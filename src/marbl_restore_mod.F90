@@ -114,6 +114,7 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
      call status_log%log_error(error_msg, subname)
      return
   else
+    ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_restore_nml
     call status_log%log_namelist('ecosys_restore_nml', tmp_nl_buffer, subname)
   end if
 
@@ -134,7 +135,7 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
     end do
   endif
 
-  ! FIXME(bja, 2014-10) assert(len(restore_short_names) == len(restore_filenames))
+  ! FIXME #35: assert(len(restore_short_names) == len(restore_filenames))
   write(status_msg, "(A)") "Found restore variables : "
   call status_log%log_noerror(status_msg, subname)
   do t = 1, size(restore_short_names)

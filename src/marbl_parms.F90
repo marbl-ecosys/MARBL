@@ -558,6 +558,7 @@ contains
        call marbl_status_log%log_error("Error reading ecosys_parms_nml", subname)
        return
     else
+       ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_parms_nml
       call marbl_status_log%log_namelist('ecosys_parms_nml', tmp_nl_buffer, subname)
     end if
 

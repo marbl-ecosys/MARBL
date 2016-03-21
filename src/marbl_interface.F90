@@ -75,7 +75,8 @@ module marbl_interface
      real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input  *
      real (r8)                                 , public, allocatable  :: column_dtracers(:,:)    ! output *
      real (r8)                                 , public, allocatable  :: column_restore(:,:)     ! input  * 
-     type(marbl_interior_forcing_input_type)   , public               :: interior_forcing_input  ! FIXME - make this a 3d real array with indices
+     ! FIXME #25: update marbl_interior_forcing_input_type
+     type(marbl_interior_forcing_input_type)   , public               :: interior_forcing_input
      type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
      type(marbl_diagnostics_type)              , public               :: interior_restore_diags  ! output
      type(marbl_restore_type)                  , public               :: restoring

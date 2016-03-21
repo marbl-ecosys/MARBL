@@ -51,7 +51,7 @@ module marbl_co2calc_mod
 
   !-----------------------------------------------------------------------------
   !   declarations for function coefficients & species concentrations
-  !   FIXME(bja, 2015-07) move dic, ta, pt, sit into their own derived type
+  !   FIXME #19: move dic, ta, pt, sit into their own derived type
   !-----------------------------------------------------------------------------
 
   type, public :: thermodynamic_coefficients_type
@@ -420,8 +420,8 @@ contains
        temp, salt, press_bar, co3_coeffs, k1_k2_pH_tot)
 
     !---------------------------------------------------------------------------
-    ! FIXME(bja, 2015-07) the computations for the individual
-    ! constants need to be broken out into separate functions and unit tested
+    ! FIXME #20: the computations for the individual constants need to
+    !            be broken out into separate functions and unit tested
     !---------------------------------------------------------------------------
 
     implicit none
@@ -938,9 +938,10 @@ contains
 
        do c = 1,num_elements
           if (mask(c)) then
-             ! FIXME - make marbl_status_log required - this is currently needed since
-             ! abil_dic_dic14_mod is calling this routine but has not itself been MARBLized yet
              if (present(marbl_status_log)) then
+                ! FIXME #21: make marbl_status_log required - this is currently needed
+                !            since abio_dic_dic14_mod is calling this routine but has
+                !            not itself been MARBLized yet
                 WRITE(status_msg,"(4A,I0,A,I0,A,I0)") '(', subname, ') ', &
                      ', c = ', c, ', it = ', it
                 call marbl_status_log%log_noerror(status_msg, subname, c, .true.)
@@ -955,8 +956,8 @@ contains
        end do
 
        if (it > max_bracket_grow_it) then
-             ! FIXME - make marbl_status_log required
           if (present(marbl_status_log)) then
+             ! FIXME #21 (see above)
              error_msg = "bounding bracket for pH solution not found"
              call marbl_status_log%log_error(error_msg, subname, c)
           end if

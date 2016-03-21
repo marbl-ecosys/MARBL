@@ -257,8 +257,8 @@ module marbl_diagnostics_mod
      integer (int_kind) :: CISO_DO14C_remin                                   ! do14c remineralization
      integer (int_kind) :: CISO_Jint_13Ctot                                   ! vertically integrated source sink term, 13Ctot
      integer (int_kind) :: CISO_Jint_14Ctot                                   ! vertically integrated source sink term, 14Ctot
-     integer (int_kind) :: CISO_Jint_100m_13Ctot                              ! vertically integrated source sink term, 0-100m, 13Ctot !FIXME - this is not being computed now
-     integer (int_kind) :: CISO_Jint_100m_14Ctot                              ! vertically integrated source sink term, 0-100m, 14Ctot !FIXME - this is not being computed now
+     integer (int_kind) :: CISO_Jint_100m_13Ctot                              ! vertically integrated source sink term, 0-100m, 13Ctot
+     integer (int_kind) :: CISO_Jint_100m_14Ctot                              ! vertically integrated source sink term, 0-100m, 14Ctot
      integer (int_kind) :: CISO_zooC_d13C                                     ! if for d13C of zooC
      integer (int_kind) :: CISO_zooC_d14C                                     ! if for d14C of zooC
      integer (int_kind) :: CISO_DOC_d13C                                      ! if for d13C of DOC
@@ -2161,8 +2161,9 @@ contains
           else
              if (autotrophs(n)%Si_ind.gt.0) then
                 lname = trim(autotrophs(n)%lname) // ' Si Uptake'
+                ! FIXME #22 - eventually add _
+                sname = trim(autotrophs(n)%sname) // 'bSi_form'
                 !sname = trim(autotrophs(n)%sname) // '_bSi_form'
-                sname = trim(autotrophs(n)%sname) // 'bSi_form' ! FIXME: eventually add _
                 units = 'mmol/m^3/s'
                 vgrid = 'layer_avg'
                 truncate = .true.
