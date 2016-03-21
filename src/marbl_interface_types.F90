@@ -91,7 +91,7 @@ module marbl_interface_types
 
   !*****************************************************************************
 
-  ! FIXME(mnl,2016-01) better names for PAR_col_frac and surf_shortwave 
+  ! FIXME #25: update marbl_interior_forcing_input_type
   type, public :: marbl_interior_forcing_input_type
      real(r8), allocatable :: temperature(:)    ! (km)
      real(r8), allocatable :: salinity(:)       ! (km)
@@ -257,8 +257,7 @@ contains
 
     integer :: k
 
-    ! FIXME (2016-02,mnl): remove dz from data type, use delta_z whether POP
-    !                      has partial bottom cells or not
+    ! FIXME #24: remove dz from data type, use delta_z for all vertical depths
     allocate(this%dz(num_levels))
     allocate(this%delta_z(num_levels))
     allocate(this%zw(num_levels))
@@ -330,8 +329,8 @@ contains
       case ('none')
         allocate(this%field_2d(num_elements))
       case DEFAULT
+        ! FIXME #23: use marbl_log_type to trap this error and then return!
         print*, "ERROR: ", trim(vgrid), " is not a valid vertical grid for MARBL"
-        ! FIXME: abort
     end select
 
     this%compute_now = .true.
@@ -407,8 +406,8 @@ contains
     this%diag_cnt = this%diag_cnt + 1
     id = this%diag_cnt
     if (id.gt.size(this%diags)) then
+      ! FIXME #23: use marbl_log_type to trap this error and then return!
       print*, "ERROR: increase max number of diagnostics!"
-      ! FIXME: abort
     end if
     call this%diags(id)%initialize(lname, sname, units, vgrid, truncate,      &
          this%num_elements, this%num_levels)
@@ -554,8 +553,8 @@ contains
        if (trim(field_source) .eq. trim(valid_field_sources(n))) has_valid_source = .true.
     enddo
     if (.not. has_valid_source) then
+       ! FIXME #23: use marbl_log_type to trap this error and then return!
        write(*,*) "ERROR: ", trim(field_source), "is not a valid field source for MARBL"
-       ! FIXME: return error code
     endif
 
     ! required variables for all forcing field sources
@@ -586,8 +585,8 @@ contains
           write(*,*) "Adding constant forcing_field_type for ", this%marbl_varname 
           call marbl_forcing_constant_init(this%field_constant_info, field_constant)
        else
+          ! FIXME #23: use marbl_log_type to trap this error and then return!
           write(*,*) "ERROR: Call to MARBL does not have the correct optional arguments for ", trim(field_source)
-          ! FIXME: return error code
        endif
 
     case('driver')
@@ -596,8 +595,8 @@ contains
           write(*,*) "Adding driver forcing_field_type for ", this%marbl_varname 
           call this%field_driver_info%initialize(marbl_driver_varname)
        else
+          ! FIXME #23: use marbl_log_type to trap this error and then return!
           write(*,*) "ERROR: Call to MARBL does not have the correct optional arguments for ", trim(field_source)
-          ! FIXME: return error code
        endif
 
     case('file') 
@@ -611,8 +610,8 @@ contains
                year_last=year_last, year_align=year_align, &
                date=date, time=time)
        else
+          ! FIXME #23: use marbl_log_type to trap this error and then return!
           write(*,*) "ERROR: Call to MARBL does not have the correct optional arguments for ", trim(field_source)
-          ! FIXME: return error code
        endif
 
     case('POP monthly calendar') 
@@ -621,8 +620,8 @@ contains
           write(*,*) "Adding calendar forcing_field_type for ", this%marbl_varname 
           call this%field_monthly_calendar_info%initialize(marbl_forcing_calendar_name)
        else
+          ! FIXME #23: use marbl_log_type to trap this error and then return!
           write(*,*) "ERROR: Call to MARBL does not have the correct optional arguments for ", trim(field_source)
-          ! FIXME: return error code
        endif
 
     end select
@@ -687,7 +686,8 @@ contains
     this%forcing_field_cnt = this%forcing_field_cnt + 1
     id = this%forcing_field_cnt
     if (id .gt. size(this%forcing_fields)) then
-      print*, "ERROR: increase max number of forcing fields!" ! FIXME: make max_number_forcing_fields run time
+      ! FIXME #23: use marbl_log_type to trap this error and then return!
+      print*, "ERROR: increase max number of forcing fields!"
     end if
     num_elem = this%num_elements
 

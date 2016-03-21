@@ -211,7 +211,7 @@ contains
        call marbl_status_log%log_error("error reading &ecosys_ciso_nml", subname)
        return
     else
-       ! FIXME(mnl,2016-02): this is printing contents of pop_in, not the entire ecosys_ciso_nml
+       ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_ciso_nml
        call marbl_status_log%log_namelist('ecosys_ciso_nml', tmp_nl_buffer, subname)
     end if
 
@@ -457,7 +457,8 @@ contains
 
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain                               
     type(marbl_interior_forcing_input_type) , intent(in)    :: marbl_interior_forcing_input
-    type(marbl_interior_share_type)         , intent(inout) :: marbl_interior_share(marbl_domain%km) !FIXME - intent is inout due to DIC_Loc
+    ! FIXME #17: intent is inout due to DIC_Loc
+    type(marbl_interior_share_type)         , intent(inout) :: marbl_interior_share(marbl_domain%km)
     type(marbl_zooplankton_share_type)      , intent(in)    :: marbl_zooplankton_share(zooplankton_cnt, marbl_domain%km)
     type(marbl_autotroph_share_type)        , intent(in)    :: marbl_autotroph_share(autotroph_cnt, marbl_domain%km)
     type(marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
@@ -626,8 +627,8 @@ contains
     ! Set module variables
     !-----------------------------------------------------------------------
 
-    ! FIXME (mvertens, 2015-14), move this calculations to the init phase when 
-    ! the initialization is brought into this module
+    ! FIXME #36: move this calculations to the init phase when 
+    !            the initialization is brought into this module
 
     pi  = 4.0_r8 * atan( 1.0_r8 )
 
@@ -1089,7 +1090,7 @@ contains
     end associate
 
     ! update carbon isotope diagnostics 
-    ! FIXME (mvertens, 2015-12) the following arguments need to be group into a derived type
+    ! FIXME #18: the following arguments need to be group into a derived type
 
     call store_diagnostics_ciso_interior(&
        marbl_domain,        &
@@ -1214,7 +1215,6 @@ contains
              !   cell_eps_fix(auto_ind)         = 23.0_r8      ! fractionation effect of carbon fixation
              
           else if (autotrophs(auto_ind)%Nfixer .and. autotrophs(auto_ind)%kSiO3 > c0) then
-              ! FIXME add error messge to marbl_status_log
               error_msg = "ciso: Currently Keller and Morel fractionation does not work for Diatoms-Diazotrophs"
               call marbl_status_log%log_error(error_msg, subname)
               return
@@ -2141,7 +2141,7 @@ contains
     end associate
 
     ! update carbon isotope diagnostics 
-    ! FIXME (mvertens, 2015-12) the following arguments need to be group into a derived type
+    ! FIXME #18: the following arguments need to be group into a derived type
 
     call store_diagnostics_ciso_surface_forcing( &
          num_elements,   &

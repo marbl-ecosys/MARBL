@@ -637,7 +637,7 @@ contains
       call marbl_status_log%log_error("error reading &ecosys_nml", subname)
       return
     else
-      ! FIXME(mnl,2016-02): this is printing contents of pop_in, not the entire ecosys_nml
+      ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_nml
       call marbl_status_log%log_namelist('ecosys_nml', tmp_nl_buffer, subname)
     end if
 
@@ -738,7 +738,7 @@ contains
     !  read ecosys_parms_nml namelist
     !-----------------------------------------------------------------------
 
-    ! FIXME(mnl, 2016-01): eliminate marbl_parms!
+    ! FIXME #11: eliminate marbl_parms!
     call marbl_params_init(nl_buffer, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       error_msg = "error code returned from marbl_params_init"
@@ -1238,8 +1238,8 @@ contains
 
     end associate
 
-    ! FIXME: do we have any forcing fields that are required to be set? If so,
-    !        check to make sure those indices are not zero here.
+    ! FIXME #26: do we have any forcing fields that are required to be set?
+    !            If so, check to make sure those indices are not zero here.
 
   end subroutine marbl_init_surface_forcing_fields
 
@@ -1371,7 +1371,8 @@ contains
     type    (marbl_PAR_type)                    , intent(inout) :: marbl_PAR
     type    (marbl_saved_state_type)            , intent(inout) :: saved_state
     real    (r8)                                , intent(out)   :: dtracers(:,:)          ! (ecosys_used_tracer_cnt, km) computed source/sink terms
-    type    (marbl_interior_share_type)         , intent(inout) :: marbl_interior_share(domain%km)  !FIXME - intent is inout due to DIC_Loc
+    ! FIXME #17: intent is inout due to DIC_Loc
+    type    (marbl_interior_share_type)         , intent(inout) :: marbl_interior_share(domain%km)
     type    (marbl_zooplankton_share_type)      , intent(inout) :: marbl_zooplankton_share(zooplankton_cnt, domain%km)
     type    (marbl_autotroph_share_type)        , intent(inout) :: marbl_autotroph_share(autotroph_cnt, domain%km)
     type    (marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
@@ -1478,8 +1479,8 @@ contains
     call marbl_init_particulate_terms(1, &
          POC, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
 
-    !FIXME (mvertens, 2015-11), new marbl timers need to be implemented to turn on timers here
-    ! around this subroutine call
+    !FIXME #27: new marbl timers need to be implemented to turn
+    !           on timers here around this subroutine call
     call marbl_compute_carbonate_chemistry(domain, interior_forcing_input, &
          tracer_local(:, :), carbonate(:), ph_prev_col(:), ph_prev_alt_co2_col(:), &
          zsat_calcite(:), zsat_aragonite(:), marbl_status_log)
@@ -1548,7 +1549,8 @@ contains
             tracer_local(fe_ind, k), POC, P_CaCO3, P_SiO2, dust, P_iron,                &
             Fe_scavenge(k), Fe_scavenge_rate(k))
 
-       ! FIXME(bja, 2015-08) need to pull particulate share out of compute_particulate_terms!
+       ! FIXME #28: need to pull particulate share out
+       !            of compute_particulate_terms!
        call marbl_compute_particulate_terms(k, domain,                 &
             marbl_particulate_share, POC, P_CaCO3, P_SiO2, dust,       &
             P_iron, PON_remin(k), PON_sed_loss(k), POP_remin(k),       &
@@ -1586,8 +1588,8 @@ contains
             dtracers(:, k) )
 
        if (ciso_on) then
-          ! FIXME(bja, 2015-08) need to pull particulate share
-          ! out of compute_particulate_terms!
+          ! FIXME #28: need to pull particulate share out
+          !            of compute_particulate_terms!
           call marbl_export_interior_shared_variables(tracer_local(:, k), &
                carbonate(k), dissolved_organic_matter(k), &
                QA_dust_def(k), &
@@ -2790,7 +2792,8 @@ contains
        stf(:, doc_ind)  = stf(:, doc_ind)  + doc_riv_flux(:) * (c1 - DOCriv_refract)
        stf(:, docr_ind) = stf(:, docr_ind) + doc_riv_flux(:) * DOCriv_refract
 
-       ! FIXME(ktl) sending total doc river input to ciso for now, need to separate doc and docr
+       ! FIXME #29: sending total doc river input to ciso
+       !            for now, need to separate doc and docr
        if (ciso_on) then
           doc_riv_flux_fields = doc_riv_flux(:)
        end if
@@ -3198,7 +3201,7 @@ contains
     integer (int_kind) :: n ! tracer index
     !-----------------------------------------------------------------------
 
-    ! FIXME(bja, 2015-06) only need to loop over non-living-biomass-ecosys-tracer-cnt. 
+    ! FIXME #30: only need to loop over non-living-biomass-ecosys-tracer-cnt. 
 
     do n = 1, ecosys_tracer_cnt
        if ( k > column_kmt) then
@@ -3513,8 +3516,9 @@ contains
     ! compute attenuation coefficient over column
     !-----------------------------------------------------------------------
 
-    ! FIXME (bja, 2015-07) move calculation outside and just pass in this
-    ! work array as autotroph_Chl instead of passing in all of autotroph_loc?
+    ! FIXME #31: move calculation outside and just pass in this
+    !            work array as autotroph_Chl instead of passing
+    !            in all of autotroph_local?
     WORK1(:) = max(sum(autotroph_local(:,1:column_kmt)%Chl, dim=1), 0.02_r8)
 
     do k = 1, column_kmt

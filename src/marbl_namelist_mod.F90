@@ -12,9 +12,9 @@ module marbl_namelist_mod
   implicit none
   private
 
-  ! FIXME(bja, 2015-01) nl_buffer_size shouldn't be a hard coded
-  ! constant, but runtime configurable?! Just not sure what the best
-  ! approach is at the moment....
+  ! FIXME #33: nl_buffer_size shouldn't be a hard coded constant
+  !            but runtime configurable?! Just not sure what the
+  !            best approach is at the moment....
 
   ! NOTES: nl_in_size is the number of characters in the entire namelist file
   !        nl_cnt is the number of distinct namelists in the file
@@ -40,9 +40,9 @@ contains
 
   subroutine marbl_nl_split_string(str_in, array_out)
 
-    ! FIXME(mnl,2016-01): This routine depends on the namelist file conforming
-    !        to very specific formatting - a more general / robust solution would
-    !        be preferred
+    ! FIXME #34: This routine depends on the namelist file conforming
+    !            to very specific formatting - a more general / robust
+    !            solution would be preferred
     character(len=marbl_nl_in_size), intent(in) :: str_in
     ! intent(inout) because we initialized to '' previously
     ! and also to save memory
@@ -57,8 +57,8 @@ contains
     nl_cnt = 1
     do i=1,len_trim(str_in)-1
       if (str_in(i:i+1) .eq. '/' // cr) then
-        ! FIXME(mnl,2016-01): add error checking in case 
-        !                     (i+1-old_pos) > marbl_nl_buffer_size!
+        ! FIXME #32: add error checking in case 
+        !            (i+1-old_pos) > marbl_nl_buffer_size
         array_out(nl_cnt) = str_in(old_pos:i)
         nl_cnt = nl_cnt+1
         old_pos = i+2
@@ -76,7 +76,7 @@ contains
       end do
       ! Remove whitespace from beginning of string (if any)
       array_out(j) = trim(adjustl(str_tmp))
-      ! FIXME(mnl,2016-01): add error checking in case first character is not '&'
+      ! FIXME #32: add error checking in case first character is not '&'
     end do
   end subroutine marbl_nl_split_string
 
@@ -96,7 +96,8 @@ contains
       end if
     end do
 
-    ! FIXME: add error checking in case &nl_name is not found! => j>marbl_nl_cnt
+    ! FIXME #32: add error checking in case &nl_name is not found
+    !            (just check to see if j>marbl_nl_cnt)
 
   end function marbl_namelist
 
