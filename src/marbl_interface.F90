@@ -1,0 +1,385 @@
+! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
+!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+module marbl_interface
+
+  !-----------------------------------------------------------------------
+  ! marbl interface
+  !
+  ! This module contains the public interface to marbl. This is the
+  ! only public API and the only interface guaranteed to be documented
+  ! and semi-stable. All other marbl rountines are private and may
+  ! change at any time.
+  !
+  ! The following terminology is used in this module:
+  !
+  ! driver - refers to the code that is calling marbl routines. This
+  !          can be anything from a full GCM to a simplified single
+  !          column test system
+  !-----------------------------------------------------------------------
+
+  use marbl_kinds_mod       , only : r8, log_kind, int_kind, log_kind
+  use marbl_logging         , only : marbl_log_type
+  use marbl_logging         , only : error_msg
+
+  use marbl_sizes           , only : ecosys_tracer_cnt
+  use marbl_sizes           , only : ecosys_ciso_tracer_cnt
+  use marbl_sizes           , only : ecosys_used_tracer_cnt
+  use marbl_sizes           , only : ecosys_ind_beg, ecosys_ind_end
+  use marbl_sizes           , only : ecosys_ciso_ind_beg, ecosys_ciso_ind_end
+  use marbl_sizes           , only : autotroph_cnt
+  use marbl_sizes           , only : zooplankton_cnt
+  use marbl_sizes           , only : num_surface_forcing_fields
+
+  use marbl_interface_types , only : marbl_domain_type
+  use marbl_interface_types , only : marbl_tracer_metadata_type
+  use marbl_interface_types , only : marbl_interior_forcing_input_type
+  use marbl_interface_types , only : marbl_surface_forcing_output_type
+  use marbl_interface_types , only : marbl_diagnostics_type
+  use marbl_interface_types , only : marbl_surface_forcing_indexing_type
+  use marbl_interface_types , only : marbl_forcing_fields_type
+  use marbl_interface_types , only : marbl_saved_state_type
+
+  use marbl_internal_types  , only : marbl_PAR_type
+  use marbl_internal_types  , only : marbl_interior_share_type
+  use marbl_internal_types  , only : marbl_autotroph_share_type
+  use marbl_internal_types  , only : marbl_zooplankton_share_type
+  use marbl_internal_types  , only : marbl_particulate_share_type
+  use marbl_internal_types  , only : marbl_surface_forcing_share_type
+  use marbl_internal_types  , only : marbl_surface_forcing_internal_type
+
+  use marbl_restore_mod     , only : marbl_restore_type
+
+  implicit none
+
+  private
+
+  !-----------------------------------------------------------------------------
+  !
+  ! The following data structures are part of the public API that the
+  ! driver will read/write to interact with marbl.
+  !
+  !-----------------------------------------------------------------------------
+  
+  ! note that column_restore is currently nutrients restoring (mmol ./m^3/sec)
+
+  type, public :: marbl_interface_class
+
+     ! public data - general
+     type(marbl_domain_type)                   , public               :: domain
+     type(marbl_tracer_metadata_type)          , public, allocatable  :: tracer_metadata(:)
+     type(marbl_log_type)                      , public               :: statusLog
+     type(marbl_saved_state_type)              , public               :: saved_state             ! input/output
+
+     ! public data - interior forcing
+     real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input  *
+     real (r8)                                 , public, allocatable  :: column_dtracers(:,:)    ! output *
+     real (r8)                                 , public, allocatable  :: column_restore(:,:)     ! input  * 
+     type(marbl_interior_forcing_input_type)   , public               :: interior_forcing_input  ! FIXME - make this a 3d real array with indices
+     type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
+     type(marbl_diagnostics_type)              , public               :: interior_restore_diags  ! output
+     type(marbl_restore_type)                  , public               :: restoring
+
+     ! public data surface forcing
+     real (r8)                                 , public, allocatable  :: surface_vals(:,:)           ! input  *
+     real (r8)                                 , public, allocatable  :: surface_input_forcings(:,:) ! input  *
+     real (r8)                                 , public, allocatable  :: surface_tracer_fluxes(:,:)  ! output *
+     type(marbl_surface_forcing_indexing_type) , public               :: surface_forcing_ind         ! 
+     type(marbl_forcing_fields_type)           , public               :: surface_forcing_fields
+     type(marbl_surface_forcing_output_type)   , public               :: surface_forcing_output      ! output
+     type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
+
+
+     ! private data 
+     logical (log_kind)                        , private              :: ciso_on
+     type(marbl_PAR_type)                      , private              :: PAR
+     type(marbl_particulate_share_type)        , private              :: particulate_share
+     type(marbl_interior_share_type)           , private, allocatable :: interior_share(:)
+     type(marbl_zooplankton_share_type)        , private, allocatable :: zooplankton_share(:,:)
+     type(marbl_autotroph_share_type)          , private, allocatable :: autotroph_share(:,:)
+     type(marbl_surface_forcing_share_type)    , private              :: surface_forcing_share
+     type(marbl_surface_forcing_internal_type) , private              :: surface_forcing_internal
+
+   contains
+
+     procedure, public :: init             
+     procedure, public :: set_interior_forcing     
+     procedure, public :: set_surface_forcing
+     procedure, public :: shutdown         
+
+  end type marbl_interface_class
+  
+  private :: init
+  private :: set_interior_forcing
+  private :: set_surface_forcing
+  private :: shutdown
+
+  !***********************************************************************
+
+contains
+
+  !***********************************************************************
+  
+  subroutine init(this,                   &
+       gcm_nl_buffer,                     &
+       gcm_ciso_on,                       &
+       gcm_num_levels,                    &
+       gcm_num_PAR_subcols,               &
+       gcm_num_elements_interior_forcing, &
+       gcm_num_elements_surface_forcing,  &
+       gcm_dz,                            &
+       gcm_zw,                            &
+       gcm_zt)
+
+    use marbl_namelist_mod    , only : marbl_nl_cnt
+    use marbl_namelist_mod    , only : marbl_nl_buffer_size
+    use marbl_ciso_mod        , only : marbl_ciso_init_nml
+    use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
+    use marbl_mod             , only : marbl_init_nml
+    use marbl_mod             , only : marbl_init_surface_forcing_fields
+    use marbl_mod             , only : marbl_init_tracer_metadata
+    use marbl_diagnostics_mod , only : marbl_diagnostics_init  
+    
+    implicit none
+
+    class     (marbl_interface_class)      , intent(inout) :: this
+    logical   (log_kind)                   , intent(in)    :: gcm_ciso_on
+    character (marbl_nl_buffer_size)       , intent(in)    :: gcm_nl_buffer(marbl_nl_cnt)
+    integer   (int_kind)                   , intent(in)    :: gcm_num_levels
+    integer   (int_kind)                   , intent(in)    :: gcm_num_PAR_subcols
+    integer   (int_kind)                   , intent(in)    :: gcm_num_elements_surface_forcing
+    integer   (int_kind)                   , intent(in)    :: gcm_num_elements_interior_forcing
+    real      (r8)                         , intent(in)    :: gcm_dz(gcm_num_levels) ! thickness of layer k
+    real      (r8)                         , intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
+    real      (r8)                         , intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
+
+    integer :: i
+    !--------------------------------------------------------------------
+
+    associate(&
+         num_levels           => gcm_num_levels,                   & 
+         num_PAR_subcols      => gcm_num_PAR_subcols,              &
+         num_surface_elements => gcm_num_elements_surface_forcing, &
+         num_interior_forcing => gcm_num_elements_interior_forcing &
+         )
+
+    !--------------------------------------------------------------------
+    ! initialize marbl status logs
+    !--------------------------------------------------------------------
+
+    call this%statusLog%construct()
+
+    !--------------------------------------------------------------------
+    ! initialize marbl namelists
+    !--------------------------------------------------------------------
+
+    call marbl_init_nml(gcm_nl_buffer, this%statusLog)
+    if (this%statusLog%labort_marbl) then
+       call this%statusLog%log_error("error code returned from marbl_init_nml", &
+            "marbl_interface::marbl_init()")
+      return
+    end if
+
+    if (gcm_ciso_on) then
+       call marbl_ciso_init_nml(gcm_nl_buffer, this%statusLog)
+       if (this%statusLog%labort_marbl) then
+          call this%statusLog%log_error("error code returned from marbl_ciso_init_nml", &
+               "marbl_interface::marbl_init()")
+          return
+       end if
+    end if
+    
+    !--------------------------------------------------------------------
+    ! call constructors and allocate memory
+    !--------------------------------------------------------------------
+
+    this%ciso_on = gcm_ciso_on
+
+    call this%PAR%construct(num_levels, num_PAR_subcols)
+
+    call this%particulate_share%construct(num_levels)
+
+    call this%surface_forcing_share%construct(num_surface_elements)
+
+    call this%surface_forcing_internal%construct(num_surface_elements)
+
+    allocate (this%interior_share(num_levels))
+
+    allocate (this%zooplankton_share(zooplankton_cnt, num_levels))
+
+    allocate (this%autotroph_share(autotroph_cnt, num_levels))
+
+    call this%domain%construct(                                &
+         num_levels                    = num_levels,           &
+         num_PAR_subcols               = num_PAR_subcols,      &
+         num_elements_surface_forcing  = num_surface_elements,  &
+         num_elements_interior_forcing = num_interior_forcing, &
+         dz                            = gcm_dz,               &
+         zw                            = gcm_zw,               &
+         zt                            = gcm_zt)
+
+         
+    call this%interior_forcing_input%construct(num_levels, num_PAR_subcols)
+
+    call this%surface_forcing_output%construct(num_surface_elements)
+    
+    call this%saved_state%construct(num_surface_elements, num_levels)
+
+    allocate(this%surface_vals(num_surface_elements, ecosys_used_tracer_cnt))
+
+    allocate(this%surface_tracer_fluxes(num_surface_elements, ecosys_used_tracer_cnt))
+
+    allocate(this%column_tracers(ecosys_used_tracer_cnt, num_levels))
+
+    allocate(this%column_dtracers(ecosys_used_tracer_cnt, num_levels))
+
+    allocate(this%column_restore(ecosys_used_tracer_cnt, gcm_num_levels))
+
+
+    !--------------------------------------------------------------------
+    ! initialize public data - general tracer metadata 
+    !--------------------------------------------------------------------
+
+    allocate(this%tracer_metadata(ecosys_used_tracer_cnt))
+
+    call marbl_init_tracer_metadata( &
+         this%tracer_metadata,       &
+         this%statusLog)
+
+    if (this%statusLog%labort_marbl) then
+      call this%statusLog%log_error("error code returned from marbl_init_tracer_metadata", &
+                                    "marbl_interface::marbl_init()")
+      return
+    end if
+
+    if (this%ciso_on) then
+       call marbl_ciso_init_tracer_metadata(                               &
+            this%tracer_metadata(ecosys_ciso_ind_beg:ecosys_ciso_ind_end), &
+            this%statusLog)
+
+       if (this%statusLog%labort_marbl) then
+         call this%statusLog%log_error("error code returned from marbl_ciso_init_tracer_metadata", &
+                                       "marbl_interface::marbl_init()")
+         return
+       end if
+    end if
+
+    !--------------------------------------------------------------------
+    ! initialize marbl surface forcing fields
+    !--------------------------------------------------------------------
+
+    call marbl_init_surface_forcing_fields(                         &
+         ciso_on                      = this%ciso_on,               &
+         num_elements                 = num_surface_elements,       &
+         num_surface_forcing_fields   = num_surface_forcing_fields, &  
+         surface_forcing_indices      = this%surface_forcing_ind,   &
+         surface_forcing_fields       = this%surface_forcing_fields)
+
+    allocate(this%surface_input_forcings(num_surface_elements, num_surface_forcing_fields))
+
+    !--------------------------------------------------------------------
+    ! Initialize tracer restoring
+    !--------------------------------------------------------------------
+
+    call this%restoring%init(                                                   &
+         nl_buffer       = gcm_nl_buffer,                                       &
+         domain          = this%domain,                                         &
+         tracer_metadata = this%tracer_metadata(ecosys_ind_beg:ecosys_ind_end), &
+         status_log      = this%statusLog)
+
+    !--------------------------------------------------------------------
+    ! Initialize marbl diagnostics
+    !--------------------------------------------------------------------
+
+    call marbl_diagnostics_init(                                                             &
+         ciso_on                      = this%ciso_on,                                        &
+         marbl_domain                 = this%domain,                                         &
+         marbl_tracer_metadata        = this%tracer_metadata(ecosys_ind_beg:ecosys_ind_end), &
+         marbl_interior_forcing_diags = this%interior_forcing_diags,                         &
+         marbl_interior_restore_diags = this%interior_restore_diags,                         &
+         marbl_surface_forcing_diags  = this%surface_forcing_diags)
+
+    end associate
+
+  end subroutine init
+
+  !***********************************************************************
+  
+  subroutine set_interior_forcing(this)
+
+    use marbl_mod, only : marbl_set_interior_forcing
+    
+    implicit none
+
+    class(marbl_interface_class), intent(inout) :: this
+
+    call this%restoring%restore_tracers( &
+         this%column_tracers,            &
+         this%domain%km,                 &
+         ecosys_used_tracer_cnt,         &
+         this%column_restore)
+
+    call marbl_set_interior_forcing(   &
+         ciso_on                 = this%ciso_on,                 &
+         domain                  = this%domain,                  &
+         interior_forcing_input  = this%interior_forcing_input,  &
+         saved_state             = this%saved_state,             &
+         interior_restore        = this%column_restore,          &
+         tracers                 = this%column_tracers,          &
+         dtracers                = this%column_dtracers,         &
+         marbl_PAR               = this%PAR,                     &
+         marbl_interior_share    = this%interior_share,          &
+         marbl_zooplankton_share = this%zooplankton_share,       &
+         marbl_autotroph_share   = this%autotroph_share,         &
+         marbl_particulate_share = this%particulate_share,       &
+         interior_forcing_diags  = this%interior_forcing_diags,  &
+         interior_restore_diags  = this%interior_restore_diags,  &
+         marbl_status_log        = this%statusLog)
+
+    if (this%statusLog%labort_marbl) then
+       error_msg = "error code returned from marbl_set_interior_forcing"
+       call this%statusLog%log_error(error_msg, "marbl_interface::set_interior_forcing")
+       return
+    end if
+    
+  end subroutine set_interior_forcing
+  
+  !***********************************************************************
+  
+  subroutine set_surface_forcing(this)
+
+    use marbl_mod      , only : marbl_set_surface_forcing
+    
+    implicit none
+
+    class(marbl_interface_class), intent(inout) :: this
+
+    call marbl_set_surface_forcing(                                           &
+         ciso_on                  = this%ciso_on,                             &
+         num_elements             = this%domain%num_elements_surface_forcing, &
+         surface_forcing_ind      = this%surface_forcing_ind,                 &
+         surface_input_forcings   = this%surface_input_forcings,              &
+         surface_vals             = this%surface_vals,                        &
+         surface_tracer_fluxes    = this%surface_tracer_fluxes,               &
+         saved_state              = this%saved_state,                         &
+         surface_forcing_output   = this%surface_forcing_output,              &
+         surface_forcing_internal = this%surface_forcing_internal,            &
+         surface_forcing_share    = this%surface_forcing_share,               &
+         surface_forcing_diags    = this%surface_forcing_diags,               &
+         marbl_status_log         = this%statuslog)
+
+  end subroutine set_surface_forcing
+  
+  !***********************************************************************
+  
+  subroutine shutdown(this)
+
+    implicit none
+
+    class(marbl_interface_class), intent(inout) :: this
+
+    ! free dynamically allocated memory, etc
+    
+  end subroutine shutdown
+
+end module marbl_interface
