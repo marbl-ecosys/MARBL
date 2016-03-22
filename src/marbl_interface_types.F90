@@ -4,6 +4,7 @@ module marbl_interface_types
   use marbl_kinds_mod           , only : r8, log_kind, int_kind, char_len
   use marbl_constants_mod       , only : c0, c1
   use marbl_interface_constants , only : marbl_str_length
+  use marbl_logging             , only : marbl_log_type, error_msg
 
   implicit none
 
@@ -312,13 +313,16 @@ contains
   !*****************************************************************************
 
   subroutine marbl_single_diag_init(this, lname, sname, units, vgrid,         &
-             truncate, num_elements, num_levels)
+             truncate, num_elements, num_levels, marbl_status_log)
 
     class(marbl_single_diagnostic_type) , intent(inout) :: this
     character(len=char_len) , intent(in)    :: lname, sname, units, vgrid
     logical                 , intent(in)    :: truncate
     integer                 , intent(in)    :: num_elements
     integer                 , intent(in)    :: num_levels
+    type(marbl_log_type)    , intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_single_diag_init'
 
     ! Allocate column memory for 3D vars or num_elements memory for 2D vars
     select case (trim(vgrid))
@@ -329,8 +333,10 @@ contains
       case ('none')
         allocate(this%field_2d(num_elements))
       case DEFAULT
-        ! FIXME #23: use marbl_log_type to trap this error and then return!
-        print*, "ERROR: ", trim(vgrid), " is not a valid vertical grid for MARBL"
+        write(error_msg,"(3A)") "ERROR: ", trim(vgrid),                       &
+                                " is not a valid vertical grid for MARBL"
+        call marbl_status_log%log_error(error_msg, subname)
+        return
     end select
 
     this%compute_now = .true.
@@ -396,21 +402,30 @@ contains
   !*****************************************************************************
 
   subroutine marbl_diagnostics_add(this, lname, sname, units, vgrid,          &
-             truncate, id)
+             truncate, id, marbl_status_log)
 
     class(marbl_diagnostics_type) , intent(inout) :: this
     character(len=char_len)       , intent(in)    :: lname, sname, units, vgrid
     logical (int_kind)            , intent(in)    :: truncate
     integer (int_kind)            , intent(out)   :: id
+    type(marbl_log_type)          , intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_diagnostics_add'
 
     this%diag_cnt = this%diag_cnt + 1
     id = this%diag_cnt
     if (id.gt.size(this%diags)) then
-      ! FIXME #23: use marbl_log_type to trap this error and then return!
-      print*, "ERROR: increase max number of diagnostics!"
+      error_msg = "ERROR: increase max number of diagnostics!"
+      call marbl_status_log%log_error(error_msg, subname)
+      return
     end if
     call this%diags(id)%initialize(lname, sname, units, vgrid, truncate,      &
-         this%num_elements, this%num_levels)
+         this%num_elements, this%num_levels, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      error_msg = "error code returned from this%diags%initialize"
+      call marbl_status_log%log_error(error_msg, subname)
+      return
+    end if
 
   end subroutine marbl_diagnostics_add
 

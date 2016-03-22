@@ -287,18 +287,29 @@ contains
          domain          = this%domain,                                         &
          tracer_metadata = this%tracer_metadata(ecosys_ind_beg:ecosys_ind_end), &
          status_log      = this%statusLog)
+    if (this%statusLog%labort_marbl) then
+      call this%statusLog%log_error("error code returned from this%restoring%init", &
+                                    "marbl_interface::marbl_init()")
+      return
+    end if
 
     !--------------------------------------------------------------------
     ! Initialize marbl diagnostics
     !--------------------------------------------------------------------
 
-    call marbl_diagnostics_init(                                                             &
-         ciso_on                      = this%ciso_on,                                        &
-         marbl_domain                 = this%domain,                                         &
+    call marbl_diagnostics_init(                                              &
+         ciso_on                      = this%ciso_on,                         &
+         marbl_domain                 = this%domain,                          &
          marbl_tracer_metadata        = this%tracer_metadata(ecosys_ind_beg:ecosys_ind_end), &
-         marbl_interior_forcing_diags = this%interior_forcing_diags,                         &
-         marbl_interior_restore_diags = this%interior_restore_diags,                         &
-         marbl_surface_forcing_diags  = this%surface_forcing_diags)
+         marbl_interior_forcing_diags = this%interior_forcing_diags,          &
+         marbl_interior_restore_diags = this%interior_restore_diags,          &
+         marbl_surface_forcing_diags  = this%surface_forcing_diags,           &
+         marbl_status_log             = this%StatusLog)
+    if (this%statusLog%labort_marbl) then
+      call this%statusLog%log_error("error code returned from marbl_diagnostics_init", &
+                                    "marbl_interface::marbl_init()")
+      return
+    end if
 
     end associate
 

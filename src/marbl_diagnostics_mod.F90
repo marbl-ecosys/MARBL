@@ -53,6 +53,9 @@ module marbl_diagnostics_mod
   use marbl_interface_types , only : marbl_surface_forcing_indexing_type
   use marbl_interface_types , only : marbl_diagnostics_type
 
+  use marbl_logging,          only : marbl_log_type
+  use marbl_logging,          only : error_msg
+
   implicit none
   public
 
@@ -352,7 +355,8 @@ contains
        marbl_tracer_metadata,        &
        marbl_interior_forcing_diags, &
        marbl_interior_restore_diags, &
-       marbl_surface_forcing_diags)
+       marbl_surface_forcing_diags,  &
+       marbl_status_log)
 
     logical (log_kind)                , intent(in)    :: ciso_on 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
@@ -360,6 +364,7 @@ contains
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_forcing_diags
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_restore_diags
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_surface_forcing_diags
+    type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -372,6 +377,8 @@ contains
     integer :: num_restore_diags
     integer :: num_forcing_diags
     character(len=char_len) :: lname, sname, units, vgrid
+
+    character(*), parameter :: subname = "marbl_diagnostics_mod:marbl_diagnostics_init"
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------
@@ -412,7 +419,13 @@ contains
           units    = 'fraction'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ECOSYS_IFRAC)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ECOSYS_IFRAC, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -423,7 +436,13 @@ contains
           units    = 'cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ECOSYS_XKW)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ECOSYS_XKW, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -434,7 +453,13 @@ contains
           units    = 'atmospheres'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ECOSYS_ATM_PRESS)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ECOSYS_ATM_PRESS, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -445,7 +470,13 @@ contains
           units    = 'cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PV_O2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PV_O2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -456,7 +487,13 @@ contains
           units    = 'none'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SCHMIDT_O2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SCHMIDT_O2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -467,7 +504,13 @@ contains
           units    = 'mmol/m^3'      ! = nmol/cm^3
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2SAT)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2SAT, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -478,7 +521,13 @@ contains
           units    = 'mmol/m^3 cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2_GAS_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2_GAS_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -489,7 +538,13 @@ contains
           units    = 'mmol/m^3'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CO2STAR)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CO2STAR, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -500,7 +555,13 @@ contains
           units    = 'mmol/m^3'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DCO2STAR)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DCO2STAR, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -511,7 +572,13 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pCO2SURF)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%pCO2SURF, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -522,7 +589,13 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DpCO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DpCO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -533,7 +606,13 @@ contains
           units    = 'cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PV_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PV_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -544,7 +623,13 @@ contains
           units    = 'none'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SCHMIDT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SCHMIDT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -555,7 +640,13 @@ contains
           units    = 'mmol/m^3 cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DIC_GAS_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DIC_GAS_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -566,7 +657,13 @@ contains
           units    = 'none'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PH)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PH, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -577,7 +674,13 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ATM_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ATM_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -588,7 +691,13 @@ contains
           units    = 'mmol/m^3'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CO2STAR_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CO2STAR_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -599,7 +708,13 @@ contains
           units    = 'mmol/m^3'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DCO2STAR_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DCO2STAR_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -610,7 +725,13 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pCO2SURF_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%pCO2SURF_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -621,7 +742,13 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DpCO2_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DpCO2_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -632,7 +759,13 @@ contains
           units    = 'mmol/m^3 cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DIC_GAS_FLUX_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DIC_GAS_FLUX_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -643,7 +776,13 @@ contains
           units    = 'none'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PH_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PH_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -654,7 +793,13 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ATM_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ATM_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -665,7 +810,13 @@ contains
           units    = 'mmol/m^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%IRON_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%IRON_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -676,7 +827,13 @@ contains
           units    = 'g/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DUST_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DUST_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -687,7 +844,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%NOx_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%NOx_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -698,7 +861,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%NHy_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%NHy_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -709,7 +878,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DIN_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DIN_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -720,7 +895,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DIP_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DIP_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -731,7 +912,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DON_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DON_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -742,7 +929,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DONr_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DONr_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -753,7 +946,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOP_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOP_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -764,7 +963,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOPr_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOPr_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -775,7 +980,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DSI_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DSI_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -786,7 +997,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DFE_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DFE_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -797,7 +1014,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DIC_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DIC_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -808,7 +1031,13 @@ contains
           units    = 'alk/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ALK_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ALK_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -819,7 +1048,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOC_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOC_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -830,7 +1065,13 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOCr_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOCr_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        !-----------------------------------------------------------------------
@@ -847,7 +1088,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI13C_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI13C_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -858,7 +1105,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI13C_AS_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI13C_AS_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -869,7 +1122,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI13C_SA_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI13C_SA_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -880,7 +1139,13 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_d13C_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_d13C_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -891,7 +1156,13 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_D13C_atm)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_D13C_atm, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -902,7 +1173,13 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_R13C_DIC_surf)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_R13C_DIC_surf, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -913,7 +1190,13 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_R13C_atm)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_R13C_atm, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -924,7 +1207,13 @@ contains
              units    = 'nmol/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI13C_RIV_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI13C_RIV_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -935,7 +1224,13 @@ contains
              units    = 'nmol/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO13C_RIV_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO13C_RIV_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -946,7 +1241,13 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_eps_aq_g_surf)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_eps_aq_g_surf, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -957,7 +1258,13 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_eps_dic_g_surf)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_eps_dic_g_surf, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -968,7 +1275,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI14C_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI14C_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -979,7 +1292,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI14C_AS_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI14C_AS_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -990,7 +1309,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI14C_SA_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI14C_SA_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1001,7 +1326,13 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_d14C_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_d14C_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1012,7 +1343,13 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_D14C_atm)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_D14C_atm, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1023,7 +1360,13 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_R14C_DIC_surf)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_R14C_DIC_surf, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1034,7 +1377,13 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_R14C_atm)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_R14C_atm, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+            end if
           end if
 
           if (count_only) then
@@ -1045,7 +1394,13 @@ contains
              units    = 'nmol/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI14C_RIV_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI14C_RIV_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1056,7 +1411,13 @@ contains
              units    = 'nmol/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO14C_RIV_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO14C_RIV_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1067,7 +1428,13 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_GLOBAL_D14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_GLOBAL_D14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
        end if
 
@@ -1091,7 +1458,13 @@ contains
           units = 'cm'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zsatcalc)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%zsatcalc, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1102,7 +1475,13 @@ contains
           units = 'cm'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zsatarag)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%zsatarag, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1113,7 +1492,13 @@ contains
           units = 'mmol/m^3'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2_ZMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2_ZMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1124,7 +1509,13 @@ contains
           units = 'cm'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2_ZMIN_DEPTH)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2_ZMIN_DEPTH, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1135,7 +1526,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_TOT_zint)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%photoC_TOT_zint, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1146,7 +1543,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_NO3_TOT_zint)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%photoC_NO3_TOT_zint, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1157,7 +1560,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_Ctot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_Ctot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1168,7 +1577,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_100m_Ctot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_100m_Ctot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1179,7 +1594,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_Ntot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_Ntot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1190,7 +1611,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_100m_Ntot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_100m_Ntot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1201,7 +1628,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_Ptot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_Ptot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1212,7 +1645,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_100m_Ptot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_100m_Ptot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1223,7 +1662,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_Sitot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_Sitot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1234,7 +1679,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_100m_Sitot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_100m_Sitot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1245,7 +1696,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_Fetot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_Fetot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1256,7 +1713,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_100m_Fetot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_100m_Fetot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        ! Particulate 2D diags
@@ -1268,7 +1731,13 @@ contains
           units = 'nmolC/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%calcToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%calcToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1279,7 +1748,13 @@ contains
           units = 'nmolC/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pocToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%pocToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1290,7 +1765,13 @@ contains
           units = 'nmolN/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ponToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ponToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1301,7 +1782,13 @@ contains
           units = 'nmolN/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SedDenitrif)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SedDenitrif, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1312,7 +1799,13 @@ contains
           units = 'nmolC/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%OtherRemin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%OtherRemin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1323,7 +1816,13 @@ contains
           units = 'nmolP/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%popToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%popToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1334,7 +1833,13 @@ contains
           units = 'nmolSi/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%bsiToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%bsiToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1345,7 +1850,13 @@ contains
           units = 'g/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%dustToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%dustToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1356,7 +1867,13 @@ contains
           units = 'nmolFe/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pfeToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%pfeToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        ! Autotroph 2D diags
@@ -1369,7 +1886,13 @@ contains
              units = 'mmol/m^3 cm/s'
              vgrid = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_zint(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoC_zint(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1380,7 +1903,13 @@ contains
              units = 'mmol/m^3 cm/s'
              vgrid = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_NO3_zint(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoC_NO3_zint(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1392,7 +1921,13 @@ contains
                 units = 'mmol/m^3 cm/s'
                 vgrid = 'none'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CaCO3_form_zint(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CaCO3_form_zint(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",  &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              else
                 ind%CaCO3_form_zint(n) = -1
              end if
@@ -1407,7 +1942,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%tot_CaCO3_form_zint)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%tot_CaCO3_form_zint, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        ! General 3D diags
@@ -1419,7 +1960,13 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CO3)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CO3, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1430,7 +1977,13 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%HCO3)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%HCO3, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1441,7 +1994,13 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%H2CO3)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%H2CO3, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1452,7 +2011,13 @@ contains
           units = 'none'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ph_3D)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ph_3D, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1463,7 +2028,13 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CO3_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CO3_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1474,7 +2045,13 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%HCO3_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%HCO3_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1485,7 +2062,13 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%H2CO3_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%H2CO3_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1496,7 +2079,13 @@ contains
           units = 'none'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ph_3D_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ph_3D_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1507,7 +2096,13 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%co3_sat_calc)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%co3_sat_calc, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1518,7 +2113,13 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%co3_sat_arag)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%co3_sat_arag, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1529,7 +2130,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%NITRIF)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%NITRIF, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1540,7 +2147,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DENITRIF)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DENITRIF, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1551,7 +2164,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2_PRODUCTION)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2_PRODUCTION, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1562,7 +2181,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2_CONSUMPTION)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2_CONSUMPTION, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1573,7 +2198,13 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%AOU)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%AOU, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1584,7 +2215,13 @@ contains
           units = 'W/m^2'
           vgrid = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PAR_avg)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PAR_avg, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1595,7 +2232,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_graze_TOT)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%auto_graze_TOT, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1606,7 +2249,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_TOT)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%photoC_TOT, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1617,7 +2266,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_NO3_TOT)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%photoC_NO3_TOT, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1628,7 +2283,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOC_prod)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOC_prod, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1639,7 +2300,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOC_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOC_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1650,7 +2317,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOCr_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOCr_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1661,7 +2334,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DON_prod)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DON_prod, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1672,7 +2351,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DON_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DON_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1683,7 +2368,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DONr_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DONr_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1694,7 +2385,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOP_prod)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOP_prod, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1705,7 +2402,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOP_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOP_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1716,7 +2419,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOPr_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOPr_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1727,7 +2436,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Fe_scavenge)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Fe_scavenge, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1738,7 +2453,13 @@ contains
           units = '1/y'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Fe_scavenge_rate)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Fe_scavenge_rate, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        ! Particulate 3D diags
@@ -1750,7 +2471,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%POC_FLUX_IN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%POC_FLUX_IN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1761,7 +2488,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%POC_PROD)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%POC_PROD, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1772,7 +2505,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%POC_REMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%POC_REMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1783,7 +2522,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%POC_REMIN_DIC)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%POC_REMIN_DIC, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1794,7 +2539,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PON_REMIN_NH4)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PON_REMIN_NH4, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1805,7 +2556,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%POP_REMIN_PO4)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%POP_REMIN_PO4, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1816,7 +2573,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CaCO3_FLUX_IN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CaCO3_FLUX_IN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1827,7 +2590,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CaCO3_PROD)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CaCO3_PROD, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1838,7 +2607,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CaCO3_REMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CaCO3_REMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1849,7 +2624,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SiO2_FLUX_IN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SiO2_FLUX_IN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1860,7 +2641,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SiO2_PROD)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SiO2_PROD, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1871,7 +2658,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SiO2_REMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SiO2_REMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1882,7 +2675,13 @@ contains
           units = 'ng/s/m^2'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%dust_FLUX_IN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%dust_FLUX_IN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1893,7 +2692,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%dust_REMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%dust_REMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1904,7 +2709,13 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%P_iron_FLUX_IN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%P_iron_FLUX_IN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1915,7 +2726,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%P_iron_PROD)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%P_iron_PROD, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1926,7 +2743,13 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%P_iron_REMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%P_iron_REMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        ! Autotroph 3D diags
@@ -1940,7 +2763,13 @@ contains
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%N_lim(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%N_lim(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
           
           if (count_only) then
@@ -1951,7 +2780,13 @@ contains
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%P_lim(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%P_lim(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1962,7 +2797,13 @@ contains
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Fe_lim(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%Fe_lim(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1974,7 +2815,13 @@ contains
                 units = 'none'
                 vgrid = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SiO3_lim(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%SiO3_lim(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              else
                 ind%SiO3_lim(n) = -1
              end if
@@ -1988,7 +2835,13 @@ contains
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%light_lim(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%light_lim(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1999,7 +2852,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoC(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2010,7 +2869,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_NO3(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoC_NO3(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2021,7 +2886,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoFe(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoFe(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2032,7 +2903,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoNO3(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoNO3(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2043,7 +2920,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoNH4(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoNH4(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2054,7 +2937,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOP_uptake(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%DOP_uptake(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2065,7 +2954,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PO4_uptake(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%PO4_uptake(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2076,7 +2971,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_graze(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_graze(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2087,7 +2988,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_graze_poc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_graze_poc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2098,7 +3005,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_graze_doc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_graze_doc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2109,7 +3022,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_graze_zoo(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_graze_zoo(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2120,7 +3039,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_loss(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_loss(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2131,7 +3056,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_loss_poc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_loss_poc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2142,7 +3073,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_loss_doc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_loss_doc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2153,7 +3090,13 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_agg(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_agg(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2167,7 +3110,13 @@ contains
                 units = 'mmol/m^3/s'
                 vgrid = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%bSi_form(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%bSi_form(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              else
                 ind%bSi_form(n) = -1
              end if
@@ -2182,7 +3131,13 @@ contains
                 units = 'mmol/m^3/s'
                 vgrid = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CaCO3_form(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CaCO3_form(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              else
                 ind%CaCO3_form(n) = -1
              end if
@@ -2197,7 +3152,13 @@ contains
                 units = 'mmol/m^3/s'
                 vgrid = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Nfix(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%Nfix(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              else
                 ind%Nfix(n) = -1
              end if
@@ -2213,7 +3174,13 @@ contains
           units    = 'mmol/m^3/s'
           vgrid    = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%tot_bSi_form)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%tot_bSi_form, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -2224,7 +3191,13 @@ contains
           units    = 'mmol/m^3/s'
           vgrid    = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%tot_CaCO3_form)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%tot_CaCO3_form, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        if (count_only) then
@@ -2235,7 +3208,13 @@ contains
           units    = 'mmol/m^3/s'
           vgrid    = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%tot_Nfix)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%tot_Nfix, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",        &
+                                    trim(sname), " to diags%add_diagnostic"
+            return
+          end if
        end if
 
        ! Zooplankton 3D diags
@@ -2249,7 +3228,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_loss(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_loss(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2260,7 +3245,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_loss_poc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_loss_poc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2271,7 +3262,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_loss_doc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_loss_doc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2282,7 +3279,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_graze(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_graze(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2293,7 +3296,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_graze_poc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_graze_poc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2304,7 +3313,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_graze_doc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_graze_doc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2315,7 +3330,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_graze_zoo(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_graze_zoo(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2326,7 +3347,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%x_graze_zoo(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%x_graze_zoo(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
        end do
@@ -2343,7 +3370,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO13C_FLUX_IN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO13C_FLUX_IN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2354,7 +3387,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO13C_PROD)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO13C_PROD, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2365,7 +3404,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO13C_REMIN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO13C_REMIN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2376,7 +3421,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO13C_prod)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO13C_prod, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2387,7 +3438,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO13C_remin)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO13C_remin, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2398,7 +3455,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca13CO3_FLUX_IN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca13CO3_FLUX_IN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2409,7 +3472,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca13CO3_PROD)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca13CO3_PROD, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2420,7 +3489,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca13CO3_REMIN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca13CO3_REMIN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2431,7 +3506,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo13C_TOT)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_photo13C_TOT, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2442,7 +3523,13 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DIC_d13C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DIC_d13C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2453,7 +3540,13 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DOC_d13C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DOC_d13C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2464,7 +3557,13 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_zooC_d13C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_zooC_d13C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2475,7 +3574,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO14C_FLUX_IN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO14C_FLUX_IN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2486,7 +3591,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO14C_PROD)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO14C_PROD, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2497,7 +3608,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO14C_REMIN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO14C_REMIN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2508,7 +3625,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO14C_prod)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO14C_prod, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2519,7 +3642,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO14C_remin)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO14C_remin, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2530,7 +3659,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca14CO3_FLUX_IN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca14CO3_FLUX_IN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2541,7 +3676,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca14CO3_PROD)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca14CO3_PROD, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2552,7 +3693,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca14CO3_REMIN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca14CO3_REMIN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2563,7 +3710,13 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo14C_TOT)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_photo14C_TOT, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2574,7 +3727,13 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DIC_d14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DIC_d14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2585,7 +3744,13 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DOC_d14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DOC_d14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2596,7 +3761,13 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_zooC_d14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_zooC_d14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           !  Nonstandard 2D fields
@@ -2609,7 +3780,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo13C_TOT_zint)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_photo13C_TOT_zint, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2620,7 +3797,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo14C_TOT_zint)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_photo14C_TOT_zint, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2631,7 +3814,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Jint_13Ctot)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Jint_13Ctot, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2642,7 +3831,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Jint_14Ctot)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Jint_14Ctot, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2653,7 +3848,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Jint_100m_13Ctot)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Jint_100m_13Ctot, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2664,7 +3865,13 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Jint_100m_14Ctot)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Jint_100m_14Ctot, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           !  Nonstandard autotroph 2D and 3D fields for each autotroph
@@ -2680,7 +3887,13 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca13CO3_form(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_Ca13CO3_form(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2691,7 +3904,13 @@ contains
                 units    = 'mmol/m^3 cm/s' 
                 vgrid    = 'none'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca13CO3_form_zint(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_Ca13CO3_form_zint(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2702,7 +3921,13 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca14CO3_form(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_Ca14CO3_form(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2713,7 +3938,13 @@ contains
                 units    = 'mmol/m^3 cm/s' 
                 vgrid    = 'none'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca14CO3_form_zint(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_Ca14CO3_form_zint(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2724,7 +3955,13 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_autotrophCaCO3_d13C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_autotrophCaCO3_d13C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2735,7 +3972,13 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_autotrophCaCO3_d14C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_autotrophCaCO3_d14C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2746,7 +3989,13 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo13C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_photo13C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2757,7 +4006,13 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo14C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_photo14C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2768,7 +4023,13 @@ contains
                 units    = 'mmol/m^3 cm/s'
                 vgrid    = 'none'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo13C_zint(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_photo13C_zint(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2779,7 +4040,13 @@ contains
                 units    = 'mmol/m^3 cm/s'
                 vgrid    = 'none'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo14C_zint(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_photo14C_zint(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2790,7 +4057,13 @@ contains
                 units    = 'permil'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_eps_autotroph(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_eps_autotroph(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2801,7 +4074,13 @@ contains
                 units    = 'permil'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_d13C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_d13C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2812,7 +4091,13 @@ contains
                 units    = 'permil'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_d14C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_d14C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2823,7 +4108,13 @@ contains
                 units    = 'm^3/mmol C/s'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_mui_to_co2star(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_mui_to_co2star(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ",    &
+                                          trim(sname), " to diags%add_diagnostic"
+                  return
+                end if
              end if
 
           end do
@@ -2838,7 +4129,13 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_eps_aq_g)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_eps_aq_g, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2849,7 +4146,13 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_eps_dic_g)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_eps_dic_g, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           !  Vars to sum up burial in sediments (2D)
@@ -2862,7 +4165,13 @@ contains
              units    = 'nmolC/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%calcToSed_13C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%calcToSed_13C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2873,7 +4182,13 @@ contains
              units    = 'nmolC/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pocToSed_13C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%pocToSed_13C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2884,7 +4199,13 @@ contains
              units    = 'nmolC/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%calcToSed_14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%calcToSed_14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2895,7 +4216,13 @@ contains
              units    = 'nmolC/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pocToSed_14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%pocToSed_14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
 
        end if  ! end of if ciso_on
@@ -2920,7 +4247,13 @@ contains
              sname = trim(marbl_tracer_metadata(n)%short_name) // "_RESTORE"
              units = 'mmol/m^3'
              vgrid = 'layer_avg'
-             call diags%add_diagnostic(lname, sname, units, vgrid, .false., tmp_id)
+             call diags%add_diagnostic(lname, sname, units, vgrid, .false.,   &
+                  tmp_id, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",     &
+                                       trim(sname), " to diags%add_diagnostic"
+               return
+             end if
           end if
        end do
        
