@@ -4,7 +4,7 @@ module marbl_interface_types
   use marbl_kinds_mod           , only : r8, log_kind, int_kind, char_len
   use marbl_constants_mod       , only : c0, c1
   use marbl_interface_constants , only : marbl_str_length
-  use marbl_logging             , only : marbl_log_type, error_msg
+  use marbl_logging             , only : marbl_log_type, error_msg, status_msg
 
   implicit none
 
@@ -333,7 +333,7 @@ contains
       case ('none')
         allocate(this%field_2d(num_elements))
       case DEFAULT
-        write(error_msg,"(3A)") "ERROR: ", trim(vgrid),                       &
+        write(error_msg,"(2A)") trim(vgrid),                                  &
                                 " is not a valid vertical grid for MARBL"
         call marbl_status_log%log_error(error_msg, subname)
         return
@@ -378,11 +378,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_diagnostics_set_to_zero(this)
+  subroutine marbl_diagnostics_set_to_zero(this, marbl_status_log)
 
     class(marbl_diagnostics_type), intent(inout) :: this
+    type(marbl_log_type),          intent(inout) :: marbl_status_log
 
     integer (int_kind) :: n
+    character(*), parameter :: subname="marbl_interface_types:diagnostics_set_to_zero"
 
     do n=1,this%diag_cnt
       if (allocated(this%diags(n)%field_2d)) then
@@ -391,9 +393,13 @@ contains
         this%diags(n)%field_3d(:, :) = c0
       else
         ! TODO abort abort abort
-        write(*,*) "ERROR: neither field_2d nor field_3d are allocated"
-        write(*,*) "Diag short name = ", trim(this%diags(n)%short_name)
-        write(*,*) "Diag long name = ", trim(this%diags(n)%long_name)
+        error_msg = "neither field_2d nor field_3d are allocated"
+        call marbl_status_log%log_error(error_msg, subname)
+        write(error_msg,"(2A)") "Diag short name = ", trim(this%diags(n)%short_name)
+        call marbl_status_log%log_error(error_msg, subname)
+        write(error_msg,"(2A)") "Diag long name = ", trim(this%diags(n)%long_name)
+        call marbl_status_log%log_error(error_msg, subname)
+        return
       end if
     end do
 
@@ -415,7 +421,7 @@ contains
     this%diag_cnt = this%diag_cnt + 1
     id = this%diag_cnt
     if (id.gt.size(this%diags)) then
-      error_msg = "ERROR: increase max number of diagnostics!"
+      error_msg = "not enough memory allocated for this number of diagnostics!"
       call marbl_status_log%log_error(error_msg, subname)
       return
     end if
@@ -525,7 +531,8 @@ contains
        year_first, year_last, year_align,          &
        date,                                       &
        time,                                       &
-       marbl_forcing_calendar_name)
+       marbl_forcing_calendar_name,                &
+       marbl_status_log)
 
     class(marbl_single_forcing_field_type), intent(inout) :: this
     integer (kind=int_kind),                intent(in)    :: num_elements
@@ -544,15 +551,17 @@ contains
     integer (kind=int_kind), optional,      intent(in)    :: year_align
     integer (kind=int_kind), optional,      intent(in)    :: date
     integer (kind=int_kind), optional,      intent(in)    :: time
-    type (marbl_forcing_monthly_every_ts_type), optional, target, intent(in) :: marbl_forcing_calendar_name
+    type(marbl_forcing_monthly_every_ts_type), optional, target, intent(in) :: marbl_forcing_calendar_name
+    type(marbl_log_type),                   intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
     character(len=char_len), dimension(6) :: valid_field_sources
-    integer (kind=int_kind) :: n
-    logical (log_kind)      :: has_valid_source
-    logical (log_kind)      :: has_valid_inputs
+    integer(kind=int_kind)  :: n
+    logical(log_kind)       :: has_valid_source
+    logical(log_kind)       :: has_valid_inputs
+    character(*), parameter :: subname = "marbl_interface_types:single_forcing_field_init"
     !-----------------------------------------------------------------------
 
     valid_field_sources(1) = "constant"
@@ -568,8 +577,10 @@ contains
        if (trim(field_source) .eq. trim(valid_field_sources(n))) has_valid_source = .true.
     enddo
     if (.not. has_valid_source) then
-       ! FIXME #23: use marbl_log_type to trap this error and then return!
-       write(*,*) "ERROR: ", trim(field_source), "is not a valid field source for MARBL"
+       write(error_msg,"(2A)") trim(field_source),                            &
+                               "is not a valid field source for MARBL"
+       call marbl_status_log%log_error(error_msg, subname)
+       return
     endif
 
     ! required variables for all forcing field sources
@@ -597,49 +608,52 @@ contains
     case('constant')
        if (.not.present(field_constant)) has_valid_inputs = .false.
        if (has_valid_inputs) then
-          write(*,*) "Adding constant forcing_field_type for ", this%marbl_varname 
+          write(status_msg,"(2A)") "Adding constant forcing_field_type for ", &
+                                   trim(this%marbl_varname)
+          call marbl_status_log%log_noerror(status_msg, subname)
           call marbl_forcing_constant_init(this%field_constant_info, field_constant)
-       else
-          ! FIXME #23: use marbl_log_type to trap this error and then return!
-          write(*,*) "ERROR: Call to MARBL does not have the correct optional arguments for ", trim(field_source)
        endif
 
     case('driver')
        if (.not.present(marbl_driver_varname)) has_valid_inputs = .false.
        if (has_valid_inputs) then
-          write(*,*) "Adding driver forcing_field_type for ", this%marbl_varname 
+          write(status_msg, "(2A)") "Adding driver forcing_field_type for ",  &
+                                    trim(this%marbl_varname)
+          call marbl_status_log%log_noerror(status_msg, subname)
           call this%field_driver_info%initialize(marbl_driver_varname)
-       else
-          ! FIXME #23: use marbl_log_type to trap this error and then return!
-          write(*,*) "ERROR: Call to MARBL does not have the correct optional arguments for ", trim(field_source)
        endif
 
     case('file') 
        if (.not.present(filename))     has_valid_inputs = .false.
        if (.not.present(file_varname)) has_valid_inputs = .false.
        if (has_valid_inputs) then
-          write(*,*) "Adding file forcing_field_type for ", this%marbl_varname 
+          write(status_msg,"(2A)") "Adding file forcing_field_type for ",     &
+                                   trim(this%marbl_varname)
+          call marbl_status_log%log_noerror(status_msg, subname)
           call this%field_file_info%initialize(&
                filename, file_varname, &
                temporal=temporal, year_first=year_first,   &
                year_last=year_last, year_align=year_align, &
                date=date, time=time)
-       else
-          ! FIXME #23: use marbl_log_type to trap this error and then return!
-          write(*,*) "ERROR: Call to MARBL does not have the correct optional arguments for ", trim(field_source)
        endif
 
     case('POP monthly calendar') 
        if (.not.present(marbl_forcing_calendar_name)) has_valid_inputs = .false.
        if (has_valid_inputs) then
-          write(*,*) "Adding calendar forcing_field_type for ", this%marbl_varname 
+          write(status_msg,"(2A)") "Adding calendar forcing_field_type for ", &
+                                   trim(this%marbl_varname)
+          call marbl_status_log%log_noerror(status_msg, subname)
           call this%field_monthly_calendar_info%initialize(marbl_forcing_calendar_name)
-       else
-          ! FIXME #23: use marbl_log_type to trap this error and then return!
-          write(*,*) "ERROR: Call to MARBL does not have the correct optional arguments for ", trim(field_source)
        endif
 
     end select
+
+    if (.not.has_valid_inputs) then
+      write(error_msg,"(3A)") "Call to MARBL does not have the correct ",     &
+                              "optional arguments for ", trim(field_source)
+      call marbl_status_log%log_error(error_msg, subname)
+      return
+    end if
 
    end subroutine marbl_single_forcing_field_init
 
@@ -673,7 +687,7 @@ contains
        year_first, year_last, year_align,   &
        date, time,                          &
        marbl_forcing_calendar_name,         &
-       id)
+       id, marbl_status_log)
 
     class(marbl_forcing_fields_type) , intent(inout) :: this
     character (char_len)             , intent(in)    :: field_source
@@ -692,17 +706,20 @@ contains
     integer (kind=int_kind), optional, intent(in)    :: date
     integer (kind=int_kind), optional, intent(in)    :: time
     integer (kind=int_kind)          , intent(out)   :: id
-    type (marbl_forcing_monthly_every_ts_type), optional, target, intent(in) :: marbl_forcing_calendar_name
+    type(marbl_forcing_monthly_every_ts_type), optional, target, intent(in) :: marbl_forcing_calendar_name
+    type(marbl_log_type),              intent(inout) :: marbl_status_log
 
     integer (kind=int_kind) :: num_elem
+    character(*), parameter :: subname = "marbl_interface_types:marbl_forcing_fields_add"
 
     ! Note - the following sets the indices into the marble interface type surface_input_forcings(:,indices)
 
     this%forcing_field_cnt = this%forcing_field_cnt + 1
     id = this%forcing_field_cnt
     if (id .gt. size(this%forcing_fields)) then
-      ! FIXME #23: use marbl_log_type to trap this error and then return!
-      print*, "ERROR: increase max number of forcing fields!"
+      error_msg = "not enough memory allocated for number of forcing fields!"
+      call marbl_status_log%log_error(error_msg, subname)
+      return
     end if
     num_elem = this%num_elements
 
@@ -716,7 +733,13 @@ contains
          temporal=temporal, year_first=year_first,       &
          year_last=year_last, year_align=year_align,     &
          date=date, time=time,                           &
-         marbl_forcing_calendar_name=marbl_forcing_calendar_name)
+         marbl_forcing_calendar_name=marbl_forcing_calendar_name,             &
+         marbl_status_log = marbl_status_log)
+    if (marbl_status_log%labort_MARBL) then
+      error_msg = "error code returned from this%forcing_fields%initialize"
+      call marbl_status_log%log_error(error_msg, subname)
+      return
+    end if
 
   end subroutine marbl_forcing_fields_add
 

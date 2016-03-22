@@ -274,7 +274,13 @@ contains
          num_elements                 = num_surface_elements,       &
          num_surface_forcing_fields   = num_surface_forcing_fields, &  
          surface_forcing_indices      = this%surface_forcing_ind,   &
-         surface_forcing_fields       = this%surface_forcing_fields)
+         surface_forcing_fields       = this%surface_forcing_fields,          &
+         marbl_status_log             = this%StatusLog)
+    if (this%statusLog%labort_marbl) then
+      error_msg = "error code returned from marbl_init_surface_forcing_fields"
+      call this%statusLog%log_error(error_msg, "marbl_interface::marbl_init()")
+      return
+    end if
 
     allocate(this%surface_input_forcings(num_surface_elements, num_surface_forcing_fields))
 

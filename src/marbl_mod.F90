@@ -769,7 +769,8 @@ contains
 
   subroutine marbl_init_surface_forcing_fields(&
        ciso_on, num_elements, num_surface_forcing_fields, &
-       surface_forcing_indices, surface_forcing_fields)
+       surface_forcing_indices, surface_forcing_fields,   &
+       marbl_status_log)
 
     !  Initialize the surface forcing_fields datatype with information from the
     !  namelist read
@@ -812,11 +813,12 @@ contains
 
     implicit none
 
-    logical (kind=log_kind)                   , intent(in)   :: ciso_on
-    integer (KIND=int_kind)                   , intent(in)   :: num_elements
-    integer (kind=int_kind)                   , intent(out)  :: num_surface_forcing_fields 
-    type(marbl_surface_forcing_indexing_type) , intent(out)  :: surface_forcing_indices         
-    type(marbl_forcing_fields_type)           , intent(out)  :: surface_forcing_fields
+    logical (kind=log_kind)                   , intent(in)    :: ciso_on
+    integer (KIND=int_kind)                   , intent(in)    :: num_elements
+    integer (kind=int_kind)                   , intent(out)   :: num_surface_forcing_fields
+    type(marbl_surface_forcing_indexing_type) , intent(out)   :: surface_forcing_indices
+    type(marbl_forcing_fields_type)           , intent(out)   :: surface_forcing_fields
+    type(marbl_log_type)                      , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -838,7 +840,7 @@ contains
          forcing_fields => surface_forcing_fields &
          )
 
-    ! First cound then allocate memory for surface forcing fields  
+    ! First count then allocate memory for surface forcing fields
 
     num_surface_forcing_fields = 0
     do imode = 1,2
@@ -859,7 +861,14 @@ contains
           units      = 'unknown' 
           call forcing_fields%add_forcing_field(&
                field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_driver_varname=varname, id=ind%surface_mask_id)
+               marbl_driver_varname=varname, id=ind%surface_mask_id,          &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (ciso_on) then
@@ -872,11 +881,16 @@ contains
              units      = 'unknown' 
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units, &
-                  marbl_driver_varname=varname, id=ind%d13c_id)
+                  marbl_driver_varname=varname, id=ind%d13c_id,               &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           end if
-       end if
 
-       if (ciso_on) then
           if (count_only) then
              num_surface_forcing_fields = num_surface_forcing_fields + 1
           else
@@ -886,11 +900,16 @@ contains
              units      = 'unknown' 
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units, &
-                  marbl_driver_varname=varname, id=ind%d14c_id)
+                  marbl_driver_varname=varname, id=ind%d14c_id,               &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           end if
-       end if
 
-       if (ciso_on) then
           if (count_only) then
              num_surface_forcing_fields = num_surface_forcing_fields + 1
           else
@@ -900,7 +919,14 @@ contains
              units      = 'unknown' 
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units,    &
-                  marbl_driver_varname=varname, id=ind%d14c_glo_avg_id)
+                  marbl_driver_varname=varname, id=ind%d14c_glo_avg_id,       &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           end if
        end if
 
@@ -913,7 +939,14 @@ contains
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
                field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_driver_varname=driver_varname, id=ind%u10_sqr_id)
+               marbl_driver_varname=driver_varname, id=ind%u10_sqr_id,        &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -925,7 +958,14 @@ contains
           units      = 'Temperature (C)'
           call forcing_fields%add_forcing_field(&
                field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_driver_varname=driver_varname, id=ind%sst_id)
+               marbl_driver_varname=driver_varname, id=ind%sst_id,            &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -937,7 +977,14 @@ contains
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
                field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_driver_varname=driver_varname, id=ind%sss_id)
+               marbl_driver_varname=driver_varname, id=ind%sss_id,            &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (lflux_gas_co2) then
@@ -950,7 +997,14 @@ contains
                 units      = 'unknown'
                 call forcing_fields%add_forcing_field(&
                      field_source=fsource, marbl_varname=varname, field_units=units, &
-                     field_constant = atm_co2_const, id=ind%xco2_id)
+                     field_constant = atm_co2_const, id=ind%xco2_id,          &
+                     marbl_status_log = marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ", &
+                                          trim(varname), " to forcing_fields%add"
+                  call marbl_status_log%log_error(error_msg, subname)
+                  return
+                end if
              end if
           else if (atm_co2_iopt == atm_co2_iopt_drv_prog .or. atm_co2_iopt == atm_co2_iopt_drv_diag) then 
              if (count_only) then
@@ -966,7 +1020,14 @@ contains
                 units      = 'unknown'
                 call forcing_fields%add_forcing_field(&
                      field_source=fsource, marbl_varname=varname, field_units=units,       &
-                     marbl_driver_varname=driver_varname, id=ind%xco2_id)
+                     marbl_driver_varname=driver_varname, id=ind%xco2_id,     &
+                     marbl_status_log = marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ", &
+                                          trim(varname), " to forcing_fields%add"
+                  call marbl_status_log%log_error(error_msg, subname)
+                  return
+                end if
              end if
           end if
        end if
@@ -981,7 +1042,14 @@ contains
              units      = 'unknown'
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units, &
-                  field_constant=atm_alt_co2_const, id=ind%xco2_alt_co2_id)
+                  field_constant=atm_alt_co2_const, id=ind%xco2_alt_co2_id,   &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           end if
        end if
 
@@ -995,7 +1063,14 @@ contains
              units      = 'unknown'
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units,    &
-                  marbl_driver_varname=driver_varname, id=ind%ifrac_id)
+                  marbl_driver_varname=driver_varname, id=ind%ifrac_id,       &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           end if
        elseif (gas_flux_forcing_iopt == gas_flux_forcing_iopt_file) then
           if (count_only) then
@@ -1006,7 +1081,14 @@ contains
              units      = 'unknown'
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units, &
-                  marbl_forcing_calendar_name=fice_file, id=ind%ifrac_id)
+                  marbl_forcing_calendar_name=fice_file, id=ind%ifrac_id,     &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           end if
        end if
 
@@ -1020,7 +1102,14 @@ contains
              units      = 'unknown'
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units,    &
-                  marbl_driver_varname=driver_varname, id=ind%xkw_id)
+                  marbl_driver_varname=driver_varname, id=ind%xkw_id,         &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           end if
        elseif (gas_flux_forcing_iopt == gas_flux_forcing_iopt_file) then
           if (count_only) then
@@ -1031,7 +1120,14 @@ contains
              units      = 'unknown'
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units,    &
-                  marbl_forcing_calendar_name=xkw_file, id=ind%xkw_id)
+                  marbl_forcing_calendar_name=xkw_file, id=ind%xkw_id,        &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           end if
        end if
 
@@ -1046,7 +1142,14 @@ contains
                 units      = 'unknown'
                 call forcing_fields%add_forcing_field(&
                      field_source=fsource, marbl_varname=varname, field_units=units,       &
-                     marbl_driver_varname=driver_varname, id=ind%atm_pressure_id)
+                     marbl_driver_varname=driver_varname, id=ind%atm_pressure_id, &
+                     marbl_status_log = marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  write(error_msg,"(3A)") "error code returned when adding ", &
+                                          trim(varname), " to forcing_fields%add"
+                  call marbl_status_log%log_error(error_msg, subname)
+                  return
+                end if
              end if
           end if
        elseif (gas_flux_forcing_iopt == gas_flux_forcing_iopt_file) then
@@ -1058,7 +1161,14 @@ contains
              units      = 'unknown'
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units,    &
-                  marbl_forcing_calendar_name=ap_file, id=ind%atm_pressure_id)
+                  marbl_forcing_calendar_name=ap_file, id=ind%atm_pressure_id,&
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           end if
        end if
 
@@ -1070,7 +1180,14 @@ contains
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
                field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=dust_flux_file, id=ind%dust_flux_id)
+               marbl_forcing_calendar_name=dust_flux_file, id=ind%dust_flux_id,&
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1081,7 +1198,14 @@ contains
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
                field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=iron_flux_file, id=ind%iron_flux_id)
+               marbl_forcing_calendar_name=iron_flux_file, id=ind%iron_flux_id,&
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1095,18 +1219,34 @@ contains
              ! stream_index = stream_index + 1 - line in forcing field routine
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units, &
-                  unit_conv_factor = ndep_shr_stream_scale_factor, &
-                  file_varname = file_varname, &
-                  year_first = ndep_shr_stream_year_first, &
-                  year_last  = ndep_shr_stream_year_last, &
-                  year_align = ndep_shr_stream_year_align, &
-                  filename   = ndep_shr_stream_file, &
-                  id=ind%nox_flux_id)
+                  unit_conv_factor = ndep_shr_stream_scale_factor,            &
+                  file_varname = file_varname,                                &
+                  year_first = ndep_shr_stream_year_first,                    &
+                  year_last  = ndep_shr_stream_year_last,                     &
+                  year_align = ndep_shr_stream_year_align,                    &
+                  filename   = ndep_shr_stream_file,                          &
+                  id=ind%nox_flux_id,                                         &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           else
              fsource    = 'POP monthly calendar'
              call forcing_fields%add_forcing_field(&
-                  field_source=fsource, marbl_varname=varname, field_units=units, &
-                  marbl_forcing_calendar_name=nox_flux_monthly_file, id=ind%nox_flux_id)
+                  field_source=fsource, marbl_varname=varname,                &
+                  field_units=units,                                          &
+                  marbl_forcing_calendar_name=nox_flux_monthly_file,          &
+                  id=ind%nox_flux_id,                                         &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           end if
        end if
 
@@ -1119,19 +1259,38 @@ contains
              fsource    = 'file'
              file_varname = 'NHx_deposition'
              call forcing_fields%add_forcing_field(&
-                  field_source=fsource, marbl_varname=varname, field_units=units,    &
-                  unit_conv_factor = ndep_shr_stream_scale_factor, &
-                  file_varname = file_varname, &
-                  year_first = ndep_shr_stream_year_first, &
-                  year_last  = ndep_shr_stream_year_last, &
-                  year_align = ndep_shr_stream_year_align, &
-                  filename   = ndep_shr_stream_file, &
-                  id=ind%nhy_flux_id)
+                  field_source=fsource,                                       &
+                  marbl_varname=varname,                                      &
+                  field_units=units,                                          &
+                  unit_conv_factor = ndep_shr_stream_scale_factor,            &
+                  file_varname = file_varname,                                &
+                  year_first = ndep_shr_stream_year_first,                    &
+                  year_last  = ndep_shr_stream_year_last,                     &
+                  year_align = ndep_shr_stream_year_align,                    &
+                  filename   = ndep_shr_stream_file,                          &
+                  id=ind%nhy_flux_id,                                         &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           else
              fsource    = 'POP monthly calendar'
              call forcing_fields%add_forcing_field(&
-                  field_source=fsource, marbl_varname=varname, field_units=units, &
-                  marbl_forcing_calendar_name=nhy_flux_monthly_file, id=ind%nhy_flux_id)
+                  field_source=fsource,                                       &
+                  marbl_varname=varname,                                      &
+                  field_units=units,                                          &
+                  marbl_forcing_calendar_name=nhy_flux_monthly_file,          &
+                  id=ind%nhy_flux_id,                                         &
+                  marbl_status_log = marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               write(error_msg,"(3A)") "error code returned when adding ",    &
+                                       trim(varname), " to forcing_fields%add"
+               call marbl_status_log%log_error(error_msg, subname)
+               return
+             end if
           end if
        end if
 
@@ -1142,8 +1301,18 @@ contains
           varname    = 'DIN river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=din_riv_flux_file, id=ind%din_riv_flux_id)
+               field_source=fsource, &
+               marbl_varname=varname, &
+               field_units=units, &
+               marbl_forcing_calendar_name=din_riv_flux_file, &
+               id=ind%din_riv_flux_id, &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1153,8 +1322,18 @@ contains
           varname    = 'DIP river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=dip_riv_flux_file, id=ind%dip_riv_flux_id)
+               field_source=fsource, &
+               marbl_varname=varname, &
+               field_units=units, &
+               marbl_forcing_calendar_name=dip_riv_flux_file, &
+               id=ind%dip_riv_flux_id, &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1164,8 +1343,18 @@ contains
           varname    = 'DON river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=don_riv_flux_file, id=ind%don_riv_flux_id)
+               field_source=fsource, &
+               marbl_varname=varname, &
+               field_units=units, &
+               marbl_forcing_calendar_name=don_riv_flux_file, &
+               id=ind%don_riv_flux_id, &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1175,8 +1364,18 @@ contains
           varname    = 'DOP river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=dop_riv_flux_file, id=ind%dop_riv_flux_id)
+               field_source=fsource, &
+               marbl_varname=varname, &
+               field_units=units, &
+               marbl_forcing_calendar_name=dop_riv_flux_file, &
+               id=ind%dop_riv_flux_id, &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1186,8 +1385,18 @@ contains
           varname    = 'DSI river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=dsi_riv_flux_file, id=ind%dsi_riv_flux_id)
+               field_source=fsource, &
+               marbl_varname=varname, &
+               field_units=units, &
+               marbl_forcing_calendar_name=dsi_riv_flux_file, &
+               id=ind%dsi_riv_flux_id, &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1197,8 +1406,18 @@ contains
           varname    = 'DFE river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=dfe_riv_flux_file, id=ind%dfe_riv_flux_id)
+               field_source=fsource, &
+               marbl_varname=varname, &
+               field_units=units, &
+               marbl_forcing_calendar_name=dfe_riv_flux_file, &
+               id=ind%dfe_riv_flux_id, &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1208,8 +1427,18 @@ contains
           varname    = 'DIC river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=dic_riv_flux_file, id=ind%dic_riv_flux_id)
+               field_source=fsource, &
+               marbl_varname=varname, &
+               field_units=units, &
+               marbl_forcing_calendar_name=dic_riv_flux_file, &
+               id=ind%dic_riv_flux_id, &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1219,8 +1448,18 @@ contains
           varname    = 'ALK river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=alk_riv_flux_file, id=ind%alk_riv_flux_id)
+               field_source=fsource, &
+               marbl_varname=varname, &
+               field_units=units, &
+               marbl_forcing_calendar_name=alk_riv_flux_file, &
+               id=ind%alk_riv_flux_id, &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1230,8 +1469,18 @@ contains
           varname    = 'DOC river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=doc_riv_flux_file, id=ind%doc_riv_flux_id)
+               field_source=fsource, &
+               marbl_varname=varname, &
+               field_units=units, &
+               marbl_forcing_calendar_name=doc_riv_flux_file, &
+               id=ind%doc_riv_flux_id, &
+               marbl_status_log = marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(error_msg,"(3A)") "error code returned when adding ",       &
+                                    trim(varname), " to forcing_fields%add"
+            call marbl_status_log%log_error(error_msg, subname)
+            return
+          end if
        end if
 
     end do
@@ -1629,7 +1878,13 @@ contains
          sed_denitrif, other_remin, nitrif, denitrif,       &
          tracers(o2_ind, :), o2_production, o2_consumption, &
          fe_scavenge, fe_scavenge_rate,                     &
-         interior_forcing_diags)
+         interior_forcing_diags, &
+         marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+       error_msg = "error code returned from marbl_diagnostics_set_interior_forcing"
+       call marbl_status_log%log_error(error_msg, "marbl_interface::set_interior_forcing")
+       return
+    end if
 
     ! Compute resotre diagnostics
     do n = 1, ecosys_tracer_cnt
