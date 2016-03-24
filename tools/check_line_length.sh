@@ -7,11 +7,12 @@
 # -----------------------------------------------------------------------------
 
 usage() {
-  echo "./check_line_length.sh [-n N] [-s]"
+  echo "./check_line_length.sh [-n N] [-s] [-d DIR]"
   echo ""
   echo "-n N    |    check for lines exceeding N characters (default=132)"
   echo "-s      |    silent mode - suppress output to stdout"
   echo "        |                  (rely on return code to detect problem)"
+  echo "-d DIR  |    compare code in directory DIR"
 }
 
 # -----------------------------------------------------------------------------
@@ -28,6 +29,7 @@ parse_args() {
 # DEFAULT SETTINGS
 SILENT=FALSE
 LINELIMIT=132
+SRC_DIR=../src
 
   while [ $# -gt 0 ]; do
     case $1 in
@@ -39,10 +41,18 @@ LINELIMIT=132
         LINELIMIT=$2
         shift
       ;;
-      -s )
+      -s|--silent )
         SILENT=TRUE
       ;;
-      -h )
+      -d|--dir|--src_dir )
+        if [ $# -eq 1 ]; then
+          echo "ERROR: you must provide directory with the -d option"
+          exit -1
+        fi
+        SRC_DIR=$2
+        shift
+      ;;
+      -h|--help )
         usage
         exit 0
       ;;
@@ -77,7 +87,14 @@ process_results() {
 parse_args $@ 
 
 FOUND=FALSE
-for file in ../src/*.F90
+FILELIST=""
+if [ -d ${SRC_DIR} ]; then
+  FILELIST=`find ${SRC_DIR} -name "*.F90"`
+fi
+if [ -z $FILELIST ] && [ "$SILENT" != "TRUE" ]; then
+  echo "WARNING: no .F90 files found in ${SRC_DIR}"
+fi
+for file in $FILELIST
 do
   if [[ ! -z `check_length` ]]; then
     FOUND=TRUE
