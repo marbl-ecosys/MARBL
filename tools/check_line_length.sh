@@ -91,7 +91,7 @@ FILELIST=""
 if [ -d ${SRC_DIR} ]; then
   FILELIST=`find ${SRC_DIR} -name "*.F90"`
 fi
-if [ -z $FILELIST ] && [ "$SILENT" != "TRUE" ]; then
+if [ -z "$FILELIST" ] && [ "$SILENT" != "TRUE" ]; then
   echo "WARNING: no .F90 files found in ${SRC_DIR}"
 fi
 for file in $FILELIST
