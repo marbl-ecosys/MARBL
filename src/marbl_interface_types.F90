@@ -146,6 +146,7 @@ module marbl_interface_types
   type, public :: marbl_surface_forcing_output_type
      real (r8), allocatable, dimension(:)   :: flux_o2     
      real (r8), allocatable, dimension(:)   :: flux_co2     
+     real (r8), allocatable, dimension(:)   :: totalChl
    contains
      procedure, public :: construct => marbl_surface_forcing_output_constructor
   end type marbl_surface_forcing_output_type
@@ -349,8 +350,9 @@ contains
     class(marbl_surface_forcing_output_type), intent(inout) :: this
     integer (int_kind), intent(in) :: num_elements
 
-    allocate (this%flux_co2          (num_elements))            
-    allocate (this%flux_o2           (num_elements))            
+    allocate (this%totalChl(num_elements))
+    allocate (this%flux_co2(num_elements))
+    allocate (this%flux_o2(num_elements))
 
   end subroutine marbl_surface_forcing_output_constructor
 

@@ -2516,6 +2516,7 @@ contains
 
          flux_o2              => surface_forcing_output%flux_o2(:),                                 &
          flux_co2             => surface_forcing_output%flux_co2(:),                                &
+         totalChl             => surface_forcing_output%totalChl(:),                                &
 
          ph_prev_surf         => saved_state%ph_prev_surf,                                          &
          ph_prev_alt_co2_surf => saved_state%ph_prev_alt_co2_surf,                                  &
@@ -2534,6 +2535,15 @@ contains
     !-----------------------------------------------------------------------
 
     stf(:, :) = c0
+
+    !-----------------------------------------------------------------------
+    !  Compute total chlorophyll
+    !-----------------------------------------------------------------------
+
+    totalChl(:) = c0
+    do auto_ind = 1,size(autotrophs)
+      totalChl(:) = totalChl(:) + max(c0, surface_vals(:,autotrophs(auto_ind)%Chl_ind))
+    end do
 
     !-----------------------------------------------------------------------
     !  calculate gas flux quantities if necessary
