@@ -44,6 +44,9 @@ module marbl_interface_types
 
   !****************************************************************************
 
+  ! NOTE: when adding a new surface forcing output field (a field that the GCM
+  !       may need to pass to flux coupler), remember to add a new index for it
+  !       as well.
   type, public :: marbl_surface_forcing_output_indexing_type
     integer(int_kind) :: flux_o2_id = 0
     integer(int_kind) :: flux_co2_id = 0
@@ -175,7 +178,7 @@ module marbl_interface_types
   type, public :: marbl_surface_forcing_output_type
      integer :: sfo_cnt
      integer :: num_elements
-     type(marbl_single_sfo_type), dimension(:), pointer :: sfo
+     type(marbl_single_sfo_type), dimension(:), pointer :: sfo => NULL()
    contains
      procedure, public :: add_sfo => marbl_sfo_add
   end type marbl_surface_forcing_output_type
@@ -389,7 +392,7 @@ contains
       case("flux_o2")
         this%long_name  = "Oxygen Flux"
         this%short_name = "flux_o2"
-        this%units      = "unknown"
+        this%units      = "nmol/cm^2/s"
         sfo_ind%flux_o2_id = id
       case("flux_co2")
         this%long_name  = "Carbon Dioxide Flux"
@@ -399,11 +402,11 @@ contains
       case("totalChl")
         this%long_name  = "Total Chlorophyll Concentration"
         this%short_name = "totalChl"
-        this%units      = "unknown"
+        this%units      = "mg/m^3"
         sfo_ind%totalChl_id = id
       case DEFAULT
-        write(error_msg, "(3A)") trim(field_name), " is not a valid surface", &
-                                 " forcing field name"
+        write(error_msg, "(2A)") trim(field_name),                            &
+                                 " is not a valid surface forcing field name"
         call marbl_status_log%log_error(error_msg, subname)
         return
     end select
@@ -414,10 +417,25 @@ contains
     this%forcing_field = c0
 
   end subroutine marbl_single_sfo_constructor
+
   !*****************************************************************************
 
   subroutine marbl_sfo_add(this, num_elements, field_name, sfo_id,            &
                            marbl_status_log)
+
+  ! MARBL uses pointers to create an extensible allocatable array. The surface
+  ! forcing output fields (part of the intent(out) of this routine) are stored
+  ! in this%sfo(:). To allow the size of this%sfo to grow, the process for
+  ! adding a new field is:
+  !
+  ! 1) allocate new_sfo to be size N (one element larger than this%sfo)
+  ! 2) copy this%sfo into first N-1 elements of new_sfo
+  ! 3) newest surface forcing output (field_name) is Nth element of new_sfo
+  ! 4) deallocate / nullify this%sfo
+  ! 5) point this%sfo => new_sfo
+  !
+  ! If the number of possible surface forcing output fields grows, this workflow
+  ! may need to be replaced with something that is not O(N^2).
 
     class(marbl_surface_forcing_output_type), intent(inout) :: this
     character(len=*),     intent(in)    :: field_name
@@ -434,22 +452,22 @@ contains
     else
       old_size = 0
     end if
-
     sfo_id = old_size+1
+
+    ! 1) allocate new_sfo to be size N (one element larger than this%sfo)
     allocate(new_sfo(sfo_id))
+
+    ! 2) copy this%sfo into first N-1 elements of new_sfo
     do n=1,old_size
       new_sfo(n)%long_name  = this%sfo(n)%long_name
       new_sfo(n)%short_name = this%sfo(n)%short_name
       new_sfo(n)%units      = this%sfo(n)%units
-
       allocate(new_sfo(n)%forcing_field(num_elements))
       new_sfo(n)%forcing_field = this%sfo(n)%forcing_field
       deallocate(this%sfo(n)%forcing_field)
     end do
-    if (old_size.gt.0) then
-      deallocate(this%sfo)
-      nullify(this%sfo)
-    end if
+
+    ! 3) newest surface forcing output (field_name) is Nth element of new_sfo
     call new_sfo(sfo_id)%construct(num_elements, field_name, sfo_id,          &
                                    marbl_status_log)
     if (marbl_status_log%labort_marbl) then
@@ -457,6 +475,14 @@ contains
       call marbl_status_log%log_error(error_msg, subname)
       return
     end if
+
+    ! 4) deallocate / nullify this%sfo
+    if (old_size.gt.0) then
+      deallocate(this%sfo)
+      nullify(this%sfo)
+    end if
+
+    ! 5) point this%sfo => new_sfo
     this%sfo=>new_sfo
 
   end subroutine marbl_sfo_add
