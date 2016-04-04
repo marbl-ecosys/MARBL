@@ -6,6 +6,7 @@ module marbl_interface_types
   use marbl_interface_constants , only : marbl_str_length
   use marbl_logging             , only : marbl_log_type
   use marbl_logging             , only : error_msg
+  use marbl_logging             , only : status_msg
 
   implicit none
 
@@ -406,6 +407,8 @@ contains
         call marbl_status_log%log_error(error_msg, subname)
         return
     end select
+    write(status_msg, "(3A)") "Adding ", trim(field_name), " to surface forcing outputs"
+    call marbl_status_log%log_noerror(status_msg, subname)
 
     allocate(this%forcing_field(num_elements))
     this%forcing_field = c0
