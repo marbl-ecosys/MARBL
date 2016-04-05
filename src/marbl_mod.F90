@@ -2666,6 +2666,7 @@ contains
 
     !  Compute surface forcing fluxes 
 
+    use marbl_interface_types , only : sfo_ind
     use marbl_schmidt_number_mod , only : schmidt_co2_surf  
     use marbl_oxygen             , only : schmidt_o2_surf
     use marbl_co2calc_mod        , only : marbl_co2calc_surf
@@ -2721,6 +2722,9 @@ contains
     real (r8)               :: ph_new(num_elements)     ! computed ph from solver
     real (r8)               :: xkw_ice(num_elements)    ! common portion of piston vel., (1-fice)*xkw (cm/s)
     real (r8)               :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (mmol/m^3)
+    real (r8)               :: totalChl_loc(num_elements)  ! local value of totalChl
+    real (r8)               :: flux_co2_loc(num_elements)  ! local value of co2 flux
+    real (r8)               :: flux_o2_loc(num_elements)   ! local value of o2 flux
     logical (log_kind)      :: mask(num_elements)
     type(thermodynamic_coefficients_type), dimension(num_elements) :: co3_coeffs
     !-----------------------------------------------------------------------
@@ -2769,9 +2773,6 @@ contains
 
          stf                  => surface_tracer_fluxes(:,:),                                        &
 
-         flux_o2              => surface_forcing_output%flux_o2(:),                                 &
-         flux_co2             => surface_forcing_output%flux_co2(:),                                &
-
          ph_prev_surf         => saved_state%ph_prev_surf,                                          &
          ph_prev_alt_co2_surf => saved_state%ph_prev_alt_co2_surf,                                  &
 
@@ -2789,6 +2790,19 @@ contains
     !-----------------------------------------------------------------------
 
     stf(:, :) = c0
+
+    !-----------------------------------------------------------------------
+    !  Compute total chlorophyll
+    !-----------------------------------------------------------------------
+
+    if (sfo_ind%totalChl_id.ne.0) then
+      totalChl_loc = c0
+      do auto_ind = 1,size(autotrophs)
+        totalChl_loc = totalChl_loc +                                         &
+                       max(c0, surface_vals(:,autotrophs(auto_ind)%Chl_ind))
+      end do
+      surface_forcing_output%sfo(sfo_ind%totalChl_id)%forcing_field = totalChl_loc
+    end if
 
     !-----------------------------------------------------------------------
     !  calculate gas flux quantities if necessary
@@ -2818,12 +2832,16 @@ contains
           where (surface_mask(:) /= c0) 
              pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
              o2sat(:) = ap_used(:) * o2sat_1atm(:)
-             flux_o2(:) = pv_o2(:) * (o2sat(:) - surface_vals(:, o2_ind))
-             stf(:, o2_ind) = stf(:, o2_ind) + flux_o2(:)
+             flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - surface_vals(:, o2_ind))
+             stf(:, o2_ind) = stf(:, o2_ind) + flux_o2_loc(:)
           elsewhere
              pv_o2(:) = c0
              o2sat(:) = c0
+             flux_o2_loc = c0
           end where
+          if (sfo_ind%flux_o2_id.ne.0) then
+            surface_forcing_output%sfo(sfo_ind%flux_o2_id)%forcing_field = flux_o2_loc
+          end if
        else
           schmidt_o2(:) = c0
           pv_o2(:)      = c0
@@ -2892,7 +2910,10 @@ contains
              return
           end if
 
-          flux_co2(:) = pv_co2(:) * dco2star(:)
+          flux_co2_loc(:) = pv_co2(:) * dco2star(:)
+          if (sfo_ind%flux_co2_id.ne.0) then
+            surface_forcing_output%sfo(sfo_ind%flux_co2_id)%forcing_field = flux_co2_loc
+          end if
  
           !-------------------------------------------------------------------
           !  The following variables need to be shared with other modules,
@@ -2956,7 +2977,7 @@ contains
           !  nmol/cm^2/s (positive down) to kg CO2/m^2/s (positive down)
           !-----------------------------------------------------------------------
 
-          stf(:, dic_ind)         = stf(:, dic_ind)         + FLUX_CO2(:)
+          stf(:, dic_ind)         = stf(:, dic_ind)         + flux_co2_loc(:)
           stf(:, dic_alt_co2_ind) = stf(:, dic_alt_co2_ind) + FLUX_ALT_CO2(:)
 
        else

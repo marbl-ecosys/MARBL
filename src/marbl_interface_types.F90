@@ -4,7 +4,9 @@ module marbl_interface_types
   use marbl_kinds_mod           , only : r8, log_kind, int_kind, char_len
   use marbl_constants_mod       , only : c0, c1
   use marbl_interface_constants , only : marbl_str_length
-  use marbl_logging             , only : marbl_log_type, error_msg, status_msg
+  use marbl_logging             , only : marbl_log_type
+  use marbl_logging             , only : error_msg
+  use marbl_logging             , only : status_msg
 
   implicit none
 
@@ -39,6 +41,19 @@ module marbl_interface_types
      integer(int_kind) :: d14c_id             = 0
      integer(int_kind) :: d14c_glo_avg_id     = 0
   end type marbl_surface_forcing_indexing_type
+
+  !****************************************************************************
+
+  ! NOTE: when adding a new surface forcing output field (a field that the GCM
+  !       may need to pass to flux coupler), remember to add a new index for it
+  !       as well.
+  type, public :: marbl_surface_forcing_output_indexing_type
+    integer(int_kind) :: flux_o2_id = 0
+    integer(int_kind) :: flux_co2_id = 0
+    integer(int_kind) :: totalChl_id = 0
+  end type marbl_surface_forcing_output_indexing_type
+
+  type(marbl_surface_forcing_output_indexing_type), public :: sfo_ind
 
   !*****************************************************************************
 
@@ -108,7 +123,7 @@ module marbl_interface_types
   !*****************************************************************************
 
   type, private :: marbl_single_diagnostic_type
-     ! marbl_singl_diagnostic : 
+     ! marbl_single_diagnostic : 
      ! a private type, this contains both the metadata
      ! and the actual diagnostic data for a single
      ! diagnostic quantity. Data must be accessed via
@@ -144,11 +159,28 @@ module marbl_interface_types
 
   !*****************************************************************************
 
-  type, public :: marbl_surface_forcing_output_type
-     real (r8), allocatable, dimension(:)   :: flux_o2     
-     real (r8), allocatable, dimension(:)   :: flux_co2     
+  type, public :: marbl_single_sfo_type
+     ! marbl_single_sfo :
+     ! a private type, this contains both the metadata
+     ! and the actual data for a single surface forcing
+     ! field that needs to be passed to the GCM / flux
+     ! coupler. Data must be accesed via the
+     ! marbl_surface_forcing_output_type data structure.
+     character (len=char_len)            :: long_name
+     character (len=char_len)            :: short_name
+     character (len=char_len)            :: units
+     real(r8), allocatable, dimension(:) :: forcing_field
    contains
-     procedure, public :: construct => marbl_surface_forcing_output_constructor
+     procedure :: construct  => marbl_single_sfo_constructor
+  end type marbl_single_sfo_type
+  !*****************************************************************************
+
+  type, public :: marbl_surface_forcing_output_type
+     integer :: sfo_cnt
+     integer :: num_elements
+     type(marbl_single_sfo_type), dimension(:), pointer :: sfo => NULL()
+   contains
+     procedure, public :: add_sfo => marbl_sfo_add
   end type marbl_surface_forcing_output_type
 
   !*****************************************************************************
@@ -350,15 +382,115 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_surface_forcing_output_constructor(this, num_elements)
+  subroutine marbl_single_sfo_constructor(this, num_elements, field_name, id, &
+                                          marbl_status_log)
+    class(marbl_single_sfo_type), intent(inout) :: this
+    character(len=*),             intent(in)    :: field_name
+    integer(int_kind),            intent(in)    :: num_elements
+    integer(int_kind),            intent(in)    :: id
+    type(marbl_log_type),         intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname =                                  &
+      'marbl_interface_types:marbl_single_sfo_constructor'
+
+    select case (trim(field_name))
+      case("flux_o2")
+        this%long_name  = "Oxygen Flux"
+        this%short_name = "flux_o2"
+        this%units      = "nmol/cm^2/s"
+        sfo_ind%flux_o2_id = id
+      case("flux_co2")
+        this%long_name  = "Carbon Dioxide Flux"
+        this%short_name = "flux_co2"
+        this%units      = "nmol/cm^2/s"
+        sfo_ind%flux_co2_id = id
+      case("totalChl")
+        this%long_name  = "Total Chlorophyll Concentration"
+        this%short_name = "totalChl"
+        this%units      = "mg/m^3"
+        sfo_ind%totalChl_id = id
+      case DEFAULT
+        write(error_msg, "(2A)") trim(field_name),                            &
+                                 " is not a valid surface forcing field name"
+        call marbl_status_log%log_error(error_msg, subname)
+        return
+    end select
+    write(status_msg, "(3A)") "Adding ", trim(field_name), " to surface forcing outputs"
+    call marbl_status_log%log_noerror(status_msg, subname)
+
+    allocate(this%forcing_field(num_elements))
+    this%forcing_field = c0
+
+  end subroutine marbl_single_sfo_constructor
+
+  !*****************************************************************************
+
+  subroutine marbl_sfo_add(this, num_elements, field_name, sfo_id,            &
+                           marbl_status_log)
+
+  ! MARBL uses pointers to create an extensible allocatable array. The surface
+  ! forcing output fields (part of the intent(out) of this routine) are stored
+  ! in this%sfo(:). To allow the size of this%sfo to grow, the process for
+  ! adding a new field is:
+  !
+  ! 1) allocate new_sfo to be size N (one element larger than this%sfo)
+  ! 2) copy this%sfo into first N-1 elements of new_sfo
+  ! 3) newest surface forcing output (field_name) is Nth element of new_sfo
+  ! 4) deallocate / nullify this%sfo
+  ! 5) point this%sfo => new_sfo
+  !
+  ! If the number of possible surface forcing output fields grows, this workflow
+  ! may need to be replaced with something that is not O(N^2).
 
     class(marbl_surface_forcing_output_type), intent(inout) :: this
-    integer (int_kind), intent(in) :: num_elements
+    character(len=*),     intent(in)    :: field_name
+    integer(int_kind),    intent(in)    :: num_elements
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+    integer(int_kind),    intent(out)   :: sfo_id
 
-    allocate (this%flux_co2          (num_elements))            
-    allocate (this%flux_o2           (num_elements))            
+    type(marbl_single_sfo_type), dimension(:), pointer :: new_sfo
+    integer :: n, old_size
+    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_sfo_add'
 
-  end subroutine marbl_surface_forcing_output_constructor
+    if (associated(this%sfo)) then
+      old_size = size(this%sfo)
+    else
+      old_size = 0
+    end if
+    sfo_id = old_size+1
+
+    ! 1) allocate new_sfo to be size N (one element larger than this%sfo)
+    allocate(new_sfo(sfo_id))
+
+    ! 2) copy this%sfo into first N-1 elements of new_sfo
+    do n=1,old_size
+      new_sfo(n)%long_name  = this%sfo(n)%long_name
+      new_sfo(n)%short_name = this%sfo(n)%short_name
+      new_sfo(n)%units      = this%sfo(n)%units
+      allocate(new_sfo(n)%forcing_field(num_elements))
+      new_sfo(n)%forcing_field = this%sfo(n)%forcing_field
+      deallocate(this%sfo(n)%forcing_field)
+    end do
+
+    ! 3) newest surface forcing output (field_name) is Nth element of new_sfo
+    call new_sfo(sfo_id)%construct(num_elements, field_name, sfo_id,          &
+                                   marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      error_msg = "error code returned from new_sfo%construct"
+      call marbl_status_log%log_error(error_msg, subname)
+      return
+    end if
+
+    ! 4) deallocate / nullify this%sfo
+    if (old_size.gt.0) then
+      deallocate(this%sfo)
+      nullify(this%sfo)
+    end if
+
+    ! 5) point this%sfo => new_sfo
+    this%sfo=>new_sfo
+
+  end subroutine marbl_sfo_add
 
   !*****************************************************************************
 

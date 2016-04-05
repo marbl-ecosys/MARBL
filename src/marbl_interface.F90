@@ -222,8 +222,6 @@ contains
          
     call this%interior_forcing_input%construct(num_levels, num_PAR_subcols)
 
-    call this%surface_forcing_output%construct(num_surface_elements)
-    
     call this%saved_state%construct(num_surface_elements, num_levels)
 
     allocate(this%surface_vals(num_surface_elements, ecosys_used_tracer_cnt))
