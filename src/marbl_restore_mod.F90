@@ -43,8 +43,6 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
 
   use marbl_kinds_mod   , only : char_len, int_kind, i4, log_kind
   use marbl_logging     , only : marbl_log_type
-  use marbl_logging     , only : error_msg
-  use marbl_logging     , only : status_msg
   use marbl_interface_types, only : marbl_tracer_metadata_type
   use marbl_namelist_mod, only : marbl_nl_cnt
   use marbl_namelist_mod, only : marbl_nl_buffer_size
@@ -79,6 +77,7 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   integer(int_kind) :: nml_error, k, n, t
   character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
   character(*), parameter :: subname = 'ecosys_restore:Init'
+  character(len=char_len) :: log_message
 
   !-----------------------------------------------------------------------
 
@@ -110,8 +109,8 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   tmp_nl_buffer = marbl_namelist(nl_buffer, 'ecosys_restore_nml')
   read(tmp_nl_buffer, nml=ecosys_restore_nml, iostat=nml_error)
   if (nml_error /= 0) then
-     error_msg = "Error reading ecosys_restore_nml"
-     call status_log%log_error(error_msg, subname)
+     log_message = "Error reading ecosys_restore_nml"
+     call status_log%log_error(log_message, subname)
      return
   else
     ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_restore_nml
@@ -136,21 +135,21 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   endif
 
   ! FIXME #35: assert(len(restore_short_names) == len(restore_filenames))
-  write(status_msg, "(A)") "Found restore variables : "
-  call status_log%log_noerror(status_msg, subname)
+  write(log_message, "(A)") "Found restore variables : "
+  call status_log%log_noerror(log_message, subname)
   do t = 1, size(restore_short_names)
      if (len(trim(restore_short_names(t))) > 0) then
         this%lrestore_any = .true.
-        write(status_msg, "(6A)") trim(restore_short_names(t)), " --> ", &
+        write(log_message, "(6A)") trim(restore_short_names(t)), " --> ", &
              trim(restore_filenames(t)), " [ ", trim(restore_file_varnames(t)), " ]"
-        call status_log%log_noerror(status_msg, subname)
+        call status_log%log_noerror(log_message, subname)
         do n=1,size(tracer_metadata)
           if (trim(restore_short_names(t)).eq.trim(tracer_metadata(n)%short_name)) exit
         end do
         if (n.le.size(tracer_metadata)) then
-          write(status_msg, "(3A,I0)") "Index for ", trim(restore_short_names(t)), &
+          write(log_message, "(3A,I0)") "Index for ", trim(restore_short_names(t)), &
                                        " is ", n
-          call status_log%log_noerror(status_msg, subname)
+          call status_log%log_noerror(log_message, subname)
           allocate(this%tracer_restore(n)%inv_tau(domain%km))
           allocate(this%tracer_restore(n)%climatology(domain%km))
           this%tracer_restore(n)%inv_tau(:) = inv_tau
@@ -158,8 +157,8 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
           this%tracer_restore(n)%file_metadata%filename = trim(restore_filenames(t))
           this%tracer_restore(n)%file_metadata%file_varname = trim(restore_file_varnames(t))
         else
-          write(error_msg, "(2A)") "Can not find tracer named ", trim(restore_short_names(t))
-          call status_log%log_error(error_msg, subname)
+          write(log_message, "(2A)") "Can not find tracer named ", trim(restore_short_names(t))
+          call status_log%log_error(log_message, subname)
         end if
      end if
   end do

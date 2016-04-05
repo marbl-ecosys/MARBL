@@ -30,8 +30,6 @@ module marbl_ciso_mod
   use marbl_sizes           , only : zooplankton_cnt
   use marbl_sizes           , only : grazer_prey_cnt
 
-  use marbl_logging         , only : error_msg
-  use marbl_logging         , only : status_msg
   use marbl_logging         , only : marbl_log_type
 
   use marbl_interface_types , only : marbl_tracer_metadata_type
@@ -135,6 +133,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_init_nml'
+    character(len=char_len) :: log_message
 
     integer (int_kind) ::               &
          n,                             & ! index
@@ -143,8 +142,7 @@ contains
     character(len=marbl_nl_buffer_size) :: &
          tmp_nl_buffer
 
-    character(char_len) :: &
-         ciso_comp_surf_avg_freq_opt
+    character(char_len) :: ciso_comp_surf_avg_freq_opt
 
     ! ecosys_ciso_nml namelist
     namelist /ecosys_ciso_nml/ &
@@ -227,8 +225,8 @@ contains
     case ('nmonth')
        ciso_comp_surf_avg_freq_iopt = marbl_freq_opt_nmonth
     case default
-       write(error_msg, "(2A)") "unknown ciso_comp_surf_avg_freq_opt: ", trim(ciso_comp_surf_avg_freq_opt)
-       call marbl_status_log%log_error(error_msg, subname)
+       write(log_message, "(2A)") "unknown ciso_comp_surf_avg_freq_opt: ", trim(ciso_comp_surf_avg_freq_opt)
+       call marbl_status_log%log_error(log_message, subname)
        return
     end select
 
@@ -237,11 +235,11 @@ contains
     !-----------------------------------------------------------------------
 
     if (ciso_use_nml_surf_vals .and. ciso_comp_surf_avg_freq_iopt /= marbl_freq_opt_never) then
-       write(error_msg, "(4A)") "ciso_use_nml_surf_vals can only be .true. if ", &
-                                "ciso_comp_surf_avg_freq_opt is 'never', but",   &
-                                "ciso_comp_surf_avg_freq_opt = ",                &
+       write(log_message, "(4A)") "ciso_use_nml_surf_vals can only be .true. if ", &
+                                  "ciso_comp_surf_avg_freq_opt is 'never', but ",  &
+                                  "ciso_comp_surf_avg_freq_opt = ",                &
                                 trim(ciso_comp_surf_avg_freq_opt)
-       call marbl_status_log%log_error(error_msg, subname)
+       call marbl_status_log%log_error(log_message, subname)
        return
     endif
 
@@ -271,6 +269,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_init_tracer_metadata'
+    character(len=char_len) :: log_message
 
     integer (int_kind) :: n                             ! tracer index
     integer (int_kind) :: auto_ind                      ! autotroph functional group index
@@ -327,9 +326,9 @@ contains
     end do
 
     if (ecosys_ciso_tracer_cnt /= n) then
-       write(error_msg, "(4A)") "ecosys_ciso_tracer_cnt = ", ecosys_ciso_tracer_cnt, &
-                                "but computed ecosys_ciso_tracer_cnt = ", n
-       call marbl_status_log%log_error(error_msg, subname)
+       write(log_message, "(4A)") "ecosys_ciso_tracer_cnt = ", ecosys_ciso_tracer_cnt, &
+                                  "but computed ecosys_ciso_tracer_cnt = ", n
+       call marbl_status_log%log_error(log_message, subname)
        return
     endif
 
@@ -378,22 +377,22 @@ contains
        endif
     end do
 
-    write (status_msg,"(A)") '----- autotroph tracer indices -----'
-    call marbl_status_log%log_noerror(status_msg, subname)
+    write (log_message,"(A)") '----- autotroph tracer indices -----'
+    call marbl_status_log%log_noerror(log_message, subname)
     do auto_ind = 1, autotroph_cnt
-       write (status_msg, "(3A,I0)") 'C13_ind('     , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%C13_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'C14_ind('     , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%C14_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'Ca13CO3_ind(' , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%Ca13CO3_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'Ca14CO3_ind(' , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%Ca14CO3_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
+       write (log_message, "(3A,I0)") 'C13_ind('     , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%C13_ind
+       call marbl_status_log%log_noerror(log_message, subname)
+       write (log_message, "(3A,I0)") 'C14_ind('     , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%C14_ind
+       call marbl_status_log%log_noerror(log_message, subname)
+       write (log_message, "(3A,I0)") 'Ca13CO3_ind(' , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%Ca13CO3_ind
+       call marbl_status_log%log_noerror(log_message, subname)
+       write (log_message, "(3A,I0)") 'Ca14CO3_ind(' , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%Ca14CO3_ind
+       call marbl_status_log%log_noerror(log_message, subname)
     end do
-    write (status_msg, "(A,I0)") 'autotroph_cnt = ', autotroph_cnt
-    call marbl_status_log%log_noerror(status_msg, subname)
-    write (status_msg,"(A)") '------------------------------------'
-    call marbl_status_log%log_noerror(status_msg, subname)
+    write (log_message, "(A,I0)") 'autotroph_cnt = ', autotroph_cnt
+    call marbl_status_log%log_noerror(log_message, subname)
+    write (log_message,"(A)") '------------------------------------'
+    call marbl_status_log%log_noerror(log_message, subname)
 
     !-----------------------------------------------------------------------
     !  set lfull_depth_tavg flag for short-lived ecosystem tracers
@@ -471,6 +470,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_interior forcing'
+    character(len=char_len) :: log_message
 
     logical (log_kind) :: zero_mask
 
@@ -645,8 +645,8 @@ contains
        cell_radius, cell_permea, cell_eps_fix, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       error_msg = "error code returned from setup_cell_attributes"
-       call marbl_status_log%log_error(error_msg, subname)
+       log_message = "error code returned from setup_cell_attributes"
+       call marbl_status_log%log_error(log_message, subname)
        return
     end if
 
@@ -1160,6 +1160,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_ciso_mod:setup_cell_attributes'
+    character(len=char_len) :: log_message
     integer (int_kind) :: &
          n,               & ! index for looping over column_tracer
          auto_ind           ! autotroph functional group index
@@ -1215,8 +1216,8 @@ contains
              !   cell_eps_fix(auto_ind)         = 23.0_r8      ! fractionation effect of carbon fixation
              
           else if (autotrophs(auto_ind)%Nfixer .and. autotrophs(auto_ind)%kSiO3 > c0) then
-              error_msg = "ciso: Currently Keller and Morel fractionation does not work for Diatoms-Diazotrophs"
-              call marbl_status_log%log_error(error_msg, subname)
+              log_message = "ciso: Currently Keller and Morel fractionation does not work for Diatoms-Diazotrophs"
+              call marbl_status_log%log_error(log_message, subname)
               return
 
           else
@@ -1600,6 +1601,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_ciso_mod:ciso_compute_particulate_terms'
+    character(len=char_len) :: log_message
 
     real (r8) ::              &
          dz_loc,              & ! dz at a particular i,j location
@@ -1952,6 +1954,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_surface_forcing'
+    character(len=char_len) :: log_message
 
     logical (log_kind), save :: &
          first = .true.  ! Logical for first iteration test

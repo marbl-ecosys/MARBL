@@ -210,8 +210,6 @@ module marbl_mod
   use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
 
   use marbl_logging         , only : marbl_log_type
-  use marbl_logging         , only : error_msg
-  use marbl_logging         , only : status_msg
 
   implicit none
   private
@@ -400,6 +398,7 @@ contains
     !-----------------------------------------------------------------------
 
     character(*), parameter :: subname = 'marbl_mod:marbl_init_nml'
+    character(len=char_len) :: log_message
     character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
 
     integer (int_kind)           :: n                           ! index for looping over tracers
@@ -650,8 +649,8 @@ contains
     else if (trim(gas_flux_forcing_opt) == 'file') then
        gas_flux_forcing_iopt = gas_flux_forcing_iopt_file
     else
-       write(error_msg, "(2A)") "unknown gas_flux_forcing_opt: ", trim(gas_flux_forcing_opt)
-       call marbl_status_log%log_error(error_msg, subname)
+       write(log_message, "(2A)") "unknown gas_flux_forcing_opt: ", trim(gas_flux_forcing_opt)
+       call marbl_status_log%log_error(log_message, subname)
        return
     endif
 
@@ -684,8 +683,8 @@ contains
     case ('nmonth')
        comp_surf_avg_freq_iopt = marbl_freq_opt_nmonth
     case default
-       write(error_msg, "(2A)") "unknown comp_surf_avg_freq_opt: ", trim(comp_surf_avg_freq_opt)
-       call marbl_status_log%log_error(error_msg, subname)
+       write(log_message, "(2A)") "unknown comp_surf_avg_freq_opt: ", trim(comp_surf_avg_freq_opt)
+       call marbl_status_log%log_error(log_message, subname)
        return
     end select
 
@@ -697,8 +696,8 @@ contains
     case ('drv_diag')
        atm_co2_iopt = atm_co2_iopt_drv_diag
     case default
-       write(error_msg, "(2A)") "unknown atm_co2_opt: ", trim(atm_co2_opt)
-       call marbl_status_log%log_error(error_msg, subname)
+       write(log_message, "(2A)") "unknown atm_co2_opt: ", trim(atm_co2_opt)
+       call marbl_status_log%log_error(log_message, subname)
        return
     end select
 
@@ -706,8 +705,8 @@ contains
     case ('const')
        atm_alt_co2_iopt = atm_co2_iopt_const
     case default
-       write(error_msg, "(2A)") "unknown atm_alt_co2_opt: ", trim(atm_alt_co2_opt)
-       call marbl_status_log%log_error(error_msg, subname)
+       write(log_message, "(2A)") "unknown atm_alt_co2_opt: ", trim(atm_alt_co2_opt)
+       call marbl_status_log%log_error(log_message, subname)
        return
     end select
 
@@ -717,8 +716,8 @@ contains
     case ('omega_calc')
        caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
     case default
-       write(error_msg, "(2A)") "unknown caco3_bury_thres_opt: ", trim(caco3_bury_thres_opt)
-       call marbl_status_log%log_error(error_msg, subname)
+       write(log_message, "(2A)") "unknown caco3_bury_thres_opt: ", trim(caco3_bury_thres_opt)
+       call marbl_status_log%log_error(log_message, subname)
        return
     end select
 
@@ -727,10 +726,10 @@ contains
     !-----------------------------------------------------------------------
 
     if (use_nml_surf_vals .and. comp_surf_avg_freq_iopt /= marbl_freq_opt_never) then
-       write(error_msg, "(4A)") "use_nml_surf_vals can only be .true. if ", &
+       write(log_message, "(4A)") "use_nml_surf_vals can only be .true. if ", &
                                 "comp_surf_avg_freq_opt is 'never', but ",  &
                                 "comp_surf_avg_freq_opt = ", trim(comp_surf_avg_freq_opt)
-       call marbl_status_log%log_error(error_msg, subname)
+       call marbl_status_log%log_error(log_message, subname)
        return
     endif
 
@@ -741,8 +740,8 @@ contains
     ! FIXME #11: eliminate marbl_parms!
     call marbl_params_init(nl_buffer, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      error_msg = "error code returned from marbl_params_init"
-      call marbl_status_log%log_error(error_msg, subname)
+      log_message = "error code returned from marbl_params_init"
+      call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
@@ -824,6 +823,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_sflux_forcing_fields_init'
+    character(len=char_len) :: log_message
     character(char_len) :: fsource                  
     character(char_len) :: filename                 
     character(char_len) :: varname                  
@@ -864,9 +864,9 @@ contains
                marbl_driver_varname=varname, id=ind%surface_mask_id,          &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -884,9 +884,9 @@ contains
                   marbl_driver_varname=varname, id=ind%d13c_id,               &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           end if
@@ -903,9 +903,9 @@ contains
                   marbl_driver_varname=varname, id=ind%d14c_id,               &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           end if
@@ -922,9 +922,9 @@ contains
                   marbl_driver_varname=varname, id=ind%d14c_glo_avg_id,       &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           end if
@@ -942,9 +942,9 @@ contains
                marbl_driver_varname=driver_varname, id=ind%u10_sqr_id,        &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -961,9 +961,9 @@ contains
                marbl_driver_varname=driver_varname, id=ind%sst_id,            &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -980,9 +980,9 @@ contains
                marbl_driver_varname=driver_varname, id=ind%sss_id,            &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1000,9 +1000,9 @@ contains
                      field_constant = atm_co2_const, id=ind%xco2_id,          &
                      marbl_status_log = marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(error_msg,"(3A)") "error code returned when adding ", &
+                  write(log_message,"(3A)") "error code returned when adding ", &
                                           trim(varname), " to forcing_fields%add"
-                  call marbl_status_log%log_error(error_msg, subname)
+                  call marbl_status_log%log_error(log_message, subname)
                   return
                 end if
              end if
@@ -1023,9 +1023,9 @@ contains
                      marbl_driver_varname=driver_varname, id=ind%xco2_id,     &
                      marbl_status_log = marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(error_msg,"(3A)") "error code returned when adding ", &
+                  write(log_message,"(3A)") "error code returned when adding ", &
                                           trim(varname), " to forcing_fields%add"
-                  call marbl_status_log%log_error(error_msg, subname)
+                  call marbl_status_log%log_error(log_message, subname)
                   return
                 end if
              end if
@@ -1045,9 +1045,9 @@ contains
                   field_constant=atm_alt_co2_const, id=ind%xco2_alt_co2_id,   &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           end if
@@ -1066,9 +1066,9 @@ contains
                   marbl_driver_varname=driver_varname, id=ind%ifrac_id,       &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           end if
@@ -1084,9 +1084,9 @@ contains
                   marbl_forcing_calendar_name=fice_file, id=ind%ifrac_id,     &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           end if
@@ -1105,9 +1105,9 @@ contains
                   marbl_driver_varname=driver_varname, id=ind%xkw_id,         &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           end if
@@ -1123,9 +1123,9 @@ contains
                   marbl_forcing_calendar_name=xkw_file, id=ind%xkw_id,        &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           end if
@@ -1145,9 +1145,9 @@ contains
                      marbl_driver_varname=driver_varname, id=ind%atm_pressure_id, &
                      marbl_status_log = marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(error_msg,"(3A)") "error code returned when adding ", &
+                  write(log_message,"(3A)") "error code returned when adding ", &
                                           trim(varname), " to forcing_fields%add"
-                  call marbl_status_log%log_error(error_msg, subname)
+                  call marbl_status_log%log_error(log_message, subname)
                   return
                 end if
              end if
@@ -1164,9 +1164,9 @@ contains
                   marbl_forcing_calendar_name=ap_file, id=ind%atm_pressure_id,&
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           end if
@@ -1183,9 +1183,9 @@ contains
                marbl_forcing_calendar_name=dust_flux_file, id=ind%dust_flux_id,&
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1201,9 +1201,9 @@ contains
                marbl_forcing_calendar_name=iron_flux_file, id=ind%iron_flux_id,&
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1228,9 +1228,9 @@ contains
                   id=ind%nox_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           else
@@ -1242,9 +1242,9 @@ contains
                   id=ind%nox_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           end if
@@ -1271,9 +1271,9 @@ contains
                   id=ind%nhy_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           else
@@ -1286,9 +1286,9 @@ contains
                   id=ind%nhy_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(error_msg,"(3A)") "error code returned when adding ",    &
+               write(log_message,"(3A)") "error code returned when adding ",    &
                                        trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(error_msg, subname)
+               call marbl_status_log%log_error(log_message, subname)
                return
              end if
           end if
@@ -1308,9 +1308,9 @@ contains
                id=ind%din_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1329,9 +1329,9 @@ contains
                id=ind%dip_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1350,9 +1350,9 @@ contains
                id=ind%don_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1371,9 +1371,9 @@ contains
                id=ind%dop_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1392,9 +1392,9 @@ contains
                id=ind%dsi_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1413,9 +1413,9 @@ contains
                id=ind%dfe_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1434,9 +1434,9 @@ contains
                id=ind%dic_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1455,9 +1455,9 @@ contains
                id=ind%alk_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1476,9 +1476,9 @@ contains
                id=ind%doc_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(error_msg,"(3A)") "error code returned when adding ",       &
+            write(log_message,"(3A)") "error code returned when adding ",       &
                                     trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(error_msg, subname)
+            call marbl_status_log%log_error(log_message, subname)
             return
           end if
        end if
@@ -1508,6 +1508,7 @@ contains
     !-----------------------------------------------------------------------
 
     character(*), parameter :: subname = 'marbl_mod:marbl_init_tracer_metadata'
+    character(len=char_len) :: log_message
 
     integer (int_kind) :: non_living_biomass_ecosys_tracer_cnt ! number of non-autotroph ecosystem tracers
     integer (int_kind) :: n        ! index for looping over tracers
@@ -1531,8 +1532,8 @@ contains
     call marbl_check_ecosys_tracer_count_consistency(non_living_biomass_ecosys_tracer_cnt, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       error_msg = "error code returned from marbl_check_ecosys_tracer_count_consistency"
-       call marbl_status_log%log_error(error_msg, subname)
+       log_message = "error code returned from marbl_check_ecosys_tracer_count_consistency"
+       call marbl_status_log%log_error(log_message, subname)
        return
     end if
 
@@ -1540,16 +1541,16 @@ contains
          non_living_biomass_ecosys_tracer_cnt, n, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       error_msg = "error code returned from marbl_init_zooplankton_tracer_metadata"
-       call marbl_status_log%log_error(error_msg, subname)
+       log_message = "error code returned from marbl_init_zooplankton_tracer_metadata"
+       call marbl_status_log%log_error(log_message, subname)
        return
     end if
 
     call marbl_init_autotroph_tracer_metadata(marbl_tracer_metadata, n, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       error_msg = "error code returned from marbl_init_autotroph_tracer_metadata"
-       call marbl_status_log%log_error(error_msg, subname)
+       log_message = "error code returned from marbl_init_autotroph_tracer_metadata"
+       call marbl_status_log%log_error(log_message, subname)
        return
     end if
 
@@ -1633,6 +1634,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_set_interior_forcing'
+    character(len=char_len) :: log_message
 
     integer (int_kind) :: auto_ind  ! autotroph functional group index
     integer (int_kind) :: auto_ind2 ! autotroph functional group index
@@ -1735,8 +1737,8 @@ contains
          zsat_calcite(:), zsat_aragonite(:), marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       error_msg = "error code returned from marbl_compute_carbonate_chemistry"
-       call marbl_status_log%log_error(error_msg, subname)
+       log_message = "error code returned from marbl_compute_carbonate_chemistry"
+       call marbl_status_log%log_error(log_message, subname)
        return
     end if
 
@@ -1808,8 +1810,8 @@ contains
             other_remin(k), fesedflux(k), ciso_on, marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
-          error_msg = "error code returned from marbl_compute_particulate_terms"
-          call marbl_status_log%log_error(error_msg, subname)
+          log_message = "error code returned from marbl_compute_particulate_terms"
+          call marbl_status_log%log_error(log_message, subname)
           return
        end if
 
@@ -1881,8 +1883,8 @@ contains
          interior_forcing_diags, &
          marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-       error_msg = "error code returned from marbl_diagnostics_set_interior_forcing"
-       call marbl_status_log%log_error(error_msg, "marbl_interface::set_interior_forcing")
+       log_message = "error code returned from marbl_diagnostics_set_interior_forcing"
+       call marbl_status_log%log_error(log_message, "marbl_interface::set_interior_forcing")
        return
     end if
 
@@ -1906,8 +1908,8 @@ contains
             marbl_status_log             = marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
-          error_msg = "error code returned from marbl_ciso_set_interior_forcing"
-          call marbl_status_log%log_error(error_msg, "marbl_interface::set_interior_forcing")
+          log_message = "error code returned from marbl_ciso_set_interior_forcing"
+          call marbl_status_log%log_error(log_message, "marbl_interface::set_interior_forcing")
           return
        end if
     end if
@@ -2157,6 +2159,7 @@ contains
 
     character(*), parameter :: &
          subname = 'marbl_mod:compute_particulate_terms'
+    character(len=char_len) :: log_message
 
     real (r8) :: TfuncS  ! temperature scaling from soft POM remin
 
@@ -2640,8 +2643,8 @@ contains
     endif
 
     if (poc_error) then
-      write(error_msg, "(A)") "mass ratio of ballast production exceeds POC production"
-      call marbl_status_log%log_error(error_msg, subname)
+      write(log_message, "(A)") "mass ratio of ballast production exceeds POC production"
+      call marbl_status_log%log_error(log_message, subname)
     endif
 
     end associate
@@ -2715,6 +2718,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_set_surface_forcing'
+    character(len=char_len) :: log_message
     integer (int_kind)      :: n                        ! loop indices
     integer (int_kind)      :: auto_ind                 ! autotroph functional group index
     real (r8)               :: phlo(num_elements)       ! lower bound for ph in solver
@@ -2905,8 +2909,8 @@ contains
                marbl_status_log = marbl_status_log)
 
           if (marbl_status_log%labort_marbl) then
-             error_msg = "error code returned from co2calc_surf"
-             call marbl_status_log%log_error(error_msg, subname)
+             log_message = "error code returned from co2calc_surf"
+             call marbl_status_log%log_error(log_message, subname)
              return
           end if
 
@@ -2965,8 +2969,8 @@ contains
                marbl_status_log = marbl_status_log)
 
             if (marbl_status_log%labort_marbl) then
-               error_msg = "error code returned from co2calc_surf"
-               call marbl_status_log%log_error(error_msg, subname)
+               log_message = "error code returned from co2calc_surf"
+               call marbl_status_log%log_error(log_message, subname)
                return
             end if
 
@@ -3288,6 +3292,7 @@ contains
          zoo_ind            ! zooplankton functional group index
 
     character(*), parameter :: subname = 'marbl_mod:check_ecosys_tracer_count_consistency'
+    character(len=char_len) :: log_message
 
     !-----------------------------------------------------------------------
     !  confirm that ecosys_tracer_cnt is consistent with autotroph declarations
@@ -3306,9 +3311,9 @@ contains
     end do
 
     if (ecosys_tracer_cnt /= n) then
-       write(error_msg, "(4A)") "ecosys_tracer_cnt = ", ecosys_tracer_cnt, &
+       write(log_message, "(4A)") "ecosys_tracer_cnt = ", ecosys_tracer_cnt, &
                                 "but computed ecosys_tracer_cnt = ", n
-       call marbl_status_log%log_error(error_msg, subname)
+       call marbl_status_log%log_error(log_message, subname)
         return
     endif
 
@@ -3334,6 +3339,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = "marbl_mod:marbl_init_zooplankton_tracer_metadata"
+    character(len=char_len) :: log_message
     integer (int_kind) :: zoo_ind            ! zooplankton functional group index
     !-----------------------------------------------------------------------
 
@@ -3349,16 +3355,16 @@ contains
        n = n + 1
     end do
 
-    write (status_msg, "(A)") '----- zooplankton tracer indices -----'
-    call marbl_status_log%log_noerror(status_msg, subname)
+    write (log_message, "(A)") '----- zooplankton tracer indices -----'
+    call marbl_status_log%log_noerror(log_message, subname)
     do zoo_ind = 1, zooplankton_cnt
-       write (status_msg, "(3A,I0)") 'C_ind(', trim(zooplankton(zoo_ind)%sname), ') = ', zooplankton(zoo_ind)%C_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
+       write (log_message, "(3A,I0)") 'C_ind(', trim(zooplankton(zoo_ind)%sname), ') = ', zooplankton(zoo_ind)%C_ind
+       call marbl_status_log%log_noerror(log_message, subname)
     end do
-    write (status_msg, "(A,I0)") 'zooplankton_cnt = ', zooplankton_cnt
-    call marbl_status_log%log_noerror(status_msg, subname)
-    write (status_msg, "(A)") '------------------------------------'
-    call marbl_status_log%log_noerror(status_msg, subname)
+    write (log_message, "(A,I0)") 'zooplankton_cnt = ', zooplankton_cnt
+    call marbl_status_log%log_noerror(log_message, subname)
+    write (log_message, "(A)") '------------------------------------'
+    call marbl_status_log%log_noerror(log_message, subname)
 
   end subroutine marbl_init_zooplankton_tracer_metadata
 
@@ -3380,6 +3386,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = "marbl_mod:marbl_init_autotroph_tracer_metadata"
+    character(len=char_len) :: log_message
     integer (int_kind) :: auto_ind ! zooplankton functional group index
     !-----------------------------------------------------------------------
 
@@ -3434,24 +3441,24 @@ contains
        endif
     end do
 
-    write (status_msg, "(A)") '----- autotroph tracer indices -----'
-    call marbl_status_log%log_noerror(status_msg, subname)
+    write (log_message, "(A)") '----- autotroph tracer indices -----'
+    call marbl_status_log%log_noerror(log_message, subname)
     do auto_ind = 1, autotroph_cnt
-       write (status_msg, "(3A,I0)") 'Chl_ind(', trim(autotrophs(auto_ind)%sname), ') = '   , autotrophs(auto_ind)%Chl_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'C_ind(', trim(autotrophs(auto_ind)%sname), ') = '     , autotrophs(auto_ind)%C_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'Fe_ind(', trim(autotrophs(auto_ind)%sname), ') = '    , autotrophs(auto_ind)%Fe_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'Si_ind(', trim(autotrophs(auto_ind)%sname), ') = '    , autotrophs(auto_ind)%Si_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'CaCO3_ind(', trim(autotrophs(auto_ind)%sname), ') = ' , autotrophs(auto_ind)%CaCO3_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
+       write (log_message, "(3A,I0)") 'Chl_ind(', trim(autotrophs(auto_ind)%sname), ') = '   , autotrophs(auto_ind)%Chl_ind
+       call marbl_status_log%log_noerror(log_message, subname)
+       write (log_message, "(3A,I0)") 'C_ind(', trim(autotrophs(auto_ind)%sname), ') = '     , autotrophs(auto_ind)%C_ind
+       call marbl_status_log%log_noerror(log_message, subname)
+       write (log_message, "(3A,I0)") 'Fe_ind(', trim(autotrophs(auto_ind)%sname), ') = '    , autotrophs(auto_ind)%Fe_ind
+       call marbl_status_log%log_noerror(log_message, subname)
+       write (log_message, "(3A,I0)") 'Si_ind(', trim(autotrophs(auto_ind)%sname), ') = '    , autotrophs(auto_ind)%Si_ind
+       call marbl_status_log%log_noerror(log_message, subname)
+       write (log_message, "(3A,I0)") 'CaCO3_ind(', trim(autotrophs(auto_ind)%sname), ') = ' , autotrophs(auto_ind)%CaCO3_ind
+       call marbl_status_log%log_noerror(log_message, subname)
     end do
-    write (status_msg, "(A,I0)") 'autotroph_cnt = ', autotroph_cnt
-    call marbl_status_log%log_noerror(status_msg, subname)
-    write (status_msg, "(A)") '------------------------------------'
-    call marbl_status_log%log_noerror(status_msg, subname)
+    write (log_message, "(A,I0)") 'autotroph_cnt = ', autotroph_cnt
+    call marbl_status_log%log_noerror(log_message, subname)
+    write (log_message, "(A)") '------------------------------------'
+    call marbl_status_log%log_noerror(log_message, subname)
     
   end subroutine marbl_init_autotroph_tracer_metadata
   
@@ -3869,6 +3876,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_compute_carbonate_chemistry'
+    character(len=char_len) :: log_message
     integer :: k
     type(thermodynamic_coefficients_type), dimension(domain%km) :: co3_coeffs
     logical(log_kind) , dimension(domain%km) :: mask
@@ -3934,8 +3942,8 @@ contains
          marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-      error_msg = "error code returned from conp_CO3terms"
-      call marbl_status_log%log_error(error_msg, subname)
+      log_message = "error code returned from conp_CO3terms"
+      call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
@@ -3961,8 +3969,8 @@ contains
          hco3_alt_co2, co3_alt_co2, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-      error_msg = "error code returned from comp_CO3terms"
-      call marbl_status_log%log_error(error_msg, subname)
+      log_message = "error code returned from comp_CO3terms"
+      call marbl_status_log%log_error(log_message, subname)
       return
     end if
        

@@ -5,8 +5,6 @@ module marbl_interface_types
   use marbl_constants_mod       , only : c0, c1
   use marbl_interface_constants , only : marbl_str_length
   use marbl_logging             , only : marbl_log_type
-  use marbl_logging             , only : error_msg
-  use marbl_logging             , only : status_msg
 
   implicit none
 
@@ -355,6 +353,7 @@ contains
     type(marbl_log_type)    , intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_interface_types:marbl_single_diag_init'
+    character(len=char_len) :: log_message
 
     ! Allocate column memory for 3D vars or num_elements memory for 2D vars
     select case (trim(vgrid))
@@ -365,9 +364,9 @@ contains
       case ('none')
         allocate(this%field_2d(num_elements))
       case DEFAULT
-        write(error_msg,"(2A)") trim(vgrid),                                  &
+        write(log_message,"(2A)") trim(vgrid),                                  &
                                 " is not a valid vertical grid for MARBL"
-        call marbl_status_log%log_error(error_msg, subname)
+        call marbl_status_log%log_error(log_message, subname)
         return
     end select
 
@@ -392,6 +391,7 @@ contains
 
     character(len=*), parameter :: subname =                                  &
       'marbl_interface_types:marbl_single_sfo_constructor'
+    character(len=char_len) :: log_message
 
     select case (trim(field_name))
       case("flux_o2")
@@ -410,13 +410,13 @@ contains
         this%units      = "mg/m^3"
         sfo_ind%totalChl_id = id
       case DEFAULT
-        write(error_msg, "(2A)") trim(field_name),                            &
+        write(log_message, "(2A)") trim(field_name),                            &
                                  " is not a valid surface forcing field name"
-        call marbl_status_log%log_error(error_msg, subname)
+        call marbl_status_log%log_error(log_message, subname)
         return
     end select
-    write(status_msg, "(3A)") "Adding ", trim(field_name), " to surface forcing outputs"
-    call marbl_status_log%log_noerror(status_msg, subname)
+    write(log_message, "(3A)") "Adding ", trim(field_name), " to surface forcing outputs"
+    call marbl_status_log%log_noerror(log_message, subname)
 
     allocate(this%forcing_field(num_elements))
     this%forcing_field = c0
@@ -451,6 +451,7 @@ contains
     type(marbl_single_sfo_type), dimension(:), pointer :: new_sfo
     integer :: n, old_size
     character(len=*), parameter :: subname = 'marbl_interface_types:marbl_sfo_add'
+    character(len=char_len) :: log_message
 
     if (associated(this%sfo)) then
       old_size = size(this%sfo)
@@ -476,8 +477,8 @@ contains
     call new_sfo(sfo_id)%construct(num_elements, field_name, sfo_id,          &
                                    marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      error_msg = "error code returned from new_sfo%construct"
-      call marbl_status_log%log_error(error_msg, subname)
+      log_message = "error code returned from new_sfo%construct"
+      call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
@@ -517,6 +518,7 @@ contains
 
     integer (int_kind) :: n
     character(*), parameter :: subname="marbl_interface_types:diagnostics_set_to_zero"
+    character(len=char_len) :: log_message
 
     do n=1,this%diag_cnt
       if (allocated(this%diags(n)%field_2d)) then
@@ -525,12 +527,12 @@ contains
         this%diags(n)%field_3d(:, :) = c0
       else
         ! TODO abort abort abort
-        error_msg = "neither field_2d nor field_3d are allocated"
-        call marbl_status_log%log_error(error_msg, subname)
-        write(error_msg,"(2A)") "Diag short name = ", trim(this%diags(n)%short_name)
-        call marbl_status_log%log_error(error_msg, subname)
-        write(error_msg,"(2A)") "Diag long name = ", trim(this%diags(n)%long_name)
-        call marbl_status_log%log_error(error_msg, subname)
+        log_message = "neither field_2d nor field_3d are allocated"
+        call marbl_status_log%log_error(log_message, subname)
+        write(log_message,"(2A)") "Diag short name = ", trim(this%diags(n)%short_name)
+        call marbl_status_log%log_error(log_message, subname)
+        write(log_message,"(2A)") "Diag long name = ", trim(this%diags(n)%long_name)
+        call marbl_status_log%log_error(log_message, subname)
         return
       end if
     end do
@@ -549,19 +551,20 @@ contains
     type(marbl_log_type)          , intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_interface_types:marbl_diagnostics_add'
+    character(len=char_len) :: log_message
 
     this%diag_cnt = this%diag_cnt + 1
     id = this%diag_cnt
     if (id.gt.size(this%diags)) then
-      error_msg = "not enough memory allocated for this number of diagnostics!"
-      call marbl_status_log%log_error(error_msg, subname)
+      log_message = "not enough memory allocated for this number of diagnostics!"
+      call marbl_status_log%log_error(log_message, subname)
       return
     end if
     call this%diags(id)%initialize(lname, sname, units, vgrid, truncate,      &
          this%num_elements, this%num_levels, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      error_msg = "error code returned from this%diags%initialize"
-      call marbl_status_log%log_error(error_msg, subname)
+      log_message = "error code returned from this%diags%initialize"
+      call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
@@ -694,6 +697,7 @@ contains
     logical(log_kind)       :: has_valid_source
     logical(log_kind)       :: has_valid_inputs
     character(*), parameter :: subname = "marbl_interface_types:single_forcing_field_init"
+    character(len=char_len) :: log_message
     !-----------------------------------------------------------------------
 
     valid_field_sources(1) = "constant"
@@ -709,9 +713,9 @@ contains
        if (trim(field_source) .eq. trim(valid_field_sources(n))) has_valid_source = .true.
     enddo
     if (.not. has_valid_source) then
-       write(error_msg,"(2A)") trim(field_source),                            &
+       write(log_message,"(2A)") trim(field_source),                            &
                                "is not a valid field source for MARBL"
-       call marbl_status_log%log_error(error_msg, subname)
+       call marbl_status_log%log_error(log_message, subname)
        return
     endif
 
@@ -740,18 +744,18 @@ contains
     case('constant')
        if (.not.present(field_constant)) has_valid_inputs = .false.
        if (has_valid_inputs) then
-          write(status_msg,"(2A)") "Adding constant forcing_field_type for ", &
+          write(log_message,"(2A)") "Adding constant forcing_field_type for ", &
                                    trim(this%marbl_varname)
-          call marbl_status_log%log_noerror(status_msg, subname)
+          call marbl_status_log%log_noerror(log_message, subname)
           call marbl_forcing_constant_init(this%field_constant_info, field_constant)
        endif
 
     case('driver')
        if (.not.present(marbl_driver_varname)) has_valid_inputs = .false.
        if (has_valid_inputs) then
-          write(status_msg, "(2A)") "Adding driver forcing_field_type for ",  &
+          write(log_message, "(2A)") "Adding driver forcing_field_type for ",  &
                                     trim(this%marbl_varname)
-          call marbl_status_log%log_noerror(status_msg, subname)
+          call marbl_status_log%log_noerror(log_message, subname)
           call this%field_driver_info%initialize(marbl_driver_varname)
        endif
 
@@ -759,9 +763,9 @@ contains
        if (.not.present(filename))     has_valid_inputs = .false.
        if (.not.present(file_varname)) has_valid_inputs = .false.
        if (has_valid_inputs) then
-          write(status_msg,"(2A)") "Adding file forcing_field_type for ",     &
+          write(log_message,"(2A)") "Adding file forcing_field_type for ",     &
                                    trim(this%marbl_varname)
-          call marbl_status_log%log_noerror(status_msg, subname)
+          call marbl_status_log%log_noerror(log_message, subname)
           call this%field_file_info%initialize(&
                filename, file_varname, &
                temporal=temporal, year_first=year_first,   &
@@ -772,18 +776,18 @@ contains
     case('POP monthly calendar') 
        if (.not.present(marbl_forcing_calendar_name)) has_valid_inputs = .false.
        if (has_valid_inputs) then
-          write(status_msg,"(2A)") "Adding calendar forcing_field_type for ", &
+          write(log_message,"(2A)") "Adding calendar forcing_field_type for ", &
                                    trim(this%marbl_varname)
-          call marbl_status_log%log_noerror(status_msg, subname)
+          call marbl_status_log%log_noerror(log_message, subname)
           call this%field_monthly_calendar_info%initialize(marbl_forcing_calendar_name)
        endif
 
     end select
 
     if (.not.has_valid_inputs) then
-      write(error_msg,"(3A)") "Call to MARBL does not have the correct ",     &
+      write(log_message,"(3A)") "Call to MARBL does not have the correct ",     &
                               "optional arguments for ", trim(field_source)
-      call marbl_status_log%log_error(error_msg, subname)
+      call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
@@ -843,14 +847,15 @@ contains
 
     integer (kind=int_kind) :: num_elem
     character(*), parameter :: subname = "marbl_interface_types:marbl_forcing_fields_add"
+    character(len=char_len) :: log_message
 
     ! Note - the following sets the indices into the marble interface type surface_input_forcings(:,indices)
 
     this%forcing_field_cnt = this%forcing_field_cnt + 1
     id = this%forcing_field_cnt
     if (id .gt. size(this%forcing_fields)) then
-      error_msg = "not enough memory allocated for number of forcing fields!"
-      call marbl_status_log%log_error(error_msg, subname)
+      log_message = "not enough memory allocated for number of forcing fields!"
+      call marbl_status_log%log_error(log_message, subname)
       return
     end if
     num_elem = this%num_elements
@@ -868,8 +873,8 @@ contains
          marbl_forcing_calendar_name=marbl_forcing_calendar_name,             &
          marbl_status_log = marbl_status_log)
     if (marbl_status_log%labort_MARBL) then
-      error_msg = "error code returned from this%forcing_fields%initialize"
-      call marbl_status_log%log_error(error_msg, subname)
+      log_message = "error code returned from this%forcing_fields%initialize"
+      call marbl_status_log%log_error(log_message, subname)
       return
     end if
 

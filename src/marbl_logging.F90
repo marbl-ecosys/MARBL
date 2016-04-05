@@ -47,9 +47,6 @@ module marbl_logging
     procedure, public :: erase => marbl_log_erase
   end type marbl_log_type
 
-  character(len=char_len), public :: error_msg
-  character(len=char_len), public :: status_msg
-
 contains
 
   subroutine marbl_output_options_constructor(this, labort_on_warning, LogVerbose, LogNamelist, &

@@ -7,10 +7,8 @@ module marbl_co2calc_mod
   ! based upon OCMIP2 co2calc
   !-----------------------------------------------------------------------------
 
-  use marbl_kinds_mod     , only : int_kind, r8, log_kind
+  use marbl_kinds_mod     , only : int_kind, r8, log_kind, char_len
   use marbl_logging       , only : marbl_log_type
-  use marbl_logging       , only : error_msg
-  use marbl_logging       , only : status_msg
   use marbl_parms         , only : p001,c3, c10
   use marbl_constants_mod , only : c0, p5, c1, c2, c1000, T0_Kelvin, rho_sw
 
@@ -138,6 +136,7 @@ contains
     !   local variable declarations
     !---------------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_co2calc:marbl_co2calc_surf'
+    character(len=char_len) :: log_message
     integer(kind=int_kind)  :: n
     integer(kind=int_kind)  :: k
     real(kind=r8)           :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
@@ -202,8 +201,8 @@ contains
 
     if (present (marbl_status_log)) then
        if (marbl_status_log%labort_marbl) then
-          error_msg = "error code returned from comp_htotal"
-          call marbl_status_log%log_error(error_msg, subname)
+          log_message = "error code returned from comp_htotal"
+          call marbl_status_log%log_error(log_message, subname)
           return
        end if
     end if
@@ -306,6 +305,8 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
+    character(*), parameter :: subname = 'marbl_co2calc:marbl_comp_CO3terms'
+    character(len=char_len) :: log_message
     integer(kind=int_kind) :: c
     real(kind=r8) :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
     real(kind=r8) :: vol_to_mass          ! (mmol/m^3) -> (mol/kg)
@@ -371,8 +372,8 @@ contains
          phlo, phhi, htotal, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       error_msg = "error code returned from comp_htotal"
-       call marbl_status_log%log_error(error_msg, "marbl_co2calc::marbl_comp_CO3terms")
+       log_message = "error code returned from comp_htotal"
+       call marbl_status_log%log_error(log_message, subname)
        return
     end if
 
@@ -789,6 +790,8 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
+    character(*), parameter :: subname = 'marbl_co2calc:marbl_comp_htotal'
+    character(len=char_len) :: log_message
     integer(kind=int_kind) :: c
     real(kind=r8) :: mass_to_vol                        ! (mol/kg) -> (mmol/m^3)
     real(kind=r8) :: vol_to_mass                        ! (mmol/m^3) -> (mol/kg)
@@ -866,8 +869,8 @@ contains
          marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       error_msg = "error code returned from drtsafe"
-       call marbl_status_log%log_error(error_msg, "marbl_co2calc::comp_htotal")
+       log_message = "error code returned from drtsafe"
+       call marbl_status_log%log_error(log_message, subname)
        return
     end if
 
@@ -908,6 +911,7 @@ contains
     !   local variable declarations
     !---------------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_co2calc::drtsafe'
+    character(len=char_len) :: log_message
     logical(kind=log_kind)                          :: leave_bracket, dx_decrease
     logical(kind=log_kind), dimension(num_elements) :: mask
     integer(kind=int_kind)                          ::  c, it
@@ -942,15 +946,15 @@ contains
                 ! FIXME #21: make marbl_status_log required - this is currently needed
                 !            since abio_dic_dic14_mod is calling this routine but has
                 !            not itself been MARBLized yet
-                WRITE(status_msg,"(4A,I0,A,I0,A,I0)") '(', subname, ') ', &
+                WRITE(log_message,"(4A,I0,A,I0,A,I0)") '(', subname, ') ', &
                      ', c = ', c, ', it = ', it
-                call marbl_status_log%log_noerror(status_msg, subname, c, .true.)
-                WRITE(status_msg,"(4A,2E15.7e3)") '(', subname, ') ', &
+                call marbl_status_log%log_noerror(log_message, subname, c, .true.)
+                WRITE(log_message,"(4A,2E15.7e3)") '(', subname, ') ', &
                      '   x1,f = ', x1(c), flo(c)
-                call marbl_status_log%log_noerror(status_msg, subname, c, .true.)
-                WRITE(status_msg,"(4A,2E15.7e3)") '(', subname, ') ', &
+                call marbl_status_log%log_noerror(log_message, subname, c, .true.)
+                WRITE(log_message,"(4A,2E15.7e3)") '(', subname, ') ', &
                      '   x2,f = ', x2(c), fhi(c)
-                call marbl_status_log%log_noerror(status_msg, subname, c, .true.)
+                call marbl_status_log%log_noerror(log_message, subname, c, .true.)
              end if
           end if
        end do
@@ -958,8 +962,8 @@ contains
        if (it > max_bracket_grow_it) then
           if (present(marbl_status_log)) then
              ! FIXME #21 (see above)
-             error_msg = "bounding bracket for pH solution not found"
-             call marbl_status_log%log_error(error_msg, subname, c)
+             log_message = "bounding bracket for pH solution not found"
+             call marbl_status_log%log_error(log_message, subname, c)
           end if
           return
        end if

@@ -18,9 +18,8 @@ module marbl_interface
   !          column test system
   !-----------------------------------------------------------------------
 
-  use marbl_kinds_mod       , only : r8, log_kind, int_kind, log_kind
+  use marbl_kinds_mod       , only : r8, log_kind, int_kind, log_kind, char_len
   use marbl_logging         , only : marbl_log_type
-  use marbl_logging         , only : error_msg
 
   use marbl_sizes           , only : ecosys_tracer_cnt
   use marbl_sizes           , only : ecosys_ciso_tracer_cnt
@@ -154,6 +153,7 @@ contains
     real      (r8)                         , intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real      (r8)                         , intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
 
+    character(len=char_len) :: log_message
     integer :: i
     !--------------------------------------------------------------------
 
@@ -275,8 +275,8 @@ contains
          surface_forcing_fields       = this%surface_forcing_fields,          &
          marbl_status_log             = this%StatusLog)
     if (this%statusLog%labort_marbl) then
-      error_msg = "error code returned from marbl_init_surface_forcing_fields"
-      call this%statusLog%log_error(error_msg, "marbl_interface::marbl_init()")
+      log_message = "error code returned from marbl_init_surface_forcing_fields"
+      call this%statusLog%log_error(log_message, "marbl_interface::marbl_init()")
       return
     end if
 
@@ -328,6 +328,7 @@ contains
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
+    character(len=char_len) :: log_message
 
     call this%restoring%restore_tracers( &
          this%column_tracers,            &
@@ -353,8 +354,8 @@ contains
          marbl_status_log        = this%statusLog)
 
     if (this%statusLog%labort_marbl) then
-       error_msg = "error code returned from marbl_set_interior_forcing"
-       call this%statusLog%log_error(error_msg, "marbl_interface::set_interior_forcing")
+       log_message = "error code returned from marbl_set_interior_forcing"
+       call this%statusLog%log_error(log_message, "marbl_interface::set_interior_forcing")
        return
     end if
     
