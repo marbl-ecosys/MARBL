@@ -50,6 +50,7 @@ module marbl_diagnostics_mod
   use marbl_interface_types , only : marbl_saved_state_type
   use marbl_interface_types , only : marbl_interior_forcing_input_type
   use marbl_interface_types , only : marbl_surface_forcing_output_type
+  use marbl_interface_types , only : sfo_ind
   use marbl_interface_types , only : marbl_surface_forcing_indexing_type
   use marbl_interface_types , only : marbl_diagnostics_type
 
@@ -3136,7 +3137,6 @@ contains
          o2sat             => surface_forcing_internal%o2sat,                                   &
          iron_flux_in      => surface_forcing_internal%iron_flux,                               &
 
-         flux_co2          => surface_forcing_output%flux_co2,                                  &
 
          ph_prev           => saved_state%ph_prev_surf,                                         &
          ph_prev_alt_co2   => saved_state%ph_prev_alt_co2_surf,                                 &
@@ -3178,7 +3178,10 @@ contains
        
        diags(ind_diag%PV_CO2)%field_2d(:)               = pv_co2(:)
        diags(ind_diag%SCHMIDT_CO2)%field_2d(:)          = schmidt_co2(:)
-       diags(ind_diag%DIC_GAS_FLUX)%field_2d(:)         = flux_co2(:)
+       if (sfo_ind%flux_co2_id.ne.0) then
+         diags(ind_diag%DIC_GAS_FLUX)%field_2d(:)       =                     &
+                surface_forcing_output%sfo(sfo_ind%flux_co2_id)%forcing_field
+       end if
        diags(ind_diag%PH)%field_2d(:)                   = ph_prev(:)
        diags(ind_diag%ATM_CO2)%field_2d(:)              = xco2(:)
       
