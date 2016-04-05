@@ -740,8 +740,7 @@ contains
     ! FIXME #11: eliminate marbl_parms!
     call marbl_params_init(nl_buffer, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      log_message = "error code returned from marbl_params_init"
-      call marbl_status_log%log_error(log_message, subname)
+      call marbl_status_log%log_error_trace('marbl_params_init', subname)
       return
     end if
 
@@ -1508,7 +1507,6 @@ contains
     !-----------------------------------------------------------------------
 
     character(*), parameter :: subname = 'marbl_mod:marbl_init_tracer_metadata'
-    character(len=char_len) :: log_message
 
     integer (int_kind) :: non_living_biomass_ecosys_tracer_cnt ! number of non-autotroph ecosystem tracers
     integer (int_kind) :: n        ! index for looping over tracers
@@ -1532,8 +1530,8 @@ contains
     call marbl_check_ecosys_tracer_count_consistency(non_living_biomass_ecosys_tracer_cnt, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       log_message = "error code returned from marbl_check_ecosys_tracer_count_consistency"
-       call marbl_status_log%log_error(log_message, subname)
+       call marbl_status_log%log_error_trace(                                 &
+            'marbl_check_ecosys_tracer_count_consistency()', subname)
        return
     end if
 
@@ -1541,16 +1539,16 @@ contains
          non_living_biomass_ecosys_tracer_cnt, n, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       log_message = "error code returned from marbl_init_zooplankton_tracer_metadata"
-       call marbl_status_log%log_error(log_message, subname)
+       call marbl_status_log%log_error_trace('marbl_init_zooplankton_tracer_metadata()', &
+                                        subname)
        return
     end if
 
     call marbl_init_autotroph_tracer_metadata(marbl_tracer_metadata, n, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       log_message = "error code returned from marbl_init_autotroph_tracer_metadata"
-       call marbl_status_log%log_error(log_message, subname)
+       call marbl_status_log%log_error_trace('marbl_init_autortoph_tracer_metadata()', &
+                                        subname)
        return
     end if
 
@@ -1634,7 +1632,6 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_set_interior_forcing'
-    character(len=char_len) :: log_message
 
     integer (int_kind) :: auto_ind  ! autotroph functional group index
     integer (int_kind) :: auto_ind2 ! autotroph functional group index
@@ -1737,8 +1734,8 @@ contains
          zsat_calcite(:), zsat_aragonite(:), marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       log_message = "error code returned from marbl_compute_carbonate_chemistry"
-       call marbl_status_log%log_error(log_message, subname)
+       call marbl_status_log%log_error_trace(&
+            'marbl_check_ecosys_tracer_count_consistency()', subname)
        return
     end if
 
@@ -1810,8 +1807,8 @@ contains
             other_remin(k), fesedflux(k), ciso_on, marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
-          log_message = "error code returned from marbl_compute_particulate_terms"
-          call marbl_status_log%log_error(log_message, subname)
+          call marbl_status_log%log_error_trace('marbl_compute_particulate_terms()', &
+                                                subname)
           return
        end if
 
@@ -1883,8 +1880,8 @@ contains
          interior_forcing_diags, &
          marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-       log_message = "error code returned from marbl_diagnostics_set_interior_forcing"
-       call marbl_status_log%log_error(log_message, "marbl_interface::set_interior_forcing")
+       call marbl_status_log%log_error_trace(&
+            'marbl_diagnostics_set_interior_foricng()', subname)
        return
     end if
 
@@ -1908,8 +1905,8 @@ contains
             marbl_status_log             = marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
-          log_message = "error code returned from marbl_ciso_set_interior_forcing"
-          call marbl_status_log%log_error(log_message, "marbl_interface::set_interior_forcing")
+          call marbl_status_log%log_error_trace(&
+               'marbl_ciso_set_interior_foricng()', subname)
           return
        end if
     end if
@@ -2718,7 +2715,6 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_set_surface_forcing'
-    character(len=char_len) :: log_message
     integer (int_kind)      :: n                        ! loop indices
     integer (int_kind)      :: auto_ind                 ! autotroph functional group index
     real (r8)               :: phlo(num_elements)       ! lower bound for ph in solver
@@ -2909,8 +2905,7 @@ contains
                marbl_status_log = marbl_status_log)
 
           if (marbl_status_log%labort_marbl) then
-             log_message = "error code returned from co2calc_surf"
-             call marbl_status_log%log_error(log_message, subname)
+             call marbl_status_log%log_error_trace('co2calc_surf()', subname)
              return
           end if
 
@@ -2969,8 +2964,7 @@ contains
                marbl_status_log = marbl_status_log)
 
             if (marbl_status_log%labort_marbl) then
-               log_message = "error code returned from co2calc_surf"
-               call marbl_status_log%log_error(log_message, subname)
+               call marbl_status_log%log_error_trace('co2calc_surf()', subname)
                return
             end if
 
@@ -3876,7 +3870,6 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_compute_carbonate_chemistry'
-    character(len=char_len) :: log_message
     integer :: k
     type(thermodynamic_coefficients_type), dimension(domain%km) :: co3_coeffs
     logical(log_kind) , dimension(domain%km) :: mask
@@ -3942,8 +3935,7 @@ contains
          marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-      log_message = "error code returned from conp_CO3terms"
-      call marbl_status_log%log_error(log_message, subname)
+      call marbl_status_log%log_error_trace('marbl_comp_CO3terms()', subname)
       return
     end if
 
@@ -3969,8 +3961,7 @@ contains
          hco3_alt_co2, co3_alt_co2, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-      log_message = "error code returned from comp_CO3terms"
-      call marbl_status_log%log_error(log_message, subname)
+      call marbl_status_log%log_error_trace('marbl_comp_CO3terms()', subname)
       return
     end if
        

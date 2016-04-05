@@ -451,7 +451,6 @@ contains
     type(marbl_single_sfo_type), dimension(:), pointer :: new_sfo
     integer :: n, old_size
     character(len=*), parameter :: subname = 'marbl_interface_types:marbl_sfo_add'
-    character(len=char_len) :: log_message
 
     if (associated(this%sfo)) then
       old_size = size(this%sfo)
@@ -477,8 +476,7 @@ contains
     call new_sfo(sfo_id)%construct(num_elements, field_name, sfo_id,          &
                                    marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      log_message = "error code returned from new_sfo%construct"
-      call marbl_status_log%log_error(log_message, subname)
+      call marbl_status_log%log_error_trace('new_sfo%construct()', subname)
       return
     end if
 
@@ -563,8 +561,7 @@ contains
     call this%diags(id)%initialize(lname, sname, units, vgrid, truncate,      &
          this%num_elements, this%num_levels, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      log_message = "error code returned from this%diags%initialize"
-      call marbl_status_log%log_error(log_message, subname)
+      call marbl_status_log%log_error_trace('this%diags%initialize()', subname)
       return
     end if
 
@@ -873,8 +870,7 @@ contains
          marbl_forcing_calendar_name=marbl_forcing_calendar_name,             &
          marbl_status_log = marbl_status_log)
     if (marbl_status_log%labort_MARBL) then
-      log_message = "error code returned from this%forcing_fields%initialize"
-      call marbl_status_log%log_error(log_message, subname)
+      call marbl_status_log%log_error_trace('this%forcing_fields%initialize()', subname)
       return
     end if
 

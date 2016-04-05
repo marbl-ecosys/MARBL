@@ -153,7 +153,7 @@ contains
     real      (r8)                         , intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real      (r8)                         , intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
 
-    character(len=char_len) :: log_message
+    character(*), parameter :: subname = 'marbl_interface:marbl_init'
     integer :: i
     !--------------------------------------------------------------------
 
@@ -176,16 +176,14 @@ contains
 
     call marbl_init_nml(gcm_nl_buffer, this%statusLog)
     if (this%statusLog%labort_marbl) then
-       call this%statusLog%log_error("error code returned from marbl_init_nml", &
-            "marbl_interface::marbl_init()")
+      call this%statusLog%log_error_trace("marbl_init_nml()", subname)
       return
     end if
 
     if (gcm_ciso_on) then
        call marbl_ciso_init_nml(gcm_nl_buffer, this%statusLog)
        if (this%statusLog%labort_marbl) then
-          call this%statusLog%log_error("error code returned from marbl_ciso_init_nml", &
-               "marbl_interface::marbl_init()")
+          call this%statusLog%log_error_trace("marbl_ciso_init_nml()", subname)
           return
        end if
     end if
@@ -246,8 +244,7 @@ contains
          this%statusLog)
 
     if (this%statusLog%labort_marbl) then
-      call this%statusLog%log_error("error code returned from marbl_init_tracer_metadata", &
-                                    "marbl_interface::marbl_init()")
+      call this%statusLog%log_error_trace("marbl_init_tracer_metadata()", subname)
       return
     end if
 
@@ -257,8 +254,7 @@ contains
             this%statusLog)
 
        if (this%statusLog%labort_marbl) then
-         call this%statusLog%log_error("error code returned from marbl_ciso_init_tracer_metadata", &
-                                       "marbl_interface::marbl_init()")
+         call this%statusLog%log_error_trace("marbl_ciso_init_tracer_metadata()", subname)
          return
        end if
     end if
@@ -275,8 +271,7 @@ contains
          surface_forcing_fields       = this%surface_forcing_fields,          &
          marbl_status_log             = this%StatusLog)
     if (this%statusLog%labort_marbl) then
-      log_message = "error code returned from marbl_init_surface_forcing_fields"
-      call this%statusLog%log_error(log_message, "marbl_interface::marbl_init()")
+      call this%statusLog%log_error_trace("marbl_init_surface_forcing_fields()", subname)
       return
     end if
 
@@ -292,8 +287,7 @@ contains
          tracer_metadata = this%tracer_metadata(ecosys_ind_beg:ecosys_ind_end), &
          status_log      = this%statusLog)
     if (this%statusLog%labort_marbl) then
-      call this%statusLog%log_error("error code returned from this%restoring%init", &
-                                    "marbl_interface::marbl_init()")
+      call this%statusLog%log_error_trace("this%restoring%init()", subname)
       return
     end if
 
@@ -310,8 +304,7 @@ contains
          marbl_surface_forcing_diags  = this%surface_forcing_diags,           &
          marbl_status_log             = this%StatusLog)
     if (this%statusLog%labort_marbl) then
-      call this%statusLog%log_error("error code returned from marbl_diagnostics_init", &
-                                    "marbl_interface::marbl_init()")
+      call this%statusLog%log_error_trace("marbl_diagnostics_init()", subname)
       return
     end if
 
@@ -328,7 +321,7 @@ contains
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
-    character(len=char_len) :: log_message
+    character(*), parameter :: subname='marbl_interface:set_interior_forcing'
 
     call this%restoring%restore_tracers( &
          this%column_tracers,            &
@@ -354,8 +347,7 @@ contains
          marbl_status_log        = this%statusLog)
 
     if (this%statusLog%labort_marbl) then
-       log_message = "error code returned from marbl_set_interior_forcing"
-       call this%statusLog%log_error(log_message, "marbl_interface::set_interior_forcing")
+       call this%statusLog%log_error_trace("marbl_set_interior_forcing()", subname)
        return
     end if
     

@@ -136,7 +136,6 @@ contains
     !   local variable declarations
     !---------------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_co2calc:marbl_co2calc_surf'
-    character(len=char_len) :: log_message
     integer(kind=int_kind)  :: n
     integer(kind=int_kind)  :: k
     real(kind=r8)           :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
@@ -201,8 +200,7 @@ contains
 
     if (present (marbl_status_log)) then
        if (marbl_status_log%labort_marbl) then
-          log_message = "error code returned from comp_htotal"
-          call marbl_status_log%log_error(log_message, subname)
+          call marbl_status_log%log_error_trace("comp_htotal()", subname)
           return
        end if
     end if
@@ -306,7 +304,6 @@ contains
     !   local variable declarations
     !---------------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_co2calc:marbl_comp_CO3terms'
-    character(len=char_len) :: log_message
     integer(kind=int_kind) :: c
     real(kind=r8) :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
     real(kind=r8) :: vol_to_mass          ! (mmol/m^3) -> (mol/kg)
@@ -372,8 +369,7 @@ contains
          phlo, phhi, htotal, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       log_message = "error code returned from comp_htotal"
-       call marbl_status_log%log_error(log_message, subname)
+       call marbl_status_log%log_error_trace("comp_htotal()", subname)
        return
     end if
 
@@ -791,7 +787,6 @@ contains
     !   local variable declarations
     !---------------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_co2calc:marbl_comp_htotal'
-    character(len=char_len) :: log_message
     integer(kind=int_kind) :: c
     real(kind=r8) :: mass_to_vol                        ! (mol/kg) -> (mmol/m^3)
     real(kind=r8) :: vol_to_mass                        ! (mmol/m^3) -> (mol/kg)
@@ -869,8 +864,7 @@ contains
          marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       log_message = "error code returned from drtsafe"
-       call marbl_status_log%log_error(log_message, subname)
+       call marbl_status_log%log_error_trace("drtsafe", subname)
        return
     end if
 

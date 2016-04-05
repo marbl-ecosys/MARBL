@@ -470,7 +470,6 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_interior forcing'
-    character(len=char_len) :: log_message
 
     logical (log_kind) :: zero_mask
 
@@ -645,8 +644,7 @@ contains
        cell_radius, cell_permea, cell_eps_fix, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       log_message = "error code returned from setup_cell_attributes"
-       call marbl_status_log%log_error(log_message, subname)
+       call marbl_status_log%log_error_trace("setup_cell_attributes", subname)
        return
     end if
 

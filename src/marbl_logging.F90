@@ -44,6 +44,7 @@ module marbl_logging
     procedure, public :: log_namelist => marbl_log_namelist
     procedure, public :: log_error    => marbl_log_error
     procedure, public :: log_noerror  => marbl_log_noerror
+    procedure, public :: log_error_trace => marbl_log_error_trace
     procedure, public :: erase => marbl_log_erase
   end type marbl_log_type
 
@@ -214,6 +215,18 @@ contains
     this%LastEntry => new_entry
 
   end subroutine marbl_log_noerror
+
+  subroutine marbl_log_error_trace(this, RoutineName, CodeLoc, ElemInd)
+
+    class(marbl_log_type), intent(inout) :: this
+    character(len=*),      intent(in)    :: RoutineName, CodeLoc
+    integer, optional,     intent(in)    :: ElemInd
+    character(len=char_len) :: log_message
+
+    write(log_message, "(2A)") "Error reported from ", trim(RoutineName)
+    call this%log_error(log_message, CodeLoc, ElemInd)
+
+  end subroutine marbl_log_error_trace
 
   subroutine marbl_log_erase(this)
 
