@@ -379,7 +379,6 @@ contains
     character(len=char_len) :: lname, sname, units, vgrid
 
     character(*), parameter :: subname = "marbl_diagnostics_mod:marbl_diagnostics_init"
-    character(len=char_len) :: log_message
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------
@@ -423,9 +422,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%ECOSYS_IFRAC, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -441,9 +438,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%ECOSYS_XKW, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -459,9 +454,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%ECOSYS_ATM_PRESS, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -477,9 +470,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%PV_O2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -495,9 +486,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%SCHMIDT_O2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -513,9 +502,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%O2SAT, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -531,9 +518,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%O2_GAS_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -549,9 +534,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%CO2STAR, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -567,9 +550,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DCO2STAR, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -585,9 +566,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%pCO2SURF, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -603,9 +582,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DpCO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -621,9 +598,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%PV_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -639,9 +614,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%SCHMIDT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -657,9 +630,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DIC_GAS_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -675,9 +646,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%PH, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -693,9 +662,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%ATM_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -711,9 +678,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%CO2STAR_ALT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -729,9 +694,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DCO2STAR_ALT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -747,9 +710,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%pCO2SURF_ALT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -765,9 +726,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DpCO2_ALT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -783,9 +742,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DIC_GAS_FLUX_ALT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -801,9 +758,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%PH_ALT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -819,9 +774,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%ATM_ALT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -837,9 +790,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%IRON_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -855,9 +806,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DUST_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -873,9 +822,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%NOx_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -891,9 +838,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%NHy_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -909,9 +854,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DIN_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -927,9 +870,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DIP_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -945,9 +886,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DON_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -963,9 +902,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DONr_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -981,9 +918,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DOP_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -999,9 +934,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DOPr_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1017,9 +950,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DSI_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1035,9 +966,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DFE_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1053,9 +982,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DIC_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1071,9 +998,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%ALK_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1089,9 +1014,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DOC_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1107,9 +1030,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DOCr_RIV_FLUX, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1131,9 +1052,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DI13C_GAS_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1149,9 +1068,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DI13C_AS_GAS_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1167,9 +1084,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DI13C_SA_GAS_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1185,9 +1100,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_d13C_GAS_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1203,9 +1116,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_D13C_atm, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1221,9 +1132,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_R13C_DIC_surf, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1239,9 +1148,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_R13C_atm, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1257,9 +1164,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DI13C_RIV_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1275,9 +1180,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DO13C_RIV_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1293,9 +1196,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_eps_aq_g_surf, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1311,9 +1212,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_eps_dic_g_surf, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1329,9 +1228,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DI14C_GAS_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1347,9 +1244,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DI14C_AS_GAS_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1365,9 +1260,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DI14C_SA_GAS_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1383,9 +1276,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_d14C_GAS_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1401,9 +1292,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_D14C_atm, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1419,9 +1308,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_R14C_DIC_surf, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1437,9 +1324,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_R14C_atm, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
             end if
           end if
@@ -1455,9 +1340,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DI14C_RIV_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1473,9 +1356,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DO14C_RIV_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1491,9 +1372,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_GLOBAL_D14C, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1522,9 +1401,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%zsatcalc, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1540,9 +1417,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%zsatarag, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1558,9 +1433,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%O2_ZMIN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1576,9 +1449,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%O2_ZMIN_DEPTH, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1594,9 +1465,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%photoC_TOT_zint, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1612,9 +1481,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%photoC_NO3_TOT_zint, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1630,9 +1497,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Jint_Ctot, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1648,9 +1513,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Jint_100m_Ctot, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1666,9 +1529,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Jint_Ntot, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1684,9 +1545,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Jint_100m_Ntot, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1702,9 +1561,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Jint_Ptot, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1720,9 +1577,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Jint_100m_Ptot, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1738,9 +1593,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Jint_Sitot, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1756,9 +1609,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Jint_100m_Sitot, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1774,9 +1625,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Jint_Fetot, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1792,9 +1641,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Jint_100m_Fetot, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1811,9 +1658,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%calcToSed, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1829,9 +1674,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%pocToSed, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1847,9 +1690,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%ponToSed, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1865,9 +1706,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%SedDenitrif, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1883,9 +1722,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%OtherRemin, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1901,9 +1738,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%popToSed, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1919,9 +1754,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%bsiToSed, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1937,9 +1770,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%dustToSed, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1955,9 +1786,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%pfeToSed, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -1975,9 +1804,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%photoC_zint(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -1993,9 +1820,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%photoC_NO3_zint(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -2012,9 +1837,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CaCO3_form_zint(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",  &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              else
@@ -2034,9 +1857,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%tot_CaCO3_form_zint, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2053,9 +1874,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%CO3, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2071,9 +1890,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%HCO3, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2089,9 +1906,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%H2CO3, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2107,9 +1922,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%ph_3D, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2125,9 +1938,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%CO3_ALT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2143,9 +1954,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%HCO3_ALT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2161,9 +1970,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%H2CO3_ALT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2179,9 +1986,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%ph_3D_ALT_CO2, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2197,9 +2002,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%co3_sat_calc, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2215,9 +2018,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%co3_sat_arag, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2233,9 +2034,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%NITRIF, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2251,9 +2050,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DENITRIF, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2269,9 +2066,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%O2_PRODUCTION, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2287,9 +2082,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%O2_CONSUMPTION, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2305,9 +2098,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%AOU, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2323,9 +2114,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%PAR_avg, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2341,9 +2130,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%auto_graze_TOT, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2359,9 +2146,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%photoC_TOT, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2377,9 +2162,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%photoC_NO3_TOT, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2395,9 +2178,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DOC_prod, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2413,9 +2194,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DOC_remin, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2431,9 +2210,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DOCr_remin, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2449,9 +2226,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DON_prod, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2467,9 +2242,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DON_remin, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2485,9 +2258,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DONr_remin, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2503,9 +2274,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DOP_prod, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2521,9 +2290,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DOP_remin, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2539,9 +2306,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%DOPr_remin, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2557,9 +2322,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Fe_scavenge, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2575,9 +2338,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%Fe_scavenge_rate, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2594,9 +2355,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%POC_FLUX_IN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2612,9 +2371,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%POC_PROD, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2630,9 +2387,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%POC_REMIN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2648,9 +2403,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%POC_REMIN_DIC, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2666,9 +2419,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%PON_REMIN_NH4, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2684,9 +2435,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%POP_REMIN_PO4, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2702,9 +2451,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%CaCO3_FLUX_IN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2720,9 +2467,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%CaCO3_PROD, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2738,9 +2483,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%CaCO3_REMIN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2756,9 +2499,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%SiO2_FLUX_IN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2774,9 +2515,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%SiO2_PROD, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2792,9 +2531,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%SiO2_REMIN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2810,9 +2547,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%dust_FLUX_IN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2828,9 +2563,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%dust_REMIN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2846,9 +2579,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%P_iron_FLUX_IN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2864,9 +2595,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%P_iron_PROD, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2882,9 +2611,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%P_iron_REMIN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -2903,9 +2630,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%N_lim(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -2921,9 +2646,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%P_lim(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -2939,9 +2662,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%Fe_lim(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -2958,9 +2679,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%SiO3_lim(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              else
@@ -2979,9 +2698,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%light_lim(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -2997,9 +2714,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%photoC(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3015,9 +2730,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%photoC_NO3(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3033,9 +2746,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%photoFe(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3051,9 +2762,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%photoNO3(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3069,9 +2778,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%photoNH4(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3087,9 +2794,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%DOP_uptake(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3105,9 +2810,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%PO4_uptake(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3123,9 +2826,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%auto_graze(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3141,9 +2842,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%auto_graze_poc(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3159,9 +2858,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%auto_graze_doc(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3177,9 +2874,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%auto_graze_zoo(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3195,9 +2890,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%auto_loss(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3213,9 +2906,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%auto_loss_poc(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3231,9 +2922,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%auto_loss_doc(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3249,9 +2938,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%auto_agg(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3270,9 +2957,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%bSi_form(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              else
@@ -3292,9 +2977,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CaCO3_form(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              else
@@ -3314,9 +2997,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%Nfix(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              else
@@ -3337,9 +3018,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%tot_bSi_form, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -3355,9 +3034,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%tot_CaCO3_form, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -3373,9 +3050,7 @@ contains
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%tot_Nfix, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",        &
-                                    trim(sname), " to diags%add_diagnostic"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
        end if
@@ -3394,9 +3069,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%zoo_loss(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3412,9 +3085,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%zoo_loss_poc(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3430,9 +3101,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%zoo_loss_doc(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3448,9 +3117,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%zoo_graze(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3466,9 +3133,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%zoo_graze_poc(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3484,9 +3149,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%zoo_graze_doc(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3502,9 +3165,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%zoo_graze_zoo(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3520,9 +3181,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%x_graze_zoo(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3544,9 +3203,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_PO13C_FLUX_IN, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3562,9 +3219,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_PO13C_PROD, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3580,9 +3235,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_PO13C_REMIN, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3598,9 +3251,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DO13C_prod, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3616,9 +3267,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DO13C_remin, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3634,9 +3283,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_Ca13CO3_FLUX_IN, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3652,9 +3299,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_Ca13CO3_PROD, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3670,9 +3315,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_Ca13CO3_REMIN, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3688,9 +3331,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_photo13C_TOT, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3706,9 +3347,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DIC_d13C, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3724,9 +3363,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DOC_d13C, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3742,9 +3379,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_zooC_d13C, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3760,9 +3395,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_PO14C_FLUX_IN, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3778,9 +3411,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_PO14C_PROD, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3796,9 +3427,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_PO14C_REMIN, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3814,9 +3443,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DO14C_prod, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3832,9 +3459,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DO14C_remin, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3850,9 +3475,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_Ca14CO3_FLUX_IN, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3868,9 +3491,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_Ca14CO3_PROD, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3886,9 +3507,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_Ca14CO3_REMIN, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3904,9 +3523,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_photo14C_TOT, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3922,9 +3539,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DIC_d14C, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3940,9 +3555,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_DOC_d14C, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3958,9 +3571,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_zooC_d14C, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3978,9 +3589,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_photo13C_TOT_zint, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -3996,9 +3605,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_photo14C_TOT_zint, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4014,9 +3621,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_Jint_13Ctot, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4032,9 +3637,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_Jint_14Ctot, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4050,9 +3653,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_Jint_100m_13Ctot, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4068,9 +3669,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_Jint_100m_14Ctot, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4091,9 +3690,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_Ca13CO3_form(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4109,9 +3706,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_Ca13CO3_form_zint(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4127,9 +3722,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_Ca14CO3_form(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4145,9 +3738,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_Ca14CO3_form_zint(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4163,9 +3754,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_autotrophCaCO3_d13C(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4181,9 +3770,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_autotrophCaCO3_d14C(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4199,9 +3786,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_photo13C(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4217,9 +3802,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_photo14C(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4235,9 +3818,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_photo13C_zint(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4253,9 +3834,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_photo14C_zint(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4271,9 +3850,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_eps_autotroph(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4289,9 +3866,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_d13C(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4307,9 +3882,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_d14C(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4325,9 +3898,7 @@ contains
                 call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                      ind%CISO_mui_to_co2star(n), marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ",    &
-                                          trim(sname), " to diags%add_diagnostic"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
              end if
@@ -4347,9 +3918,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_eps_aq_g, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4365,9 +3934,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_eps_dic_g, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4385,9 +3952,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%calcToSed_13C, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4403,9 +3968,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%pocToSed_13C, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4421,9 +3984,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%calcToSed_14C, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4439,9 +4000,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%pocToSed_14C, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4471,9 +4030,7 @@ contains
              call diags%add_diagnostic(lname, sname, units, vgrid, .false.,   &
                   tmp_id, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",     &
-                                       trim(sname), " to diags%add_diagnostic"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
@@ -4489,20 +4046,20 @@ contains
 
     call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      log_message = "error code returned marbl_interior_forcing_diags%set_to_zero"
-      call marbl_status_log%log_error(log_message, subname)
+      call marbl_status_log%log_error_trace(&
+           'marbl_interior_forcing_diags%set_to_zero', subname)
       return
     end if
     call marbl_interior_restore_diags%set_to_zero(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      log_message = "error code returned marbl_interior_forcing_diags%set_to_zero"
-      call marbl_status_log%log_error(log_message, subname)
+      call marbl_status_log%log_error_trace(&
+           'marbl_interior_restore_diags%set_to_zero', subname)
       return
     end if
     call marbl_surface_forcing_diags%set_to_zero(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      log_message = "error code returned marbl_interior_forcing_diags%set_to_zero"
-      call marbl_status_log%log_error(log_message, subname)
+      call marbl_status_log%log_error_trace(&
+           'marbl_surface_forcing_diags%set_to_zero', subname)
       return
     end if
 
@@ -4556,7 +4113,6 @@ contains
     type (marbl_log_type)                     , intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = "marbl_diagnostics_mod:set_interior"
-    character(len=char_len) :: log_message
 
     !-----------------------------------------------------------------
 
@@ -4571,8 +4127,8 @@ contains
 
     call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      log_message = "error code returned marbl_interior_forcing_diags%set_to_zero"
-      call marbl_status_log%log_error(log_message, subname)
+      call marbl_status_log%log_error_trace(&
+           'marbl_interior_forcing_diags%set_to_zero', subname)
       return
     end if
 
@@ -4682,7 +4238,6 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_diagnostics:store_diagnostics_surface_forcing'
-    character(len=char_len) :: log_message
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------------
@@ -5848,7 +5403,6 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_diagnostics:store_diagnostics_ciso_surface_forcing'
-    character(len=char_len) :: log_message
     !-----------------------------------------------------------------------
 
     associate(                                          &
@@ -5969,5 +5523,16 @@ contains
     end if
 
   end subroutine compute_vertical_integrals
+
+  subroutine log_add_diagnostics_error(marbl_status_log, sname, subname)
+
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+    character(len=*),     intent(in)    :: sname, subname
+    character(len=char_len) :: routine_name
+
+    write(routine_name,"(3A)") "diags%add_diagnostic(", trim(sname), ")"
+    call marbl_status_log%log_error_trace(routine_name, subname)
+
+  end subroutine log_add_diagnostics_error
 
 end module marbl_diagnostics_mod
