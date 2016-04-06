@@ -1,5 +1,51 @@
 module marbl_logging
 
+! ------------
+! Module Usage
+! ------------
+!
+! MARBL has been designed so that all I/O goes through the GCM (or whatever is
+! driving the library). The marbl_interface_class contains StatusLog, which
+! is used to
+!
+! (a) send text to stdout (or wherever your model prefers)
+! (b) report errors that require the model to abort
+!
+! In MARBL subroutines, one of three subroutines will be used:
+!
+! (1) StatusLog%log_noerror -- this stores a log message in StatusLog that does
+!     not contain a fatal error
+! (2) StatusLog%log_error -- this stores a log message in StatusLog that DOES
+!     contain a fatal error. It does this by setting StatusLog%labort_marbl =
+!     .true.; when a call from the GCM to MARBL returns, it is important for the
+!     GCM to check the value of StatusLog%labort_marbl and abort the run if an
+!     error has been reported.
+! (3) StatusLog%log_error_trace -- this routine helps trace the path in the code
+!     that resulted in an error being reported. If a MARBL routine logs an error
+!     message, then the routine that called the errant routine also logs an
+!     error message giving more information about where the call was made from.
+!
+! StatusLog uses a linked list to store the error messages. To print the
+! message, start with a pointer of type(marbl_status_log_entry_type) that points
+! to StatusLog%FullLog. You definitely want to print FullLogPtr%LogMessage, and
+! may also be interested in FullLogPtr%ElementInd (if the message came from a
+! portion of the code looping of num_elements) and FullLogPtr%CodeLocation
+! (which contains MODULE:SUBROUTINE).
+!
+! There is also a helpful FullLogPtr%lall_tasks, which is .true. if MARBL deems
+! the message important enough to be printed regardless of the number of tasks
+! or threads the GCM is using. Error messages will always set lall_tasks to
+! .true. but diagnostic messages (such as notes about which surface forcing
+! output fields are being used) will set lall_tasks to .false. and only a single
+! task needs to print those messages.
+!
+! After the GCM processes the contents of FullLogPtr, set FullLogPtr =>
+! FullLogPtr%next and, if associated(FullLogPtr), process the next message. Once
+! you get to the last message in the linked list, FullLogPtr%next => NULL().
+!
+! Once you have looped through all of the log messages, run StatusLog%erase() to
+! clear the contents of the log.
+
   use marbl_kinds_mod, only : char_len
   use marbl_namelist_mod, only : marbl_nl_buffer_size
   implicit none

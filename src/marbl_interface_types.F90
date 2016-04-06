@@ -524,7 +524,6 @@ contains
       elseif (allocated(this%diags(n)%field_3d)) then
         this%diags(n)%field_3d(:, :) = c0
       else
-        ! TODO abort abort abort
         log_message = "neither field_2d nor field_3d are allocated"
         call marbl_status_log%log_error(log_message, subname)
         write(log_message,"(2A)") "Diag short name = ", trim(this%diags(n)%short_name)
