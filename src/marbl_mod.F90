@@ -863,9 +863,7 @@ contains
                marbl_driver_varname=varname, id=ind%surface_mask_id,          &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -883,9 +881,7 @@ contains
                   marbl_driver_varname=varname, id=ind%d13c_id,               &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_forcing_field_error(marbl_status_log, varname, subname)
                return
              end if
           end if
@@ -902,9 +898,7 @@ contains
                   marbl_driver_varname=varname, id=ind%d14c_id,               &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_forcing_field_error(marbl_status_log, varname, subname)
                return
              end if
           end if
@@ -921,9 +915,7 @@ contains
                   marbl_driver_varname=varname, id=ind%d14c_glo_avg_id,       &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_forcing_field_error(marbl_status_log, varname, subname)
                return
              end if
           end if
@@ -941,9 +933,7 @@ contains
                marbl_driver_varname=driver_varname, id=ind%u10_sqr_id,        &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -960,9 +950,7 @@ contains
                marbl_driver_varname=driver_varname, id=ind%sst_id,            &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -979,9 +967,7 @@ contains
                marbl_driver_varname=driver_varname, id=ind%sss_id,            &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -999,9 +985,7 @@ contains
                      field_constant = atm_co2_const, id=ind%xco2_id,          &
                      marbl_status_log = marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ", &
-                                          trim(varname), " to forcing_fields%add"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_forcing_field_error(marbl_status_log, varname, subname)
                   return
                 end if
              end if
@@ -1022,9 +1006,7 @@ contains
                      marbl_driver_varname=driver_varname, id=ind%xco2_id,     &
                      marbl_status_log = marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ", &
-                                          trim(varname), " to forcing_fields%add"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_forcing_field_error(marbl_status_log, varname, subname)
                   return
                 end if
              end if
@@ -1044,9 +1026,7 @@ contains
                   field_constant=atm_alt_co2_const, id=ind%xco2_alt_co2_id,   &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_forcing_field_error(marbl_status_log, varname, subname)
                return
              end if
           end if
@@ -1065,9 +1045,7 @@ contains
                   marbl_driver_varname=driver_varname, id=ind%ifrac_id,       &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_forcing_field_error(marbl_status_log, varname, subname)
                return
              end if
           end if
@@ -1083,9 +1061,7 @@ contains
                   marbl_forcing_calendar_name=fice_file, id=ind%ifrac_id,     &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_forcing_field_error(marbl_status_log, varname, subname)
                return
              end if
           end if
@@ -1104,9 +1080,7 @@ contains
                   marbl_driver_varname=driver_varname, id=ind%xkw_id,         &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_forcing_field_error(marbl_status_log, varname, subname)
                return
              end if
           end if
@@ -1122,9 +1096,7 @@ contains
                   marbl_forcing_calendar_name=xkw_file, id=ind%xkw_id,        &
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_forcing_field_error(marbl_status_log, varname, subname)
                return
              end if
           end if
@@ -1144,9 +1116,7 @@ contains
                      marbl_driver_varname=driver_varname, id=ind%atm_pressure_id, &
                      marbl_status_log = marbl_status_log)
                 if (marbl_status_log%labort_marbl) then
-                  write(log_message,"(3A)") "error code returned when adding ", &
-                                          trim(varname), " to forcing_fields%add"
-                  call marbl_status_log%log_error(log_message, subname)
+                  call log_add_forcing_field_error(marbl_status_log, varname, subname)
                   return
                 end if
              end if
@@ -1163,9 +1133,7 @@ contains
                   marbl_forcing_calendar_name=ap_file, id=ind%atm_pressure_id,&
                   marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
+               call log_add_forcing_field_error(marbl_status_log, varname, subname)
                return
              end if
           end if
@@ -1182,9 +1150,7 @@ contains
                marbl_forcing_calendar_name=dust_flux_file, id=ind%dust_flux_id,&
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -1200,9 +1166,7 @@ contains
                marbl_forcing_calendar_name=iron_flux_file, id=ind%iron_flux_id,&
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -1226,12 +1190,6 @@ contains
                   filename   = ndep_shr_stream_file,                          &
                   id=ind%nox_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
-               return
-             end if
           else
              fsource    = 'POP monthly calendar'
              call forcing_fields%add_forcing_field(&
@@ -1240,12 +1198,10 @@ contains
                   marbl_forcing_calendar_name=nox_flux_monthly_file,          &
                   id=ind%nox_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
-               return
-             end if
+          end if
+          if (marbl_status_log%labort_marbl) then
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
+            return
           end if
        end if
 
@@ -1269,12 +1225,6 @@ contains
                   filename   = ndep_shr_stream_file,                          &
                   id=ind%nhy_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
-               return
-             end if
           else
              fsource    = 'POP monthly calendar'
              call forcing_fields%add_forcing_field(&
@@ -1284,12 +1234,10 @@ contains
                   marbl_forcing_calendar_name=nhy_flux_monthly_file,          &
                   id=ind%nhy_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               write(log_message,"(3A)") "error code returned when adding ",    &
-                                       trim(varname), " to forcing_fields%add"
-               call marbl_status_log%log_error(log_message, subname)
-               return
-             end if
+          end if
+          if (marbl_status_log%labort_marbl) then
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
+            return
           end if
        end if
 
@@ -1307,9 +1255,7 @@ contains
                id=ind%din_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -1328,9 +1274,7 @@ contains
                id=ind%dip_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -1349,9 +1293,7 @@ contains
                id=ind%don_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -1370,9 +1312,7 @@ contains
                id=ind%dop_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -1391,9 +1331,7 @@ contains
                id=ind%dsi_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -1412,9 +1350,7 @@ contains
                id=ind%dfe_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -1433,9 +1369,7 @@ contains
                id=ind%dic_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -1454,9 +1388,7 @@ contains
                id=ind%alk_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -1475,9 +1407,7 @@ contains
                id=ind%doc_riv_flux_id, &
                marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(3A)") "error code returned when adding ",       &
-                                    trim(varname), " to forcing_fields%add"
-            call marbl_status_log%log_error(log_message, subname)
+            call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
           end if
        end if
@@ -5558,6 +5488,17 @@ contains
     end associate
 
   end subroutine marbl_export_autotroph_shared_variables
+
+  subroutine log_add_forcing_field_error(marbl_status_log, varname, subname)
+
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+    character(len=*),     intent(in)    :: varname, subname
+    character(len=char_len) :: routine_name
+
+    write(routine_name,"(3A)") "forcing_fields%add(", trim(varname), ")"
+    call marbl_status_log%log_error_trace(routine_name, subname)
+
+  end subroutine log_add_forcing_field_error
 
 end module marbl_mod
 
