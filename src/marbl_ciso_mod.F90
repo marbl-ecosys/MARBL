@@ -326,8 +326,9 @@ contains
     end do
 
     if (ecosys_ciso_tracer_cnt /= n) then
-       write(log_message, "(4A)") "ecosys_ciso_tracer_cnt = ", ecosys_ciso_tracer_cnt, &
-                                  "but computed ecosys_ciso_tracer_cnt = ", n
+       write(log_message, "(A,I0,A,I0)") "ecosys_ciso_tracer_cnt = ",         &
+                                         ecosys_ciso_tracer_cnt,              &
+                                         "but computed tracer count is ", n
        call marbl_status_log%log_error(log_message, subname)
        return
     endif
