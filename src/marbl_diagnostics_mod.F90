@@ -17,18 +17,6 @@ module marbl_diagnostics_mod
   use marbl_parms           , only : zooplankton
   use marbl_parms           , only : c0
   use marbl_parms           , only : c1
-  use marbl_parms           , only : po4_ind
-  use marbl_parms           , only : no3_ind
-  use marbl_parms           , only : sio3_ind
-  use marbl_parms           , only : nh4_ind
-  use marbl_parms           , only : fe_ind
-  use marbl_parms           , only : dic_ind
-  use marbl_parms           , only : doc_ind
-  use marbl_parms           , only : don_ind
-  use marbl_parms           , only : dop_ind
-  use marbl_parms           , only : dopr_ind
-  use marbl_parms           , only : donr_ind
-  use marbl_parms           , only : docr_ind
 
   use marbl_internal_types  , only : carbonate_type
   use marbl_internal_types  , only : zooplankton_type
@@ -3073,21 +3061,7 @@ contains
     use marbl_share_mod       , only : dic_riv_flux_file          
     use marbl_share_mod       , only : alk_riv_flux_file          
     use marbl_parms           , only : mpercm
-    use marbl_parms           , only : po4_ind
-    use marbl_parms           , only : no3_ind
-    use marbl_parms           , only : sio3_ind
-    use marbl_parms           , only : nh4_ind
-    use marbl_parms           , only : fe_ind
-    use marbl_parms           , only : o2_ind
-    use marbl_parms           , only : dic_ind
-    use marbl_parms           , only : dic_alt_co2_ind
-    use marbl_parms           , only : alk_ind
-    use marbl_parms           , only : doc_ind
-    use marbl_parms           , only : don_ind
-    use marbl_parms           , only : dop_ind
-    use marbl_parms           , only : dopr_ind
-    use marbl_parms           , only : donr_ind
-    use marbl_parms           , only : docr_ind
+    use marbl_parms           , only : marbl_tracer_indices
 
     implicit none
 
@@ -3141,7 +3115,23 @@ contains
          ph_prev           => saved_state%ph_prev_surf,                                         &
          ph_prev_alt_co2   => saved_state%ph_prev_alt_co2_surf,                                 &
 
-         stf               => surface_tracer_fluxes(:,:)                                        &
+         stf               => surface_tracer_fluxes(:,:),                                       &
+
+         po4_ind           => marbl_tracer_indices%po4_ind,                                     &
+         no3_ind           => marbl_tracer_indices%no3_ind,                                     &
+         sio3_ind          => marbl_tracer_indices%sio3_ind,                                     &
+         nh4_ind           => marbl_tracer_indices%nh4_ind,                                     &
+         fe_ind            => marbl_tracer_indices%fe_ind,                                      &
+         o2_ind            => marbl_tracer_indices%o2_ind,                                      &
+         dic_ind           => marbl_tracer_indices%dic_ind,                                     &
+         dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind,                             &
+         alk_ind           => marbl_tracer_indices%alk_ind,                                     &
+         doc_ind           => marbl_tracer_indices%doc_ind,                                     &
+         don_ind           => marbl_tracer_indices%don_ind,                                     &
+         dop_ind           => marbl_tracer_indices%dop_ind,                                     &
+         dopr_ind          => marbl_tracer_indices%dopr_ind,                                    &
+         donr_ind          => marbl_tracer_indices%donr_ind,                                    &
+         docr_ind          => marbl_tracer_indices%docr_ind                                     &
          )
 
     if (lflux_gas_o2 .or. lflux_gas_co2) then
@@ -3755,6 +3745,8 @@ contains
   subroutine store_diagnostics_carbon_fluxes(marbl_domain, &
        POC, P_CaCO3, dtracer, marbl_diags)
 
+    use marbl_parms, only : marbl_tracer_indices
+
     type(marbl_domain_type)     , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: POC
     type(column_sinking_particle_type) , intent(in)    :: P_CaCO3
@@ -3772,7 +3764,11 @@ contains
          diags   => marbl_diags%diags,       &
          ind     => marbl_interior_diag_ind, &
          kmt     => marbl_domain%kmt,        &
-         delta_z => marbl_domain%delta_z     &
+         delta_z => marbl_domain%delta_z,    &
+
+         dic_ind  => marbl_tracer_indices%dic_ind,                            &
+         doc_ind  => marbl_tracer_indices%doc_ind,                            &
+         docr_ind => marbl_tracer_indices%docr_ind                            &
          )
 
     ! vertical integrals
@@ -3800,6 +3796,7 @@ contains
        PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracer, &
        marbl_diags)
 
+    use marbl_parms, only : marbl_tracer_indices
     use marbl_parms, only : Q
 
     type(marbl_domain_type)         , intent(in)    :: marbl_domain
@@ -3821,7 +3818,12 @@ contains
          diags   => marbl_diags%diags,       &
          ind     => marbl_interior_diag_ind, &
          kmt     => marbl_domain%kmt,        &
-         delta_z => marbl_domain%delta_z     &
+         delta_z => marbl_domain%delta_z,    &
+
+         no3_ind  => marbl_tracer_indices%no3_ind,                            &
+         nh4_ind  => marbl_tracer_indices%nh4_ind,                            &
+         don_ind  => marbl_tracer_indices%don_ind,                            &
+         donr_ind => marbl_tracer_indices%donr_ind                            &
          )
 
     ! vertical integrals
@@ -3850,6 +3852,7 @@ contains
   subroutine store_diagnostics_phosphorus_fluxes(marbl_domain, &
        POP_sed_loss, dtracer, marbl_diags)
 
+    use marbl_parms, only : marbl_tracer_indices
     use marbl_parms,  only : Qp_zoo_pom
 
     type(marbl_domain_type) , intent(in)    :: marbl_domain
@@ -3868,7 +3871,11 @@ contains
          diags   => marbl_diags%diags,       &
          ind     => marbl_interior_diag_ind, &
          kmt     => marbl_domain%kmt,        &
-         delta_z => marbl_domain%delta_z     &
+         delta_z => marbl_domain%delta_z,    &
+
+         po4_ind  => marbl_tracer_indices%po4_ind,                            &
+         dop_ind  => marbl_tracer_indices%dop_ind,                            &
+         dopr_ind => marbl_tracer_indices%dopr_ind                            &
          )
 
     ! vertical integrals
@@ -3893,6 +3900,8 @@ contains
   subroutine store_diagnostics_silicon_fluxes(marbl_domain, &
        P_SiO2, dtracer, marbl_diags)
 
+    use marbl_parms, only : marbl_tracer_indices
+
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: P_SiO2
     real(r8)                           , intent(in)    :: dtracer(:,:) ! ecosys_tracer_cnt, km
@@ -3914,7 +3923,7 @@ contains
          )
 
     ! vertical integrals
-    work = dtracer(sio3_ind,:)
+    work = dtracer(marbl_tracer_indices%sio3_ind,:)
     do n = 1, autotroph_cnt
        if (autotrophs(n)%Si_ind > 0) then
           work = work + dtracer(autotrophs(n)%Si_ind,:)
@@ -3933,6 +3942,8 @@ contains
 
   subroutine store_diagnostics_iron_fluxes(marbl_domain, &
        P_iron, dust, fesedflux, dtracer, marbl_diags)
+
+    use marbl_parms, only : marbl_tracer_indices
 
     use marbl_parms     , only : Qfe_zoo
     use marbl_parms     , only : dust_to_Fe
@@ -3956,11 +3967,12 @@ contains
          ind     => marbl_interior_diag_ind, &
          kmt     => marbl_domain%kmt,        &
          zw      => marbl_domain%zw,         &
-         delta_z => marbl_domain%delta_z     &
+         delta_z => marbl_domain%delta_z,    &
+         fe_ind  => marbl_tracer_indices%fe_ind &
          )
 
     ! vertical integrals
-    work = dtracer(Fe_ind, :) + sum(dtracer(autotrophs(:)%Fe_ind, :),dim=1) + &
+    work = dtracer(fe_ind, :) + sum(dtracer(autotrophs(:)%Fe_ind, :),dim=1) + &
            Qfe_zoo * sum(dtracer(zooplankton(:)%C_ind, :),dim=1) -            &
            dust%remin(:) * dust_to_Fe
     call compute_vertical_integrals(work, delta_z, kmt,                       &

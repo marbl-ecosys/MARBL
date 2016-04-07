@@ -155,21 +155,7 @@ module marbl_mod
   use marbl_parms, only : r_Nfix_photo
   use marbl_parms, only : spc_poc_fac
   use marbl_parms, only : yps
-  use marbl_parms, only : po4_ind
-  use marbl_parms, only : no3_ind
-  use marbl_parms, only : sio3_ind
-  use marbl_parms, only : nh4_ind
-  use marbl_parms, only : fe_ind
-  use marbl_parms, only : o2_ind
-  use marbl_parms, only : dic_ind
-  use marbl_parms, only : dic_alt_co2_ind
-  use marbl_parms, only : alk_ind
-  use marbl_parms, only : doc_ind
-  use marbl_parms, only : don_ind
-  use marbl_parms, only : dop_ind
-  use marbl_parms, only : dopr_ind
-  use marbl_parms, only : donr_ind
-  use marbl_parms, only : docr_ind
+  use marbl_parms, only : marbl_tracer_indices
 
   use marbl_sizes, only : ecosys_tracer_cnt    
   use marbl_sizes, only : autotroph_cnt
@@ -1461,6 +1447,22 @@ contains
          temperature         => interior_forcing_input%temperature, &
          fesedflux           => interior_forcing_input%fesedflux,   &
 
+         po4_ind           => marbl_tracer_indices%po4_ind,         &
+         no3_ind           => marbl_tracer_indices%no3_ind,         &
+         sio3_ind          => marbl_tracer_indices%sio3_ind,        &
+         nh4_ind           => marbl_tracer_indices%nh4_ind,         &
+         fe_ind            => marbl_tracer_indices%fe_ind,          &
+         o2_ind            => marbl_tracer_indices%o2_ind,          &
+         dic_ind           => marbl_tracer_indices%dic_ind,         &
+         dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind, &
+         alk_ind           => marbl_tracer_indices%alk_ind,         &
+         doc_ind           => marbl_tracer_indices%doc_ind,         &
+         don_ind           => marbl_tracer_indices%don_ind,         &
+         dop_ind           => marbl_tracer_indices%dop_ind,         &
+         dopr_ind          => marbl_tracer_indices%dopr_ind,        &
+         donr_ind          => marbl_tracer_indices%donr_ind,        &
+         docr_ind          => marbl_tracer_indices%docr_ind,        &
+
          PAR                 => marbl_PAR                           &
          )
 
@@ -1935,8 +1937,8 @@ contains
          column_kmt               => domain%kmt,                                       &
          delta_z                  => domain%delta_z,                                   &
          zw                       => domain%zw,                                        & 
-         O2_loc                   => tracer_local(o2_ind),                             &
-         NO3_loc                  => tracer_local(no3_ind),                            &
+         O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind),        &
+         NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind),       &
          POC_PROD_avail_fields    => marbl_particulate_share%POC_PROD_avail_fields,    & ! IN/OUT
          decay_POC_E_fields       => marbl_particulate_share%decay_POC_E_fields,       & ! IN/OUT
          decay_CaCO3_fields       => marbl_particulate_share%decay_CaCO3_fields,       & ! IN/OUT
@@ -2521,6 +2523,22 @@ contains
          ph_prev_surf         => saved_state%ph_prev_surf,                                          &
          ph_prev_alt_co2_surf => saved_state%ph_prev_alt_co2_surf,                                  &
 
+         po4_ind           => marbl_tracer_indices%po4_ind,                                     &
+         no3_ind           => marbl_tracer_indices%no3_ind,                                     &
+         sio3_ind          => marbl_tracer_indices%sio3_ind,                                     &
+         nh4_ind           => marbl_tracer_indices%nh4_ind,                                     &
+         fe_ind            => marbl_tracer_indices%fe_ind,                                      &
+         o2_ind            => marbl_tracer_indices%o2_ind,                                      &
+         dic_ind           => marbl_tracer_indices%dic_ind,                                     &
+         dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind,                             &
+         alk_ind           => marbl_tracer_indices%alk_ind,                                     &
+         doc_ind           => marbl_tracer_indices%doc_ind,                                     &
+         don_ind           => marbl_tracer_indices%don_ind,                                     &
+         dop_ind           => marbl_tracer_indices%dop_ind,                                     &
+         dopr_ind          => marbl_tracer_indices%dopr_ind,                                    &
+         donr_ind          => marbl_tracer_indices%donr_ind,                                    &
+         docr_ind          => marbl_tracer_indices%docr_ind ,                                   &
+
          pv_surf_fields       => surface_forcing_share%pv_surf_fields(:),                           & ! out
          dic_surf_fields      => surface_forcing_share%dic_surf_fields(:),                          & ! out
          co2star_surf_fields  => surface_forcing_share%co2star_surf_fields(:),                      & ! out
@@ -2941,6 +2959,24 @@ contains
 
     integer(int_kind) :: n
 
+    associate(&
+         po4_ind           => marbl_tracer_indices%po4_ind,         &
+         no3_ind           => marbl_tracer_indices%no3_ind,         &
+         sio3_ind          => marbl_tracer_indices%sio3_ind,        &
+         nh4_ind           => marbl_tracer_indices%nh4_ind,         &
+         fe_ind            => marbl_tracer_indices%fe_ind,          &
+         o2_ind            => marbl_tracer_indices%o2_ind,          &
+         dic_ind           => marbl_tracer_indices%dic_ind,         &
+         dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind, &
+         alk_ind           => marbl_tracer_indices%alk_ind,         &
+         doc_ind           => marbl_tracer_indices%doc_ind,         &
+         don_ind           => marbl_tracer_indices%don_ind,         &
+         dop_ind           => marbl_tracer_indices%dop_ind,         &
+         dopr_ind          => marbl_tracer_indices%dopr_ind,        &
+         donr_ind          => marbl_tracer_indices%donr_ind,        &
+         docr_ind          => marbl_tracer_indices%docr_ind         &
+             )
+
     non_living_biomass_ecosys_tracer_cnt = 0
 
     marbl_tracer_metadata(po4_ind)%short_name='PO4'
@@ -3014,6 +3050,8 @@ contains
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
        endif
     end do
+
+    end associate
 
   end subroutine marbl_init_non_autotroph_tracer_metadata
 
@@ -3397,8 +3435,8 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                 &
-         Fe_loc     => tracer_local(fe_ind),                   &
-         SiO3_loc   => tracer_local(sio3_ind),                 &
+         Fe_loc     => tracer_local(marbl_tracer_indices%fe_ind),                   &
+         SiO3_loc   => tracer_local(marbl_tracer_indices%sio3_ind),                 &
          auto_C     => autotroph_local(:)%C,                   &
          auto_Chl   => autotroph_local(:)%Chl,                 &
          auto_Fe    => autotroph_local(:)%Fe,                  &
@@ -3631,11 +3669,11 @@ contains
     ! make local copies instead of using associate construct because of gnu fortran bug
     ! https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68546
 
-    dic_loc(:)         = tracer_local(dic_ind,:)
-    dic_alt_co2_loc(:) = tracer_local(dic_alt_co2_ind,:)
-    alk_loc(:)         = tracer_local(alk_ind,:)
-    po4_loc(:)         = tracer_local(po4_ind,:)
-    sio3_loc(:)        = tracer_local(sio3_ind,:)
+    dic_loc(:)         = tracer_local(marbl_tracer_indices%dic_ind,:)
+    dic_alt_co2_loc(:) = tracer_local(marbl_tracer_indices%dic_alt_co2_ind,:)
+    alk_loc(:)         = tracer_local(marbl_tracer_indices%alk_ind,:)
+    po4_loc(:)         = tracer_local(marbl_tracer_indices%po4_ind,:)
+    sio3_loc(:)        = tracer_local(marbl_tracer_indices%sio3_ind,:)
 
     associate(                                                    &
          dkm               => domain%km,                          &
@@ -3877,12 +3915,12 @@ contains
     do auto_ind = 1, auto_cnt
 
        associate(                                                             &
-                 DOP_loc => tracer_local(dop_ind),                            &
-                 NO3_loc => tracer_local(no3_ind),                            &
-                 NH4_loc => tracer_local(nh4_ind),                            &
-                 PO4_loc => tracer_local(po4_ind),                            &
-                 Fe_loc   => tracer_local(fe_ind),                            &
-                 SiO3_loc => tracer_local(sio3_ind),                          &
+                 DOP_loc => tracer_local(marbl_tracer_indices%dop_ind),       &
+                 NO3_loc => tracer_local(marbl_tracer_indices%no3_ind),       &
+                 NH4_loc => tracer_local(marbl_tracer_indices%nh4_ind),       &
+                 PO4_loc => tracer_local(marbl_tracer_indices%po4_ind),       &
+                 Fe_loc   => tracer_local(marbl_tracer_indices%fe_ind),       &
+                 SiO3_loc => tracer_local(marbl_tracer_indices%sio3_ind),     &
                  ! OUTPUTS
                  VNO3  => autotroph_secondary_species(auto_ind)%VNO3,         &
                  VNH4  => autotroph_secondary_species(auto_ind)%VNH4,         &
@@ -4597,12 +4635,12 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                               &
-         DOC_loc         => tracer_local(doc_ind)                          , &
-         DON_loc         => tracer_local(don_ind)                          , &
-         DOP_loc         => tracer_local(dop_ind)                          , &
-         DONr_loc        => tracer_local(donr_ind)                         , &
-         DOPr_loc        => tracer_local(dopr_ind)                         , &
-         DOCr_loc        => tracer_local(docr_ind)                         , &
+         DOC_loc         => tracer_local(marbl_tracer_indices%doc_ind)     , &
+         DON_loc         => tracer_local(marbl_tracer_indices%don_ind)     , &
+         DOP_loc         => tracer_local(marbl_tracer_indices%dop_ind)     , &
+         DONr_loc        => tracer_local(marbl_tracer_indices%donr_ind)    , &
+         DOPr_loc        => tracer_local(marbl_tracer_indices%dopr_ind)    , &
+         DOCr_loc        => tracer_local(marbl_tracer_indices%docr_ind)    , &
          Qfe             => autotroph_secondary_species(:)%Qfe             , & ! input
          remaining_P_dop => autotroph_secondary_species(:)%remaining_P_dop , & ! input
          auto_loss_doc   => autotroph_secondary_species(:)%auto_loss_doc   , & ! input
@@ -4996,7 +5034,23 @@ contains
          DONr_remin      => dissolved_organic_matter%DONr_remin      , & ! remineralization of DONr
          DOP_prod        => dissolved_organic_matter%DOP_prod        , & ! production of DOP
          DOP_remin       => dissolved_organic_matter%DOP_remin       , & ! remineralization of DOP
-         DOPr_remin      => dissolved_organic_matter%DOPr_remin        & ! remineralization of DOPr
+         DOPr_remin      => dissolved_organic_matter%DOPr_remin      , & ! remineralization of DOPr
+
+         po4_ind           => marbl_tracer_indices%po4_ind,         &
+         no3_ind           => marbl_tracer_indices%no3_ind,         &
+         sio3_ind          => marbl_tracer_indices%sio3_ind,        &
+         nh4_ind           => marbl_tracer_indices%nh4_ind,         &
+         fe_ind            => marbl_tracer_indices%fe_ind,          &
+         o2_ind            => marbl_tracer_indices%o2_ind,          &
+         dic_ind           => marbl_tracer_indices%dic_ind,         &
+         dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind, &
+         alk_ind           => marbl_tracer_indices%alk_ind,         &
+         doc_ind           => marbl_tracer_indices%doc_ind,         &
+         don_ind           => marbl_tracer_indices%don_ind,         &
+         dop_ind           => marbl_tracer_indices%dop_ind,         &
+         dopr_ind          => marbl_tracer_indices%dopr_ind,        &
+         donr_ind          => marbl_tracer_indices%donr_ind,        &
+         docr_ind          => marbl_tracer_indices%docr_ind         &
          )
 
     !-----------------------------------------------------------------------
@@ -5204,10 +5258,10 @@ contains
          )
 
     share%QA_dust_def    = QA_dust_def
-    share%DIC_loc_fields = tracer_local(DIC_ind)
-    share%DOC_loc_fields = tracer_local(DOC_ind)
-    share%O2_loc_fields  = tracer_local(O2_ind)
-    share%NO3_loc_fields = tracer_local(NO3_ind)
+    share%DIC_loc_fields = tracer_local(marbl_tracer_indices%DIC_ind)
+    share%DOC_loc_fields = tracer_local(marbl_tracer_indices%DOC_ind)
+    share%O2_loc_fields  = tracer_local(marbl_tracer_indices%O2_ind)
+    share%NO3_loc_fields = tracer_local(marbl_tracer_indices%NO3_ind)
 
 
     share%CO3_fields   = carbonate%CO3

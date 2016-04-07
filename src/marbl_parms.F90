@@ -96,28 +96,9 @@ module marbl_parms
   !  MARBL indices 
   !-----------------------------------------------------------------------
 
-  ! incidices for input forcing
-
   ! non-autotroph relative tracer indices
   ! autotroph relative tracer indices are in autotroph derived type and 
   ! are determined at run time
-
-  integer (int_kind), parameter :: &
-       po4_ind         =  1,  & ! dissolved inorganic phosphate
-       no3_ind         =  2,  & ! dissolved inorganic nitrate
-       sio3_ind        =  3,  & ! dissolved inorganic silicate
-       nh4_ind         =  4,  & ! dissolved ammonia
-       fe_ind          =  5,  & ! dissolved inorganic iron
-       o2_ind          =  6,  & ! dissolved oxygen
-       dic_ind         =  7,  & ! dissolved inorganic carbon
-       dic_alt_co2_ind =  8,  & ! dissolved inorganic carbon with alternative CO2
-       alk_ind         =  9,  & ! alkalinity
-       doc_ind         = 10,  & ! dissolved organic carbon
-       don_ind         = 11,  & ! dissolved organic nitrogen
-       dop_ind         = 12,  & ! dissolved organic phosphorus
-       dopr_ind        = 13,  & ! refractory DOP
-       donr_ind        = 14,  & ! refractory DON
-       docr_ind        = 15     ! refractory DOC
 
   type marbl_tracer_index_type
     ! Tracer count, indices for CISO tracers
@@ -694,12 +675,14 @@ contains
     class(marbl_tracer_index_type), intent(inout) :: this
     logical,                        intent(in)    :: ciso_on
 
+    integer :: tmp_cnt ! for now we want to reset tracer_cnt for ciso and then
+                       ! end with the correct total
+
     associate(tracer_cnt        => this%non_autotroph_tracer_cnt,             &
               ciso_tracer_begin => this%non_autotroph_ciso_tracer_ind_begin,  &
               ciso_tracer_end   => this%non_autotroph_ciso_tracer_ind_end)
       tracer_cnt = 0
 
-#if 0
       ! General ecosys tracers
       tracer_cnt  = tracer_cnt + 1
       this%po4_ind = tracer_cnt
@@ -745,10 +728,11 @@ contains
 
       tracer_cnt    = tracer_cnt + 1
       this%docr_ind = tracer_cnt
-#endif
 
       if (ciso_on) then
         ! Next tracer is start of the CISO tracers
+        tmp_cnt = tracer_cnt
+        tracer_cnt = 0
         ciso_tracer_begin = tracer_cnt + 1
 
         tracer_cnt     = tracer_cnt + 1
@@ -770,6 +754,7 @@ contains
         this%zoo14C_ind = tracer_cnt
 
         ciso_tracer_end = tracer_cnt
+        tracer_cnt      = tracer_cnt + tmp_cnt
       end if
     end associate
 
