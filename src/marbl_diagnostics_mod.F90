@@ -4010,12 +4010,7 @@ contains
     !  Update marbl_interior_ciso_diags data type 
     !---------------------------------------------------------------------
 
-    use marbl_parms           , only : di13c_ind
-    use marbl_parms           , only : do13c_ind
-    use marbl_parms           , only : zoo13C_ind
-    use marbl_parms           , only : di14c_ind
-    use marbl_parms           , only : do14c_ind
-    use marbl_parms           , only : zoo14C_ind
+    use marbl_parms, only : marbl_tracer_indices
 
     implicit none
 
@@ -4072,7 +4067,13 @@ contains
          zw      => marbl_domain%zw,         &
          delta_z => marbl_domain%delta_z,    &
          diags   => marbl_diags%diags,       &
-         ind     => marbl_interior_diag_ind  &
+         ind     => marbl_interior_diag_ind,  &
+         di13c_ind  => marbl_tracer_indices%di13c_ind,                   &
+         do13c_ind  => marbl_tracer_indices%do13c_ind,                   &
+         zoo13c_ind => marbl_tracer_indices%zoo13c_ind,                  &
+         di14c_ind  => marbl_tracer_indices%di14c_ind,                   &
+         do14c_ind  => marbl_tracer_indices%do14c_ind,                   &
+         zoo14c_ind => marbl_tracer_indices%zoo14c_ind                   &
          )
 
     diags(ind%calcToSed_13C)%field_2d(1) = sum(P_Ca13CO3%sed_loss)

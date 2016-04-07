@@ -254,13 +254,8 @@ contains
     !  Set tracer and forcing metadata
 
     use marbl_share_mod       , only : ecosys_ciso_tracer_cnt
-    use marbl_share_mod       , only : ciso_lecovars_full_depth_tavg 
-    use marbl_parms           , only : di13c_ind
-    use marbl_parms           , only : do13c_ind
-    use marbl_parms           , only : zoo13C_ind
-    use marbl_parms           , only : di14c_ind
-    use marbl_parms           , only : do14c_ind
-    use marbl_parms           , only : zoo14C_ind
+    use marbl_share_mod       , only : ciso_lecovars_full_depth_tavg
+    use marbl_parms           , only : marbl_tracer_indices
 
     implicit none
 
@@ -274,41 +269,40 @@ contains
 
     integer (int_kind) :: n                             ! tracer index
     integer (int_kind) :: auto_ind                      ! autotroph functional group index
-    integer (int_kind) :: non_autotroph_ciso_tracer_cnt ! number of non-autotroph ecosystem tracers
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------------
     !  initialize non-autotroph metadata values
-    !  accumulate non_autotroph_ciso_tracer_cnt
     !-----------------------------------------------------------------------
 
-    non_autotroph_ciso_tracer_cnt = 0
+    associate(di13c_ind         => marbl_tracer_indices%di13c_ind,            &
+              do13c_ind         => marbl_tracer_indices%do13c_ind,            &
+              zoo13c_ind        => marbl_tracer_indices%zoo13c_ind,           &
+              di14c_ind         => marbl_tracer_indices%di14c_ind,            &
+              do14c_ind         => marbl_tracer_indices%do14c_ind,            &
+              zoo14c_ind        => marbl_tracer_indices%zoo14c_ind,           &
+              ciso_tracer_begin => marbl_tracer_indices%non_autotroph_ciso_tracer_ind_begin,  &
+              ciso_tracer_end   => marbl_tracer_indices%non_autotroph_ciso_tracer_ind_end)
 
     marbl_tracer_metadata(di13c_ind)%short_name='DI13C'
     marbl_tracer_metadata(di13c_ind)%long_name='Dissolved Inorganic Carbon-13'
-    non_autotroph_ciso_tracer_cnt = non_autotroph_ciso_tracer_cnt + 1
 
     marbl_tracer_metadata(do13c_ind)%short_name='DO13C'
     marbl_tracer_metadata(do13c_ind)%long_name='Dissolved Organic Carbon-13'
-    non_autotroph_ciso_tracer_cnt = non_autotroph_ciso_tracer_cnt + 1
 
     marbl_tracer_metadata(zoo13C_ind)%short_name='zoo13C'
     marbl_tracer_metadata(zoo13C_ind)%long_name='Zooplankton Carbon-13'
-    non_autotroph_ciso_tracer_cnt = non_autotroph_ciso_tracer_cnt + 1
 
     marbl_tracer_metadata(di14c_ind)%short_name='DI14C'
     marbl_tracer_metadata(di14c_ind)%long_name='Dissolved Inorganic Carbon-14'
-    non_autotroph_ciso_tracer_cnt = non_autotroph_ciso_tracer_cnt + 1
 
     marbl_tracer_metadata(do14c_ind)%short_name='DO14C'
     marbl_tracer_metadata(do14c_ind)%long_name='Dissolved Organic Carbon-14'
-    non_autotroph_ciso_tracer_cnt = non_autotroph_ciso_tracer_cnt + 1
 
     marbl_tracer_metadata(zoo14C_ind)%short_name='zoo14C'
     marbl_tracer_metadata(zoo14C_ind)%long_name='Zooplankton Carbon-14'
-    non_autotroph_ciso_tracer_cnt = non_autotroph_ciso_tracer_cnt + 1
 
-    do n = 1, non_autotroph_ciso_tracer_cnt
+    do n = ciso_tracer_begin,ciso_tracer_end
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
@@ -318,7 +312,7 @@ contains
     !  confirm that ecosys_ciso_tracer_cnt is consistent with autotroph declarations
     !-----------------------------------------------------------------------
 
-    n = non_autotroph_ciso_tracer_cnt
+    n = ciso_tracer_end - (ciso_tracer_begin-1)
     do auto_ind = 1, autotroph_cnt
        n = n + 2 ! C13, C14 tracers
        if (autotrophs(auto_ind)%imp_calcifier .or. autotrophs(auto_ind)%exp_calcifier) then
@@ -327,8 +321,9 @@ contains
     end do
 
     if (ecosys_ciso_tracer_cnt /= n) then
-       write(error_msg, "(4A)") "ecosys_ciso_tracer_cnt = ", ecosys_ciso_tracer_cnt, &
-                                "but computed ecosys_ciso_tracer_cnt = ", n
+       write(error_msg, "(A,I0,A,I0)") "ecosys_ciso_tracer_cnt = ",           &
+                                       ecosys_ciso_tracer_cnt,                &
+                                       " but computed tracer count is ", n
        call marbl_status_log%log_error(error_msg, subname)
        return
     endif
@@ -337,7 +332,7 @@ contains
     !  initialize autotroph tracer_d values and tracer indices
     !-----------------------------------------------------------------------
 
-    n = non_autotroph_ciso_tracer_cnt + 1
+    n = ciso_tracer_end - (ciso_tracer_begin-1) + 1 ! why +1?
 
     do auto_ind = 1, autotroph_cnt
        marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '13C'
@@ -419,6 +414,8 @@ contains
        endif
     end do
 
+    end associate
+
   end subroutine marbl_ciso_init_tracer_metadata
 
   !***********************************************************************
@@ -445,12 +442,7 @@ contains
     use marbl_parms            , only : f_graze_CaCO3_REMIN
     use marbl_parms            , only : R13c_std, R14c_std
     use marbl_parms            , only : spd
-    use marbl_parms            , only : di13c_ind
-    use marbl_parms            , only : do13c_ind
-    use marbl_parms            , only : zoo13C_ind
-    use marbl_parms            , only : di14c_ind
-    use marbl_parms            , only : do14c_ind
-    use marbl_parms            , only : zoo14C_ind
+    use marbl_parms            , only : marbl_tracer_indices
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_interior
 
     implicit none
@@ -612,7 +604,14 @@ contains
          zoo_loss_dic       => marbl_zooplankton_share%zoo_loss_dic_fields     , & ! INPUT zoo_loss routed to dic (mmol C/m^3/sec)                                       
 
          POC                => marbl_particulate_share%POC                     , & ! INPUT
-         P_CaCO3            => marbl_particulate_share%P_CaCO3                   & ! INPUT
+         P_CaCO3            => marbl_particulate_share%P_CaCO3                 , & ! INPUT
+
+         di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
+         do13c_ind          => marbl_tracer_indices%do13c_ind                  , &
+         zoo13c_ind         => marbl_tracer_indices%zoo13c_ind                 , &
+         di14c_ind          => marbl_tracer_indices%di14c_ind                  , &
+         do14c_ind          => marbl_tracer_indices%do14c_ind                  , &
+         zoo14c_ind         => marbl_tracer_indices%zoo14c_ind                   &
          )
 
     !-----------------------------------------------------------------------
@@ -1248,12 +1247,7 @@ contains
     !  treat negative values as zero
     !-----------------------------------------------------------------------
 
-    use marbl_parms , only : di13c_ind
-    use marbl_parms , only : do13c_ind
-    use marbl_parms , only : zoo13C_ind
-    use marbl_parms , only : di14c_ind
-    use marbl_parms , only : do14c_ind
-    use marbl_parms , only : zoo14C_ind
+    use marbl_parms , only : marbl_tracer_indices
 
     implicit none
 
@@ -1273,6 +1267,12 @@ contains
     integer :: k 
     !-----------------------------------------------------------------------
 
+    associate(di13c_ind  => marbl_tracer_indices%di13c_ind,                   &
+              do13c_ind  => marbl_tracer_indices%do13c_ind,                   &
+              zoo13c_ind => marbl_tracer_indices%zoo13c_ind,                  &
+              di14c_ind  => marbl_tracer_indices%di14c_ind,                   &
+              do14c_ind  => marbl_tracer_indices%do14c_ind,                   &
+              zoo14c_ind => marbl_tracer_indices%zoo14c_ind)
     do k = 1,column_kmt
        DI13C_loc(k)  = max(c0, column_tracer(di13c_ind,k))
        DI14C_loc(k)  = max(c0, column_tracer(di14c_ind,k))
@@ -1294,6 +1294,7 @@ contains
        zoo13C_loc(k) = c0
        zoo14C_loc(k) = c0
     end do
+    end associate
 
   end subroutine setup_local_column_tracers
 
@@ -1928,10 +1929,7 @@ contains
     use marbl_parms            , only : R13c_std
     use marbl_parms            , only : R14c_std
     use marbl_parms            , only : p5
-    use marbl_parms            , only : di13c_ind
-    use marbl_parms            , only : di14c_ind
-    use marbl_parms            , only : do13c_ind
-    use marbl_parms            , only : do14c_ind
+    use marbl_parms            , only : marbl_tracer_indices
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_surface_forcing
 
     implicit none
@@ -2010,7 +2008,12 @@ contains
          dco2star            => marbl_surface_forcing_share%dco2star_surf_fields , & ! in/out DCO2STAR from solver
          co3_surf_fields     => marbl_surface_forcing_share%co3_surf_fields      , & ! in/out
          dic_riv_flux_fields => marbl_surface_forcing_share%dic_riv_flux_fields  , & ! in/out
-         doc_riv_flux_fields => marbl_surface_forcing_share%doc_riv_flux_fields    & ! in/out
+         doc_riv_flux_fields => marbl_surface_forcing_share%doc_riv_flux_fields  , & ! in/out
+
+         di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
+         do13c_ind          => marbl_tracer_indices%do13c_ind                  , &
+         di14c_ind          => marbl_tracer_indices%di14c_ind                  , &
+         do14c_ind          => marbl_tracer_indices%do14c_ind                    &
          )
 
     !-----------------------------------------------------------------------

@@ -119,13 +119,41 @@ module marbl_parms
        donr_ind        = 14,  & ! refractory DON
        docr_ind        = 15     ! refractory DOC
 
-  integer (int_kind), parameter :: &
-       di13c_ind       = 1,  & ! dissolved inorganic carbon 13
-       do13c_ind       = 2,  & ! dissolved organic carbon 13
-       zoo13C_ind      = 3,  & ! zooplankton carbon 13
-       di14c_ind       = 4,  & ! dissolved inorganic carbon 14
-       do14c_ind       = 5,  & ! dissolved organic carbon 14
-       zoo14C_ind      = 6     ! zooplankton carbon 14
+  type marbl_tracer_index_type
+    ! Tracer count, indices for CISO tracers
+    integer (int_kind) :: non_autotroph_tracer_cnt            = 0
+    integer (int_kind) :: non_autotroph_ciso_tracer_ind_begin = 0
+    integer (int_kind) :: non_autotroph_ciso_tracer_ind_end   = 0
+
+    ! General tracers
+    integer (int_kind) :: po4_ind         = 0 ! dissolved inorganic phosphate
+    integer (int_kind) :: no3_ind         = 0 ! dissolved inorganic nitrate
+    integer (int_kind) :: sio3_ind        = 0 ! dissolved inorganic silicate
+    integer (int_kind) :: nh4_ind         = 0 ! dissolved ammonia
+    integer (int_kind) :: fe_ind          = 0 ! dissolved inorganic iron
+    integer (int_kind) :: o2_ind          = 0 ! dissolved oxygen
+    integer (int_kind) :: dic_ind         = 0 ! dissolved inorganic carbon
+    integer (int_kind) :: dic_alt_co2_ind = 0 ! dissolved inorganic carbon with alternative CO2
+    integer (int_kind) :: alk_ind         = 0 ! alkalinity
+    integer (int_kind) :: doc_ind         = 0 ! dissolved organic carbon
+    integer (int_kind) :: don_ind         = 0 ! dissolved organic nitrogen
+    integer (int_kind) :: dop_ind         = 0 ! dissolved organic phosphorus
+    integer (int_kind) :: dopr_ind        = 0 ! refractory DOP
+    integer (int_kind) :: donr_ind        = 0 ! refractory DON
+    integer (int_kind) :: docr_ind        = 0 ! refractory DOC
+
+    ! CISO tracers
+    integer (int_kind) :: di13c_ind       = 0 ! dissolved inorganic carbon 13
+    integer (int_kind) :: do13c_ind       = 0 ! dissolved organic carbon 13
+    integer (int_kind) :: zoo13C_ind      = 0 ! zooplankton carbon 13
+    integer (int_kind) :: di14c_ind       = 0 ! dissolved inorganic carbon 14
+    integer (int_kind) :: do14c_ind       = 0 ! dissolved organic carbon 14
+    integer (int_kind) :: zoo14C_ind      = 0 ! zooplankton carbon 14
+  contains
+    procedure, public :: construct => marbl_tracer_index_constructor 
+  end type marbl_tracer_index_type
+
+  type(marbl_tracer_index_type) :: marbl_tracer_indices
 
   !-----------------------------------------------------------------------------
   !   epsilon values
@@ -653,6 +681,99 @@ contains
     write(stdout, *) '----------------------------------------'
 
   end subroutine marbl_params_print
+
+  !*****************************************************************************
+
+  subroutine marbl_tracer_index_constructor(this, ciso_on)
+
+    ! This subroutine sets the tracer indices for the non-autotroph tracers. To
+    ! know where to start the indexing for the autotroph tracers, it increments
+    ! tracer_cnt by 1 for each tracer that is included. Note that this gives an
+    ! accurate count whether the carbon isotope tracers are included or not.
+
+    class(marbl_tracer_index_type), intent(inout) :: this
+    logical,                        intent(in)    :: ciso_on
+
+    associate(tracer_cnt        => this%non_autotroph_tracer_cnt,             &
+              ciso_tracer_begin => this%non_autotroph_ciso_tracer_ind_begin,  &
+              ciso_tracer_end   => this%non_autotroph_ciso_tracer_ind_end)
+      tracer_cnt = 0
+
+#if 0
+      ! General ecosys tracers
+      tracer_cnt  = tracer_cnt + 1
+      this%po4_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%no3_ind = tracer_cnt
+
+      tracer_cnt    = tracer_cnt + 1
+      this%sio3_ind = tracer_cnt
+
+      tracer_cnt    = tracer_cnt + 1
+      this%nh4_ind  = tracer_cnt
+
+      tracer_cnt  = tracer_cnt + 1
+      this%fe_ind = tracer_cnt
+
+      tracer_cnt  = tracer_cnt + 1
+      this%o2_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%dic_ind = tracer_cnt
+
+      tracer_cnt           = tracer_cnt + 1
+      this%dic_alt_co2_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%alk_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%doc_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%don_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%dop_ind = tracer_cnt
+
+      tracer_cnt    = tracer_cnt + 1
+      this%dopr_ind = tracer_cnt
+
+      tracer_cnt    = tracer_cnt + 1
+      this%donr_ind = tracer_cnt
+
+      tracer_cnt    = tracer_cnt + 1
+      this%docr_ind = tracer_cnt
+#endif
+
+      if (ciso_on) then
+        ! Next tracer is start of the CISO tracers
+        ciso_tracer_begin = tracer_cnt + 1
+
+        tracer_cnt     = tracer_cnt + 1
+        this%di13c_ind = tracer_cnt
+
+        tracer_cnt     = tracer_cnt + 1
+        this%do13c_ind = tracer_cnt
+
+        tracer_cnt      = tracer_cnt + 1
+        this%zoo13C_ind = tracer_cnt
+
+        tracer_cnt     = tracer_cnt + 1
+        this%di14c_ind = tracer_cnt
+
+        tracer_cnt     = tracer_cnt + 1
+        this%do14c_ind = tracer_cnt
+
+        tracer_cnt      = tracer_cnt + 1
+        this%zoo14C_ind = tracer_cnt
+
+        ciso_tracer_end = tracer_cnt
+      end if
+    end associate
+
+  end subroutine marbl_tracer_index_constructor
 
   !*****************************************************************************
 
