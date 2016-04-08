@@ -96,6 +96,18 @@ module marbl_parms
   !  MARBL indices 
   !-----------------------------------------------------------------------
 
+  type marbl_living_tracer_index_type
+     integer (KIND=int_kind) :: Chl_ind      ! tracer indices for Chl content
+     integer (KIND=int_kind) :: C_ind        ! tracer indices for Ce content
+     integer (KIND=int_kind) :: Fe_ind       ! tracer indices for Fe content
+     integer (KIND=int_kind) :: Si_ind       ! tracer indices for Si  content
+     integer (KIND=int_kind) :: CaCO3_ind    ! tracer indices for CaCO3 content
+     integer (KIND=int_kind) :: C13_ind      ! tracer indices for 13C content
+     integer (KIND=int_kind) :: C14_ind      ! tracer indices for 14C content
+     integer (KIND=int_kind) :: Ca13CO3_ind  ! tracer indices for 13CaCO3 content
+     integer (KIND=int_kind) :: Ca14CO3_ind  ! tracer indices for 14CaCO3 content
+  end type
+
   ! non-autotroph relative tracer indices
   ! autotroph relative tracer indices are in autotroph derived type and 
   ! are determined at run time
@@ -130,6 +142,10 @@ module marbl_parms
     integer (int_kind) :: di14c_ind       = 0 ! dissolved inorganic carbon 14
     integer (int_kind) :: do14c_ind       = 0 ! dissolved organic carbon 14
     integer (int_kind) :: zoo14C_ind      = 0 ! zooplankton carbon 14
+
+    ! Living tracers
+    type(marbl_living_tracer_index_type), dimension(autotroph_cnt)   :: auto_inds
+    type(marbl_living_tracer_index_type), dimension(zooplankton_cnt) :: zoo_inds
   contains
     procedure, public :: construct => marbl_tracer_index_constructor 
   end type marbl_tracer_index_type
@@ -677,6 +693,7 @@ contains
 
     integer :: tmp_cnt ! for now we want to reset tracer_cnt for ciso and then
                        ! end with the correct total
+    integer :: n
 
     associate(tracer_cnt        => this%non_autotroph_tracer_cnt,             &
               ciso_tracer_begin => this%non_autotroph_ciso_tracer_ind_begin,  &
@@ -729,6 +746,27 @@ contains
       tracer_cnt    = tracer_cnt + 1
       this%docr_ind = tracer_cnt
 
+      do n=1,autotroph_cnt
+        tracer_cnt    = tracer_cnt + 1
+        this%auto_inds%Chl_ind = tracer_cnt
+
+        tracer_cnt    = tracer_cnt + 1
+        this%auto_inds%C_ind = tracer_cnt
+
+        tracer_cnt    = tracer_cnt + 1
+        this%auto_inds%Fe_ind = tracer_cnt
+
+        if (autotrophs(n)%kSiO3.gt.c0) then
+          tracer_cnt    = tracer_cnt + 1
+          this%auto_inds%Si_ind = tracer_cnt
+        end if
+
+        if (autotrophs(n)%imp_calcifier.or.autotrophs(n)%exp_calcifier) then
+          tracer_cnt    = tracer_cnt + 1
+          this%auto_inds%CaCO3_ind = tracer_cnt
+        end if
+      end do
+
       if (ciso_on) then
         ! Next tracer is start of the CISO tracers
         tmp_cnt = tracer_cnt
@@ -754,6 +792,23 @@ contains
         this%zoo14C_ind = tracer_cnt
 
         ciso_tracer_end = tracer_cnt
+
+        do n=1,autotroph_cnt
+          tracer_cnt    = tracer_cnt + 1
+          this%auto_inds(n)%C13_ind = tracer_cnt
+
+          tracer_cnt    = tracer_cnt + 1
+          this%auto_inds(n)%C14_ind = tracer_cnt
+
+          if (autotrophs(n)%imp_calcifier.or.autotrophs(n)%exp_calcifier) then
+            tracer_cnt    = tracer_cnt + 1
+            this%auto_inds(n)%Ca13CO3_ind = tracer_cnt
+
+            tracer_cnt    = tracer_cnt + 1
+            this%auto_inds(n)%Ca14CO3_ind = tracer_cnt
+          end if
+        end do
+
         tracer_cnt      = tracer_cnt + tmp_cnt
       end if
     end associate
