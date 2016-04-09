@@ -50,6 +50,8 @@ module marbl_interface
 
   use marbl_restore_mod     , only : marbl_restore_type
 
+  use marbl_parms           , only : marbl_tracer_index_type
+
   implicit none
 
   private
@@ -68,6 +70,7 @@ module marbl_interface
      ! public data - general
      type(marbl_domain_type)                   , public               :: domain
      type(marbl_tracer_metadata_type)          , public, allocatable  :: tracer_metadata(:)
+     type(marbl_tracer_index_type)             , public               :: tracer_indices
      type(marbl_log_type)                      , public               :: statusLog
      type(marbl_saved_state_type)              , public               :: saved_state             ! input/output
 
@@ -196,6 +199,8 @@ contains
 
     this%ciso_on = gcm_ciso_on
 
+    call this%tracer_indices%construct(gcm_ciso_on)
+
     call this%PAR%construct(num_levels, num_PAR_subcols)
 
     call this%particulate_share%construct(num_levels)
@@ -243,6 +248,7 @@ contains
 
     call marbl_init_tracer_metadata( &
          this%tracer_metadata,       &
+         this%tracer_indices,        &
          this%statusLog)
 
     if (this%statusLog%labort_marbl) then
@@ -254,7 +260,7 @@ contains
     if (this%ciso_on) then
        call marbl_ciso_init_tracer_metadata(                               &
             this%tracer_metadata(ecosys_ciso_ind_beg:ecosys_ciso_ind_end), &
-            this%statusLog)
+            this%tracer_indices, this%statusLog)
 
        if (this%statusLog%labort_marbl) then
          call this%statusLog%log_error("error code returned from marbl_ciso_init_tracer_metadata", &
@@ -326,6 +332,7 @@ contains
          interior_restore        = this%column_restore,          &
          tracers                 = this%column_tracers,          &
          dtracers                = this%column_dtracers,         &
+         marbl_tracer_indices    = this%tracer_indices,          &
          marbl_PAR               = this%PAR,                     &
          marbl_interior_share    = this%interior_share,          &
          marbl_zooplankton_share = this%zooplankton_share,       &
@@ -360,6 +367,7 @@ contains
          surface_input_forcings   = this%surface_input_forcings,              &
          surface_vals             = this%surface_vals,                        &
          surface_tracer_fluxes    = this%surface_tracer_fluxes,               &
+         marbl_tracer_indices     = this%tracer_indices,                      &
          saved_state              = this%saved_state,                         &
          surface_forcing_output   = this%surface_forcing_output,              &
          surface_forcing_internal = this%surface_forcing_internal,            &

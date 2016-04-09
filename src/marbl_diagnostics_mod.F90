@@ -17,6 +17,7 @@ module marbl_diagnostics_mod
   use marbl_parms           , only : zooplankton
   use marbl_parms           , only : c0
   use marbl_parms           , only : c1
+  use marbl_parms           , only : marbl_tracer_index_type
 
   use marbl_internal_types  , only : carbonate_type
   use marbl_internal_types  , only : zooplankton_type
@@ -2933,6 +2934,7 @@ contains
        domain,                                        &
        interior_forcing_input,                        &
        dtracers,                                      &
+       marbl_tracer_indices,                          &
        carbonate,                                     &
        autotroph_secondary_species,                   &         
        zooplankton_secondary_species,                 &
@@ -2951,6 +2953,7 @@ contains
     type (marbl_domain_type)                  , intent(in) :: domain                                
     type (marbl_interior_forcing_input_type)  , intent(in) :: interior_forcing_input
     real (r8)                                 , intent(in) :: dtracers(:,:) ! (ecosys_used_tracer_cnt, km) computed source/sink terms
+    type(marbl_tracer_index_type)             , intent(in) :: marbl_tracer_indices
     type (carbonate_type)                     , intent(in) :: carbonate(domain%km)
     type (autotroph_secondary_species_type)   , intent(in) :: autotroph_secondary_species(autotroph_cnt, domain%km)
     type (zooplankton_secondary_species_type) , intent(in) :: zooplankton_secondary_species(zooplankton_cnt, domain%km)
@@ -3002,8 +3005,8 @@ contains
          PON_remin, PON_sed_loss, POP_remin, POP_sed_loss, &
          sed_denitrif, other_remin, marbl_interior_forcing_diags)
 
-    call store_diagnostics_carbon_fluxes(domain, &
-         POC, P_CaCO3, dtracers, marbl_interior_forcing_diags)
+    call store_diagnostics_carbon_fluxes(domain, POC, P_CaCO3, dtracers,      &
+         marbl_tracer_indices, marbl_interior_forcing_diags)
 
     call store_diagnostics_nitrification(&
          nitrif, denitrif, marbl_interior_forcing_diags)
@@ -3020,16 +3023,18 @@ contains
 
     call store_diagnostics_nitrogen_fluxes(domain, &
          PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracers, &
+         marbl_tracer_indices, marbl_interior_forcing_diags)
+
+    call store_diagnostics_phosphorus_fluxes(domain, POP_sed_loss, dtracers,  &
+         marbl_tracer_indices, marbl_interior_forcing_diags)
+
+    call store_diagnostics_silicon_fluxes(domain, P_SiO2, dtracers,           &
+         marbl_tracer_indices, marbl_interior_forcing_diags)
+
+    call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
+         interior_forcing_input%fesedflux, dtracers, marbl_tracer_indices,    &
          marbl_interior_forcing_diags)
-
-    call store_diagnostics_phosphorus_fluxes(domain, &
-         POP_sed_loss, dtracers, marbl_interior_forcing_diags)
-
-    call store_diagnostics_silicon_fluxes(domain, &
-         P_SiO2, dtracers, marbl_interior_forcing_diags)
-
-    call store_diagnostics_iron_fluxes(domain, &
-         P_iron, dust, interior_forcing_input%fesedflux, dtracers, marbl_interior_forcing_diags)
+         
 
     end associate
 
@@ -3042,6 +3047,7 @@ contains
        surface_input_forcings,                      &
        surface_forcing_internal,                    &
        surface_tracer_fluxes,                       &
+       marbl_tracer_indices,                        &
        saved_state,                                 &
        surface_forcing_output,                      &
        surface_forcing_diags)
@@ -3061,13 +3067,13 @@ contains
     use marbl_share_mod       , only : dic_riv_flux_file          
     use marbl_share_mod       , only : alk_riv_flux_file          
     use marbl_parms           , only : mpercm
-    use marbl_parms           , only : marbl_tracer_indices
 
     implicit none
 
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
     real(r8)                                  , intent(in)    :: surface_input_forcings(:,:)
     real(r8)                                  , intent(in)    :: surface_tracer_fluxes(:,:)
+    type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(in)    :: saved_state 
     type(marbl_surface_forcing_internal_type) , intent(in)    :: surface_forcing_internal
     type(marbl_surface_forcing_output_type)   , intent(in)    :: surface_forcing_output
@@ -3742,15 +3748,14 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_carbon_fluxes(marbl_domain, &
-       POC, P_CaCO3, dtracer, marbl_diags)
-
-    use marbl_parms, only : marbl_tracer_indices
+  subroutine store_diagnostics_carbon_fluxes(marbl_domain, POC, P_CaCO3,      &
+             dtracer, marbl_tracer_indices, marbl_diags)
 
     type(marbl_domain_type)     , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: POC
     type(column_sinking_particle_type) , intent(in)    :: P_CaCO3
     real(r8)                           , intent(in)    :: dtracer(:,:) ! ecosys_tracer_cnt, km
+    type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
@@ -3794,9 +3799,8 @@ contains
 
   subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, &
        PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracer, &
-       marbl_diags)
+       marbl_tracer_indices, marbl_diags)
 
-    use marbl_parms, only : marbl_tracer_indices
     use marbl_parms, only : Q
 
     type(marbl_domain_type)         , intent(in)    :: marbl_domain
@@ -3805,6 +3809,7 @@ contains
     real(r8)                               , intent(in)    :: sed_denitrif(:) ! km
     type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:)
     real(r8)                               , intent(in)    :: dtracer(:,:)      ! ecosys_tracer_cnt, km
+    type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
@@ -3850,14 +3855,14 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_phosphorus_fluxes(marbl_domain, &
-       POP_sed_loss, dtracer, marbl_diags)
+       POP_sed_loss, dtracer, marbl_tracer_indices, marbl_diags)
 
-    use marbl_parms, only : marbl_tracer_indices
     use marbl_parms,  only : Qp_zoo_pom
 
     type(marbl_domain_type) , intent(in)    :: marbl_domain
     real(r8)                       , intent(in)    :: POP_sed_loss(:) ! km
     real(r8)                       , intent(in)    :: dtracer(:,:)    ! ecosys_tracer_cnt, km
+    type(marbl_tracer_index_type)  , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)   , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
@@ -3898,13 +3903,12 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_silicon_fluxes(marbl_domain, &
-       P_SiO2, dtracer, marbl_diags)
-
-    use marbl_parms, only : marbl_tracer_indices
+       P_SiO2, dtracer, marbl_tracer_indices, marbl_diags)
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: P_SiO2
     real(r8)                           , intent(in)    :: dtracer(:,:) ! ecosys_tracer_cnt, km
+    type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
@@ -3940,10 +3944,8 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_iron_fluxes(marbl_domain, &
-       P_iron, dust, fesedflux, dtracer, marbl_diags)
-
-    use marbl_parms, only : marbl_tracer_indices
+  subroutine store_diagnostics_iron_fluxes(marbl_domain, P_iron, dust, &
+             fesedflux, dtracer, marbl_tracer_indices, marbl_diags)
 
     use marbl_parms     , only : Qfe_zoo
     use marbl_parms     , only : dust_to_Fe
@@ -3953,6 +3955,7 @@ contains
     type(column_sinking_particle_type) , intent(in)    :: dust
     real(r8), dimension(:)             , intent(in)    :: fesedflux  ! km
     real(r8), dimension(:,:)           , intent(in)    :: dtracer ! ecosys_tracer_cnt, km
+    type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
@@ -4015,14 +4018,13 @@ contains
        P_Ca13CO3,           &
        P_Ca14CO3,           &
        dtracer,             &
+       marbl_tracer_indices,&
        marbl_diags)
 
     !---------------------------------------------------------------------
     ! !DESCRIPTION:
     !  Update marbl_interior_ciso_diags data type 
     !---------------------------------------------------------------------
-
-    use marbl_parms, only : marbl_tracer_indices
 
     implicit none
 
@@ -4056,6 +4058,8 @@ contains
 
     real (r8), intent(in), dimension(ecosys_ciso_tracer_cnt, marbl_domain%km) :: &
          dtracer   ! computed source/sink terms
+
+    type(marbl_tracer_index_type), intent(in)      :: marbl_tracer_indices
 
     type(column_sinking_particle_type), intent(in) :: &
          PO13C,        &  ! base units = nmol 13C

@@ -150,8 +150,6 @@ module marbl_parms
     procedure, public :: construct => marbl_tracer_index_constructor 
   end type marbl_tracer_index_type
 
-  type(marbl_tracer_index_type) :: marbl_tracer_indices
-
   !-----------------------------------------------------------------------------
   !   epsilon values
   !-----------------------------------------------------------------------------

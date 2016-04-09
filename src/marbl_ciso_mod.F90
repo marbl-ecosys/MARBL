@@ -25,6 +25,7 @@ module marbl_ciso_mod
   use marbl_parms           , only : autotrophs  
   use marbl_parms           , only : zooplankton 
   use marbl_parms           , only : grazing     
+  use marbl_parms           , only : marbl_tracer_index_type
 
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
@@ -249,17 +250,19 @@ contains
 
   !*****************************************************************************
   
-  subroutine marbl_ciso_init_tracer_metadata(marbl_tracer_metadata, marbl_status_log)
+  subroutine marbl_ciso_init_tracer_metadata(marbl_tracer_metadata,           &
+                                             marbl_tracer_indices,            &
+                                             marbl_status_log)
 
     !  Set tracer and forcing metadata
 
     use marbl_share_mod       , only : ecosys_ciso_tracer_cnt
     use marbl_share_mod       , only : ciso_lecovars_full_depth_tavg
-    use marbl_parms           , only : marbl_tracer_indices
 
     implicit none
 
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
+    type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
     type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
@@ -430,6 +433,7 @@ contains
        marbl_particulate_share,               &
        column_tracer,                         &
        column_dtracer,                        &
+       marbl_tracer_indices,                  &
        marbl_interior_diags,                  &
        marbl_status_log)
 
@@ -443,7 +447,6 @@ contains
     use marbl_parms            , only : f_graze_CaCO3_REMIN
     use marbl_parms            , only : R13c_std, R14c_std
     use marbl_parms            , only : spd
-    use marbl_parms            , only : marbl_tracer_indices
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_interior
 
     implicit none
@@ -457,6 +460,7 @@ contains
     type(marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
     real (r8)                               , intent(in)    :: column_tracer(ecosys_ciso_tracer_cnt, marbl_domain%km)   ! tracer values
     real (r8)                               , intent(out)   :: column_dtracer(ecosys_ciso_tracer_cnt, marbl_domain%km)  ! computed source/sink terms
+    type(marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)            , intent(inout) :: marbl_interior_diags
     type(marbl_log_type)                    , intent(inout) :: marbl_status_log
 
@@ -654,8 +658,9 @@ contains
     !  Create local copies of model column_tracer, treat negative values as zero
     !-----------------------------------------------------------------------
     
-    call setup_local_column_tracers(column_km, column_kmt, column_tracer, &
-         DI13C_loc, DO13c_loc, zoo13C_loc, DI14C_loc, DO14C_loc, zoo14C_loc)
+    call setup_local_column_tracers(column_km, column_kmt, column_tracer,     &
+           marbl_tracer_indices, DI13C_loc, DO13c_loc, zoo13C_loc, DI14C_loc, &
+           DO14C_loc, zoo14C_loc)
 
     !-----------------------------------------------------------------------
     !  Create local copies of model column autotrophs, treat negative values as zero
@@ -1121,6 +1126,7 @@ contains
        P_Ca13CO3,           &
        P_Ca14CO3,           &
        column_dtracer,      &
+       marbl_tracer_indices,&
        marbl_interior_diags)
 
     !-----------------------------------------------------------------------
@@ -1241,20 +1247,20 @@ contains
   !***********************************************************************
 
   subroutine setup_local_column_tracers(column_km, column_kmt, column_tracer, &
-       DI13C_loc, DO13c_loc, zoo13C_loc, DI14C_loc, DO14C_loc, zoo14C_loc)
+           marbl_tracer_indices, DI13C_loc, DO13c_loc, zoo13C_loc, DI14C_loc, &
+           DO14C_loc, zoo14C_loc)
 
     !-----------------------------------------------------------------------
     !  create local copies of model column_tracer
     !  treat negative values as zero
     !-----------------------------------------------------------------------
 
-    use marbl_parms , only : marbl_tracer_indices
-
     implicit none
 
     integer(int_kind) , intent(in)  :: column_km
     integer(int_kind) , intent(in)  :: column_kmt
     real (r8)         , intent(in)  :: column_tracer(:,:) ! (ecosys_ciso_tracer_cnt,km) tracer values
+    type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
 
     real (r8)         , intent(out) :: DI13C_loc(:)     ! (km) local copy of model DI13C
     real (r8)         , intent(out) :: DO13C_loc(:)     ! (km) local copy of model DO13C
@@ -1924,13 +1930,13 @@ contains
        d14c_glo_avg        ,                 &
        surface_vals        ,                 &
        stf                 ,                 &
+       marbl_tracer_indices,                 &
        marbl_surface_forcing_share ,         &
        marbl_surface_forcing_diags)
 
     use marbl_parms            , only : R13c_std
     use marbl_parms            , only : R14c_std
     use marbl_parms            , only : p5
-    use marbl_parms            , only : marbl_tracer_indices
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_surface_forcing
 
     implicit none
@@ -1945,6 +1951,7 @@ contains
     real(r8)                               , intent(in)    :: surface_vals(num_elements, num_tracers)
     type(marbl_surface_forcing_share_type) , intent(in)    :: marbl_surface_forcing_share
     real(r8)                               , intent(inout) :: stf(num_elements, num_tracers)
+    type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_surface_forcing_diags
 
     !-----------------------------------------------------------------------
