@@ -350,6 +350,7 @@ contains
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
+       autotrophs(auto_ind)%C14_ind = n
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
        if (n.gt.0) then
@@ -375,17 +376,13 @@ contains
     write (status_msg,"(A)") '----- autotroph tracer indices -----'
     call marbl_status_log%log_noerror(status_msg, subname)
     do auto_ind = 1, autotroph_cnt
-       write (status_msg, "(3A,I0)") 'C13_ind('     , trim(autotrophs(auto_ind)%sname), &
-             ') = ', marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
+       write (status_msg, "(3A,I0)") 'C13_ind('     , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%C13_ind
        call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'C14_ind('     , trim(autotrophs(auto_ind)%sname), &
-             ') = ', marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
+       write (status_msg, "(3A,I0)") 'C14_ind('     , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%C14_ind
        call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'Ca13CO3_ind(' , trim(autotrophs(auto_ind)%sname), &
-             ') = ', marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
+       write (status_msg, "(3A,I0)") 'Ca13CO3_ind(' , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%Ca13CO3_ind
        call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'Ca14CO3_ind(' , trim(autotrophs(auto_ind)%sname), &
-             ') = ', marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
+       write (status_msg, "(3A,I0)") 'Ca14CO3_ind(' , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%Ca14CO3_ind
        call marbl_status_log%log_noerror(status_msg, subname)
     end do
     write (status_msg, "(A,I0)") 'autotroph_cnt = ', autotroph_cnt
@@ -412,7 +409,7 @@ contains
           marbl_tracer_metadata(n)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
        endif
 
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
        if (n > 0) then
           marbl_tracer_metadata(n)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
        endif

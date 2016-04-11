@@ -679,19 +679,24 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_tracer_index_constructor(this, ciso_on)
+  subroutine marbl_tracer_index_constructor(this, ciso_on, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
     ! tracer_cnt by 1 for each tracer that is included. Note that this gives an
     ! accurate count whether the carbon isotope tracers are included or not.
 
+    use marbl_logging, only : marbl_log_type
+    use marbl_logging, only : status_msg
+
     class(marbl_tracer_index_type), intent(inout) :: this
     logical,                        intent(in)    :: ciso_on
+    type(marbl_log_type),           intent(inout) :: marbl_status_log
 
     integer :: tmp_cnt ! for now we want to reset tracer_cnt for ciso and then
                        ! end with the correct total
     integer :: n
+    character(*), parameter :: subname='marbl_parms:marbl_tracer_index_constructor'
 
     associate(tracer_cnt        => this%non_autotroph_tracer_cnt,             &
               ciso_tracer_begin => this%non_autotroph_ciso_tracer_ind_begin,  &
@@ -744,25 +749,62 @@ contains
       tracer_cnt    = tracer_cnt + 1
       this%docr_ind = tracer_cnt
 
+      write (status_msg, "(A)") '----- zooplankton tracer indices -----'
+      call marbl_status_log%log_noerror(status_msg, subname)
+
+      do n=1,zooplankton_cnt
+        tracer_cnt    = tracer_cnt + 1
+        this%zoo_inds(n)%C_ind = tracer_cnt
+
+        write (status_msg, "(3A,I0)") 'C_ind('     , trim(zooplankton(n)%sname), &
+              ') = ', this%zoo_inds(n)%C_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+      end do
+
+      write (status_msg, "(A)") '----- autotroph tracer indices -----'
+      call marbl_status_log%log_noerror(status_msg, subname)
+
       do n=1,autotroph_cnt
         tracer_cnt    = tracer_cnt + 1
-        this%auto_inds%Chl_ind = tracer_cnt
+        this%auto_inds(n)%Chl_ind = tracer_cnt
 
         tracer_cnt    = tracer_cnt + 1
-        this%auto_inds%C_ind = tracer_cnt
+        this%auto_inds(n)%C_ind = tracer_cnt
 
         tracer_cnt    = tracer_cnt + 1
-        this%auto_inds%Fe_ind = tracer_cnt
+        this%auto_inds(n)%Fe_ind = tracer_cnt
 
         if (autotrophs(n)%kSiO3.gt.c0) then
           tracer_cnt    = tracer_cnt + 1
-          this%auto_inds%Si_ind = tracer_cnt
+          this%auto_inds(n)%Si_ind = tracer_cnt
         end if
 
         if (autotrophs(n)%imp_calcifier.or.autotrophs(n)%exp_calcifier) then
           tracer_cnt    = tracer_cnt + 1
-          this%auto_inds%CaCO3_ind = tracer_cnt
+          this%auto_inds(n)%CaCO3_ind = tracer_cnt
         end if
+
+        write (status_msg, "(3A,I0)") 'Chl_ind('     , trim(autotrophs(n)%sname), &
+              ') = ', this%auto_inds(n)%Chl_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+        write (status_msg, "(3A,I0)") 'C_ind('     , trim(autotrophs(n)%sname), &
+              ') = ', this%auto_inds(n)%C_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+        write (status_msg, "(3A,I0)") 'Fe_ind('     , trim(autotrophs(n)%sname), &
+              ') = ', this%auto_inds(n)%Fe_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+        write (status_msg, "(3A,I0)") 'Si_ind('     , trim(autotrophs(n)%sname), &
+              ') = ', this%auto_inds(n)%Si_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+        write (status_msg, "(3A,I0)") 'CaCO3_ind('     , trim(autotrophs(n)%sname), &
+              ') = ', this%auto_inds(n)%CaCO3_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
       end do
 
       if (ciso_on) then
@@ -791,6 +833,9 @@ contains
 
         ciso_tracer_end = tracer_cnt
 
+        write (status_msg, "(A)") '----- autotroph tracer indices (CISO) -----'
+        call marbl_status_log%log_noerror(status_msg, subname)
+
         do n=1,autotroph_cnt
           tracer_cnt    = tracer_cnt + 1
           this%auto_inds(n)%C13_ind = tracer_cnt
@@ -805,6 +850,19 @@ contains
             tracer_cnt    = tracer_cnt + 1
             this%auto_inds(n)%Ca14CO3_ind = tracer_cnt
           end if
+
+          write (status_msg, "(3A,I0)") 'C13_ind('     , trim(autotrophs(n)%sname), &
+                ') = ', this%auto_inds(n)%C13_ind
+          call marbl_status_log%log_noerror(status_msg, subname)
+          write (status_msg, "(3A,I0)") 'C14_ind('     , trim(autotrophs(n)%sname), &
+                ') = ', this%auto_inds(n)%C14_ind
+          call marbl_status_log%log_noerror(status_msg, subname)
+          write (status_msg, "(3A,I0)") 'Ca13CO3_ind(' , trim(autotrophs(n)%sname), &
+                ') = ', this%auto_inds(n)%Ca13CO3_ind
+          call marbl_status_log%log_noerror(status_msg, subname)
+          write (status_msg, "(3A,I0)") 'Ca14CO3_ind(' , trim(autotrophs(n)%sname), &
+                ') = ', this%auto_inds(n)%Ca14CO3_ind
+          call marbl_status_log%log_noerror(status_msg, subname)
         end do
 
         tracer_cnt      = tracer_cnt + tmp_cnt

@@ -199,7 +199,7 @@ contains
 
     this%ciso_on = gcm_ciso_on
 
-    call this%tracer_indices%construct(gcm_ciso_on)
+    call this%tracer_indices%construct(gcm_ciso_on, this%StatusLog)
 
     call this%PAR%construct(num_levels, num_PAR_subcols)
 
