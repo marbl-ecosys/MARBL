@@ -927,7 +927,7 @@ contains
        !-----------------------------------------------------------------------
        
        do auto_ind = 1, autotroph_cnt
-          if (autotrophs(auto_ind)%CaCO3_ind > 0) then
+          if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
              P_Ca13CO3%prod(k) = P_CaCO3%prod(k) * R13C_autotrophCaCO3(auto_ind,k)
              P_Ca14CO3%prod(k) = P_CaCO3%prod(k) * R14C_autotrophCaCO3(auto_ind,k)
           endif
@@ -947,7 +947,7 @@ contains
        zooC_d14C(k)=  ( R14C_zooC(k) / R14C_std - c1 ) * c1000
 
        do auto_ind = 1, autotroph_cnt
-          if (autotrophs(auto_ind)%CaCO3_ind > 0) then
+          if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
              autotrophCaCO3_d13C(auto_ind,k) =  ( R13C_autotrophCaCO3(auto_ind,k) / R13C_std - c1 ) * c1000
              autotrophCaCO3_d14C(auto_ind,k) =  ( R14C_autotrophCaCO3(auto_ind,k) / R14C_std - c1 ) * c1000
           else
@@ -1873,7 +1873,7 @@ contains
                        autotrophC_loc(auto_ind,k)   == c0 .or. &
                        autotrophFe_loc(auto_ind,k)  == c0)
 
-          if (autotroph_meta(auto_ind)%Si_ind > 0) then
+          if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
              zero_mask = (zero_mask .or. autotrophSi_loc(auto_ind,k) == c0)
           end if
 

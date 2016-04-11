@@ -340,6 +340,7 @@ contains
        ciso_on,                      &
        marbl_domain,                 &
        marbl_tracer_metadata,        &
+       marbl_tracer_indices,         &
        marbl_interior_forcing_diags, &
        marbl_interior_restore_diags, &
        marbl_surface_forcing_diags)
@@ -347,6 +348,7 @@ contains
     logical (log_kind)                , intent(in)    :: ciso_on 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
+    type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_forcing_diags
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_restore_diags
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_surface_forcing_diags
@@ -1376,7 +1378,7 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             if (autotrophs(n)%CaCO3_ind.gt.0) then
+             if (marbl_tracer_indices%auto_inds(n)%CaCO3_ind.gt.0) then
                 lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation Vertical Integral'
                 sname = trim(autotrophs(n)%sname) // '_CaCO3_form_zint'
                 units = 'mmol/m^3 cm/s'
@@ -2149,7 +2151,7 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             if (autotrophs(n)%Si_ind.gt.0) then
+             if (marbl_tracer_indices%auto_inds(n)%Si_ind.gt.0) then
                 lname = trim(autotrophs(n)%lname) // ' Si Uptake'
                 ! FIXME #22 - eventually add _
                 sname = trim(autotrophs(n)%sname) // 'bSi_form'
@@ -2166,7 +2168,7 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             if (autotrophs(n)%CaCO3_ind.gt.0) then
+             if (marbl_tracer_indices%auto_inds(n)%CaCO3_ind.gt.0) then
                 lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation'
                 sname = trim(autotrophs(n)%sname) // '_CaCO3_form'
                 units = 'mmol/m^3/s'
@@ -3780,9 +3782,9 @@ contains
     work = dtracer(dic_ind,:) + dtracer(doc_ind,:) +                          &
          dtracer(docr_ind,:) +                                                &
          sum(dtracer(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +      &
-         sum(dtracer(autotrophs(:)%C_ind,:),dim=1)
+         sum(dtracer(marbl_tracer_indices%auto_inds(:)%C_ind,:),dim=1)
     do auto_ind = 1, autotroph_cnt
-       n = autotrophs(auto_ind)%CaCO3_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n.gt.0) then
           work = work + dtracer(n,:)
        end if
@@ -3835,8 +3837,8 @@ contains
     ! vertical integrals
     work = dtracer(no3_ind,:) + dtracer(nh4_ind,:) +                          &
            dtracer(don_ind,:) + dtracer(donr_ind,:) +                         &
-           Q * sum(dtracer(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +&
-           Q * sum(dtracer(autotrophs(:)%C_ind,:), dim=1) +                   &
+           Q * sum(dtracer(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +  &
+           Q * sum(dtracer(marbl_tracer_indices%auto_inds(:)%C_ind,:), dim=1) + &
            denitrif(:) + sed_denitrif(:)
     ! subtract out N fixation
     do n = 1, autotroph_cnt
@@ -3890,7 +3892,7 @@ contains
        work = work + Qp_zoo_pom * dtracer(marbl_tracer_indices%zoo_inds(n)%C_ind,:)
     end do
     do n = 1, autotroph_cnt
-       work = work + autotrophs(n)%Qp * dtracer(autotrophs(n)%C_ind,:)
+       work = work + autotrophs(n)%Qp * dtracer(marbl_tracer_indices%auto_inds(n)%C_ind,:)
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &
          full_depth_integral=diags(ind%Jint_Ptot)%field_2d(1),                &
@@ -3930,8 +3932,8 @@ contains
     ! vertical integrals
     work = dtracer(marbl_tracer_indices%sio3_ind,:)
     do n = 1, autotroph_cnt
-       if (autotrophs(n)%Si_ind > 0) then
-          work = work + dtracer(autotrophs(n)%Si_ind,:)
+       if (marbl_tracer_indices%auto_inds(n)%Si_ind > 0) then
+          work = work + dtracer(marbl_tracer_indices%auto_inds(n)%Si_ind,:)
        end if
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &
@@ -3976,7 +3978,8 @@ contains
          )
 
     ! vertical integrals
-    work = dtracer(fe_ind, :) + sum(dtracer(autotrophs(:)%Fe_ind, :),dim=1) + &
+    work = dtracer(fe_ind, :) +                                               &
+           sum(dtracer(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) +  &
            Qfe_zoo * sum(dtracer(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1) - &
            dust%remin(:) * dust_to_Fe
     call compute_vertical_integrals(work, delta_z, kmt,                       &

@@ -33,11 +33,6 @@ module marbl_internal_types
      logical (KIND=log_kind) :: Nfixer                             ! flag set to true if this autotroph fixes N2
      logical (KIND=log_kind) :: imp_calcifier                      ! flag set to true if this autotroph implicitly handles calcification
      logical (KIND=log_kind) :: exp_calcifier                      ! flag set to true if this autotroph explicitly handles calcification
-     integer (KIND=int_kind) :: Chl_ind                            ! tracer indices for Chl content
-     integer (KIND=int_kind) :: C_ind                              ! tracer indices for Ce content
-     integer (KIND=int_kind) :: Fe_ind                             ! tracer indices for Fe content
-     integer (KIND=int_kind) :: Si_ind                             ! tracer indices for Si  content
-     integer (KIND=int_kind) :: CaCO3_ind                          ! tracer indices for CaCO3 content
      real    (KIND=r8)       :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3 ! nutrient uptake half-sat constants
      real    (KIND=r8)       :: Qp                                 ! P/C ratio
      real    (KIND=r8)       :: gQfe_0, gQfe_min                   ! initial and minimum fe/C ratio
