@@ -1288,7 +1288,7 @@ contains
 
     ! Should be done in marbl_diagnostics, and without the _tavg name
     do zoo_ind = 1, zooplankton_cnt
-       n = zooplankton(zoo_ind)%C_ind
+       n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
        marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
     end do
 
@@ -1467,7 +1467,8 @@ contains
     do k = 1, km
        call marbl_setup_local_tracers(k, kmt, tracers(:, k), tracer_local(:, k))
 
-       call marbl_setup_local_zooplankton(k, kmt, tracers(:, k), zooplankton_local(:, k))
+       call marbl_setup_local_zooplankton(k, kmt, tracers(:, k),              &
+            marbl_tracer_indices, zooplankton_local(:, k))
 
        call marbl_setup_local_autotrophs(k, kmt, tracers(:, k), autotroph_local(:, k))
     enddo
@@ -3129,7 +3130,6 @@ contains
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-       zooplankton(zoo_ind)%C_ind = n
     end do
 
   end subroutine marbl_init_zooplankton_tracer_metadata
@@ -3238,7 +3238,8 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_setup_local_zooplankton(k, column_kmt, tracers, zooplankton_local)
+  subroutine marbl_setup_local_zooplankton(k, column_kmt, tracers,            &
+             marbl_tracer_indices, zooplankton_local)
 
     !-----------------------------------------------------------------------
     !  create local copies of model tracers, treat negative values as zero
@@ -3249,6 +3250,7 @@ contains
     integer (int_kind)           , intent(in)  :: k
     integer(int_kind)            , intent(in)  :: column_kmt
     real (r8)                    , intent(in)  :: tracers(:) ! tracer values
+    type(marbl_tracer_index_type), intent(in)  :: marbl_tracer_indices
     type(zooplankton_local_type) , intent(out) :: zooplankton_local(:)
 
     !-----------------------------------------------------------------------
@@ -3261,7 +3263,7 @@ contains
        if (k > column_kmt) then
           zooplankton_local(zoo_ind)%C = c0
        else
-          n = zooplankton(zoo_ind)%C_ind
+          n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
           zooplankton_local(zoo_ind)%C = max(c0, tracers(n))
        end if
     end do
@@ -5088,7 +5090,7 @@ contains
     !  zoo Carbon
     !-----------------------------------------------------------------------
     do zoo_ind = 1, zoo_cnt
-       n = zoo_meta(zoo_ind)%C_ind
+       n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
        dtracers(n) = x_graze_zoo(zoo_ind) - zoo_graze(zoo_ind) - zoo_loss(zoo_ind)
     end do
 

@@ -19,7 +19,6 @@ module marbl_internal_types
   type, public :: zooplankton_type
      character(char_len)     :: sname
      character(char_len)     :: lname
-     integer (KIND=int_kind) :: C_ind      ! tracer indices for zooplankton carbon
      real    (KIND=r8)       :: z_mort_0   ! zoo linear mort rate (1/sec)
      real    (KIND=r8)       :: z_mort2_0  ! zoo quad mort rate (1/sec/((mmol C/m3))
      real    (KIND=r8)       :: loss_thres ! zoo conc. where losses go to zero

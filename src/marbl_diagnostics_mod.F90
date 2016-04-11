@@ -3778,7 +3778,8 @@ contains
 
     ! vertical integrals
     work = dtracer(dic_ind,:) + dtracer(doc_ind,:) +                          &
-         dtracer(docr_ind,:) + sum(dtracer(zooplankton(:)%C_ind,:), dim=1) +  &
+         dtracer(docr_ind,:) +                                                &
+         sum(dtracer(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +      &
          sum(dtracer(autotrophs(:)%C_ind,:),dim=1)
     do auto_ind = 1, autotroph_cnt
        n = autotrophs(auto_ind)%CaCO3_ind
@@ -3834,7 +3835,7 @@ contains
     ! vertical integrals
     work = dtracer(no3_ind,:) + dtracer(nh4_ind,:) +                          &
            dtracer(don_ind,:) + dtracer(donr_ind,:) +                         &
-           Q * sum(dtracer(zooplankton(:)%C_ind,:), dim=1) +                  &
+           Q * sum(dtracer(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +&
            Q * sum(dtracer(autotrophs(:)%C_ind,:), dim=1) +                   &
            denitrif(:) + sed_denitrif(:)
     ! subtract out N fixation
@@ -3886,7 +3887,7 @@ contains
     ! vertical integrals
     work = dtracer(po4_ind,:) + dtracer(dop_ind,:) + dtracer(dopr_ind,:)
     do n = 1, zooplankton_cnt
-       work = work + Qp_zoo_pom * dtracer(zooplankton(n)%C_ind,:)
+       work = work + Qp_zoo_pom * dtracer(marbl_tracer_indices%zoo_inds(n)%C_ind,:)
     end do
     do n = 1, autotroph_cnt
        work = work + autotrophs(n)%Qp * dtracer(autotrophs(n)%C_ind,:)
@@ -3976,7 +3977,7 @@ contains
 
     ! vertical integrals
     work = dtracer(fe_ind, :) + sum(dtracer(autotrophs(:)%Fe_ind, :),dim=1) + &
-           Qfe_zoo * sum(dtracer(zooplankton(:)%C_ind, :),dim=1) -            &
+           Qfe_zoo * sum(dtracer(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1) - &
            dust%remin(:) * dust_to_Fe
     call compute_vertical_integrals(work, delta_z, kmt,                       &
          full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),               &
