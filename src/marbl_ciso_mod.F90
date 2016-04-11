@@ -373,23 +373,6 @@ contains
        autotrophs(auto_ind)%Ca14CO3_ind = n
     end do
 
-    write (status_msg,"(A)") '----- autotroph tracer indices -----'
-    call marbl_status_log%log_noerror(status_msg, subname)
-    do auto_ind = 1, autotroph_cnt
-       write (status_msg, "(3A,I0)") 'C13_ind('     , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%C13_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'C14_ind('     , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%C14_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'Ca13CO3_ind(' , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%Ca13CO3_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'Ca14CO3_ind(' , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%Ca14CO3_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-    end do
-    write (status_msg, "(A,I0)") 'autotroph_cnt = ', autotroph_cnt
-    call marbl_status_log%log_noerror(status_msg, subname)
-    write (status_msg,"(A)") '------------------------------------'
-    call marbl_status_log%log_noerror(status_msg, subname)
-
     !-----------------------------------------------------------------------
     !  set lfull_depth_tavg flag for short-lived ecosystem tracers
     !-----------------------------------------------------------------------

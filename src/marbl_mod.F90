@@ -1293,21 +1293,21 @@ contains
     end do
 
     do auto_ind = 1, autotroph_cnt
-       n = autotrophs(auto_ind)%Chl_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
        marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
 
-       n = autotrophs(auto_ind)%C_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
        marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
 
-       n = autotrophs(auto_ind)%Fe_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
        marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
 
-       n = autotrophs(auto_ind)%Si_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
        if (n > 0) then
           marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
        endif
 
-       n = autotrophs(auto_ind)%CaCO3_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n > 0) then
           marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
        endif
