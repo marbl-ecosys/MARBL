@@ -1276,22 +1276,11 @@ contains
        return
     end if
 
-    call marbl_init_zooplankton_tracer_metadata(marbl_tracer_metadata, &
-         non_living_biomass_ecosys_tracer_cnt, n, marbl_status_log)
+    call marbl_init_zooplankton_tracer_metadata(marbl_tracer_metadata,        &
+         marbl_tracer_indices)
 
-    if (marbl_status_log%labort_marbl) then
-       error_msg = "error code returned from marbl_init_zooplankton_tracer_metadata"
-       call marbl_status_log%log_error(error_msg, subname)
-       return
-    end if
-
-    call marbl_init_autotroph_tracer_metadata(marbl_tracer_metadata, n, marbl_status_log)
-
-    if (marbl_status_log%labort_marbl) then
-       error_msg = "error code returned from marbl_init_autotroph_tracer_metadata"
-       call marbl_status_log%log_error(error_msg, subname)
-       return
-    end if
+    call marbl_init_autotroph_tracer_metadata(marbl_tracer_metadata,          &
+         marbl_tracer_indices)
 
     !-----------------------------------------------------------------------
     !  set lfull_depth_tavg flag for short-lived ecosystem tracers
@@ -3116,7 +3105,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_init_zooplankton_tracer_metadata(marbl_tracer_metadata, &
-       non_living_biomass_ecosys_tracer_cnt, n, marbl_status_log)
+             marbl_tracer_indices)
 
     !-----------------------------------------------------------------------
     !  initialize zooplankton tracer_d values and tracer indices
@@ -3124,46 +3113,31 @@ contains
 
     implicit none
 
-    integer (int_kind)                , intent(in)    :: non_living_biomass_ecosys_tracer_cnt ! number of non-autotroph ecosystem tracers
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
-    type(marbl_log_type)              , intent(inout) :: marbl_status_log
-    integer (int_kind)                , intent(inout) :: n
+    type (marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = "marbl_mod:marbl_init_zooplankton_tracer_metadata"
-    integer (int_kind) :: zoo_ind            ! zooplankton functional group index
+    integer (int_kind) :: n, zoo_ind            ! zooplankton functional group index
     !-----------------------------------------------------------------------
 
-    n = non_living_biomass_ecosys_tracer_cnt + 1
-
     do zoo_ind = 1, zooplankton_cnt
+       n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
        marbl_tracer_metadata(n)%short_name = trim(zooplankton(zoo_ind)%sname) // 'C'
        marbl_tracer_metadata(n)%long_name  = trim(zooplankton(zoo_ind)%lname) // ' Carbon'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
        zooplankton(zoo_ind)%C_ind = n
-       n = n + 1
     end do
-
-    write (status_msg, "(A)") '----- zooplankton tracer indices -----'
-    call marbl_status_log%log_noerror(status_msg, subname)
-    do zoo_ind = 1, zooplankton_cnt
-       write (status_msg, "(3A,I0)") 'C_ind(', trim(zooplankton(zoo_ind)%sname), ') = ', zooplankton(zoo_ind)%C_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-    end do
-    write (status_msg, "(A,I0)") 'zooplankton_cnt = ', zooplankton_cnt
-    call marbl_status_log%log_noerror(status_msg, subname)
-    write (status_msg, "(A)") '------------------------------------'
-    call marbl_status_log%log_noerror(status_msg, subname)
 
   end subroutine marbl_init_zooplankton_tracer_metadata
 
   !***********************************************************************
 
-  subroutine marbl_init_autotroph_tracer_metadata(marbl_tracer_metadata, n, marbl_status_log)
+  subroutine marbl_init_autotroph_tracer_metadata(marbl_tracer_metadata,      &
+             marbl_tracer_indices)
 
     !-----------------------------------------------------------------------
     !  initialize autotroph tracer_d values and tracer indices
@@ -3172,86 +3146,60 @@ contains
     implicit none
 
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
-    type(marbl_log_type)              , intent(inout) :: marbl_status_log
-    integer(int_kind)                 , intent(inout) :: n
+    type    (marbl_tracer_index_type) , intent(in)    :: marbl_tracer_indices
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = "marbl_mod:marbl_init_autotroph_tracer_metadata"
-    integer (int_kind) :: auto_ind ! zooplankton functional group index
+    integer (int_kind) :: n, auto_ind
     !-----------------------------------------------------------------------
 
     do auto_ind = 1, autotroph_cnt
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
        marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Chl'
        marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Chlorophyll'
        marbl_tracer_metadata(n)%units      = 'mg/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mg/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mg/m^3 cm/s'
        autotrophs(auto_ind)%Chl_ind = n
-       n = n + 1
 
+       n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
        marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'C'
        marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
        autotrophs(auto_ind)%C_ind = n
-       n = n + 1
 
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
        marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Fe'
        marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Iron'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
        autotrophs(auto_ind)%Fe_ind = n
-       n = n + 1
 
-       if (autotrophs(auto_ind)%kSiO3 > c0) then
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
+       if (n.gt.0) then
           marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Si'
           marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Silicon'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-          autotrophs(auto_ind)%Si_ind = n
-          n = n + 1
-       else
-          autotrophs(auto_ind)%Si_ind = 0
        endif
+       autotrophs(auto_ind)%Si_ind = n
 
-       if (autotrophs(auto_ind)%imp_calcifier .or. &
-            autotrophs(auto_ind)%exp_calcifier) then
+       n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
+       if (n.gt.0) then
           marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'CaCO3'
           marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' CaCO3'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-          autotrophs(auto_ind)%CaCO3_ind = n
-          n = n + 1
-       else
-          autotrophs(auto_ind)%CaCO3_ind = 0
        endif
+       autotrophs(auto_ind)%CaCO3_ind = n
     end do
 
-    write (status_msg, "(A)") '----- autotroph tracer indices -----'
-    call marbl_status_log%log_noerror(status_msg, subname)
-    do auto_ind = 1, autotroph_cnt
-       write (status_msg, "(3A,I0)") 'Chl_ind(', trim(autotrophs(auto_ind)%sname), ') = '   , autotrophs(auto_ind)%Chl_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'C_ind(', trim(autotrophs(auto_ind)%sname), ') = '     , autotrophs(auto_ind)%C_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'Fe_ind(', trim(autotrophs(auto_ind)%sname), ') = '    , autotrophs(auto_ind)%Fe_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'Si_ind(', trim(autotrophs(auto_ind)%sname), ') = '    , autotrophs(auto_ind)%Si_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-       write (status_msg, "(3A,I0)") 'CaCO3_ind(', trim(autotrophs(auto_ind)%sname), ') = ' , autotrophs(auto_ind)%CaCO3_ind
-       call marbl_status_log%log_noerror(status_msg, subname)
-    end do
-    write (status_msg, "(A,I0)") 'autotroph_cnt = ', autotroph_cnt
-    call marbl_status_log%log_noerror(status_msg, subname)
-    write (status_msg, "(A)") '------------------------------------'
-    call marbl_status_log%log_noerror(status_msg, subname)
-    
   end subroutine marbl_init_autotroph_tracer_metadata
   
   !***********************************************************************
