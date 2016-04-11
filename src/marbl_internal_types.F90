@@ -38,10 +38,6 @@ module marbl_internal_types
      integer (KIND=int_kind) :: Fe_ind                             ! tracer indices for Fe content
      integer (KIND=int_kind) :: Si_ind                             ! tracer indices for Si  content
      integer (KIND=int_kind) :: CaCO3_ind                          ! tracer indices for CaCO3 content
-     integer (KIND=int_kind) :: C13_ind                            ! tracer indices for 13C
-     integer (KIND=int_kind) :: C14_ind                            ! tracer indices for 14C
-     integer (KIND=int_kind) :: Ca13CO3_ind                        ! tracer indices for 13CaCO3
-     integer (KIND=int_kind) :: Ca14CO3_ind                        ! tracer indices for 14CaCO3
      real    (KIND=r8)       :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3 ! nutrient uptake half-sat constants
      real    (KIND=r8)       :: Qp                                 ! P/C ratio
      real    (KIND=r8)       :: gQfe_0, gQfe_min                   ! initial and minimum fe/C ratio

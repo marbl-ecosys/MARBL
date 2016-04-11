@@ -342,7 +342,6 @@ contains
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-       autotrophs(auto_ind)%C13_ind = n
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
        marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '14C'
@@ -350,7 +349,6 @@ contains
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-       autotrophs(auto_ind)%C14_ind = n
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
        if (n.gt.0) then
@@ -360,7 +358,6 @@ contains
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
         end if
-        autotrophs(auto_ind)%Ca13CO3_ind = n
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
        if (n.gt.0) then
@@ -370,7 +367,6 @@ contains
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
        endif
-       autotrophs(auto_ind)%Ca14CO3_ind = n
     end do
 
     !-----------------------------------------------------------------------
@@ -647,14 +643,14 @@ contains
     !-----------------------------------------------------------------------
 
     call setup_local_autotrophs(column_km, column_kmt, column_tracer, &
-         autotroph_loc)
+         marbl_tracer_indices, autotroph_loc)
 
     !-----------------------------------------------------------------------
     !  If any ecosys phyto box is zero, set others to zeros
     !-----------------------------------------------------------------------
 
-    call marbl_autotroph_consistency_check(column_km,  &
-         autotroph_cnt, autotrophs, marbl_autotroph_share, autotroph_loc)
+    call marbl_autotroph_consistency_check(column_km, autotroph_cnt, autotrophs, &
+         marbl_tracer_indices, marbl_autotroph_share, autotroph_loc)
 
     !-----------------------------------------------------------------------
     !  Initialize Particulate terms for k=1
@@ -984,20 +980,20 @@ contains
        do auto_ind = 1, autotroph_cnt
           work1 = auto_graze(auto_ind,k) + auto_loss(auto_ind,k) + auto_agg(auto_ind,k)
 
-          n = autotrophs(auto_ind)%C13_ind
+          n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
           column_dtracer(n,k) = photo13C(auto_ind,k) - work1 * R13C_autotroph(auto_ind,k)
 
-          n = autotrophs(auto_ind)%C14_ind
+          n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
           column_dtracer(n,k) = photo14C(auto_ind,k) - work1 * R14C_autotroph(auto_ind,k) - &
                c14_lambda_inv_sec * autotroph_loc(auto_ind,k)%C14
 
-          n = autotrophs(auto_ind)%Ca13CO3_ind
+          n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
           if (n > 0) then
              column_dtracer(n,k) = Ca13CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
                   * work1 * R13C_autotrophCaCO3(auto_ind,k)
           endif
 
-          n = autotrophs(auto_ind)%Ca14CO3_ind
+          n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
           if (n > 0) then
              column_dtracer(n,k) = Ca14CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
                   * work1 * R14C_autotrophCaCO3(auto_ind,k)      &
@@ -1046,13 +1042,13 @@ contains
           - c14_lambda_inv_sec * DI14C_loc(k)
 
        do auto_ind = 1, autotroph_cnt
-          if (autotrophs(auto_ind)%Ca13CO3_ind > 0) then
+          if (marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind > 0) then
              column_dtracer(di13c_ind,k) = column_dtracer(di13c_ind,k)            &
                   + f_graze_CaCO3_REMIN * auto_graze(auto_ind,k)                  &
                   * QCaCO3(auto_ind,k) * R13C_autotrophCaCO3(auto_ind,k)          &
                   - Ca13CO3_PROD(auto_ind,k)
           endif
-          if (autotrophs(auto_ind)%Ca14CO3_ind > 0) then
+          if (marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind > 0) then
              column_dtracer(di14c_ind,k) = column_dtracer(di14c_ind,k)            &
                   + f_graze_CaCO3_REMIN * auto_graze(auto_ind,k)                  &
                   * QCaCO3(auto_ind,k) * R14C_autotrophCaCO3(auto_ind,k)          &
@@ -1288,7 +1284,7 @@ contains
   !***********************************************************************
 
   subroutine setup_local_autotrophs(column_km, column_kmt, column_tracer, &
-       autotroph_loc)
+             marbl_tracer_indices, autotroph_loc)
 
     !-----------------------------------------------------------------------
     !  create local copies of model column_tracer, treat negative values as zero
@@ -1300,6 +1296,7 @@ contains
     integer(int_kind)          , intent(in)  :: column_kmt
     real (r8)                  , intent(in)  :: column_tracer(:,:)  ! (autotroph_cnt, km)tracer values
 
+    type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
     type(autotroph_local_type) , intent(out) :: autotroph_loc(:,:)  ! (autotroph_cnt)
 
     !-----------------------------------------------------------------------
@@ -1312,20 +1309,20 @@ contains
 
     do auto_ind = 1, autotroph_cnt
        do k = 1, column_kmt
-          tracer_ind = autotrophs(auto_ind)%C13_ind
+          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
           autotroph_loc(auto_ind,k)%C13 = max(c0, column_tracer(tracer_ind,k))
 
-          tracer_ind = autotrophs(auto_ind)%C14_ind
+          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
           autotroph_loc(auto_ind,k)%C14 = max(c0, column_tracer(tracer_ind,k))
 
-          tracer_ind = autotrophs(auto_ind)%Ca13CO3_ind
+          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
           if (tracer_ind > 0) then
              autotroph_loc(auto_ind,k)%Ca13CO3 = max(c0, column_tracer(tracer_ind,k))
           else
              autotroph_loc(auto_ind,k)%Ca13CO3 = c0
           end if
 
-          tracer_ind = autotrophs(auto_ind)%Ca14CO3_ind
+          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
           if (tracer_ind > 0) then
              autotroph_loc(auto_ind,k)%Ca14CO3 = max(c0, column_tracer(tracer_ind,k))
           else
@@ -1835,8 +1832,8 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_autotroph_consistency_check(column_km,  &
-       autotroph_cnt, autotroph_meta, autotroph_share, autotroph_loc)
+  subroutine marbl_autotroph_consistency_check(column_km, autotroph_cnt,      &
+         autotroph_meta, marbl_tracer_indices, autotroph_share, autotroph_loc)
 
     !-----------------------------------------------------------------------
     !  If any phyto box are zero, set others to zeros.
@@ -1847,6 +1844,7 @@ contains
     integer(int_kind)                , intent(in)    :: column_km                     ! number of active model layers
     integer(int_kind)                , intent(in)    :: autotroph_cnt                 ! autotroph_cnt
     type(autotroph_type)             , intent(in)    :: autotroph_meta(autotroph_cnt) ! autotroph metadata
+    type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
     type(marbl_autotroph_share_type) , intent(in)    :: autotroph_share(autotroph_cnt, column_km)
     type(autotroph_local_type)       , intent(inout) :: autotroph_loc(autotroph_cnt, column_km)
 
@@ -1883,10 +1881,10 @@ contains
              autotroph_loc(auto_ind,k)%C13 = c0
              autotroph_loc(auto_ind,k)%C14 = c0
 
-             if (autotroph_meta(auto_ind)%Ca13CO3_ind > 0) then
+             if (marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind > 0) then
                 autotroph_loc(auto_ind,k)%Ca13CO3 = c0
              end if
-             if (autotroph_meta(auto_ind)%Ca14CO3_ind > 0) then
+             if (marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind > 0) then
                 autotroph_loc(auto_ind,k)%Ca14CO3 = c0
              end if
           end if

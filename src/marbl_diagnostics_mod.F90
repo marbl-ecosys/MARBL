@@ -4109,9 +4109,9 @@ contains
 
     diags(ind%CISO_Jint_13Ctot)%field_3d(:, 1) = c0
     work(:) = dtracer(di13c_ind,:) + dtracer(do13c_ind,:) + dtracer(zoo13C_ind,:) &
-         + sum(dtracer(autotrophs(:)%C13_ind,:), dim=1)
+         + sum(dtracer(marbl_tracer_indices%auto_inds(:)%C13_ind,:), dim=1)
     do auto_ind = 1, autotroph_cnt
-       n = autotrophs(auto_ind)%Ca13CO3_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
        if (n > 0) then
           work = work + dtracer(n,:)
        end if
@@ -4125,9 +4125,9 @@ contains
 
     diags(ind%CISO_Jint_14Ctot)%field_3d(:, 1) = c0
     work(:) = dtracer(di14c_ind,:) + dtracer(do14c_ind,:) + dtracer(zoo14C_ind,:) &
-         + sum(dtracer(autotrophs(:)%C14_ind,:), dim=1)
+         + sum(dtracer(marbl_tracer_indices%auto_inds(:)%C14_ind,:), dim=1)
     do auto_ind = 1, autotroph_cnt
-       n = autotrophs(auto_ind)%Ca14CO3_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
        if (n > 0) then
           work = work + dtracer(n,:)
        end if
