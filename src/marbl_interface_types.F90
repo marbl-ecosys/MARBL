@@ -334,7 +334,7 @@ module marbl_interface_types
     integer (int_kind) :: zoo14C_ind      = 0 ! zooplankton carbon 14
 
   contains
-    procedure, public :: construct => marbl_tracer_index_constructor 
+    procedure, public :: construct => marbl_tracer_index_constructor
   end type marbl_tracer_index_type
 
   !*****************************************************************************
