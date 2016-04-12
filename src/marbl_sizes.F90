@@ -41,7 +41,5 @@ module marbl_sizes
 
   integer (int_kind) :: ecosys_ind_beg = 1
   integer (int_kind) :: ecosys_ind_end
-  integer (int_kind) :: ecosys_ciso_ind_beg
-  integer (int_kind) :: ecosys_ciso_ind_end
 
 end module marbl_sizes

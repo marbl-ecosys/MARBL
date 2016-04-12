@@ -9,7 +9,6 @@ module marbl_diagnostics_mod
   use marbl_kinds_mod       , only : char_len
 
   use marbl_sizes           , only : ecosys_tracer_cnt
-  use marbl_sizes           , only : ecosys_ciso_tracer_cnt
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
 
@@ -4021,7 +4020,7 @@ contains
        PO14C,               &
        P_Ca13CO3,           &
        P_Ca14CO3,           &
-       dtracer,             &
+       dtracers,            &
        marbl_tracer_indices,&
        marbl_diags)
 
@@ -4060,8 +4059,7 @@ contains
          eps_aq_g    , & ! equilibrium fractionation (CO2_gaseous <-> CO2_aq)
          eps_dic_g       ! equilibrium fractionation between total DIC and gaseous CO2
 
-    real (r8), intent(in), dimension(ecosys_ciso_tracer_cnt, marbl_domain%km) :: &
-         dtracer   ! computed source/sink terms
+    real (r8), intent(in) :: dtracers(:,:) ! (ecosys_used_tracer_cnt, km) computed source/sink terms
 
     type(marbl_tracer_index_type), intent(in)      :: marbl_tracer_indices
 
@@ -4111,12 +4109,12 @@ contains
     ! Vertical integrals - CISO_Jint_13Ctot and Jint_100m_13Ctot
 
     diags(ind%CISO_Jint_13Ctot)%field_3d(:, 1) = c0
-    work(:) = dtracer(di13c_ind,:) + dtracer(do13c_ind,:) + dtracer(zoo13C_ind,:) &
-         + sum(dtracer(marbl_tracer_indices%auto_inds(:)%C13_ind,:), dim=1)
+    work(:) = dtracers(di13c_ind,:) + dtracers(do13c_ind,:) + dtracers(zoo13C_ind,:) &
+         + sum(dtracers(marbl_tracer_indices%auto_inds(:)%C13_ind,:), dim=1)
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
        if (n > 0) then
-          work = work + dtracer(n,:)
+          work = work + dtracers(n,:)
        end if
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &
@@ -4127,12 +4125,12 @@ contains
     ! Vertical integral - CISO_Jint_14Ctot and Jint_100m_14Ctot
 
     diags(ind%CISO_Jint_14Ctot)%field_3d(:, 1) = c0
-    work(:) = dtracer(di14c_ind,:) + dtracer(do14c_ind,:) + dtracer(zoo14C_ind,:) &
-         + sum(dtracer(marbl_tracer_indices%auto_inds(:)%C14_ind,:), dim=1)
+    work(:) = dtracers(di14c_ind,:) + dtracers(do14c_ind,:) + dtracers(zoo14C_ind,:) &
+         + sum(dtracers(marbl_tracer_indices%auto_inds(:)%C14_ind,:), dim=1)
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
        if (n > 0) then
-          work = work + dtracer(n,:)
+          work = work + dtracers(n,:)
        end if
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &

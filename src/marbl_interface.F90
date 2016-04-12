@@ -23,10 +23,8 @@ module marbl_interface
   use marbl_logging         , only : error_msg
 
   use marbl_sizes           , only : ecosys_tracer_cnt
-  use marbl_sizes           , only : ecosys_ciso_tracer_cnt
   use marbl_sizes           , only : ecosys_used_tracer_cnt
   use marbl_sizes           , only : ecosys_ind_beg, ecosys_ind_end
-  use marbl_sizes           , only : ecosys_ciso_ind_beg, ecosys_ciso_ind_end
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
   use marbl_sizes           , only : num_surface_forcing_fields
@@ -257,8 +255,7 @@ contains
     end if
 
     if (this%ciso_on) then
-       call marbl_ciso_init_tracer_metadata(                               &
-            this%tracer_metadata(ecosys_ciso_ind_beg:ecosys_ciso_ind_end), &
+       call marbl_ciso_init_tracer_metadata(this%tracer_metadata,          &
             this%tracer_indices, this%statusLog)
 
        if (this%statusLog%labort_marbl) then

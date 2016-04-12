@@ -284,45 +284,51 @@ contains
               di14c_ind         => marbl_tracer_indices%di14c_ind,            &
               do14c_ind         => marbl_tracer_indices%do14c_ind,            &
               zoo14c_ind        => marbl_tracer_indices%zoo14c_ind,           &
-              ciso_tracer_begin => marbl_tracer_indices%non_autotroph_ciso_tracer_ind_begin,  &
-              ciso_tracer_end   => marbl_tracer_indices%non_autotroph_ciso_tracer_ind_end)
+              ciso_tracer_beg   => marbl_tracer_indices%ciso_tracer_ind_beg,  &
+              ciso_tracer_end   => marbl_tracer_indices%ciso_tracer_ind_end)
 
     marbl_tracer_metadata(di13c_ind)%short_name='DI13C'
     marbl_tracer_metadata(di13c_ind)%long_name='Dissolved Inorganic Carbon-13'
+    marbl_tracer_metadata(di13c_ind)%units      = 'mmol/m^3'
+    marbl_tracer_metadata(di13c_ind)%tend_units = 'mmol/m^3/s'
+    marbl_tracer_metadata(di13c_ind)%flux_units = 'mmol/m^3 cm/s'
 
     marbl_tracer_metadata(do13c_ind)%short_name='DO13C'
     marbl_tracer_metadata(do13c_ind)%long_name='Dissolved Organic Carbon-13'
+    marbl_tracer_metadata(do13c_ind)%units      = 'mmol/m^3'
+    marbl_tracer_metadata(do13c_ind)%tend_units = 'mmol/m^3/s'
+    marbl_tracer_metadata(do13c_ind)%flux_units = 'mmol/m^3 cm/s'
 
     marbl_tracer_metadata(zoo13C_ind)%short_name='zoo13C'
     marbl_tracer_metadata(zoo13C_ind)%long_name='Zooplankton Carbon-13'
+    marbl_tracer_metadata(zoo13C_ind)%units      = 'mmol/m^3'
+    marbl_tracer_metadata(zoo13C_ind)%tend_units = 'mmol/m^3/s'
+    marbl_tracer_metadata(zoo13C_ind)%flux_units = 'mmol/m^3 cm/s'
 
     marbl_tracer_metadata(di14c_ind)%short_name='DI14C'
     marbl_tracer_metadata(di14c_ind)%long_name='Dissolved Inorganic Carbon-14'
+    marbl_tracer_metadata(di14c_ind)%units      = 'mmol/m^3'
+    marbl_tracer_metadata(di14c_ind)%tend_units = 'mmol/m^3/s'
+    marbl_tracer_metadata(di14c_ind)%flux_units = 'mmol/m^3 cm/s'
 
     marbl_tracer_metadata(do14c_ind)%short_name='DO14C'
     marbl_tracer_metadata(do14c_ind)%long_name='Dissolved Organic Carbon-14'
+    marbl_tracer_metadata(do14c_ind)%units      = 'mmol/m^3'
+    marbl_tracer_metadata(do14c_ind)%tend_units = 'mmol/m^3/s'
+    marbl_tracer_metadata(do14c_ind)%flux_units = 'mmol/m^3 cm/s'
 
     marbl_tracer_metadata(zoo14C_ind)%short_name='zoo14C'
     marbl_tracer_metadata(zoo14C_ind)%long_name='Zooplankton Carbon-14'
+    marbl_tracer_metadata(zoo14C_ind)%units      = 'mmol/m^3'
+    marbl_tracer_metadata(zoo14C_ind)%tend_units = 'mmol/m^3/s'
+    marbl_tracer_metadata(zoo14C_ind)%flux_units = 'mmol/m^3 cm/s'
 
-    do n = ciso_tracer_begin,ciso_tracer_end
-       marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-       marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-       marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-    end do
 
     !-----------------------------------------------------------------------
     !  confirm that ecosys_ciso_tracer_cnt is consistent with autotroph declarations
     !-----------------------------------------------------------------------
 
-    n = ciso_tracer_end - (ciso_tracer_begin-1)
-    do auto_ind = 1, autotroph_cnt
-       n = n + 2 ! C13, C14 tracers
-       if (autotrophs(auto_ind)%imp_calcifier .or. autotrophs(auto_ind)%exp_calcifier) then
-          n = n + 2 ! Ca13CO3 & Ca14CO3 tracers
-       end if
-    end do
-
+    n = ciso_tracer_end - (ciso_tracer_beg-1)
     if (ecosys_ciso_tracer_cnt /= n) then
        write(error_msg, "(A,I0,A,I0)") "ecosys_ciso_tracer_cnt = ",           &
                                        ecosys_ciso_tracer_cnt,                &
@@ -401,6 +407,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_ciso_set_interior_forcing( &
+       num_tracers,                           &
        marbl_domain,                          &
        marbl_interior_forcing_input,          &
        marbl_interior_share,                  &
@@ -417,7 +424,6 @@ contains
     !  13C code is based on code from X. Giraud, ETH ZÃ¼rich, 2008, for pop1
     !  Also added biotic 14C
 
-    use marbl_share_mod        , only : ecosys_ciso_tracer_cnt
     use marbl_share_mod        , only : ciso_lsource_sink
     use marbl_share_mod        , only : ciso_fract_factors
     use marbl_parms            , only : f_graze_CaCO3_REMIN
@@ -427,6 +433,7 @@ contains
 
     implicit none
 
+    integer                                 , intent(in)    :: num_tracers
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain                               
     type(marbl_interior_forcing_input_type) , intent(in)    :: marbl_interior_forcing_input
     ! FIXME #17: intent is inout due to DIC_Loc
@@ -434,8 +441,8 @@ contains
     type(marbl_zooplankton_share_type)      , intent(in)    :: marbl_zooplankton_share(zooplankton_cnt, marbl_domain%km)
     type(marbl_autotroph_share_type)        , intent(in)    :: marbl_autotroph_share(autotroph_cnt, marbl_domain%km)
     type(marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
-    real (r8)                               , intent(in)    :: column_tracer(ecosys_ciso_tracer_cnt, marbl_domain%km)   ! tracer values
-    real (r8)                               , intent(out)   :: column_dtracer(ecosys_ciso_tracer_cnt, marbl_domain%km)  ! computed source/sink terms
+    real (r8)                               , intent(in)    :: column_tracer(num_tracers, marbl_domain%km)   ! tracer values
+    real (r8)                               , intent(inout) :: column_dtracer(num_tracers, marbl_domain%km)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
     type(marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)            , intent(inout) :: marbl_interior_diags
     type(marbl_log_type)                    , intent(inout) :: marbl_status_log
@@ -1143,7 +1150,6 @@ contains
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_ciso_mod:setup_cell_attributes'
     integer (int_kind) :: &
-         n,               & ! index for looping over column_tracer
          auto_ind           ! autotroph functional group index
     !-----------------------------------------------------------------------
 
@@ -1235,7 +1241,7 @@ contains
 
     integer(int_kind) , intent(in)  :: column_km
     integer(int_kind) , intent(in)  :: column_kmt
-    real (r8)         , intent(in)  :: column_tracer(:,:) ! (ecosys_ciso_tracer_cnt,km) tracer values
+    real (r8)         , intent(in)  :: column_tracer(:,:) ! (ecosys_used_tracer_cnt,km) tracer values
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
 
     real (r8)         , intent(out) :: DI13C_loc(:)     ! (km) local copy of model DI13C
@@ -1294,7 +1300,7 @@ contains
 
     integer(int_kind)          , intent(in)  :: column_km
     integer(int_kind)          , intent(in)  :: column_kmt
-    real (r8)                  , intent(in)  :: column_tracer(:,:)  ! (autotroph_cnt, km)tracer values
+    real (r8)                  , intent(in)  :: column_tracer(:,:)  ! (ecosys_used_tracer_cnt, km) tracer values
 
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
     type(autotroph_local_type) , intent(out) :: autotroph_loc(:,:)  ! (autotroph_cnt)
@@ -1999,14 +2005,16 @@ contains
          di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
          do13c_ind          => marbl_tracer_indices%do13c_ind                  , &
          di14c_ind          => marbl_tracer_indices%di14c_ind                  , &
-         do14c_ind          => marbl_tracer_indices%do14c_ind                    &
+         do14c_ind          => marbl_tracer_indices%do14c_ind                  , &
+         ciso_tracer_beg    => marbl_tracer_indices%ciso_tracer_ind_beg        , &
+         ciso_tracer_end    => marbl_tracer_indices%ciso_tracer_ind_end          &
          )
 
     !-----------------------------------------------------------------------
-    !  fluxes initially set to 0
+    !  ciso fluxes initially set to 0
     !-----------------------------------------------------------------------
 
-    stf(:, :) = c0
+    stf(:,ciso_tracer_beg:ciso_tracer_end) = c0
 
     !-----------------------------------------------------------------------
     !     initialize R13C_atm  and R14C_atm

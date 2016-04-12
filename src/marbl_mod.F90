@@ -1337,8 +1337,8 @@ contains
     
     !  Compute time derivatives for ecosystem state variables
 
-    use marbl_sizes    , only : ecosys_ciso_ind_beg, ecosys_ciso_ind_end
     use marbl_ciso_mod , only : marbl_ciso_set_interior_forcing
+    use marbl_sizes    , only : ecosys_used_tracer_cnt
 
     implicit none 
 
@@ -1635,24 +1635,25 @@ contains
          fe_scavenge, fe_scavenge_rate,                     &
          interior_forcing_diags)
 
-    ! Compute resotre diagnostics
+    ! Compute restore diagnostics
     do n = 1, ecosys_tracer_cnt
        interior_restore_diags%diags(n)%field_3d(:,1) = interior_restore(n,:)
     end do
 
     !  Compute time derivatives for ecosystem carbon isotope state variables
     if (ciso_on) then
-       call marbl_ciso_set_interior_forcing(                                                    &
-            marbl_domain                 = domain,                                              &
-            marbl_interior_forcing_input = interior_forcing_input,                              &
-            marbl_interior_share         = marbl_interior_share,                                &
-            marbl_zooplankton_share      = marbl_zooplankton_share,                             &
-            marbl_autotroph_share        = marbl_autotroph_share,                               &
-            marbl_particulate_share      = marbl_particulate_share,                             &
-            column_tracer                = tracers(ecosys_ciso_ind_beg:ecosys_ciso_ind_end,:),  &
-            column_dtracer               = dtracers(ecosys_ciso_ind_beg:ecosys_ciso_ind_end,:), &
-            marbl_tracer_indices         = marbl_tracer_indices,                                & 
-            marbl_interior_diags         = interior_forcing_diags,                              & 
+       call marbl_ciso_set_interior_forcing(                        &
+            num_tracers                  = ecosys_used_tracer_cnt,  &
+            marbl_domain                 = domain,                  &
+            marbl_interior_forcing_input = interior_forcing_input,  &
+            marbl_interior_share         = marbl_interior_share,    &
+            marbl_zooplankton_share      = marbl_zooplankton_share, &
+            marbl_autotroph_share        = marbl_autotroph_share,   &
+            marbl_particulate_share      = marbl_particulate_share, &
+            column_tracer                = tracers,                 &
+            column_dtracer               = dtracers,                &
+            marbl_tracer_indices         = marbl_tracer_indices,    &
+            marbl_interior_diags         = interior_forcing_diags,  &
             marbl_status_log             = marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
@@ -2445,8 +2446,7 @@ contains
     use marbl_share_mod          , only : dic_riv_flux_file    
     use marbl_share_mod          , only : alk_riv_flux_file    
     use marbl_share_mod          , only : doc_riv_flux_file    
-    use marbl_sizes              , only : ecosys_ciso_tracer_cnt
-    use marbl_sizes              , only : ecosys_ciso_ind_beg, ecosys_ciso_ind_end
+    use marbl_sizes              , only : ecosys_used_tracer_cnt
     use marbl_ciso_mod           , only : marbl_ciso_set_surface_forcing
 
     implicit none
@@ -2870,18 +2870,18 @@ contains
     !-----------------------------------------------------------------------
 
     if (ciso_on) then
-       call marbl_ciso_set_surface_forcing(                                                                  &
-            num_tracers                 = ecosys_ciso_tracer_cnt,                                            &
-            num_elements                = num_elements,                                                      &
-            surface_mask                = surface_input_forcings(:,ind%surface_mask_id),                     &
-            sst                         = surface_input_forcings(:,ind%sst_id),                              &
-            d13c                        = surface_input_forcings(:,ind%d13c_id),                             &
-            d14c                        = surface_input_forcings(:,ind%d14c_id),                             &
-            d14c_glo_avg                = surface_input_forcings(:,ind%d14c_glo_avg_id),                     &
-            surface_vals                = surface_vals(:,ecosys_ciso_ind_beg: ecosys_ciso_ind_end),          &
-            stf                         = surface_tracer_fluxes(:,ecosys_ciso_ind_beg: ecosys_ciso_ind_end), &
-            marbl_tracer_indices        = marbl_tracer_indices,                                              &
-            marbl_surface_forcing_share = surface_forcing_share,                                             &
+       call marbl_ciso_set_surface_forcing(                                              &
+            num_tracers                 = ecosys_used_tracer_cnt,                        &
+            num_elements                = num_elements,                                  &
+            surface_mask                = surface_input_forcings(:,ind%surface_mask_id), &
+            sst                         = surface_input_forcings(:,ind%sst_id),          &
+            d13c                        = surface_input_forcings(:,ind%d13c_id),         &
+            d14c                        = surface_input_forcings(:,ind%d14c_id),         &
+            d14c_glo_avg                = surface_input_forcings(:,ind%d14c_glo_avg_id), &
+            surface_vals                = surface_vals,                                  &
+            stf                         = surface_tracer_fluxes,                         &
+            marbl_tracer_indices        = marbl_tracer_indices,                          &
+            marbl_surface_forcing_share = surface_forcing_share,                         &
             marbl_surface_forcing_diags = surface_forcing_diags)
     end if
 

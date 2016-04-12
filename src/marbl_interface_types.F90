@@ -298,8 +298,8 @@ module marbl_interface_types
 
   type, public :: marbl_tracer_index_type
     ! Tracer count, indices for CISO tracers
-    integer (int_kind) :: non_autotroph_ciso_tracer_ind_begin = 0
-    integer (int_kind) :: non_autotroph_ciso_tracer_ind_end   = 0
+    integer (int_kind) :: ciso_tracer_ind_beg = 0
+    integer (int_kind) :: ciso_tracer_ind_end = 0
 
     ! General tracers
     integer (int_kind) :: po4_ind         = 0 ! dissolved inorganic phosphate
@@ -935,13 +935,11 @@ contains
     logical,                        intent(in)    :: ciso_on
     type(marbl_log_type),           intent(inout) :: marbl_status_log
 
-    integer :: tmp_cnt ! for now we want to reset tracer_cnt for ciso and then
-                       ! end with the correct total
     integer :: tracer_cnt, n
     character(*), parameter :: subname='marbl_parms:marbl_tracer_index_constructor'
 
-    associate(ciso_tracer_begin => this%non_autotroph_ciso_tracer_ind_begin,  &
-              ciso_tracer_end   => this%non_autotroph_ciso_tracer_ind_end)
+    associate(ciso_tracer_beg => this%ciso_tracer_ind_beg,  &
+              ciso_tracer_end => this%ciso_tracer_ind_end)
 
       tracer_cnt = 0
 
@@ -1051,9 +1049,7 @@ contains
 
       if (ciso_on) then
         ! Next tracer is start of the CISO tracers
-        tmp_cnt = tracer_cnt
-        tracer_cnt = 0
-        ciso_tracer_begin = tracer_cnt + 1
+        ciso_tracer_beg = tracer_cnt + 1
 
         tracer_cnt     = tracer_cnt + 1
         this%di13c_ind = tracer_cnt
@@ -1072,8 +1068,6 @@ contains
 
         tracer_cnt      = tracer_cnt + 1
         this%zoo14C_ind = tracer_cnt
-
-        ciso_tracer_end = tracer_cnt
 
         write (status_msg, "(A)") '----- autotroph tracer indices (CISO) -----'
         call marbl_status_log%log_noerror(status_msg, subname)
@@ -1107,7 +1101,8 @@ contains
           call marbl_status_log%log_noerror(status_msg, subname)
         end do
 
-        tracer_cnt      = tracer_cnt + tmp_cnt
+        ciso_tracer_end = tracer_cnt
+
       end if
     end associate
 
