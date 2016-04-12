@@ -25,7 +25,6 @@ module marbl_ciso_mod
   use marbl_parms           , only : autotrophs  
   use marbl_parms           , only : zooplankton 
   use marbl_parms           , only : grazing     
-  use marbl_parms           , only : marbl_tracer_index_type
 
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
@@ -39,6 +38,7 @@ module marbl_ciso_mod
   use marbl_interface_types , only : marbl_diagnostics_type
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_interior_forcing_input_type
+  use marbl_interface_types , only : marbl_tracer_index_type
 
   use marbl_internal_types  , only : autotroph_type
   use marbl_internal_types  , only : column_sinking_particle_type

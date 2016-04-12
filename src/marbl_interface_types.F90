@@ -7,6 +7,8 @@ module marbl_interface_types
   use marbl_logging             , only : marbl_log_type
   use marbl_logging             , only : error_msg
   use marbl_logging             , only : status_msg
+  use marbl_parms               , only : autotrophs, zooplankton
+  use marbl_parms               , only : autotroph_cnt, zooplankton_cnt
 
   implicit none
 
@@ -141,6 +143,8 @@ module marbl_interface_types
      procedure :: initialize  => marbl_single_diag_init
   end type marbl_single_diagnostic_type
 
+  !*****************************************************************************
+
   type, public :: marbl_diagnostics_type
      ! marbl_diagnostics : 
      ! used to pass diagnostic information from marbl back to
@@ -215,11 +219,15 @@ module marbl_interface_types
   end type marbl_forcing_constant_type
 
 
+  !*****************************************************************************
+
   type, private :: marbl_forcing_driver_type
      character(char_len) :: marbl_driver_varname
    contains
      procedure :: initialize  => marbl_forcing_driver_init
   end type marbl_forcing_driver_type
+
+  !*****************************************************************************
 
   ! MNL -- made public because I need it for ecosys_restore; could just
   ! keep ecosys_single_restoring_field_type in this module instead
@@ -243,6 +251,8 @@ module marbl_interface_types
      procedure :: initialize  => marbl_forcing_monthly_calendar_init
   end type marbl_forcing_monthly_calendar_type
 
+  !*****************************************************************************
+
   type, private :: marbl_single_forcing_field_type
      ! single_forcing_field_type (contains the above 4 type definitions)
      character(char_len)                        :: marbl_varname
@@ -258,6 +268,8 @@ module marbl_interface_types
      procedure :: initialize  => marbl_single_forcing_field_init
   end type marbl_single_forcing_field_type
 
+  !*****************************************************************************
+
   type, public :: marbl_forcing_fields_type
      integer(kind=int_kind) :: num_elements
      integer(kind=int_kind) :: forcing_field_cnt
@@ -267,6 +279,63 @@ module marbl_interface_types
      procedure, public :: add_forcing_field => marbl_forcing_fields_add
      procedure, public :: deconstruct       => marbl_forcing_fields_deconstructor
   end type marbl_forcing_fields_type
+
+  !*****************************************************************************
+
+  type, private :: marbl_living_tracer_index_type
+     integer (KIND=int_kind) :: Chl_ind     = 0  ! tracer indices for Chl content
+     integer (KIND=int_kind) :: C_ind       = 0  ! tracer indices for C content
+     integer (KIND=int_kind) :: Fe_ind      = 0  ! tracer indices for Fe content
+     integer (KIND=int_kind) :: Si_ind      = 0  ! tracer indices for Si  content
+     integer (KIND=int_kind) :: CaCO3_ind   = 0  ! tracer indices for CaCO3 content
+     integer (KIND=int_kind) :: C13_ind     = 0  ! tracer indices for 13C content
+     integer (KIND=int_kind) :: C14_ind     = 0  ! tracer indices for 14C content
+     integer (KIND=int_kind) :: Ca13CO3_ind = 0  ! tracer indices for 13CaCO3 content
+     integer (KIND=int_kind) :: Ca14CO3_ind = 0  ! tracer indices for 14CaCO3 content
+  end type marbl_living_tracer_index_type
+
+  !*****************************************************************************
+
+  type, public :: marbl_tracer_index_type
+    ! Tracer count, indices for CISO tracers
+    integer (int_kind) :: non_autotroph_ciso_tracer_ind_begin = 0
+    integer (int_kind) :: non_autotroph_ciso_tracer_ind_end   = 0
+
+    ! General tracers
+    integer (int_kind) :: po4_ind         = 0 ! dissolved inorganic phosphate
+    integer (int_kind) :: no3_ind         = 0 ! dissolved inorganic nitrate
+    integer (int_kind) :: sio3_ind        = 0 ! dissolved inorganic silicate
+    integer (int_kind) :: nh4_ind         = 0 ! dissolved ammonia
+    integer (int_kind) :: fe_ind          = 0 ! dissolved inorganic iron
+    integer (int_kind) :: o2_ind          = 0 ! dissolved oxygen
+    integer (int_kind) :: dic_ind         = 0 ! dissolved inorganic carbon
+    integer (int_kind) :: dic_alt_co2_ind = 0 ! dissolved inorganic carbon with alternative CO2
+    integer (int_kind) :: alk_ind         = 0 ! alkalinity
+    integer (int_kind) :: doc_ind         = 0 ! dissolved organic carbon
+    integer (int_kind) :: don_ind         = 0 ! dissolved organic nitrogen
+    integer (int_kind) :: dop_ind         = 0 ! dissolved organic phosphorus
+    integer (int_kind) :: dopr_ind        = 0 ! refractory DOP
+    integer (int_kind) :: donr_ind        = 0 ! refractory DON
+    integer (int_kind) :: docr_ind        = 0 ! refractory DOC
+
+    ! CISO tracers
+    integer (int_kind) :: di13c_ind       = 0 ! dissolved inorganic carbon 13
+    integer (int_kind) :: do13c_ind       = 0 ! dissolved organic carbon 13
+    integer (int_kind) :: di14c_ind       = 0 ! dissolved inorganic carbon 14
+    integer (int_kind) :: do14c_ind       = 0 ! dissolved organic carbon 14
+
+    ! Living tracers
+    type(marbl_living_tracer_index_type), dimension(autotroph_cnt)   :: auto_inds
+    type(marbl_living_tracer_index_type), dimension(zooplankton_cnt) :: zoo_inds
+    ! For CISO, don't want individual C13 and C14 tracers for each zooplankton
+    ! Instead we collect them into one tracer for each isotope, regardless of
+    ! zooplankton_cnt
+    integer (int_kind) :: zoo13C_ind      = 0 ! zooplankton carbon 13
+    integer (int_kind) :: zoo14C_ind      = 0 ! zooplankton carbon 14
+
+  contains
+    procedure, public :: construct => marbl_tracer_index_constructor 
+  end type marbl_tracer_index_type
 
   !*****************************************************************************
 
@@ -849,6 +918,200 @@ contains
     deallocate(this%forcing_fields)
 
   end subroutine marbl_forcing_fields_deconstructor
+
+  !*****************************************************************************
+
+  subroutine marbl_tracer_index_constructor(this, ciso_on, marbl_status_log)
+
+    ! This subroutine sets the tracer indices for the non-autotroph tracers. To
+    ! know where to start the indexing for the autotroph tracers, it increments
+    ! tracer_cnt by 1 for each tracer that is included. Note that this gives an
+    ! accurate count whether the carbon isotope tracers are included or not.
+
+    use marbl_logging, only : marbl_log_type
+    use marbl_logging, only : status_msg
+
+    class(marbl_tracer_index_type), intent(inout) :: this
+    logical,                        intent(in)    :: ciso_on
+    type(marbl_log_type),           intent(inout) :: marbl_status_log
+
+    integer :: tmp_cnt ! for now we want to reset tracer_cnt for ciso and then
+                       ! end with the correct total
+    integer :: tracer_cnt, n
+    character(*), parameter :: subname='marbl_parms:marbl_tracer_index_constructor'
+
+    associate(ciso_tracer_begin => this%non_autotroph_ciso_tracer_ind_begin,  &
+              ciso_tracer_end   => this%non_autotroph_ciso_tracer_ind_end)
+
+      tracer_cnt = 0
+
+      ! General ecosys tracers
+      tracer_cnt  = tracer_cnt + 1
+      this%po4_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%no3_ind = tracer_cnt
+
+      tracer_cnt    = tracer_cnt + 1
+      this%sio3_ind = tracer_cnt
+
+      tracer_cnt    = tracer_cnt + 1
+      this%nh4_ind  = tracer_cnt
+
+      tracer_cnt  = tracer_cnt + 1
+      this%fe_ind = tracer_cnt
+
+      tracer_cnt  = tracer_cnt + 1
+      this%o2_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%dic_ind = tracer_cnt
+
+      tracer_cnt           = tracer_cnt + 1
+      this%dic_alt_co2_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%alk_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%doc_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%don_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%dop_ind = tracer_cnt
+
+      tracer_cnt    = tracer_cnt + 1
+      this%dopr_ind = tracer_cnt
+
+      tracer_cnt    = tracer_cnt + 1
+      this%donr_ind = tracer_cnt
+
+      tracer_cnt    = tracer_cnt + 1
+      this%docr_ind = tracer_cnt
+
+      write (status_msg, "(A)") '----- zooplankton tracer indices -----'
+      call marbl_status_log%log_noerror(status_msg, subname)
+
+      do n=1,zooplankton_cnt
+        tracer_cnt    = tracer_cnt + 1
+        this%zoo_inds(n)%C_ind = tracer_cnt
+
+        write (status_msg, "(3A,I0)") 'C_ind('     , trim(zooplankton(n)%sname), &
+              ') = ', this%zoo_inds(n)%C_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+      end do
+
+      write (status_msg, "(A)") '----- autotroph tracer indices -----'
+      call marbl_status_log%log_noerror(status_msg, subname)
+
+      do n=1,autotroph_cnt
+        tracer_cnt    = tracer_cnt + 1
+        this%auto_inds(n)%Chl_ind = tracer_cnt
+
+        tracer_cnt    = tracer_cnt + 1
+        this%auto_inds(n)%C_ind = tracer_cnt
+
+        tracer_cnt    = tracer_cnt + 1
+        this%auto_inds(n)%Fe_ind = tracer_cnt
+
+        if (autotrophs(n)%kSiO3.gt.c0) then
+          tracer_cnt    = tracer_cnt + 1
+          this%auto_inds(n)%Si_ind = tracer_cnt
+        end if
+
+        if (autotrophs(n)%imp_calcifier.or.autotrophs(n)%exp_calcifier) then
+          tracer_cnt    = tracer_cnt + 1
+          this%auto_inds(n)%CaCO3_ind = tracer_cnt
+        end if
+
+        write (status_msg, "(3A,I0)") 'Chl_ind('     , trim(autotrophs(n)%sname), &
+              ') = ', this%auto_inds(n)%Chl_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+        write (status_msg, "(3A,I0)") 'C_ind('     , trim(autotrophs(n)%sname), &
+              ') = ', this%auto_inds(n)%C_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+        write (status_msg, "(3A,I0)") 'Fe_ind('     , trim(autotrophs(n)%sname), &
+              ') = ', this%auto_inds(n)%Fe_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+        write (status_msg, "(3A,I0)") 'Si_ind('     , trim(autotrophs(n)%sname), &
+              ') = ', this%auto_inds(n)%Si_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+        write (status_msg, "(3A,I0)") 'CaCO3_ind('     , trim(autotrophs(n)%sname), &
+              ') = ', this%auto_inds(n)%CaCO3_ind
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+      end do
+
+      if (ciso_on) then
+        ! Next tracer is start of the CISO tracers
+        tmp_cnt = tracer_cnt
+        tracer_cnt = 0
+        ciso_tracer_begin = tracer_cnt + 1
+
+        tracer_cnt     = tracer_cnt + 1
+        this%di13c_ind = tracer_cnt
+
+        tracer_cnt     = tracer_cnt + 1
+        this%do13c_ind = tracer_cnt
+
+        tracer_cnt     = tracer_cnt + 1
+        this%di14c_ind = tracer_cnt
+
+        tracer_cnt     = tracer_cnt + 1
+        this%do14c_ind = tracer_cnt
+
+        tracer_cnt      = tracer_cnt + 1
+        this%zoo13C_ind = tracer_cnt
+
+        tracer_cnt      = tracer_cnt + 1
+        this%zoo14C_ind = tracer_cnt
+
+        ciso_tracer_end = tracer_cnt
+
+        write (status_msg, "(A)") '----- autotroph tracer indices (CISO) -----'
+        call marbl_status_log%log_noerror(status_msg, subname)
+
+        do n=1,autotroph_cnt
+          tracer_cnt    = tracer_cnt + 1
+          this%auto_inds(n)%C13_ind = tracer_cnt
+
+          tracer_cnt    = tracer_cnt + 1
+          this%auto_inds(n)%C14_ind = tracer_cnt
+
+          if (autotrophs(n)%imp_calcifier.or.autotrophs(n)%exp_calcifier) then
+            tracer_cnt    = tracer_cnt + 1
+            this%auto_inds(n)%Ca13CO3_ind = tracer_cnt
+
+            tracer_cnt    = tracer_cnt + 1
+            this%auto_inds(n)%Ca14CO3_ind = tracer_cnt
+          end if
+
+          write (status_msg, "(3A,I0)") 'C13_ind('     , trim(autotrophs(n)%sname), &
+                ') = ', this%auto_inds(n)%C13_ind
+          call marbl_status_log%log_noerror(status_msg, subname)
+          write (status_msg, "(3A,I0)") 'C14_ind('     , trim(autotrophs(n)%sname), &
+                ') = ', this%auto_inds(n)%C14_ind
+          call marbl_status_log%log_noerror(status_msg, subname)
+          write (status_msg, "(3A,I0)") 'Ca13CO3_ind(' , trim(autotrophs(n)%sname), &
+                ') = ', this%auto_inds(n)%Ca13CO3_ind
+          call marbl_status_log%log_noerror(status_msg, subname)
+          write (status_msg, "(3A,I0)") 'Ca14CO3_ind(' , trim(autotrophs(n)%sname), &
+                ') = ', this%auto_inds(n)%Ca14CO3_ind
+          call marbl_status_log%log_noerror(status_msg, subname)
+        end do
+
+        tracer_cnt      = tracer_cnt + tmp_cnt
+      end if
+    end associate
+
+  end subroutine marbl_tracer_index_constructor
 
   !*****************************************************************************
 

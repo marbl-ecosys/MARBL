@@ -155,7 +155,6 @@ module marbl_mod
   use marbl_parms, only : r_Nfix_photo
   use marbl_parms, only : spc_poc_fac
   use marbl_parms, only : yps
-  use marbl_parms, only : marbl_tracer_index_type
 
   use marbl_sizes, only : ecosys_tracer_cnt    
   use marbl_sizes, only : autotroph_cnt
@@ -191,6 +190,7 @@ module marbl_mod
   use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_forcing_monthly_every_ts_type
   use marbl_interface_types , only : marbl_diagnostics_type
+  use marbl_interface_types , only : marbl_tracer_index_type
 
   use marbl_diagnostics_mod , only : marbl_diagnostics_set_surface_forcing
   use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
