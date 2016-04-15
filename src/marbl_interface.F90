@@ -31,6 +31,7 @@ module marbl_interface
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
+  use marbl_interface_types , only : marbl_tracer_read_type
   use marbl_interface_types , only : marbl_interior_forcing_input_type
   use marbl_interface_types , only : marbl_surface_forcing_output_type
   use marbl_interface_types , only : marbl_diagnostics_type
@@ -67,8 +68,9 @@ module marbl_interface
      ! public data - general
      type(marbl_domain_type)                   , public               :: domain
      type(marbl_tracer_metadata_type)          , public, allocatable  :: tracer_metadata(:)
+     type(marbl_tracer_read_type)              , public, allocatable  :: tracer_read(:)
      type(marbl_tracer_index_type)             , public               :: tracer_indices
-     type(marbl_log_type)                      , public               :: statusLog
+     type(marbl_log_type)                      , public               :: StatusLog
      type(marbl_saved_state_type)              , public               :: saved_state             ! input/output
 
      ! public data - interior forcing
@@ -124,6 +126,7 @@ contains
   subroutine init(this,                   &
        gcm_nl_buffer,                     &
        gcm_ciso_on,                       &
+       gcm_tracer_cnt,                    &
        gcm_num_levels,                    &
        gcm_num_PAR_subcols,               &
        gcm_num_elements_interior_forcing, &
@@ -139,6 +142,7 @@ contains
     use marbl_mod             , only : marbl_init_nml
     use marbl_mod             , only : marbl_init_surface_forcing_fields
     use marbl_mod             , only : marbl_init_tracer_metadata
+    use marbl_mod             , only : marbl_update_tracer_read
     use marbl_diagnostics_mod , only : marbl_diagnostics_init  
     
     implicit none
@@ -146,6 +150,7 @@ contains
     class     (marbl_interface_class)      , intent(inout) :: this
     logical   (log_kind)                   , intent(in)    :: gcm_ciso_on
     character (marbl_nl_buffer_size)       , intent(in)    :: gcm_nl_buffer(marbl_nl_cnt)
+    integer   (int_kind)                   , intent(in)    :: gcm_tracer_cnt
     integer   (int_kind)                   , intent(in)    :: gcm_num_levels
     integer   (int_kind)                   , intent(in)    :: gcm_num_PAR_subcols
     integer   (int_kind)                   , intent(in)    :: gcm_num_elements_surface_forcing
@@ -165,38 +170,42 @@ contains
          )
 
     !--------------------------------------------------------------------
-    ! initialize marbl status logs
+    ! initialize ciso_on and status log
     !--------------------------------------------------------------------
 
-    call this%statusLog%construct()
+    this%ciso_on = gcm_ciso_on
+    call this%StatusLog%construct()
 
     !--------------------------------------------------------------------
     ! initialize marbl namelists
     !--------------------------------------------------------------------
 
-    call marbl_init_nml(gcm_nl_buffer, this%statusLog)
-    if (this%statusLog%labort_marbl) then
-       call this%statusLog%log_error("error code returned from marbl_init_nml", &
+    call marbl_init_nml(gcm_nl_buffer, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+       call this%StatusLog%log_error("error code returned from marbl_init_nml", &
             "marbl_interface::marbl_init()")
       return
     end if
 
-    if (gcm_ciso_on) then
-       call marbl_ciso_init_nml(gcm_nl_buffer, this%statusLog)
-       if (this%statusLog%labort_marbl) then
-          call this%statusLog%log_error("error code returned from marbl_ciso_init_nml", &
+    if (this%ciso_on) then
+       call marbl_ciso_init_nml(gcm_nl_buffer, this%StatusLog)
+       if (this%StatusLog%labort_marbl) then
+          call this%StatusLog%log_error("error code returned from marbl_ciso_init_nml", &
                "marbl_interface::marbl_init()")
           return
        end if
     end if
-    
+
     !--------------------------------------------------------------------
     ! call constructors and allocate memory
     !--------------------------------------------------------------------
 
-    this%ciso_on = gcm_ciso_on
-
-    call this%tracer_indices%construct(gcm_ciso_on, this%StatusLog)
+    call this%tracer_indices%construct(gcm_ciso_on, gcm_tracer_cnt, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error("error code returned from tracer_indices%construct", &
+                                    "marbl_interface::marbl_init()")
+      return
+    end if
 
     call this%PAR%construct(num_levels, num_PAR_subcols)
 
@@ -236,33 +245,43 @@ contains
 
     allocate(this%column_restore(ecosys_used_tracer_cnt, gcm_num_levels))
 
-
     !--------------------------------------------------------------------
-    ! initialize public data - general tracer metadata 
+    ! Initialize public data / general tracer metadata
+    ! And then update tracer input info based on namelist
     !--------------------------------------------------------------------
 
     allocate(this%tracer_metadata(ecosys_used_tracer_cnt))
+    allocate(this%tracer_read(ecosys_used_tracer_cnt))
 
     call marbl_init_tracer_metadata( &
          this%tracer_metadata,       &
+         this%tracer_read,           &
          this%tracer_indices,        &
-         this%statusLog)
+         this%StatusLog)
 
-    if (this%statusLog%labort_marbl) then
-      call this%statusLog%log_error("error code returned from marbl_init_tracer_metadata", &
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error("error code returned from marbl_init_tracer_metadata", &
                                     "marbl_interface::marbl_init()")
       return
     end if
 
     if (this%ciso_on) then
        call marbl_ciso_init_tracer_metadata(this%tracer_metadata,          &
-            this%tracer_indices, this%statusLog)
+            this%tracer_read, this%tracer_indices, this%StatusLog)
 
-       if (this%statusLog%labort_marbl) then
-         call this%statusLog%log_error("error code returned from marbl_ciso_init_tracer_metadata", &
+       if (this%StatusLog%labort_marbl) then
+         call this%StatusLog%log_error("error code returned from marbl_ciso_init_tracer_metadata", &
                                        "marbl_interface::marbl_init()")
          return
        end if
+    end if
+
+    call marbl_update_tracer_read(this%tracer_indices, this%tracer_read,      &
+         this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+       call this%StatusLog%log_error("error code returned from marbl_update_tracer_read", &
+            "marbl_interface::marbl_init()")
+      return
     end if
 
     !--------------------------------------------------------------------
@@ -286,7 +305,7 @@ contains
          nl_buffer       = gcm_nl_buffer,                                       &
          domain          = this%domain,                                         &
          tracer_metadata = this%tracer_metadata(ecosys_ind_beg:ecosys_ind_end), &
-         status_log      = this%statusLog)
+         status_log      = this%StatusLog)
 
     !--------------------------------------------------------------------
     ! Initialize marbl diagnostics
@@ -337,11 +356,11 @@ contains
          marbl_particulate_share = this%particulate_share,       &
          interior_forcing_diags  = this%interior_forcing_diags,  &
          interior_restore_diags  = this%interior_restore_diags,  &
-         marbl_status_log        = this%statusLog)
+         marbl_status_log        = this%StatusLog)
 
-    if (this%statusLog%labort_marbl) then
+    if (this%StatusLog%labort_marbl) then
        error_msg = "error code returned from marbl_set_interior_forcing"
-       call this%statusLog%log_error(error_msg, "marbl_interface::set_interior_forcing")
+       call this%StatusLog%log_error(error_msg, "marbl_interface::set_interior_forcing")
        return
     end if
     

@@ -209,6 +209,7 @@ module marbl_mod
   public  :: marbl_init_nml
   public  :: marbl_init_surface_forcing_fields
   public  :: marbl_init_tracer_metadata
+  public  :: marbl_update_tracer_read
   public  :: marbl_set_interior_forcing
   public  :: marbl_set_surface_forcing
 
@@ -330,8 +331,8 @@ contains
     use marbl_share_mod           , only : surf_avg_dic_const, surf_avg_alk_const
     use marbl_share_mod           , only : use_nml_surf_vals         
     use marbl_share_mod           , only : init_ecosys_option        
-    use marbl_share_mod           , only : init_ecosys_init_file     
-    use marbl_share_mod           , only : init_ecosys_init_file_fmt 
+    use marbl_share_mod           , only : init_ecosys_init_file
+    use marbl_share_mod           , only : init_ecosys_init_file_fmt
     use marbl_share_mod           , only : tracer_init_ext
     use marbl_share_mod           , only : ndep_data_type 
     use marbl_share_mod           , only : ndep_shr_stream_year_first
@@ -1232,13 +1233,17 @@ contains
   !*****************************************************************************
   
   subroutine marbl_init_tracer_metadata(marbl_tracer_metadata,                &
-             marbl_tracer_indices, marbl_status_log)
+             marbl_tracer_read, marbl_tracer_indices, marbl_status_log)
 
     !  Set tracer and forcing metadata
+
+    use marbl_share_mod, only : init_ecosys_init_file
+    use marbl_share_mod, only : init_ecosys_init_file_fmt
 
     implicit none
 
     type (marbl_tracer_metadata_type), intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
+    type (marbl_tracer_read_type)    , intent(inout) :: marbl_tracer_read(:)
     type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
     type(marbl_log_type)             , intent(inout) :: marbl_status_log
 
@@ -1260,8 +1265,9 @@ contains
     ! by default, all tracers are written to tavg as full depth and
     ! have scale_factor equal to one
 
-    marbl_tracer_metadata(:)%lfull_depth_tavg = .true.
-    marbl_tracer_metadata(:)%scale_factor     = 1.0_r8
+    marbl_tracer_metadata(:)%lfull_depth_tavg   = .true.
+    marbl_tracer_metadata(:)%scale_factor       = c1
+    marbl_tracer_metadata(:)%tracer_module_name = 'ecosys'
 
     call marbl_init_surface_forcing_metadata()
 
@@ -1311,6 +1317,15 @@ contains
        if (n > 0) then
           marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
        endif
+    end do
+
+    do n=1,ecosys_tracer_cnt
+      marbl_tracer_read(n)%mod_varname  = marbl_tracer_metadata(n)%short_name
+      marbl_tracer_read(n)%filename     = init_ecosys_init_file
+      marbl_tracer_read(n)%file_varname = marbl_tracer_metadata(n)%short_name
+      marbl_tracer_read(n)%file_fmt     = init_ecosys_init_file_fmt
+      marbl_tracer_read(n)%scale_factor = c1
+      marbl_tracer_read(n)%default_val  = c0
     end do
 
   end subroutine marbl_init_tracer_metadata
@@ -5338,6 +5353,59 @@ contains
     end associate
 
   end subroutine marbl_export_autotroph_shared_variables
+
+  !***********************************************************************
+
+  subroutine marbl_update_tracer_read(marbl_tracer_indices, marbl_tracer_read, &
+             marbl_status_log)
+
+    use marbl_share_mod           , only : tracer_init_ext
+    use marbl_share_mod           , only : ciso_tracer_init_ext
+
+    type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
+    type (marbl_tracer_read_type), intent(inout) :: marbl_tracer_read(:)
+    type(marbl_log_type)         , intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_mod:marbl_update_tracer_read'
+    integer :: n, ind, tracer_ind
+
+    do n=1,size(tracer_init_ext)
+      if (trim(tracer_init_ext(n)%mod_varname).ne.'unknown') then
+        tracer_ind = 0
+        do ind=1,size(marbl_tracer_read)
+          if (trim(tracer_init_ext(n)%mod_varname).eq.                        &
+              trim(marbl_tracer_read(ind)%mod_varname)) then
+            tracer_ind = ind
+            exit
+          end if
+        end do
+
+        ! Error if no tracer is found
+        if (tracer_ind.eq.0) then
+          write(error_msg,"(A,X,A)") 'No tracer defined with name',           &
+               trim(tracer_init_ext(n)%mod_varname)
+          call marbl_status_log%log_error(error_msg, subname)
+          return
+        end if
+
+        ! Update filename, file_varname, scale_factor, and default_val
+        associate(&
+                  tracer_read       => marbl_tracer_read(ind),                &
+                  namelist_metadata => tracer_init_ext(n)                     &
+                 )
+          if (namelist_metadata%filename.ne.'unknown') &
+            tracer_read%filename = namelist_metadata%filename
+          if (namelist_metadata%file_varname.ne.'unknown') &
+            tracer_read%file_varname = namelist_metadata%file_varname
+          if (namelist_metadata%scale_factor.ne.c1) &
+            tracer_read%scale_factor = namelist_metadata%scale_factor
+          if (namelist_metadata%default_val.ne.c0) &
+            tracer_read%default_val = namelist_metadata%default_val
+        end associate
+      end if
+    end do
+
+  end subroutine marbl_update_tracer_read
 
 end module marbl_mod
 

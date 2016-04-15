@@ -94,6 +94,7 @@ module marbl_interface_types
      character(char_len) :: flux_units
      logical             :: lfull_depth_tavg
      real(r8)            :: scale_factor
+     character(char_len) :: tracer_module_name
   end type marbl_tracer_metadata_type
 
   !*****************************************************************************
@@ -297,10 +298,6 @@ module marbl_interface_types
   !*****************************************************************************
 
   type, public :: marbl_tracer_index_type
-    ! Tracer count, indices for CISO tracers
-    integer (int_kind) :: ciso_tracer_ind_beg = 0
-    integer (int_kind) :: ciso_tracer_ind_end = 0
-
     ! General tracers
     integer (int_kind) :: po4_ind         = 0 ! dissolved inorganic phosphate
     integer (int_kind) :: no3_ind         = 0 ! dissolved inorganic nitrate
@@ -921,29 +918,35 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_tracer_index_constructor(this, ciso_on, marbl_status_log)
+  subroutine marbl_tracer_index_constructor(this, ciso_on, gcm_tracer_cnt,    &
+             marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
     ! tracer_cnt by 1 for each tracer that is included. Note that this gives an
     ! accurate count whether the carbon isotope tracers are included or not.
 
-    use marbl_logging, only : marbl_log_type
-    use marbl_logging, only : status_msg
+    use marbl_sizes,   only : ecosys_used_tracer_cnt
+    use marbl_sizes,   only : ecosys_ind_beg
+    use marbl_sizes,   only : ecosys_ind_end
+    use marbl_sizes,   only : ecosys_ciso_ind_beg
+    use marbl_sizes,   only : ecosys_ciso_ind_end
 
     class(marbl_tracer_index_type), intent(inout) :: this
+    integer,                        intent(in)    :: gcm_tracer_cnt
     logical,                        intent(in)    :: ciso_on
     type(marbl_log_type),           intent(inout) :: marbl_status_log
 
-    integer :: tracer_cnt, n
+    integer :: n
     character(*), parameter :: subname='marbl_parms:marbl_tracer_index_constructor'
 
-    associate(ciso_tracer_beg => this%ciso_tracer_ind_beg,  &
-              ciso_tracer_end => this%ciso_tracer_ind_end)
+    associate(tracer_cnt      => ecosys_used_tracer_cnt)
 
       tracer_cnt = 0
 
       ! General ecosys tracers
+      ecosys_ind_beg = tracer_cnt + 1
+
       tracer_cnt  = tracer_cnt + 1
       this%po4_ind = tracer_cnt
 
@@ -1046,10 +1049,11 @@ contains
         call marbl_status_log%log_noerror(status_msg, subname)
 
       end do
+      ecosys_ind_end = tracer_cnt
 
       if (ciso_on) then
         ! Next tracer is start of the CISO tracers
-        ciso_tracer_beg = tracer_cnt + 1
+        ecosys_ciso_ind_beg = tracer_cnt + 1
 
         tracer_cnt     = tracer_cnt + 1
         this%di13c_ind = tracer_cnt
@@ -1101,9 +1105,25 @@ contains
           call marbl_status_log%log_noerror(status_msg, subname)
         end do
 
-        ciso_tracer_end = tracer_cnt
+        ecosys_ciso_ind_end = tracer_cnt
 
       end if
+
+    if (tracer_cnt.ne.gcm_tracer_cnt) then
+      write(error_msg,"(A,I0,A,I0)") "MARBL has defined ", tracer_cnt,        &
+                            " tracers, but GCM is expecting ", gcm_tracer_cnt
+      call marbl_status_log%log_error(error_msg, subname)
+      return
+    else
+      write(status_msg, "(A,I0,A)") "MARBL has defined ", tracer_cnt, " tracers."
+      call marbl_status_log%log_noerror(status_msg, subname)
+      write(status_msg, "(A, I0,A,I0)") "General tracers: ", ecosys_ind_beg,  &
+                                        " to ", ecosys_ind_end
+      call marbl_status_log%log_noerror(status_msg, subname)
+      write(status_msg, "(A, I0,A,I0)") "CISO tracers: ", ecosys_ciso_ind_beg, &
+                                        " to ", ecosys_ciso_ind_end
+      call marbl_status_log%log_noerror(status_msg, subname)
+    end if
     end associate
 
   end subroutine marbl_tracer_index_constructor
