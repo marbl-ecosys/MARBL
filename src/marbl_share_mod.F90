@@ -50,8 +50,6 @@ module marbl_share_mod
   character (char_len) :: init_ecosys_option           ! namelist option for initialization of bgc
   character (char_len) :: init_ecosys_init_file        ! filename for option 'file'
   character (char_len) :: init_ecosys_init_file_fmt    ! file format for option 'file'
-  real      (r8)       :: surf_avg_dic_const
-  real      (r8)       :: surf_avg_alk_const
 
   logical   (log_kind) :: liron_patch                  ! flag for iron patch fertilization
   character (char_len) :: iron_patch_flux_filename     ! file containing name of iron patch file
@@ -92,8 +90,6 @@ module marbl_share_mod
   character (char_len)        :: ciso_init_ecosys_option        ! option for initialization of bgc
   character (char_len)        :: ciso_init_ecosys_init_file     ! filename for option 'file'
   character (char_len)        :: ciso_init_ecosys_init_file_fmt ! file format for option 'file'
-  real      (r8)              :: ciso_surf_avg_di13c_const      ! values to be used when comp_surf_avg_freq_opt==never
-  real      (r8)              :: ciso_surf_avg_di14c_const      ! values to be used when comp_surf_avg_freq_opt==never
   logical   (log_kind)        :: ciso_lecovars_full_depth_tavg  ! should ecosystem vars be written full depth
 
   ! ciso forcing related variables

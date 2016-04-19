@@ -117,8 +117,6 @@ contains
     use marbl_share_mod           , only : ciso_atm_model_year
     use marbl_share_mod           , only : ciso_atm_data_year
     use marbl_share_mod           , only : ciso_lecovars_full_depth_tavg 
-    use marbl_share_mod           , only : ciso_surf_avg_di13c_const
-    use marbl_share_mod           , only : ciso_surf_avg_di14c_const
     use marbl_share_mod           , only : marbl_freq_opt_never  
     use marbl_share_mod           , only : marbl_freq_opt_nmonth 
     use marbl_share_mod           , only : marbl_freq_opt_nyear  
@@ -144,7 +142,6 @@ contains
     namelist /ecosys_ciso_nml/ &
          ciso_init_ecosys_option, ciso_init_ecosys_init_file, &
          ciso_init_ecosys_init_file_fmt, ciso_tracer_init_ext, &
-         ciso_surf_avg_di13c_const, ciso_surf_avg_di14c_const, &
          ciso_lsource_sink, &
          ciso_lecovars_full_depth_tavg, &
          ciso_atm_d13c_opt, ciso_atm_d13c_const, ciso_atm_d13c_filename, &
@@ -169,9 +166,6 @@ contains
     end do
 
     ciso_lsource_sink                       = .true.
-
-    ciso_surf_avg_di13c_const               = 1944.0_r8
-    ciso_surf_avg_di14c_const               = 1944.0_r8
 
     ciso_atm_d13c_opt                       = 'const'
     ciso_atm_d13c_const                     = -6.379_r8

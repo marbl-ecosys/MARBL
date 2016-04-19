@@ -328,7 +328,6 @@ contains
     use marbl_namelist_mod        , only : marbl_nl_cnt
     use marbl_namelist_mod        , only : marbl_nl_buffer_size
     use marbl_namelist_mod        , only : marbl_namelist
-    use marbl_share_mod           , only : surf_avg_dic_const, surf_avg_alk_const
     use marbl_share_mod           , only : init_ecosys_option        
     use marbl_share_mod           , only : init_ecosys_init_file
     use marbl_share_mod           , only : init_ecosys_init_file_fmt
@@ -428,8 +427,7 @@ contains
          dop_riv_flux_input, dsi_riv_flux_input, dfe_riv_flux_input,      &
          dic_riv_flux_input, alk_riv_flux_input, doc_riv_flux_input,      &
          gas_flux_forcing_opt, gas_flux_forcing_file,                     &
-         gas_flux_fice, gas_flux_ws, gas_flux_ap,                         &
-         nutr_rest_file, surf_avg_dic_const, surf_avg_alk_const,          &
+         gas_flux_fice, gas_flux_ws, gas_flux_ap, nutr_rest_file,         &
          lsource_sink, lflux_gas_o2, lflux_gas_co2, locmip_k1_k2_bug_fix, &
          lnutr_variable_restore, nutr_variable_rest_file,                 &
          nutr_variable_rest_file_fmt, atm_co2_opt, atm_co2_const,         &
@@ -579,9 +577,6 @@ contains
     lflux_gas_o2          = .true.
     lflux_gas_co2         = .true.
     locmip_k1_k2_bug_fix  = .true.
-
-    surf_avg_dic_const            = 1944.0_r8
-    surf_avg_alk_const            = 2225.0_r8
 
     liron_patch              = .false.
     iron_patch_flux_filename = 'unknown_iron_patch_filename'
