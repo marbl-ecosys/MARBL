@@ -117,10 +117,6 @@ contains
     use marbl_share_mod           , only : ciso_atm_model_year
     use marbl_share_mod           , only : ciso_atm_data_year
     use marbl_share_mod           , only : ciso_lecovars_full_depth_tavg 
-    use marbl_share_mod           , only : ciso_use_nml_surf_vals
-    use marbl_share_mod           , only : ciso_comp_surf_avg_flag
-    use marbl_share_mod           , only : ciso_comp_surf_avg_freq
-    use marbl_share_mod           , only : ciso_comp_surf_avg_freq_iopt
     use marbl_share_mod           , only : ciso_surf_avg_di13c_const
     use marbl_share_mod           , only : ciso_surf_avg_di14c_const
     use marbl_share_mod           , only : marbl_freq_opt_never  
@@ -144,15 +140,10 @@ contains
     character(len=marbl_nl_buffer_size) :: &
          tmp_nl_buffer
 
-    character(char_len) :: &
-         ciso_comp_surf_avg_freq_opt
-
     ! ecosys_ciso_nml namelist
     namelist /ecosys_ciso_nml/ &
          ciso_init_ecosys_option, ciso_init_ecosys_init_file, &
          ciso_init_ecosys_init_file_fmt, ciso_tracer_init_ext, &
-         ciso_comp_surf_avg_freq_opt, ciso_comp_surf_avg_freq,  &
-         ciso_use_nml_surf_vals, &
          ciso_surf_avg_di13c_const, ciso_surf_avg_di14c_const, &
          ciso_lsource_sink, &
          ciso_lecovars_full_depth_tavg, &
@@ -179,9 +170,6 @@ contains
 
     ciso_lsource_sink                       = .true.
 
-    ciso_comp_surf_avg_freq_opt             = 'never'
-    ciso_comp_surf_avg_freq                 = 1
-    ciso_use_nml_surf_vals                  = .false.
     ciso_surf_avg_di13c_const               = 1944.0_r8
     ciso_surf_avg_di14c_const               = 1944.0_r8
 
@@ -215,36 +203,6 @@ contains
        ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_ciso_nml
        call marbl_status_log%log_namelist('ecosys_ciso_nml', tmp_nl_buffer, subname)
     end if
-
-    !-----------------------------------------------------------------------
-    !  set variables immediately dependent on namelist variables
-    !-----------------------------------------------------------------------
-
-    select case (ciso_comp_surf_avg_freq_opt)
-    case ('never')
-       ciso_comp_surf_avg_freq_iopt = marbl_freq_opt_never
-    case ('nyear')
-       ciso_comp_surf_avg_freq_iopt = marbl_freq_opt_nyear
-    case ('nmonth')
-       ciso_comp_surf_avg_freq_iopt = marbl_freq_opt_nmonth
-    case default
-       write(error_msg, "(2A)") "unknown ciso_comp_surf_avg_freq_opt: ", trim(ciso_comp_surf_avg_freq_opt)
-       call marbl_status_log%log_error(error_msg, subname)
-       return
-    end select
-
-    !-----------------------------------------------------------------------
-    !  namelist consistency checking
-    !-----------------------------------------------------------------------
-
-    if (ciso_use_nml_surf_vals .and. ciso_comp_surf_avg_freq_iopt /= marbl_freq_opt_never) then
-       write(error_msg, "(4A)") "ciso_use_nml_surf_vals can only be .true. if ", &
-                                "ciso_comp_surf_avg_freq_opt is 'never', but",   &
-                                "ciso_comp_surf_avg_freq_opt = ",                &
-                                trim(ciso_comp_surf_avg_freq_opt)
-       call marbl_status_log%log_error(error_msg, subname)
-       return
-    endif
 
   end subroutine marbl_ciso_init_nml
 

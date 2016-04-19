@@ -329,7 +329,6 @@ contains
     use marbl_namelist_mod        , only : marbl_nl_buffer_size
     use marbl_namelist_mod        , only : marbl_namelist
     use marbl_share_mod           , only : surf_avg_dic_const, surf_avg_alk_const
-    use marbl_share_mod           , only : use_nml_surf_vals         
     use marbl_share_mod           , only : init_ecosys_option        
     use marbl_share_mod           , only : init_ecosys_init_file
     use marbl_share_mod           , only : init_ecosys_init_file_fmt
@@ -390,7 +389,6 @@ contains
     character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
 
     integer (int_kind)           :: n                           ! index for looping over tracers
-    character(char_len)          :: comp_surf_avg_freq_opt      ! choice for freq of comp_surf_avg
     character(char_len)          :: gas_flux_forcing_opt        ! option for forcing gas fluxes
     character(char_len)          :: atm_co2_opt                 ! option for atmospheric co2 concentration
     character(char_len)          :: atm_alt_co2_opt             ! option for atmospheric alternative CO2
@@ -409,8 +407,6 @@ contains
     type(marbl_tracer_read_type) :: doc_riv_flux_input          ! namelist input for doc_riv_flux
     integer (int_kind)           :: nml_error                   ! namelist i/o error flag
     integer (int_kind)           :: zoo_ind                     ! zooplankton functional group index
-    integer (int_kind)           :: comp_surf_avg_freq_iopt     ! choice for freq of comp_surf_avg
-    integer (int_kind)           :: comp_surf_avg_freq          ! choice for freq of comp_surf_avg
     type(marbl_tracer_read_type) :: gas_flux_fice               ! ice fraction for gas fluxes
     type(marbl_tracer_read_type) :: gas_flux_ws                 ! wind speed for gas fluxes
     type(marbl_tracer_read_type) :: gas_flux_ap                 ! atmospheric pressure for gas fluxes
@@ -419,10 +415,6 @@ contains
     character(char_len)          :: nutr_variable_rest_file_fmt ! format of file containing variable restoring info
     logical (log_kind)           :: lnutr_variable_restore      ! geographically varying nutrient restoring (maltrud)
     logical (log_kind)           :: locmip_k1_k2_bug_fix
-
-    !-----------------------------------------------------------------------
-    !  values to be used when comp_surf_avg_freq_opt==never
-    !-----------------------------------------------------------------------
 
     namelist /ecosys_nml/                                                 &
          init_ecosys_option, init_ecosys_init_file, tracer_init_ext,      &
@@ -437,9 +429,7 @@ contains
          dic_riv_flux_input, alk_riv_flux_input, doc_riv_flux_input,      &
          gas_flux_forcing_opt, gas_flux_forcing_file,                     &
          gas_flux_fice, gas_flux_ws, gas_flux_ap,                         &
-         nutr_rest_file,                                                  &
-         comp_surf_avg_freq_opt, comp_surf_avg_freq,                      &
-         use_nml_surf_vals, surf_avg_dic_const, surf_avg_alk_const,       &
+         nutr_rest_file, surf_avg_dic_const, surf_avg_alk_const,          &
          lsource_sink, lflux_gas_o2, lflux_gas_co2, locmip_k1_k2_bug_fix, &
          lnutr_variable_restore, nutr_variable_rest_file,                 &
          nutr_variable_rest_file_fmt, atm_co2_opt, atm_co2_const,         &
@@ -590,9 +580,6 @@ contains
     lflux_gas_co2         = .true.
     locmip_k1_k2_bug_fix  = .true.
 
-    comp_surf_avg_freq_opt        = 'never'
-    comp_surf_avg_freq            = 1
-    use_nml_surf_vals             = .false.
     surf_avg_dic_const            = 1944.0_r8
     surf_avg_alk_const            = 2225.0_r8
 
@@ -663,19 +650,6 @@ contains
     !  set variables immediately dependent on namelist variables
     !-----------------------------------------------------------------------
 
-    select case (comp_surf_avg_freq_opt)
-    case ('never')
-       comp_surf_avg_freq_iopt = marbl_freq_opt_never
-    case ('nyear')
-       comp_surf_avg_freq_iopt = marbl_freq_opt_nyear
-    case ('nmonth')
-       comp_surf_avg_freq_iopt = marbl_freq_opt_nmonth
-    case default
-       write(error_msg, "(2A)") "unknown comp_surf_avg_freq_opt: ", trim(comp_surf_avg_freq_opt)
-       call marbl_status_log%log_error(error_msg, subname)
-       return
-    end select
-
     select case (atm_co2_opt)
     case ('const')
        atm_co2_iopt = atm_co2_iopt_const
@@ -708,18 +682,6 @@ contains
        call marbl_status_log%log_error(error_msg, subname)
        return
     end select
-
-    !-----------------------------------------------------------------------
-    !  namelist consistency checking
-    !-----------------------------------------------------------------------
-
-    if (use_nml_surf_vals .and. comp_surf_avg_freq_iopt /= marbl_freq_opt_never) then
-       write(error_msg, "(4A)") "use_nml_surf_vals can only be .true. if ", &
-                                "comp_surf_avg_freq_opt is 'never', but ",  &
-                                "comp_surf_avg_freq_opt = ", trim(comp_surf_avg_freq_opt)
-       call marbl_status_log%log_error(error_msg, subname)
-       return
-    endif
 
     !-----------------------------------------------------------------------
     !  read ecosys_parms_nml namelist

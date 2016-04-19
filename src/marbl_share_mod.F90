@@ -50,7 +50,6 @@ module marbl_share_mod
   character (char_len) :: init_ecosys_option           ! namelist option for initialization of bgc
   character (char_len) :: init_ecosys_init_file        ! filename for option 'file'
   character (char_len) :: init_ecosys_init_file_fmt    ! file format for option 'file'
-  logical   (log_kind) :: use_nml_surf_vals            ! do namelist surf values override values from restart file
   real      (r8)       :: surf_avg_dic_const
   real      (r8)       :: surf_avg_alk_const
 
@@ -64,10 +63,6 @@ module marbl_share_mod
   integer   (int_kind) :: ndep_shr_stream_year_align   ! align ndep_shr_stream_year_first with this model year
   character (char_len) :: ndep_shr_stream_file         ! file containing domain and input data
   real      (r8)       :: ndep_shr_stream_scale_factor ! unit conversion factor
-
-  integer   (int_kind) :: comp_surf_avg_flag           ! flag for computing average surface tracer values 
-  integer   (int_kind) :: comp_surf_avg_freq_iopt      ! choice for freq of comp_surf_avg
-  integer   (int_kind) :: comp_surf_avg_freq           ! choice for freq of comp_surf_avg
 
   type(marbl_forcing_monthly_every_ts_type), pointer :: fice_file             ! ice fraction, if read from file
   type(marbl_forcing_monthly_every_ts_type), pointer :: xkw_file              ! a * wind-speed ** 2, if read from file
@@ -93,14 +88,10 @@ module marbl_share_mod
   type(marbl_tracer_read_type) :: ciso_tracer_init_ext(ecosys_ciso_tracer_cnt) ! namelist variable for initializing tracers
 
   logical   (log_kind)        :: ciso_lsource_sink              ! flag controlling which portion of code are executed
-  logical   (log_kind)        :: ciso_use_nml_surf_vals         ! do namelist surf values override values from restart file
   character (char_len)        :: ciso_fract_factors             ! option for which biological fractionation calculation to use
   character (char_len)        :: ciso_init_ecosys_option        ! option for initialization of bgc
   character (char_len)        :: ciso_init_ecosys_init_file     ! filename for option 'file'
   character (char_len)        :: ciso_init_ecosys_init_file_fmt ! file format for option 'file'
-  integer   (int_kind)        :: ciso_comp_surf_avg_flag        ! flag for computing average surface tracer values
-  integer   (int_kind)        :: ciso_comp_surf_avg_freq_iopt   ! choice for freq of comp_surf_avg
-  integer   (int_kind)        :: ciso_comp_surf_avg_freq        ! choice for freq of comp_surf_avg
   real      (r8)              :: ciso_surf_avg_di13c_const      ! values to be used when comp_surf_avg_freq_opt==never
   real      (r8)              :: ciso_surf_avg_di14c_const      ! values to be used when comp_surf_avg_freq_opt==never
   logical   (log_kind)        :: ciso_lecovars_full_depth_tavg  ! should ecosystem vars be written full depth
