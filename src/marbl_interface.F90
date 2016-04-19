@@ -277,7 +277,7 @@ contains
     end if
 
     call marbl_update_tracer_read(this%tracer_indices, this%tracer_read,      &
-         this%StatusLog)
+         this%ciso_on, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
        call this%StatusLog%log_error("error code returned from marbl_update_tracer_read", &
             "marbl_interface::marbl_init()")
