@@ -5316,8 +5316,15 @@ contains
   subroutine marbl_update_tracer_file_metadata(marbl_tracer_indices,          &
              marbl_tracer_read, ciso_on, marbl_status_log)
 
-  ! FIXME: add comments about what this code is doing
-  !        also, needs a better name
+    ! MARBL is responsible for telling the  GCM driver where to read tracer
+    ! initial conditions from, and this information comes from the
+    ! marbl_tracer_read_type data structure (part of the marbl_interface_class)
+    ! By default, the ecosys tracers are expected to be in init_ecosys_init_file
+    ! and the CISO tracers are in ciso_init_ecosys_init_file [which is a
+    ! terrible variable name], but individual tracers can be read from other
+    ! files via the tracer_init_ext and ciso_tracer_init_ext namelist variables.
+    ! This routine parses the tracer_init_ext arrays and updates the file
+    ! metadata of any specified tracers.
 
     use marbl_share_mod           , only : tracer_init_ext
     use marbl_share_mod           , only : ciso_tracer_init_ext
@@ -5332,6 +5339,8 @@ contains
 
     do n=1,size(tracer_init_ext)
       if (trim(tracer_init_ext(n)%mod_varname).ne.'unknown') then
+        ! (1) For each element of tracer_init_ext(:), determine the tracer index
+        !     of the tracer being updated (ignore 'unknown')
         tracer_ind = 0
         do ind=1,size(marbl_tracer_read)
           if (trim(tracer_init_ext(n)%mod_varname).eq.                        &
@@ -5341,7 +5350,7 @@ contains
           end if
         end do
 
-        ! Error if no tracer is found
+        ! (1b) Return with an error if no tracer matches
         if (tracer_ind.eq.0) then
           write(error_msg,"(A,X,A)") 'No tracer defined with name',           &
                trim(tracer_init_ext(n)%mod_varname)
@@ -5349,7 +5358,7 @@ contains
           return
         end if
 
-        ! Update filename, file_varname, scale_factor, and default_val
+        ! (2) Given a match, update any fields provided via tracer_init_ext
         associate(&
                   tracer_read       => marbl_tracer_read(ind),                &
                   namelist_metadata => tracer_init_ext(n)                     &
@@ -5366,6 +5375,15 @@ contains
       end if
     end do
 
+    ! (3) Repeat for CISO tracers
+    !     Note: a potential improvement from a user standpoint would be to
+    !           remove ciso_tracer_init_ext and just use tracer_init_ext with
+    !           CISO tracer names. The only current hurdle to this is that the
+    !           default POP CISO runs set ciso_tracer_init_ext in the namelist,
+    !           rather than relying on the defaults set in marbl_ciso_mod.F90
+    !
+    !     At the very least, we should consider refactoring this so it can be
+    !     called with tracer_init_ext and then ciso_tracer_init_ext.
     if (ciso_on) then
       do n=1,size(ciso_tracer_init_ext)
         if (trim(ciso_tracer_init_ext(n)%mod_varname).ne.'unknown') then
@@ -5386,7 +5404,6 @@ contains
             return
           end if
 
-          ! Update filename, file_varname, scale_factor, and default_val
           associate(&
                     tracer_read       => marbl_tracer_read(ind),              &
                     namelist_metadata => ciso_tracer_init_ext(n)              &
