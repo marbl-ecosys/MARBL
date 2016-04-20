@@ -142,7 +142,7 @@ contains
     use marbl_mod             , only : marbl_init_nml
     use marbl_mod             , only : marbl_init_surface_forcing_fields
     use marbl_mod             , only : marbl_init_tracer_metadata
-    use marbl_mod             , only : marbl_update_tracer_read
+    use marbl_mod             , only : marbl_update_tracer_file_metadata
     use marbl_diagnostics_mod , only : marbl_diagnostics_init  
     
     implicit none
@@ -276,10 +276,10 @@ contains
        end if
     end if
 
-    call marbl_update_tracer_read(this%tracer_indices, this%tracer_read,      &
+    call marbl_update_tracer_file_metadata(this%tracer_indices, this%tracer_read, &
          this%ciso_on, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-       call this%StatusLog%log_error("error code returned from marbl_update_tracer_read", &
+       call this%StatusLog%log_error("error code returned from marbl_update_tracer_file_metadata", &
             "marbl_interface::marbl_init()")
       return
     end if

@@ -209,7 +209,7 @@ module marbl_mod
   public  :: marbl_init_nml
   public  :: marbl_init_surface_forcing_fields
   public  :: marbl_init_tracer_metadata
-  public  :: marbl_update_tracer_read
+  public  :: marbl_update_tracer_file_metadata
   public  :: marbl_set_interior_forcing
   public  :: marbl_set_surface_forcing
 
@@ -5313,10 +5313,11 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_update_tracer_read(marbl_tracer_indices, marbl_tracer_read, &
-             ciso_on, marbl_status_log)
+  subroutine marbl_update_tracer_file_metadata(marbl_tracer_indices,          &
+             marbl_tracer_read, ciso_on, marbl_status_log)
 
   ! FIXME: add comments about what this code is doing
+  !        also, needs a better name
 
     use marbl_share_mod           , only : tracer_init_ext
     use marbl_share_mod           , only : ciso_tracer_init_ext
@@ -5326,7 +5327,7 @@ contains
     logical (kind=log_kind)      , intent(in)    :: ciso_on
     type(marbl_log_type)         , intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_mod:marbl_update_tracer_read'
+    character(*), parameter :: subname = 'marbl_mod:marbl_update_tracer_file_metadata'
     integer :: n, ind, tracer_ind
 
     do n=1,size(tracer_init_ext)
@@ -5403,7 +5404,7 @@ contains
       end do
     end if
 
-  end subroutine marbl_update_tracer_read
+  end subroutine marbl_update_tracer_file_metadata
 
 end module marbl_mod
 
