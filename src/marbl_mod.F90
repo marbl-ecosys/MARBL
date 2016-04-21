@@ -5352,7 +5352,7 @@ contains
 
         ! (1b) Return with an error if no tracer matches
         if (tracer_ind.eq.0) then
-          write(error_msg,"(A,X,A)") 'No tracer defined with name',           &
+          write(error_msg,"(A,1X,A)") 'No tracer defined with name',          &
                trim(tracer_init_ext(n)%mod_varname)
           call marbl_status_log%log_error(error_msg, subname)
           return
@@ -5398,7 +5398,7 @@ contains
 
           ! Error if no tracer is found
           if (tracer_ind.eq.0) then
-            write(error_msg,"(A,X,A)") 'No tracer defined with name',         &
+            write(error_msg,"(A,1X,A)") 'No tracer defined with name',        &
                  trim(ciso_tracer_init_ext(n)%mod_varname)
             call marbl_status_log%log_error(error_msg, subname)
             return
