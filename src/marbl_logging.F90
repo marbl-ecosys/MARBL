@@ -4,60 +4,63 @@ module marbl_logging
 ! Module Usage
 ! ------------
 !
-! MARBL has been designed so that all I/O goes through the GCM (or whatever is
-! driving the library). The marbl_interface_class contains StatusLog, which
-! is used to
+! Assume a variable named StatusLog (as appears in the marbl_interface_class)
 !
-! (a) send text to stdout (or wherever your model prefers)
-! (b) report errors that require the model to abort
+! Use the following routines to write log entries
+! -----------------------------------------------
 !
-! In MARBL subroutines, one of three subroutines will be used:
-!
-! (1) StatusLog%log_noerror -- this stores a log message in StatusLog that does
+! (1) StatusLog%log_namelist -- this stores a log message that contains a
+!     namelist that has been read in by MARBL. The log message will include
+!     "Contents of &[namelist_name]:" as a prefix to the actual namelist.
+! (2) StatusLog%log_noerror -- this stores a log message in StatusLog that does
 !     not contain a fatal error
-! (2) StatusLog%log_error -- this stores a log message in StatusLog that DOES
+! (3) StatusLog%log_error -- this stores a log message in StatusLog that DOES
 !     contain a fatal error. It does this by setting StatusLog%labort_marbl =
 !     .true.; when a call from the GCM to MARBL returns, it is important for the
 !     GCM to check the value of StatusLog%labort_marbl and abort the run if an
 !     error has been reported.
-! (3) StatusLog%log_error_trace -- this routine helps trace the path in the code
+! (4) StatusLog%log_error_trace -- this routine helps trace the path in the code
 !     that resulted in an error being reported. If a MARBL routine logs an error
 !     message, then the routine that called the errant routine also logs an
 !     error message giving more information about where the call was made from.
 !
-! StatusLog uses a linked list to store the error messages. To print the
-! message, start with a pointer of type(marbl_status_log_entry_type) that points
-! to StatusLog%FullLog. You definitely want to print FullLogPtr%LogMessage, and
-! may also be interested in FullLogPtr%ElementInd (if the message came from a
-! portion of the code looping of num_elements) and FullLogPtr%CodeLocation
-! (which contains MODULE:SUBROUTINE).
+! Pseudo-code for writing StatusLog in the driver
+! -----------------------------------------------
 !
-! There is also a helpful FullLogPtr%lall_tasks, which is .true. if MARBL deems
-! the message important enough to be printed regardless of the number of tasks
-! or threads the GCM is using. Error messages will always set lall_tasks to
-! .true. but diagnostic messages (such as notes about which surface forcing
-! output fields are being used) will set lall_tasks to .false. and only a single
-! task needs to print those messages.
-!
-! After the GCM processes the contents of FullLogPtr, set FullLogPtr =>
-! FullLogPtr%next and, if associated(FullLogPtr), process the next message. Once
-! you get to the last message in the linked list, FullLogPtr%next => NULL().
-!
-! Once you have looped through all of the log messages, run StatusLog%erase() to
-! clear the contents of the log.
+! Using '#if 0' so code below is not compiled
+#if 0
+  type(marbl_status_log_entry_type), pointer :: LogEntry
+
+  ! Set pointer to first entry of the log
+  LogEntry => StatusLog%FullLog
+
+  do while (associated(LogEntry))
+    ! If running in parallel, you may want to check if you are the master
+    ! task or if LogEntry%lalltasks = .true.
+    write(stdout,*) trim(LogEntry%LogMessage)
+    LogEntry => LogEntry%next
+  end do
+
+  ! Erase contents of log now that they have been written out
+  call StatusLog%erase()
+
+  if (StatusLog%labort_marbl) then
+    [GCM abort call: "error found in MARBL"]
+  end if
+
+#endif
 
   use marbl_kinds_mod, only : char_len
   use marbl_namelist_mod, only : marbl_nl_buffer_size
+
   implicit none
   private
   save
 
   integer, parameter, private :: marbl_log_len = marbl_nl_buffer_size
 
-  ! MNL TO-DO: do we want a wrapper class that contains a linked list of
-  !            marbl_log_type? Then labort_marbl can be in the wrapped class
-  !            (and so can the status level definitions); would make this more
-  !            in line with the diagnostic and forcing field types, as well
+  !****************************************************************************
+
   type, public :: marbl_status_log_entry_type
     integer :: ElementInd
     logical :: lall_tasks  ! True => message should be written to stdout by
@@ -68,6 +71,19 @@ module marbl_logging
     type(marbl_status_log_entry_type), pointer :: next
   end type marbl_status_log_entry_type
 
+  !****************************************************************************
+
+  ! Note: this data type is not in use at the moment, but it is included as an
+  !       initial step towards allowing the user some control over what types
+  !       of messages are added to the log. For example, if you do not want
+  !       the contents of namelists written to the log, you would simply set
+  !
+  !       lLogNamelist = .false.
+  !
+  !       In the future we hope to be able to set these options via namelist,
+  !       but for now lLogNamelist, lLogGeneral, lLogWarning, and lLogError are
+  !       all set to .true. and can not be changed without modifying the source
+  !       code in this file.
   type, private :: marbl_log_output_options_type
     logical :: labort_on_warning ! True => elevate Warnings to Errors
     logical :: lLogVerbose       ! Debugging output should be given Verbose label
@@ -79,6 +95,8 @@ module marbl_logging
   contains
     procedure :: construct => marbl_output_options_constructor
   end type marbl_log_output_options_type
+
+  !****************************************************************************
 
   type, public :: marbl_log_type
     logical, public :: labort_marbl ! True => driver should abort GCM
@@ -94,7 +112,11 @@ module marbl_logging
     procedure, public :: erase => marbl_log_erase
   end type marbl_log_type
 
+  !****************************************************************************
+
 contains
+
+  !****************************************************************************
 
   subroutine marbl_output_options_constructor(this, labort_on_warning, LogVerbose, LogNamelist, &
                                               LogGeneral, LogWarning, LogError)
@@ -141,6 +163,8 @@ contains
 
   end subroutine marbl_output_options_constructor
 
+  !****************************************************************************
+
   subroutine marbl_log_constructor(this)
 
     class(marbl_log_type), intent(inout) :: this
@@ -152,9 +176,14 @@ contains
 
   end subroutine marbl_log_constructor
 
+  !****************************************************************************
+
   subroutine marbl_log_namelist(this, NamelistName, NamelistContents, CodeLoc, ElemInd)
 
     class(marbl_log_type), intent(inout) :: this
+    ! NamelistName is the name of the namelist
+    ! NamelistContents is a string containing the contents of the namelist
+    ! CodeLoc is the name of the subroutine that is calling StatusLog%log_namelist
     character(len=*),      intent(in)    :: NamelistName, NamelistContents, CodeLoc
     integer, optional,     intent(in)    :: ElemInd
     type(marbl_status_log_entry_type), pointer :: new_entry
@@ -187,9 +216,14 @@ contains
 
   end subroutine marbl_log_namelist
 
+  !****************************************************************************
+
   subroutine marbl_log_error(this, ErrorMsg, CodeLoc, ElemInd)
 
     class(marbl_log_type), intent(inout) :: this
+    ! ErrorMsg is the error message to be printed in the log; it does not need
+    !     to contain the name of the module or subroutine triggering the error
+    ! CodeLoc is the name of the subroutine that is calling StatusLog%log_error
     character(len=*),      intent(in)    :: ErrorMsg, CodeLoc
     integer, optional,     intent(in)    :: ElemInd
     type(marbl_status_log_entry_type), pointer :: new_entry
@@ -223,11 +257,19 @@ contains
 
   end subroutine marbl_log_error
 
+  !****************************************************************************
+
   subroutine marbl_log_noerror(this, StatusMsg, CodeLoc, ElemInd, lall_tasks)
 
     class(marbl_log_type), intent(inout) :: this
+    ! StatusMsg is the message to be printed in the log; it does not need to
+    !    contain the name of the module or subroutine producing the log message
+    ! CodeLoc is the name of the subroutine that is calling StatusLog%log_noerror
     character(len=*),      intent(in)    :: StatusMsg, CodeLoc
     integer, optional,     intent(in)    :: ElemInd
+    ! If lall_tasks is .true., then this is a message that should be printed out
+    ! regardless of which task produced it. By default, MARBL assumes that only
+    ! the master task needs to print a message
     logical, optional,     intent(in)    :: lall_tasks
     type(marbl_status_log_entry_type), pointer :: new_entry
 
@@ -262,9 +304,24 @@ contains
 
   end subroutine marbl_log_noerror
 
+  !****************************************************************************
+
   subroutine marbl_log_error_trace(this, RoutineName, CodeLoc, ElemInd)
 
+  ! This routine should only be called if another subroutine has returned and
+  ! StatusLog%labort_marbl = .true.
+
     class(marbl_log_type), intent(inout) :: this
+    ! RoutineName is the name of the subroutine that returned with
+    !             labort_marbl = .true.
+    ! CodeLoc is the name of the subroutine that is calling StatusLog%log_error_trace
+    !
+    ! Log will contain a message along the lines of
+    !
+    ! "(CodeLoc) Error reported from RoutineName"
+    !
+    ! When the log is printed, this will provide a traceback through the sequence
+    ! of calls that led to the original error message.
     character(len=*),      intent(in)    :: RoutineName, CodeLoc
     integer, optional,     intent(in)    :: ElemInd
     character(len=char_len) :: log_message
@@ -273,6 +330,8 @@ contains
     call this%log_error(log_message, CodeLoc, ElemInd)
 
   end subroutine marbl_log_error_trace
+
+  !****************************************************************************
 
   subroutine marbl_log_erase(this)
 
