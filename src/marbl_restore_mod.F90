@@ -76,7 +76,7 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   real(r8), dimension(:), allocatable :: inv_tau
   integer(int_kind) :: nml_error, k, n, t
   character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
-  character(*), parameter :: subname = 'ecosys_restore:Init'
+  character(*), parameter :: subname = 'marbl_restore_mod:init'
   character(len=char_len) :: log_message
 
   !-----------------------------------------------------------------------

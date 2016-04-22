@@ -378,7 +378,7 @@ contains
     integer :: num_forcing_diags
     character(len=char_len) :: lname, sname, units, vgrid
 
-    character(*), parameter :: subname = "marbl_diagnostics_mod:marbl_diagnostics_init"
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_init'
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------
@@ -4112,7 +4112,7 @@ contains
     type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_forcing_diags
     type (marbl_log_type)                     , intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = "marbl_diagnostics_mod:set_interior"
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:set_interior'
 
     !-----------------------------------------------------------------
 
@@ -4237,7 +4237,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_diagnostics:store_diagnostics_surface_forcing'
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_surface_forcing'
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------------
@@ -5402,7 +5402,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_diagnostics:store_diagnostics_ciso_surface_forcing'
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_ciso_surface_forcing'
     !-----------------------------------------------------------------------
 
     associate(                                          &

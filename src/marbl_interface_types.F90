@@ -389,8 +389,7 @@ contains
     integer(int_kind),            intent(in)    :: id
     type(marbl_log_type),         intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname =                                  &
-      'marbl_interface_types:marbl_single_sfo_constructor'
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_single_sfo_constructor'
     character(len=char_len) :: log_message
 
     select case (trim(field_name))
@@ -450,7 +449,7 @@ contains
 
     type(marbl_single_sfo_type), dimension(:), pointer :: new_sfo
     integer :: n, old_size
-    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_sfo_add'
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_sfo_add'
 
     if (associated(this%sfo)) then
       old_size = size(this%sfo)
@@ -515,7 +514,7 @@ contains
     type(marbl_log_type),          intent(inout) :: marbl_status_log
 
     integer (int_kind) :: n
-    character(*), parameter :: subname="marbl_interface_types:diagnostics_set_to_zero"
+    character(*), parameter :: subname = 'marbl_interface_types:diagnostics_set_to_zero'
     character(len=char_len) :: log_message
 
     do n=1,this%diag_cnt
@@ -692,7 +691,7 @@ contains
     integer(kind=int_kind)  :: n
     logical(log_kind)       :: has_valid_source
     logical(log_kind)       :: has_valid_inputs
-    character(*), parameter :: subname = "marbl_interface_types:single_forcing_field_init"
+    character(*), parameter :: subname = 'marbl_interface_types:single_forcing_field_init'
     character(len=char_len) :: log_message
     !-----------------------------------------------------------------------
 
@@ -842,7 +841,7 @@ contains
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
     integer (kind=int_kind) :: num_elem
-    character(*), parameter :: subname = "marbl_interface_types:marbl_forcing_fields_add"
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_forcing_fields_add'
     character(len=char_len) :: log_message
 
     ! Note - the following sets the indices into the marble interface type surface_input_forcings(:,indices)

@@ -3262,7 +3262,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = "marbl_mod:marbl_init_zooplankton_tracer_metadata"
+    character(*), parameter :: subname = 'marbl_mod:marbl_init_zooplankton_tracer_metadata'
     character(len=char_len) :: log_message
     integer (int_kind) :: zoo_ind            ! zooplankton functional group index
     !-----------------------------------------------------------------------
@@ -3309,7 +3309,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = "marbl_mod:marbl_init_autotroph_tracer_metadata"
+    character(*), parameter :: subname = 'marbl_mod:marbl_init_autotroph_tracer_metadata'
     character(len=char_len) :: log_message
     integer (int_kind) :: auto_ind ! zooplankton functional group index
     !-----------------------------------------------------------------------

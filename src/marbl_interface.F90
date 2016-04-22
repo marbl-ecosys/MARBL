@@ -321,7 +321,7 @@ contains
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
-    character(*), parameter :: subname='marbl_interface:set_interior_forcing'
+    character(*), parameter :: subname = 'marbl_interface:set_interior_forcing'
 
     call this%restoring%restore_tracers( &
          this%column_tracers,            &

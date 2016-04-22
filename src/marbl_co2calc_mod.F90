@@ -135,7 +135,7 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_co2calc:marbl_co2calc_surf'
+    character(*), parameter :: subname = 'marbl_co2calc_mod:marbl_co2calc_surf'
     integer(kind=int_kind)  :: n
     integer(kind=int_kind)  :: k
     real(kind=r8)           :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
@@ -303,7 +303,7 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_co2calc:marbl_comp_CO3terms'
+    character(*), parameter :: subname = 'marbl_co2calc_mod:marbl_comp_CO3terms'
     integer(kind=int_kind) :: c
     real(kind=r8) :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
     real(kind=r8) :: vol_to_mass          ! (mmol/m^3) -> (mol/kg)
@@ -786,7 +786,7 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_co2calc:marbl_comp_htotal'
+    character(*), parameter :: subname = 'marbl_co2calc_mod:marbl_comp_htotal'
     integer(kind=int_kind) :: c
     real(kind=r8) :: mass_to_vol                        ! (mol/kg) -> (mmol/m^3)
     real(kind=r8) :: vol_to_mass                        ! (mmol/m^3) -> (mol/kg)
@@ -904,7 +904,7 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_co2calc::drtsafe'
+    character(*), parameter :: subname = 'marbl_co2calc_mod:drtsafe'
     character(len=char_len) :: log_message
     logical(kind=log_kind)                          :: leave_bracket, dx_decrease
     logical(kind=log_kind), dimension(num_elements) :: mask
