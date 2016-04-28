@@ -4089,7 +4089,6 @@ contains
 
     ! Vertical integrals - CISO_Jint_13Ctot and Jint_100m_13Ctot
 
-    diags(ind%CISO_Jint_13Ctot)%field_3d(:, 1) = c0
     work(:) = dtracer(di13c_ind,:) + dtracer(do13c_ind,:) + dtracer(zoo13C_ind,:) &
          + sum(dtracer(autotrophs(:)%C13_ind,:), dim=1)
     do auto_ind = 1, autotroph_cnt
@@ -4105,7 +4104,6 @@ contains
 
     ! Vertical integral - CISO_Jint_14Ctot and Jint_100m_14Ctot
 
-    diags(ind%CISO_Jint_14Ctot)%field_3d(:, 1) = c0
     work(:) = dtracer(di14c_ind,:) + dtracer(do14c_ind,:) + dtracer(zoo14C_ind,:) &
          + sum(dtracer(autotrophs(:)%C14_ind,:), dim=1)
     do auto_ind = 1, autotroph_cnt
@@ -4122,19 +4120,15 @@ contains
     ! Other vertical integrals
 
     do n = 1,autotroph_cnt
-       diags(ind%CISO_photo13C_zint(n))%field_2d(1) = c0
        call compute_vertical_integrals(photo13C(n,:), delta_z, kmt,           &
             full_depth_integral=diags(ind%CISO_photo13C_zint(n))%field_2d(1))
        
-       diags(ind%CISO_photo14C_zint(n))%field_2d(1) = c0
        call compute_vertical_integrals(photo14C(n,:), delta_z, kmt,           &
             full_depth_integral=diags(ind%CISO_photo14C_zint(n))%field_2d(1))
        
-       diags(ind%CISO_Ca13CO3_form_zint(n))%field_2d(1) = c0
        call compute_vertical_integrals(Ca13CO3_prod(n,:), delta_z, kmt,       &
             full_depth_integral=diags(ind%CISO_Ca13CO3_form_zint(n))%field_2d(1))
        
-       diags(ind%CISO_Ca14CO3_form_zint(n))%field_2d(1) = c0
        call compute_vertical_integrals(Ca14CO3_prod(n,:), delta_z, kmt,       &
             full_depth_integral=diags(ind%CISO_Ca14CO3_form_zint(n))%field_2d(1))
     end do
