@@ -298,6 +298,12 @@ module marbl_interface_types
   !*****************************************************************************
 
   type, public :: marbl_tracer_index_type
+    ! Index ranges
+    integer (int_kind) :: ecosys_base_ind_beg
+    integer (int_kind) :: ecosys_base_ind_end
+    integer (int_kind) :: ciso_ind_beg
+    integer (int_kind) :: ciso_ind_end
+
     ! General tracers
     integer (int_kind) :: po4_ind         = 0 ! dissolved inorganic phosphate
     integer (int_kind) :: no3_ind         = 0 ! dissolved inorganic nitrate
@@ -926,11 +932,7 @@ contains
     ! tracer_cnt by 1 for each tracer that is included. Note that this gives an
     ! accurate count whether the carbon isotope tracers are included or not.
 
-    use marbl_sizes,   only : ecosys_used_tracer_cnt
-    use marbl_sizes,   only : ecosys_ind_beg
-    use marbl_sizes,   only : ecosys_ind_end
-    use marbl_sizes,   only : ecosys_ciso_ind_beg
-    use marbl_sizes,   only : ecosys_ciso_ind_end
+    use marbl_sizes,   only : marbl_total_tracer_cnt
 
     class(marbl_tracer_index_type), intent(inout) :: this
     integer,                        intent(in)    :: gcm_tracer_cnt
@@ -940,12 +942,14 @@ contains
     integer :: n
     character(*), parameter :: subname='marbl_parms:marbl_tracer_index_constructor'
 
-    associate(tracer_cnt      => ecosys_used_tracer_cnt)
+    associate(tracer_cnt      => marbl_total_tracer_cnt)
 
       tracer_cnt = 0
+      this%ciso_ind_beg = 0
+      this%ciso_ind_end = 0
 
       ! General ecosys tracers
-      ecosys_ind_beg = tracer_cnt + 1
+      this%ecosys_base_ind_beg = tracer_cnt + 1
 
       tracer_cnt  = tracer_cnt + 1
       this%po4_ind = tracer_cnt
@@ -1049,11 +1053,11 @@ contains
         call marbl_status_log%log_noerror(status_msg, subname)
 
       end do
-      ecosys_ind_end = tracer_cnt
+      this%ecosys_base_ind_end = tracer_cnt
 
       if (ciso_on) then
         ! Next tracer is start of the CISO tracers
-        ecosys_ciso_ind_beg = tracer_cnt + 1
+        this%ciso_ind_beg = tracer_cnt + 1
 
         tracer_cnt     = tracer_cnt + 1
         this%di13c_ind = tracer_cnt
@@ -1105,7 +1109,7 @@ contains
           call marbl_status_log%log_noerror(status_msg, subname)
         end do
 
-        ecosys_ciso_ind_end = tracer_cnt
+        this%ciso_ind_end = tracer_cnt
 
       end if
 
@@ -1117,12 +1121,15 @@ contains
     else
       write(status_msg, "(A,I0,A)") "MARBL has defined ", tracer_cnt, " tracers."
       call marbl_status_log%log_noerror(status_msg, subname)
-      write(status_msg, "(A, I0,A,I0)") "General tracers: ", ecosys_ind_beg,  &
-                                        " to ", ecosys_ind_end
+      write(status_msg, "(A, I0,A,I0)") "General tracers: ",                  &
+                                        this%ecosys_base_ind_beg, " to ",     &
+                                        this%ecosys_base_ind_end
       call marbl_status_log%log_noerror(status_msg, subname)
-      write(status_msg, "(A, I0,A,I0)") "CISO tracers: ", ecosys_ciso_ind_beg, &
-                                        " to ", ecosys_ciso_ind_end
-      call marbl_status_log%log_noerror(status_msg, subname)
+      if (ciso_on) then
+        write(status_msg, "(A, I0,A,I0)") "CISO tracers: ", this%ciso_ind_beg, &
+                                          " to ", this%ciso_ind_end
+        call marbl_status_log%log_noerror(status_msg, subname)
+      end if
     end if
     end associate
 

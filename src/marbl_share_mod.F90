@@ -8,8 +8,8 @@ module marbl_share_mod
   use marbl_kinds_mod       , only : log_kind
   use marbl_kinds_mod       , only : int_kind
   use marbl_kinds_mod       , only : char_len
-  use marbl_sizes           , only : ecosys_tracer_cnt
-  use marbl_sizes           , only : ecosys_ciso_tracer_cnt
+  use marbl_sizes           , only : ecosys_base_tracer_cnt
+  use marbl_sizes           , only : ciso_tracer_cnt
   use marbl_interface_types , only : marbl_tracer_read_type
   use marbl_interface_types , only : marbl_forcing_monthly_every_ts_type
 
@@ -36,7 +36,7 @@ module marbl_share_mod
   integer (int_kind), parameter :: atm_co2_iopt_drv_prog      = 2
   integer (int_kind), parameter :: atm_co2_iopt_drv_diag      = 3
 
-  type(marbl_tracer_read_type) :: tracer_init_ext(ecosys_tracer_cnt) ! namelist variable for initializing tracers 
+  type(marbl_tracer_read_type) :: tracer_init_ext(ecosys_base_tracer_cnt) ! namelist variable for initializing tracers 
   type(marbl_tracer_read_type) :: fesedflux_input                    ! namelist input for iron_flux
 
   character (char_len) :: gas_flux_forcing_file        ! file containing gas flux forcing fields
@@ -83,7 +83,7 @@ module marbl_share_mod
   !  namelist: ecosys_ciso_nml 
   !-----------------------------------------------------------------------
 
-  type(marbl_tracer_read_type) :: ciso_tracer_init_ext(ecosys_ciso_tracer_cnt) ! namelist variable for initializing tracers
+  type(marbl_tracer_read_type) :: ciso_tracer_init_ext(ciso_tracer_cnt) ! namelist variable for initializing tracers
 
   logical   (log_kind)        :: ciso_lsource_sink              ! flag controlling which portion of code are executed
   character (char_len)        :: ciso_fract_factors             ! option for which biological fractionation calculation to use

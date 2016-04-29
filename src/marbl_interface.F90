@@ -22,9 +22,8 @@ module marbl_interface
   use marbl_logging         , only : marbl_log_type
   use marbl_logging         , only : error_msg
 
-  use marbl_sizes           , only : ecosys_tracer_cnt
-  use marbl_sizes           , only : ecosys_used_tracer_cnt
-  use marbl_sizes           , only : ecosys_ind_beg, ecosys_ind_end
+  use marbl_sizes           , only : ecosys_base_tracer_cnt
+  use marbl_sizes           , only : marbl_total_tracer_cnt
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
   use marbl_sizes           , only : num_surface_forcing_fields
@@ -163,10 +162,12 @@ contains
     !--------------------------------------------------------------------
 
     associate(&
-         num_levels           => gcm_num_levels,                   & 
-         num_PAR_subcols      => gcm_num_PAR_subcols,              &
-         num_surface_elements => gcm_num_elements_surface_forcing, &
-         num_interior_forcing => gcm_num_elements_interior_forcing &
+         num_levels           => gcm_num_levels,                               &
+         num_PAR_subcols      => gcm_num_PAR_subcols,                          &
+         num_surface_elements => gcm_num_elements_surface_forcing,             &
+         num_interior_forcing => gcm_num_elements_interior_forcing,            &
+         ecosys_base_ind_beg  => this%tracer_indices%ecosys_base_ind_beg,      &
+         ecosys_base_ind_end  => this%tracer_indices%ecosys_base_ind_end       &
          )
 
     !--------------------------------------------------------------------
@@ -235,23 +236,23 @@ contains
 
     call this%saved_state%construct(num_surface_elements, num_levels)
 
-    allocate(this%surface_vals(num_surface_elements, ecosys_used_tracer_cnt))
+    allocate(this%surface_vals(num_surface_elements, marbl_total_tracer_cnt))
 
-    allocate(this%surface_tracer_fluxes(num_surface_elements, ecosys_used_tracer_cnt))
+    allocate(this%surface_tracer_fluxes(num_surface_elements, marbl_total_tracer_cnt))
 
-    allocate(this%column_tracers(ecosys_used_tracer_cnt, num_levels))
+    allocate(this%column_tracers(marbl_total_tracer_cnt, num_levels))
 
-    allocate(this%column_dtracers(ecosys_used_tracer_cnt, num_levels))
+    allocate(this%column_dtracers(marbl_total_tracer_cnt, num_levels))
 
-    allocate(this%column_restore(ecosys_used_tracer_cnt, gcm_num_levels))
+    allocate(this%column_restore(marbl_total_tracer_cnt, gcm_num_levels))
 
     !--------------------------------------------------------------------
     ! Initialize public data / general tracer metadata
     ! And then update tracer input info based on namelist
     !--------------------------------------------------------------------
 
-    allocate(this%tracer_metadata(ecosys_used_tracer_cnt))
-    allocate(this%tracer_read(ecosys_used_tracer_cnt))
+    allocate(this%tracer_metadata(marbl_total_tracer_cnt))
+    allocate(this%tracer_read(marbl_total_tracer_cnt))
 
     call marbl_init_tracer_metadata( &
          this%tracer_metadata,       &
@@ -304,7 +305,7 @@ contains
     call this%restoring%init(                                                   &
          nl_buffer       = gcm_nl_buffer,                                       &
          domain          = this%domain,                                         &
-         tracer_metadata = this%tracer_metadata(ecosys_ind_beg:ecosys_ind_end), &
+         tracer_metadata = this%tracer_metadata(ecosys_base_ind_beg:ecosys_base_ind_end), &
          status_log      = this%StatusLog)
 
     !--------------------------------------------------------------------
@@ -314,7 +315,7 @@ contains
     call marbl_diagnostics_init(                                                             &
          ciso_on                      = this%ciso_on,                                        &
          marbl_domain                 = this%domain,                                         &
-         marbl_tracer_metadata        = this%tracer_metadata(ecosys_ind_beg:ecosys_ind_end), &
+         marbl_tracer_metadata        = this%tracer_metadata(ecosys_base_ind_beg:ecosys_base_ind_end), &
          marbl_tracer_indices         = this%tracer_indices,                                 &
          marbl_interior_forcing_diags = this%interior_forcing_diags,                         &
          marbl_interior_restore_diags = this%interior_restore_diags,                         &
@@ -337,7 +338,7 @@ contains
     call this%restoring%restore_tracers( &
          this%column_tracers,            &
          this%domain%km,                 &
-         ecosys_used_tracer_cnt,         &
+         marbl_total_tracer_cnt,         &
          this%column_restore)
 
     call marbl_set_interior_forcing(   &

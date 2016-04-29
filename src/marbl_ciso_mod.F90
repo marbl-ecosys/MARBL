@@ -101,7 +101,7 @@ contains
     use marbl_namelist_mod        , only : marbl_nl_buffer_size
     use marbl_namelist_mod        , only : marbl_nl_split_string
     use marbl_namelist_mod        , only : marbl_namelist
-    use marbl_share_mod           , only : ecosys_ciso_tracer_cnt
+    use marbl_share_mod           , only : ciso_tracer_cnt
     use marbl_share_mod           , only : ciso_init_ecosys_option
     use marbl_share_mod           , only : ciso_init_ecosys_init_file
     use marbl_share_mod           , only : ciso_init_ecosys_init_file_fmt
@@ -156,7 +156,7 @@ contains
     ciso_init_ecosys_option                 = 'unknown'
     ciso_init_ecosys_init_file              = 'unknown'
     ciso_init_ecosys_init_file_fmt          = 'bin'
-    do n = 1,ecosys_ciso_tracer_cnt
+    do n = 1,ciso_tracer_cnt
        ciso_tracer_init_ext(n)%mod_varname  = 'unknown'
        ciso_tracer_init_ext(n)%filename     = 'unknown'
        ciso_tracer_init_ext(n)%file_varname = 'unknown'
@@ -210,9 +210,7 @@ contains
     !  Set tracer and forcing metadata
 
     use marbl_interface_types, only : marbl_tracer_read_type
-    use marbl_sizes          , only : ecosys_ciso_ind_beg
-    use marbl_sizes          , only : ecosys_ciso_ind_end
-    use marbl_share_mod      , only : ecosys_ciso_tracer_cnt
+    use marbl_share_mod      , only : ciso_tracer_cnt
     use marbl_share_mod      , only : ciso_lecovars_full_depth_tavg
     use marbl_share_mod      , only : ciso_init_ecosys_init_file
     use marbl_share_mod      , only : ciso_init_ecosys_init_file_fmt
@@ -242,7 +240,9 @@ contains
               zoo13c_ind        => marbl_tracer_indices%zoo13c_ind,           &
               di14c_ind         => marbl_tracer_indices%di14c_ind,            &
               do14c_ind         => marbl_tracer_indices%do14c_ind,            &
-              zoo14c_ind        => marbl_tracer_indices%zoo14c_ind            &
+              zoo14c_ind        => marbl_tracer_indices%zoo14c_ind,           &
+              ciso_ind_beg      => marbl_tracer_indices%ciso_ind_beg,         &
+              ciso_ind_end      => marbl_tracer_indices%ciso_ind_end          &
              )
 
     marbl_tracer_metadata(di13c_ind)%short_name='DI13C'
@@ -289,13 +289,13 @@ contains
 
 
     !-----------------------------------------------------------------------
-    !  confirm that ecosys_ciso_tracer_cnt is consistent with autotroph declarations
+    !  confirm that ciso_tracer_cnt is consistent with autotroph declarations
     !-----------------------------------------------------------------------
 
-    n = ecosys_ciso_ind_end - (ecosys_ciso_ind_beg-1)
-    if (ecosys_ciso_tracer_cnt /= n) then
-       write(error_msg, "(A,I0,A,I0)") "ecosys_ciso_tracer_cnt = ",           &
-                                       ecosys_ciso_tracer_cnt,                &
+    n = ciso_ind_end - (ciso_ind_beg-1)
+    if (ciso_tracer_cnt /= n) then
+       write(error_msg, "(A,I0,A,I0)") "ciso_tracer_cnt = ",                  &
+                                       ciso_tracer_cnt,                       &
                                        " but computed tracer count is ", n
        call marbl_status_log%log_error(error_msg, subname)
        return
@@ -368,9 +368,7 @@ contains
        endif
     end do
 
-    end associate
-
-    do n=ecosys_ciso_ind_beg,ecosys_ciso_ind_end
+    do n=ciso_ind_beg,ciso_ind_end
       marbl_tracer_read(n)%mod_varname  = marbl_tracer_metadata(n)%short_name
       marbl_tracer_read(n)%filename     = ciso_init_ecosys_init_file
       marbl_tracer_read(n)%file_varname = marbl_tracer_metadata(n)%short_name
@@ -378,6 +376,8 @@ contains
       marbl_tracer_read(n)%scale_factor = c1
       marbl_tracer_read(n)%default_val  = c0
     end do
+
+    end associate
 
   end subroutine marbl_ciso_init_tracer_metadata
 
@@ -1218,7 +1218,7 @@ contains
 
     integer(int_kind) , intent(in)  :: column_km
     integer(int_kind) , intent(in)  :: column_kmt
-    real (r8)         , intent(in)  :: column_tracer(:,:) ! (ecosys_used_tracer_cnt,km) tracer values
+    real (r8)         , intent(in)  :: column_tracer(:,:) ! (marbl_total_tracer_cnt,km) tracer values
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
 
     real (r8)         , intent(out) :: DI13C_loc(:)     ! (km) local copy of model DI13C
@@ -1277,7 +1277,7 @@ contains
 
     integer(int_kind)          , intent(in)  :: column_km
     integer(int_kind)          , intent(in)  :: column_kmt
-    real (r8)                  , intent(in)  :: column_tracer(:,:)  ! (ecosys_used_tracer_cnt, km) tracer values
+    real (r8)                  , intent(in)  :: column_tracer(:,:)  ! (marbl_total_tracer_cnt, km) tracer values
 
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
     type(autotroph_local_type) , intent(out) :: autotroph_loc(:,:)  ! (autotroph_cnt)
@@ -1899,8 +1899,6 @@ contains
     use marbl_parms            , only : R14c_std
     use marbl_parms            , only : p5
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_surface_forcing
-    use marbl_sizes            , only : ecosys_ciso_ind_beg
-    use marbl_sizes            , only : ecosys_ciso_ind_end
 
     implicit none
 
@@ -1984,14 +1982,16 @@ contains
          di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
          do13c_ind          => marbl_tracer_indices%do13c_ind                  , &
          di14c_ind          => marbl_tracer_indices%di14c_ind                  , &
-         do14c_ind          => marbl_tracer_indices%do14c_ind                    &
+         do14c_ind          => marbl_tracer_indices%do14c_ind                  , &
+              ciso_ind_beg  => marbl_tracer_indices%ciso_ind_beg               , &
+              ciso_ind_end  => marbl_tracer_indices%ciso_ind_end                 &
          )
 
     !-----------------------------------------------------------------------
     !  ciso fluxes initially set to 0
     !-----------------------------------------------------------------------
 
-    stf(:,ecosys_ciso_ind_beg:ecosys_ciso_ind_end) = c0
+    stf(:,ciso_ind_beg:ciso_ind_end) = c0
 
     !-----------------------------------------------------------------------
     !     initialize R13C_atm  and R14C_atm
