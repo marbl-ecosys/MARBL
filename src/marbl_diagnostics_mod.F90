@@ -31,6 +31,7 @@ module marbl_diagnostics_mod
   use marbl_internal_types  , only : marbl_zooplankton_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
+  use marbl_internal_types , only : marbl_tracer_index_type
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
@@ -40,7 +41,6 @@ module marbl_diagnostics_mod
   use marbl_interface_types , only : sfo_ind
   use marbl_interface_types , only : marbl_surface_forcing_indexing_type
   use marbl_interface_types , only : marbl_diagnostics_type
-  use marbl_interface_types , only : marbl_tracer_index_type
 
   implicit none
   public

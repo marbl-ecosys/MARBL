@@ -37,7 +37,6 @@ module marbl_interface
   use marbl_interface_types , only : marbl_surface_forcing_indexing_type
   use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_saved_state_type
-  use marbl_interface_types , only : marbl_tracer_index_type
 
   use marbl_internal_types  , only : marbl_PAR_type
   use marbl_internal_types  , only : marbl_interior_share_type
@@ -46,6 +45,7 @@ module marbl_interface
   use marbl_internal_types  , only : marbl_particulate_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
+  use marbl_internal_types  , only : marbl_tracer_index_type
 
   use marbl_restore_mod     , only : marbl_restore_type
 
@@ -143,6 +143,8 @@ contains
     use marbl_mod             , only : marbl_init_tracer_metadata
     use marbl_mod             , only : marbl_update_tracer_file_metadata
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
+    use marbl_parms           , only : autotrophs
+    use marbl_parms           , only : zooplankton
     use marbl_share_mod       , only : tracer_init_ext
     use marbl_share_mod       , only : ciso_tracer_init_ext
     
@@ -203,7 +205,8 @@ contains
     ! call constructors and allocate memory
     !--------------------------------------------------------------------
 
-    call this%tracer_indices%construct(gcm_ciso_on, gcm_tracer_cnt, this%StatusLog)
+    call this%tracer_indices%construct(gcm_ciso_on, autotrophs, zooplankton,  &
+         gcm_tracer_cnt, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error("error code returned from tracer_indices%construct", &
                                     "marbl_interface::marbl_init()")

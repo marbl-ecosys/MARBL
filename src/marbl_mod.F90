@@ -179,6 +179,7 @@ module marbl_mod
   use marbl_internal_types  , only : marbl_zooplankton_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
+  use marbl_internal_types , only : marbl_tracer_index_type
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
@@ -190,7 +191,6 @@ module marbl_mod
   use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_forcing_monthly_every_ts_type
   use marbl_interface_types , only : marbl_diagnostics_type
-  use marbl_interface_types , only : marbl_tracer_index_type
 
   use marbl_diagnostics_mod , only : marbl_diagnostics_set_surface_forcing
   use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
