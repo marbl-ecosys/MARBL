@@ -384,7 +384,6 @@ contains
   !***********************************************************************
 
   subroutine marbl_ciso_set_interior_forcing( &
-       num_tracers,                           &
        marbl_domain,                          &
        marbl_interior_forcing_input,          &
        marbl_interior_share,                  &
@@ -410,7 +409,6 @@ contains
 
     implicit none
 
-    integer                                 , intent(in)    :: num_tracers
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain                               
     type(marbl_interior_forcing_input_type) , intent(in)    :: marbl_interior_forcing_input
     ! FIXME #17: intent is inout due to DIC_Loc
@@ -418,8 +416,8 @@ contains
     type(marbl_zooplankton_share_type)      , intent(in)    :: marbl_zooplankton_share(zooplankton_cnt, marbl_domain%km)
     type(marbl_autotroph_share_type)        , intent(in)    :: marbl_autotroph_share(autotroph_cnt, marbl_domain%km)
     type(marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
-    real (r8)                               , intent(in)    :: column_tracer(num_tracers, marbl_domain%km)   ! tracer values
-    real (r8)                               , intent(inout) :: column_dtracer(num_tracers, marbl_domain%km)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
+    real (r8)                               , intent(in)    :: column_tracer(:,:)
+    real (r8)                               , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
     type(marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)            , intent(inout) :: marbl_interior_diags
     type(marbl_log_type)                    , intent(inout) :: marbl_status_log
@@ -1882,7 +1880,6 @@ contains
   !*****************************************************************************
 
   subroutine marbl_ciso_set_surface_forcing( &
-       num_tracers         ,                 &
        num_elements        ,                 &
        surface_mask        ,                 &
        sst                 ,                 &
@@ -1903,15 +1900,14 @@ contains
     implicit none
 
     integer (int_kind)                     , intent(in)    :: num_elements
-    integer (int_kind)                     , intent(in)    :: num_tracers
     real(r8)                               , intent(in)    :: surface_mask(num_elements)
     real(r8)                               , intent(in)    :: sst(num_elements)
     real(r8)                               , intent(in)    :: d13c(num_elements)  ! atm 13co2 value
     real(r8)                               , intent(in)    :: d14c(num_elements)  ! atm 14co2 value
     real(r8)                               , intent(in)    :: d14c_glo_avg(num_elements)
-    real(r8)                               , intent(in)    :: surface_vals(num_elements, num_tracers)
+    real(r8)                               , intent(in)    :: surface_vals(:,:)
     type(marbl_surface_forcing_share_type) , intent(in)    :: marbl_surface_forcing_share
-    real(r8)                               , intent(inout) :: stf(num_elements, num_tracers)
+    real(r8)                               , intent(inout) :: stf(:, :)
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_surface_forcing_diags
 

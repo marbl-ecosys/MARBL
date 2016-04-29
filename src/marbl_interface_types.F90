@@ -1118,19 +1118,20 @@ contains
                             " tracers, but GCM is expecting ", gcm_tracer_cnt
       call marbl_status_log%log_error(error_msg, subname)
       return
-    else
-      write(status_msg, "(A,I0,A)") "MARBL has defined ", tracer_cnt, " tracers."
-      call marbl_status_log%log_noerror(status_msg, subname)
-      write(status_msg, "(A, I0,A,I0)") "General tracers: ",                  &
-                                        this%ecosys_base_ind_beg, " to ",     &
-                                        this%ecosys_base_ind_end
-      call marbl_status_log%log_noerror(status_msg, subname)
-      if (ciso_on) then
-        write(status_msg, "(A, I0,A,I0)") "CISO tracers: ", this%ciso_ind_beg, &
-                                          " to ", this%ciso_ind_end
-        call marbl_status_log%log_noerror(status_msg, subname)
-      end if
     end if
+
+    write(status_msg, "(A,I0,A)") "MARBL has defined ", tracer_cnt, " tracers."
+    call marbl_status_log%log_noerror(status_msg, subname)
+    write(status_msg, "(A, I0,A,I0)") "General tracers: ",                    &
+                                      this%ecosys_base_ind_beg, " to ",       &
+                                      this%ecosys_base_ind_end
+    call marbl_status_log%log_noerror(status_msg, subname)
+    if (ciso_on) then
+      write(status_msg, "(A, I0,A,I0)") "CISO tracers: ", this%ciso_ind_beg,  &
+                                        " to ", this%ciso_ind_end
+      call marbl_status_log%log_noerror(status_msg, subname)
+    end if
+
     end associate
 
   end subroutine marbl_tracer_index_constructor

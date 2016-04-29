@@ -1615,7 +1615,6 @@ contains
     !  Compute time derivatives for ecosystem carbon isotope state variables
     if (ciso_on) then
        call marbl_ciso_set_interior_forcing(                        &
-            num_tracers                  = marbl_total_tracer_cnt,  &
             marbl_domain                 = domain,                  &
             marbl_interior_forcing_input = interior_forcing_input,  &
             marbl_interior_share         = marbl_interior_share,    &
@@ -2843,7 +2842,6 @@ contains
 
     if (ciso_on) then
        call marbl_ciso_set_surface_forcing(                                              &
-            num_tracers                 = marbl_total_tracer_cnt,                        &
             num_elements                = num_elements,                                  &
             surface_mask                = surface_input_forcings(:,ind%surface_mask_id), &
             sst                         = surface_input_forcings(:,ind%sst_id),          &
