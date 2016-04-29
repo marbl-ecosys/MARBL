@@ -5312,7 +5312,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_update_tracer_file_metadata(marbl_tracer_indices,          &
-             marbl_tracer_read, ciso_on, marbl_status_log)
+             marbl_tracer_read, tracer_ext, marbl_status_log)
 
     ! MARBL is responsible for telling the  GCM driver where to read tracer
     ! initial conditions from, and this information comes from the
@@ -5324,24 +5324,21 @@ contains
     ! This routine parses the tracer_init_ext arrays and updates the file
     ! metadata of any specified tracers.
 
-    use marbl_share_mod           , only : tracer_init_ext
-    use marbl_share_mod           , only : ciso_tracer_init_ext
-
     type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
-    type (marbl_tracer_read_type), intent(inout) :: marbl_tracer_read(:)
-    logical (kind=log_kind)      , intent(in)    :: ciso_on
-    type(marbl_log_type)         , intent(inout) :: marbl_status_log
+    type(marbl_tracer_read_type),  intent(inout) :: marbl_tracer_read(:)
+    type(marbl_tracer_read_type),  intent(in)    :: tracer_ext(:)
+    type(marbl_log_type),          intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_mod:marbl_update_tracer_file_metadata'
     integer :: n, ind, tracer_ind
 
-    do n=1,size(tracer_init_ext)
-      if (trim(tracer_init_ext(n)%mod_varname).ne.'unknown') then
-        ! (1) For each element of tracer_init_ext(:), determine the tracer index
+    do n=1,size(tracer_ext)
+      if (trim(tracer_ext(n)%mod_varname).ne.'unknown') then
+        ! (1) For each element of tracer_ext(:), determine the tracer index
         !     of the tracer being updated (ignore 'unknown')
         tracer_ind = 0
         do ind=1,size(marbl_tracer_read)
-          if (trim(tracer_init_ext(n)%mod_varname).eq.                        &
+          if (trim(tracer_ext(n)%mod_varname).eq.                              &
               trim(marbl_tracer_read(ind)%mod_varname)) then
             tracer_ind = ind
             exit
@@ -5351,15 +5348,15 @@ contains
         ! (1b) Return with an error if no tracer matches
         if (tracer_ind.eq.0) then
           write(error_msg,"(A,1X,A)") 'No tracer defined with name',          &
-               trim(tracer_init_ext(n)%mod_varname)
+               trim(tracer_ext(n)%mod_varname)
           call marbl_status_log%log_error(error_msg, subname)
           return
         end if
 
-        ! (2) Given a match, update any fields provided via tracer_init_ext
+        ! (2) Given a match, update any fields provided via tracer_ext
         associate(&
                   tracer_read       => marbl_tracer_read(ind),                &
-                  namelist_metadata => tracer_init_ext(n)                     &
+                  namelist_metadata => tracer_ext(n)                          &
                  )
           if (namelist_metadata%filename.ne.'unknown') &
             tracer_read%filename = namelist_metadata%filename
@@ -5372,52 +5369,6 @@ contains
         end associate
       end if
     end do
-
-    ! (3) Repeat for CISO tracers
-    !     Note: a potential improvement from a user standpoint would be to
-    !           remove ciso_tracer_init_ext and just use tracer_init_ext with
-    !           CISO tracer names. The only current hurdle to this is that the
-    !           default POP CISO runs set ciso_tracer_init_ext in the namelist,
-    !           rather than relying on the defaults set in marbl_ciso_mod.F90
-    !
-    !     At the very least, we should consider refactoring this so it can be
-    !     called with tracer_init_ext and then ciso_tracer_init_ext.
-    if (ciso_on) then
-      do n=1,size(ciso_tracer_init_ext)
-        if (trim(ciso_tracer_init_ext(n)%mod_varname).ne.'unknown') then
-          tracer_ind = 0
-          do ind=1,size(marbl_tracer_read)
-            if (trim(ciso_tracer_init_ext(n)%mod_varname).eq.                 &
-                trim(marbl_tracer_read(ind)%mod_varname)) then
-              tracer_ind = ind
-              exit
-            end if
-          end do
-
-          ! Error if no tracer is found
-          if (tracer_ind.eq.0) then
-            write(error_msg,"(A,1X,A)") 'No tracer defined with name',        &
-                 trim(ciso_tracer_init_ext(n)%mod_varname)
-            call marbl_status_log%log_error(error_msg, subname)
-            return
-          end if
-
-          associate(&
-                    tracer_read       => marbl_tracer_read(ind),              &
-                    namelist_metadata => ciso_tracer_init_ext(n)              &
-                   )
-            if (namelist_metadata%filename.ne.'unknown') &
-              tracer_read%filename = namelist_metadata%filename
-            if (namelist_metadata%file_varname.ne.'unknown') &
-              tracer_read%file_varname = namelist_metadata%file_varname
-            if (namelist_metadata%scale_factor.ne.c1) &
-            tracer_read%scale_factor = namelist_metadata%scale_factor
-            if (namelist_metadata%default_val.ne.c0) &
-              tracer_read%default_val = namelist_metadata%default_val
-          end associate
-        end if
-      end do
-    end if
 
   end subroutine marbl_update_tracer_file_metadata
 

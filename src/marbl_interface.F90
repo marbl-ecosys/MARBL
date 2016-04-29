@@ -142,7 +142,9 @@ contains
     use marbl_mod             , only : marbl_init_surface_forcing_fields
     use marbl_mod             , only : marbl_init_tracer_metadata
     use marbl_mod             , only : marbl_update_tracer_file_metadata
-    use marbl_diagnostics_mod , only : marbl_diagnostics_init  
+    use marbl_diagnostics_mod , only : marbl_diagnostics_init
+    use marbl_share_mod       , only : tracer_init_ext
+    use marbl_share_mod       , only : ciso_tracer_init_ext
     
     implicit none
 
@@ -272,11 +274,20 @@ contains
     end if
 
     call marbl_update_tracer_file_metadata(this%tracer_indices, this%tracer_read, &
-         this%ciso_on, this%StatusLog)
+         tracer_init_ext, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
        call this%StatusLog%log_error("error code returned from marbl_update_tracer_file_metadata", &
             "marbl_interface::marbl_init()")
       return
+    end if
+    if (this%ciso_on) then
+      call marbl_update_tracer_file_metadata(this%tracer_indices, this%tracer_read, &
+           ciso_tracer_init_ext, this%StatusLog)
+      if (this%StatusLog%labort_marbl) then
+         call this%StatusLog%log_error("error code returned from marbl_update_tracer_file_metadata (ciso_on)", &
+              "marbl_interface::marbl_init()")
+        return
+      end if
     end if
 
     !--------------------------------------------------------------------
