@@ -105,6 +105,7 @@ module marbl_interface
    contains
 
      procedure, public :: init             
+     procedure, public :: get_tracer_index
      procedure, public :: set_interior_forcing     
      procedure, public :: set_surface_forcing
      procedure, public :: shutdown         
@@ -413,5 +414,28 @@ contains
     ! free dynamically allocated memory, etc
     
   end subroutine shutdown
+
+  !***********************************************************************
+  
+  function get_tracer_index(this, tracer_name)
+
+    class(marbl_interface_class), intent(inout) :: this
+    character(*),                 intent(in)    :: tracer_name
+    integer :: get_tracer_index
+
+    integer :: n
+
+    get_tracer_index = 0
+    do n=1,marbl_total_tracer_cnt
+      if (trim(tracer_name).eq.trim(this%tracer_metadata(n)%short_name) .or.  &
+          trim(tracer_name).eq.trim(this%tracer_metadata(n)%long_name)) then
+        get_tracer_index = n
+        exit
+      end if
+    end do
+
+  end function get_tracer_index
+
+  !*****************************************************************************
 
 end module marbl_interface

@@ -364,7 +364,6 @@ module marbl_internal_types
 
   contains
     procedure, public :: construct => tracer_index_constructor
-    procedure, public :: get_index => tracer_index_get
   end type marbl_tracer_index_type
 
   !***********************************************************************
@@ -753,72 +752,6 @@ contains
     end associate
 
   end subroutine tracer_index_constructor
-
-  !*****************************************************************************
-
-  function tracer_index_get(this, tracer_name, marbl_status_log)
-
-    use marbl_logging, only : marbl_log_type
-    use marbl_logging, only : status_msg
-    use marbl_logging, only : error_msg
-
-    class(marbl_tracer_index_type), intent(inout) :: this
-    character(*),                   intent(in)    :: tracer_name
-    type(marbl_log_type),           intent(inout) :: marbl_status_log
-    integer :: tracer_index_get
-    character(*), parameter :: subname = 'marbl_internal_types:tracer_index_get'
-
-    tracer_index_get = 0
-    select case (trim(tracer_name))
-      case ('po4')
-        tracer_index_get = this%po4_ind
-      case ('no3')
-        tracer_index_get = this%no3_ind
-      case ('sio3')
-        tracer_index_get = this%sio3_ind
-      case ('nh4')
-        tracer_index_get = this%nh4_ind
-      case ('fe')
-        tracer_index_get = this%fe_ind
-      case ('o2')
-        tracer_index_get = this%o2_ind
-      case ('dic')
-        tracer_index_get = this%dic_ind
-      case ('dic_alt_co2')
-        tracer_index_get = this%dic_alt_co2_ind
-      case ('alk')
-        tracer_index_get = this%alk_ind
-      case ('doc')
-        tracer_index_get = this%doc_ind
-      case ('don')
-        tracer_index_get = this%don_ind
-      case ('dop')
-        tracer_index_get = this%dop_ind
-      case ('dopr')
-        tracer_index_get = this%dopr_ind
-      case ('donr')
-        tracer_index_get = this%donr_ind
-      case ('docr')
-        tracer_index_get = this%docr_ind
-      case ('di13c')
-        tracer_index_get = this%di13c_ind
-      case ('do13c')
-        tracer_index_get = this%do13c_ind
-      case ('di14c')
-        tracer_index_get = this%di14c_ind
-      case ('do14c')
-        tracer_index_get = this%do14c_ind
-      case DEFAULT
-        write(error_msg, "(2A)") trim(tracer_name), " is not a recognized tracer"
-        call marbl_status_log%log_error(error_msg, subname)
-        return
-    end select
-
-    write(status_msg, "(3A,I0)") "Index of ", trim(tracer_name), " is ",      &
-         tracer_index_get
-    call marbl_status_log%log_noerror(status_msg, subname)
-
-  end function tracer_index_get
 
   !*****************************************************************************
 
