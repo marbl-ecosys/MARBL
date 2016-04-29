@@ -204,13 +204,11 @@ contains
   
   subroutine marbl_ciso_init_tracer_metadata(marbl_tracer_metadata,           &
                                              marbl_tracer_read,               &
-                                             marbl_tracer_indices,            &
-                                             marbl_status_log)
+                                             marbl_tracer_indices)
 
     !  Set tracer and forcing metadata
 
     use marbl_interface_types, only : marbl_tracer_read_type
-    use marbl_share_mod      , only : ciso_tracer_cnt
     use marbl_share_mod      , only : ciso_lecovars_full_depth_tavg
     use marbl_share_mod      , only : ciso_init_ecosys_init_file
     use marbl_share_mod      , only : ciso_init_ecosys_init_file_fmt
@@ -220,7 +218,6 @@ contains
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type (marbl_tracer_read_type)     , intent(inout) :: marbl_tracer_read(:)
     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
-    type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -245,61 +242,32 @@ contains
               ciso_ind_end      => marbl_tracer_indices%ciso_ind_end          &
              )
 
+    ! All CISO tracers share units, tend_units, flux_units, and
+    ! tracer_module_name
+    do n=ciso_ind_beg,ciso_ind_end
+      marbl_tracer_metadata(n)%units      = 'mmol/m^3'
+      marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
+      marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
+      marbl_tracer_metadata(n)%tracer_module_name = 'ciso'
+    end do
     marbl_tracer_metadata(di13c_ind)%short_name='DI13C'
     marbl_tracer_metadata(di13c_ind)%long_name='Dissolved Inorganic Carbon-13'
-    marbl_tracer_metadata(di13c_ind)%units      = 'mmol/m^3'
-    marbl_tracer_metadata(di13c_ind)%tend_units = 'mmol/m^3/s'
-    marbl_tracer_metadata(di13c_ind)%flux_units = 'mmol/m^3 cm/s'
-    marbl_tracer_metadata(di13c_ind)%tracer_module_name = 'ciso'
 
     marbl_tracer_metadata(do13c_ind)%short_name='DO13C'
     marbl_tracer_metadata(do13c_ind)%long_name='Dissolved Organic Carbon-13'
-    marbl_tracer_metadata(do13c_ind)%units      = 'mmol/m^3'
-    marbl_tracer_metadata(do13c_ind)%tend_units = 'mmol/m^3/s'
-    marbl_tracer_metadata(do13c_ind)%flux_units = 'mmol/m^3 cm/s'
-    marbl_tracer_metadata(do13c_ind)%tracer_module_name = 'ciso'
 
     marbl_tracer_metadata(zoo13C_ind)%short_name='zoo13C'
     marbl_tracer_metadata(zoo13C_ind)%long_name='Zooplankton Carbon-13'
-    marbl_tracer_metadata(zoo13C_ind)%units      = 'mmol/m^3'
-    marbl_tracer_metadata(zoo13C_ind)%tend_units = 'mmol/m^3/s'
-    marbl_tracer_metadata(zoo13C_ind)%flux_units = 'mmol/m^3 cm/s'
-    marbl_tracer_metadata(zoo14C_ind)%tracer_module_name = 'ciso'
 
     marbl_tracer_metadata(di14c_ind)%short_name='DI14C'
     marbl_tracer_metadata(di14c_ind)%long_name='Dissolved Inorganic Carbon-14'
-    marbl_tracer_metadata(di14c_ind)%units      = 'mmol/m^3'
-    marbl_tracer_metadata(di14c_ind)%tend_units = 'mmol/m^3/s'
-    marbl_tracer_metadata(di14c_ind)%flux_units = 'mmol/m^3 cm/s'
-    marbl_tracer_metadata(di14c_ind)%tracer_module_name = 'ciso'
 
     marbl_tracer_metadata(do14c_ind)%short_name='DO14C'
     marbl_tracer_metadata(do14c_ind)%long_name='Dissolved Organic Carbon-14'
-    marbl_tracer_metadata(do14c_ind)%units      = 'mmol/m^3'
-    marbl_tracer_metadata(do14c_ind)%tend_units = 'mmol/m^3/s'
-    marbl_tracer_metadata(do14c_ind)%flux_units = 'mmol/m^3 cm/s'
-    marbl_tracer_metadata(do14c_ind)%tracer_module_name = 'ciso'
 
     marbl_tracer_metadata(zoo14C_ind)%short_name='zoo14C'
     marbl_tracer_metadata(zoo14C_ind)%long_name='Zooplankton Carbon-14'
-    marbl_tracer_metadata(zoo14C_ind)%units      = 'mmol/m^3'
-    marbl_tracer_metadata(zoo14C_ind)%tend_units = 'mmol/m^3/s'
-    marbl_tracer_metadata(zoo14C_ind)%flux_units = 'mmol/m^3 cm/s'
-    marbl_tracer_metadata(zoo14C_ind)%tracer_module_name = 'ciso'
 
-
-    !-----------------------------------------------------------------------
-    !  confirm that ciso_tracer_cnt is consistent with autotroph declarations
-    !-----------------------------------------------------------------------
-
-    n = ciso_ind_end - (ciso_ind_beg-1)
-    if (ciso_tracer_cnt /= n) then
-       write(error_msg, "(A,I0,A,I0)") "ciso_tracer_cnt = ",                  &
-                                       ciso_tracer_cnt,                       &
-                                       " but computed tracer count is ", n
-       call marbl_status_log%log_error(error_msg, subname)
-       return
-    endif
 
     !-----------------------------------------------------------------------
     !  initialize autotroph tracer_d values and tracer indices
@@ -309,37 +277,21 @@ contains
        n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
        marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '13C'
        marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon-13'
-       marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-       marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-       marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-       marbl_tracer_metadata(n)%tracer_module_name = 'ciso'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
        marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '14C'
        marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon-14'
-       marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-       marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-       marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-       marbl_tracer_metadata(n)%tracer_module_name = 'ciso'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
        if (n.gt.0) then
           marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Ca13CO3'
           marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Ca13CO3'
-          marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-          marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-          marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-          marbl_tracer_metadata(n)%tracer_module_name = 'ciso'
         end if
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
        if (n.gt.0) then
           marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Ca14CO3'
           marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Ca14CO3'
-          marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-          marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-          marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-          marbl_tracer_metadata(n)%tracer_module_name = 'ciso'
        endif
     end do
 

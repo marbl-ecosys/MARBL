@@ -933,6 +933,7 @@ contains
     ! accurate count whether the carbon isotope tracers are included or not.
 
     use marbl_sizes,   only : marbl_total_tracer_cnt
+    use marbl_sizes,   only : ciso_tracer_cnt
 
     class(marbl_tracer_index_type), intent(inout) :: this
     integer,                        intent(in)    :: gcm_tracer_cnt
@@ -1118,6 +1119,15 @@ contains
                             " tracers, but GCM is expecting ", gcm_tracer_cnt
       call marbl_status_log%log_error(error_msg, subname)
       return
+    end if
+    if (ciso_on) then
+      n = this%ciso_ind_end - (this%ciso_ind_beg-1)
+      if (n.ne.ciso_tracer_cnt) then
+        write(error_msg, "(A,I0,A,I0)") "ciso_tracer_cnt = ",                 &
+                                        ciso_tracer_cnt,                      &
+                                        " but computed tracer count is ", n
+        call marbl_status_log%log_error(error_msg, subname)
+      end if
     end if
 
     write(status_msg, "(A,I0,A)") "MARBL has defined ", tracer_cnt, " tracers."

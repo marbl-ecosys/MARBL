@@ -268,13 +268,7 @@ contains
 
     if (this%ciso_on) then
        call marbl_ciso_init_tracer_metadata(this%tracer_metadata,          &
-            this%tracer_read, this%tracer_indices, this%StatusLog)
-
-       if (this%StatusLog%labort_marbl) then
-         call this%StatusLog%log_error("error code returned from marbl_ciso_init_tracer_metadata", &
-                                       "marbl_interface::marbl_init()")
-         return
-       end if
+            this%tracer_read, this%tracer_indices)
     end if
 
     call marbl_update_tracer_file_metadata(this%tracer_indices, this%tracer_read, &
