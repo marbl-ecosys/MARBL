@@ -3750,12 +3750,12 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_carbon_fluxes(marbl_domain, POC, P_CaCO3,      &
-             dtracer, marbl_tracer_indices, marbl_diags)
+             dtracers, marbl_tracer_indices, marbl_diags)
 
     type(marbl_domain_type)     , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: POC
     type(column_sinking_particle_type) , intent(in)    :: P_CaCO3
-    real(r8)                           , intent(in)    :: dtracer(:,:) ! marbl_total_tracer_cnt, km
+    real(r8)                           , intent(in)    :: dtracers(:,:) ! marbl_total_tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
@@ -3778,14 +3778,14 @@ contains
          )
 
     ! vertical integrals
-    work = dtracer(dic_ind,:) + dtracer(doc_ind,:) +                          &
-         dtracer(docr_ind,:) +                                                &
-         sum(dtracer(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +      &
-         sum(dtracer(marbl_tracer_indices%auto_inds(:)%C_ind,:),dim=1)
+    work = dtracers(dic_ind,:) + dtracers(doc_ind,:) +                        &
+         dtracers(docr_ind,:) +                                               &
+         sum(dtracers(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +     &
+         sum(dtracers(marbl_tracer_indices%auto_inds(:)%C_ind,:),dim=1)
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n.gt.0) then
-          work = work + dtracer(n,:)
+          work = work + dtracers(n,:)
        end if
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &
@@ -3800,8 +3800,8 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, &
-       PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracer, &
-       marbl_tracer_indices, marbl_diags)
+       PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species,     &
+       dtracers, marbl_tracer_indices, marbl_diags)
 
     use marbl_parms, only : Q
 
@@ -3810,7 +3810,7 @@ contains
     real(r8)                               , intent(in)    :: denitrif(:)     ! km
     real(r8)                               , intent(in)    :: sed_denitrif(:) ! km
     type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:)
-    real(r8)                               , intent(in)    :: dtracer(:,:)      ! marbl_total_tracer_cnt, km
+    real(r8)                               , intent(in)    :: dtracers(:,:)      ! marbl_total_tracer_cnt, km
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
 
@@ -3834,10 +3834,10 @@ contains
          )
 
     ! vertical integrals
-    work = dtracer(no3_ind,:) + dtracer(nh4_ind,:) +                          &
-           dtracer(don_ind,:) + dtracer(donr_ind,:) +                         &
-           Q * sum(dtracer(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +  &
-           Q * sum(dtracer(marbl_tracer_indices%auto_inds(:)%C_ind,:), dim=1) + &
+    work = dtracers(no3_ind,:) + dtracers(nh4_ind,:) +                        &
+           dtracers(don_ind,:) + dtracers(donr_ind,:) +                       &
+           Q * sum(dtracers(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +  &
+           Q * sum(dtracers(marbl_tracer_indices%auto_inds(:)%C_ind,:), dim=1) + &
            denitrif(:) + sed_denitrif(:)
     ! subtract out N fixation
     do n = 1, autotroph_cnt
@@ -3856,14 +3856,14 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_phosphorus_fluxes(marbl_domain, &
-       POP_sed_loss, dtracer, marbl_tracer_indices, marbl_diags)
+  subroutine store_diagnostics_phosphorus_fluxes(marbl_domain,                &
+       POP_sed_loss, dtracers, marbl_tracer_indices, marbl_diags)
 
     use marbl_parms,  only : Qp_zoo_pom
 
     type(marbl_domain_type) , intent(in)    :: marbl_domain
     real(r8)                       , intent(in)    :: POP_sed_loss(:) ! km
-    real(r8)                       , intent(in)    :: dtracer(:,:)    ! marbl_total_tracer_cnt, km
+    real(r8)                       , intent(in)    :: dtracers(:,:)    ! marbl_total_tracer_cnt, km
     type(marbl_tracer_index_type)  , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)   , intent(inout) :: marbl_diags
 
@@ -3886,12 +3886,12 @@ contains
          )
 
     ! vertical integrals
-    work = dtracer(po4_ind,:) + dtracer(dop_ind,:) + dtracer(dopr_ind,:)
+    work = dtracers(po4_ind,:) + dtracers(dop_ind,:) + dtracers(dopr_ind,:)
     do n = 1, zooplankton_cnt
-       work = work + Qp_zoo_pom * dtracer(marbl_tracer_indices%zoo_inds(n)%C_ind,:)
+       work = work + Qp_zoo_pom * dtracers(marbl_tracer_indices%zoo_inds(n)%C_ind,:)
     end do
     do n = 1, autotroph_cnt
-       work = work + autotrophs(n)%Qp * dtracer(marbl_tracer_indices%auto_inds(n)%C_ind,:)
+       work = work + autotrophs(n)%Qp * dtracers(marbl_tracer_indices%auto_inds(n)%C_ind,:)
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &
          full_depth_integral=diags(ind%Jint_Ptot)%field_2d(1),                &
@@ -3905,11 +3905,11 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_silicon_fluxes(marbl_domain, &
-       P_SiO2, dtracer, marbl_tracer_indices, marbl_diags)
+       P_SiO2, dtracers, marbl_tracer_indices, marbl_diags)
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: P_SiO2
-    real(r8)                           , intent(in)    :: dtracer(:,:) ! marbl_total_tracer_cnt, km
+    real(r8)                           , intent(in)    :: dtracers(:,:) ! marbl_total_tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
@@ -3929,10 +3929,10 @@ contains
          )
 
     ! vertical integrals
-    work = dtracer(marbl_tracer_indices%sio3_ind,:)
+    work = dtracers(marbl_tracer_indices%sio3_ind,:)
     do n = 1, autotroph_cnt
        if (marbl_tracer_indices%auto_inds(n)%Si_ind > 0) then
-          work = work + dtracer(marbl_tracer_indices%auto_inds(n)%Si_ind,:)
+          work = work + dtracers(marbl_tracer_indices%auto_inds(n)%Si_ind,:)
        end if
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &
@@ -3947,7 +3947,7 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_iron_fluxes(marbl_domain, P_iron, dust, &
-             fesedflux, dtracer, marbl_tracer_indices, marbl_diags)
+             fesedflux, dtracers, marbl_tracer_indices, marbl_diags)
 
     use marbl_parms     , only : Qfe_zoo
     use marbl_parms     , only : dust_to_Fe
@@ -3956,7 +3956,7 @@ contains
     type(column_sinking_particle_type) , intent(in)    :: P_iron
     type(column_sinking_particle_type) , intent(in)    :: dust
     real(r8), dimension(:)             , intent(in)    :: fesedflux  ! km
-    real(r8), dimension(:,:)           , intent(in)    :: dtracer ! marbl_total_tracer_cnt, km
+    real(r8), dimension(:,:)           , intent(in)    :: dtracers ! marbl_total_tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
@@ -3977,9 +3977,9 @@ contains
          )
 
     ! vertical integrals
-    work = dtracer(fe_ind, :) +                                               &
-           sum(dtracer(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) +  &
-           Qfe_zoo * sum(dtracer(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1) - &
+    work = dtracers(fe_ind, :) +                                              &
+           sum(dtracers(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) + &
+           Qfe_zoo * sum(dtracers(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1) - &
            dust%remin(:) * dust_to_Fe
     call compute_vertical_integrals(work, delta_z, kmt,                       &
          full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),               &
