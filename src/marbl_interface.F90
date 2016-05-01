@@ -321,13 +321,13 @@ contains
     ! Initialize marbl diagnostics
     !--------------------------------------------------------------------
 
-    call marbl_diagnostics_init(                                                             &
-         ciso_on                      = this%ciso_on,                                        &
-         marbl_domain                 = this%domain,                                         &
-         marbl_tracer_metadata        = this%tracer_metadata(ecosys_base_ind_beg:ecosys_base_ind_end), &
-         marbl_tracer_indices         = this%tracer_indices,                                 &
-         marbl_interior_forcing_diags = this%interior_forcing_diags,                         &
-         marbl_interior_restore_diags = this%interior_restore_diags,                         &
+    call marbl_diagnostics_init(                                              &
+         ciso_on                      = this%ciso_on,                         &
+         marbl_domain                 = this%domain,                          &
+         marbl_tracer_metadata        = this%tracer_metadata,                 &
+         marbl_tracer_indices         = this%tracer_indices,                  &
+         marbl_interior_forcing_diags = this%interior_forcing_diags,          &
+         marbl_interior_restore_diags = this%interior_restore_diags,          &
          marbl_surface_forcing_diags  = this%surface_forcing_diags)
 
     end associate
