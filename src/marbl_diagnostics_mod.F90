@@ -3466,8 +3466,6 @@ contains
                diags(ind%CaCO3_form_zint(n))%field_2d(1)
        end if
 
-       diags(ind%photoC_zint(n))%field_2d(1) = c0
-
        call compute_vertical_integrals(autotroph_secondary_species(n,:)%photoC, &
             delta_z, kmt, full_depth_integral=diags(ind%photoC_zint(n))%field_2d(1))
 
