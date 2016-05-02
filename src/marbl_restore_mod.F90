@@ -7,7 +7,7 @@ module marbl_restore_mod
   use marbl_constants_mod  , only : p5, c0, c2, c1000
   use marbl_interface_types, only : marbl_forcing_file_type
   use marbl_interface_types, only : marbl_domain_type
-  use marbl_sizes          , only : ecosys_used_tracer_cnt
+  use marbl_sizes          , only : marbl_total_tracer_cnt
 
   implicit none
 
@@ -90,10 +90,10 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
        rest_z0, rest_z1
 
   this%lrestore_any = .false.
-  allocate(this%tracer_restore(ecosys_used_tracer_cnt))
-  allocate(restore_short_names(ecosys_used_tracer_cnt))
-  allocate(restore_filenames(ecosys_used_tracer_cnt))
-  allocate(restore_file_varnames(ecosys_used_tracer_cnt))
+  allocate(this%tracer_restore(marbl_total_tracer_cnt))
+  allocate(restore_short_names(marbl_total_tracer_cnt))
+  allocate(restore_filenames(marbl_total_tracer_cnt))
+  allocate(restore_file_varnames(marbl_total_tracer_cnt))
   allocate(inv_tau(domain%km))
 
   ! initialize namelist variables to default values

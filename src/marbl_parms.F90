@@ -92,41 +92,6 @@ module marbl_parms
   character (9), parameter :: ndelim_fmt = "(72('='))"
   character (5), parameter :: blank_fmt  = "(' ')"
 
-  !-----------------------------------------------------------------------
-  !  MARBL indices 
-  !-----------------------------------------------------------------------
-
-  ! incidices for input forcing
-
-  ! non-autotroph relative tracer indices
-  ! autotroph relative tracer indices are in autotroph derived type and 
-  ! are determined at run time
-
-  integer (int_kind), parameter :: &
-       po4_ind         =  1,  & ! dissolved inorganic phosphate
-       no3_ind         =  2,  & ! dissolved inorganic nitrate
-       sio3_ind        =  3,  & ! dissolved inorganic silicate
-       nh4_ind         =  4,  & ! dissolved ammonia
-       fe_ind          =  5,  & ! dissolved inorganic iron
-       o2_ind          =  6,  & ! dissolved oxygen
-       dic_ind         =  7,  & ! dissolved inorganic carbon
-       dic_alt_co2_ind =  8,  & ! dissolved inorganic carbon with alternative CO2
-       alk_ind         =  9,  & ! alkalinity
-       doc_ind         = 10,  & ! dissolved organic carbon
-       don_ind         = 11,  & ! dissolved organic nitrogen
-       dop_ind         = 12,  & ! dissolved organic phosphorus
-       dopr_ind        = 13,  & ! refractory DOP
-       donr_ind        = 14,  & ! refractory DON
-       docr_ind        = 15     ! refractory DOC
-
-  integer (int_kind), parameter :: &
-       di13c_ind       = 1,  & ! dissolved inorganic carbon 13
-       do13c_ind       = 2,  & ! dissolved organic carbon 13
-       zoo13C_ind      = 3,  & ! zooplankton carbon 13
-       di14c_ind       = 4,  & ! dissolved inorganic carbon 14
-       do14c_ind       = 5,  & ! dissolved organic carbon 14
-       zoo14C_ind      = 6     ! zooplankton carbon 14
-
   !-----------------------------------------------------------------------------
   !   epsilon values
   !-----------------------------------------------------------------------------
