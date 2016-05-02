@@ -92,6 +92,7 @@ module marbl_interface_types
      character(char_len) :: flux_units
      logical             :: lfull_depth_tavg
      real(r8)            :: scale_factor
+     character(char_len) :: tracer_module_name
   end type marbl_tracer_metadata_type
 
   !*****************************************************************************
@@ -140,6 +141,8 @@ module marbl_interface_types
    contains
      procedure :: initialize  => marbl_single_diag_init
   end type marbl_single_diagnostic_type
+
+  !*****************************************************************************
 
   type, public :: marbl_diagnostics_type
      ! marbl_diagnostics : 
@@ -215,11 +218,15 @@ module marbl_interface_types
   end type marbl_forcing_constant_type
 
 
+  !*****************************************************************************
+
   type, private :: marbl_forcing_driver_type
      character(char_len) :: marbl_driver_varname
    contains
      procedure :: initialize  => marbl_forcing_driver_init
   end type marbl_forcing_driver_type
+
+  !*****************************************************************************
 
   ! MNL -- made public because I need it for ecosys_restore; could just
   ! keep ecosys_single_restoring_field_type in this module instead
@@ -243,6 +250,8 @@ module marbl_interface_types
      procedure :: initialize  => marbl_forcing_monthly_calendar_init
   end type marbl_forcing_monthly_calendar_type
 
+  !*****************************************************************************
+
   type, private :: marbl_single_forcing_field_type
      ! single_forcing_field_type (contains the above 4 type definitions)
      character(char_len)                        :: marbl_varname
@@ -257,6 +266,8 @@ module marbl_interface_types
    contains
      procedure :: initialize  => marbl_single_forcing_field_init
   end type marbl_single_forcing_field_type
+
+  !*****************************************************************************
 
   type, public :: marbl_forcing_fields_type
      integer(kind=int_kind) :: num_elements
