@@ -5557,6 +5557,8 @@ contains
 
   end subroutine marbl_update_tracer_file_metadata
 
+  !***********************************************************************
+
   subroutine log_add_forcing_field_error(marbl_status_log, varname, subname)
 
     type(marbl_log_type), intent(inout) :: marbl_status_log
@@ -5564,7 +5566,7 @@ contains
     character(len=*),     intent(in)    :: subname
     character(len=char_len) :: routine_name
 
-    write(routine_name, "(3A)") "forcing_fields%add(", trim(varname), ")"
+    write(routine_name,"(3A)") "forcing_fields%add(", trim(varname), ")"
     call marbl_status_log%log_error_trace(routine_name, subname)
 
   end subroutine log_add_forcing_field_error
