@@ -115,7 +115,7 @@ module marbl_interface_types
      real(r8), allocatable :: fesedflux(:)      ! (km)
      real(r8), allocatable :: PAR_col_frac(:)   ! column fraction occupied by each sub-column
      real(r8), allocatable :: surf_shortwave(:) ! surface shortwave for each sub-column (W/m^2)
-     real(r8)              :: dust_flux           
+     real(r8)              :: dust_flux         ! (g/cm^2/s)
    contains
      procedure, public :: construct => marbl_interior_forcing_input_constructor
   end type marbl_interior_forcing_input_type

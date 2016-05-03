@@ -366,6 +366,7 @@ contains
     use marbl_share_mod           , only : atm_co2_iopt_drv_prog
     use marbl_share_mod           , only : atm_co2_iopt_drv_diag
     use marbl_share_mod           , only : atm_alt_co2_iopt
+    use marbl_share_mod           , only : dust_flux_source
     use marbl_share_mod           , only : dust_flux_file        
     use marbl_share_mod           , only : iron_flux_file        
     use marbl_share_mod           , only : fice_file        
@@ -440,7 +441,8 @@ contains
     namelist /ecosys_nml/                                                 &
          init_ecosys_option, init_ecosys_init_file, tracer_init_ext,      &
          init_ecosys_init_file_fmt,                                       &
-         dust_flux_input, iron_flux_input, fesedflux_input,               &
+         dust_flux_source, dust_flux_input,                               &
+         iron_flux_input, fesedflux_input,                                &
          ndep_data_type, nox_flux_monthly_input, nhy_flux_monthly_input,  &
          ndep_shr_stream_year_first, ndep_shr_stream_year_last,           &
          ndep_shr_stream_year_align, ndep_shr_stream_file,                &
@@ -778,6 +780,7 @@ contains
     use marbl_share_mod, only : gas_flux_forcing_iopt_file
     use marbl_share_mod, only : gas_flux_forcing_iopt
     use marbl_share_mod, only : gas_flux_forcing_file
+    use marbl_share_mod, only : dust_flux_source
     use marbl_share_mod, only : dust_flux_file
     use marbl_share_mod, only : iron_flux_file
     use marbl_share_mod, only : fice_file
@@ -1065,12 +1068,20 @@ contains
        if (count_only) then
           num_surface_forcing_fields = num_surface_forcing_fields + 1
        else
-          fsource    = 'POP monthly calendar'
-          varname    = 'Dust Flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=dust_flux_file, id=ind%dust_flux_id)
+          varname = 'Dust Flux'
+          units   = 'g/cm^2/s'
+          if (dust_flux_source == 'monthly-calendar') then
+             fsource = 'POP monthly calendar'
+             call forcing_fields%add_forcing_field(&
+                  field_source=fsource, marbl_varname=varname, field_units=units, &
+                  marbl_forcing_calendar_name=dust_flux_file, id=ind%dust_flux_id)
+          elseif (dust_flux_source == 'driver') then
+             fsource = 'driver'
+             driver_varname = 'DUST_FLUX'
+             call forcing_fields%add_forcing_field(&
+                  field_source=fsource, marbl_varname=varname, field_units=units, &
+                  marbl_driver_varname=driver_varname, id=ind%dust_flux_id)
+          end if
        end if
 
        if (count_only) then
@@ -1672,6 +1683,7 @@ contains
     !  The first 6 arguments are intent(inout) in
     !  order to preserve contents on other blocks.
 
+    use marbl_share_mod, only : dust_flux_source
     use marbl_share_mod, only : dust_flux_file        
 
     integer(int_kind)                  , intent(in)    :: k
@@ -1733,7 +1745,9 @@ contains
     P_SiO2%sflux_in(k) = P_SiO2%sflux_out(k)
     P_SiO2%hflux_in(k) = P_SiO2%hflux_out(k)
 
-    if (dust_flux_file%has_data) then
+    ! FIXME : need a better (i.e., extensible and maintainable) conditional here
+    if (((dust_flux_source == 'monthly-calendar') .and. dust_flux_file%has_data) .or. &
+        (dust_flux_source == 'driver')) then
        dust%sflux_out(k) = (c1 - dust%gamma) * net_dust_in
        dust%hflux_out(k) = dust%gamma * net_dust_in
     else

@@ -69,6 +69,8 @@ module marbl_share_mod
   integer   (int_kind) :: comp_surf_avg_freq_iopt      ! choice for freq of comp_surf_avg
   integer   (int_kind) :: comp_surf_avg_freq           ! choice for freq of comp_surf_avg
 
+  character (char_len) :: dust_flux_source             ! option for atmospheric dust deposition
+
   type(marbl_forcing_monthly_every_ts_type), pointer :: fice_file             ! ice fraction, if read from file
   type(marbl_forcing_monthly_every_ts_type), pointer :: xkw_file              ! a * wind-speed ** 2, if read from file
   type(marbl_forcing_monthly_every_ts_type), pointer :: ap_file               ! atmoshperic pressure, if read from file
