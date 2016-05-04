@@ -8,8 +8,7 @@ module marbl_diagnostics_mod
   use marbl_kinds_mod       , only : log_kind
   use marbl_kinds_mod       , only : char_len
 
-  use marbl_sizes           , only : ecosys_tracer_cnt
-  use marbl_sizes           , only : ecosys_ciso_tracer_cnt
+  use marbl_sizes           , only : marbl_total_tracer_cnt
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
 
@@ -17,18 +16,6 @@ module marbl_diagnostics_mod
   use marbl_parms           , only : zooplankton
   use marbl_parms           , only : c0
   use marbl_parms           , only : c1
-  use marbl_parms           , only : po4_ind
-  use marbl_parms           , only : no3_ind
-  use marbl_parms           , only : sio3_ind
-  use marbl_parms           , only : nh4_ind
-  use marbl_parms           , only : fe_ind
-  use marbl_parms           , only : dic_ind
-  use marbl_parms           , only : doc_ind
-  use marbl_parms           , only : don_ind
-  use marbl_parms           , only : dop_ind
-  use marbl_parms           , only : dopr_ind
-  use marbl_parms           , only : donr_ind
-  use marbl_parms           , only : docr_ind
 
   use marbl_internal_types  , only : carbonate_type
   use marbl_internal_types  , only : zooplankton_type
@@ -44,6 +31,7 @@ module marbl_diagnostics_mod
   use marbl_internal_types  , only : marbl_zooplankton_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
+  use marbl_internal_types , only : marbl_tracer_index_type
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
@@ -53,6 +41,8 @@ module marbl_diagnostics_mod
   use marbl_interface_types , only : sfo_ind
   use marbl_interface_types , only : marbl_surface_forcing_indexing_type
   use marbl_interface_types , only : marbl_diagnostics_type
+
+  use marbl_logging,          only : marbl_log_type
 
   implicit none
   public
@@ -351,16 +341,20 @@ contains
        ciso_on,                      &
        marbl_domain,                 &
        marbl_tracer_metadata,        &
+       marbl_tracer_indices,         &
        marbl_interior_forcing_diags, &
        marbl_interior_restore_diags, &
-       marbl_surface_forcing_diags)
+       marbl_surface_forcing_diags,  &
+       marbl_status_log)
 
     logical (log_kind)                , intent(in)    :: ciso_on 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
+    type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_forcing_diags
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_restore_diags
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_surface_forcing_diags
+    type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -373,6 +367,8 @@ contains
     integer :: num_restore_diags
     integer :: num_forcing_diags
     character(len=char_len) :: lname, sname, units, vgrid
+
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_init'
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------
@@ -413,7 +409,12 @@ contains
           units    = 'fraction'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ECOSYS_IFRAC)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ECOSYS_IFRAC, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -424,7 +425,12 @@ contains
           units    = 'cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ECOSYS_XKW)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ECOSYS_XKW, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -435,7 +441,12 @@ contains
           units    = 'atmospheres'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ECOSYS_ATM_PRESS)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ECOSYS_ATM_PRESS, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -446,7 +457,12 @@ contains
           units    = 'cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PV_O2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PV_O2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -457,7 +473,12 @@ contains
           units    = 'none'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SCHMIDT_O2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SCHMIDT_O2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -468,7 +489,12 @@ contains
           units    = 'mmol/m^3'      ! = nmol/cm^3
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2SAT)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2SAT, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -479,7 +505,12 @@ contains
           units    = 'mmol/m^3 cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2_GAS_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2_GAS_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -490,7 +521,12 @@ contains
           units    = 'mmol/m^3'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CO2STAR)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CO2STAR, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -501,7 +537,12 @@ contains
           units    = 'mmol/m^3'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DCO2STAR)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DCO2STAR, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -512,7 +553,12 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pCO2SURF)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%pCO2SURF, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -523,7 +569,12 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DpCO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DpCO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -534,7 +585,12 @@ contains
           units    = 'cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PV_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PV_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -545,7 +601,12 @@ contains
           units    = 'none'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SCHMIDT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SCHMIDT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -556,7 +617,12 @@ contains
           units    = 'mmol/m^3 cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DIC_GAS_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DIC_GAS_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -567,7 +633,12 @@ contains
           units    = 'none'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PH)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PH, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -578,7 +649,12 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ATM_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ATM_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -589,7 +665,12 @@ contains
           units    = 'mmol/m^3'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CO2STAR_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CO2STAR_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -600,7 +681,12 @@ contains
           units    = 'mmol/m^3'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DCO2STAR_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DCO2STAR_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -611,7 +697,12 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pCO2SURF_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%pCO2SURF_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -622,7 +713,12 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DpCO2_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DpCO2_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -633,7 +729,12 @@ contains
           units    = 'mmol/m^3 cm/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DIC_GAS_FLUX_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DIC_GAS_FLUX_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -644,7 +745,12 @@ contains
           units    = 'none'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PH_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PH_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -655,7 +761,12 @@ contains
           units    = 'ppmv'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ATM_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ATM_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -666,7 +777,12 @@ contains
           units    = 'mmol/m^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%IRON_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%IRON_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -677,7 +793,12 @@ contains
           units    = 'g/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DUST_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DUST_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -688,7 +809,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%NOx_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%NOx_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -699,7 +825,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%NHy_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%NHy_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -710,7 +841,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DIN_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DIN_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -721,7 +857,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DIP_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DIP_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -732,7 +873,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DON_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DON_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -743,7 +889,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DONr_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DONr_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -754,7 +905,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOP_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOP_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -765,7 +921,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOPr_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOPr_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -776,7 +937,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DSI_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DSI_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -787,7 +953,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DFE_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DFE_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -798,7 +969,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DIC_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DIC_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -809,7 +985,12 @@ contains
           units    = 'alk/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ALK_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ALK_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -820,7 +1001,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOC_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOC_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -831,7 +1017,12 @@ contains
           units    = 'nmol/cm^2/s'
           vgrid    = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOCr_RIV_FLUX)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOCr_RIV_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        !-----------------------------------------------------------------------
@@ -848,7 +1039,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI13C_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI13C_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -859,7 +1055,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI13C_AS_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI13C_AS_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -870,7 +1071,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI13C_SA_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI13C_SA_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -881,7 +1087,12 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_d13C_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_d13C_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -892,7 +1103,12 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_D13C_atm)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_D13C_atm, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -903,7 +1119,12 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_R13C_DIC_surf)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_R13C_DIC_surf, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -914,7 +1135,12 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_R13C_atm)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_R13C_atm, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -925,7 +1151,12 @@ contains
              units    = 'nmol/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI13C_RIV_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI13C_RIV_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -936,7 +1167,12 @@ contains
              units    = 'nmol/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO13C_RIV_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO13C_RIV_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -947,7 +1183,12 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_eps_aq_g_surf)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_eps_aq_g_surf, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -958,7 +1199,12 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_eps_dic_g_surf)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_eps_dic_g_surf, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -969,7 +1215,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI14C_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI14C_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -980,7 +1231,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI14C_AS_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI14C_AS_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -991,7 +1247,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI14C_SA_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI14C_SA_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1002,7 +1263,12 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_d14C_GAS_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_d14C_GAS_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1013,7 +1279,12 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_D14C_atm)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_D14C_atm, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1024,7 +1295,12 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_R14C_DIC_surf)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_R14C_DIC_surf, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1035,7 +1311,12 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_R14C_atm)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_R14C_atm, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+            end if
           end if
 
           if (count_only) then
@@ -1046,7 +1327,12 @@ contains
              units    = 'nmol/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DI14C_RIV_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DI14C_RIV_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1057,7 +1343,12 @@ contains
              units    = 'nmol/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO14C_RIV_FLUX)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO14C_RIV_FLUX, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1068,7 +1359,12 @@ contains
              units    = 'permil'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_GLOBAL_D14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_GLOBAL_D14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
        end if
 
@@ -1092,7 +1388,12 @@ contains
           units = 'cm'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zsatcalc)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%zsatcalc, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1103,7 +1404,12 @@ contains
           units = 'cm'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zsatarag)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%zsatarag, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1114,7 +1420,12 @@ contains
           units = 'mmol/m^3'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2_ZMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2_ZMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1125,7 +1436,12 @@ contains
           units = 'cm'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2_ZMIN_DEPTH)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2_ZMIN_DEPTH, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1136,7 +1452,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_TOT_zint)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%photoC_TOT_zint, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1147,7 +1468,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_NO3_TOT_zint)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%photoC_NO3_TOT_zint, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1158,7 +1484,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_Ctot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_Ctot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1169,7 +1500,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_100m_Ctot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_100m_Ctot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1180,7 +1516,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_Ntot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_Ntot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1191,7 +1532,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_100m_Ntot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_100m_Ntot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1202,7 +1548,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_Ptot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_Ptot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1213,7 +1564,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_100m_Ptot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_100m_Ptot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1224,7 +1580,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_Sitot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_Sitot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1235,7 +1596,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_100m_Sitot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_100m_Sitot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1246,7 +1612,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_Fetot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_Fetot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1257,7 +1628,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Jint_100m_Fetot)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Jint_100m_Fetot, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        ! Particulate 2D diags
@@ -1269,7 +1645,12 @@ contains
           units = 'nmolC/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%calcToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%calcToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1280,7 +1661,12 @@ contains
           units = 'nmolC/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pocToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%pocToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1291,7 +1677,12 @@ contains
           units = 'nmolN/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ponToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ponToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1302,7 +1693,12 @@ contains
           units = 'nmolN/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SedDenitrif)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SedDenitrif, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1313,7 +1709,12 @@ contains
           units = 'nmolC/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%OtherRemin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%OtherRemin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1324,7 +1725,12 @@ contains
           units = 'nmolP/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%popToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%popToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1335,7 +1741,12 @@ contains
           units = 'nmolSi/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%bsiToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%bsiToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1346,7 +1757,12 @@ contains
           units = 'g/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%dustToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%dustToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1357,7 +1773,12 @@ contains
           units = 'nmolFe/cm^2/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pfeToSed)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%pfeToSed, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        ! Autotroph 2D diags
@@ -1370,7 +1791,12 @@ contains
              units = 'mmol/m^3 cm/s'
              vgrid = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_zint(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoC_zint(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1381,19 +1807,29 @@ contains
              units = 'mmol/m^3 cm/s'
              vgrid = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_NO3_zint(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoC_NO3_zint(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             if (autotrophs(n)%CaCO3_ind.gt.0) then
+             if (marbl_tracer_indices%auto_inds(n)%CaCO3_ind.gt.0) then
                 lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation Vertical Integral'
                 sname = trim(autotrophs(n)%sname) // '_CaCO3_form_zint'
                 units = 'mmol/m^3 cm/s'
                 vgrid = 'none'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CaCO3_form_zint(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CaCO3_form_zint(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              else
                 ind%CaCO3_form_zint(n) = -1
              end if
@@ -1408,7 +1844,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%tot_CaCO3_form_zint)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%tot_CaCO3_form_zint, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        ! General 3D diags
@@ -1420,7 +1861,12 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CO3)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CO3, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1431,7 +1877,12 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%HCO3)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%HCO3, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1442,7 +1893,12 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%H2CO3)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%H2CO3, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1453,7 +1909,12 @@ contains
           units = 'none'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ph_3D)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ph_3D, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1464,7 +1925,12 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CO3_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CO3_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1475,7 +1941,12 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%HCO3_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%HCO3_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1486,7 +1957,12 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%H2CO3_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%H2CO3_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1497,7 +1973,12 @@ contains
           units = 'none'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%ph_3D_ALT_CO2)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%ph_3D_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1508,7 +1989,12 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%co3_sat_calc)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%co3_sat_calc, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1519,7 +2005,12 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%co3_sat_arag)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%co3_sat_arag, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1530,7 +2021,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%NITRIF)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%NITRIF, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1541,7 +2037,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DENITRIF)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DENITRIF, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1552,7 +2053,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2_PRODUCTION)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2_PRODUCTION, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1563,7 +2069,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%O2_CONSUMPTION)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%O2_CONSUMPTION, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1574,7 +2085,12 @@ contains
           units = 'mmol/m^3'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%AOU)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%AOU, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1585,7 +2101,12 @@ contains
           units = 'W/m^2'
           vgrid = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PAR_avg)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PAR_avg, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1596,7 +2117,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_graze_TOT)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%auto_graze_TOT, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1607,7 +2133,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_TOT)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%photoC_TOT, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1618,7 +2149,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_NO3_TOT)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%photoC_NO3_TOT, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1629,7 +2165,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOC_prod)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOC_prod, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1640,7 +2181,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOC_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOC_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1651,7 +2197,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOCr_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOCr_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1662,7 +2213,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DON_prod)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DON_prod, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1673,7 +2229,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DON_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DON_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1684,7 +2245,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DONr_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DONr_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1695,7 +2261,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOP_prod)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOP_prod, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1706,7 +2277,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOP_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOP_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1717,7 +2293,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOPr_remin)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%DOPr_remin, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1728,7 +2309,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Fe_scavenge)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Fe_scavenge, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1739,7 +2325,12 @@ contains
           units = '1/y'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Fe_scavenge_rate)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Fe_scavenge_rate, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        ! Particulate 3D diags
@@ -1751,7 +2342,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%POC_FLUX_IN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%POC_FLUX_IN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1762,7 +2358,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%POC_PROD)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%POC_PROD, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1773,7 +2374,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%POC_REMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%POC_REMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1784,7 +2390,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%POC_REMIN_DIC)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%POC_REMIN_DIC, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1795,7 +2406,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PON_REMIN_NH4)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%PON_REMIN_NH4, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1806,7 +2422,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%POP_REMIN_PO4)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%POP_REMIN_PO4, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1817,7 +2438,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CaCO3_FLUX_IN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CaCO3_FLUX_IN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1828,7 +2454,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CaCO3_PROD)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CaCO3_PROD, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1839,7 +2470,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CaCO3_REMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CaCO3_REMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1850,7 +2486,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SiO2_FLUX_IN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SiO2_FLUX_IN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1861,7 +2502,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SiO2_PROD)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SiO2_PROD, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1872,7 +2518,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SiO2_REMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%SiO2_REMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1883,7 +2534,12 @@ contains
           units = 'ng/s/m^2'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%dust_FLUX_IN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%dust_FLUX_IN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1894,7 +2550,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%dust_REMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%dust_REMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1905,7 +2566,12 @@ contains
           units = 'mmol/m^3 cm/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%P_iron_FLUX_IN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%P_iron_FLUX_IN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1916,7 +2582,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%P_iron_PROD)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%P_iron_PROD, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -1927,7 +2598,12 @@ contains
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%P_iron_REMIN)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%P_iron_REMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        ! Autotroph 3D diags
@@ -1941,7 +2617,12 @@ contains
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%N_lim(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%N_lim(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
           
           if (count_only) then
@@ -1952,7 +2633,12 @@ contains
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%P_lim(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%P_lim(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1963,7 +2649,12 @@ contains
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Fe_lim(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%Fe_lim(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -1975,7 +2666,12 @@ contains
                 units = 'none'
                 vgrid = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%SiO3_lim(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%SiO3_lim(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              else
                 ind%SiO3_lim(n) = -1
              end if
@@ -1989,7 +2685,12 @@ contains
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%light_lim(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%light_lim(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2000,7 +2701,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoC(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2011,7 +2717,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoC_NO3(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoC_NO3(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2022,7 +2733,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoFe(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoFe(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2033,7 +2749,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoNO3(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoNO3(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2044,7 +2765,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%photoNH4(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%photoNH4(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2055,7 +2781,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%DOP_uptake(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%DOP_uptake(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2066,7 +2797,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%PO4_uptake(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%PO4_uptake(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2077,7 +2813,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_graze(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_graze(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2088,7 +2829,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_graze_poc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_graze_poc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2099,7 +2845,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_graze_doc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_graze_doc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2110,7 +2861,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_graze_zoo(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_graze_zoo(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2121,7 +2877,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_loss(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_loss(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2132,7 +2893,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_loss_poc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_loss_poc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2143,7 +2909,12 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_loss_doc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_loss_doc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2154,13 +2925,18 @@ contains
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%auto_agg(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_agg(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             if (autotrophs(n)%Si_ind.gt.0) then
+             if (marbl_tracer_indices%auto_inds(n)%Si_ind.gt.0) then
                 lname = trim(autotrophs(n)%lname) // ' Si Uptake'
                 ! FIXME #22 - eventually add _
                 sname = trim(autotrophs(n)%sname) // 'bSi_form'
@@ -2168,7 +2944,12 @@ contains
                 units = 'mmol/m^3/s'
                 vgrid = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%bSi_form(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%bSi_form(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              else
                 ind%bSi_form(n) = -1
              end if
@@ -2177,13 +2958,18 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             if (autotrophs(n)%CaCO3_ind.gt.0) then
+             if (marbl_tracer_indices%auto_inds(n)%CaCO3_ind.gt.0) then
                 lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation'
                 sname = trim(autotrophs(n)%sname) // '_CaCO3_form'
                 units = 'mmol/m^3/s'
                 vgrid = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CaCO3_form(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CaCO3_form(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              else
                 ind%CaCO3_form(n) = -1
              end if
@@ -2198,7 +2984,12 @@ contains
                 units = 'mmol/m^3/s'
                 vgrid = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%Nfix(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%Nfix(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              else
                 ind%Nfix(n) = -1
              end if
@@ -2214,7 +3005,12 @@ contains
           units    = 'mmol/m^3/s'
           vgrid    = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%tot_bSi_form)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%tot_bSi_form, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -2225,7 +3021,12 @@ contains
           units    = 'mmol/m^3/s'
           vgrid    = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%tot_CaCO3_form)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%tot_CaCO3_form, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        if (count_only) then
@@ -2236,7 +3037,12 @@ contains
           units    = 'mmol/m^3/s'
           vgrid    = 'layer_avg'
           truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%tot_Nfix)
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%tot_Nfix, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
        end if
 
        ! Zooplankton 3D diags
@@ -2250,7 +3056,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_loss(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_loss(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2261,7 +3072,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_loss_poc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_loss_poc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2272,7 +3088,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_loss_doc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_loss_doc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2283,7 +3104,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_graze(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_graze(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2294,7 +3120,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_graze_poc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_graze_poc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2305,7 +3136,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_graze_doc(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_graze_doc(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2316,7 +3152,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%zoo_graze_zoo(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_graze_zoo(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2327,7 +3168,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%x_graze_zoo(n))
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%x_graze_zoo(n), marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
        end do
@@ -2344,7 +3190,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO13C_FLUX_IN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO13C_FLUX_IN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2355,7 +3206,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO13C_PROD)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO13C_PROD, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2366,7 +3222,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO13C_REMIN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO13C_REMIN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2377,7 +3238,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO13C_prod)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO13C_prod, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2388,7 +3254,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO13C_remin)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO13C_remin, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2399,7 +3270,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca13CO3_FLUX_IN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca13CO3_FLUX_IN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2410,7 +3286,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca13CO3_PROD)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca13CO3_PROD, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2421,7 +3302,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca13CO3_REMIN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca13CO3_REMIN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2432,7 +3318,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo13C_TOT)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_photo13C_TOT, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2443,7 +3334,12 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DIC_d13C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DIC_d13C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2454,7 +3350,12 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DOC_d13C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DOC_d13C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2465,7 +3366,12 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_zooC_d13C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_zooC_d13C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2476,7 +3382,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO14C_FLUX_IN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO14C_FLUX_IN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2487,7 +3398,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO14C_PROD)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO14C_PROD, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2498,7 +3414,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_PO14C_REMIN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_PO14C_REMIN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2509,7 +3430,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO14C_prod)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO14C_prod, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2520,7 +3446,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DO14C_remin)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DO14C_remin, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2531,7 +3462,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca14CO3_FLUX_IN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca14CO3_FLUX_IN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2542,7 +3478,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca14CO3_PROD)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca14CO3_PROD, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2553,7 +3494,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca14CO3_REMIN)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Ca14CO3_REMIN, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2564,7 +3510,12 @@ contains
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo14C_TOT)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_photo14C_TOT, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2575,7 +3526,12 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DIC_d14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DIC_d14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2586,7 +3542,12 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_DOC_d14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_DOC_d14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2597,7 +3558,12 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_zooC_d14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_zooC_d14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           !  Nonstandard 2D fields
@@ -2610,7 +3576,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo13C_TOT_zint)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_photo13C_TOT_zint, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2621,7 +3592,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo14C_TOT_zint)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_photo14C_TOT_zint, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2632,7 +3608,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Jint_13Ctot)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Jint_13Ctot, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2643,7 +3624,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Jint_14Ctot)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Jint_14Ctot, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2654,7 +3640,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Jint_100m_13Ctot)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Jint_100m_13Ctot, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2665,7 +3656,12 @@ contains
              units    = 'mmol/m^3 cm/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Jint_100m_14Ctot)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_Jint_100m_14Ctot, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           !  Nonstandard autotroph 2D and 3D fields for each autotroph
@@ -2681,7 +3677,12 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca13CO3_form(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_Ca13CO3_form(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2692,7 +3693,12 @@ contains
                 units    = 'mmol/m^3 cm/s' 
                 vgrid    = 'none'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca13CO3_form_zint(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_Ca13CO3_form_zint(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2703,7 +3709,12 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca14CO3_form(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_Ca14CO3_form(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2714,7 +3725,12 @@ contains
                 units    = 'mmol/m^3 cm/s' 
                 vgrid    = 'none'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_Ca14CO3_form_zint(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_Ca14CO3_form_zint(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2725,7 +3741,12 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_autotrophCaCO3_d13C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_autotrophCaCO3_d13C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2736,7 +3757,12 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_autotrophCaCO3_d14C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_autotrophCaCO3_d14C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2747,7 +3773,12 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo13C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_photo13C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2758,7 +3789,12 @@ contains
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo14C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_photo14C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2769,7 +3805,12 @@ contains
                 units    = 'mmol/m^3 cm/s'
                 vgrid    = 'none'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo13C_zint(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_photo13C_zint(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2780,7 +3821,12 @@ contains
                 units    = 'mmol/m^3 cm/s'
                 vgrid    = 'none'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_photo14C_zint(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_photo14C_zint(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2791,7 +3837,12 @@ contains
                 units    = 'permil'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_eps_autotroph(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_eps_autotroph(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2802,7 +3853,12 @@ contains
                 units    = 'permil'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_d13C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_d13C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2813,7 +3869,12 @@ contains
                 units    = 'permil'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_d14C(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_d14C(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
              if (count_only) then
@@ -2824,7 +3885,12 @@ contains
                 units    = 'm^3/mmol C/s'
                 vgrid    = 'layer_avg'
                 truncate = .false.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_mui_to_co2star(n))
+                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                     ind%CISO_mui_to_co2star(n), marbl_status_log)
+                if (marbl_status_log%labort_marbl) then
+                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+                end if
              end if
 
           end do
@@ -2839,7 +3905,12 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_eps_aq_g)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_eps_aq_g, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2850,7 +3921,12 @@ contains
              units    = 'permil'
              vgrid    = 'layer_avg'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%CISO_eps_dic_g)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%CISO_eps_dic_g, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           !  Vars to sum up burial in sediments (2D)
@@ -2863,7 +3939,12 @@ contains
              units    = 'nmolC/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%calcToSed_13C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%calcToSed_13C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2874,7 +3955,12 @@ contains
              units    = 'nmolC/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pocToSed_13C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%pocToSed_13C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2885,7 +3971,12 @@ contains
              units    = 'nmolC/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%calcToSed_14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%calcToSed_14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
           if (count_only) then
@@ -2896,7 +3987,12 @@ contains
              units    = 'nmolC/cm^2/s'
              vgrid    = 'none'
              truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate, ind%pocToSed_14C)
+             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%pocToSed_14C, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
 
        end if  ! end of if ciso_on
@@ -2911,7 +4007,7 @@ contains
             diags => marbl_interior_restore_diags &
             )
        
-       do n = 1,ecosys_tracer_cnt
+       do n = 1,marbl_total_tracer_cnt
           ! Note that tmp_id is a temp variable because restoring diagnostics
           ! have same indexing as the ecosys tracers
           if (count_only) then
@@ -2921,7 +4017,12 @@ contains
              sname = trim(marbl_tracer_metadata(n)%short_name) // "_RESTORE"
              units = 'mmol/m^3'
              vgrid = 'layer_avg'
-             call diags%add_diagnostic(lname, sname, units, vgrid, .false., tmp_id)
+             call diags%add_diagnostic(lname, sname, units, vgrid, .false.,   &
+                  tmp_id, marbl_status_log)
+             if (marbl_status_log%labort_marbl) then
+               call log_add_diagnostics_error(marbl_status_log, sname, subname)
+               return
+             end if
           end if
        end do
        
@@ -2933,9 +4034,24 @@ contains
     ! Initialize all diagnostics to zero
     !-----------------------------------------------------------------
 
-    call marbl_interior_forcing_diags%set_to_zero()
-    call marbl_interior_restore_diags%set_to_zero()
-    call marbl_surface_forcing_diags%set_to_zero()
+    call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace(&
+           'marbl_interior_forcing_diags%set_to_zero', subname)
+      return
+    end if
+    call marbl_interior_restore_diags%set_to_zero(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace(&
+           'marbl_interior_restore_diags%set_to_zero', subname)
+      return
+    end if
+    call marbl_surface_forcing_diags%set_to_zero(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace(&
+           'marbl_surface_forcing_diags%set_to_zero', subname)
+      return
+    end if
 
   end subroutine marbl_diagnostics_init
 
@@ -2945,6 +4061,7 @@ contains
        domain,                                        &
        interior_forcing_input,                        &
        dtracers,                                      &
+       marbl_tracer_indices,                          &
        carbonate,                                     &
        autotroph_secondary_species,                   &         
        zooplankton_secondary_species,                 &
@@ -2956,13 +4073,15 @@ contains
        sed_denitrif, other_remin, nitrif, denitrif,   &
        column_o2, o2_production, o2_consumption,      &
        fe_scavenge, fe_scavenge_rate,                 &
-       marbl_interior_forcing_diags)
+       marbl_interior_forcing_diags,                  &
+       marbl_status_log)
        
     implicit none
 
     type (marbl_domain_type)                  , intent(in) :: domain                                
     type (marbl_interior_forcing_input_type)  , intent(in) :: interior_forcing_input
-    real (r8)                                 , intent(in) :: dtracers(:,:) ! (ecosys_used_tracer_cnt, km) computed source/sink terms
+    real (r8)                                 , intent(in) :: dtracers(:,:) ! (marbl_total_tracer_cnt, km) computed source/sink terms
+    type(marbl_tracer_index_type)             , intent(in) :: marbl_tracer_indices
     type (carbonate_type)                     , intent(in) :: carbonate(domain%km)
     type (autotroph_secondary_species_type)   , intent(in) :: autotroph_secondary_species(autotroph_cnt, domain%km)
     type (zooplankton_secondary_species_type) , intent(in) :: zooplankton_secondary_species(zooplankton_cnt, domain%km)
@@ -2983,6 +4102,9 @@ contains
     real (r8)                                 , intent(in) :: fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient
     real (r8)                                 , intent(in) :: fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
     type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_forcing_diags
+    type (marbl_log_type)                     , intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:set_interior'
 
     !-----------------------------------------------------------------
 
@@ -2995,7 +4117,12 @@ contains
          PAR             => marbl_PAR                                     &
          )
 
-    call marbl_interior_forcing_diags%set_to_zero()
+    call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace(&
+           'marbl_interior_forcing_diags%set_to_zero', subname)
+      return
+    end if
 
     call store_diagnostics_carbonate(domain, &
          carbonate, marbl_interior_forcing_diags)
@@ -3014,8 +4141,8 @@ contains
          PON_remin, PON_sed_loss, POP_remin, POP_sed_loss, &
          sed_denitrif, other_remin, marbl_interior_forcing_diags)
 
-    call store_diagnostics_carbon_fluxes(domain, &
-         POC, P_CaCO3, dtracers, marbl_interior_forcing_diags)
+    call store_diagnostics_carbon_fluxes(domain, POC, P_CaCO3, dtracers,      &
+         marbl_tracer_indices, marbl_interior_forcing_diags)
 
     call store_diagnostics_nitrification(&
          nitrif, denitrif, marbl_interior_forcing_diags)
@@ -3032,16 +4159,18 @@ contains
 
     call store_diagnostics_nitrogen_fluxes(domain, &
          PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracers, &
+         marbl_tracer_indices, marbl_interior_forcing_diags)
+
+    call store_diagnostics_phosphorus_fluxes(domain, POP_sed_loss, dtracers,  &
+         marbl_tracer_indices, marbl_interior_forcing_diags)
+
+    call store_diagnostics_silicon_fluxes(domain, P_SiO2, dtracers,           &
+         marbl_tracer_indices, marbl_interior_forcing_diags)
+
+    call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
+         interior_forcing_input%fesedflux, dtracers, marbl_tracer_indices,    &
          marbl_interior_forcing_diags)
-
-    call store_diagnostics_phosphorus_fluxes(domain, &
-         POP_sed_loss, dtracers, marbl_interior_forcing_diags)
-
-    call store_diagnostics_silicon_fluxes(domain, &
-         P_SiO2, dtracers, marbl_interior_forcing_diags)
-
-    call store_diagnostics_iron_fluxes(domain, &
-         P_iron, dust, interior_forcing_input%fesedflux, dtracers, marbl_interior_forcing_diags)
+         
 
     end associate
 
@@ -3054,6 +4183,7 @@ contains
        surface_input_forcings,                      &
        surface_forcing_internal,                    &
        surface_tracer_fluxes,                       &
+       marbl_tracer_indices,                        &
        saved_state,                                 &
        surface_forcing_output,                      &
        surface_forcing_diags)
@@ -3073,27 +4203,13 @@ contains
     use marbl_share_mod       , only : dic_riv_flux_file          
     use marbl_share_mod       , only : alk_riv_flux_file          
     use marbl_parms           , only : mpercm
-    use marbl_parms           , only : po4_ind
-    use marbl_parms           , only : no3_ind
-    use marbl_parms           , only : sio3_ind
-    use marbl_parms           , only : nh4_ind
-    use marbl_parms           , only : fe_ind
-    use marbl_parms           , only : o2_ind
-    use marbl_parms           , only : dic_ind
-    use marbl_parms           , only : dic_alt_co2_ind
-    use marbl_parms           , only : alk_ind
-    use marbl_parms           , only : doc_ind
-    use marbl_parms           , only : don_ind
-    use marbl_parms           , only : dop_ind
-    use marbl_parms           , only : dopr_ind
-    use marbl_parms           , only : donr_ind
-    use marbl_parms           , only : docr_ind
 
     implicit none
 
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
     real(r8)                                  , intent(in)    :: surface_input_forcings(:,:)
     real(r8)                                  , intent(in)    :: surface_tracer_fluxes(:,:)
+    type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(in)    :: saved_state 
     type(marbl_surface_forcing_internal_type) , intent(in)    :: surface_forcing_internal
     type(marbl_surface_forcing_output_type)   , intent(in)    :: surface_forcing_output
@@ -3102,7 +4218,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_diagnostics:store_diagnostics_surface_forcing'
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_surface_forcing'
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------------
@@ -3141,7 +4257,23 @@ contains
          ph_prev           => saved_state%ph_prev_surf,                                         &
          ph_prev_alt_co2   => saved_state%ph_prev_alt_co2_surf,                                 &
 
-         stf               => surface_tracer_fluxes(:,:)                                        &
+         stf               => surface_tracer_fluxes(:,:),                                       &
+
+         po4_ind           => marbl_tracer_indices%po4_ind,                                     &
+         no3_ind           => marbl_tracer_indices%no3_ind,                                     &
+         sio3_ind          => marbl_tracer_indices%sio3_ind,                                     &
+         nh4_ind           => marbl_tracer_indices%nh4_ind,                                     &
+         fe_ind            => marbl_tracer_indices%fe_ind,                                      &
+         o2_ind            => marbl_tracer_indices%o2_ind,                                      &
+         dic_ind           => marbl_tracer_indices%dic_ind,                                     &
+         dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind,                             &
+         alk_ind           => marbl_tracer_indices%alk_ind,                                     &
+         doc_ind           => marbl_tracer_indices%doc_ind,                                     &
+         don_ind           => marbl_tracer_indices%don_ind,                                     &
+         dop_ind           => marbl_tracer_indices%dop_ind,                                     &
+         dopr_ind          => marbl_tracer_indices%dopr_ind,                                    &
+         donr_ind          => marbl_tracer_indices%donr_ind,                                    &
+         docr_ind          => marbl_tracer_indices%docr_ind                                     &
          )
 
     if (lflux_gas_o2 .or. lflux_gas_co2) then
@@ -3466,8 +4598,6 @@ contains
                diags(ind%CaCO3_form_zint(n))%field_2d(1)
        end if
 
-       diags(ind%photoC_zint(n))%field_2d(1) = c0
-
        call compute_vertical_integrals(autotroph_secondary_species(n,:)%photoC, &
             delta_z, kmt, full_depth_integral=diags(ind%photoC_zint(n))%field_2d(1))
 
@@ -3752,13 +4882,14 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_carbon_fluxes(marbl_domain, &
-       POC, P_CaCO3, dtracer, marbl_diags)
+  subroutine store_diagnostics_carbon_fluxes(marbl_domain, POC, P_CaCO3,      &
+             dtracers, marbl_tracer_indices, marbl_diags)
 
     type(marbl_domain_type)     , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: POC
     type(column_sinking_particle_type) , intent(in)    :: P_CaCO3
-    real(r8)                           , intent(in)    :: dtracer(:,:) ! ecosys_tracer_cnt, km
+    real(r8)                           , intent(in)    :: dtracers(:,:) ! marbl_total_tracer_cnt, km
+    type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
@@ -3772,17 +4903,22 @@ contains
          diags   => marbl_diags%diags,       &
          ind     => marbl_interior_diag_ind, &
          kmt     => marbl_domain%kmt,        &
-         delta_z => marbl_domain%delta_z     &
+         delta_z => marbl_domain%delta_z,    &
+
+         dic_ind  => marbl_tracer_indices%dic_ind,                            &
+         doc_ind  => marbl_tracer_indices%doc_ind,                            &
+         docr_ind => marbl_tracer_indices%docr_ind                            &
          )
 
     ! vertical integrals
-    work = dtracer(dic_ind,:) + dtracer(doc_ind,:) +                          &
-         dtracer(docr_ind,:) + sum(dtracer(zooplankton(:)%C_ind,:), dim=1) +  &
-         sum(dtracer(autotrophs(:)%C_ind,:),dim=1)
+    work = dtracers(dic_ind,:) + dtracers(doc_ind,:) +                        &
+         dtracers(docr_ind,:) +                                               &
+         sum(dtracers(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +     &
+         sum(dtracers(marbl_tracer_indices%auto_inds(:)%C_ind,:),dim=1)
     do auto_ind = 1, autotroph_cnt
-       n = autotrophs(auto_ind)%CaCO3_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n.gt.0) then
-          work = work + dtracer(n,:)
+          work = work + dtracers(n,:)
        end if
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &
@@ -3797,8 +4933,8 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, &
-       PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracer, &
-       marbl_diags)
+       PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species,     &
+       dtracers, marbl_tracer_indices, marbl_diags)
 
     use marbl_parms, only : Q
 
@@ -3807,7 +4943,8 @@ contains
     real(r8)                               , intent(in)    :: denitrif(:)     ! km
     real(r8)                               , intent(in)    :: sed_denitrif(:) ! km
     type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:)
-    real(r8)                               , intent(in)    :: dtracer(:,:)      ! ecosys_tracer_cnt, km
+    real(r8)                               , intent(in)    :: dtracers(:,:)      ! marbl_total_tracer_cnt, km
+    type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
@@ -3821,14 +4958,19 @@ contains
          diags   => marbl_diags%diags,       &
          ind     => marbl_interior_diag_ind, &
          kmt     => marbl_domain%kmt,        &
-         delta_z => marbl_domain%delta_z     &
+         delta_z => marbl_domain%delta_z,    &
+
+         no3_ind  => marbl_tracer_indices%no3_ind,                            &
+         nh4_ind  => marbl_tracer_indices%nh4_ind,                            &
+         don_ind  => marbl_tracer_indices%don_ind,                            &
+         donr_ind => marbl_tracer_indices%donr_ind                            &
          )
 
     ! vertical integrals
-    work = dtracer(no3_ind,:) + dtracer(nh4_ind,:) +                          &
-           dtracer(don_ind,:) + dtracer(donr_ind,:) +                         &
-           Q * sum(dtracer(zooplankton(:)%C_ind,:), dim=1) +                  &
-           Q * sum(dtracer(autotrophs(:)%C_ind,:), dim=1) +                   &
+    work = dtracers(no3_ind,:) + dtracers(nh4_ind,:) +                        &
+           dtracers(don_ind,:) + dtracers(donr_ind,:) +                       &
+           Q * sum(dtracers(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +  &
+           Q * sum(dtracers(marbl_tracer_indices%auto_inds(:)%C_ind,:), dim=1) + &
            denitrif(:) + sed_denitrif(:)
     ! subtract out N fixation
     do n = 1, autotroph_cnt
@@ -3847,14 +4989,15 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_phosphorus_fluxes(marbl_domain, &
-       POP_sed_loss, dtracer, marbl_diags)
+  subroutine store_diagnostics_phosphorus_fluxes(marbl_domain,                &
+       POP_sed_loss, dtracers, marbl_tracer_indices, marbl_diags)
 
     use marbl_parms,  only : Qp_zoo_pom
 
     type(marbl_domain_type) , intent(in)    :: marbl_domain
     real(r8)                       , intent(in)    :: POP_sed_loss(:) ! km
-    real(r8)                       , intent(in)    :: dtracer(:,:)    ! ecosys_tracer_cnt, km
+    real(r8)                       , intent(in)    :: dtracers(:,:)    ! marbl_total_tracer_cnt, km
+    type(marbl_tracer_index_type)  , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)   , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
@@ -3868,16 +5011,20 @@ contains
          diags   => marbl_diags%diags,       &
          ind     => marbl_interior_diag_ind, &
          kmt     => marbl_domain%kmt,        &
-         delta_z => marbl_domain%delta_z     &
+         delta_z => marbl_domain%delta_z,    &
+
+         po4_ind  => marbl_tracer_indices%po4_ind,                            &
+         dop_ind  => marbl_tracer_indices%dop_ind,                            &
+         dopr_ind => marbl_tracer_indices%dopr_ind                            &
          )
 
     ! vertical integrals
-    work = dtracer(po4_ind,:) + dtracer(dop_ind,:) + dtracer(dopr_ind,:)
+    work = dtracers(po4_ind,:) + dtracers(dop_ind,:) + dtracers(dopr_ind,:)
     do n = 1, zooplankton_cnt
-       work = work + Qp_zoo_pom * dtracer(zooplankton(n)%C_ind,:)
+       work = work + Qp_zoo_pom * dtracers(marbl_tracer_indices%zoo_inds(n)%C_ind,:)
     end do
     do n = 1, autotroph_cnt
-       work = work + autotrophs(n)%Qp * dtracer(autotrophs(n)%C_ind,:)
+       work = work + autotrophs(n)%Qp * dtracers(marbl_tracer_indices%auto_inds(n)%C_ind,:)
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &
          full_depth_integral=diags(ind%Jint_Ptot)%field_2d(1),                &
@@ -3891,11 +5038,12 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_silicon_fluxes(marbl_domain, &
-       P_SiO2, dtracer, marbl_diags)
+       P_SiO2, dtracers, marbl_tracer_indices, marbl_diags)
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: P_SiO2
-    real(r8)                           , intent(in)    :: dtracer(:,:) ! ecosys_tracer_cnt, km
+    real(r8)                           , intent(in)    :: dtracers(:,:) ! marbl_total_tracer_cnt, km
+    type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
@@ -3914,10 +5062,10 @@ contains
          )
 
     ! vertical integrals
-    work = dtracer(sio3_ind,:)
+    work = dtracers(marbl_tracer_indices%sio3_ind,:)
     do n = 1, autotroph_cnt
-       if (autotrophs(n)%Si_ind > 0) then
-          work = work + dtracer(autotrophs(n)%Si_ind,:)
+       if (marbl_tracer_indices%auto_inds(n)%Si_ind > 0) then
+          work = work + dtracers(marbl_tracer_indices%auto_inds(n)%Si_ind,:)
        end if
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &
@@ -3931,8 +5079,8 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_iron_fluxes(marbl_domain, &
-       P_iron, dust, fesedflux, dtracer, marbl_diags)
+  subroutine store_diagnostics_iron_fluxes(marbl_domain, P_iron, dust, &
+             fesedflux, dtracers, marbl_tracer_indices, marbl_diags)
 
     use marbl_parms     , only : Qfe_zoo
     use marbl_parms     , only : dust_to_Fe
@@ -3941,7 +5089,8 @@ contains
     type(column_sinking_particle_type) , intent(in)    :: P_iron
     type(column_sinking_particle_type) , intent(in)    :: dust
     real(r8), dimension(:)             , intent(in)    :: fesedflux  ! km
-    real(r8), dimension(:,:)           , intent(in)    :: dtracer ! ecosys_tracer_cnt, km
+    real(r8), dimension(:,:)           , intent(in)    :: dtracers ! marbl_total_tracer_cnt, km
+    type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
@@ -3956,12 +5105,14 @@ contains
          ind     => marbl_interior_diag_ind, &
          kmt     => marbl_domain%kmt,        &
          zw      => marbl_domain%zw,         &
-         delta_z => marbl_domain%delta_z     &
+         delta_z => marbl_domain%delta_z,    &
+         fe_ind  => marbl_tracer_indices%fe_ind &
          )
 
     ! vertical integrals
-    work = dtracer(Fe_ind, :) + sum(dtracer(autotrophs(:)%Fe_ind, :),dim=1) + &
-           Qfe_zoo * sum(dtracer(zooplankton(:)%C_ind, :),dim=1) -            &
+    work = dtracers(fe_ind, :) +                                              &
+           sum(dtracers(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) + &
+           Qfe_zoo * sum(dtracers(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1) - &
            dust%remin(:) * dust_to_Fe
     call compute_vertical_integrals(work, delta_z, kmt,                       &
          full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),               &
@@ -4002,20 +5153,14 @@ contains
        PO14C,               &
        P_Ca13CO3,           &
        P_Ca14CO3,           &
-       dtracer,             &
+       dtracers,            &
+       marbl_tracer_indices,&
        marbl_diags)
 
     !---------------------------------------------------------------------
     ! !DESCRIPTION:
     !  Update marbl_interior_ciso_diags data type 
     !---------------------------------------------------------------------
-
-    use marbl_parms           , only : di13c_ind
-    use marbl_parms           , only : do13c_ind
-    use marbl_parms           , only : zoo13C_ind
-    use marbl_parms           , only : di14c_ind
-    use marbl_parms           , only : do14c_ind
-    use marbl_parms           , only : zoo14C_ind
 
     implicit none
 
@@ -4047,8 +5192,9 @@ contains
          eps_aq_g    , & ! equilibrium fractionation (CO2_gaseous <-> CO2_aq)
          eps_dic_g       ! equilibrium fractionation between total DIC and gaseous CO2
 
-    real (r8), intent(in), dimension(ecosys_ciso_tracer_cnt, marbl_domain%km) :: &
-         dtracer   ! computed source/sink terms
+    real (r8), intent(in) :: dtracers(:,:) ! (marbl_total_tracer_cnt, km) computed source/sink terms
+
+    type(marbl_tracer_index_type), intent(in)      :: marbl_tracer_indices
 
     type(column_sinking_particle_type), intent(in) :: &
          PO13C,        &  ! base units = nmol 13C
@@ -4072,7 +5218,13 @@ contains
          zw      => marbl_domain%zw,         &
          delta_z => marbl_domain%delta_z,    &
          diags   => marbl_diags%diags,       &
-         ind     => marbl_interior_diag_ind  &
+         ind     => marbl_interior_diag_ind,  &
+         di13c_ind  => marbl_tracer_indices%di13c_ind,                   &
+         do13c_ind  => marbl_tracer_indices%do13c_ind,                   &
+         zoo13c_ind => marbl_tracer_indices%zoo13c_ind,                  &
+         di14c_ind  => marbl_tracer_indices%di14c_ind,                   &
+         do14c_ind  => marbl_tracer_indices%do14c_ind,                   &
+         zoo14c_ind => marbl_tracer_indices%zoo14c_ind                   &
          )
 
     diags(ind%calcToSed_13C)%field_2d(1) = sum(P_Ca13CO3%sed_loss)
@@ -4089,12 +5241,12 @@ contains
 
     ! Vertical integrals - CISO_Jint_13Ctot and Jint_100m_13Ctot
 
-    work(:) = dtracer(di13c_ind,:) + dtracer(do13c_ind,:) + dtracer(zoo13C_ind,:) &
-         + sum(dtracer(autotrophs(:)%C13_ind,:), dim=1)
+    work(:) = dtracers(di13c_ind,:) + dtracers(do13c_ind,:) + dtracers(zoo13C_ind,:) &
+         + sum(dtracers(marbl_tracer_indices%auto_inds(:)%C13_ind,:), dim=1)
     do auto_ind = 1, autotroph_cnt
-       n = autotrophs(auto_ind)%Ca13CO3_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
        if (n > 0) then
-          work = work + dtracer(n,:)
+          work = work + dtracers(n,:)
        end if
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &
@@ -4104,12 +5256,12 @@ contains
 
     ! Vertical integral - CISO_Jint_14Ctot and Jint_100m_14Ctot
 
-    work(:) = dtracer(di14c_ind,:) + dtracer(do14c_ind,:) + dtracer(zoo14C_ind,:) &
-         + sum(dtracer(autotrophs(:)%C14_ind,:), dim=1)
+    work(:) = dtracers(di14c_ind,:) + dtracers(do14c_ind,:) + dtracers(zoo14C_ind,:) &
+         + sum(dtracers(marbl_tracer_indices%auto_inds(:)%C14_ind,:), dim=1)
     do auto_ind = 1, autotroph_cnt
-       n = autotrophs(auto_ind)%Ca14CO3_ind
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
        if (n > 0) then
-          work = work + dtracer(n,:)
+          work = work + dtracers(n,:)
        end if
     end do
     call compute_vertical_integrals(work, delta_z, kmt,                       &
@@ -4261,7 +5413,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_diagnostics:store_diagnostics_ciso_surface_forcing'
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_ciso_surface_forcing'
     !-----------------------------------------------------------------------
 
     associate(                                          &
@@ -4382,5 +5534,16 @@ contains
     end if
 
   end subroutine compute_vertical_integrals
+
+  subroutine log_add_diagnostics_error(marbl_status_log, sname, subname)
+
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+    character(len=*),     intent(in)    :: sname, subname
+    character(len=char_len) :: routine_name
+
+    write(routine_name,"(3A)") "diags%add_diagnostic(", trim(sname), ")"
+    call marbl_status_log%log_error_trace(routine_name, subname)
+
+  end subroutine log_add_diagnostics_error
 
 end module marbl_diagnostics_mod

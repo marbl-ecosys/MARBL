@@ -10,8 +10,10 @@ module marbl_sizes
   ! number of ecosystem tracers
   !-----------------------------------------------------------------------------
   
-  integer(int_kind), parameter :: ecosys_tracer_cnt = ECOSYS_NT
-  integer(int_kind), parameter :: ecosys_ciso_tracer_cnt = 14
+  integer(int_kind), parameter :: ecosys_base_tracer_cnt = ECOSYS_NT
+  integer(int_kind), parameter :: ciso_tracer_cnt = 14
+  integer(int_kind)            :: marbl_total_tracer_cnt = 0
+
 
   !-----------------------------------------------------------------------------
   ! number of ecosystem constituents and grazing interactions
@@ -24,24 +26,9 @@ module marbl_sizes
   integer (KIND=int_kind), parameter :: max_prey_class_size = 9
 
   !-----------------------------------------------------------------------------
-  ! total number of tracers used by marbl
-  !-----------------------------------------------------------------------------
-
-  integer (int_kind) :: ecosys_used_tracer_cnt
-
-  !-----------------------------------------------------------------------------
   ! number of surface forcing fields
   !-----------------------------------------------------------------------------
 
   integer :: num_surface_forcing_fields 
-
-  !-----------------------------------------------------------------------------
-  ! array bounds 
-  !-----------------------------------------------------------------------------
-
-  integer (int_kind) :: ecosys_ind_beg = 1
-  integer (int_kind) :: ecosys_ind_end
-  integer (int_kind) :: ecosys_ciso_ind_beg
-  integer (int_kind) :: ecosys_ciso_ind_end
 
 end module marbl_sizes
