@@ -1472,6 +1472,7 @@ contains
        domain,                           &
        interior_forcing_input,           &
        saved_state,                      &
+       saved_state_ind,                  &
        interior_restore,                 &
        tracers,                          &
        dtracers,                         &
@@ -1489,6 +1490,7 @@ contains
 
     use marbl_ciso_mod , only : marbl_ciso_set_interior_forcing
     use marbl_sizes    , only : marbl_total_tracer_cnt
+    use marbl_interface_types, only : marbl_interior_saved_state_indexing_type
 
     implicit none 
 
@@ -1499,6 +1501,7 @@ contains
     real    (r8)                                , intent(in)    :: tracers(:,: )         ! (marbl_total_tracer_cnt, km) tracer values 
     type    (marbl_PAR_type)                    , intent(inout) :: marbl_PAR
     type    (marbl_saved_state_type)            , intent(inout) :: saved_state
+    type    (marbl_interior_saved_state_indexing_type), intent(in) :: saved_state_ind
     real    (r8)                                , intent(out)   :: dtracers(:,:)          ! (marbl_total_tracer_cnt, km) computed source/sink terms
     type    (marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
     ! FIXME #17: intent is inout due to DIC_Loc
@@ -1584,8 +1587,8 @@ contains
          dust                => marbl_particulate_share%dust,       &
          P_iron              => marbl_particulate_share%P_iron,     &
 
-         ph_prev_col         => saved_state%ph_prev_col,            &
-         ph_prev_alt_co2_col => saved_state%ph_prev_alt_co2_col,    &
+         ph_prev_col         => saved_state%state(saved_state_ind%ph_col)%field_3d(:,1), &
+         ph_prev_alt_co2_col => saved_state%state(saved_state_ind%ph_alt_co2_col)%field_3d(:,1), &
 
          dust_flux_in        => interior_forcing_input%dust_flux,   &
          temperature         => interior_forcing_input%temperature, &
@@ -2568,6 +2571,7 @@ contains
        surface_tracer_fluxes,           &
        marbl_tracer_indices,            &
        saved_state,                     &
+       saved_state_ind,                 &
        surface_forcing_output,          &
        surface_forcing_internal,        &
        surface_forcing_share,           &
@@ -2576,6 +2580,7 @@ contains
 
     !  Compute surface forcing fluxes 
 
+    use marbl_interface_types , only : marbl_surface_saved_state_indexing_type
     use marbl_interface_types , only : sfo_ind
     use marbl_schmidt_number_mod , only : schmidt_co2_surf  
     use marbl_oxygen             , only : schmidt_o2_surf
@@ -2615,6 +2620,7 @@ contains
     real (r8)                                 , intent(out)   :: surface_tracer_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(inout) :: saved_state
+    type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_forcing_internal_type) , intent(inout) :: surface_forcing_internal
     type(marbl_surface_forcing_output_type)   , intent(inout) :: surface_forcing_output
     type(marbl_surface_forcing_share_type)    , intent(inout) :: surface_forcing_share
@@ -2683,8 +2689,8 @@ contains
 
          stf                  => surface_tracer_fluxes(:,:),                                        &
 
-         ph_prev_surf         => saved_state%ph_prev_surf,                                          &
-         ph_prev_alt_co2_surf => saved_state%ph_prev_alt_co2_surf,                                  &
+         ph_prev_surf         => saved_state%state(saved_state_ind%ph_surf)%field_2d,               &
+         ph_prev_alt_co2_surf => saved_state%state(saved_state_ind%ph_alt_co2_surf)%field_2d,       &
 
          po4_ind           => marbl_tracer_indices%po4_ind,                                     &
          no3_ind           => marbl_tracer_indices%no3_ind,                                     &
@@ -3016,6 +3022,7 @@ contains
          surface_tracer_fluxes    = stf,                      &
          marbl_tracer_indices     = marbl_tracer_indices,     &
          saved_state              = saved_state,              & 
+         saved_state_ind          = saved_state_ind,          & 
          surface_forcing_output   = surface_forcing_output,   &
          surface_forcing_diags    = surface_forcing_diags)
 

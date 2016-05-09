@@ -4185,12 +4185,14 @@ contains
        surface_tracer_fluxes,                       &
        marbl_tracer_indices,                        &
        saved_state,                                 &
+       saved_state_ind,                             &
        surface_forcing_output,                      &
        surface_forcing_diags)
 
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
 
+    use marbl_interface_types , only : marbl_surface_saved_state_indexing_type
     use marbl_share_mod       , only : lflux_gas_o2
     use marbl_share_mod       , only : lflux_gas_co2
     use marbl_share_mod       , only : iron_flux_file     
@@ -4201,7 +4203,7 @@ contains
     use marbl_share_mod       , only : dsi_riv_flux_file          
     use marbl_share_mod       , only : dfe_riv_flux_file          
     use marbl_share_mod       , only : dic_riv_flux_file          
-    use marbl_share_mod       , only : alk_riv_flux_file          
+    use marbl_share_mod       , only : alk_riv_flux_file         
     use marbl_parms           , only : mpercm
 
     implicit none
@@ -4211,6 +4213,7 @@ contains
     real(r8)                                  , intent(in)    :: surface_tracer_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(in)    :: saved_state 
+    type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_forcing_internal_type) , intent(in)    :: surface_forcing_internal
     type(marbl_surface_forcing_output_type)   , intent(in)    :: surface_forcing_output
     type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
@@ -4254,8 +4257,8 @@ contains
          iron_flux_in      => surface_forcing_internal%iron_flux,                               &
 
 
-         ph_prev           => saved_state%ph_prev_surf,                                         &
-         ph_prev_alt_co2   => saved_state%ph_prev_alt_co2_surf,                                 &
+         ph_prev           => saved_state%state(saved_state_ind%ph_surf)%field_2d,              &
+         ph_prev_alt_co2   => saved_state%state(saved_state_ind%ph_alt_co2_surf)%field_2d,      &
 
          stf               => surface_tracer_fluxes(:,:),                                       &
 

@@ -55,13 +55,45 @@ module marbl_interface_types
 
   !*****************************************************************************
 
+  type, public :: marbl_surface_saved_state_indexing_type
+    integer :: ph_surf = 0
+    integer :: ph_alt_co2_surf = 0
+  end type marbl_surface_saved_state_indexing_type
+
+  !*****************************************************************************
+
+  type, public :: marbl_interior_saved_state_indexing_type
+    integer :: ph_col = 0
+    integer :: ph_alt_co2_col = 0
+  end type marbl_interior_saved_state_indexing_type
+
+  !*****************************************************************************
+
+  type, public :: marbl_single_saved_state_type
+    character(len=char_len) :: long_name
+    character(len=char_len) :: short_name
+    character(len=char_len) :: units
+    character(len=char_len) :: vertical_grid ! 'none', 'layer_avg', 'layer_iface'
+    real(r8), allocatable, dimension(:)   :: field_2d
+    real(r8), allocatable, dimension(:,:) :: field_3d
+  contains
+    procedure :: initialize => marbl_single_saved_state_init
+  end type marbl_single_saved_state_type
+
+  !*****************************************************************************
+
   type, public :: marbl_saved_state_type
-     real (r8), allocatable :: ph_prev_col(:)          ! (km)
-     real (r8), allocatable :: ph_prev_alt_co2_col(:)  ! (km)
-     real (r8), allocatable :: ph_prev_surf(:)         ! (num_elements)
-     real (r8), allocatable :: ph_prev_alt_co2_surf(:) ! (num_elements)
+    integer :: saved_state_cnt
+    integer :: num_elements
+    integer :: num_levels
+    type(marbl_single_saved_state_type), dimension(:), allocatable :: state
+!     real (r8), allocatable :: ph_prev_col(:)          ! (km)
+!     real (r8), allocatable :: ph_prev_alt_co2_col(:)  ! (km)
+!     real (r8), allocatable :: ph_prev_surf(:)         ! (num_elements)
+!     real (r8), allocatable :: ph_prev_alt_co2_surf(:) ! (num_elements)
    contains
      procedure, public :: construct => marbl_saved_state_constructor
+     procedure, public :: add_state => marbl_saved_state_add
   end type marbl_saved_state_type
 
   !*****************************************************************************
@@ -321,18 +353,93 @@ contains
   
   !*****************************************************************************
 
-  subroutine marbl_saved_state_constructor(this, num_elements, num_levels)
+  subroutine marbl_single_saved_state_init(this, lname, sname, units, vgrid,  &
+             num_elements, num_levels, marbl_status_log)
+
+    class(marbl_single_saved_state_type), intent(inout) :: this
+    type(marbl_log_type),                 intent(inout) :: marbl_status_log
+
+    character(*), intent(in) :: lname
+    character(*), intent(in) :: sname
+    character(*), intent(in) :: units
+    character(*), intent(in) :: vgrid
+    integer,      intent(in) :: num_elements
+    integer,      intent(in) :: num_levels
+
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_single_saved_state_init'
+    character(char_len)     :: log_message
+
+    select case (trim(vgrid))
+      case ('layer_avg')
+        allocate(this%field_3d(num_levels, num_elements))
+      case ('layer_iface')
+        allocate(this%field_3d(num_levels+1, num_elements))
+      case ('none')
+        allocate(this%field_2d(num_elements))
+      case DEFAULT
+        write(log_message,"(2A)") trim(vgrid),                                  &
+                                " is not a valid vertical grid for MARBL"
+        call marbl_status_log%log_error(log_message, subname)
+        return
+    end select
+
+    this%long_name     = trim(lname)
+    this%short_name    = trim(sname)
+    this%units         = trim(units)
+    this%vertical_grid = trim(vgrid)
+
+  end subroutine marbl_single_saved_state_init
+
+  !*****************************************************************************
+
+  subroutine marbl_saved_state_constructor(this, num_state, num_elements,     &
+             num_levels)
 
     class(marbl_saved_state_type), intent(inout) :: this
+    integer (int_kind) , intent(in) :: num_state
     integer (int_kind) , intent(in) :: num_elements
     integer (int_kind) , intent(in) :: num_levels
 
-    allocate(this%ph_prev_surf         (num_elements))
-    allocate(this%ph_prev_alt_co2_surf (num_elements))
-    allocate(this%ph_prev_col          (num_levels))
-    allocate(this%ph_prev_alt_co2_col  (num_levels))
+    allocate(this%state(num_state))
+    this%saved_state_cnt = 0
+    this%num_elements    = num_elements
+    this%num_levels      = num_levels
 
   end subroutine marbl_saved_state_constructor
+
+  !*****************************************************************************
+
+  subroutine marbl_saved_state_add(this, lname, sname, units, vgrid, id,      &
+             marbl_status_log)
+
+    class(marbl_saved_state_type), intent(inout) :: this
+    type(marbl_log_type),          intent(inout) :: marbl_status_log
+
+    character(*),      intent(in)  :: lname
+    character(*),      intent(in)  :: sname
+    character(*),      intent(in)  :: units
+    character(*),      intent(in)  :: vgrid
+    integer(int_kind), intent(out) :: id
+
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_saved_state_add'
+    character(len=char_len) :: log_message
+
+    this%saved_state_cnt = this%saved_state_cnt + 1
+    id = this%saved_state_cnt
+    if (id.gt.size(this%state)) then
+      log_message = "not enough memory allocated for this number of saved state vars!"
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    call this%state(id)%initialize(lname, sname, units, vgrid,                &
+              this%num_elements, this%num_levels, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('this%state%initialize', subname)
+      return
+    end if
+
+  end subroutine marbl_saved_state_add
 
   !*****************************************************************************
 
