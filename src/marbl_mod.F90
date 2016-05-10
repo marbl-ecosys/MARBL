@@ -294,6 +294,10 @@ module marbl_mod
   !  input surface forcing
   !-----------------------------------------------------------------------
 
+  ! FIXME : move this option, and corresponding code to driver when
+  ! surface forcing source is selected in driver, instead of MARBL
+  logical (log_kind) :: liron_flux_derived
+
   type(marbl_forcing_monthly_every_ts_type), target :: dust_flux_file_loc
   type(marbl_forcing_monthly_every_ts_type), target :: iron_flux_file_loc
   type(marbl_forcing_monthly_every_ts_type), target :: fice_file_loc
@@ -350,6 +354,9 @@ contains
     use marbl_share_mod           , only : atm_co2_iopt_drv_diag
     use marbl_share_mod           , only : atm_alt_co2_iopt
     use marbl_share_mod           , only : dust_flux_source
+    use marbl_share_mod           , only : iron_flux_source
+    use marbl_share_mod           , only : iron_frac_in_dust
+    use marbl_share_mod           , only : iron_frac_in_bc
     use marbl_share_mod           , only : dust_flux_file        
     use marbl_share_mod           , only : iron_flux_file        
     use marbl_share_mod           , only : fice_file        
@@ -419,7 +426,8 @@ contains
          init_ecosys_option, init_ecosys_init_file, tracer_init_ext,      &
          init_ecosys_init_file_fmt,                                       &
          dust_flux_source, dust_flux_input,                               &
-         iron_flux_input, fesedflux_input,                                &
+         iron_flux_source, iron_flux_input, fesedflux_input,              &
+         iron_frac_in_dust, iron_frac_in_bc,                              &
          ndep_data_type, nox_flux_monthly_input, nhy_flux_monthly_input,  &
          ndep_shr_stream_year_first, ndep_shr_stream_year_last,           &
          ndep_shr_stream_year_align, ndep_shr_stream_file,                &
@@ -473,17 +481,22 @@ contains
     nutr_variable_rest_file     = 'unknown'
     nutr_variable_rest_file_fmt = 'bin'
 
+    dust_flux_source             = 'monthly-calendar'
     dust_flux_input%filename     = 'unknown'
     dust_flux_input%file_varname = 'dust_flux'
     dust_flux_input%scale_factor = c1
     dust_flux_input%default_val  = c0
     dust_flux_input%file_fmt     = 'bin'
 
+    iron_flux_source             = 'monthly-calendar'
     iron_flux_input%filename     = 'unknown'
     iron_flux_input%file_varname = 'iron_flux'
     iron_flux_input%scale_factor = c1
     iron_flux_input%default_val  = c0
     iron_flux_input%file_fmt     = 'bin'
+
+    iron_frac_in_dust            = 0.035_r8 * 0.01_r8
+    iron_frac_in_bc              = 0.06_r8
 
     fesedflux_input%filename     = 'unknown'
     fesedflux_input%file_varname = 'FESEDFLUXIN'
@@ -725,6 +738,7 @@ contains
     use marbl_share_mod, only : gas_flux_forcing_file
     use marbl_share_mod, only : dust_flux_source
     use marbl_share_mod, only : dust_flux_file
+    use marbl_share_mod, only : iron_flux_source
     use marbl_share_mod, only : iron_flux_file
     use marbl_share_mod, only : fice_file
     use marbl_share_mod, only : xkw_file
@@ -768,7 +782,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_mod:marbl_sflux_forcing_fields_init'
+    character(*), parameter :: subname = 'marbl_mod:marbl_init_surface_forcing_fields'
     character(len=char_len) :: log_message
     character(char_len) :: fsource                  
     character(char_len) :: filename                 
@@ -1098,12 +1112,16 @@ contains
                   marbl_forcing_calendar_name=dust_flux_file, id=ind%dust_flux_id,&
                   marbl_status_log = marbl_status_log)
           elseif (dust_flux_source == 'driver') then
-             fsource = 'driver'
+             fsource        = 'driver'
              driver_varname = 'DUST_FLUX'
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units, &
                   marbl_driver_varname=driver_varname, id=ind%dust_flux_id,       &
                   marbl_status_log = marbl_status_log)
+          else
+             log_message = 'unknown value for dust_flux_source' // trim(dust_flux_source)
+             call marbl_status_log%log_error(log_message, subname)
+             return
           end if
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -1114,13 +1132,28 @@ contains
        if (count_only) then
           num_surface_forcing_fields = num_surface_forcing_fields + 1
        else
-          fsource    = 'POP monthly calendar'
-          varname    = 'Iron Flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               field_source=fsource, marbl_varname=varname, field_units=units, &
-               marbl_forcing_calendar_name=iron_flux_file, id=ind%iron_flux_id,&
-               marbl_status_log = marbl_status_log)
+          varname = 'Iron Flux'
+          units   = 'unknown'
+          if (iron_flux_source == 'monthly-calendar') then
+             liron_flux_derived = .false.
+             fsource            = 'POP monthly calendar'
+             call forcing_fields%add_forcing_field(&
+                  field_source=fsource, marbl_varname=varname, field_units=units, &
+                  marbl_forcing_calendar_name=iron_flux_file, id=ind%iron_flux_id,&
+                  marbl_status_log = marbl_status_log)
+          elseif (iron_flux_source == 'driver-derived') then
+             liron_flux_derived = .true.
+             fsource            = 'driver'
+             driver_varname     = 'BLACK_CARBON_FLUX'
+             call forcing_fields%add_forcing_field(&
+                  field_source=fsource, marbl_varname=varname, field_units=units,   &
+                  marbl_driver_varname=driver_varname, id=ind%black_carbon_flux_id, &
+                  marbl_status_log = marbl_status_log)
+          else
+             log_message = 'unknown value for iron_flux_source' // trim(iron_flux_source)
+             call marbl_status_log%log_error(log_message, subname)
+             return
+          end if
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
             return
@@ -1146,7 +1179,7 @@ contains
                   filename   = ndep_shr_stream_file,                          &
                   id=ind%nox_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
-          else
+          elseif (ndep_data_type == 'monthly-calendar') then
              fsource    = 'POP monthly calendar'
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname,                &
@@ -1154,6 +1187,10 @@ contains
                   marbl_forcing_calendar_name=nox_flux_monthly_file,          &
                   id=ind%nox_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
+          else
+             log_message = 'unknown value for ndep_data_type ' // trim(ndep_data_type)
+             call marbl_status_log%log_error(log_message, subname)
+             return
           end if
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -1181,7 +1218,7 @@ contains
                   filename   = ndep_shr_stream_file,                          &
                   id=ind%nhy_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
-          else
+          elseif (ndep_data_type == 'monthly-calendar') then
              fsource    = 'POP monthly calendar'
              call forcing_fields%add_forcing_field(&
                   field_source=fsource,                                       &
@@ -1190,6 +1227,10 @@ contains
                   marbl_forcing_calendar_name=nhy_flux_monthly_file,          &
                   id=ind%nhy_flux_id,                                         &
                   marbl_status_log = marbl_status_log)
+          else
+             log_message = 'unknown value for ndep_data_type ' // trim(ndep_data_type)
+             call marbl_status_log%log_error(log_message, subname)
+             return
           end if
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -1369,6 +1410,12 @@ contains
        end if
 
     end do
+
+    if (liron_flux_derived .and. ind%dust_flux_id .eq. 0) then
+       log_message = 'liron_flux_derived is .true., but dust_flux_id == 0'
+       call marbl_status_log%log_error(log_message, subname)
+       return
+    endif
 
     end associate
 
@@ -2079,7 +2126,7 @@ contains
          dust_diss
 
     character(*), parameter :: &
-         subname = 'marbl_mod:compute_particulate_terms'
+         subname = 'marbl_mod:marbl_compute_particulate_terms'
     character(len=char_len) :: log_message
 
     real (r8) :: TfuncS  ! temperature scaling from soft POM remin
@@ -2597,6 +2644,7 @@ contains
     use marbl_co2calc_mod        , only : marbl_co2calc_surf
     use marbl_co2calc_mod        , only : thermodynamic_coefficients_type
     use marbl_oxygen             , only : o2sat_surf
+    use marbl_parms              , only : molw_Fe
     use marbl_share_mod          , only : lflux_gas_o2
     use marbl_share_mod          , only : lflux_gas_co2
     use marbl_share_mod          , only : ndep_data_type
@@ -2606,6 +2654,8 @@ contains
     use marbl_share_mod          , only : fice_file        
     use marbl_share_mod          , only : xkw_file         
     use marbl_share_mod          , only : ap_file          
+    use marbl_share_mod          , only : iron_frac_in_dust
+    use marbl_share_mod          , only : iron_frac_in_bc
     use marbl_share_mod          , only : dust_flux_file       
     use marbl_share_mod          , only : iron_flux_file          
     use marbl_share_mod          , only : din_riv_flux_file      
@@ -2667,6 +2717,7 @@ contains
          xkw                  => surface_input_forcings(:,surface_forcing_ind%xkw_id),              &
          dust_flux_in         => surface_input_forcings(:,surface_forcing_ind%dust_flux_id),        &
          iron_flux_in         => surface_input_forcings(:,surface_forcing_ind%iron_flux_id),        &
+         black_carbon_flux_in => surface_input_forcings(:,surface_forcing_ind%black_carbon_flux_id),&
          nox_flux             => surface_input_forcings(:,surface_forcing_ind%nox_flux_id),         &
          nhy_flux             => surface_input_forcings(:,surface_forcing_ind%nhy_flux_id),         &
          din_riv_flux         => surface_input_forcings(:,surface_forcing_ind%din_riv_flux_id),     & 
@@ -2930,7 +2981,14 @@ contains
     !  calculate iron and dust fluxes if necessary
     !-----------------------------------------------------------------------
 
-    iron_flux_in_new(:) = iron_flux_in(:) * parm_Fe_bioavail  ! TODO: this gets moved up and out - a forcing field modify
+    if (liron_flux_derived) then
+       ! compute iron_flux gFe/cm^2/s, then convert to nmolFe/cm^2/s
+       ! FIXME : check coefficient values in formula here
+       iron_flux_in_new(:) = dust_flux_in(:) * iron_frac_in_dust + black_carbon_flux_in(:) * iron_frac_in_bc
+       iron_flux_in_new(:) = (1.0e9_r8 / molw_Fe) * iron_flux_in_new(:)
+    else
+       iron_flux_in_new(:) = iron_flux_in(:) * parm_Fe_bioavail  ! TODO: this gets moved up and out - a forcing field modify
+    endif
 
     stf(:, fe_ind) = stf(:, fe_ind) + iron_flux_in_new(:)
 

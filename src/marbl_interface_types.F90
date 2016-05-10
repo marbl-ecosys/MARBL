@@ -13,31 +13,32 @@ module marbl_interface_types
   !****************************************************************************
 
   type, public :: marbl_surface_forcing_indexing_type
-     integer(int_kind) :: surface_mask_id     = 0
-     integer(int_kind) :: u10_sqr_id          = 0
-     integer(int_kind) :: ifrac_id            = 0
-     integer(int_kind) :: sst_id              = 0
-     integer(int_kind) :: sss_id              = 0
-     integer(int_kind) :: atm_pressure_id     = 0
-     integer(int_kind) :: xco2_id             = 0
-     integer(int_kind) :: xco2_alt_co2_id     = 0
-     integer(int_kind) :: xkw_id              = 0
-     integer(int_kind) :: dust_flux_id        = 0
-     integer(int_kind) :: iron_flux_id        = 0
-     integer(int_kind) :: nox_flux_id         = 0
-     integer(int_kind) :: nhy_flux_id         = 0
-     integer(int_kind) :: din_riv_flux_id     = 0
-     integer(int_kind) :: dip_riv_flux_id     = 0
-     integer(int_kind) :: don_riv_flux_id     = 0
-     integer(int_kind) :: dop_riv_flux_id     = 0
-     integer(int_kind) :: dsi_riv_flux_id     = 0
-     integer(int_kind) :: dfe_riv_flux_id     = 0
-     integer(int_kind) :: dic_riv_flux_id     = 0
-     integer(int_kind) :: alk_riv_flux_id     = 0
-     integer(int_kind) :: doc_riv_flux_id     = 0
-     integer(int_kind) :: d13c_id             = 0
-     integer(int_kind) :: d14c_id             = 0
-     integer(int_kind) :: d14c_glo_avg_id     = 0
+     integer(int_kind) :: surface_mask_id      = 0
+     integer(int_kind) :: u10_sqr_id           = 0
+     integer(int_kind) :: ifrac_id             = 0
+     integer(int_kind) :: sst_id               = 0
+     integer(int_kind) :: sss_id               = 0
+     integer(int_kind) :: atm_pressure_id      = 0
+     integer(int_kind) :: xco2_id              = 0
+     integer(int_kind) :: xco2_alt_co2_id      = 0
+     integer(int_kind) :: xkw_id               = 0
+     integer(int_kind) :: dust_flux_id         = 0
+     integer(int_kind) :: black_carbon_flux_id = 0
+     integer(int_kind) :: iron_flux_id         = 0
+     integer(int_kind) :: nox_flux_id          = 0
+     integer(int_kind) :: nhy_flux_id          = 0
+     integer(int_kind) :: din_riv_flux_id      = 0
+     integer(int_kind) :: dip_riv_flux_id      = 0
+     integer(int_kind) :: don_riv_flux_id      = 0
+     integer(int_kind) :: dop_riv_flux_id      = 0
+     integer(int_kind) :: dsi_riv_flux_id      = 0
+     integer(int_kind) :: dfe_riv_flux_id      = 0
+     integer(int_kind) :: dic_riv_flux_id      = 0
+     integer(int_kind) :: alk_riv_flux_id      = 0
+     integer(int_kind) :: doc_riv_flux_id      = 0
+     integer(int_kind) :: d13c_id              = 0
+     integer(int_kind) :: d14c_id              = 0
+     integer(int_kind) :: d14c_glo_avg_id      = 0
   end type marbl_surface_forcing_indexing_type
 
   !****************************************************************************
@@ -525,7 +526,7 @@ contains
     type(marbl_log_type),          intent(inout) :: marbl_status_log
 
     integer (int_kind) :: n
-    character(*), parameter :: subname = 'marbl_interface_types:diagnostics_set_to_zero'
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_diagnostics_set_to_zero'
     character(len=char_len) :: log_message
 
     do n=1,this%diag_cnt
@@ -702,7 +703,7 @@ contains
     integer(kind=int_kind)  :: n
     logical(log_kind)       :: has_valid_source
     logical(log_kind)       :: has_valid_inputs
-    character(*), parameter :: subname = 'marbl_interface_types:single_forcing_field_init'
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_single_forcing_field_init'
     character(len=char_len) :: log_message
     !-----------------------------------------------------------------------
 
