@@ -294,7 +294,7 @@ module marbl_mod
   !  input surface forcing
   !-----------------------------------------------------------------------
 
-  ! FIXME : move this option, and corresponding code to driver when
+  ! FIXME #56 : move this option, and corresponding code to driver when
   ! surface forcing source is selected in driver, instead of MARBL
   logical (log_kind) :: liron_flux_derived
 
@@ -1119,7 +1119,7 @@ contains
                   marbl_driver_varname=driver_varname, id=ind%dust_flux_id,       &
                   marbl_status_log = marbl_status_log)
           else
-             log_message = 'unknown value for dust_flux_source' // trim(dust_flux_source)
+             log_message = 'unknown value for dust_flux_source ' // trim(dust_flux_source)
              call marbl_status_log%log_error(log_message, subname)
              return
           end if
@@ -1133,10 +1133,10 @@ contains
           num_surface_forcing_fields = num_surface_forcing_fields + 1
        else
           varname = 'Iron Flux'
-          units   = 'unknown'
           if (iron_flux_source == 'monthly-calendar') then
              liron_flux_derived = .false.
              fsource            = 'POP monthly calendar'
+             units              = 'nmol/cm^2/s'
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units, &
                   marbl_forcing_calendar_name=iron_flux_file, id=ind%iron_flux_id,&
@@ -1145,12 +1145,13 @@ contains
              liron_flux_derived = .true.
              fsource            = 'driver'
              driver_varname     = 'BLACK_CARBON_FLUX'
+             units              = 'g/cm^2/s'
              call forcing_fields%add_forcing_field(&
                   field_source=fsource, marbl_varname=varname, field_units=units,   &
                   marbl_driver_varname=driver_varname, id=ind%black_carbon_flux_id, &
                   marbl_status_log = marbl_status_log)
           else
-             log_message = 'unknown value for iron_flux_source' // trim(iron_flux_source)
+             log_message = 'unknown value for iron_flux_source ' // trim(iron_flux_source)
              call marbl_status_log%log_error(log_message, subname)
              return
           end if
@@ -1954,7 +1955,7 @@ contains
     P_SiO2%sflux_in(k) = P_SiO2%sflux_out(k)
     P_SiO2%hflux_in(k) = P_SiO2%hflux_out(k)
 
-    ! FIXME : need a better (i.e., extensible and maintainable) conditional here
+    ! FIXME #56 : need a better (i.e., extensible and maintainable) conditional here
     if (((dust_flux_source == 'monthly-calendar') .and. dust_flux_file%has_data) .or. &
         (dust_flux_source == 'driver')) then
        dust%sflux_out(k) = (c1 - dust%gamma) * net_dust_in
@@ -2983,7 +2984,6 @@ contains
 
     if (liron_flux_derived) then
        ! compute iron_flux gFe/cm^2/s, then convert to nmolFe/cm^2/s
-       ! FIXME : check coefficient values in formula here
        iron_flux_in_new(:) = dust_flux_in(:) * iron_frac_in_dust + black_carbon_flux_in(:) * iron_frac_in_bc
        iron_flux_in_new(:) = (1.0e9_r8 / molw_Fe) * iron_flux_in_new(:)
     else
