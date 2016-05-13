@@ -4104,7 +4104,7 @@ contains
     type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_forcing_diags
     type (marbl_log_type)                     , intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_diagnostics_mod:set_interior'
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_interior_forcing'
 
     !-----------------------------------------------------------------
 
@@ -4221,7 +4221,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_surface_forcing'
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_surface_forcing'
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------------
@@ -4332,9 +4332,10 @@ contains
 
     ! multiply IRON flux by mpercm (.01) to convert from model units (cm/s)(mmol/m^3) to mmol/s/m^2
 
-    if (iron_flux_file%has_data) then
+    ! FIXME #56 : need better conditional here, perhaps based on iron_flux_id /= 0
+!   if (iron_flux_file%has_data) then
        diags(ind_diag%IRON_FLUX)%field_2d(:) = iron_flux_in(:) * mpercm
-    endif
+!   endif
 
     !-----------------------------------------------------------------------
     !  calculate nox and nhy fluxes if necessary
@@ -4375,6 +4376,7 @@ contains
     diags(ind_diag%DOC_RIV_FLUX)%field_2d(:)  = stf(:, doc_ind)
     diags(ind_diag%DOCr_RIV_FLUX)%field_2d(:) = stf(:, docr_ind)
 
+    ! FIXME #63 : reported units of DUST_FLUX are g/cm^2/s, so this comment doesn't make sense
     ! multiply DUST flux by mpercm (.01) to convert from model units (cm/s)(mmol/m^3) to mmol/s/m^2
     diags(ind_diag%DUST_FLUX)%field_2d(:) = DUST_FLUX_IN(:)*mpercm
 

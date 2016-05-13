@@ -45,8 +45,10 @@ module marbl_parms
   type(grazing_type)     :: grazing(grazer_prey_cnt, zooplankton_cnt)
 
   !---------------------------------------------------------------------
-  !  isotope standards
+  !  molecular weights and isotope standards
   !---------------------------------------------------------------------
+
+  real(r8), parameter :: molw_Fe = 55.845_r8
 
   ! Using scaled isotopic carbon pools, so Rstd =1
   real(r8), parameter :: R13C_std = 1.0_r8  ! actual 13C/12C PDB standard ratio (Craig, 1957) = 1123.72e-5_r8

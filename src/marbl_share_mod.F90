@@ -62,6 +62,11 @@ module marbl_share_mod
   character (char_len) :: ndep_shr_stream_file         ! file containing domain and input data
   real      (r8)       :: ndep_shr_stream_scale_factor ! unit conversion factor
 
+  character (char_len) :: dust_flux_source             ! option for atmospheric dust deposition
+  character (char_len) :: iron_flux_source             ! option for atmospheric iron deposition
+  real      (r8)       :: iron_frac_in_dust            ! fraction by weight of iron in dust
+  real      (r8)       :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
+
   type(marbl_forcing_monthly_every_ts_type), pointer :: fice_file             ! ice fraction, if read from file
   type(marbl_forcing_monthly_every_ts_type), pointer :: xkw_file              ! a * wind-speed ** 2, if read from file
   type(marbl_forcing_monthly_every_ts_type), pointer :: ap_file               ! atmoshperic pressure, if read from file
