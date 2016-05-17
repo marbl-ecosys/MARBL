@@ -403,6 +403,7 @@ contains
     this%short_name    = trim(sname)
     this%units         = trim(units)
     this%vertical_grid = trim(vgrid)
+    this%rank          = rank
 
   end subroutine marbl_single_saved_state_init
 
