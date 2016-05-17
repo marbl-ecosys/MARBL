@@ -152,6 +152,7 @@ contains
     use marbl_parms           , only : zooplankton
     use marbl_share_mod       , only : tracer_init_ext
     use marbl_share_mod       , only : ciso_tracer_init_ext
+    use marbl_saved_state_mod , only : marbl_saved_state_init
     
     implicit none
 
@@ -169,9 +170,6 @@ contains
 
     character(*), parameter :: subname = 'marbl_interface:marbl_init'
     integer :: i
-    ! For saved_state initialization
-    character(len=char_len) :: lname, sname, units, vgrid
-    integer :: rank
     !--------------------------------------------------------------------
 
     associate(&
@@ -259,56 +257,17 @@ contains
     ! set up saved state variables
     !--------------------------------------------------------------------
 
-    ! MNL MNL MNL -- don't hard-code number of saved state variables!
-    ! Move this to marbl_saved_state_mod.F90?
-    call this%surface_saved_state%construct(2, num_surface_elements, num_levels)
+    call marbl_saved_state_init(this%surface_saved_state,                     &
+                                this%interior_saved_state,                    &
+                                this%surf_state_ind,                          &
+                                this%interior_state_ind,                      &
+                                num_levels,                                   &
+                                num_surface_elements,                         &
+                                num_interior_forcing,                         &
+                                this%StatusLog)
 
-    lname = 'surface pH'
-    sname = 'PH_SURF'
-    units = 'pH'
-    vgrid = 'none'
-    rank  = 2
-    call this%surface_saved_state%add_state(lname, sname, units, vgrid, rank, &
-              this%surf_state_ind%ph_surf, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("add_state(PH_SURF)", subname)
-      return
-    end if
-
-    lname = 'surface pH (alternate CO2)'
-    sname = 'PH_SURF_ALT_CO2'
-    units = 'pH'
-    vgrid = 'none'
-    rank  = 2
-    call this%surface_saved_state%add_state(lname, sname, units, vgrid, rank, &
-              this%surf_state_ind%ph_alt_co2_surf, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("add_state(PH_SURF_ALT_CO2)", subname)
-      return
-    end if
-
-    call this%interior_saved_state%construct(2, num_interior_forcing, num_levels)
-    lname = '3D pH'
-    sname = 'PH_3D'
-    units = 'pH'
-    vgrid = 'layer_avg'
-    rank  = 3
-    call this%interior_saved_state%add_state(lname, sname, units, vgrid, rank,&
-              this%interior_state_ind%ph_col, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("add_state(PH_3D)", subname)
-      return
-    end if
-
-    lname = '3D pH (alternate CO2)'
-    sname = 'PH_3D_ALT_CO2'
-    units = 'pH'
-    vgrid = 'layer_avg'
-    rank  = 3
-    call this%interior_saved_state%add_state(lname, sname, units, vgrid, rank,&
-              this%interior_state_ind%ph_alt_co2_col, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("add_state(PH_3D_ALT_CO2)", subname)
+      call this%StatusLog%log_error_trace("marbl_saved_state_init()", subname)
       return
     end if
 
