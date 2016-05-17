@@ -171,6 +171,7 @@ contains
     integer :: i
     ! For saved_state initialization
     character(len=char_len) :: lname, sname, units, vgrid
+    integer :: rank
     !--------------------------------------------------------------------
 
     associate(&
@@ -266,7 +267,8 @@ contains
     sname = 'PH_SURF'
     units = 'pH'
     vgrid = 'none'
-    call this%surface_saved_state%add_state(lname, sname, units, vgrid,       &
+    rank  = 2
+    call this%surface_saved_state%add_state(lname, sname, units, vgrid, rank, &
               this%surf_state_ind%ph_surf, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("add_state(PH_SURF)", subname)
@@ -277,7 +279,8 @@ contains
     sname = 'PH_SURF_ALT_CO2'
     units = 'pH'
     vgrid = 'none'
-    call this%surface_saved_state%add_state(lname, sname, units, vgrid,       &
+    rank  = 2
+    call this%surface_saved_state%add_state(lname, sname, units, vgrid, rank, &
               this%surf_state_ind%ph_alt_co2_surf, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("add_state(PH_SURF_ALT_CO2)", subname)
@@ -289,7 +292,8 @@ contains
     sname = 'PH_3D'
     units = 'pH'
     vgrid = 'layer_avg'
-    call this%interior_saved_state%add_state(lname, sname, units, vgrid,      &
+    rank  = 3
+    call this%interior_saved_state%add_state(lname, sname, units, vgrid, rank,&
               this%interior_state_ind%ph_col, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("add_state(PH_3D)", subname)
@@ -300,7 +304,8 @@ contains
     sname = 'PH_3D_ALT_CO2'
     units = 'pH'
     vgrid = 'layer_avg'
-    call this%interior_saved_state%add_state(lname, sname, units, vgrid,      &
+    rank  = 3
+    call this%interior_saved_state%add_state(lname, sname, units, vgrid, rank,&
               this%interior_state_ind%ph_alt_co2_col, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("add_state(PH_3D_ALT_CO2)", subname)

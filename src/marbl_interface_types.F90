@@ -71,6 +71,7 @@ module marbl_interface_types
   !*****************************************************************************
 
   type, public :: marbl_single_saved_state_type
+    integer                 :: rank
     character(len=char_len) :: long_name
     character(len=char_len) :: short_name
     character(len=char_len) :: units
@@ -355,7 +356,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_single_saved_state_init(this, lname, sname, units, vgrid,  &
-             num_elements, num_levels, marbl_status_log)
+             rank, num_elements, num_levels, marbl_status_log)
 
     class(marbl_single_saved_state_type), intent(inout) :: this
     type(marbl_log_type),                 intent(inout) :: marbl_status_log
@@ -364,22 +365,36 @@ contains
     character(*), intent(in) :: sname
     character(*), intent(in) :: units
     character(*), intent(in) :: vgrid
+    integer,      intent(in) :: rank
     integer,      intent(in) :: num_elements
     integer,      intent(in) :: num_levels
 
     character(*), parameter :: subname = 'marbl_interface_types:marbl_single_saved_state_init'
     character(char_len)     :: log_message
 
-    select case (trim(vgrid))
-      case ('layer_avg')
-        allocate(this%field_3d(num_levels, num_elements))
-      case ('layer_iface')
-        allocate(this%field_3d(num_levels+1, num_elements))
-      case ('none')
-        allocate(this%field_2d(num_elements))
+    select case (rank)
+      case (3)
+        select case (trim(vgrid))
+          case ('layer_avg')
+            allocate(this%field_3d(num_levels, num_elements))
+          case ('layer_iface')
+            allocate(this%field_3d(num_levels+1, num_elements))
+          case DEFAULT
+            write(log_message,"(2A)") trim(vgrid),                            &
+                  " is not a valid vertical grid for 3D saved state"
+            call marbl_status_log%log_error(log_message, subname)
+        end select
+      case (2)
+        if (trim(vgrid).eq.'none') then
+          allocate(this%field_2d(num_elements))
+        else
+          write(log_message,"(2A)") trim(vgrid),                              &
+                " is not a valid vertical grid for 2D saved state"
+            call marbl_status_log%log_error(log_message, subname)
+        end if
       case DEFAULT
-        write(log_message,"(2A)") trim(vgrid),                                  &
-                                " is not a valid vertical grid for MARBL"
+        write(log_message,"(I0, 2A)") rank, " is not a valid rank for saved", &
+              " state"
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
@@ -410,8 +425,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_saved_state_add(this, lname, sname, units, vgrid, id,      &
-             marbl_status_log)
+  subroutine marbl_saved_state_add(this, lname, sname, units, vgrid, rank,    &
+             id, marbl_status_log)
 
     class(marbl_saved_state_type), intent(inout) :: this
     type(marbl_log_type),          intent(inout) :: marbl_status_log
@@ -420,6 +435,7 @@ contains
     character(*),      intent(in)  :: sname
     character(*),      intent(in)  :: units
     character(*),      intent(in)  :: vgrid
+    integer(int_kind), intent(in)  :: rank
     integer(int_kind), intent(out) :: id
 
     character(*), parameter :: subname = 'marbl_interface_types:marbl_saved_state_add'
@@ -433,7 +449,7 @@ contains
       return
     end if
 
-    call this%state(id)%initialize(lname, sname, units, vgrid,                &
+    call this%state(id)%initialize(lname, sname, units, vgrid, rank,          &
               this%num_elements, this%num_levels, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('this%state%initialize', subname)
