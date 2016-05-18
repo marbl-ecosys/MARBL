@@ -32,7 +32,7 @@ Contains
     character(len=char_len) :: lname, sname, units, vgrid
     integer :: rank
 
-    call surface_state%construct(2, num_surface_elements, num_levels)
+    call surface_state%construct(num_surface_elements, num_levels)
 
     lname = 'surface pH'
     sname = 'PH_SURF'
@@ -58,7 +58,7 @@ Contains
       return
     end if
 
-    call interior_state%construct(2, num_interior_forcing, num_levels)
+    call interior_state%construct(num_interior_forcing, num_levels)
     lname = '3D pH'
     sname = 'PH_3D'
     units = 'pH'
