@@ -1,0 +1,9 @@
+&marbl_driver_nml
+testname="namelist_write"
+/
+&ecosys_nml
+/
+&ecosys_parms_nml
+/
+&ecosys_restore_nml
+/
