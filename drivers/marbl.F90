@@ -18,9 +18,10 @@ Program marbl
   type(marbl_interface_class) :: marbl_instance
   character(len=marbl_nl_buffer_size) :: nl_buffer(marbl_nl_cnt)
   character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
-  character(len=marbl_nl_in_size)     :: nl_str
+  character(len=marbl_nl_in_size)     :: nl_str, tmp_str
   integer                             :: nl_unit
   integer                             :: ioerr
+  integer                             :: m, n
   character(len=256)                  :: testname
   namelist /marbl_driver_nml/testname
 
@@ -31,13 +32,23 @@ Program marbl
   testname     = ''
 
   ! Open file pop_in to read
-  open(nl_unit, file='marbl_in', action='read', access='stream', iostat=ioerr)
+  open(nl_unit, file='marbl_in', action='read', access='stream', form="formatted", iostat=ioerr)
   if (ioerr.ne.0) then
     write(*,"(A,I0,A)") "ERROR ", ioerr, ": encountered when opening marbl_in"
     stop 1
   end if
-  read(unit=nl_unit, iostat=ioerr) nl_str
+
+  n = 0
+  m = 0
+  do while(ioerr.eq.0)
+    n = n+m+1
+    read(unit=nl_unit, fmt="(A)", iostat=ioerr) tmp_str
+    m = len(trim(tmp_str))
+    nl_str(n:n+m-1) = trim(tmp_str)
+    if (ioerr.eq.0) nl_str(n+m:n+m) = achar(10)
+  end do
   if (.not.is_iostat_end(ioerr)) then
+    print*, ioerr
     write(*,"(A)") "ERROR encountered when reading marbl_in to buffer"
     stop 1
   end if

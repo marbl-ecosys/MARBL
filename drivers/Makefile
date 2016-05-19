@@ -14,7 +14,7 @@ EXE       = ../exe/marbl.exe
 OBJS = marbl_init_output_drv.o    \
        marbl.o
 
-.PHONY: gnu clean
+.PHONY: intel pgi gnu nag cray clean
 
 all: gnu
 
@@ -29,16 +29,19 @@ $(LIB_DIR)/libmarbl.a: $(SRC_DIR)/*.F90
 	cd $(SRC_DIR) ; make FC=$(FC) FCFLAGS="$(FCFLAGS)" $(COMP_ARGS) LIBNAME=$@
 
 intel:
-	$(MAKE) FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR) -cpp -nogen-interface -fp-model source" $(COMP_ARGS) $(EXE)
+	$(MAKE) $(EXE) FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR) -cpp -nogen-interface -fp-model source"
 
 pgi:
-	$(MAKE) FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)" $(COMP_ARGS) $(EXE)
+	$(MAKE) $(EXE) FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)"
 
 gnu:
-	$(MAKE) FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR) -cpp" $(COMP_ARGS) $(EXE)
+	$(MAKE) $(EXE) FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR) -cpp"
 
 nag:
-	$(MAKE) FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR) -mdir $(OBJ_DIR) -kind=byte" $(COMP_ARGS) $(EXE)
+	$(MAKE) $(EXE) FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR) -mdir $(OBJ_DIR) -kind=byte"
+
+cray:
+	$(MAKE) $(EXE) FC=ftn FCFLAGS="-O2 -f free -e mf -J $(OBJ_DIR)"
 
 clean:
 	rm -f $(OBJ_DIR)/* $(LIB_DIR)/* $(INC_DIR)/* $(EXE)

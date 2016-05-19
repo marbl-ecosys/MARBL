@@ -5,7 +5,7 @@
 build() {
   CWD=$PWD
   cd ../../drivers
-  make gnu
+  make $COMPILER
   if [ $? -ne 0 ]; then
     exit
   fi
@@ -20,6 +20,11 @@ run() {
 
 #------------------------------------------------------------------------------
 
+if [ -z $1 ]; then
+  COMPILER=gnu
+else
+  COMPILER=$1
+fi
 build
 run
 

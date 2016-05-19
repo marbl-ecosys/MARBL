@@ -3,6 +3,8 @@ testname="namelist_write"
 /
 &ecosys_nml
 /
+&ecosys_ciso_nml
+/
 &ecosys_parms_nml
 /
 &ecosys_restore_nml
