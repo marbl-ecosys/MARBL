@@ -21,6 +21,9 @@ gnu:
 nag:
 	$(MAKE) $(LIB_DIR)/libmarbl-nag.a FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR) -mdir $(OBJ_DIR) -kind=byte"
 
+cray:
+	$(MAKE) $(LIB_DIR)/libmarbl-cray.a FC=ftn FCFLAGS="-O2 -f free -e mf -J $(OBJ_DIR)"
+
 # Actual library build
 
 $(LIB_DIR)/%.a: $(SRC_DIR)/*.F90
