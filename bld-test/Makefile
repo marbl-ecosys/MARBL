@@ -16,5 +16,11 @@ pgi:
 gnu:
 	cd $(SRC_DIR) ; make FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR) -cpp" $(COMP_ARGS) LIB_NAME=$(LIB_DIR)/libmarbl-gnu.a
 
+nag:
+	cd $(SRC_DIR) ; make FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR) -mdir $(OBJ_DIR) -kind=sequential" $(COMP_ARGS) LIB_NAME=$(LIB_DIR)/libmarbl-nag.a
+
+cray:
+	cd $(SRC_DIR) ; make FC=ftn FCFLAGS="-O2 -f free -e mf -J $(OBJ_DIR)" $(COMP_ARGS) LIB_NAME=$(LIB_DIR)/libmarbl-cray.a
+
 clean:
 	rm -f $(OBJ_DIR)/* $(LIB_DIR)/* $(INC_DIR)/*
