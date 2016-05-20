@@ -36,9 +36,9 @@ module marbl_interface
   use marbl_interface_types , only : marbl_surface_forcing_indexing_type
   use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_saved_state_type
-  use marbl_interface_types , only : marbl_surface_saved_state_indexing_type
-  use marbl_interface_types , only : marbl_interior_saved_state_indexing_type
 
+  use marbl_internal_types , only : marbl_surface_saved_state_indexing_type
+  use marbl_internal_types , only : marbl_interior_saved_state_indexing_type
   use marbl_internal_types  , only : marbl_PAR_type
   use marbl_internal_types  , only : marbl_interior_share_type
   use marbl_internal_types  , only : marbl_autotroph_share_type

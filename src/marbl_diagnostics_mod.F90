@@ -4192,19 +4192,19 @@ contains
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
 
-    use marbl_interface_types , only : marbl_surface_saved_state_indexing_type
-    use marbl_share_mod       , only : lflux_gas_o2
-    use marbl_share_mod       , only : lflux_gas_co2
-    use marbl_share_mod       , only : iron_flux_file     
-    use marbl_share_mod       , only : din_riv_flux_file     
-    use marbl_share_mod       , only : dip_riv_flux_file          
-    use marbl_share_mod       , only : don_riv_flux_file          
-    use marbl_share_mod       , only : dop_riv_flux_file          
-    use marbl_share_mod       , only : dsi_riv_flux_file          
-    use marbl_share_mod       , only : dfe_riv_flux_file          
-    use marbl_share_mod       , only : dic_riv_flux_file          
-    use marbl_share_mod       , only : alk_riv_flux_file         
-    use marbl_parms           , only : mpercm
+    use marbl_internal_types , only : marbl_surface_saved_state_indexing_type
+    use marbl_share_mod      , only : lflux_gas_o2
+    use marbl_share_mod      , only : lflux_gas_co2
+    use marbl_share_mod      , only : iron_flux_file     
+    use marbl_share_mod      , only : din_riv_flux_file     
+    use marbl_share_mod      , only : dip_riv_flux_file          
+    use marbl_share_mod      , only : don_riv_flux_file          
+    use marbl_share_mod      , only : dop_riv_flux_file          
+    use marbl_share_mod      , only : dsi_riv_flux_file          
+    use marbl_share_mod      , only : dfe_riv_flux_file          
+    use marbl_share_mod      , only : dic_riv_flux_file          
+    use marbl_share_mod      , only : alk_riv_flux_file         
+    use marbl_parms          , only : mpercm
 
     implicit none
 

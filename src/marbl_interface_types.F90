@@ -56,28 +56,14 @@ module marbl_interface_types
 
   !*****************************************************************************
 
-  type, public :: marbl_surface_saved_state_indexing_type
-    integer :: ph_surf = 0
-    integer :: ph_alt_co2_surf = 0
-  end type marbl_surface_saved_state_indexing_type
-
-  !*****************************************************************************
-
-  type, public :: marbl_interior_saved_state_indexing_type
-    integer :: ph_col = 0
-    integer :: ph_alt_co2_col = 0
-  end type marbl_interior_saved_state_indexing_type
-
-  !*****************************************************************************
-
   type, public :: marbl_single_saved_state_type
     integer                 :: rank
     character(len=char_len) :: long_name
     character(len=char_len) :: short_name
     character(len=char_len) :: units
     character(len=char_len) :: vertical_grid ! 'none', 'layer_avg', 'layer_iface'
-    real(r8), allocatable, dimension(:)   :: field_2d
-    real(r8), allocatable, dimension(:,:) :: field_3d
+    real(r8), allocatable, dimension(:)   :: field_2d  ! num_elements
+    real(r8), allocatable, dimension(:,:) :: field_3d  ! num_levels, num_elements
   contains
     procedure :: construct => marbl_single_saved_state_construct
   end type marbl_single_saved_state_type

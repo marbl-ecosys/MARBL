@@ -13,8 +13,8 @@ Contains
              num_interior_forcing, marbl_status_log)
 
     use marbl_interface_types , only : marbl_saved_state_type
-    use marbl_interface_types , only : marbl_surface_saved_state_indexing_type
-    use marbl_interface_types , only : marbl_interior_saved_state_indexing_type
+    use marbl_internal_types  , only : marbl_surface_saved_state_indexing_type
+    use marbl_internal_types  , only : marbl_interior_saved_state_indexing_type
     use marbl_logging         , only : marbl_log_type
     use marbl_kinds_mod       , only : char_len
 
@@ -59,6 +59,7 @@ Contains
     end if
 
     call interior_state%construct(num_interior_forcing, num_levels)
+
     lname = '3D pH'
     sname = 'PH_3D'
     units = 'pH'

@@ -1548,9 +1548,9 @@ contains
     
     !  Compute time derivatives for ecosystem state variables
 
-    use marbl_ciso_mod , only : marbl_ciso_set_interior_forcing
-    use marbl_sizes    , only : marbl_total_tracer_cnt
-    use marbl_interface_types, only : marbl_interior_saved_state_indexing_type
+    use marbl_ciso_mod      , only : marbl_ciso_set_interior_forcing
+    use marbl_sizes         , only : marbl_total_tracer_cnt
+    use marbl_internal_types, only : marbl_interior_saved_state_indexing_type
 
     implicit none 
 
@@ -2643,8 +2643,8 @@ contains
 
     !  Compute surface forcing fluxes 
 
-    use marbl_interface_types , only : marbl_surface_saved_state_indexing_type
-    use marbl_interface_types , only : sfo_ind
+    use marbl_interface_types    , only : sfo_ind
+    use marbl_internal_types     , only : marbl_surface_saved_state_indexing_type
     use marbl_schmidt_number_mod , only : schmidt_co2_surf  
     use marbl_oxygen             , only : schmidt_o2_surf
     use marbl_co2calc_mod        , only : marbl_co2calc_surf
