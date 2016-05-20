@@ -135,11 +135,15 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   endif
 
   ! FIXME #35: assert(len(restore_short_names) == len(restore_filenames))
-  write(log_message, "(A)") "Found restore variables : "
-  call status_log%log_noerror(log_message, subname)
   do t = 1, size(restore_short_names)
      if (len(trim(restore_short_names(t))) > 0) then
-        this%lrestore_any = .true.
+        if (.not.this%lrestore_any) then
+           ! first time we encounter variable to restore, add header to status
+           ! log (and update lrestore_any)
+           write(log_message, "(A)") "Found restore variables : "
+           call status_log%log_noerror(log_message, subname)
+           this%lrestore_any = .true.
+        end if
         write(log_message, "(6A)") trim(restore_short_names(t)), " --> ", &
              trim(restore_filenames(t)), " [ ", trim(restore_file_varnames(t)), " ]"
         call status_log%log_noerror(log_message, subname)
