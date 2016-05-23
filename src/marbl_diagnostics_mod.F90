@@ -4511,10 +4511,14 @@ contains
     character(*), parameter :: subname = 'marbl_diagnostics_mod:linear_root'
     real(kind=r8) :: m_inv
 
-    if (y(1)*y(2).gt.c0) then
-       call marbl_status_log%log_error(subname, "can not find root, y-values are same sign!")
+    if ((y(1).gt.c0).and.(y(2).gt.c0)) then
+       call marbl_status_log%log_error(subname, "can not find root, both y-values are positive!")
+       return
+    else if ((y(1).lt.c0).and.(y(2).lt.c0)) then
+       call marbl_status_log%log_error(subname, "can not find root, both y-values are negative!")
        return
     end if
+
     if (y(2).eq.c0) then
        linear_root = x(2)
     else
