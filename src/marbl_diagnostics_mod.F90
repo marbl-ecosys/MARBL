@@ -4124,8 +4124,13 @@ contains
       return
     end if
 
-    call store_diagnostics_carbonate(domain, &
-         carbonate, marbl_interior_forcing_diags)
+    call store_diagnostics_carbonate(domain, carbonate,                       &
+         marbl_interior_forcing_diags, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('store_diagnostics_carbonate',    &
+           subname)
+      return
+    end if
 
     call store_diagnostics_autotrophs(domain, &
          autotroph_secondary_species, marbl_interior_forcing_diags)
@@ -4386,15 +4391,18 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_carbonate(marbl_domain, carbonate, marbl_interior_diags)
+  subroutine store_diagnostics_carbonate(marbl_domain, carbonate,             &
+             marbl_interior_diags, marbl_status_log)
 
     type(marbl_domain_type)      , intent(in)    :: marbl_domain
     type(carbonate_type)         , intent(in)    :: carbonate(:)
     type(marbl_diagnostics_type) , intent(inout) :: marbl_interior_diags
+    type(marbl_log_type)         , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_carbonate'
     integer(int_kind) :: k
     real(r8) :: zsat_calcite, zsat_aragonite
     !-----------------------------------------------------------------------
@@ -4409,8 +4417,22 @@ contains
          )
 
     ! Find depth where CO3 = CO3_sat_calcite or CO3_sat_argonite
-    diags(ind%zsatcalc)%field_2d(1) =  compute_saturation_depth(marbl_domain, CO3, CO3_sat_calcite)
-    diags(ind%zsatarag)%field_2d(1) =  compute_saturation_depth(marbl_domain, CO3, CO3_sat_aragonite)
+    diags(ind%zsatcalc)%field_2d(1) =  compute_saturation_depth(marbl_domain, &
+                                               CO3, CO3_sat_calcite,          &
+                                               marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('compute_sat_depth (calcite)',    &
+           subname)
+      return
+    end if
+    diags(ind%zsatarag)%field_2d(1) =  compute_saturation_depth(marbl_domain, &
+                                               CO3, CO3_sat_aragonite,        &
+                                               marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('compute_sat_depth (aragonite)',  &
+           subname)
+      return
+    end if
 
     do k = 1, km
        diags(ind%CO3)%field_3d(k, 1)           = carbonate(k)%CO3
@@ -4431,17 +4453,19 @@ contains
 
   !***********************************************************************
 
-  function compute_saturation_depth(marbl_domain, CO3, sat_val)
+  function compute_saturation_depth(marbl_domain, CO3, sat_val, marbl_status_log)
 
-    type(marbl_domain_type) , intent(in) :: marbl_domain
-    real(r8)                , intent(in) :: CO3(:)
-    real(r8)                , intent(in) :: sat_val(:)
+    type(marbl_domain_type) , intent(in)    :: marbl_domain
+    real(r8)                , intent(in)    :: CO3(:)
+    real(r8)                , intent(in)    :: sat_val(:)
+    type(marbl_log_type)    , intent(inout) :: marbl_status_log
 
     real(r8) :: compute_saturation_depth
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:compute_saturation_depth'
     real(r8) :: anomaly(marbl_domain%km) ! CO3 concentration above saturation at level
     integer  :: k
     !-----------------------------------------------------------------------
@@ -4464,7 +4488,11 @@ contains
        end do
 
        ! saturation depth is location of root of anomaly
-       compute_saturation_depth = linear_root(zt(k-1:k), anomaly(k-1:k))
+       compute_saturation_depth = linear_root(zt(k-1:k), anomaly(k-1:k), marbl_status_log)
+       if (marbl_status_log%labort_marbl) then
+         call marbl_status_log%log_error_trace('linear_root', subname)
+         return
+       end if
     end if
 
     end associate
@@ -4473,22 +4501,27 @@ contains
 
   !***********************************************************************
 
-  function linear_root(x,y)
-    ! TO-DO (MNL): if we end up with a marbl_math_mod, this can be generalized
-    !              to a better root-finding routine; otherwise maybe we compute
-    !              the root inside compute_saturation_depth rather than as a
-    !              separate function?
+  function linear_root(x,y, marbl_status_log)
+    ! TO-DO: if we end up with a marbl_math_mod, this can be generalized
+    !        to a better root-finding routine; otherwise maybe we compute
+    !        the root inside compute_saturation_depth rather than as a
+    !        separate function?
 
-    real(kind=r8), dimension(2), intent(in) :: x,y
+    real(kind=r8), dimension(2), intent(in)    :: x,y
+    type(marbl_log_type),        intent(inout) :: marbl_status_log
     real(kind=r8) :: linear_root
 
+    character(*), parameter :: subname = 'marbl_diagnostics_mod:linear_root'
     real(kind=r8) :: m_inv
 
-    if (y(1)*y(2).gt.c0) then
-       ! TO-DO (MNL): do we have a marbl_abort() routine? How do I exit if we
-       !              hit this error?
-       print*, "MNL MNL MNL: can not find root, y-values are same sign!"
+    if ((y(1).gt.c0).and.(y(2).gt.c0)) then
+       call marbl_status_log%log_error(subname, "can not find root, both y-values are positive!")
+       return
+    else if ((y(1).lt.c0).and.(y(2).lt.c0)) then
+       call marbl_status_log%log_error(subname, "can not find root, both y-values are negative!")
+       return
     end if
+
     if (y(2).eq.c0) then
        linear_root = x(2)
     else
