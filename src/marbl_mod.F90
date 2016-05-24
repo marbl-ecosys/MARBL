@@ -90,9 +90,6 @@ module marbl_mod
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : char_len
 
-  use marbl_parms, only : blank_fmt
-  use marbl_parms, only : delim_fmt
-  use marbl_parms, only : ndelim_fmt
   use marbl_parms, only : marbl_params_init, marbl_params_print
   use marbl_parms, only : grz_fnc_michaelis_menten
   use marbl_parms, only : grz_fnc_sigmoidal
@@ -2649,7 +2646,7 @@ contains
     use marbl_co2calc_mod        , only : marbl_co2calc_surf
     use marbl_co2calc_mod        , only : thermodynamic_coefficients_type
     use marbl_oxygen             , only : o2sat_surf
-    use marbl_parms              , only : molw_Fe
+    use marbl_constants_mod      , only : molw_Fe
     use marbl_share_mod          , only : lflux_gas_o2
     use marbl_share_mod          , only : lflux_gas_co2
     use marbl_share_mod          , only : ndep_data_type
@@ -3618,10 +3615,10 @@ contains
              autotroph_local, tracer_local, marbl_tracer_indices,             &
              autotroph_secondary_species)
 
-    use marbl_parms     , only : epsC
-    use marbl_parms     , only : gQsi_0
-    use marbl_parms     , only : gQsi_max
-    use marbl_parms     , only : gQsi_min
+    use marbl_constants_mod, only : epsC
+    use marbl_parms        , only : gQsi_0
+    use marbl_parms        , only : gQsi_max
+    use marbl_parms        , only : gQsi_min
 
     implicit none
 
@@ -4182,7 +4179,7 @@ contains
     !     get photosynth. rate, phyto C biomass change, photoadapt
     !-----------------------------------------------------------------------
 
-    use marbl_parms     , only : epsTinv
+    use marbl_constants_mod, only : epsTinv
 
     integer(int_kind)                      , intent(in)    :: auto_cnt
     integer(int_kind)                      , intent(in)    :: PAR_nsubcols
@@ -4515,10 +4512,10 @@ contains
     !  NOTE: if autotrophs(diat_ind)%graze_zoo is changed, coeff.s for poc, doc and dic must change!
     !-----------------------------------------------------------------------
 
-    use marbl_parms     , only : epsC
-    use marbl_parms     , only : epsTinv
-    use marbl_parms     , only : grz_fnc_michaelis_menten
-    use marbl_parms     , only : grz_fnc_sigmoidal
+    use marbl_constants_mod, only : epsC
+    use marbl_constants_mod, only : epsTinv
+    use marbl_parms        , only : grz_fnc_michaelis_menten
+    use marbl_parms        , only : grz_fnc_sigmoidal
 
     integer(int_kind)                        , intent(in)    :: auto_cnt
     integer(int_kind)                        , intent(in)    :: zoo_cnt

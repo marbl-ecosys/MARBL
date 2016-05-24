@@ -47,33 +47,6 @@ module marbl_parms
   type(autotroph_type)   :: autotrophs(autotroph_cnt)
   type(grazing_type)     :: grazing(grazer_prey_cnt, zooplankton_cnt)
 
-  !---------------------------------------------------------------------
-  !  molecular weights and isotope standards
-  !---------------------------------------------------------------------
-
-  real(r8), parameter :: molw_Fe = 55.845_r8
-
-  ! Using scaled isotopic carbon pools, so Rstd =1
-  real(r8), parameter :: R13C_std = 1.0_r8  ! actual 13C/12C PDB standard ratio (Craig, 1957) = 1123.72e-5_r8
-  real(r8), parameter :: R14C_std = 1.0_r8  ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
-
-  !-----------------------------------------------------------------------
-  !  common formats for formatted output
-  !-----------------------------------------------------------------------
-
-  character (1), parameter :: char_delim = ','
-  character (9), parameter :: delim_fmt  = "(72('-'))"
-  character (9), parameter :: ndelim_fmt = "(72('='))"
-  character (5), parameter :: blank_fmt  = "(' ')"
-
-  !-----------------------------------------------------------------------------
-  !   epsilon values
-  !-----------------------------------------------------------------------------
-
-   real(kind=r8), parameter :: &
-      epsC      = 1.00e-8, & ! small C concentration (mmol C/m^3)
-      epsTinv   = 3.17e-8    ! small inverse time scale (1/year) (1/sec)
-
   !-----------------------------------------------------------------------------
   !   Redfield Ratios, dissolved & particulate
   !-----------------------------------------------------------------------------
@@ -253,8 +226,13 @@ module marbl_parms
 
   private :: &
        marbl_params_set_defaults
-  
+
+  ! Variables used from other modules should be private
+  ! (So we don't accidentally use them from this module)
+  private :: r8, int_kind, log_kind
   private :: c1, dps
+  private :: zooplankton_type, autotroph_type, grazing_type
+  private :: autotroph_cnt, zooplankton_cnt, grazer_prey_cnt
 
 contains
 

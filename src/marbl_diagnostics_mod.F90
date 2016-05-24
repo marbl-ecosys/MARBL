@@ -5419,8 +5419,7 @@ contains
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
 
-    use marbl_parms        , only : R13c_std, R14c_std
-    use marbl_constants_mod, only : c1000
+    use marbl_constants_mod, only : R13c_std, R14c_std, c1000
 
     implicit none
 

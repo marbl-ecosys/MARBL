@@ -73,10 +73,6 @@ module marbl_ciso_mod
      real (r8) :: Ca14CO3 ! local copy of model autotroph Ca14CO3
   end type autotroph_local_type
 
-  ! Using scaled isotopic carbon pools, so Rstd =1
-  real(r8), parameter :: R13C_std = 1.0_r8 ! actual 13C/12C PDB standard ratio (Craig, 1957) = 1123.72e-5_r8
-  real(r8), parameter :: R14C_std = 1.0_r8 ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
-
   ! Module variables
   real(r8) :: pi
 
@@ -355,7 +351,8 @@ contains
     use marbl_share_mod        , only : ciso_lsource_sink
     use marbl_share_mod        , only : ciso_fract_factors
     use marbl_parms            , only : f_graze_CaCO3_REMIN
-    use marbl_parms            , only : R13c_std, R14c_std
+    use marbl_constants_mod    , only : R13c_std
+    use marbl_constants_mod    , only : R14c_std
     use marbl_constants_mod    , only : spd
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_interior
 
@@ -1845,8 +1842,8 @@ contains
        marbl_surface_forcing_share ,         &
        marbl_surface_forcing_diags)
 
-    use marbl_parms            , only : R13c_std
-    use marbl_parms            , only : R14c_std
+    use marbl_constants_mod    , only : R13c_std
+    use marbl_constants_mod    , only : R14c_std
     use marbl_constants_mod    , only : p5
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_surface_forcing
 
