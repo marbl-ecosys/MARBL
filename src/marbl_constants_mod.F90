@@ -7,19 +7,21 @@ module marbl_constants_mod
   save
 
   ! General constants
-  real(kind=r8), parameter, public :: &
-      c0     =    0.0_r8       , &
-      c1     =    1.0_r8       , &
-      c2     =    2.0_r8       , &
-      c3     =    3.0_r8       , &
-      c10    =   10.0_r8       , &
-      c1000  = 1000.0_r8       , &
-      p001   =  0.001_r8       , &
-      p5     =    0.5_r8
+  real(kind=r8), parameter, public ::        &
+      c0     =    0.0_r8                   , &
+      c1     =    1.0_r8                   , &
+      c2     =    2.0_r8                   , &
+      c3     =    3.0_r8                   , &
+      c10    =   10.0_r8                   , &
+      c1000  = 1000.0_r8                   , &
+      p001   =    0.001_r8                 , &
+      p5     =    0.5_r8                   , &
+      pi     =    3.14159265358979323846_r8
 
 ! Unit Conversion
   real(kind=r8), parameter, public :: &
       spd       = 86400.0_r8,          & ! number of seconds in a day
+      spy       = 365.0_r8*spd,        & ! number of seconds in a year
       dps       = c1 / spd,            & ! number of days in a second
       yps       = c1 / (365.0_r8*spd), & ! number of years in a second
       mpercm    = .01_r8                 ! meters per cm

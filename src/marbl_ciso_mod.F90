@@ -73,9 +73,6 @@ module marbl_ciso_mod
      real (r8) :: Ca14CO3 ! local copy of model autotroph Ca14CO3
   end type autotroph_local_type
 
-  ! Module variables
-  real(r8) :: pi
-
   !-----------------------------------------------------------------------
   !  scalar constants for 14C decay calculation
   !-----------------------------------------------------------------------
@@ -354,6 +351,7 @@ contains
     use marbl_constants_mod    , only : R13c_std
     use marbl_constants_mod    , only : R14c_std
     use marbl_constants_mod    , only : spd
+    use marbl_constants_mod    , only : spy
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_interior
 
     implicit none
@@ -379,7 +377,6 @@ contains
     logical (log_kind) :: zero_mask
 
     real (r8) :: &
-         marbl_seconds_in_year, & 
          work1,     & ! temporaries
          ztop         ! depth of top of cell
 
@@ -538,14 +535,8 @@ contains
     ! Set module variables
     !-----------------------------------------------------------------------
 
-    ! FIXME #36: move this calculations to the init phase when 
-    !            the initialization is brought into this module
-
-    pi  = 4.0_r8 * atan( 1.0_r8 )
-
     !  Define decay variable for DI14C, using earlier defined half-life of 14C
-    marbl_seconds_in_year = 86400._r8 * 365._r8
-    c14_lambda_inv_sec = log(c2) / (c14_halflife_years * marbl_seconds_in_year)
+    c14_lambda_inv_sec = log(c2) / (c14_halflife_years * spy)
 
     !----------------------------------------------------------------------------------------
     ! Set cell attributes
@@ -1303,7 +1294,9 @@ contains
     !
     !   Developed by X. Giraud, ETH ZÃ¼rich, 21.07.2008
     !---------------------------------------------------------------------------
-    
+
+    use marbl_constants_mod, only : pi
+
     implicit none
 
     real (r8), intent(in) :: &
@@ -1323,8 +1316,7 @@ contains
     real (r8) :: &
          var, theta, eps_up
 
-    real (r8) :: &
-         pi, Vol, Qc, Surf, radius_m
+    real (r8) :: Vol, Qc, Surf, radius_m
 
     real (r8) :: &
          eps_diff   = 0.7_r8, & ! fractionation by diffusion, O'Leary, 1984
