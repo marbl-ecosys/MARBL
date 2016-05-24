@@ -366,6 +366,20 @@ module marbl_internal_types
     procedure, public :: construct => tracer_index_constructor
   end type marbl_tracer_index_type
 
+  !*****************************************************************************
+
+  type, public :: marbl_surface_saved_state_indexing_type
+    integer :: ph_surf = 0
+    integer :: ph_alt_co2_surf = 0
+  end type marbl_surface_saved_state_indexing_type
+
+  !*****************************************************************************
+
+  type, public :: marbl_interior_saved_state_indexing_type
+    integer :: ph_col = 0
+    integer :: ph_alt_co2_col = 0
+  end type marbl_interior_saved_state_indexing_type
+
   !***********************************************************************
 
 contains

@@ -37,6 +37,8 @@ module marbl_interface
   use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_saved_state_type
 
+  use marbl_internal_types , only : marbl_surface_saved_state_indexing_type
+  use marbl_internal_types , only : marbl_interior_saved_state_indexing_type
   use marbl_internal_types  , only : marbl_PAR_type
   use marbl_internal_types  , only : marbl_interior_share_type
   use marbl_internal_types  , only : marbl_autotroph_share_type
@@ -69,7 +71,10 @@ module marbl_interface
      type(marbl_tracer_read_type)              , public, allocatable  :: tracer_read(:)
      type(marbl_tracer_index_type)             , public               :: tracer_indices
      type(marbl_log_type)                      , public               :: StatusLog
-     type(marbl_saved_state_type)              , public               :: saved_state             ! input/output
+     type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
+     type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
+     type(marbl_surface_saved_state_indexing_type), public            :: surf_state_ind
+     type(marbl_interior_saved_state_indexing_type), public           :: interior_state_ind
 
      ! public data - interior forcing
      real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input  *
@@ -147,6 +152,7 @@ contains
     use marbl_parms           , only : zooplankton
     use marbl_share_mod       , only : tracer_init_ext
     use marbl_share_mod       , only : ciso_tracer_init_ext
+    use marbl_saved_state_mod , only : marbl_saved_state_init
     
     implicit none
 
@@ -237,8 +243,6 @@ contains
          
     call this%interior_forcing_input%construct(num_levels, num_PAR_subcols)
 
-    call this%saved_state%construct(num_surface_elements, num_levels)
-
     allocate(this%surface_vals(num_surface_elements, marbl_total_tracer_cnt))
 
     allocate(this%surface_tracer_fluxes(num_surface_elements, marbl_total_tracer_cnt))
@@ -248,6 +252,24 @@ contains
     allocate(this%column_dtracers(marbl_total_tracer_cnt, num_levels))
 
     allocate(this%column_restore(marbl_total_tracer_cnt, gcm_num_levels))
+
+    !--------------------------------------------------------------------
+    ! set up saved state variables
+    !--------------------------------------------------------------------
+
+    call marbl_saved_state_init(this%surface_saved_state,                     &
+                                this%interior_saved_state,                    &
+                                this%surf_state_ind,                          &
+                                this%interior_state_ind,                      &
+                                num_levels,                                   &
+                                num_surface_elements,                         &
+                                num_interior_forcing,                         &
+                                this%StatusLog)
+
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_saved_state_init()", subname)
+      return
+    end if
 
     !--------------------------------------------------------------------
     ! Initialize public data / general tracer metadata
@@ -359,7 +381,8 @@ contains
          ciso_on                 = this%ciso_on,                 &
          domain                  = this%domain,                  &
          interior_forcing_input  = this%interior_forcing_input,  &
-         saved_state             = this%saved_state,             &
+         saved_state             = this%interior_saved_state,    &
+         saved_state_ind         = this%interior_state_ind,      &
          interior_restore        = this%column_restore,          &
          tracers                 = this%column_tracers,          &
          dtracers                = this%column_dtracers,         &
@@ -398,7 +421,8 @@ contains
          surface_vals             = this%surface_vals,                        &
          surface_tracer_fluxes    = this%surface_tracer_fluxes,               &
          marbl_tracer_indices     = this%tracer_indices,                      &
-         saved_state              = this%saved_state,                         &
+         saved_state              = this%surface_saved_state,                 &
+         saved_state_ind          = this%surf_state_ind,                      &
          surface_forcing_output   = this%surface_forcing_output,              &
          surface_forcing_internal = this%surface_forcing_internal,            &
          surface_forcing_share    = this%surface_forcing_share,               &

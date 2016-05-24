@@ -1,0 +1,89 @@
+module marbl_saved_state_mod
+
+  Implicit None
+  Private
+  Save
+
+  public :: marbl_saved_state_init
+
+Contains
+
+  subroutine marbl_saved_state_init(surface_state, interior_state, surf_ind,  &
+             interior_ind, num_levels, num_surface_elements,                  &
+             num_interior_forcing, marbl_status_log)
+
+    use marbl_interface_types , only : marbl_saved_state_type
+    use marbl_internal_types  , only : marbl_surface_saved_state_indexing_type
+    use marbl_internal_types  , only : marbl_interior_saved_state_indexing_type
+    use marbl_logging         , only : marbl_log_type
+    use marbl_kinds_mod       , only : char_len
+
+
+    type(marbl_saved_state_type), intent(inout) :: surface_state
+    type(marbl_saved_state_type), intent(inout) :: interior_state
+    type(marbl_surface_saved_state_indexing_type),  intent(inout) :: surf_ind
+    type(marbl_interior_saved_state_indexing_type), intent(inout) :: interior_ind
+    integer,                      intent(in)    :: num_levels
+    integer,                      intent(in)    :: num_surface_elements
+    integer,                      intent(in)    :: num_interior_forcing
+    type(marbl_log_type),         intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_saved_state_mod:marbl_saved_state_init'
+    character(len=char_len) :: lname, sname, units, vgrid
+    integer :: rank
+
+    call surface_state%construct(num_surface_elements, num_levels)
+
+    lname = 'surface pH'
+    sname = 'PH_SURF'
+    units = 'pH'
+    vgrid = 'none'
+    rank  = 2
+    call surface_state%add_state(lname, sname, units, vgrid, rank,            &
+         surf_ind%ph_surf, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("add_state(PH_SURF)", subname)
+      return
+    end if
+
+    lname = 'surface pH (alternate CO2)'
+    sname = 'PH_SURF_ALT_CO2'
+    units = 'pH'
+    vgrid = 'none'
+    rank  = 2
+    call surface_state%add_state(lname, sname, units, vgrid, rank,            &
+         surf_ind%ph_alt_co2_surf, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("add_state(PH_SURF_ALT_CO2)", subname)
+      return
+    end if
+
+    call interior_state%construct(num_interior_forcing, num_levels)
+
+    lname = '3D pH'
+    sname = 'PH_3D'
+    units = 'pH'
+    vgrid = 'layer_avg'
+    rank  = 3
+    call interior_state%add_state(lname, sname, units, vgrid, rank,           &
+         interior_ind%ph_col, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("add_state(PH_3D)", subname)
+      return
+    end if
+
+    lname = '3D pH (alternate CO2)'
+    sname = 'PH_3D_ALT_CO2'
+    units = 'pH'
+    vgrid = 'layer_avg'
+    rank  = 3
+    call interior_state%add_state(lname, sname, units, vgrid, rank,           &
+         interior_ind%ph_alt_co2_col, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("add_state(PH_3D_ALT_CO2)", subname)
+      return
+    end if
+
+  end subroutine marbl_saved_state_init
+
+end module marbl_saved_state_mod
