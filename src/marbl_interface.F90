@@ -150,8 +150,8 @@ contains
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
     use marbl_parms           , only : autotrophs
     use marbl_parms           , only : zooplankton
-    use marbl_share_mod       , only : tracer_init_ext
-    use marbl_share_mod       , only : ciso_tracer_init_ext
+    use marbl_parms           , only : tracer_init_ext
+    use marbl_parms           , only : ciso_tracer_init_ext
     use marbl_saved_state_mod , only : marbl_saved_state_init
     
     implicit none

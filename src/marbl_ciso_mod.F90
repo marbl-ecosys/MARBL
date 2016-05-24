@@ -8,7 +8,7 @@ module marbl_ciso_mod
   !  13C code is based on code form G. Xavier, ETH, 2010, which
   !  was written for pop1 (CCSM3)
   !  This code needs the ecosystem model to run, as it uses several
-  !  variables computed there. Data is shared using marbl_share_mod.F90
+  !  variables computed there.
   !  This module adds 7 carbon pools for 13C and another 7 for 14C
   !-----------------------------------------------------------------------
 
@@ -93,25 +93,25 @@ contains
     use marbl_namelist_mod        , only : marbl_nl_buffer_size
     use marbl_namelist_mod        , only : marbl_nl_split_string
     use marbl_namelist_mod        , only : marbl_namelist
-    use marbl_share_mod           , only : ciso_tracer_cnt
-    use marbl_share_mod           , only : ciso_init_ecosys_option
-    use marbl_share_mod           , only : ciso_init_ecosys_init_file
-    use marbl_share_mod           , only : ciso_init_ecosys_init_file_fmt
-    use marbl_share_mod           , only : ciso_tracer_init_ext
-    use marbl_share_mod           , only : ciso_lsource_sink
-    use marbl_share_mod           , only : ciso_atm_d13c_opt
-    use marbl_share_mod           , only : ciso_atm_d13c_const
-    use marbl_share_mod           , only : ciso_atm_d13c_filename
-    use marbl_share_mod           , only : ciso_atm_d14c_opt
-    use marbl_share_mod           , only : ciso_atm_d14c_const
-    use marbl_share_mod           , only : ciso_atm_d14c_filename
-    use marbl_share_mod           , only : ciso_fract_factors
-    use marbl_share_mod           , only : ciso_atm_model_year
-    use marbl_share_mod           , only : ciso_atm_data_year
-    use marbl_share_mod           , only : ciso_lecovars_full_depth_tavg 
-    use marbl_share_mod           , only : marbl_freq_opt_never  
-    use marbl_share_mod           , only : marbl_freq_opt_nmonth 
-    use marbl_share_mod           , only : marbl_freq_opt_nyear  
+    use marbl_parms               , only : ciso_tracer_cnt
+    use marbl_parms               , only : ciso_init_ecosys_option
+    use marbl_parms               , only : ciso_init_ecosys_init_file
+    use marbl_parms               , only : ciso_init_ecosys_init_file_fmt
+    use marbl_parms               , only : ciso_tracer_init_ext
+    use marbl_parms               , only : ciso_lsource_sink
+    use marbl_parms               , only : ciso_atm_d13c_opt
+    use marbl_parms               , only : ciso_atm_d13c_const
+    use marbl_parms               , only : ciso_atm_d13c_filename
+    use marbl_parms               , only : ciso_atm_d14c_opt
+    use marbl_parms               , only : ciso_atm_d14c_const
+    use marbl_parms               , only : ciso_atm_d14c_filename
+    use marbl_parms               , only : ciso_fract_factors
+    use marbl_parms               , only : ciso_atm_model_year
+    use marbl_parms               , only : ciso_atm_data_year
+    use marbl_parms               , only : ciso_lecovars_full_depth_tavg 
+    use marbl_parms               , only : marbl_freq_opt_never  
+    use marbl_parms               , only : marbl_freq_opt_nmonth 
+    use marbl_parms               , only : marbl_freq_opt_nyear  
 
     implicit none
 
@@ -202,9 +202,9 @@ contains
     !  Set tracer and forcing metadata
 
     use marbl_interface_types, only : marbl_tracer_read_type
-    use marbl_share_mod      , only : ciso_lecovars_full_depth_tavg
-    use marbl_share_mod      , only : ciso_init_ecosys_init_file
-    use marbl_share_mod      , only : ciso_init_ecosys_init_file_fmt
+    use marbl_parms          , only : ciso_lecovars_full_depth_tavg
+    use marbl_parms          , only : ciso_init_ecosys_init_file
+    use marbl_parms          , only : ciso_init_ecosys_init_file_fmt
 
     implicit none
 
@@ -345,8 +345,8 @@ contains
     !  13C code is based on code from X. Giraud, ETH ZÃ¼rich, 2008, for pop1
     !  Also added biotic 14C
 
-    use marbl_share_mod        , only : ciso_lsource_sink
-    use marbl_share_mod        , only : ciso_fract_factors
+    use marbl_parms            , only : ciso_lsource_sink
+    use marbl_parms            , only : ciso_fract_factors
     use marbl_parms            , only : f_graze_CaCO3_REMIN
     use marbl_constants_mod    , only : R13c_std
     use marbl_constants_mod    , only : R14c_std
