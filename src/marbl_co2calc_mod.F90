@@ -9,7 +9,7 @@ module marbl_co2calc_mod
 
   use marbl_kinds_mod     , only : int_kind, r8, log_kind, char_len
   use marbl_logging       , only : marbl_log_type
-  use marbl_parms         , only : p001,c3, c10
+  use marbl_constants_mod , only : p001,c3, c10
   use marbl_constants_mod , only : c0, p5, c1, c2, c1000, T0_Kelvin, rho_sw
 
   implicit none

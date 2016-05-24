@@ -17,11 +17,12 @@ module marbl_ciso_mod
   use marbl_kinds_mod       , only : log_kind
   use marbl_kinds_mod       , only : char_len
 
-  use marbl_parms           , only : c0
-  use marbl_parms           , only : c1
-  use marbl_parms           , only : c2
-  use marbl_parms           , only : c1000
-  use marbl_parms           , only : mpercm
+  use marbl_constants_mod   , only : c0
+  use marbl_constants_mod   , only : c1
+  use marbl_constants_mod   , only : c2
+  use marbl_constants_mod   , only : c1000
+  use marbl_constants_mod   , only : mpercm
+
   use marbl_parms           , only : autotrophs  
   use marbl_parms           , only : zooplankton 
   use marbl_parms           , only : grazing     
@@ -355,7 +356,7 @@ contains
     use marbl_share_mod        , only : ciso_fract_factors
     use marbl_parms            , only : f_graze_CaCO3_REMIN
     use marbl_parms            , only : R13c_std, R14c_std
-    use marbl_parms            , only : spd
+    use marbl_constants_mod    , only : spd
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_interior
 
     implicit none
@@ -1493,9 +1494,9 @@ contains
     !  For other comments, see compute_particulate_terms in marbl_mod
     !----------------------------------------------------------------------------------------
     
-    use marbl_parms     , only : denitrif_C_N
-    use marbl_parms     , only : parm_POMbury
-    use marbl_parms     , only : spd
+    use marbl_parms         , only : denitrif_C_N
+    use marbl_parms         , only : parm_POMbury
+    use marbl_constants_mod , only : spd
 
     implicit none
 
@@ -1846,7 +1847,7 @@ contains
 
     use marbl_parms            , only : R13c_std
     use marbl_parms            , only : R14c_std
-    use marbl_parms            , only : p5
+    use marbl_constants_mod    , only : p5
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_surface_forcing
 
     implicit none

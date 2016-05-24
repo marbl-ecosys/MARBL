@@ -14,6 +14,9 @@ module marbl_parms
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : log_kind
 
+  use marbl_constants_mod, only : c1
+  use marbl_constants_mod, only : dps
+
   use marbl_internal_types, only : zooplankton_type
   use marbl_internal_types, only : autotroph_type
   use marbl_internal_types, only : grazing_type
@@ -55,37 +58,6 @@ module marbl_parms
   real(r8), parameter :: R14C_std = 1.0_r8  ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
 
   !-----------------------------------------------------------------------
-  !  numbers
-  !-----------------------------------------------------------------------
-  
-  real (r8), parameter :: c0     =    0.0_r8
-  real (r8), parameter :: c1     =    1.0_r8
-  real (r8), parameter :: c2     =    2.0_r8
-  real (r8), parameter :: c3     =    3.0_r8
-  real (r8), parameter :: c4     =    4.0_r8
-  real (r8), parameter :: c5     =    5.0_r8
-  real (r8), parameter :: c8     =    8.0_r8
-  real (r8), parameter :: c10    =   10.0_r8
-  real (r8), parameter :: c16    =   16.0_r8
-  real (r8), parameter :: c1000  = 1000.0_r8
-  real (r8), parameter :: c10000 =10000.0_r8
-  real (r8), parameter :: c1p5   =    1.5_r8
-  real (r8), parameter :: p33    = c1/c3    
-  real (r8), parameter :: p5     = 0.500_r8 
-  real (r8), parameter :: p25    = 0.250_r8 
-  real (r8), parameter :: p125   = 0.125_r8 
-  real (r8), parameter :: p001   = 0.001_r8 
-  real (r8), parameter :: eps    = 1.0e-10_r8
-  real (r8), parameter :: eps2   = 1.0e-20_r8
-  real (r8), parameter :: bignum = 1.0e+30_r8
-
-  !-----------------------------------------------------------------------
-  !  conversion factors
-  !-----------------------------------------------------------------------
-
-  real (r8) :: mpercm    = .01_r8        ! meters per cm
-
-  !-----------------------------------------------------------------------
   !  common formats for formatted output
   !-----------------------------------------------------------------------
 
@@ -101,16 +73,6 @@ module marbl_parms
    real(kind=r8), parameter :: &
       epsC      = 1.00e-8, & ! small C concentration (mmol C/m^3)
       epsTinv   = 3.17e-8    ! small inverse time scale (1/year) (1/sec)
-
-  !-----------------------------------------------------------------------------
-  !   floating point constants used across marbl
-  !-----------------------------------------------------------------------------
-
-  REAL(KIND=r8), PARAMETER :: &
-       spd = 86400.0_r8,        & ! number of seconds in a day
-       dps = c1 / spd,          & ! number of days in a second
-       yps = c1 / (365.0_r8*spd)  ! number of years in a second
-
 
   !-----------------------------------------------------------------------------
   !   Redfield Ratios, dissolved & particulate
@@ -292,6 +254,8 @@ module marbl_parms
   private :: &
        marbl_params_set_defaults
   
+  private :: c1, dps
+
 contains
 
   !*****************************************************************************

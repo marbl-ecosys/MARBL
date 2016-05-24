@@ -76,17 +76,20 @@ module marbl_mod
   !-----------------------------------------------------------------------
 
   use marbl_constants_mod, only : T0_Kelvin
+  use marbl_constants_mod, only : c0
+  use marbl_constants_mod, only : c1
+  use marbl_constants_mod, only : c2
+  use marbl_constants_mod, only : c10
+  use marbl_constants_mod, only : mpercm
+  use marbl_constants_mod, only : spd
+  use marbl_constants_mod, only : dps
+  use marbl_constants_mod, only : yps
 
   use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : char_len
 
-  use marbl_parms, only : c0
-  use marbl_parms, only : c1
-  use marbl_parms, only : c2
-  use marbl_parms, only : c10
-  use marbl_parms, only : mpercm
   use marbl_parms, only : blank_fmt
   use marbl_parms, only : delim_fmt
   use marbl_parms, only : ndelim_fmt
@@ -102,7 +105,6 @@ module marbl_mod
   use marbl_parms, only : parm_Red_Fe_C
   use marbl_parms, only : Q
   use marbl_parms, only : Qp_zoo_pom
-  use marbl_parms, only : spd
   use marbl_parms, only : parm_CaCO3_diss
   use marbl_parms, only : parm_POC_diss
   use marbl_parms, only : parm_SiO2_diss
@@ -131,7 +133,6 @@ module marbl_mod
   use marbl_parms, only : DONriv_refract
   use marbl_parms, only : DOPriv_refract
   use marbl_parms, only : f_toDON
-  use marbl_parms, only : dps
   use marbl_parms, only : dust_fescav_scale
   use marbl_parms, only : f_graze_CaCO3_REMIN
   use marbl_parms, only : f_graze_si_remin
@@ -154,16 +155,14 @@ module marbl_mod
   use marbl_parms, only : Qfe_zoo
   use marbl_parms, only : r_Nfix_photo
   use marbl_parms, only : spc_poc_fac
-  use marbl_parms, only : yps
+  use marbl_parms, only : grazing  
+  use marbl_parms, only : autotrophs
+  use marbl_parms, only : zooplankton
 
   use marbl_sizes, only : ecosys_base_tracer_cnt    
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
   use marbl_sizes, only : grazer_prey_cnt
-
-  use marbl_parms, only : grazing  
-  use marbl_parms, only : autotrophs
-  use marbl_parms, only : zooplankton
 
   use marbl_internal_types  , only : carbonate_type
   use marbl_internal_types  , only : zooplankton_type
@@ -3974,9 +3973,9 @@ contains
     !  growth, mort and grazing rates scaled by Tfunc where they are computed
     !-----------------------------------------------------------------------
 
-    use marbl_parms, only : Q_10
-    use marbl_parms, only : Tref
-    use marbl_parms, only : c10
+    use marbl_parms         , only : Q_10
+    use marbl_parms         , only : Tref
+    use marbl_constants_mod , only : c10
 
     real(r8), intent(in)  :: column_temperature
     real(r8), intent(out) :: Tfunc
@@ -4045,7 +4044,6 @@ contains
        zoo_cnt, zoo_meta, zooC, &
        Tfunc, zooplankton_secondary_species)
 
-    use marbl_parms           , only : c1, c0
     use marbl_parms           , only : thres_z1_zoo
     use marbl_parms           , only : thres_z2_zoo
 
@@ -4097,8 +4095,6 @@ contains
 
   subroutine marbl_compute_autotroph_uptake (auto_cnt, auto_meta, &
        tracer_local, marbl_tracer_indices, autotroph_secondary_species)
-
-    use marbl_parms     , only : c1
 
     integer(int_kind)                      , intent(in)  :: auto_cnt
     type(autotroph_type)                   , intent(in)  :: auto_meta(auto_cnt)
@@ -4186,7 +4182,6 @@ contains
     !     get photosynth. rate, phyto C biomass change, photoadapt
     !-----------------------------------------------------------------------
 
-    use marbl_parms     , only : c0, c1
     use marbl_parms     , only : epsTinv
 
     integer(int_kind)                      , intent(in)    :: auto_cnt
@@ -4276,7 +4271,6 @@ contains
     !  Get nutrient uptakes by small phyto based on calculated C fixation
     !-----------------------------------------------------------------------
 
-    use marbl_parms     , only : c0
     use marbl_parms     , only : Q
 
     integer(int_kind)                      , intent(in)    :: auto_cnt
@@ -4452,8 +4446,6 @@ contains
     ! loss terms
     !-----------------------------------------------------------------------
 
-    use marbl_parms, only : dps
-
     integer(int_kind)                          , intent(in)    :: auto_cnt
     type(autotroph_type)                       , intent(in)    :: auto_meta(auto_cnt)
     real(r8)                                   , intent(in)    :: Tfunc
@@ -4527,7 +4519,6 @@ contains
     use marbl_parms     , only : epsTinv
     use marbl_parms     , only : grz_fnc_michaelis_menten
     use marbl_parms     , only : grz_fnc_sigmoidal
-    use marbl_parms     , only : c0
 
     integer(int_kind)                        , intent(in)    :: auto_cnt
     integer(int_kind)                        , intent(in)    :: zoo_cnt
@@ -4706,7 +4697,6 @@ contains
   subroutine marbl_compute_routing (auto_cnt, zoo_cnt,  auto_meta, &
        zooplankton_secondary_species, autotroph_secondary_species)
 
-    use marbl_parms     , only : c1
     use marbl_parms     , only : Qp_zoo_pom
     use marbl_parms     , only : parm_labile_ratio
 
@@ -4947,7 +4937,6 @@ contains
     use marbl_parms     , only : dust_fescav_scale
     use marbl_parms     , only : Fe_scavenge_thres1
     use marbl_parms     , only : fe_max_scale2
-    use marbl_parms     , only : yps
 
     ! Note (mvertens, 2016-02), all the column_sinking_partiles must be intent(inout)
     ! rather than intent(out), since if they were intent(out) they would be automatically 

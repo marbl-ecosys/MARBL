@@ -14,8 +14,9 @@ module marbl_diagnostics_mod
 
   use marbl_parms           , only : autotrophs
   use marbl_parms           , only : zooplankton
-  use marbl_parms           , only : c0
-  use marbl_parms           , only : c1
+
+  use marbl_constants_mod   , only : c0
+  use marbl_constants_mod   , only : c1
 
   use marbl_internal_types  , only : carbonate_type
   use marbl_internal_types  , only : zooplankton_type
@@ -4209,7 +4210,7 @@ contains
     use marbl_share_mod      , only : dfe_riv_flux_file          
     use marbl_share_mod      , only : dic_riv_flux_file          
     use marbl_share_mod      , only : alk_riv_flux_file         
-    use marbl_parms          , only : mpercm
+    use marbl_constants_mod  , only : mpercm
 
     implicit none
 

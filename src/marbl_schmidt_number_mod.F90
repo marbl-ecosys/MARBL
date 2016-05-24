@@ -20,8 +20,8 @@ contains
     !  ref : Wanninkhof, J. Geophys. Res, Vol. 97, No. C5,
     !  pp. 7373-7382, May 15, 1992
     
-    use marbl_kinds_mod, only : r8, log_kind, int_kind
-    use marbl_parms    , only : c0
+    use marbl_kinds_mod     , only : r8, log_kind, int_kind
+    use marbl_constants_mod , only : c0
 
     implicit none
 
