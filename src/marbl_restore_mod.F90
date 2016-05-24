@@ -94,10 +94,14 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
 
   this%lrestore_any = .false.
   allocate(this%tracer_restore(marbl_total_tracer_cnt))
-  allocate(restore_short_names(marbl_total_tracer_cnt))
-  allocate(restore_filenames(marbl_total_tracer_cnt))
-  allocate(restore_file_varnames(marbl_total_tracer_cnt))
   allocate(inv_tau(domain%km))
+  ! FIXME #69: not thread-safe!
+  if (.not.allocated(restore_short_names)) &
+    allocate(restore_short_names(marbl_total_tracer_cnt))
+  if (.not.allocated(restore_filenames)) &
+    allocate(restore_filenames(marbl_total_tracer_cnt))
+  if (.not.allocated(restore_file_varnames)) &
+    allocate(restore_file_varnames(marbl_total_tracer_cnt))
 
   ! initialize namelist variables to default values
   restore_short_names = ''
