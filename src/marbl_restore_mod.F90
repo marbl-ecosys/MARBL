@@ -47,6 +47,13 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   use marbl_namelist_mod, only : marbl_nl_cnt
   use marbl_namelist_mod, only : marbl_nl_buffer_size
   use marbl_namelist_mod, only : marbl_namelist
+  use marbl_parms       , only : restore_short_names
+  use marbl_parms       , only : restore_filenames
+  use marbl_parms       , only : restore_file_varnames
+  use marbl_parms       , only : rest_time_inv_surf
+  use marbl_parms       , only : rest_time_inv_deep
+  use marbl_parms       , only : rest_z0
+  use marbl_parms       , only : rest_z1
 
   implicit none
 
@@ -69,10 +76,6 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   !  local variables
   !-----------------------------------------------------------------------
 
-  character(len=char_len), allocatable, dimension(:) :: restore_short_names, &
-                                                        restore_filenames,   &
-                                                        restore_file_varnames
-  real(r8) :: rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
   real(r8), dimension(:), allocatable :: inv_tau
   integer(int_kind) :: nml_error, k, n, t
   character(len=marbl_nl_buffer_size) :: tmp_nl_buffer

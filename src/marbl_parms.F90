@@ -321,6 +321,15 @@ module marbl_parms
   character (char_len)        :: ciso_atm_d14c_opt              ! option for CO2 and D13C varying or constant forcing
   character (char_len)        :: ciso_atm_d14c_filename(3)      ! filenames for varying atm D14C (one each for NH, SH, EQ)
 
+  !---------------------------------------------------------------------
+  !  Variables read in via &ecosys_restore_nml
+  !---------------------------------------------------------------------
+
+  character(len=char_len), allocatable, dimension(:) :: restore_short_names, &
+                                                        restore_filenames,   &
+                                                        restore_file_varnames
+  real(r8) :: rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
+
   !*****************************************************************************
 
   public :: &
