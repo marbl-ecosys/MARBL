@@ -84,13 +84,14 @@ module marbl_mod
   use marbl_constants_mod, only : spd
   use marbl_constants_mod, only : dps
   use marbl_constants_mod, only : yps
+  use marbl_constants_mod, only : Q_10
 
   use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : char_len
 
-  use marbl_parms, only : marbl_params_init, marbl_params_print
+  use marbl_parms, only : marbl_params_init
   use marbl_parms, only : grz_fnc_michaelis_menten
   use marbl_parms, only : grz_fnc_sigmoidal
   use marbl_parms, only : f_qsw_par
@@ -147,7 +148,6 @@ module marbl_mod
   use marbl_parms, only : parm_red_d_c_o2
   use marbl_parms, only : parm_red_d_c_o2_diaz
   use marbl_parms, only : parm_Remin_D_C_O2
-  use marbl_parms, only : q_10
   use marbl_parms, only : QCaCO3_max
   use marbl_parms, only : Qfe_zoo
   use marbl_parms, only : r_Nfix_photo
@@ -2092,7 +2092,7 @@ contains
 
     ! !USES:
 
-    use marbl_parms           , only : Tref
+    use marbl_constants_mod, only : Tref
 
     integer (int_kind)                      , intent(in)    :: k                   ! vertical model level
     type(marbl_domain_type)                 , intent(in)    :: domain                              
@@ -3970,9 +3970,9 @@ contains
     !  growth, mort and grazing rates scaled by Tfunc where they are computed
     !-----------------------------------------------------------------------
 
-    use marbl_parms         , only : Q_10
-    use marbl_parms         , only : Tref
-    use marbl_constants_mod , only : c10
+    use marbl_constants_mod, only : Q_10
+    use marbl_constants_mod, only : Tref
+    use marbl_constants_mod, only : c10
 
     real(r8), intent(in)  :: column_temperature
     real(r8), intent(out) :: Tfunc

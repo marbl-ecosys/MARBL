@@ -1,12 +1,25 @@
 module marbl_constants_mod
 
+  !---------------------------------------------------------------------------
+  !  This module contains non-BGC related parameters. There are three general
+  !  categories:
+  !    * General constants (c0, c1, etc)
+  !    * Unit conversions (spy, spd, mpercm, etc)
+  !    * Physical parameters (T0_Kelvin, rho_sw, etc)
+  !
+  !  BGC-specific parameters are in marbl_parms.
+  !---------------------------------------------------------------------------
+
   use marbl_kinds_mod, only : r8
 
   implicit none
   public
   save
 
-  ! General constants
+  !---------------------------------------------------------------------
+  !  General constants
+  !---------------------------------------------------------------------
+
   real(kind=r8), parameter, public ::        &
       c0     =    0.0_r8                   , &
       c1     =    1.0_r8                   , &
@@ -18,7 +31,10 @@ module marbl_constants_mod
       p5     =    0.5_r8                   , &
       pi     =    3.14159265358979323846_r8
 
-! Unit Conversion
+  !---------------------------------------------------------------------
+  !  Unit Conversion
+  !---------------------------------------------------------------------
+
   real(kind=r8), parameter, public :: &
       spd       = 86400.0_r8,          & ! number of seconds in a day
       spy       = 365.0_r8*spd,        & ! number of seconds in a year
@@ -26,9 +42,14 @@ module marbl_constants_mod
       yps       = c1 / (365.0_r8*spd), & ! number of years in a second
       mpercm    = .01_r8                 ! meters per cm
 
-! Physical Constants
+  !---------------------------------------------------------------------
+  !  Physical Constants
+  !---------------------------------------------------------------------
+
   real(kind=r8), parameter, public :: &
       T0_Kelvin = 273.15_r8,           & ! freezing T of fresh water (deg K)
+      Tref      =  30.0_r8,            & ! reference temperature (C)
+      Q_10      =   1.7_r8,            & ! factor for temperature dependence (non-dim)
       rho_sw    =   1.026_r8,          & ! density of salt water (g/cm^3)
       epsC      =   1.00e-8,           & ! small C concentration (mmol C/m^3)
       epsTinv   =   3.17e-8,           & ! small inverse time scale (1/year) (1/sec)
