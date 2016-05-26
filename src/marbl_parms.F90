@@ -36,6 +36,8 @@ module marbl_parms
   use marbl_sizes, only : ecosys_base_tracer_cnt
   use marbl_sizes, only : ciso_tracer_cnt
 
+  use marbl_logging, only: marbl_log_type
+
   implicit none
 
   !-----------------------------------------------------------------------------
@@ -53,33 +55,33 @@ module marbl_parms
   type(marbl_tracer_read_type) :: tracer_init_ext(ecosys_base_tracer_cnt) ! namelist variable for initializing tracers 
   type(marbl_tracer_read_type) :: fesedflux_input                    ! namelist input for iron_flux
 
-  character (char_len) :: gas_flux_forcing_file        ! file containing gas flux forcing fields
-  integer   (int_kind) :: gas_flux_forcing_iopt
-  integer   (int_kind) :: atm_co2_iopt
-  integer   (int_kind) :: atm_alt_co2_iopt
-  real      (r8)       :: atm_co2_const                ! value of atmospheric co2 (ppm, dry-air, 1 atm)
-  real      (r8)       :: atm_alt_co2_const            ! value of atmospheric alternative co2 (ppm, dry-air, 1 atm)
-  logical   (log_kind) :: lflux_gas_o2                 ! controls which portion of code are executed usefull for debugging
-  logical   (log_kind) :: lflux_gas_co2                ! controls which portion of code are executed usefull for debugging
-  character (char_len) :: init_ecosys_option           ! namelist option for initialization of bgc
-  character (char_len) :: init_ecosys_init_file        ! filename for option 'file'
-  character (char_len) :: init_ecosys_init_file_fmt    ! file format for option 'file'
+  character(char_len), target :: gas_flux_forcing_file        ! file containing gas flux forcing fields
+  integer(int_kind),   target :: gas_flux_forcing_iopt
+  integer(int_kind),   target :: atm_co2_iopt
+  integer(int_kind),   target :: atm_alt_co2_iopt
+  real(r8),            target :: atm_co2_const                ! value of atmospheric co2 (ppm, dry-air, 1 atm)
+  real(r8),            target :: atm_alt_co2_const            ! value of atmospheric alternative co2 (ppm, dry-air, 1 atm)
+  logical(log_kind),   target :: lflux_gas_o2                 ! controls which portion of code are executed usefull for debugging
+  logical(log_kind),   target :: lflux_gas_co2                ! controls which portion of code are executed usefull for debugging
+  character(char_len), target :: init_ecosys_option           ! namelist option for initialization of bgc
+  character(char_len), target :: init_ecosys_init_file        ! filename for option 'file'
+  character(char_len), target :: init_ecosys_init_file_fmt    ! file format for option 'file'
 
-  logical   (log_kind) :: liron_patch                  ! flag for iron patch fertilization
-  character (char_len) :: iron_patch_flux_filename     ! file containing name of iron patch file
-  integer   (int_kind) :: iron_patch_month             ! integer month to add patch flux
+  logical(log_kind),   target :: liron_patch                  ! flag for iron patch fertilization
+  character(char_len), target :: iron_patch_flux_filename     ! file containing name of iron patch file
+  integer(int_kind),   target :: iron_patch_month             ! integer month to add patch flux
 
-  character (char_len) :: ndep_data_type               ! type of ndep forcing
-  integer   (int_kind) :: ndep_shr_stream_year_first   ! first year in stream to use
-  integer   (int_kind) :: ndep_shr_stream_year_last    ! last year in stream to use
-  integer   (int_kind) :: ndep_shr_stream_year_align   ! align ndep_shr_stream_year_first with this model year
-  character (char_len) :: ndep_shr_stream_file         ! file containing domain and input data
-  real      (r8)       :: ndep_shr_stream_scale_factor ! unit conversion factor
+  character(char_len), target :: ndep_data_type               ! type of ndep forcing
+  integer(int_kind), target :: ndep_shr_stream_year_first   ! first year in stream to use
+  integer(int_kind), target :: ndep_shr_stream_year_last    ! last year in stream to use
+  integer(int_kind), target :: ndep_shr_stream_year_align   ! align ndep_shr_stream_year_first with this model year
+  character(char_len), target :: ndep_shr_stream_file         ! file containing domain and input data
+  real(r8), target :: ndep_shr_stream_scale_factor ! unit conversion factor
 
-  character (char_len) :: dust_flux_source             ! option for atmospheric dust deposition
-  character (char_len) :: iron_flux_source             ! option for atmospheric iron deposition
-  real      (r8)       :: iron_frac_in_dust            ! fraction by weight of iron in dust
-  real      (r8)       :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
+  character(char_len), target :: dust_flux_source             ! option for atmospheric dust deposition
+  character(char_len), target :: iron_flux_source             ! option for atmospheric iron deposition
+  real(r8), target :: iron_frac_in_dust            ! fraction by weight of iron in dust
+  real(r8), target :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
 
   type(marbl_forcing_monthly_every_ts_type), pointer :: fice_file             ! ice fraction, if read from file
   type(marbl_forcing_monthly_every_ts_type), pointer :: xkw_file              ! a * wind-speed ** 2, if read from file
@@ -164,6 +166,36 @@ module marbl_parms
                                                         restore_filenames,   &
                                                         restore_file_varnames
   real(r8) :: rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
+
+  !---------------------------------------------------------------------
+  !  Datatype for accessing parameters without namelist
+  !---------------------------------------------------------------------
+
+  type, public :: marbl_single_parms_type
+    ! Metadata
+    character(len=char_len) :: long_name
+    character(len=char_len) :: short_name
+    character(len=char_len) :: units
+    character(len=char_len) :: datatype
+    ! Actual parameter data
+    logical(log_kind),       pointer :: lptr => NULL()
+    integer(int_kind),       pointer :: iptr => NULL()
+    real(r8),                pointer :: rptr => NULL()
+    character(len=char_len), pointer :: sptr => NULL()
+  contains
+    procedure :: define => marbl_single_parms_define
+  end type marbl_single_parms_type
+
+  type, public :: marbl_parms_type
+    integer :: parms_cnt
+    type(marbl_single_parms_type), dimension(:), pointer :: parms => NULL()
+  contains
+    procedure :: construct  => marbl_parms_construct
+    procedure :: add_parms  => marbl_parms_add
+    procedure :: list_parms => marbl_parms_list
+  end type marbl_parms_type
+
+  type(marbl_parms_type) :: marbl_parameters
 
   !---------------------------------------------------------------------
   !  BGC parameters that are not part of ecosys_parms_nml
@@ -491,7 +523,6 @@ contains
     use marbl_namelist_mod, only : marbl_nl_cnt
     use marbl_namelist_mod, only : marbl_nl_buffer_size
     use marbl_namelist_mod, only : marbl_namelist
-    use marbl_logging     , only: marbl_log_type
 
     implicit none
 
@@ -548,6 +579,227 @@ contains
     end if
 
   end subroutine marbl_params_init
+
+  !*****************************************************************************
+
+  subroutine marbl_single_parms_define(this, sname, marbl_status_log)
+
+    class(marbl_single_parms_type), intent(inout) :: this
+    character(len=char_len),        intent(in)    :: sname
+    type(marbl_log_type),           intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname='marbl_parms:marbl_single_parm_define'
+    character(len=char_len) :: log_message
+
+    select case (trim(sname))
+      case ('gas_flux_forcing_file')
+        this%long_name =  'File containing gas flux forcing fields'
+        this%units     =  'unitless'
+        this%datatype  =  'string'
+        this%sptr      => gas_flux_forcing_file
+      case ('atm_co2_const')
+        this%long_name =  'Value of atmospheric co2'
+        this%units     =  'ppm (dry air; 1 atm)'
+        this%datatype  =  'real'
+        this%rptr      => atm_co2_const
+      case ('atm_alt_co2_const')
+        this%long_name =  'Value of atmospheric alternative co2'
+        this%units     =  'ppm (dry air; 1 atm)'
+        this%datatype  =  'real'
+        this%rptr      => atm_alt_co2_const
+      case ('lflux_gas_o2')
+        this%long_name  = 'Run O2 gas flux portion of the code'
+        this%units      = 'unitless'
+        this%datatype   = 'logical'
+        this%lptr      => lflux_gas_o2
+      case ('lflux_gas_co2')
+        this%long_name  = 'Run CO2 gas flux portion of the code'
+        this%units      = 'unitless'
+        this%datatype   = 'logical'
+        this%lptr      => lflux_gas_co2
+      case ('init_ecosys_option')
+        this%long_name =  'How base ecosys module initialized'
+        this%units     =  'unitless'
+        this%datatype  =  'string'
+        this%sptr      => init_ecosys_option
+      case ('init_ecosys_init_file')
+        this%long_name =  'File containing base ecosys init conditions'
+        this%units     =  'unitless'
+        this%datatype  =  'string'
+        this%sptr      => init_ecosys_init_file
+      case ('init_ecosys_init_file_fmt')
+        this%long_name =  'Format of file containing base ecosys init conditions'
+        this%units     =  'unitless'
+        this%datatype  =  'string'
+        this%sptr      => init_ecosys_init_file_fmt
+      case ('liron_patch')
+        this%long_name  = 'Turn on iron patch fertilization'
+        this%units      = 'unitless'
+        this%datatype   = 'logical'
+        this%lptr      => liron_patch
+      case ('ndep_shr_stream_year_first')
+        this%long_name  = 'First year to use in ndep stream file'
+        this%units      = 'years CE'
+        this%datatype   = 'integer'
+        this%iptr      => ndep_shr_stream_year_first
+      case DEFAULT
+        write(log_message, "(2A)") trim(sname), " is not a valid parm name"
+        call marbl_status_log%log_error(log_message, subname)
+        return
+    end select
+    this%short_name = sname
+
+  end subroutine marbl_single_parms_define
+
+  !*****************************************************************************
+
+  subroutine marbl_parms_construct(this, marbl_status_log)
+
+    class(marbl_parms_type), intent(inout) :: this
+    type(marbl_log_type),    intent(inout) :: marbl_status_log
+
+    character(len=char_len) :: sname
+
+    this%parms_cnt = 0
+    allocate(this%parms(this%parms_cnt))
+
+    sname = 'gas_flux_forcing_file'
+    call this%add_parms(sname, marbl_status_log)
+
+    sname = 'atm_co2_const'
+    call this%add_parms(sname, marbl_status_log)
+    
+    sname = 'atm_alt_co2_const'
+    call this%add_parms(sname, marbl_status_log)
+    
+    sname = 'lflux_gas_o2'
+    call this%add_parms(sname, marbl_status_log)
+    
+    sname = 'lflux_gas_co2'
+    call this%add_parms(sname, marbl_status_log)
+
+    sname = 'init_ecosys_option'
+    call this%add_parms(sname, marbl_status_log)
+    
+    sname = 'init_ecosys_init_file'
+    call this%add_parms(sname, marbl_status_log)
+    
+    sname = 'init_ecosys_init_file_fmt'
+    call this%add_parms(sname, marbl_status_log)
+    
+    sname = 'liron_patch'
+    call this%add_parms(sname, marbl_status_log)
+    
+    sname = 'ndep_shr_stream_year_first'
+    call this%add_parms(sname, marbl_status_log)
+    
+  end subroutine marbl_parms_construct
+
+  !*****************************************************************************
+
+  subroutine marbl_parms_add(this, sname, marbl_status_log)
+
+    class(marbl_parms_type), intent(inout) :: this
+    character(len=char_len), intent(in)    :: sname
+    type(marbl_log_type),    intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_parms:marbl_parms_add'
+    type(marbl_single_parms_type), dimension(:), pointer :: new_parms
+    integer :: old_size, id, n
+    character(len=char_len) :: log_message
+
+    if (.not.associated(this%parms)) then
+      write(log_message, "(A)") 'Parms constructor must be run'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    old_size = size(this%parms)
+    id = old_size+1
+
+    ! 1) Allocate new_parms to be size N (one element larger than this%parms)
+    allocate(new_parms(id))
+
+    ! 2) copy this%parms into first N-1 elements of new_parms
+    do n=1, old_size
+      new_parms(n)%long_name  = this%parms(n)%long_name
+      new_parms(n)%short_name = this%parms(n)%short_name
+      new_parms(n)%units      = this%parms(n)%units
+      new_parms(n)%datatype   = this%parms(n)%datatype
+      if (associated(this%parms(n)%lptr)) &
+        new_parms(n)%lptr => this%parms(n)%lptr
+      if (associated(this%parms(n)%iptr)) &
+        new_parms(n)%iptr => this%parms(n)%iptr
+      if (associated(this%parms(n)%rptr)) &
+        new_parms(n)%rptr => this%parms(n)%rptr
+      if (associated(this%parms(n)%sptr)) &
+        new_parms(n)%sptr => this%parms(n)%sptr
+    end do
+
+    ! 3) add newest parm variable
+    call new_parms(id)%define(sname, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('this%parms%define', subname)
+      return
+    end if
+
+    ! 4) deallocate / nullify this%parms
+    deallocate(this%parms)
+    nullify(this%parms)
+
+    ! 5) point this%parms => new_parms and update parms_cnt
+    this%parms => new_parms
+    this%parms_cnt = id
+
+  end subroutine marbl_parms_add
+
+  !*****************************************************************************
+
+  subroutine marbl_parms_list(this, marbl_status_log)
+
+    class(marbl_parms_type), intent(inout) :: this
+    type(marbl_log_type),    intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_parms:marbl_parms_list'
+    character(len=char_len) :: log_message
+    character(len=7)        :: logic
+    integer :: n
+
+    call marbl_status_log%log_noerror('', subname)
+    write(log_message, "(A)") 'MARBL parameter values: '
+    call marbl_status_log%log_noerror(log_message, subname)
+    do n=1,this%parms_cnt
+      select case(trim(this%parms(n)%datatype))
+        case ('string')
+          write(log_message, "(4A)") trim(this%parms(n)%short_name), " = '",  &
+                                     trim(this%parms(n)%sptr), "'"
+          call marbl_status_log%log_noerror(log_message, subname)
+        case ('real')
+          write(log_message, "(2A,E9.4)") trim(this%parms(n)%short_name), " = ", &
+                                          this%parms(n)%rptr
+          call marbl_status_log%log_noerror(log_message, subname)
+        case ('integer')
+          write(log_message, "(2A,I0)") trim(this%parms(n)%short_name), " = ", &
+                                        this%parms(n)%iptr
+          call marbl_status_log%log_noerror(log_message, subname)
+        case ('logical')
+          if (this%parms(n)%lptr) then
+            logic = '.true.'
+          else
+            logic = '.false.'
+          end if
+          write(log_message, "(3A)") trim(this%parms(n)%short_name), " = ",   &
+                                     trim(logic)
+          call marbl_status_log%log_noerror(log_message, subname)
+        case DEFAULT
+          write(log_message, "(2A)") trim(this%parms(n)%datatype),            &
+                                     ' is not a valid datatype for parameter'
+          call marbl_status_log%log_error(log_message, subname)
+          return
+      end select
+    end do
+
+  end subroutine marbl_parms_list
 
   !*****************************************************************************
 

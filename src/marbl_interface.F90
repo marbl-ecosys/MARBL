@@ -152,6 +152,7 @@ contains
     use marbl_parms           , only : zooplankton
     use marbl_parms           , only : tracer_init_ext
     use marbl_parms           , only : ciso_tracer_init_ext
+    use marbl_parms           , only : marbl_parameters
     use marbl_saved_state_mod , only : marbl_saved_state_init
     
     implicit none
@@ -357,6 +358,8 @@ contains
          marbl_status_log             = this%StatusLog)
 
     end associate
+
+    call marbl_parameters%construct(this%StatusLog)
 
   end subroutine init
 
