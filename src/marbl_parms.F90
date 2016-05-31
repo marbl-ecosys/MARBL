@@ -178,12 +178,10 @@ module marbl_parms
     character(len=char_len) :: units
     character(len=char_len) :: datatype
     ! Actual parameter data
-    logical(log_kind),       pointer :: lptr => NULL()
-    integer(int_kind),       pointer :: iptr => NULL()
     real(r8),                pointer :: rptr => NULL()
+    integer(int_kind),       pointer :: iptr => NULL()
+    logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
-  contains
-    procedure :: define => marbl_single_parms_define
   end type marbl_single_parms_type
 
   type, public :: marbl_parms_type
@@ -582,126 +580,158 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_single_parms_define(this, sname, marbl_status_log)
-
-    class(marbl_single_parms_type), intent(inout) :: this
-    character(len=char_len),        intent(in)    :: sname
-    type(marbl_log_type),           intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname='marbl_parms:marbl_single_parm_define'
-    character(len=char_len) :: log_message
-
-    select case (trim(sname))
-      case ('gas_flux_forcing_file')
-        this%long_name =  'File containing gas flux forcing fields'
-        this%units     =  'unitless'
-        this%datatype  =  'string'
-        this%sptr      => gas_flux_forcing_file
-      case ('atm_co2_const')
-        this%long_name =  'Value of atmospheric co2'
-        this%units     =  'ppm (dry air; 1 atm)'
-        this%datatype  =  'real'
-        this%rptr      => atm_co2_const
-      case ('atm_alt_co2_const')
-        this%long_name =  'Value of atmospheric alternative co2'
-        this%units     =  'ppm (dry air; 1 atm)'
-        this%datatype  =  'real'
-        this%rptr      => atm_alt_co2_const
-      case ('lflux_gas_o2')
-        this%long_name  = 'Run O2 gas flux portion of the code'
-        this%units      = 'unitless'
-        this%datatype   = 'logical'
-        this%lptr      => lflux_gas_o2
-      case ('lflux_gas_co2')
-        this%long_name  = 'Run CO2 gas flux portion of the code'
-        this%units      = 'unitless'
-        this%datatype   = 'logical'
-        this%lptr      => lflux_gas_co2
-      case ('init_ecosys_option')
-        this%long_name =  'How base ecosys module initialized'
-        this%units     =  'unitless'
-        this%datatype  =  'string'
-        this%sptr      => init_ecosys_option
-      case ('init_ecosys_init_file')
-        this%long_name =  'File containing base ecosys init conditions'
-        this%units     =  'unitless'
-        this%datatype  =  'string'
-        this%sptr      => init_ecosys_init_file
-      case ('init_ecosys_init_file_fmt')
-        this%long_name =  'Format of file containing base ecosys init conditions'
-        this%units     =  'unitless'
-        this%datatype  =  'string'
-        this%sptr      => init_ecosys_init_file_fmt
-      case ('liron_patch')
-        this%long_name  = 'Turn on iron patch fertilization'
-        this%units      = 'unitless'
-        this%datatype   = 'logical'
-        this%lptr      => liron_patch
-      case ('ndep_shr_stream_year_first')
-        this%long_name  = 'First year to use in ndep stream file'
-        this%units      = 'years CE'
-        this%datatype   = 'integer'
-        this%iptr      => ndep_shr_stream_year_first
-      case DEFAULT
-        write(log_message, "(2A)") trim(sname), " is not a valid parm name"
-        call marbl_status_log%log_error(log_message, subname)
-        return
-    end select
-    this%short_name = sname
-
-  end subroutine marbl_single_parms_define
-
-  !*****************************************************************************
-
   subroutine marbl_parms_construct(this, marbl_status_log)
 
     class(marbl_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
-
-    character(len=char_len) :: sname
+ 
+    character(*), parameter :: subname = 'marbl_parms:marbl_parms_construct'
+    character(len=char_len) :: sname, lname, units, datatype
+    real(r8),                pointer :: rptr => NULL()
+    integer(int_kind),       pointer :: iptr => NULL()
+    logical(log_kind),       pointer :: lptr => NULL()
+    character(len=char_len), pointer :: sptr => NULL()
 
     this%parms_cnt = 0
     allocate(this%parms(this%parms_cnt))
 
-    sname = 'gas_flux_forcing_file'
-    call this%add_parms(sname, marbl_status_log)
+    sname     = 'gas_flux_forcing_file'
+    lname     =  'File containing gas flux forcing fields'
+    units     =  'unitless'
+    datatype  =  'string'
+    sptr      => gas_flux_forcing_file
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
 
-    sname = 'atm_co2_const'
-    call this%add_parms(sname, marbl_status_log)
+    sname     = 'atm_co2_const'
+    lname     =  'Value of atmospheric co2'
+    units     =  'ppm (dry air; 1 atm)'
+    datatype  =  'real'
+    rptr      => atm_co2_const
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
     
-    sname = 'atm_alt_co2_const'
-    call this%add_parms(sname, marbl_status_log)
+    sname     = 'atm_alt_co2_const'
+    lname     =  'Value of atmospheric alternative co2'
+    units     =  'ppm (dry air; 1 atm)'
+    datatype  =  'real'
+    rptr      => atm_alt_co2_const
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
     
-    sname = 'lflux_gas_o2'
-    call this%add_parms(sname, marbl_status_log)
+    sname     = 'lflux_gas_o2'
+    lname      = 'Run O2 gas flux portion of the code'
+    units      = 'unitless'
+    datatype   = 'logical'
+    lptr      => lflux_gas_o2
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        lptr=lptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
     
-    sname = 'lflux_gas_co2'
-    call this%add_parms(sname, marbl_status_log)
+    sname     = 'lflux_gas_co2'
+    lname      = 'Run CO2 gas flux portion of the code'
+    units      = 'unitless'
+    datatype   = 'logical'
+    lptr      => lflux_gas_co2
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        lptr=lptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
 
-    sname = 'init_ecosys_option'
-    call this%add_parms(sname, marbl_status_log)
+    sname     = 'init_ecosys_option'
+    lname     =  'How base ecosys module initialized'
+    units     =  'unitless'
+    datatype  =  'string'
+    sptr      => init_ecosys_option
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
     
-    sname = 'init_ecosys_init_file'
-    call this%add_parms(sname, marbl_status_log)
+    sname     = 'init_ecosys_init_file'
+    lname     =  'File containing base ecosys init conditions'
+    units     =  'unitless'
+    datatype  =  'string'
+    sptr      => init_ecosys_init_file
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
     
-    sname = 'init_ecosys_init_file_fmt'
-    call this%add_parms(sname, marbl_status_log)
+    sname     = 'init_ecosys_init_file_fmt'
+    lname     =  'Format of file containing base ecosys init conditions'
+    units     =  'unitless'
+    datatype  =  'string'
+    sptr      => init_ecosys_init_file_fmt
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
     
-    sname = 'liron_patch'
-    call this%add_parms(sname, marbl_status_log)
+    sname     = 'liron_patch'
+    lname     = 'Turn on iron patch fertilization'
+    units     = 'unitless'
+    datatype  = 'logical'
+    lptr      => liron_patch
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        lptr=lptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
     
-    sname = 'ndep_shr_stream_year_first'
-    call this%add_parms(sname, marbl_status_log)
+    sname     = 'ndep_shr_stream_year_first'
+    lname     = 'First year to use in ndep stream file'
+    units     = 'years CE'
+    datatype  = 'integer'
+    iptr      => ndep_shr_stream_year_first
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
     
   end subroutine marbl_parms_construct
 
   !*****************************************************************************
 
-  subroutine marbl_parms_add(this, sname, marbl_status_log)
+  subroutine marbl_parms_add(this, sname, lname, units, datatype,             &
+             marbl_status_log, rptr, iptr, lptr, sptr)
 
     class(marbl_parms_type), intent(inout) :: this
     character(len=char_len), intent(in)    :: sname
+    character(len=char_len), intent(in)    :: lname
+    character(len=char_len), intent(in)    :: units
+    character(len=char_len), intent(in)    :: datatype
     type(marbl_log_type),    intent(inout) :: marbl_status_log
+    real(r8),                optional, pointer, intent(in) :: rptr
+    integer,                 optional, pointer, intent(in) :: iptr
+    logical,                 optional, pointer, intent(in) :: lptr
+    character(len=char_len), optional, pointer, intent(in) :: sptr
 
     character(*), parameter :: subname = 'marbl_parms:marbl_parms_add'
     type(marbl_single_parms_type), dimension(:), pointer :: new_parms
@@ -737,11 +767,52 @@ contains
     end do
 
     ! 3) add newest parm variable
-    call new_parms(id)%define(sname, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('this%parms%define', subname)
-      return
-    end if
+    new_parms(id)%short_name = sname
+    new_parms(id)%long_name  = lname
+    new_parms(id)%units      = units
+    new_parms(id)%datatype   = datatype
+    select case (trim(datatype))
+      case ('real')
+        if (present(rptr)) then
+          new_parms(id)%rptr => rptr
+        else
+          write(log_message, "(A)")                                           &
+               "Defining real parameter but rptr not present!"
+          call marbl_status_log%log_error(log_message, subname)
+          return
+        end if
+      case ('integer')
+        if (present(iptr)) then
+          new_parms(id)%iptr => iptr
+        else
+          write(log_message, "(A)")                                           &
+               "Defining integer parameter but iptr not present!"
+          call marbl_status_log%log_error(log_message, subname)
+          return
+        end if
+      case ('logical')
+        if (present(lptr)) then
+          new_parms(id)%lptr => lptr
+        else
+          write(log_message, "(A)")                                           &
+               "Defining logical parameter but lptr not present!"
+          call marbl_status_log%log_error(log_message, subname)
+          return
+        end if
+      case ('string')
+        if (present(sptr)) then
+          new_parms(id)%sptr => sptr
+        else
+          write(log_message, "(A)")                                           &
+               "Defining string parameter but aptr not present!"
+          call marbl_status_log%log_error(log_message, subname)
+          return
+        end if
+      case DEFAULT
+        write(log_message, "(2A)") "Unkown datatype: ", trim(datatype)
+        call marbl_status_log%log_error(log_message, subname)
+        return
+    end select
 
     ! 4) deallocate / nullify this%parms
     deallocate(this%parms)
@@ -800,6 +871,20 @@ contains
     end do
 
   end subroutine marbl_parms_list
+
+  !***********************************************************************
+
+  subroutine log_add_parms_error(marbl_status_log, sname, subname)
+
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+    character(len=*),     intent(in)    :: sname
+    character(len=*),     intent(in)    :: subname
+    character(len=char_len) :: routine_name
+
+    write(routine_name,"(3A)") "this%add_parms(", trim(sname), ")"
+    call marbl_status_log%log_error_trace(routine_name, subname)
+
+  end subroutine log_add_parms_error
 
   !*****************************************************************************
 
