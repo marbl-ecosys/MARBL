@@ -1,4 +1,3 @@
-! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 module marbl_interface
@@ -50,6 +49,8 @@ module marbl_interface
 
   use marbl_restore_mod     , only : marbl_restore_type
 
+  use marbl_parms, only : marbl_parms_type
+
   implicit none
 
   private
@@ -71,6 +72,8 @@ module marbl_interface
      type(marbl_tracer_read_type)              , public, allocatable  :: tracer_read(:)
      type(marbl_tracer_index_type)             , public               :: tracer_indices
      type(marbl_log_type)                      , public               :: StatusLog
+     type(marbl_parms_type)                    , public               :: parameters
+
      type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
      type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
      type(marbl_surface_saved_state_indexing_type), public            :: surf_state_ind
@@ -152,7 +155,6 @@ contains
     use marbl_parms           , only : zooplankton
     use marbl_parms           , only : tracer_init_ext
     use marbl_parms           , only : ciso_tracer_init_ext
-    use marbl_parms           , only : marbl_parameters
     use marbl_saved_state_mod , only : marbl_saved_state_init
     
     implicit none
@@ -356,10 +358,18 @@ contains
          marbl_interior_restore_diags = this%interior_restore_diags,          &
          marbl_surface_forcing_diags  = this%surface_forcing_diags,           &
          marbl_status_log             = this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_diagnostics_init()", subname)
+      return
+    end if
 
     end associate
 
-    call marbl_parameters%construct(this%StatusLog)
+    call this%parameters%construct(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("parameters%construct()", subname)
+      return
+    end if
 
   end subroutine init
 

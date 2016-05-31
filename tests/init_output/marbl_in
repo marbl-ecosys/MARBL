@@ -2,8 +2,6 @@
 testname="namelist_write"
 /
 &ecosys_nml
-atm_alt_co2_const = 278
-lflux_gas_o2 = .false.
 /
 &ecosys_ciso_nml
 /

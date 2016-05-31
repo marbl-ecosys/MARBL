@@ -16,8 +16,6 @@ Contains
 
   subroutine marbl_init_output_test(marbl_instance, gcm_namelist)
 
-    use marbl_parms, only : marbl_parameters
-
     type(marbl_interface_class), intent(inout) :: marbl_instance
     character(len=*), dimension(:), intent(in) :: gcm_namelist
 
@@ -50,7 +48,7 @@ Contains
       return
     end if
 
-    call marbl_parameters%list_parms(marbl_instance%StatusLog)
+    call marbl_instance%parameters%list_parms(marbl_instance%StatusLog)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl_parmeters%list',   &
            subname)

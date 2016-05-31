@@ -91,7 +91,7 @@ module marbl_mod
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : char_len
 
-  use marbl_parms, only : marbl_params_init
+  use marbl_parms, only : marbl_parms_init
   use marbl_parms, only : grz_fnc_michaelis_menten
   use marbl_parms, only : grz_fnc_sigmoidal
   use marbl_parms, only : f_qsw_par
@@ -693,9 +693,9 @@ contains
     !-----------------------------------------------------------------------
 
     ! FIXME #11: eliminate marbl_parms!
-    call marbl_params_init(nl_buffer, marbl_status_log)
+    call marbl_parms_init(nl_buffer, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('marbl_params_init', subname)
+      call marbl_status_log%log_error_trace('marbl_parms_init', subname)
       return
     end if
 

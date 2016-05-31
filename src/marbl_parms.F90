@@ -193,8 +193,6 @@ module marbl_parms
     procedure :: list_parms => marbl_parms_list
   end type marbl_parms_type
 
-  type(marbl_parms_type) :: marbl_parameters
-
   !---------------------------------------------------------------------
   !  BGC parameters that are not part of ecosys_parms_nml
   !---------------------------------------------------------------------
@@ -328,10 +326,11 @@ module marbl_parms
   !*****************************************************************************
 
   public :: &
-       marbl_params_init
+       marbl_parms_init
 
-  private :: &
-       marbl_params_set_defaults
+  private ::                     &
+       marbl_parms_set_defaults, &
+       log_add_parms_error
 
   ! Variables used from other modules should be private
   ! (So we don't accidentally use them from this module)
@@ -344,7 +343,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_params_set_defaults()
+  subroutine marbl_parms_set_defaults()
     ! assign default parameter values
 
     implicit none
@@ -512,11 +511,11 @@ contains
     grazing(prey_ind,zoo_ind)%f_zoo_detr       = 0.1_r8
     grazing(prey_ind,zoo_ind)%grazing_function = grz_fnc_michaelis_menten
 
-  end subroutine marbl_params_set_defaults
+  end subroutine marbl_parms_set_defaults
 
   !*****************************************************************************
 
-  subroutine marbl_params_init(nl_buffer, marbl_status_log)
+  subroutine marbl_parms_init(nl_buffer, marbl_status_log)
 
     use marbl_namelist_mod, only : marbl_nl_cnt
     use marbl_namelist_mod, only : marbl_nl_buffer_size
@@ -560,7 +559,7 @@ contains
     ! set defaults for namelist variables before reading them
     !---------------------------------------------------------------------------
 
-    call marbl_params_set_defaults()
+    call marbl_parms_set_defaults()
 
     !---------------------------------------------------------------------------
     ! read in namelist to override some defaults
@@ -576,7 +575,7 @@ contains
       call marbl_status_log%log_namelist('ecosys_parms_nml', tmp_nl_buffer, subname)
     end if
 
-  end subroutine marbl_params_init
+  end subroutine marbl_parms_init
 
   !*****************************************************************************
 
@@ -586,11 +585,18 @@ contains
     type(marbl_log_type),    intent(inout) :: marbl_status_log
  
     character(*), parameter :: subname = 'marbl_parms:marbl_parms_construct'
+    character(len=char_len) :: log_message
     character(len=char_len) :: sname, lname, units, datatype
     real(r8),                pointer :: rptr => NULL()
     integer(int_kind),       pointer :: iptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
+
+    if (associated(this%parms)) then
+      write(log_message, "(A)") "this%parameters has been constructed already"
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
 
     this%parms_cnt = 0
     allocate(this%parms(this%parms_cnt))
