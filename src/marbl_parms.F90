@@ -5,8 +5,8 @@ module marbl_parms
   !
   !   Most of the variables are not parameters in the Fortran sense. In the
   !   the Fortran sense, they are vanilla module variables associated with one
-  !   of the four MARBL namelists (ecosys_nml, ecosys_parms_nml,
-  !   ecosys_ciso_nml, and ecosys_restore_nml)
+  !   of the four MARBL namelists (marbl_ecosys_base_nml, marbl_parms_nml, 
+  !   marbl_ciso_nml, and marbl_restore_nml)
   !
   !   In addition to containing all the namelist variables, this modules also
   !   handles initializing the variables in &marbl_parms_nml to default values
@@ -49,7 +49,7 @@ module marbl_parms
   save
 
   !---------------------------------------------------------------------
-  !  Variables read in via &ecosys_nml
+  !  Variables read in via &marbl_ecosys_base_nml
   !---------------------------------------------------------------------
 
   type(marbl_tracer_read_type) :: tracer_init_ext(ecosys_base_tracer_cnt) ! namelist variable for initializing tracers 
@@ -101,7 +101,7 @@ module marbl_parms
   type(marbl_forcing_monthly_every_ts_type), pointer :: doc_riv_flux_file     ! river doc flux, added to semi-labile DOC
 
   !---------------------------------------------------------------------
-  !  Variables read in via &ecosys_parms_nml
+  !  Variables read in via &marbl_parms_nml
   !---------------------------------------------------------------------
 
   REAL(KIND=r8) :: &
@@ -129,7 +129,7 @@ module marbl_parms
   type(grazing_type)     :: grazing(grazer_prey_cnt, zooplankton_cnt)
 
   !---------------------------------------------------------------------
-  !  Variables read in via &ecosys_ciso_nml
+  !  Variables read in via &marbl_ciso_nml
   !---------------------------------------------------------------------
 
   type(marbl_tracer_read_type) :: ciso_tracer_init_ext(ciso_tracer_cnt) ! namelist variable for initializing tracers
@@ -159,7 +159,7 @@ module marbl_parms
   character (char_len)        :: ciso_atm_d14c_filename(3)      ! filenames for varying atm D14C (one each for NH, SH, EQ)
 
   !---------------------------------------------------------------------
-  !  Variables read in via &ecosys_restore_nml
+  !  Variables read in via &marbl_restore_nml
   !---------------------------------------------------------------------
 
   character(len=char_len), allocatable, dimension(:) :: restore_short_names, &
@@ -194,7 +194,7 @@ module marbl_parms
   end type marbl_parms_type
 
   !---------------------------------------------------------------------
-  !  BGC parameters that are not part of ecosys_parms_nml
+  !  BGC parameters that are not part of marbl_parms_nml
   !---------------------------------------------------------------------
 
   ! Redfield Ratios, dissolved & particulate
@@ -534,7 +534,7 @@ contains
 
     integer(kind=int_kind) :: io_error
 
-    NAMELIST /ecosys_parms_nml/ &
+    NAMELIST /marbl_parms_nml/ &
          parm_Fe_bioavail, &
          parm_o2_min, &
          parm_o2_min_delta, &
@@ -565,14 +565,14 @@ contains
     ! read in namelist to override some defaults
     !---------------------------------------------------------------------------
 
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'ecosys_parms_nml')
-    read(tmp_nl_buffer, nml=ecosys_parms_nml, iostat=io_error)
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_parms_nml')
+    read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=io_error)
     if (io_error /= 0) then
-       call marbl_status_log%log_error("Error reading ecosys_parms_nml", subname)
+       call marbl_status_log%log_error("Error reading marbl_parms_nml", subname)
        return
     else
-       ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_parms_nml
-      call marbl_status_log%log_namelist('ecosys_parms_nml', tmp_nl_buffer, subname)
+       ! FIXME #16: this is printing contents of pop_in, not the entire marbl_parms_nml
+      call marbl_status_log%log_namelist('marbl_parms_nml', tmp_nl_buffer, subname)
     end if
 
   end subroutine marbl_parms_init
@@ -711,11 +711,107 @@ contains
     
     sname     = 'ndep_shr_stream_year_first'
     lname     = 'First year to use in ndep stream file'
-    units     = 'years CE'
+    units     = 'years'
     datatype  = 'integer'
     iptr      => ndep_shr_stream_year_first
     call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
                         iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+    
+    sname     = 'ndep_shr_stream_year_last'
+    lname     = 'Last year to use in ndep stream file'
+    units     = 'years'
+    datatype  = 'integer'
+    iptr      => ndep_shr_stream_year_last
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+    
+    sname     = 'ndep_shr_stream_year_align'
+    lname     = 'Align ndep_shr_stream_year_first with this model year'
+    units     = 'year CE'
+    datatype  = 'integer'
+    iptr      => ndep_shr_stream_year_align
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+    
+    sname     = 'ndep_shr_stream_year_file'
+    lname     = 'File containing ndep domain and input data'
+    units     = 'unitless'
+    datatype  = 'string'
+    sptr      => ndep_shr_stream_file
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+    
+    sname     = 'ndep_shr_stream_scale_factor'
+    lname     = 'Unit conversion factor'
+    units     = 'unknown'
+    datatype  = 'real'
+    rptr      => ndep_shr_stream_scale_factor
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+    
+    sname     = 'dust_flux_source'
+    lname     = 'Option for atmospheric dust deposition'
+    units     = 'unitless'
+    datatype  = 'string'
+    sptr      => dust_flux_source
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+    
+    sname     = 'iron_flux_source'
+    lname     = 'Option for atmospheric iron deposition'
+    units     = 'unitless'
+    datatype  = 'string'
+    sptr      => iron_flux_source
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+    
+    sname     = 'iron_frac_in_dust'
+    lname     = 'Fraction by weight of iron in dust'
+    units     = 'unitless (kg/kg)'
+    datatype  = 'real'
+    rptr      => iron_frac_in_dust
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+    
+    sname     = 'iron_frac_in_bc'
+    lname     = 'Fraction by weight of iron in black carbon'
+    units     = 'unitless (kg/kg)'
+    datatype  = 'real'
+    rptr      => iron_frac_in_dust
+    call this%add_parms(sname, lname, units, datatype, marbl_status_log,      &
+                        rptr=rptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_parms_error(marbl_status_log, sname, subname)
       return

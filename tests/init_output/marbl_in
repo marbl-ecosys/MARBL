@@ -1,11 +1,11 @@
 &marbl_driver_nml
 testname="namelist_write"
 /
-&ecosys_nml
+&marbl_ecosys_base_nml
 /
-&ecosys_ciso_nml
+&marbl_ciso_nml
 /
-&ecosys_parms_nml
+&marbl_parms_nml
 /
-&ecosys_restore_nml
+&marbl_restore_nml
 /

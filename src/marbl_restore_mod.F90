@@ -84,7 +84,7 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
 
   !-----------------------------------------------------------------------
 
-  namelist /ecosys_restore_nml/       &
+  namelist /marbl_restore_nml/        &
        restore_short_names,           &
        restore_filenames,             &
        restore_file_varnames,         &
@@ -113,15 +113,15 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   rest_z0 = default_rest_z0
   rest_z1 = default_rest_z1
 
-  tmp_nl_buffer = marbl_namelist(nl_buffer, 'ecosys_restore_nml')
-  read(tmp_nl_buffer, nml=ecosys_restore_nml, iostat=nml_error)
+  tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_restore_nml')
+  read(tmp_nl_buffer, nml=marbl_restore_nml, iostat=nml_error)
   if (nml_error /= 0) then
-     log_message = "Error reading ecosys_restore_nml"
+     log_message = "Error reading marbl_restore_nml"
      call status_log%log_error(log_message, subname)
      return
   else
-    ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_restore_nml
-    call status_log%log_namelist('ecosys_restore_nml', tmp_nl_buffer, subname)
+    ! FIXME #16: this is printing contents of pop_in, not the entire marbl_restore_nml
+    call status_log%log_namelist('marbl_restore_nml', tmp_nl_buffer, subname)
   end if
 
   ! Set up inverse tau based on namelist values

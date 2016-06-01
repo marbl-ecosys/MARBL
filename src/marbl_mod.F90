@@ -418,7 +418,7 @@ contains
     logical (log_kind)           :: lnutr_variable_restore      ! geographically varying nutrient restoring (maltrud)
     logical (log_kind)           :: locmip_k1_k2_bug_fix
 
-    namelist /ecosys_nml/                                                 &
+    namelist /marbl_ecosys_base_nml/                                      &
          init_ecosys_option, init_ecosys_init_file, tracer_init_ext,      &
          init_ecosys_init_file_fmt,                                       &
          dust_flux_source, dust_flux_input,                               &
@@ -610,14 +610,15 @@ contains
     ! read the namelist buffer on every processor
     !-----------------------------------------------------------------------
 
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'ecosys_nml')
-    read(tmp_nl_buffer, nml=ecosys_nml, iostat=nml_error)
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_ecosys_base_nml')
+    read(tmp_nl_buffer, nml=marbl_ecosys_base_nml, iostat=nml_error)
     if (nml_error /= 0) then
-      call marbl_status_log%log_error("error reading &ecosys_nml", subname)
+      call marbl_status_log%log_error("error reading &marbl_ecosys_base_nml", subname)
       return
     else
-      ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_nml
-      call marbl_status_log%log_namelist('ecosys_nml', tmp_nl_buffer, subname)
+      ! FIXME #16: this is printing contents of pop_in, not the entire
+      !            marbl_ecosys_base_nml
+      call marbl_status_log%log_namelist('marbl_ecosys_base_nml', tmp_nl_buffer, subname)
     end if
 
     !-----------------------------------------------------------------------
@@ -689,10 +690,9 @@ contains
     end select
 
     !-----------------------------------------------------------------------
-    !  read ecosys_parms_nml namelist
+    !  read marbl_parms_nml namelist
     !-----------------------------------------------------------------------
 
-    ! FIXME #11: eliminate marbl_parms!
     call marbl_parms_init(nl_buffer, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('marbl_parms_init', subname)

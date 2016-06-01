@@ -131,8 +131,8 @@ contains
     character(len=marbl_nl_buffer_size) :: &
          tmp_nl_buffer
 
-    ! ecosys_ciso_nml namelist
-    namelist /ecosys_ciso_nml/ &
+    ! marbl_ciso_nml namelist
+    namelist /marbl_ciso_nml/ &
          ciso_init_ecosys_option, ciso_init_ecosys_init_file, &
          ciso_init_ecosys_init_file_fmt, ciso_tracer_init_ext, &
          ciso_lsource_sink, &
@@ -181,14 +181,14 @@ contains
     ! read the namelist buffer on every processor
     !-----------------------------------------------------------------------
 
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'ecosys_ciso_nml')
-    read(tmp_nl_buffer, nml=ecosys_ciso_nml, iostat=nml_error)
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_ciso_nml')
+    read(tmp_nl_buffer, nml=marbl_ciso_nml, iostat=nml_error)
     if (nml_error /= 0) then
-       call marbl_status_log%log_error("error reading &ecosys_ciso_nml", subname)
+       call marbl_status_log%log_error("error reading &marbl_ciso_nml", subname)
        return
     else
-       ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_ciso_nml
-       call marbl_status_log%log_namelist('ecosys_ciso_nml', tmp_nl_buffer, subname)
+       ! FIXME #16: this is printing contents of pop_in, not the entire marbl_ciso_nml
+       call marbl_status_log%log_namelist('marbl_ciso_nml', tmp_nl_buffer, subname)
     end if
 
   end subroutine marbl_ciso_init_nml
