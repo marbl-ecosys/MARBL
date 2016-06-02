@@ -5,7 +5,7 @@ module marbl_parms
   !
   !   Most of the variables are not parameters in the Fortran sense. In the
   !   the Fortran sense, they are vanilla module variables associated with one
-  !   of the four MARBL namelists (marbl_ecosys_base_nml, marbl_parms_nml, 
+  !   of the four MARBL namelists (marbl_ecosys_base_nml, marbl_parms_nml,
   !   marbl_ciso_nml, and marbl_restore_nml)
   !
   !   In addition to containing all the namelist variables, this modules also
@@ -52,7 +52,7 @@ module marbl_parms
   !  Variables read in via &marbl_ecosys_base_nml
   !---------------------------------------------------------------------
 
-  type(marbl_tracer_read_type) :: tracer_init_ext(ecosys_base_tracer_cnt) ! namelist variable for initializing tracers 
+  type(marbl_tracer_read_type) :: tracer_init_ext(ecosys_base_tracer_cnt) ! namelist variable for initializing tracers
   type(marbl_tracer_read_type) :: fesedflux_input                    ! namelist input for iron_flux
 
   character(char_len), target :: gas_flux_forcing_file        ! file containing gas flux forcing fields
@@ -113,12 +113,12 @@ module marbl_parms
        parm_labile_ratio,     & ! fraction of loss to DOC that routed directly to DIC (non-dimensional)
        parm_POMbury,          & ! scale factor for burial of POC, PON, and POP
        parm_BSIbury,          & ! scale factor burial of bSi
-       parm_fe_scavenge_rate0,& ! base scavenging rate
-       parm_f_prod_sp_CaCO3,  & !fraction of sp prod. as CaCO3 prod.
-       parm_POC_diss,         & ! base POC diss len scale
-       parm_SiO2_diss,        & ! base SiO2 diss len scale
-       parm_CaCO3_diss,       & ! base CaCO3 diss len scale
-       fe_max_scale2            ! unitless scaling coeff.
+       parm_fe_scavenge_rate0,& ! base scavenging rate (1/yr)
+       parm_f_prod_sp_CaCO3,  & ! fraction of sp prod. as CaCO3 prod.
+       parm_POC_diss,         & ! base POC diss len scale (cm)
+       parm_SiO2_diss,        & ! base SiO2 diss len scale (cm)
+       parm_CaCO3_diss,       & ! base CaCO3 diss len scale (cm)
+       fe_max_scale2            ! scaling coeff. (cm^3 / nmol / yr = m^3 / mmol / yr)
 
   real(kind=r8), dimension(4) :: &
        parm_scalelen_z,       & ! depths of prescribed scalelen values
@@ -224,19 +224,19 @@ module marbl_parms
   !                    --------- *  ---------- * ----------
   !                      gDust      55.847 gFe     molFe
   !
-  ! dust_to_Fe          conversion - dust to iron (nmol Fe/g Dust) 
+  ! dust_to_Fe          conversion - dust to iron (nmol Fe/g Dust)
   real(kind=r8), parameter :: &
        dust_to_Fe=0.035_r8/55.847_r8*1.0e9_r8
- 
+
   ! Partitioning of phytoplankton growth, grazing and losses
   ! All f_* variables are fractions and are non-dimensional
   real(kind=r8), parameter :: &
-      caco3_poc_min         = 0.40_r8,  & ! minimum proportionality between 
-                                          !   QCaCO3 and grazing losses to POC 
+      caco3_poc_min         = 0.40_r8,  & ! minimum proportionality between
+                                          !   QCaCO3 and grazing losses to POC
                                           !   (mmol C/mmol CaCO3)
       spc_poc_fac           = 0.10_r8,  & ! small phyto grazing factor (1/mmolC)
-      f_graze_sp_poc_lim    = 0.40_r8,  & 
-      f_photosp_CaCO3       = 0.40_r8,  & ! proportionality between small phyto 
+      f_graze_sp_poc_lim    = 0.40_r8,  &
+      f_photosp_CaCO3       = 0.40_r8,  & ! proportionality between small phyto
                                           !    production and CaCO3 production
       f_graze_CaCO3_remin   = 0.33_r8,  & ! fraction of spCaCO3 grazing which is remin
       f_graze_si_remin      = 0.50_r8,  & ! fraction of diatom Si grazing which is remin
@@ -354,7 +354,7 @@ contains
     !---------------------------------------------------------------------------
     integer :: auto_ind, zoo_ind, prey_ind
     !---------------------------------------------------------------------------
-    
+
     parm_Fe_bioavail       = 1.0_r8
     parm_o2_min            = 5.0_r8
     parm_o2_min_delta      = 5.0_r8
@@ -433,7 +433,6 @@ contains
     autotrophs(auto_ind)%agg_rate_max  = 0.5_r8
     autotrophs(auto_ind)%agg_rate_min  = 0.02_r8
     autotrophs(auto_ind)%loss_poc      = 0.0_r8
-   
 
     auto_ind = diaz_ind
     autotrophs(auto_ind)%sname         = 'diaz'
@@ -461,7 +460,6 @@ contains
     autotrophs(auto_ind)%agg_rate_max  = 0.5_r8
     autotrophs(auto_ind)%agg_rate_min  = 0.01_r8
     autotrophs(auto_ind)%loss_poc      = 0.0_r8
- 
 
     !---------------------------------------------------------------------------
     ! predator-prey relationships
@@ -475,7 +473,7 @@ contains
     grazing(prey_ind,zoo_ind)%zoo_ind          = -1
     grazing(prey_ind,zoo_ind)%zoo_ind_cnt      = 0
     grazing(prey_ind,zoo_ind)%z_umax_0         = 3.25_r8 * dps
-    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8              
+    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8
     grazing(prey_ind,zoo_ind)%graze_zoo        = 0.3_r8
     grazing(prey_ind,zoo_ind)%graze_poc        = 0.0_r8
     grazing(prey_ind,zoo_ind)%graze_doc        = 0.06_r8
@@ -490,7 +488,7 @@ contains
     grazing(prey_ind,zoo_ind)%zoo_ind          = -1
     grazing(prey_ind,zoo_ind)%zoo_ind_cnt      = 0
     grazing(prey_ind,zoo_ind)%z_umax_0         = 2.9_r8 * dps
-    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8              
+    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8
     grazing(prey_ind,zoo_ind)%graze_zoo        = 0.3_r8
     grazing(prey_ind,zoo_ind)%graze_poc        = 0.4_r8
     grazing(prey_ind,zoo_ind)%graze_doc        = 0.06_r8
@@ -505,7 +503,7 @@ contains
     grazing(prey_ind,zoo_ind)%zoo_ind          = -1
     grazing(prey_ind,zoo_ind)%zoo_ind_cnt      = 0
     grazing(prey_ind,zoo_ind)%z_umax_0         = 1.85_r8 * dps
-    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8              
+    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8
     grazing(prey_ind,zoo_ind)%graze_zoo        = 0.3_r8
     grazing(prey_ind,zoo_ind)%graze_poc        = 0.08_r8
     grazing(prey_ind,zoo_ind)%graze_doc        = 0.06_r8
@@ -552,7 +550,7 @@ contains
          fe_max_scale2, &
          parm_scalelen_z, &
          parm_scalelen_vals, &
-         autotrophs, & 
+         autotrophs, &
          zooplankton, &
          grazing
 
@@ -571,9 +569,6 @@ contains
     if (io_error /= 0) then
        call marbl_status_log%log_error("Error reading marbl_parms_nml", subname)
        return
-    else
-       ! FIXME #16: this is printing contents of pop_in, not the entire marbl_parms_nml
-      call marbl_status_log%log_namelist('marbl_parms_nml', tmp_nl_buffer, subname)
     end if
 
   end subroutine marbl_parms_init
@@ -584,7 +579,7 @@ contains
 
     class(marbl_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
- 
+
     character(*), parameter :: subname = 'marbl_parms:marbl_parms_construct'
     character(len=char_len) :: log_message
     character(len=char_len) :: sname, lname, units, datatype, group
@@ -631,7 +626,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'atm_alt_co2_const'
     lname     =  'Value of atmospheric alternative co2'
     units     =  'ppm (dry air; 1 atm)'
@@ -644,7 +639,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'lflux_gas_o2'
     lname      = 'Run O2 gas flux portion of the code'
     units      = 'unitless'
@@ -656,7 +651,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'lflux_gas_co2'
     lname      = 'Run CO2 gas flux portion of the code'
     units      = 'unitless'
@@ -681,7 +676,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'init_ecosys_init_file'
     lname     =  'File containing base ecosys init conditions'
     units     =  'unitless'
@@ -694,7 +689,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'init_ecosys_init_file_fmt'
     lname     =  'Format of file containing base ecosys init conditions'
     units     =  'unitless'
@@ -707,7 +702,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'liron_patch'
     lname     = 'Turn on iron patch fertilization'
     units     = 'unitless'
@@ -720,7 +715,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'ndep_shr_stream_year_first'
     lname     = 'First year to use in ndep stream file'
     units     = 'years'
@@ -733,7 +728,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'ndep_shr_stream_year_last'
     lname     = 'Last year to use in ndep stream file'
     units     = 'years'
@@ -746,7 +741,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'ndep_shr_stream_year_align'
     lname     = 'Align ndep_shr_stream_year_first with this model year'
     units     = 'year CE'
@@ -759,7 +754,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'ndep_shr_stream_year_file'
     lname     = 'File containing ndep domain and input data'
     units     = 'unitless'
@@ -772,7 +767,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'ndep_shr_stream_scale_factor'
     lname     = 'Unit conversion factor'
     units     = 'unknown'
@@ -785,7 +780,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'dust_flux_source'
     lname     = 'Option for atmospheric dust deposition'
     units     = 'unitless'
@@ -798,7 +793,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'iron_flux_source'
     lname     = 'Option for atmospheric iron deposition'
     units     = 'unitless'
@@ -811,7 +806,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'iron_frac_in_dust'
     lname     = 'Fraction by weight of iron in dust'
     units     = 'unitless (kg/kg)'
@@ -824,7 +819,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'iron_frac_in_bc'
     lname     = 'Fraction by weight of iron in black carbon'
     units     = 'unitless (kg/kg)'
@@ -837,7 +832,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     !-----------------!
     ! marbl_parms_nml !
     !-----------------!
@@ -847,14 +842,14 @@ contains
     units     = 'unitless'
     datatype  = 'real'
     group     =  'marbl_parms_nml'
-    rptr      => parm_Fe_bioavail 
+    rptr      => parm_Fe_bioavail
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'parm_o2_min'
     lname     = 'Minimum O2 needed for production and consumption'
     units     = 'nmol/cm^3'
@@ -867,7 +862,7 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
     sname     = 'parm_o2_min_delta'
     lname     = 'Width of minimum O2 range'
     units     = 'nmol/cm^3'
@@ -880,7 +875,150 @@ contains
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
-    
+
+    sname     = 'parm_kappa_nitrif'
+    lname     = 'Nitrification inverse time constant'
+    units     = '1/s'
+    datatype  = 'real'
+    group     =  'marbl_parms_nml'
+    rptr      => parm_kappa_nitrif
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_nitrif_par_lim'
+    lname     = 'PAR limit for nitrification'
+    units     = 'W/m^2'
+    datatype  = 'real'
+    group     =  'marbl_parms_nml'
+    rptr      => parm_nitrif_par_lim
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_labile_ratio'
+    lname     = 'Fraction of loss to DOC that is routed directly to DIC'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     =  'marbl_parms_nml'
+    rptr      => parm_labile_ratio
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_POMbury'
+    lname     = 'scale factor for burial of POC, PON, and POP'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     =  'marbl_parms_nml'
+    rptr      => parm_POMbury
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_BSIbury'
+    lname     = 'scale factor for burial of bSi'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     =  'marbl_parms_nml'
+    rptr      => parm_BSIbury
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_fe_scavenge_rate0'
+    lname     = 'base scavenging rate'
+    units     = '1/yr'
+    datatype  = 'real'
+    group     =  'marbl_parms_nml'
+    rptr      => parm_fe_scavenge_rate0
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_f_prod_sp_CaCO3'
+    lname     = 'Fraction of sp production as CaCO3 production'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     =  'marbl_parms_nml'
+    rptr      => parm_f_prod_sp_CaCO3
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_POC_diss'
+    lname     = 'base POC dissolution length scale'
+    units     = 'cm'
+    datatype  = 'real'
+    group     =  'marbl_parms_nml'
+    rptr      => parm_POC_diss
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_SiO2_diss'
+    lname     = 'base SiO2 dissolution length scale'
+    units     = 'cm'
+    datatype  = 'real'
+    group     =  'marbl_parms_nml'
+    rptr      => parm_SiO2_diss
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_CaCO3_diss'
+    lname     = 'base CaCO3 dissolution length scale'
+    units     = 'cm'
+    datatype  = 'real'
+    group     =  'marbl_parms_nml'
+    rptr      => parm_CaCO3_diss
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'fe_max_scale2'
+    lname     = 'Scaling coefficient'
+    units     = 'm^3 / mmol / yr'
+    datatype  = 'real'
+    group     =  'marbl_parms_nml'
+    rptr      => fe_max_scale2
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
   end subroutine marbl_parms_construct
 
   !*****************************************************************************

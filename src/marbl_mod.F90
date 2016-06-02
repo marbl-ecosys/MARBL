@@ -615,10 +615,6 @@ contains
     if (nml_error /= 0) then
       call marbl_status_log%log_error("error reading &marbl_ecosys_base_nml", subname)
       return
-    else
-      ! FIXME #16: this is printing contents of pop_in, not the entire
-      !            marbl_ecosys_base_nml
-      call marbl_status_log%log_namelist('marbl_ecosys_base_nml', tmp_nl_buffer, subname)
     end if
 
     !-----------------------------------------------------------------------

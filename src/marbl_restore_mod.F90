@@ -119,9 +119,6 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
      log_message = "Error reading marbl_restore_nml"
      call status_log%log_error(log_message, subname)
      return
-  else
-    ! FIXME #16: this is printing contents of pop_in, not the entire marbl_restore_nml
-    call status_log%log_namelist('marbl_restore_nml', tmp_nl_buffer, subname)
   end if
 
   ! Set up inverse tau based on namelist values
