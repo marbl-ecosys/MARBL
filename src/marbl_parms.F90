@@ -189,9 +189,10 @@ module marbl_parms
     integer :: parms_cnt
     type(marbl_single_parms_type), dimension(:), pointer :: parms => NULL()
   contains
-    procedure :: construct  => marbl_parms_construct
-    procedure :: add_parms  => marbl_parms_add
-    procedure :: list_parms => marbl_parms_list
+    procedure :: construct        => marbl_parms_construct
+    procedure :: add_parms        => marbl_parms_add
+    procedure :: add_parms_1d_r8  => marbl_parms_add_1d_r8
+    procedure :: list_parms       => marbl_parms_list
   end type marbl_parms_type
 
   !---------------------------------------------------------------------
@@ -602,10 +603,10 @@ contains
     !-----------------------!
 
     sname     = 'gas_flux_forcing_file'
-    lname     =  'File containing gas flux forcing fields'
-    units     =  'unitless'
-    datatype  =  'string'
-    group     =  'marbl_ecosys_base_nml'
+    lname     = 'File containing gas flux forcing fields'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
     sptr      => gas_flux_forcing_file
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
@@ -615,10 +616,10 @@ contains
     end if
 
     sname     = 'atm_co2_const'
-    lname     =  'Value of atmospheric co2'
-    units     =  'ppm (dry air; 1 atm)'
-    datatype  =  'real'
-    group     =  'marbl_ecosys_base_nml'
+    lname     = 'Value of atmospheric co2'
+    units     = 'ppm (dry air; 1 atm)'
+    datatype  = 'real'
+    group     = 'marbl_ecosys_base_nml'
     rptr      => atm_co2_const
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -628,10 +629,10 @@ contains
     end if
 
     sname     = 'atm_alt_co2_const'
-    lname     =  'Value of atmospheric alternative co2'
-    units     =  'ppm (dry air; 1 atm)'
-    datatype  =  'real'
-    group     =  'marbl_ecosys_base_nml'
+    lname     = 'Value of atmospheric alternative co2'
+    units     = 'ppm (dry air; 1 atm)'
+    datatype  = 'real'
+    group     = 'marbl_ecosys_base_nml'
     rptr      => atm_alt_co2_const
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -665,10 +666,10 @@ contains
     end if
 
     sname     = 'init_ecosys_option'
-    lname     =  'How base ecosys module initialized'
-    units     =  'unitless'
-    datatype  =  'string'
-    group     =  'marbl_ecosys_base_nml'
+    lname     = 'How base ecosys module initialized'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
     sptr      => init_ecosys_option
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
@@ -678,10 +679,10 @@ contains
     end if
 
     sname     = 'init_ecosys_init_file'
-    lname     =  'File containing base ecosys init conditions'
-    units     =  'unitless'
-    datatype  =  'string'
-    group     =  'marbl_ecosys_base_nml'
+    lname     = 'File containing base ecosys init conditions'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
     sptr      => init_ecosys_init_file
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
@@ -691,10 +692,10 @@ contains
     end if
 
     sname     = 'init_ecosys_init_file_fmt'
-    lname     =  'Format of file containing base ecosys init conditions'
-    units     =  'unitless'
-    datatype  =  'string'
-    group     =  'marbl_ecosys_base_nml'
+    lname     = 'Format of file containing base ecosys init conditions'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
     sptr      => init_ecosys_init_file_fmt
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
@@ -707,7 +708,7 @@ contains
     lname     = 'Turn on iron patch fertilization'
     units     = 'unitless'
     datatype  = 'logical'
-    group     =  'marbl_ecosys_base_nml'
+    group     = 'marbl_ecosys_base_nml'
     lptr      => liron_patch
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, lptr=lptr)
@@ -720,7 +721,7 @@ contains
     lname     = 'First year to use in ndep stream file'
     units     = 'years'
     datatype  = 'integer'
-    group     =  'marbl_ecosys_base_nml'
+    group     = 'marbl_ecosys_base_nml'
     iptr      => ndep_shr_stream_year_first
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, iptr=iptr)
@@ -733,7 +734,7 @@ contains
     lname     = 'Last year to use in ndep stream file'
     units     = 'years'
     datatype  = 'integer'
-    group     =  'marbl_ecosys_base_nml'
+    group     = 'marbl_ecosys_base_nml'
     iptr      => ndep_shr_stream_year_last
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, iptr=iptr)
@@ -746,7 +747,7 @@ contains
     lname     = 'Align ndep_shr_stream_year_first with this model year'
     units     = 'year CE'
     datatype  = 'integer'
-    group     =  'marbl_ecosys_base_nml'
+    group     = 'marbl_ecosys_base_nml'
     iptr      => ndep_shr_stream_year_align
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, iptr=iptr)
@@ -759,7 +760,7 @@ contains
     lname     = 'File containing ndep domain and input data'
     units     = 'unitless'
     datatype  = 'string'
-    group     =  'marbl_ecosys_base_nml'
+    group     = 'marbl_ecosys_base_nml'
     sptr      => ndep_shr_stream_file
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
@@ -772,7 +773,7 @@ contains
     lname     = 'Unit conversion factor'
     units     = 'unknown'
     datatype  = 'real'
-    group     =  'marbl_ecosys_base_nml'
+    group     = 'marbl_ecosys_base_nml'
     rptr      => ndep_shr_stream_scale_factor
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -785,7 +786,7 @@ contains
     lname     = 'Option for atmospheric dust deposition'
     units     = 'unitless'
     datatype  = 'string'
-    group     =  'marbl_ecosys_base_nml'
+    group     = 'marbl_ecosys_base_nml'
     sptr      => dust_flux_source
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
@@ -798,7 +799,7 @@ contains
     lname     = 'Option for atmospheric iron deposition'
     units     = 'unitless'
     datatype  = 'string'
-    group     =  'marbl_ecosys_base_nml'
+    group     = 'marbl_ecosys_base_nml'
     sptr      => iron_flux_source
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
@@ -811,7 +812,7 @@ contains
     lname     = 'Fraction by weight of iron in dust'
     units     = 'unitless (kg/kg)'
     datatype  = 'real'
-    group     =  'marbl_ecosys_base_nml'
+    group     = 'marbl_ecosys_base_nml'
     rptr      => iron_frac_in_dust
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -824,7 +825,7 @@ contains
     lname     = 'Fraction by weight of iron in black carbon'
     units     = 'unitless (kg/kg)'
     datatype  = 'real'
-    group     =  'marbl_ecosys_base_nml'
+    group     = 'marbl_ecosys_base_nml'
     rptr      => iron_frac_in_dust
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -841,7 +842,7 @@ contains
     lname     = 'Fraction of Fe flux that is bioavailable'
     units     = 'unitless'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_Fe_bioavail
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -854,7 +855,7 @@ contains
     lname     = 'Minimum O2 needed for production and consumption'
     units     = 'nmol/cm^3'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_o2_min
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -867,7 +868,7 @@ contains
     lname     = 'Width of minimum O2 range'
     units     = 'nmol/cm^3'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_o2_min_delta
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -880,7 +881,7 @@ contains
     lname     = 'Nitrification inverse time constant'
     units     = '1/s'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_kappa_nitrif
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -893,7 +894,7 @@ contains
     lname     = 'PAR limit for nitrification'
     units     = 'W/m^2'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_nitrif_par_lim
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -906,7 +907,7 @@ contains
     lname     = 'Fraction of loss to DOC that is routed directly to DIC'
     units     = 'unitless'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_labile_ratio
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -919,7 +920,7 @@ contains
     lname     = 'scale factor for burial of POC, PON, and POP'
     units     = 'unitless'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_POMbury
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -932,7 +933,7 @@ contains
     lname     = 'scale factor for burial of bSi'
     units     = 'unitless'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_BSIbury
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -945,7 +946,7 @@ contains
     lname     = 'base scavenging rate'
     units     = '1/yr'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_fe_scavenge_rate0
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -958,7 +959,7 @@ contains
     lname     = 'Fraction of sp production as CaCO3 production'
     units     = 'unitless'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_f_prod_sp_CaCO3
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -971,7 +972,7 @@ contains
     lname     = 'base POC dissolution length scale'
     units     = 'cm'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_POC_diss
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -984,7 +985,7 @@ contains
     lname     = 'base SiO2 dissolution length scale'
     units     = 'cm'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_SiO2_diss
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -997,7 +998,7 @@ contains
     lname     = 'base CaCO3 dissolution length scale'
     units     = 'cm'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => parm_CaCO3_diss
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
@@ -1010,12 +1011,34 @@ contains
     lname     = 'Scaling coefficient'
     units     = 'm^3 / mmol / yr'
     datatype  = 'real'
-    group     =  'marbl_parms_nml'
+    group     = 'marbl_parms_nml'
     rptr      => fe_max_scale2
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_scalelen_z'
+    lname     = 'Depths of prescribed scale length values'
+    units     = 'cm'
+    group     = 'marbl_parms_nml'
+    call this%add_parms_1d_r8(sname, lname, units, group, parm_scalelen_z,    &
+                              marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_parms_1d_r8', subname)
+      return
+    end if
+
+    sname     = 'parm_scalelen_vals'
+    lname     = 'Prescribed scale length values'
+    units     = 'cm'
+    group     = 'marbl_parms_nml'
+    call this%add_parms_1d_r8(sname, lname, units, group, parm_scalelen_vals, &
+                              marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_parms_1d_r8', subname)
       return
     end if
 
@@ -1027,11 +1050,11 @@ contains
              marbl_status_log, rptr, iptr, lptr, sptr)
 
     class(marbl_parms_type), intent(inout) :: this
-    character(len=char_len), intent(in)    :: sname
-    character(len=char_len), intent(in)    :: lname
-    character(len=char_len), intent(in)    :: units
-    character(len=char_len), intent(in)    :: datatype
-    character(len=char_len), intent(in)    :: group
+    character(len=*),        intent(in)    :: sname
+    character(len=*),        intent(in)    :: lname
+    character(len=*),        intent(in)    :: units
+    character(len=*),        intent(in)    :: datatype
+    character(len=*),        intent(in)    :: group
     type(marbl_log_type),    intent(inout) :: marbl_status_log
     real(r8),                optional, pointer, intent(in) :: rptr
     integer,                 optional, pointer, intent(in) :: iptr
@@ -1073,11 +1096,6 @@ contains
     end do
 
     ! 3) add newest parm variable
-    new_parms(id)%short_name = sname
-    new_parms(id)%long_name  = lname
-    new_parms(id)%units      = units
-    new_parms(id)%datatype   = datatype
-    new_parms(id)%group      = group
     select case (trim(datatype))
       case ('real')
         if (present(rptr)) then
@@ -1116,10 +1134,15 @@ contains
           return
         end if
       case DEFAULT
-        write(log_message, "(2A)") "Unkown datatype: ", trim(datatype)
+        write(log_message, "(2A)") "Unknown datatype: ", trim(datatype)
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
+    new_parms(id)%short_name = trim(sname)
+    new_parms(id)%long_name  = trim(lname)
+    new_parms(id)%units      = trim(units)
+    new_parms(id)%datatype   = trim(datatype)
+    new_parms(id)%group      = trim(group)
 
     ! 4) deallocate / nullify this%parms
     deallocate(this%parms)
@@ -1130,6 +1153,37 @@ contains
     this%parms_cnt = id
 
   end subroutine marbl_parms_add
+
+  !*****************************************************************************
+
+  subroutine marbl_parms_add_1d_r8(this, sname, lname, units, group, r8array, &
+                                   marbl_status_log)
+
+    class(marbl_parms_type),             intent(inout) :: this
+    character(len=char_len),             intent(in)    :: sname
+    character(len=char_len),             intent(in)    :: lname
+    character(len=char_len),             intent(in)    :: units
+    character(len=char_len),             intent(in)    :: group
+    real(kind=r8), dimension(:), target, intent(in)    :: r8array
+    type(marbl_log_type),                intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_parms:marbl_parms_add'
+    character(len=char_len) :: sname_loc
+    real(r8), pointer :: rptr => NULL()
+    integer :: n
+
+    do n=1,size(r8array)
+      write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
+      rptr => r8array(n)
+      call this%add_parms(sname_loc, lname, units, 'real', group,             &
+                          marbl_status_log, rptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_parms_error(marbl_status_log, sname_loc, subname)
+        return
+      end if
+    end do
+
+  end subroutine marbl_parms_add_1d_r8
 
   !*****************************************************************************
 
