@@ -83,6 +83,22 @@ module marbl_parms
   real(r8), target :: iron_frac_in_dust            ! fraction by weight of iron in dust
   real(r8), target :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
 
+  logical (log_kind) ::  lsource_sink             ! control which portion of code are executed, useful for debugging
+  logical (log_kind)  :: lecovars_full_depth_tavg ! should ecosystem vars be written full depth
+  character(char_len) :: caco3_bury_thres_opt   ! option of threshold of caco3 burial ['fixed_depth', 'omega_calc']
+  integer (int_kind)  :: caco3_bury_thres_iopt   ! integer version of caco3_bury_thres_opt
+  integer (int_kind), parameter :: caco3_bury_thres_iopt_fixed_depth = 1
+  integer (int_kind), parameter :: caco3_bury_thres_iopt_omega_calc  = 2
+  real (r8) :: caco3_bury_thres_depth ! threshold depth for caco3_bury_thres_opt='fixed_depth'
+  ! PON_sed_loss = PON_bury_coeff * Q * POC_sed_loss
+  ! factor is used to avoid overburying PON like POC
+  ! is when total C burial is matched to C riverine input
+  real (r8) :: PON_bury_coeff
+  ! POP_sed_loss = POP_bury_coeff * Qp_zoo_pom * POC_sed_loss
+  ! factor is used to enable forced closure of the P cycle
+  ! i.e. POP_sed_loss = P inputs (riverine + atm dep)
+  real (r8) :: POP_bury_coeff
+
   type(marbl_forcing_monthly_every_ts_type), pointer :: fice_file             ! ice fraction, if read from file
   type(marbl_forcing_monthly_every_ts_type), pointer :: xkw_file              ! a * wind-speed ** 2, if read from file
   type(marbl_forcing_monthly_every_ts_type), pointer :: ap_file               ! atmoshperic pressure, if read from file
@@ -325,13 +341,63 @@ module marbl_parms
          grz_fnc_michaelis_menten = 1,       &
          grz_fnc_sigmoidal        = 2
 
+  !-----------------------------------------------------------------------
+  !  input surface forcing
+  !-----------------------------------------------------------------------
+  ! FIXME #56 : move this option, and corresponding code to driver when
+  ! surface forcing source is selected in driver, instead of MARBL
+
+  logical (log_kind) :: liron_flux_derived
+  type(marbl_forcing_monthly_every_ts_type), target :: dust_flux_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: iron_flux_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: fice_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: xkw_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: ap_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: nox_flux_monthly_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: nhy_flux_monthly_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: din_riv_flux_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: dip_riv_flux_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: don_riv_flux_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: dop_riv_flux_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: dsi_riv_flux_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: dfe_riv_flux_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: dic_riv_flux_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: alk_riv_flux_file_loc
+  type(marbl_forcing_monthly_every_ts_type), target :: doc_riv_flux_file_loc
+
+  ! Parameters where namelist doesn't match module variable name
+  type(marbl_tracer_read_type) :: dust_flux_input             ! namelist input for dust_flux
+  type(marbl_tracer_read_type) :: iron_flux_input             ! namelist input for iron_flux
+  type(marbl_tracer_read_type) :: nox_flux_monthly_input      ! namelist input for nox_flux_monthly
+  type(marbl_tracer_read_type) :: nhy_flux_monthly_input      ! namelist input for nhy_flux_monthly
+  type(marbl_tracer_read_type) :: din_riv_flux_input          ! namelist input for din_riv_flux
+  type(marbl_tracer_read_type) :: dip_riv_flux_input          ! namelist input for dip_riv_flux
+  type(marbl_tracer_read_type) :: don_riv_flux_input          ! namelist input for don_riv_flux
+  type(marbl_tracer_read_type) :: dop_riv_flux_input          ! namelist input for dop_riv_flux
+  type(marbl_tracer_read_type) :: dsi_riv_flux_input          ! namelist input for dsi_riv_flux
+  type(marbl_tracer_read_type) :: dfe_riv_flux_input          ! namelist input for dfe_riv_flux
+  type(marbl_tracer_read_type) :: dic_riv_flux_input          ! namelist input for dic_riv_flux
+  type(marbl_tracer_read_type) :: alk_riv_flux_input          ! namelist input for alk_riv_flux
+  type(marbl_tracer_read_type) :: doc_riv_flux_input          ! namelist input for doc_riv_flux
+  character(char_len)          :: gas_flux_forcing_opt        ! option for forcing gas fluxes
+  type(marbl_tracer_read_type) :: gas_flux_fice               ! ice fraction for gas fluxes
+  type(marbl_tracer_read_type) :: gas_flux_ws                 ! wind speed for gas fluxes
+  type(marbl_tracer_read_type) :: gas_flux_ap                 ! atmospheric pressure for gas fluxes
+  character(char_len)          :: nutr_rest_file              ! file containing nutrient fields
+  character(char_len)          :: nutr_variable_rest_file     ! file containing variable restoring info
+  character(char_len)          :: nutr_variable_rest_file_fmt ! format of file containing variable restoring info
+  logical (log_kind)           :: lnutr_variable_restore      ! geographically varying nutrient restoring (maltrud)
+  logical (log_kind)           :: locmip_k1_k2_bug_fix
+  character(char_len)          :: atm_co2_opt                 ! option for atmospheric co2 concentration
+  character(char_len)          :: atm_alt_co2_opt             ! option for atmospheric alternative CO2
+
   !*****************************************************************************
 
   public :: &
-       marbl_parms_init
+       marbl_parms_read_namelist, &
+       marbl_parms_set_defaults
 
   private ::                     &
-       marbl_parms_set_defaults, &
        log_add_parms_error
 
   ! Variables used from other modules should be private
@@ -346,6 +412,8 @@ contains
   !*****************************************************************************
 
   subroutine marbl_parms_set_defaults()
+
+    use marbl_constants_mod, only : c0
     ! assign default parameter values
 
     implicit none
@@ -353,8 +421,172 @@ contains
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    integer :: auto_ind, zoo_ind, prey_ind
+    integer :: auto_ind, zoo_ind, prey_ind, n
     !---------------------------------------------------------------------------
+
+    !-----------------------------------------------------------------------
+    !  default namelist settings
+    !-----------------------------------------------------------------------
+    init_ecosys_option = 'unknown'
+    init_ecosys_init_file = 'unknown'
+    init_ecosys_init_file_fmt = 'bin'
+
+    gas_flux_forcing_opt  = 'drv'
+    gas_flux_forcing_file = 'unknown'
+
+    gas_flux_fice%filename     = 'unknown'
+    gas_flux_fice%file_varname = 'FICE'
+    gas_flux_fice%scale_factor = c1
+    gas_flux_fice%default_val  = c0
+    gas_flux_fice%file_fmt     = 'bin'
+
+    gas_flux_ws%filename     = 'unknown'
+    gas_flux_ws%file_varname = 'XKW'
+    gas_flux_ws%scale_factor = c1
+    gas_flux_ws%default_val  = c0
+    gas_flux_ws%file_fmt     = 'bin'
+
+    gas_flux_ap%filename     = 'unknown'
+    gas_flux_ap%file_varname = 'P'
+    gas_flux_ap%scale_factor = c1
+    gas_flux_ap%default_val  = c0
+    gas_flux_ap%file_fmt     = 'bin'
+
+    nutr_rest_file = 'unknown'
+
+    !maltrud variable restoring
+    lnutr_variable_restore      = .false.
+    nutr_variable_rest_file     = 'unknown'
+    nutr_variable_rest_file_fmt = 'bin'
+
+    dust_flux_source             = 'monthly-calendar'
+    dust_flux_input%filename     = 'unknown'
+    dust_flux_input%file_varname = 'dust_flux'
+    dust_flux_input%scale_factor = c1
+    dust_flux_input%default_val  = c0
+    dust_flux_input%file_fmt     = 'bin'
+
+    iron_flux_source             = 'monthly-calendar'
+    iron_flux_input%filename     = 'unknown'
+    iron_flux_input%file_varname = 'iron_flux'
+    iron_flux_input%scale_factor = c1
+    iron_flux_input%default_val  = c0
+    iron_flux_input%file_fmt     = 'bin'
+
+    iron_frac_in_dust            = 0.035_r8 * 0.01_r8
+    iron_frac_in_bc              = 0.06_r8
+
+    fesedflux_input%filename     = 'unknown'
+    fesedflux_input%file_varname = 'FESEDFLUXIN'
+    fesedflux_input%scale_factor = c1
+    fesedflux_input%default_val  = c0
+    fesedflux_input%file_fmt     = 'bin'
+
+    ndep_data_type = 'monthly-calendar'
+
+    nox_flux_monthly_input%filename     = 'unknown'
+    nox_flux_monthly_input%file_varname = 'nox_flux'
+    nox_flux_monthly_input%scale_factor = c1
+    nox_flux_monthly_input%default_val  = c0
+    nox_flux_monthly_input%file_fmt     = 'bin'
+
+    nhy_flux_monthly_input%filename     = 'unknown'
+    nhy_flux_monthly_input%file_varname = 'nhy_flux'
+    nhy_flux_monthly_input%scale_factor = c1
+    nhy_flux_monthly_input%default_val  = c0
+    nhy_flux_monthly_input%file_fmt     = 'bin'
+
+    ndep_shr_stream_year_first = 1
+    ndep_shr_stream_year_last  = 1
+    ndep_shr_stream_year_align = 1
+    ndep_shr_stream_file       = 'unknown'
+    ndep_shr_stream_scale_factor = c1
+
+    din_riv_flux_input%filename     = 'unknown'
+    din_riv_flux_input%file_varname = 'din_riv_flux'
+    din_riv_flux_input%scale_factor = c1
+    din_riv_flux_input%default_val  = c0
+    din_riv_flux_input%file_fmt     = 'nc'
+
+    dip_riv_flux_input%filename     = 'unknown'
+    dip_riv_flux_input%file_varname = 'dip_riv_flux'
+    dip_riv_flux_input%scale_factor = c1
+    dip_riv_flux_input%default_val  = c0
+    dip_riv_flux_input%file_fmt     = 'nc'
+
+    don_riv_flux_input%filename     = 'unknown'
+    don_riv_flux_input%file_varname = 'don_riv_flux'
+    don_riv_flux_input%scale_factor = c1
+    don_riv_flux_input%default_val  = c0
+    don_riv_flux_input%file_fmt     = 'nc'
+
+    dop_riv_flux_input%filename     = 'unknown'
+    dop_riv_flux_input%file_varname = 'dop_riv_flux'
+    dop_riv_flux_input%scale_factor = c1
+    dop_riv_flux_input%default_val  = c0
+    dop_riv_flux_input%file_fmt     = 'nc'
+
+    dsi_riv_flux_input%filename     = 'unknown'
+    dsi_riv_flux_input%file_varname = 'dsi_riv_flux'
+    dsi_riv_flux_input%scale_factor = c1
+    dsi_riv_flux_input%default_val  = c0
+    dsi_riv_flux_input%file_fmt     = 'nc'
+
+    dfe_riv_flux_input%filename     = 'unknown'
+    dfe_riv_flux_input%file_varname = 'dfe_riv_flux'
+    dfe_riv_flux_input%scale_factor = c1
+    dfe_riv_flux_input%default_val  = c0
+    dfe_riv_flux_input%file_fmt     = 'nc'
+
+    dic_riv_flux_input%filename     = 'unknown'
+    dic_riv_flux_input%file_varname = 'dic_riv_flux'
+    dic_riv_flux_input%scale_factor = c1
+    dic_riv_flux_input%default_val  = c0
+    dic_riv_flux_input%file_fmt     = 'nc'
+
+    alk_riv_flux_input%filename     = 'unknown'
+    alk_riv_flux_input%file_varname = 'alk_riv_flux'
+    alk_riv_flux_input%scale_factor = c1
+    alk_riv_flux_input%default_val  = c0
+    alk_riv_flux_input%file_fmt     = 'nc'
+
+    doc_riv_flux_input%filename     = 'unknown'
+    doc_riv_flux_input%file_varname = 'doc_riv_flux'
+    doc_riv_flux_input%scale_factor = c1
+    doc_riv_flux_input%default_val  = c0
+    doc_riv_flux_input%file_fmt     = 'nc'
+
+    do n = 1, ecosys_base_tracer_cnt
+       tracer_init_ext(n)%mod_varname  = 'unknown'
+       tracer_init_ext(n)%filename     = 'unknown'
+       tracer_init_ext(n)%file_varname = 'unknown'
+       tracer_init_ext(n)%scale_factor = c1
+       tracer_init_ext(n)%default_val  = c0
+       tracer_init_ext(n)%file_fmt     = 'bin'
+    end do
+
+    lsource_sink          = .true.
+    lflux_gas_o2          = .true.
+    lflux_gas_co2         = .true.
+    locmip_k1_k2_bug_fix  = .true.
+
+    liron_patch              = .false.
+    iron_patch_flux_filename = 'unknown_iron_patch_filename'
+    iron_patch_month         = 1
+
+    atm_co2_opt   = 'const'
+    atm_co2_const = 280.0_r8
+
+    atm_alt_co2_opt   = 'const'
+    atm_alt_co2_const = 280.0_r8
+
+    caco3_bury_thres_opt = 'omega_calc'
+    caco3_bury_thres_depth = 3000.0e2
+
+    PON_bury_coeff = 0.5_r8
+    POP_bury_coeff = 1.0_r8
+
+    lecovars_full_depth_tavg = .false.
 
     parm_Fe_bioavail       = 1.0_r8
     parm_o2_min            = 5.0_r8
@@ -515,7 +747,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_parms_init(nl_buffer, marbl_status_log)
+  subroutine marbl_parms_read_namelist(nl_buffer, marbl_status_log)
 
     use marbl_namelist_mod, only : marbl_nl_cnt
     use marbl_namelist_mod, only : marbl_nl_buffer_size
@@ -529,12 +761,41 @@ contains
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_parms:marbl_parms_init'
+    character(len=*), parameter :: subname = 'marbl_parms:marbl_parms_read_namelist'
     character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
+    character(len=char_len) :: log_message
 
     integer(kind=int_kind) :: io_error
 
-    NAMELIST /marbl_parms_nml/ &
+    integer (int_kind)           :: n                           ! index for looping over tracers
+    integer (int_kind)           :: nml_error                   ! namelist i/o error flag
+    integer (int_kind)           :: zoo_ind                     ! zooplankton functional group index
+
+    namelist /marbl_ecosys_base_nml/                                      &
+         init_ecosys_option, init_ecosys_init_file, tracer_init_ext,      &
+         init_ecosys_init_file_fmt,                                       &
+         dust_flux_source, dust_flux_input,                               &
+         iron_flux_source, iron_flux_input, fesedflux_input,              &
+         iron_frac_in_dust, iron_frac_in_bc,                              &
+         ndep_data_type, nox_flux_monthly_input, nhy_flux_monthly_input,  &
+         ndep_shr_stream_year_first, ndep_shr_stream_year_last,           &
+         ndep_shr_stream_year_align, ndep_shr_stream_file,                &
+         ndep_shr_stream_scale_factor,                                    &
+         din_riv_flux_input, dip_riv_flux_input, don_riv_flux_input,      &
+         dop_riv_flux_input, dsi_riv_flux_input, dfe_riv_flux_input,      &
+         dic_riv_flux_input, alk_riv_flux_input, doc_riv_flux_input,      &
+         gas_flux_forcing_opt, gas_flux_forcing_file,                     &
+         gas_flux_fice, gas_flux_ws, gas_flux_ap, nutr_rest_file,         &
+         lsource_sink, lflux_gas_o2, lflux_gas_co2, locmip_k1_k2_bug_fix, &
+         lnutr_variable_restore, nutr_variable_rest_file,                 &
+         nutr_variable_rest_file_fmt, atm_co2_opt, atm_co2_const,         &
+         atm_alt_co2_opt, atm_alt_co2_const,                              &
+         liron_patch, iron_patch_flux_filename, iron_patch_month,         &
+         caco3_bury_thres_opt, caco3_bury_thres_depth, &
+         PON_bury_coeff, &
+         lecovars_full_depth_tavg
+
+    namelist /marbl_parms_nml/ &
          parm_Fe_bioavail, &
          parm_o2_min, &
          parm_o2_min_delta, &
@@ -555,14 +816,104 @@ contains
          zooplankton, &
          grazing
 
-    !---------------------------------------------------------------------------
-    ! set defaults for namelist variables before reading them
-    !---------------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    ! read the &marbl_ecoosys_base_nml namelist
+    !-----------------------------------------------------------------------
 
-    call marbl_parms_set_defaults()
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_ecosys_base_nml')
+    read(tmp_nl_buffer, nml=marbl_ecosys_base_nml, iostat=nml_error)
+    if (nml_error /= 0) then
+      call marbl_status_log%log_error("error reading &marbl_ecosys_base_nml", subname)
+      return
+    end if
+
+    !-----------------------------------------------------------------------
+    ! reassign values temporary input values to correct arrays
+    !-----------------------------------------------------------------------
+
+    if (trim(gas_flux_forcing_opt) == 'drv') then
+       gas_flux_forcing_iopt = gas_flux_forcing_iopt_drv
+    else if (trim(gas_flux_forcing_opt) == 'file') then
+       gas_flux_forcing_iopt = gas_flux_forcing_iopt_file
+    else
+       write(log_message, "(2A)") "unknown gas_flux_forcing_opt: ", trim(gas_flux_forcing_opt)
+       call marbl_status_log%log_error(log_message, subname)
+       return
+    endif
+
+    fice_file_loc%input             = gas_flux_fice
+    xkw_file_loc%input              = gas_flux_ws
+    ap_file_loc%input               = gas_flux_ap
+    dust_flux_file_loc%input        = dust_flux_input
+    iron_flux_file_loc%input        = iron_flux_input
+    nox_flux_monthly_file_loc%input = nox_flux_monthly_input
+    nhy_flux_monthly_file_loc%input = nhy_flux_monthly_input
+    din_riv_flux_file_loc%input     = din_riv_flux_input
+    dip_riv_flux_file_loc%input     = dip_riv_flux_input
+    don_riv_flux_file_loc%input     = don_riv_flux_input
+    dop_riv_flux_file_loc%input     = dop_riv_flux_input
+    dsi_riv_flux_file_loc%input     = dsi_riv_flux_input
+    dfe_riv_flux_file_loc%input     = dfe_riv_flux_input
+    dic_riv_flux_file_loc%input     = dic_riv_flux_input
+    alk_riv_flux_file_loc%input     = alk_riv_flux_input
+    doc_riv_flux_file_loc%input     = doc_riv_flux_input
+
+    dust_flux_file        => dust_flux_file_loc
+    iron_flux_file        => iron_flux_file_loc
+    fice_file             => fice_file_loc
+    xkw_file              => xkw_file_loc
+    ap_file               => ap_file_loc
+    nox_flux_monthly_file => nox_flux_monthly_file_loc
+    nhy_flux_monthly_file => nhy_flux_monthly_file_loc
+    din_riv_flux_file     => din_riv_flux_file_loc
+    dip_riv_flux_file     => dip_riv_flux_file_loc
+    don_riv_flux_file     => don_riv_flux_file_loc
+    dop_riv_flux_file     => dop_riv_flux_file_loc
+    dsi_riv_flux_file     => dsi_riv_flux_file_loc
+    dfe_riv_flux_file     => dfe_riv_flux_file_loc
+    dic_riv_flux_file     => dic_riv_flux_file_loc
+    alk_riv_flux_file     => alk_riv_flux_file_loc
+    doc_riv_flux_file     => doc_riv_flux_file_loc
+
+    !-----------------------------------------------------------------------
+    !  set variables immediately dependent on namelist variables
+    !-----------------------------------------------------------------------
+
+    select case (atm_co2_opt)
+    case ('const')
+       atm_co2_iopt = atm_co2_iopt_const
+    case ('drv_prog')
+       atm_co2_iopt = atm_co2_iopt_drv_prog
+    case ('drv_diag')
+       atm_co2_iopt = atm_co2_iopt_drv_diag
+    case default
+       write(log_message, "(2A)") "unknown atm_co2_opt: ", trim(atm_co2_opt)
+       call marbl_status_log%log_error(log_message, subname)
+       return
+    end select
+
+    select case (atm_alt_co2_opt)
+    case ('const')
+       atm_alt_co2_iopt = atm_co2_iopt_const
+    case default
+       write(log_message, "(2A)") "unknown atm_alt_co2_opt: ", trim(atm_alt_co2_opt)
+       call marbl_status_log%log_error(log_message, subname)
+       return
+    end select
+
+    select case (caco3_bury_thres_opt)
+    case ('fixed_depth')
+       caco3_bury_thres_iopt = caco3_bury_thres_iopt_fixed_depth
+    case ('omega_calc')
+       caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
+    case default
+       write(log_message, "(2A)") "unknown caco3_bury_thres_opt: ", trim(caco3_bury_thres_opt)
+       call marbl_status_log%log_error(log_message, subname)
+       return
+    end select
 
     !---------------------------------------------------------------------------
-    ! read in namelist to override some defaults
+    ! read the &marbl_parms_nml namelist
     !---------------------------------------------------------------------------
 
     tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_parms_nml')
@@ -572,7 +923,7 @@ contains
        return
     end if
 
-  end subroutine marbl_parms_init
+  end subroutine marbl_parms_read_namelist
 
   !*****************************************************************************
 
