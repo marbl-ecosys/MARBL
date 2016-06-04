@@ -142,8 +142,9 @@ module marbl_parms
        parm_kappa_nitrif,     & ! nitrification inverse time constant (1/sec)
        parm_nitrif_par_lim,   & ! PAR limit for nitrif. (W/m^2)
        parm_labile_ratio,     & ! fraction of loss to DOC that routed directly to DIC (non-dimensional)
-       parm_POMbury,          & ! scale factor for burial of POC, PON, and POP
-       parm_BSIbury,          & ! scale factor burial of bSi
+       parm_init_POC_bury_coeff,& ! initial scale factor for burial of POC, PON
+       parm_init_POP_bury_coeff,& ! initial scale factor for burial of POP
+       parm_init_bSi_bury_coeff,& ! initial scale factor burial of bSi
        parm_fe_scavenge_rate0,& ! base scavenging rate
        parm_f_prod_sp_CaCO3,  & !fraction of sp prod. as CaCO3 prod.
        parm_POC_diss,         & ! base POC diss len scale
@@ -313,8 +314,9 @@ contains
     parm_kappa_nitrif      = 0.06_r8 * dps  ! (= 1/( days))
     parm_nitrif_par_lim    = 1.0_r8
     parm_labile_ratio      = 0.94_r8
-    parm_POMbury           = 1.1_r8         ! x1 default
-    parm_BSIbury           = 1.0_r8         ! x1 default
+    parm_init_POC_bury_coeff=1.1_r8         ! x1 default
+    parm_init_POP_bury_coeff=1.1_r8         ! x1 default
+    parm_init_bSi_bury_coeff=1.0_r8         ! x1 default
     parm_fe_scavenge_rate0 = 1.9_r8         ! x1 default
     parm_f_prod_sp_CaCO3   = 0.065_r8       ! x1 default
     parm_POC_diss          = 90.0e2_r8
@@ -495,8 +497,9 @@ contains
          parm_kappa_nitrif, &
          parm_nitrif_par_lim, &
          parm_labile_ratio, &
-         parm_POMbury, &
-         parm_BSIbury, &
+         parm_init_POC_bury_coeff, &
+         parm_init_POP_bury_coeff, &
+         parm_init_bSi_bury_coeff, &
          parm_fe_scavenge_rate0, &
          parm_f_prod_sp_CaCO3, &
          parm_POC_diss, &
@@ -552,8 +555,9 @@ contains
     write(stdout, *) 'parm_kappa_nitrif      = ', parm_kappa_nitrif
     write(stdout, *) 'parm_nitrif_par_lim    = ', parm_nitrif_par_lim
     write(stdout, *) 'parm_labile_ratio      = ', parm_labile_ratio
-    write(stdout, *) 'parm_POMbury           = ', parm_POMbury
-    write(stdout, *) 'parm_BSIbury           = ', parm_BSIbury
+    write(stdout, *) 'parm_init_POC_bury_coeff=', parm_init_POC_bury_coeff
+    write(stdout, *) 'parm_init_POP_bury_coeff=', parm_init_POP_bury_coeff
+    write(stdout, *) 'parm_init_bSi_bury_coeff=', parm_init_bSi_bury_coeff
     write(stdout, *) 'parm_fe_scavenge_rate0 = ', parm_fe_scavenge_rate0
     write(stdout, *) 'parm_f_prod_sp_CaCO3   = ', parm_f_prod_sp_CaCO3
     write(stdout, *) 'parm_POC_diss          = ', parm_POC_diss

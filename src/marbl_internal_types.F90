@@ -195,6 +195,10 @@ module marbl_internal_types
      real(r8), allocatable :: POC_hflux_out_fields     (:) ! POC_hflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: POC_remin_fields         (:) ! POC remin from ecosys before it gets modified for k=KMT
      real(r8), allocatable :: POC_prod_avail_fields    (:) ! POC production available for excess POC flux
+
+     real(r8)              :: POC_bury_coeff
+     real(r8)              :: POP_bury_coeff
+     real(r8)              :: bSi_bury_coeff
    contains
      procedure, public :: construct => marbl_particulate_share_constructor
      procedure, public :: destruct  => marbl_particulate_share_destructor
@@ -546,7 +550,7 @@ contains
     type(marbl_log_type),           intent(inout) :: marbl_status_log
 
     integer :: n
-    character(*), parameter :: subname='marbl_parms:tracer_index_constructor'
+    character(*), parameter :: subname='marbl_internal_types:tracer_index_constructor'
     character(len=char_len) :: log_message
 
     associate(tracer_cnt      => marbl_total_tracer_cnt)
