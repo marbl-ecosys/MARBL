@@ -1,6 +1,8 @@
 &marbl_driver_nml
 testname="namelist_write"
 /
+&marbl_config_nml
+/
 &marbl_ecosys_base_nml
 /
 &marbl_ciso_nml
@@ -8,4 +10,6 @@ testname="namelist_write"
 &marbl_parms_nml
 /
 &marbl_restore_nml
+/
+&marbl_forcing_tmp_nml
 /
