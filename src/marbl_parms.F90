@@ -52,11 +52,41 @@ module marbl_parms
   !  Variables read in via &marbl_config_nml
   !---------------------------------------------------------------------
 
-  logical(log_kind), target ::  lsource_sink             ! control which portion of code are executed, useful for debugging
-  logical(log_kind), target :: lflux_gas_o2                 ! controls which portion of code are executed usefull for debugging
-  logical(log_kind), target :: lflux_gas_co2                ! controls which portion of code are executed usefull for debugging
+  logical(log_kind), target ::  lsource_sink                  ! control which portion of code is executed, useful for debugging
+  logical(log_kind), target :: ciso_lsource_sink              ! control which portion of carbon isotope code is executed, useful for debugging
+  logical(log_kind), target :: lecovars_full_depth_tavg       ! should base ecosystem vars be written full depth
+  logical(log_kind), target :: ciso_lecovars_full_depth_tavg  ! should carbon isotope vars be written full depth
+  logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
+  logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: locmip_k1_k2_bug_fix
-  logical(log_kind), target :: lecovars_full_depth_tavg ! should ecosystem vars be written full depth
+
+  !---------------------------------------------------------------------
+  !  Variables read in via &marbl_parms_nml
+  !---------------------------------------------------------------------
+
+  real(kind=r8), target :: &
+       parm_Fe_bioavail,      & ! fraction of Fe flux that is bioavailable
+       parm_o2_min,           & ! min O2 needed for prod & consump. (nmol/cm^3)
+       parm_o2_min_delta,     & ! width of min O2 range (nmol/cm^3)
+       parm_kappa_nitrif,     & ! nitrification inverse time constant (1/sec)
+       parm_nitrif_par_lim,   & ! PAR limit for nitrif. (W/m^2)
+       parm_labile_ratio,     & ! fraction of loss to DOC that routed directly to DIC (non-dimensional)
+       parm_POMbury,          & ! scale factor for burial of POC, PON, and POP
+       parm_BSIbury,          & ! scale factor burial of bSi
+       parm_fe_scavenge_rate0,& ! base scavenging rate (1/yr)
+       parm_f_prod_sp_CaCO3,  & ! fraction of sp prod. as CaCO3 prod.
+       parm_POC_diss,         & ! base POC diss len scale (cm)
+       parm_SiO2_diss,        & ! base SiO2 diss len scale (cm)
+       parm_CaCO3_diss,       & ! base CaCO3 diss len scale (cm)
+       fe_max_scale2            ! scaling coeff. (cm^3 / nmol / yr = m^3 / mmol / yr)
+
+  real(kind=r8), dimension(4) :: &
+       parm_scalelen_z,       & ! depths of prescribed scalelen values
+       parm_scalelen_vals       ! prescribed scalelen values
+
+  type(zooplankton_type) :: zooplankton(zooplankton_cnt)
+  type(autotroph_type)   :: autotrophs(autotroph_cnt)
+  type(grazing_type)     :: grazing(grazer_prey_cnt, zooplankton_cnt)
 
   !---------------------------------------------------------------------
   !  Variables read in via &marbl_ecosys_base_nml
@@ -88,62 +118,14 @@ module marbl_parms
   character(char_len), target  :: nutr_variable_rest_file_fmt ! format of file containing variable restoring info
 
   !---------------------------------------------------------------------
-  !  Variables read in via &marbl_parms_nml
-  !---------------------------------------------------------------------
-
-  real(kind=r8), target :: &
-       parm_Fe_bioavail,      & ! fraction of Fe flux that is bioavailable
-       parm_o2_min,           & ! min O2 needed for prod & consump. (nmol/cm^3)
-       parm_o2_min_delta,     & ! width of min O2 range (nmol/cm^3)
-       parm_kappa_nitrif,     & ! nitrification inverse time constant (1/sec)
-       parm_nitrif_par_lim,   & ! PAR limit for nitrif. (W/m^2)
-       parm_labile_ratio,     & ! fraction of loss to DOC that routed directly to DIC (non-dimensional)
-       parm_POMbury,          & ! scale factor for burial of POC, PON, and POP
-       parm_BSIbury,          & ! scale factor burial of bSi
-       parm_fe_scavenge_rate0,& ! base scavenging rate (1/yr)
-       parm_f_prod_sp_CaCO3,  & ! fraction of sp prod. as CaCO3 prod.
-       parm_POC_diss,         & ! base POC diss len scale (cm)
-       parm_SiO2_diss,        & ! base SiO2 diss len scale (cm)
-       parm_CaCO3_diss,       & ! base CaCO3 diss len scale (cm)
-       fe_max_scale2            ! scaling coeff. (cm^3 / nmol / yr = m^3 / mmol / yr)
-
-  real(kind=r8), dimension(4) :: &
-       parm_scalelen_z,       & ! depths of prescribed scalelen values
-       parm_scalelen_vals       ! prescribed scalelen values
-
-  type(zooplankton_type) :: zooplankton(zooplankton_cnt)
-  type(autotroph_type)   :: autotrophs(autotroph_cnt)
-  type(grazing_type)     :: grazing(grazer_prey_cnt, zooplankton_cnt)
-
-  !---------------------------------------------------------------------
   !  Variables read in via &marbl_ciso_nml
   !---------------------------------------------------------------------
 
+  character(char_len),  target :: ciso_init_ecosys_option        ! option for initialization of bgc
+  character(char_len),  target :: ciso_init_ecosys_init_file     ! filename for option 'file'
+  character(char_len),  target :: ciso_init_ecosys_init_file_fmt ! file format for option 'file'
   type(marbl_tracer_read_type) :: ciso_tracer_init_ext(ciso_tracer_cnt) ! namelist variable for initializing tracers
-
-  logical   (log_kind)        :: ciso_lsource_sink              ! flag controlling which portion of code are executed
-  character (char_len)        :: ciso_fract_factors             ! option for which biological fractionation calculation to use
-  character (char_len)        :: ciso_init_ecosys_option        ! option for initialization of bgc
-  character (char_len)        :: ciso_init_ecosys_init_file     ! filename for option 'file'
-  character (char_len)        :: ciso_init_ecosys_init_file_fmt ! file format for option 'file'
-  logical   (log_kind)        :: ciso_lecovars_full_depth_tavg  ! should ecosystem vars be written full depth
-
-  ! ciso forcing related variables
-
-  integer   (int_kind)        :: ciso_atm_model_year            ! arbitrary model year
-  integer   (int_kind)        :: ciso_atm_data_year             ! year in atmospheric ciso data that corresponds to ciso_atm_model_year
-  integer   (int_kind)        :: ciso_atm_d13c_data_nbval       ! number of values in ciso_atm_d13c_filename
-  integer   (int_kind)        :: ciso_atm_d14c_data_nbval       ! number of values in ciso_atm_d14c_filename
-  real      (r8), allocatable :: ciso_atm_d13c_data(:)          ! atmospheric D13C values in datafile
-  real      (r8), allocatable :: ciso_atm_d13c_data_yr(:)       ! date of atmospheric D13C values in datafile
-  real      (r8), allocatable :: ciso_atm_d14c_data(:,:)        ! atmospheric D14C values in datafile (sh, eq, nh, in permil)
-  real      (r8), allocatable :: ciso_atm_d14c_data_yr(:,:)     ! date of atmospheric D14C values in datafile (sh, eq, nh)
-  real      (r8)              :: ciso_atm_d13c_const            ! atmospheric D13C constant [permil]
-  real      (r8)              :: ciso_atm_d14c_const            ! atmospheric D14C constant [permil]
-  character (char_len)        :: ciso_atm_d13c_opt              ! option for CO2 and D13C varying or constant forcing
-  character (char_len)        :: ciso_atm_d13c_filename         ! filenames for varying atm D13C
-  character (char_len)        :: ciso_atm_d14c_opt              ! option for CO2 and D13C varying or constant forcing
-  character (char_len)        :: ciso_atm_d14c_filename(3)      ! filenames for varying atm D14C (one each for NH, SH, EQ)
+  character(char_len),  target :: ciso_fract_factors             ! option for which biological fractionation calculation to use
 
   !---------------------------------------------------------------------
   !  Variables read in via &marbl_restore_nml
@@ -192,6 +174,20 @@ module marbl_parms
   logical(log_kind),   target :: liron_patch                  ! flag for iron patch fertilization
   character(char_len), target :: iron_patch_flux_filename     ! file containing name of iron patch file
   integer(int_kind),   target :: iron_patch_month             ! integer month to add patch flux
+  integer   (int_kind)        :: ciso_atm_model_year            ! arbitrary model year
+  integer   (int_kind)        :: ciso_atm_data_year             ! year in atmospheric ciso data that corresponds to ciso_atm_model_year
+  integer   (int_kind)        :: ciso_atm_d13c_data_nbval       ! number of values in ciso_atm_d13c_filename
+  integer   (int_kind)        :: ciso_atm_d14c_data_nbval       ! number of values in ciso_atm_d14c_filename
+  real      (r8), allocatable :: ciso_atm_d13c_data(:)          ! atmospheric D13C values in datafile
+  real      (r8), allocatable :: ciso_atm_d13c_data_yr(:)       ! date of atmospheric D13C values in datafile
+  real      (r8), allocatable :: ciso_atm_d14c_data(:,:)        ! atmospheric D14C values in datafile (sh, eq, nh, in permil)
+  real      (r8), allocatable :: ciso_atm_d14c_data_yr(:,:)     ! date of atmospheric D14C values in datafile (sh, eq, nh)
+  real      (r8)              :: ciso_atm_d13c_const            ! atmospheric D13C constant [permil]
+  real      (r8)              :: ciso_atm_d14c_const            ! atmospheric D14C constant [permil]
+  character (char_len)        :: ciso_atm_d13c_opt              ! option for CO2 and D13C varying or constant forcing
+  character (char_len)        :: ciso_atm_d13c_filename         ! filenames for varying atm D13C
+  character (char_len)        :: ciso_atm_d14c_opt              ! option for CO2 and D13C varying or constant forcing
+  character (char_len)        :: ciso_atm_d14c_filename(3)      ! filenames for varying atm D14C (one each for NH, SH, EQ)
 
   !---------------------------------------------------------------------
   !  Datatype for accessing parameters without namelist
@@ -439,166 +435,13 @@ contains
     !-----------------------------------------------------------------------
     !  &marbl_config_nml
     !-----------------------------------------------------------------------
-    lsource_sink             = .true.
-    lflux_gas_o2             = .true.
-    lflux_gas_co2            = .true.
-    locmip_k1_k2_bug_fix     = .true.
-    lecovars_full_depth_tavg = .false.
-
-    !-----------------------------------------------------------------------
-    !  &marbl_ecosys_base_nml
-    !-----------------------------------------------------------------------
-    init_ecosys_option = 'unknown'
-    init_ecosys_init_file = 'unknown'
-    init_ecosys_init_file_fmt = 'bin'
-    iron_frac_in_dust            = 0.035_r8 * 0.01_r8
-    iron_frac_in_bc              = 0.06_r8
-    caco3_bury_thres_opt = 'omega_calc'
-    caco3_bury_thres_depth = 3000.0e2
-    PON_bury_coeff = 0.5_r8
-    POP_bury_coeff = 1.0_r8
-
-    do n = 1, ecosys_base_tracer_cnt
-       tracer_init_ext(n)%mod_varname  = 'unknown'
-       tracer_init_ext(n)%filename     = 'unknown'
-       tracer_init_ext(n)%file_varname = 'unknown'
-       tracer_init_ext(n)%scale_factor = c1
-       tracer_init_ext(n)%default_val  = c0
-       tracer_init_ext(n)%file_fmt     = 'bin'
-    end do
-
-    ! MNL MNL TODO: are these ever used?
-    nutr_rest_file = 'unknown'
-    lnutr_variable_restore      = .false.
-    nutr_variable_rest_file     = 'unknown'
-    nutr_variable_rest_file_fmt = 'bin'
-
-    !-----------------------------------------------------------------------
-    !  &marbl_forcing_tmp_nml
-    !-----------------------------------------------------------------------
-    gas_flux_forcing_opt  = 'drv'
-    gas_flux_forcing_file = 'unknown'
-
-    gas_flux_fice%filename     = 'unknown'
-    gas_flux_fice%file_varname = 'FICE'
-    gas_flux_fice%scale_factor = c1
-    gas_flux_fice%default_val  = c0
-    gas_flux_fice%file_fmt     = 'bin'
-
-    gas_flux_ws%filename     = 'unknown'
-    gas_flux_ws%file_varname = 'XKW'
-    gas_flux_ws%scale_factor = c1
-    gas_flux_ws%default_val  = c0
-    gas_flux_ws%file_fmt     = 'bin'
-
-    gas_flux_ap%filename     = 'unknown'
-    gas_flux_ap%file_varname = 'P'
-    gas_flux_ap%scale_factor = c1
-    gas_flux_ap%default_val  = c0
-    gas_flux_ap%file_fmt     = 'bin'
-
-    dust_flux_source             = 'monthly-calendar'
-    dust_flux_input%filename     = 'unknown'
-    dust_flux_input%file_varname = 'dust_flux'
-    dust_flux_input%scale_factor = c1
-    dust_flux_input%default_val  = c0
-    dust_flux_input%file_fmt     = 'bin'
-
-    iron_flux_source             = 'monthly-calendar'
-    iron_flux_input%filename     = 'unknown'
-    iron_flux_input%file_varname = 'iron_flux'
-    iron_flux_input%scale_factor = c1
-    iron_flux_input%default_val  = c0
-    iron_flux_input%file_fmt     = 'bin'
-
-    fesedflux_input%filename     = 'unknown'
-    fesedflux_input%file_varname = 'FESEDFLUXIN'
-    fesedflux_input%scale_factor = c1
-    fesedflux_input%default_val  = c0
-    fesedflux_input%file_fmt     = 'bin'
-
-    ndep_data_type = 'monthly-calendar'
-
-    nox_flux_monthly_input%filename     = 'unknown'
-    nox_flux_monthly_input%file_varname = 'nox_flux'
-    nox_flux_monthly_input%scale_factor = c1
-    nox_flux_monthly_input%default_val  = c0
-    nox_flux_monthly_input%file_fmt     = 'bin'
-
-    nhy_flux_monthly_input%filename     = 'unknown'
-    nhy_flux_monthly_input%file_varname = 'nhy_flux'
-    nhy_flux_monthly_input%scale_factor = c1
-    nhy_flux_monthly_input%default_val  = c0
-    nhy_flux_monthly_input%file_fmt     = 'bin'
-
-    ndep_shr_stream_year_first = 1
-    ndep_shr_stream_year_last  = 1
-    ndep_shr_stream_year_align = 1
-    ndep_shr_stream_file       = 'unknown'
-    ndep_shr_stream_scale_factor = c1
-
-    din_riv_flux_input%filename     = 'unknown'
-    din_riv_flux_input%file_varname = 'din_riv_flux'
-    din_riv_flux_input%scale_factor = c1
-    din_riv_flux_input%default_val  = c0
-    din_riv_flux_input%file_fmt     = 'nc'
-
-    dip_riv_flux_input%filename     = 'unknown'
-    dip_riv_flux_input%file_varname = 'dip_riv_flux'
-    dip_riv_flux_input%scale_factor = c1
-    dip_riv_flux_input%default_val  = c0
-    dip_riv_flux_input%file_fmt     = 'nc'
-
-    don_riv_flux_input%filename     = 'unknown'
-    don_riv_flux_input%file_varname = 'don_riv_flux'
-    don_riv_flux_input%scale_factor = c1
-    don_riv_flux_input%default_val  = c0
-    don_riv_flux_input%file_fmt     = 'nc'
-
-    dop_riv_flux_input%filename     = 'unknown'
-    dop_riv_flux_input%file_varname = 'dop_riv_flux'
-    dop_riv_flux_input%scale_factor = c1
-    dop_riv_flux_input%default_val  = c0
-    dop_riv_flux_input%file_fmt     = 'nc'
-
-    dsi_riv_flux_input%filename     = 'unknown'
-    dsi_riv_flux_input%file_varname = 'dsi_riv_flux'
-    dsi_riv_flux_input%scale_factor = c1
-    dsi_riv_flux_input%default_val  = c0
-    dsi_riv_flux_input%file_fmt     = 'nc'
-
-    dfe_riv_flux_input%filename     = 'unknown'
-    dfe_riv_flux_input%file_varname = 'dfe_riv_flux'
-    dfe_riv_flux_input%scale_factor = c1
-    dfe_riv_flux_input%default_val  = c0
-    dfe_riv_flux_input%file_fmt     = 'nc'
-
-    dic_riv_flux_input%filename     = 'unknown'
-    dic_riv_flux_input%file_varname = 'dic_riv_flux'
-    dic_riv_flux_input%scale_factor = c1
-    dic_riv_flux_input%default_val  = c0
-    dic_riv_flux_input%file_fmt     = 'nc'
-
-    alk_riv_flux_input%filename     = 'unknown'
-    alk_riv_flux_input%file_varname = 'alk_riv_flux'
-    alk_riv_flux_input%scale_factor = c1
-    alk_riv_flux_input%default_val  = c0
-    alk_riv_flux_input%file_fmt     = 'nc'
-
-    doc_riv_flux_input%filename     = 'unknown'
-    doc_riv_flux_input%file_varname = 'doc_riv_flux'
-    doc_riv_flux_input%scale_factor = c1
-    doc_riv_flux_input%default_val  = c0
-    doc_riv_flux_input%file_fmt     = 'nc'
-
-    liron_patch              = .false.
-    iron_patch_flux_filename = 'unknown_iron_patch_filename'
-    iron_patch_month         = 1
-
-    atm_co2_opt   = 'const'
-    atm_co2_const = 280.0_r8
-    atm_alt_co2_opt   = 'const'
-    atm_alt_co2_const = 280.0_r8
+    lsource_sink                  = .true.
+    ciso_lsource_sink             = .true.
+    lecovars_full_depth_tavg      = .false.
+    ciso_lecovars_full_depth_tavg = .false.
+    lflux_gas_o2                  = .true.
+    lflux_gas_co2                 = .true.
+    locmip_k1_k2_bug_fix          = .true.
 
     !-----------------------------------------------------------------------
     !  &marbl_parms_nml
@@ -617,7 +460,6 @@ contains
     parm_SiO2_diss         = 600.0e2_r8
     parm_CaCO3_diss        = 450.0e2_r8
     fe_max_scale2          = 2200.0_r8      ! x1 default
-
     parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8,  750.0e2_r8 /)
     parm_scalelen_vals = (/     1.0_r8,     3.3_r8,     4.6_r8,      5.0_r8 /) ! x1 default
 
@@ -709,9 +551,7 @@ contains
     autotrophs(auto_ind)%agg_rate_min  = 0.01_r8
     autotrophs(auto_ind)%loss_poc      = 0.0_r8
 
-    !---------------------------------------------------------------------------
     ! predator-prey relationships
-    !---------------------------------------------------------------------------
     zoo_ind = 1
     prey_ind = sp_ind
     grazing(prey_ind,zoo_ind)%sname            = 'grz_' // autotrophs(prey_ind)%sname // '_' // zooplankton(zoo_ind)%sname
@@ -758,6 +598,167 @@ contains
     grazing(prey_ind,zoo_ind)%f_zoo_detr       = 0.1_r8
     grazing(prey_ind,zoo_ind)%grazing_function = grz_fnc_michaelis_menten
 
+    !-----------------------------------------------------------------------
+    !  &marbl_ecosys_base_nml
+    !-----------------------------------------------------------------------
+    init_ecosys_option = 'unknown'
+    init_ecosys_init_file = 'unknown'
+    init_ecosys_init_file_fmt = 'bin'
+    iron_frac_in_dust            = 0.035_r8 * 0.01_r8
+    iron_frac_in_bc              = 0.06_r8
+    caco3_bury_thres_opt = 'omega_calc'
+    caco3_bury_thres_depth = 3000.0e2
+    PON_bury_coeff = 0.5_r8
+    POP_bury_coeff = 1.0_r8
+    do n = 1, ecosys_base_tracer_cnt
+       tracer_init_ext(n)%mod_varname  = 'unknown'
+       tracer_init_ext(n)%filename     = 'unknown'
+       tracer_init_ext(n)%file_varname = 'unknown'
+       tracer_init_ext(n)%scale_factor = c1
+       tracer_init_ext(n)%default_val  = c0
+       tracer_init_ext(n)%file_fmt     = 'bin'
+    end do
+
+    ! MNL MNL TODO: are these ever used?
+    nutr_rest_file = 'unknown'
+    lnutr_variable_restore      = .false.
+    nutr_variable_rest_file     = 'unknown'
+    nutr_variable_rest_file_fmt = 'bin'
+
+    !-----------------------------------------------------------------------
+    !  &marbl_ciso_nml
+    !-----------------------------------------------------------------------
+
+    ciso_init_ecosys_option                 = 'unknown'
+    ciso_init_ecosys_init_file              = 'unknown'
+    ciso_init_ecosys_init_file_fmt          = 'bin'
+    ciso_fract_factors                      = 'Rau'
+    do n = 1,ciso_tracer_cnt
+       ciso_tracer_init_ext(n)%mod_varname  = 'unknown'
+       ciso_tracer_init_ext(n)%filename     = 'unknown'
+       ciso_tracer_init_ext(n)%file_varname = 'unknown'
+       ciso_tracer_init_ext(n)%scale_factor = c1
+       ciso_tracer_init_ext(n)%default_val  = c0
+       ciso_tracer_init_ext(n)%file_fmt     = 'bin'
+    end do
+
+    !-----------------------------------------------------------------------
+    !  &marbl_forcing_tmp_nml
+    !-----------------------------------------------------------------------
+
+    gas_flux_forcing_opt  = 'drv'
+    gas_flux_forcing_file = 'unknown'
+    gas_flux_fice%filename     = 'unknown'
+    gas_flux_fice%file_varname = 'FICE'
+    gas_flux_fice%scale_factor = c1
+    gas_flux_fice%default_val  = c0
+    gas_flux_fice%file_fmt     = 'bin'
+    gas_flux_ws%filename     = 'unknown'
+    gas_flux_ws%file_varname = 'XKW'
+    gas_flux_ws%scale_factor = c1
+    gas_flux_ws%default_val  = c0
+    gas_flux_ws%file_fmt     = 'bin'
+    gas_flux_ap%filename     = 'unknown'
+    gas_flux_ap%file_varname = 'P'
+    gas_flux_ap%scale_factor = c1
+    gas_flux_ap%default_val  = c0
+    gas_flux_ap%file_fmt     = 'bin'
+    dust_flux_source             = 'monthly-calendar'
+    dust_flux_input%filename     = 'unknown'
+    dust_flux_input%file_varname = 'dust_flux'
+    dust_flux_input%scale_factor = c1
+    dust_flux_input%default_val  = c0
+    dust_flux_input%file_fmt     = 'bin'
+    iron_flux_source             = 'monthly-calendar'
+    iron_flux_input%filename     = 'unknown'
+    iron_flux_input%file_varname = 'iron_flux'
+    iron_flux_input%scale_factor = c1
+    iron_flux_input%default_val  = c0
+    iron_flux_input%file_fmt     = 'bin'
+    fesedflux_input%filename     = 'unknown'
+    fesedflux_input%file_varname = 'FESEDFLUXIN'
+    fesedflux_input%scale_factor = c1
+    fesedflux_input%default_val  = c0
+    fesedflux_input%file_fmt     = 'bin'
+    ndep_data_type = 'monthly-calendar'
+    nox_flux_monthly_input%filename     = 'unknown'
+    nox_flux_monthly_input%file_varname = 'nox_flux'
+    nox_flux_monthly_input%scale_factor = c1
+    nox_flux_monthly_input%default_val  = c0
+    nox_flux_monthly_input%file_fmt     = 'bin'
+    nhy_flux_monthly_input%filename     = 'unknown'
+    nhy_flux_monthly_input%file_varname = 'nhy_flux'
+    nhy_flux_monthly_input%scale_factor = c1
+    nhy_flux_monthly_input%default_val  = c0
+    nhy_flux_monthly_input%file_fmt     = 'bin'
+    ndep_shr_stream_year_first = 1
+    ndep_shr_stream_year_last  = 1
+    ndep_shr_stream_year_align = 1
+    ndep_shr_stream_file       = 'unknown'
+    ndep_shr_stream_scale_factor = c1
+    din_riv_flux_input%filename     = 'unknown'
+    din_riv_flux_input%file_varname = 'din_riv_flux'
+    din_riv_flux_input%scale_factor = c1
+    din_riv_flux_input%default_val  = c0
+    din_riv_flux_input%file_fmt     = 'nc'
+    dip_riv_flux_input%filename     = 'unknown'
+    dip_riv_flux_input%file_varname = 'dip_riv_flux'
+    dip_riv_flux_input%scale_factor = c1
+    dip_riv_flux_input%default_val  = c0
+    dip_riv_flux_input%file_fmt     = 'nc'
+    don_riv_flux_input%filename     = 'unknown'
+    don_riv_flux_input%file_varname = 'don_riv_flux'
+    don_riv_flux_input%scale_factor = c1
+    don_riv_flux_input%default_val  = c0
+    don_riv_flux_input%file_fmt     = 'nc'
+    dop_riv_flux_input%filename     = 'unknown'
+    dop_riv_flux_input%file_varname = 'dop_riv_flux'
+    dop_riv_flux_input%scale_factor = c1
+    dop_riv_flux_input%default_val  = c0
+    dop_riv_flux_input%file_fmt     = 'nc'
+    dsi_riv_flux_input%filename     = 'unknown'
+    dsi_riv_flux_input%file_varname = 'dsi_riv_flux'
+    dsi_riv_flux_input%scale_factor = c1
+    dsi_riv_flux_input%default_val  = c0
+    dsi_riv_flux_input%file_fmt     = 'nc'
+    dfe_riv_flux_input%filename     = 'unknown'
+    dfe_riv_flux_input%file_varname = 'dfe_riv_flux'
+    dfe_riv_flux_input%scale_factor = c1
+    dfe_riv_flux_input%default_val  = c0
+    dfe_riv_flux_input%file_fmt     = 'nc'
+    dic_riv_flux_input%filename     = 'unknown'
+    dic_riv_flux_input%file_varname = 'dic_riv_flux'
+    dic_riv_flux_input%scale_factor = c1
+    dic_riv_flux_input%default_val  = c0
+    dic_riv_flux_input%file_fmt     = 'nc'
+    alk_riv_flux_input%filename     = 'unknown'
+    alk_riv_flux_input%file_varname = 'alk_riv_flux'
+    alk_riv_flux_input%scale_factor = c1
+    alk_riv_flux_input%default_val  = c0
+    alk_riv_flux_input%file_fmt     = 'nc'
+    doc_riv_flux_input%filename     = 'unknown'
+    doc_riv_flux_input%file_varname = 'doc_riv_flux'
+    doc_riv_flux_input%scale_factor = c1
+    doc_riv_flux_input%default_val  = c0
+    doc_riv_flux_input%file_fmt     = 'nc'
+    liron_patch              = .false.
+    iron_patch_flux_filename = 'unknown_iron_patch_filename'
+    iron_patch_month         = 1
+    atm_co2_opt   = 'const'
+    atm_co2_const = 280.0_r8
+    atm_alt_co2_opt   = 'const'
+    atm_alt_co2_const = 280.0_r8
+    ciso_atm_d13c_opt                       = 'const'
+    ciso_atm_d13c_const                     = -6.379_r8
+    ciso_atm_d13c_filename                  = 'unknown'
+    ciso_atm_d14c_opt                       = 'const'
+    ciso_atm_d14c_const                     = 0.0_r8
+    ciso_atm_d14c_filename(1)               = 'unknown'
+    ciso_atm_d14c_filename(2)               = 'unknown'
+    ciso_atm_d14c_filename(3)               = 'unknown'
+    ciso_atm_model_year                     = 1
+    ciso_atm_data_year                      = 1
+
   end subroutine marbl_parms_set_defaults
 
   !*****************************************************************************
@@ -787,8 +788,16 @@ contains
     integer (int_kind)           :: zoo_ind                     ! zooplankton functional group index
 
     namelist /marbl_config_nml/                                               &
-         lsource_sink, lflux_gas_o2, lflux_gas_co2, locmip_k1_k2_bug_fix,     &
-         lecovars_full_depth_tavg
+         lsource_sink, ciso_lsource_sink, lecovars_full_depth_tavg,           &
+         ciso_lecovars_full_depth_tavg, lflux_gas_o2, lflux_gas_co2,          &
+         locmip_k1_k2_bug_fix
+
+    namelist /marbl_parms_nml/                                                &
+         parm_Fe_bioavail, parm_o2_min, parm_o2_min_delta, parm_kappa_nitrif, &
+         parm_nitrif_par_lim, parm_labile_ratio, parm_POMbury, parm_BSIbury,  &
+         parm_fe_scavenge_rate0, parm_f_prod_sp_CaCO3, parm_POC_diss,         &
+         parm_SiO2_diss, parm_CaCO3_diss, fe_max_scale2, parm_scalelen_z,     &
+         parm_scalelen_vals, autotrophs, zooplankton, grazing
 
     namelist /marbl_ecosys_base_nml/                                          &
          init_ecosys_option, init_ecosys_init_file, tracer_init_ext,          &
@@ -796,6 +805,11 @@ contains
          caco3_bury_thres_opt, caco3_bury_thres_depth, PON_bury_coeff,        &
          POP_bury_coeff, lnutr_variable_restore, nutr_variable_rest_file,     &
          nutr_rest_file, nutr_variable_rest_file_fmt
+
+    namelist /marbl_ciso_nml/ &
+         ciso_init_ecosys_option, ciso_init_ecosys_init_file,                 &
+         ciso_init_ecosys_init_file_fmt, ciso_tracer_init_ext,                &
+         ciso_fract_factors
 
     namelist /marbl_forcing_tmp_nml/                                          &
          dust_flux_source, dust_flux_input, iron_flux_source,                 &
@@ -809,14 +823,10 @@ contains
          alk_riv_flux_input, doc_riv_flux_input, gas_flux_forcing_opt,        &
          gas_flux_forcing_file, gas_flux_fice, gas_flux_ws, gas_flux_ap,      &
          atm_co2_opt, atm_co2_const, atm_alt_co2_opt, atm_alt_co2_const,      &
-         liron_patch, iron_patch_flux_filename, iron_patch_month
-
-    namelist /marbl_parms_nml/                                                &
-         parm_Fe_bioavail, parm_o2_min, parm_o2_min_delta, parm_kappa_nitrif, &
-         parm_nitrif_par_lim, parm_labile_ratio, parm_POMbury, parm_BSIbury,  &
-         parm_fe_scavenge_rate0, parm_f_prod_sp_CaCO3, parm_POC_diss,         &
-         parm_SiO2_diss, parm_CaCO3_diss, fe_max_scale2, parm_scalelen_z,     &
-         parm_scalelen_vals, autotrophs, zooplankton, grazing
+         liron_patch, iron_patch_flux_filename, iron_patch_month,             &
+         ciso_atm_d13c_opt, ciso_atm_d13c_const, ciso_atm_d13c_filename,      &
+         ciso_atm_d14c_opt, ciso_atm_d14c_const, ciso_atm_d14c_filename,      &
+         ciso_atm_model_year, ciso_atm_data_year
 
     !-----------------------------------------------------------------------
     ! read the &marbl_config_nml namelist
@@ -827,6 +837,17 @@ contains
     if (nml_error /= 0) then
       call marbl_status_log%log_error("error reading &marbl_config_nml", subname)
       return
+    end if
+
+    !---------------------------------------------------------------------------
+    ! read the &marbl_parms_nml namelist
+    !---------------------------------------------------------------------------
+
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_parms_nml')
+    read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=io_error)
+    if (io_error /= 0) then
+       call marbl_status_log%log_error("Error reading marbl_parms_nml", subname)
+       return
     end if
 
     !-----------------------------------------------------------------------
@@ -855,14 +876,13 @@ contains
        return
     end select
 
-    !---------------------------------------------------------------------------
-    ! read the &marbl_parms_nml namelist
-    !---------------------------------------------------------------------------
-
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_parms_nml')
-    read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=io_error)
-    if (io_error /= 0) then
-       call marbl_status_log%log_error("Error reading marbl_parms_nml", subname)
+    !-----------------------------------------------------------------------
+    ! read the &marbl_ciso_nml namelist
+    !-----------------------------------------------------------------------
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_ciso_nml')
+    read(tmp_nl_buffer, nml=marbl_ciso_nml, iostat=nml_error)
+    if (nml_error /= 0) then
+       call marbl_status_log%log_error("error reading &marbl_ciso_nml", subname)
        return
     end if
 
@@ -994,6 +1014,45 @@ contains
       return
     end if
 
+    sname     = 'ciso_lsource_sink'
+    lname     = 'Control which portions of carbon isotope code are executed (useful for debugging)'
+    units     = 'unitless'
+    datatype  = 'logical'
+    group     = 'marbl_config_nml'
+    lptr      => ciso_lsource_sink
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, lptr=lptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'lecovars_full_depth_tavg'
+    lname     = 'Are base ecosystem tracers full depth?'
+    units     = 'unitless'
+    datatype  = 'logical'
+    group     = 'marbl_config_nml'
+    lptr      => lecovars_full_depth_tavg
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, lptr=lptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_lecovars_full_depth_tavg'
+    lname     = 'Are carbon isotope tracers full depth?'
+    units     = 'unitless'
+    datatype  = 'logical'
+    group     = 'marbl_config_nml'
+    lptr      => ciso_lecovars_full_depth_tavg
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, lptr=lptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
     sname     = 'lflux_gas_o2'
     lname     = 'Run O2 gas flux portion of the code'
     units     = 'unitless'
@@ -1028,192 +1087,6 @@ contains
     lptr      => locmip_k1_k2_bug_fix
     call this%add_parms(sname, lname, units, datatype, group,                 &
                         marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'lecovars_full_depth_tavg'
-    lname     = 'Are ecosystem diagnostic vars full depth?'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_config_nml'
-    lptr      => lecovars_full_depth_tavg
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    !-----------------------!
-    ! marbl_ecosys_base_nml !
-    !-----------------------!
-
-    sname     = 'init_ecosys_option'
-    lname     = 'How base ecosys module initialized'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_ecosys_base_nml'
-    sptr      => init_ecosys_option
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'init_ecosys_init_file'
-    lname     = 'File containing base ecosys init conditions'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_ecosys_base_nml'
-    sptr      => init_ecosys_init_file
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'init_ecosys_init_file_fmt'
-    lname     = 'Format of file containing base ecosys init conditions'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_ecosys_base_nml'
-    sptr      => init_ecosys_init_file_fmt
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'iron_frac_in_dust'
-    lname     = 'Fraction by weight of iron in dust'
-    units     = 'unitless (kg/kg)'
-    datatype  = 'real'
-    group     = 'marbl_ecosys_base_nml'
-    rptr      => iron_frac_in_dust
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'iron_frac_in_bc'
-    lname     = 'Fraction by weight of iron in black carbon'
-    units     = 'unitless (kg/kg)'
-    datatype  = 'real'
-    group     = 'marbl_ecosys_base_nml'
-    rptr      => iron_frac_in_dust
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'caco3_bury_thres_opt'
-    lname     = 'Option for CaCO3 burial threshold'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_ecosys_base_nml'
-    sptr      => caco3_bury_thres_opt
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'caco3_bury_thres_depth'
-    lname     = 'Threshold depth for CaCO3 burial (if using fixed_depth option)'
-    units     = 'cm'
-    datatype  = 'real'
-    group     = 'marbl_ecosys_base_nml'
-    rptr      => caco3_bury_thres_depth
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'PON_bury_coeff'
-    lname     = ''
-    units     = ''
-    datatype  = 'real'
-    group     = 'marbl_ecosys_base_nml'
-    rptr      => PON_bury_coeff
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'POP_bury_coeff'
-    lname     = ''
-    units     = ''
-    datatype  = 'real'
-    group     = 'marbl_ecosys_base_nml'
-    rptr      => POP_bury_coeff
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'lnutr_variable_restore'
-    lname     = 'Flag to use spatially-varying nutrient restoring'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_ecosys_base_nml'
-    lptr      => lnutr_variable_restore
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'nutr_rest_file'
-    lname     = 'File containing nutrient fields'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_ecosys_base_nml'
-    sptr      => nutr_rest_file
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'nutr_variable_rest_file'
-    lname     = 'File containing spatially-varying nutrient restoring info'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_ecosys_base_nml'
-    sptr      => nutr_variable_rest_file
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'nutr_variable_rest_file_fmt'
-    lname     = 'Format of file containing spatially-varying nutrient restoring info'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_ecosys_base_nml'
-    sptr      => nutr_variable_rest_file_fmt
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_parms_error(marbl_status_log, sname, subname)
       return
@@ -1424,6 +1297,235 @@ contains
                               marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('add_parms_1d_r8', subname)
+      return
+    end if
+
+    !-----------------------!
+    ! marbl_ecosys_base_nml !
+    !-----------------------!
+
+    sname     = 'init_ecosys_option'
+    lname     = 'How base ecosys module initialized'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
+    sptr      => init_ecosys_option
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'init_ecosys_init_file'
+    lname     = 'File containing base ecosys init conditions'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
+    sptr      => init_ecosys_init_file
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'init_ecosys_init_file_fmt'
+    lname     = 'Format of file containing base ecosys init conditions'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
+    sptr      => init_ecosys_init_file_fmt
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'iron_frac_in_dust'
+    lname     = 'Fraction by weight of iron in dust'
+    units     = 'unitless (kg/kg)'
+    datatype  = 'real'
+    group     = 'marbl_ecosys_base_nml'
+    rptr      => iron_frac_in_dust
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'iron_frac_in_bc'
+    lname     = 'Fraction by weight of iron in black carbon'
+    units     = 'unitless (kg/kg)'
+    datatype  = 'real'
+    group     = 'marbl_ecosys_base_nml'
+    rptr      => iron_frac_in_dust
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'caco3_bury_thres_opt'
+    lname     = 'Option for CaCO3 burial threshold'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
+    sptr      => caco3_bury_thres_opt
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'caco3_bury_thres_depth'
+    lname     = 'Threshold depth for CaCO3 burial (if using fixed_depth option)'
+    units     = 'cm'
+    datatype  = 'real'
+    group     = 'marbl_ecosys_base_nml'
+    rptr      => caco3_bury_thres_depth
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'PON_bury_coeff'
+    lname     = ''
+    units     = ''
+    datatype  = 'real'
+    group     = 'marbl_ecosys_base_nml'
+    rptr      => PON_bury_coeff
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'POP_bury_coeff'
+    lname     = ''
+    units     = ''
+    datatype  = 'real'
+    group     = 'marbl_ecosys_base_nml'
+    rptr      => POP_bury_coeff
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'lnutr_variable_restore'
+    lname     = 'Flag to use spatially-varying nutrient restoring'
+    units     = 'unitless'
+    datatype  = 'logical'
+    group     = 'marbl_ecosys_base_nml'
+    lptr      => lnutr_variable_restore
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, lptr=lptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'nutr_rest_file'
+    lname     = 'File containing nutrient fields'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
+    sptr      => nutr_rest_file
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'nutr_variable_rest_file'
+    lname     = 'File containing spatially-varying nutrient restoring info'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
+    sptr      => nutr_variable_rest_file
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'nutr_variable_rest_file_fmt'
+    lname     = 'Format of file containing spatially-varying nutrient restoring info'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
+    sptr      => nutr_variable_rest_file_fmt
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    !----------------!
+    ! marbl_ciso_nml !
+    !----------------!
+
+    sname     = 'ciso_init_ecosys_option'
+    lname     = 'How carbon isotope module is initialized'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ciso_nml'
+    sptr      => ciso_init_ecosys_option
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_init_ecosys_init_file'
+    lname     = 'File containing carbon isotope init conditions'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ciso_nml'
+    sptr      => ciso_init_ecosys_init_file
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_init_ecosys_init_file_fmt'
+    lname     = 'Format of file containing carbon isotope init conditions'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ciso_nml'
+    sptr      => ciso_init_ecosys_init_file_fmt
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_fract_factors'
+    lname     = 'Optiob for which biological fractionation calculation to use'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ciso_nml'
+    sptr      => ciso_fract_factors
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1719,9 +1821,10 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_parms_list(this, marbl_status_log)
+  subroutine marbl_parms_list(this, ciso_on, marbl_status_log)
 
     class(marbl_parms_type), intent(inout) :: this
+    logical,                 intent(in)    :: ciso_on
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_parms:marbl_parms_list'
@@ -1734,39 +1837,40 @@ contains
     do n=1,this%parms_cnt
       if (this%parms(n)%group.ne.group) then
         group = trim(this%parms(n)%group)
-        call marbl_status_log%log_noerror('', subname)
-        write(log_message, "(2A)") trim(group), ' parameter values: '
-        call marbl_status_log%log_noerror(log_message, subname)
-        call marbl_status_log%log_noerror('---', subname)
+        if (ciso_on.or.(trim(group).ne.'marbl_ciso_nml')) then
+          call marbl_status_log%log_noerror('', subname)
+          write(log_message, "(2A)") trim(group), ' parameter values: '
+          call marbl_status_log%log_noerror(log_message, subname)
+          call marbl_status_log%log_noerror('---', subname)
+        end if
       end if
-      select case(trim(this%parms(n)%datatype))
-        case ('string')
-          write(log_message, "(4A)") trim(this%parms(n)%short_name), " = '",  &
-                                     trim(this%parms(n)%sptr), "'"
-          call marbl_status_log%log_noerror(log_message, subname)
-        case ('real')
-          write(log_message, "(2A,E25.17)") trim(this%parms(n)%short_name),   &
-                                            " = ", this%parms(n)%rptr
-          call marbl_status_log%log_noerror(log_message, subname)
-        case ('integer')
-          write(log_message, "(2A,I0)") trim(this%parms(n)%short_name), " = ", &
-                                        this%parms(n)%iptr
-          call marbl_status_log%log_noerror(log_message, subname)
-        case ('logical')
-          if (this%parms(n)%lptr) then
-            logic = '.true.'
-          else
-            logic = '.false.'
-          end if
-          write(log_message, "(3A)") trim(this%parms(n)%short_name), " = ",   &
-                                     trim(logic)
-          call marbl_status_log%log_noerror(log_message, subname)
-        case DEFAULT
-          write(log_message, "(2A)") trim(this%parms(n)%datatype),            &
-                                     ' is not a valid datatype for parameter'
-          call marbl_status_log%log_error(log_message, subname)
-          return
-      end select
+      if (ciso_on.or.(trim(group).ne.'marbl_ciso_nml')) then
+        select case(trim(this%parms(n)%datatype))
+          case ('string')
+            write(log_message, "(4A)") trim(this%parms(n)%short_name), " = '",  &
+                                       trim(this%parms(n)%sptr), "'"
+          case ('real')
+            write(log_message, "(2A,E24.16)") trim(this%parms(n)%short_name),   &
+                                              " = ", this%parms(n)%rptr
+          case ('integer')
+            write(log_message, "(2A,I0)") trim(this%parms(n)%short_name), " = ", &
+                                          this%parms(n)%iptr
+          case ('logical')
+            if (this%parms(n)%lptr) then
+              logic = '.true.'
+            else
+              logic = '.false.'
+            end if
+            write(log_message, "(3A)") trim(this%parms(n)%short_name), " = ",   &
+                                       trim(logic)
+          case DEFAULT
+            write(log_message, "(2A)") trim(this%parms(n)%datatype),            &
+                                       ' is not a valid datatype for parameter'
+            call marbl_status_log%log_error(log_message, subname)
+            return
+        end select
+        call marbl_status_log%log_noerror(log_message, subname)
+      end if
     end do
 
   end subroutine marbl_parms_list

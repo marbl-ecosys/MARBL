@@ -54,7 +54,6 @@ module marbl_ciso_mod
   !  public/private declarations
   !-----------------------------------------------------------------------
 
-  public  :: marbl_ciso_init_nml
   public  :: marbl_ciso_init_tracer_metadata
   public  :: marbl_ciso_set_interior_forcing
   public  :: marbl_ciso_set_surface_forcing
@@ -86,112 +85,6 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_ciso_init_nml(nl_buffer, marbl_status_log)
-
-    use marbl_namelist_mod        , only : marbl_nl_in_size
-    use marbl_namelist_mod        , only : marbl_nl_cnt
-    use marbl_namelist_mod        , only : marbl_nl_buffer_size
-    use marbl_namelist_mod        , only : marbl_nl_split_string
-    use marbl_namelist_mod        , only : marbl_namelist
-    use marbl_parms               , only : ciso_tracer_cnt
-    use marbl_parms               , only : ciso_init_ecosys_option
-    use marbl_parms               , only : ciso_init_ecosys_init_file
-    use marbl_parms               , only : ciso_init_ecosys_init_file_fmt
-    use marbl_parms               , only : ciso_tracer_init_ext
-    use marbl_parms               , only : ciso_lsource_sink
-    use marbl_parms               , only : ciso_atm_d13c_opt
-    use marbl_parms               , only : ciso_atm_d13c_const
-    use marbl_parms               , only : ciso_atm_d13c_filename
-    use marbl_parms               , only : ciso_atm_d14c_opt
-    use marbl_parms               , only : ciso_atm_d14c_const
-    use marbl_parms               , only : ciso_atm_d14c_filename
-    use marbl_parms               , only : ciso_fract_factors
-    use marbl_parms               , only : ciso_atm_model_year
-    use marbl_parms               , only : ciso_atm_data_year
-    use marbl_parms               , only : ciso_lecovars_full_depth_tavg 
-    use marbl_parms               , only : marbl_freq_opt_never  
-    use marbl_parms               , only : marbl_freq_opt_nmonth 
-    use marbl_parms               , only : marbl_freq_opt_nyear  
-
-    implicit none
-
-    character(marbl_nl_buffer_size) , intent(in)    :: nl_buffer(marbl_nl_cnt)
-    type(marbl_log_type)            , intent(inout) :: marbl_status_log
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_init_nml'
-    character(len=char_len) :: log_message
-
-    integer (int_kind) ::               &
-         n,                             & ! index
-         nml_error                        ! namelist i/o error flag
-
-    character(len=marbl_nl_buffer_size) :: &
-         tmp_nl_buffer
-
-    ! marbl_ciso_nml namelist
-    namelist /marbl_ciso_nml/ &
-         ciso_init_ecosys_option, ciso_init_ecosys_init_file, &
-         ciso_init_ecosys_init_file_fmt, ciso_tracer_init_ext, &
-         ciso_lsource_sink, &
-         ciso_lecovars_full_depth_tavg, &
-         ciso_atm_d13c_opt, ciso_atm_d13c_const, ciso_atm_d13c_filename, &
-         ciso_atm_d14c_opt, ciso_atm_d14c_const, ciso_atm_d14c_filename, &
-         ciso_fract_factors, ciso_atm_model_year, ciso_atm_data_year
-    !-----------------------------------------------------------------------
-
-    !-----------------------------------------------------------------------
-    !  default namelist settings
-    !-----------------------------------------------------------------------
-
-    ciso_init_ecosys_option                 = 'unknown'
-    ciso_init_ecosys_init_file              = 'unknown'
-    ciso_init_ecosys_init_file_fmt          = 'bin'
-    do n = 1,ciso_tracer_cnt
-       ciso_tracer_init_ext(n)%mod_varname  = 'unknown'
-       ciso_tracer_init_ext(n)%filename     = 'unknown'
-       ciso_tracer_init_ext(n)%file_varname = 'unknown'
-       ciso_tracer_init_ext(n)%scale_factor = c1
-       ciso_tracer_init_ext(n)%default_val  = c0
-       ciso_tracer_init_ext(n)%file_fmt     = 'bin'
-    end do
-
-    ciso_lsource_sink                       = .true.
-
-    ciso_atm_d13c_opt                       = 'const'
-    ciso_atm_d13c_const                     = -6.379_r8
-    ciso_atm_d13c_filename                  = 'unknown'
-
-    ciso_atm_d14c_opt                       = 'const'
-    ciso_atm_d14c_const                     = 0.0_r8
-    ciso_atm_d14c_filename(1)               = 'unknown'
-    ciso_atm_d14c_filename(2)               = 'unknown'
-    ciso_atm_d14c_filename(3)               = 'unknown'
-
-    ciso_fract_factors                      = 'Rau'
-
-    ciso_lecovars_full_depth_tavg           = .false.
-
-    ciso_atm_model_year                     = 1
-    ciso_atm_data_year                      = 1
-
-    !-----------------------------------------------------------------------
-    ! read the namelist buffer on every processor
-    !-----------------------------------------------------------------------
-
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_ciso_nml')
-    read(tmp_nl_buffer, nml=marbl_ciso_nml, iostat=nml_error)
-    if (nml_error /= 0) then
-       call marbl_status_log%log_error("error reading &marbl_ciso_nml", subname)
-       return
-    end if
-
-  end subroutine marbl_ciso_init_nml
-
-  !*****************************************************************************
-  
   subroutine marbl_ciso_init_tracer_metadata(marbl_tracer_metadata,           &
                                              marbl_tracer_read,               &
                                              marbl_tracer_indices)

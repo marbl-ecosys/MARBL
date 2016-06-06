@@ -144,7 +144,6 @@ contains
 
     use marbl_namelist_mod    , only : marbl_nl_cnt
     use marbl_namelist_mod    , only : marbl_nl_buffer_size
-    use marbl_ciso_mod        , only : marbl_ciso_init_nml
     use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
     use marbl_mod             , only : marbl_init_nml
     use marbl_mod             , only : marbl_init_surface_forcing_fields
@@ -199,14 +198,6 @@ contains
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_nml()", subname)
       return
-    end if
-
-    if (gcm_ciso_on) then
-       call marbl_ciso_init_nml(gcm_nl_buffer, this%StatusLog)
-       if (this%StatusLog%labort_marbl) then
-          call this%StatusLog%log_error_trace("marbl_ciso_init_nml()", subname)
-          return
-       end if
     end if
 
     !--------------------------------------------------------------------
