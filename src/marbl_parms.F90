@@ -1745,8 +1745,8 @@ contains
                                      trim(this%parms(n)%sptr), "'"
           call marbl_status_log%log_noerror(log_message, subname)
         case ('real')
-          write(log_message, "(2A,E9.4)") trim(this%parms(n)%short_name), " = ", &
-                                          this%parms(n)%rptr
+          write(log_message, "(2A,E25.17)") trim(this%parms(n)%short_name),   &
+                                            " = ", this%parms(n)%rptr
           call marbl_status_log%log_noerror(log_message, subname)
         case ('integer')
           write(log_message, "(2A,I0)") trim(this%parms(n)%short_name), " = ", &
