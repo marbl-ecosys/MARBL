@@ -99,33 +99,33 @@ module marbl_parms
   real(r8),            target :: iron_frac_in_dust            ! fraction by weight of iron in dust
   real(r8),            target :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
   character(char_len), target :: caco3_bury_thres_opt         ! option of threshold of caco3 burial ['fixed_depth', 'omega_calc']
-  real (r8),           target :: caco3_bury_thres_depth       ! threshold depth for caco3_bury_thres_opt='fixed_depth'
+  real(r8),            target :: caco3_bury_thres_depth       ! threshold depth for caco3_bury_thres_opt='fixed_depth'
   ! -----------
   ! PON_sed_loss = PON_bury_coeff * Q * POC_sed_loss
   ! factor is used to avoid overburying PON like POC
   ! is when total C burial is matched to C riverine input
   ! -----------
-  real (r8),           target :: PON_bury_coeff
+  real(r8),            target :: PON_bury_coeff
   ! -----------
   ! POP_sed_loss = POP_bury_coeff * Qp_zoo_pom * POC_sed_loss
   ! factor is used to enable forced closure of the P cycle
   ! i.e. POP_sed_loss = P inputs (riverine + atm dep)
   ! -----------
-  real (r8),           target :: POP_bury_coeff
-  logical (log_kind),  target  :: lnutr_variable_restore      ! geographically varying nutrient restoring (maltrud)
-  character(char_len), target  :: nutr_rest_file              ! file containing nutrient fields
-  character(char_len), target  :: nutr_variable_rest_file     ! file containing variable restoring info
-  character(char_len), target  :: nutr_variable_rest_file_fmt ! format of file containing variable restoring info
+  real(r8),            target :: POP_bury_coeff
+  logical(log_kind),   target :: lnutr_variable_restore      ! geographically varying nutrient restoring (maltrud)
+  character(char_len), target :: nutr_rest_file              ! file containing nutrient fields
+  character(char_len), target :: nutr_variable_rest_file     ! file containing variable restoring info
+  character(char_len), target :: nutr_variable_rest_file_fmt ! format of file containing variable restoring info
 
   !---------------------------------------------------------------------
   !  Variables read in via &marbl_ciso_nml
   !---------------------------------------------------------------------
 
-  character(char_len),  target :: ciso_init_ecosys_option        ! option for initialization of bgc
-  character(char_len),  target :: ciso_init_ecosys_init_file     ! filename for option 'file'
-  character(char_len),  target :: ciso_init_ecosys_init_file_fmt ! file format for option 'file'
+  character(char_len), target :: ciso_init_ecosys_option        ! option for initialization of bgc
+  character(char_len), target :: ciso_init_ecosys_init_file     ! filename for option 'file'
+  character(char_len), target :: ciso_init_ecosys_init_file_fmt ! file format for option 'file'
   type(marbl_tracer_read_type) :: ciso_tracer_init_ext(ciso_tracer_cnt) ! namelist variable for initializing tracers
-  character(char_len),  target :: ciso_fract_factors             ! option for which biological fractionation calculation to use
+  character(char_len), target :: ciso_fract_factors             ! option for which biological fractionation calculation to use
 
   !---------------------------------------------------------------------
   !  Variables read in via &marbl_restore_nml
@@ -140,19 +140,19 @@ module marbl_parms
   !  Variables read in via &marbl_forcing_tmp_nml
   !---------------------------------------------------------------------
 
-  character(char_len), target :: dust_flux_source             ! option for atmospheric dust deposition
+  character(char_len),  target :: dust_flux_source             ! option for atmospheric dust deposition
   type(marbl_tracer_read_type) :: dust_flux_input             ! namelist input for dust_flux
-  character(char_len), target :: iron_flux_source             ! option for atmospheric iron deposition
+  character(char_len),  target :: iron_flux_source             ! option for atmospheric iron deposition
   type(marbl_tracer_read_type) :: iron_flux_input             ! namelist input for iron_flux
   type(marbl_tracer_read_type) :: fesedflux_input                    ! namelist input for iron_flux
-  character(char_len), target :: ndep_data_type               ! type of ndep forcing
+  character(char_len),  target :: ndep_data_type               ! type of ndep forcing
   type(marbl_tracer_read_type) :: nox_flux_monthly_input      ! namelist input for nox_flux_monthly
   type(marbl_tracer_read_type) :: nhy_flux_monthly_input      ! namelist input for nhy_flux_monthly
-  integer(int_kind), target :: ndep_shr_stream_year_first   ! first year in stream to use
-  integer(int_kind), target :: ndep_shr_stream_year_last    ! last year in stream to use
-  integer(int_kind), target :: ndep_shr_stream_year_align   ! align ndep_shr_stream_year_first with this model year
-  character(char_len), target :: ndep_shr_stream_file         ! file containing domain and input data
-  real(r8), target :: ndep_shr_stream_scale_factor ! unit conversion factor
+  integer(int_kind),    target :: ndep_shr_stream_year_first   ! first year in stream to use
+  integer(int_kind),    target :: ndep_shr_stream_year_last    ! last year in stream to use
+  integer(int_kind),    target :: ndep_shr_stream_year_align   ! align ndep_shr_stream_year_first with this model year
+  character(char_len),  target :: ndep_shr_stream_file         ! file containing domain and input data
+  real(r8),             target :: ndep_shr_stream_scale_factor ! unit conversion factor
   type(marbl_tracer_read_type) :: din_riv_flux_input          ! namelist input for din_riv_flux
   type(marbl_tracer_read_type) :: dip_riv_flux_input          ! namelist input for dip_riv_flux
   type(marbl_tracer_read_type) :: don_riv_flux_input          ! namelist input for don_riv_flux
@@ -163,31 +163,31 @@ module marbl_parms
   type(marbl_tracer_read_type) :: alk_riv_flux_input          ! namelist input for alk_riv_flux
   type(marbl_tracer_read_type) :: doc_riv_flux_input          ! namelist input for doc_riv_flux
   character(char_len)          :: gas_flux_forcing_opt        ! option for forcing gas fluxes
-  character(char_len), target :: gas_flux_forcing_file        ! file containing gas flux forcing fields
+  character(char_len),  target :: gas_flux_forcing_file        ! file containing gas flux forcing fields
   type(marbl_tracer_read_type) :: gas_flux_fice               ! ice fraction for gas fluxes
   type(marbl_tracer_read_type) :: gas_flux_ws                 ! wind speed for gas fluxes
   type(marbl_tracer_read_type) :: gas_flux_ap                 ! atmospheric pressure for gas fluxes
   character(char_len)          :: atm_co2_opt                 ! option for atmospheric co2 concentration
-  real(r8),            target :: atm_co2_const                ! value of atmospheric co2 (ppm, dry-air, 1 atm)
+  real(r8),             target :: atm_co2_const                ! value of atmospheric co2 (ppm, dry-air, 1 atm)
   character(char_len)          :: atm_alt_co2_opt             ! option for atmospheric alternative CO2
-  real(r8),            target :: atm_alt_co2_const            ! value of atmospheric alternative co2 (ppm, dry-air, 1 atm)
-  logical(log_kind),   target :: liron_patch                  ! flag for iron patch fertilization
-  character(char_len), target :: iron_patch_flux_filename     ! file containing name of iron patch file
-  integer(int_kind),   target :: iron_patch_month             ! integer month to add patch flux
-  integer   (int_kind)        :: ciso_atm_model_year            ! arbitrary model year
-  integer   (int_kind)        :: ciso_atm_data_year             ! year in atmospheric ciso data that corresponds to ciso_atm_model_year
-  integer   (int_kind)        :: ciso_atm_d13c_data_nbval       ! number of values in ciso_atm_d13c_filename
-  integer   (int_kind)        :: ciso_atm_d14c_data_nbval       ! number of values in ciso_atm_d14c_filename
-  real      (r8), allocatable :: ciso_atm_d13c_data(:)          ! atmospheric D13C values in datafile
-  real      (r8), allocatable :: ciso_atm_d13c_data_yr(:)       ! date of atmospheric D13C values in datafile
-  real      (r8), allocatable :: ciso_atm_d14c_data(:,:)        ! atmospheric D14C values in datafile (sh, eq, nh, in permil)
-  real      (r8), allocatable :: ciso_atm_d14c_data_yr(:,:)     ! date of atmospheric D14C values in datafile (sh, eq, nh)
-  real      (r8)              :: ciso_atm_d13c_const            ! atmospheric D13C constant [permil]
-  real      (r8)              :: ciso_atm_d14c_const            ! atmospheric D14C constant [permil]
-  character (char_len)        :: ciso_atm_d13c_opt              ! option for CO2 and D13C varying or constant forcing
-  character (char_len)        :: ciso_atm_d13c_filename         ! filenames for varying atm D13C
-  character (char_len)        :: ciso_atm_d14c_opt              ! option for CO2 and D13C varying or constant forcing
-  character (char_len)        :: ciso_atm_d14c_filename(3)      ! filenames for varying atm D14C (one each for NH, SH, EQ)
+  real(r8),             target :: atm_alt_co2_const            ! value of atmospheric alternative co2 (ppm, dry-air, 1 atm)
+  logical(log_kind),    target :: liron_patch                  ! flag for iron patch fertilization
+  character(char_len),  target :: iron_patch_flux_filename     ! file containing name of iron patch file
+  integer(int_kind),    target :: iron_patch_month             ! integer month to add patch flux
+  integer(int_kind)            :: ciso_atm_model_year            ! arbitrary model year
+  integer(int_kind)            :: ciso_atm_data_year             ! year in atmospheric ciso data that corresponds to ciso_atm_model_year
+  integer(int_kind)            :: ciso_atm_d13c_data_nbval       ! number of values in ciso_atm_d13c_filename
+  integer(int_kind)            :: ciso_atm_d14c_data_nbval       ! number of values in ciso_atm_d14c_filename
+  real(r8), allocatable        :: ciso_atm_d13c_data(:)          ! atmospheric D13C values in datafile
+  real(r8), allocatable        :: ciso_atm_d13c_data_yr(:)       ! date of atmospheric D13C values in datafile
+  real(r8), allocatable        :: ciso_atm_d14c_data(:,:)        ! atmospheric D14C values in datafile (sh, eq, nh, in permil)
+  real(r8), allocatable        :: ciso_atm_d14c_data_yr(:,:)     ! date of atmospheric D14C values in datafile (sh, eq, nh)
+  real(r8)                     :: ciso_atm_d13c_const            ! atmospheric D13C constant [permil]
+  real(r8)                     :: ciso_atm_d14c_const            ! atmospheric D14C constant [permil]
+  character(char_len)          :: ciso_atm_d13c_opt              ! option for CO2 and D13C varying or constant forcing
+  character(char_len)          :: ciso_atm_d13c_filename         ! filenames for varying atm D13C
+  character(char_len)          :: ciso_atm_d14c_opt              ! option for CO2 and D13C varying or constant forcing
+  character(char_len)          :: ciso_atm_d14c_filename(3)      ! filenames for varying atm D14C (one each for NH, SH, EQ)
 
   !---------------------------------------------------------------------
   !  Datatype for accessing parameters without namelist
