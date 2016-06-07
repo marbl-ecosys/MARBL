@@ -35,9 +35,24 @@ Contains
       zt(k) = p5*(zw(k-1)+zw(k))
     end do
 
+    ! Call marbl%config
+    call marbl_instance%config(gcm_nl_buffer = gcm_namelist,                  &
+                               gcm_ciso_on = ciso_on)
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error_trace('marbl%config', subname)
+      return
+    end if
+
+    ! Log configuration setup
+    call marbl_instance%configuration%list_vars(ciso_on, marbl_instance%StatusLog)
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error_trace('marbl_configuration%list', &
+           subname)
+      return
+    end if
+
     ! Call marbl%init
     call marbl_instance%init(gcm_nl_buffer = gcm_namelist,                    &
-                             gcm_ciso_on = ciso_on,                           &
                              gcm_tracer_cnt = tracer_cnt,                     &
                              gcm_num_levels = km,                             &
                              gcm_num_PAR_subcols = 1,                         &
@@ -51,13 +66,7 @@ Contains
       return
     end if
 
-    call marbl_instance%configuration%list_vars(ciso_on, marbl_instance%StatusLog)
-    if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl_configuration%list', &
-           subname)
-      return
-    end if
-
+    ! Log parameter setup
     call marbl_instance%parameters%list_vars(ciso_on, marbl_instance%StatusLog)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl_parmeters%list',   &

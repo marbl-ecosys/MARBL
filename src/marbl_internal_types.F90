@@ -620,6 +620,7 @@ contains
       tracer_cnt    = tracer_cnt + 1
       this%docr_ind = tracer_cnt
 
+      call marbl_status_log%log_noerror('', subname)
       write (log_message, "(A)") '----- zooplankton tracer indices -----'
       call marbl_status_log%log_noerror(log_message, subname)
 
@@ -633,6 +634,7 @@ contains
 
       end do
 
+      call marbl_status_log%log_noerror('', subname)
       write (log_message, "(A)") '----- autotroph tracer indices -----'
       call marbl_status_log%log_noerror(log_message, subname)
 
@@ -701,6 +703,7 @@ contains
         tracer_cnt      = tracer_cnt + 1
         this%zoo14C_ind = tracer_cnt
 
+        call marbl_status_log%log_noerror('', subname)
         write (log_message, "(A)") '----- autotroph tracer indices (CISO) -----'
         call marbl_status_log%log_noerror(log_message, subname)
 
@@ -737,6 +740,7 @@ contains
 
       end if
 
+    call marbl_status_log%log_noerror('', subname)
     if (tracer_cnt.ne.gcm_tracer_cnt) then
       write(log_message,"(A,I0,A,I0)") "MARBL has defined ", tracer_cnt,      &
                             " tracers, but GCM is expecting ", gcm_tracer_cnt

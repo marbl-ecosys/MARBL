@@ -114,14 +114,16 @@ module marbl_interface
 
    contains
 
-     procedure, public :: init             
+     procedure, public :: config
+     procedure, public :: init
      procedure, public :: get_tracer_index
-     procedure, public :: set_interior_forcing     
+     procedure, public :: set_interior_forcing
      procedure, public :: set_surface_forcing
-     procedure, public :: shutdown         
+     procedure, public :: shutdown
 
   end type marbl_interface_class
   
+  private :: config
   private :: init
   private :: set_interior_forcing
   private :: set_surface_forcing
@@ -133,65 +135,20 @@ contains
 
   !***********************************************************************
   
-  subroutine init(this,                   &
+  subroutine config(this,                 &
        gcm_nl_buffer,                     &
-       gcm_ciso_on,                       &
-       gcm_tracer_cnt,                    &
-       gcm_num_levels,                    &
-       gcm_num_PAR_subcols,               &
-       gcm_num_elements_interior_forcing, &
-       gcm_num_elements_surface_forcing,  &
-       gcm_dz,                            &
-       gcm_zw,                            &
-       gcm_zt)
+       gcm_ciso_on)
 
     use marbl_namelist_mod    , only : marbl_nl_cnt
     use marbl_namelist_mod    , only : marbl_nl_buffer_size
-    use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
-    use marbl_mod             , only : marbl_init_surface_forcing_fields
-    use marbl_mod             , only : marbl_init_tracer_metadata
-    use marbl_mod             , only : marbl_update_tracer_file_metadata
-    use marbl_diagnostics_mod , only : marbl_diagnostics_init
-    use marbl_config_mod      , only : autotrophs
-    use marbl_config_mod      , only : zooplankton
-    use marbl_config_mod      , only : auto_names
-    use marbl_config_mod      , only : zoo_names
     use marbl_config_mod      , only : marbl_config_set_defaults
     use marbl_config_mod      , only : marbl_config_read_namelist
-    use marbl_config_mod      , only : marbl_config_zooplankton
-    use marbl_config_mod      , only : marbl_config_autotrophs
-    use marbl_parms           , only : tracer_init_ext
-    use marbl_parms           , only : ciso_tracer_init_ext
-    use marbl_parms           , only : marbl_parms_set_defaults
-    use marbl_parms           , only : marbl_parms_read_namelist
-    use marbl_saved_state_mod , only : marbl_saved_state_init
-    
-    implicit none
 
     class     (marbl_interface_class)      , intent(inout) :: this
-    logical   (log_kind)                   , intent(in)    :: gcm_ciso_on
     character (marbl_nl_buffer_size)       , intent(in)    :: gcm_nl_buffer(marbl_nl_cnt)
-    integer   (int_kind)                   , intent(in)    :: gcm_tracer_cnt
-    integer   (int_kind)                   , intent(in)    :: gcm_num_levels
-    integer   (int_kind)                   , intent(in)    :: gcm_num_PAR_subcols
-    integer   (int_kind)                   , intent(in)    :: gcm_num_elements_surface_forcing
-    integer   (int_kind)                   , intent(in)    :: gcm_num_elements_interior_forcing
-    real      (r8)                         , intent(in)    :: gcm_dz(gcm_num_levels) ! thickness of layer k
-    real      (r8)                         , intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
-    real      (r8)                         , intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
+    logical   (log_kind)                   , intent(in)    :: gcm_ciso_on
 
-    character(*), parameter :: subname = 'marbl_interface:marbl_init'
-    integer :: i
-    !--------------------------------------------------------------------
-
-    associate(&
-         num_levels           => gcm_num_levels,                               &
-         num_PAR_subcols      => gcm_num_PAR_subcols,                          &
-         num_surface_elements => gcm_num_elements_surface_forcing,             &
-         num_interior_forcing => gcm_num_elements_interior_forcing,            &
-         ecosys_base_ind_beg  => this%tracer_indices%ecosys_base_ind_beg,      &
-         ecosys_base_ind_end  => this%tracer_indices%ecosys_base_ind_end       &
-         )
+    character(*), parameter :: subname = 'marbl_interface:config'
 
     !--------------------------------------------------------------------
     ! initialize ciso_on and status log
@@ -218,6 +175,66 @@ contains
       return
     end if
 
+  end subroutine config
+
+  !***********************************************************************
+  
+  subroutine init(this,                   &
+       gcm_nl_buffer,                     &
+       gcm_tracer_cnt,                    &
+       gcm_num_levels,                    &
+       gcm_num_PAR_subcols,               &
+       gcm_num_elements_interior_forcing, &
+       gcm_num_elements_surface_forcing,  &
+       gcm_dz,                            &
+       gcm_zw,                            &
+       gcm_zt)
+
+    use marbl_namelist_mod    , only : marbl_nl_cnt
+    use marbl_namelist_mod    , only : marbl_nl_buffer_size
+    use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
+    use marbl_mod             , only : marbl_init_surface_forcing_fields
+    use marbl_mod             , only : marbl_init_tracer_metadata
+    use marbl_mod             , only : marbl_update_tracer_file_metadata
+    use marbl_diagnostics_mod , only : marbl_diagnostics_init
+    use marbl_config_mod      , only : autotrophs
+    use marbl_config_mod      , only : zooplankton
+    use marbl_config_mod      , only : auto_names
+    use marbl_config_mod      , only : zoo_names
+    use marbl_config_mod      , only : marbl_config_zooplankton
+    use marbl_config_mod      , only : marbl_config_autotrophs
+    use marbl_parms           , only : tracer_init_ext
+    use marbl_parms           , only : ciso_tracer_init_ext
+    use marbl_parms           , only : marbl_parms_set_defaults
+    use marbl_parms           , only : marbl_parms_read_namelist
+    use marbl_saved_state_mod , only : marbl_saved_state_init
+    
+    implicit none
+
+    class     (marbl_interface_class)      , intent(inout) :: this
+    character (marbl_nl_buffer_size)       , intent(in)    :: gcm_nl_buffer(marbl_nl_cnt)
+    integer   (int_kind)                   , intent(in)    :: gcm_tracer_cnt
+    integer   (int_kind)                   , intent(in)    :: gcm_num_levels
+    integer   (int_kind)                   , intent(in)    :: gcm_num_PAR_subcols
+    integer   (int_kind)                   , intent(in)    :: gcm_num_elements_surface_forcing
+    integer   (int_kind)                   , intent(in)    :: gcm_num_elements_interior_forcing
+    real      (r8)                         , intent(in)    :: gcm_dz(gcm_num_levels) ! thickness of layer k
+    real      (r8)                         , intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
+    real      (r8)                         , intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
+
+    character(*), parameter :: subname = 'marbl_interface:marbl_init'
+    integer :: i
+    !--------------------------------------------------------------------
+
+    associate(&
+         num_levels           => gcm_num_levels,                               &
+         num_PAR_subcols      => gcm_num_PAR_subcols,                          &
+         num_surface_elements => gcm_num_elements_surface_forcing,             &
+         num_interior_forcing => gcm_num_elements_interior_forcing,            &
+         ecosys_base_ind_beg  => this%tracer_indices%ecosys_base_ind_beg,      &
+         ecosys_base_ind_end  => this%tracer_indices%ecosys_base_ind_end       &
+         )
+
     !-----------------------------------------------------------------------
     !  Set up tracer indices
     !-----------------------------------------------------------------------
@@ -233,7 +250,7 @@ contains
         return
       end if
 
-    call this%tracer_indices%construct(gcm_ciso_on, autotrophs, zooplankton,  &
+    call this%tracer_indices%construct(this%ciso_on, autotrophs, zooplankton, &
          auto_names, zoo_names, gcm_tracer_cnt, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("tracer_indices%construct", subname)
