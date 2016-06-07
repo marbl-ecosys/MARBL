@@ -155,6 +155,8 @@ contains
     use marbl_config_mod      , only : zoo_names
     use marbl_config_mod      , only : marbl_config_set_defaults
     use marbl_config_mod      , only : marbl_config_read_namelist
+    use marbl_config_mod      , only : marbl_config_zooplankton
+    use marbl_config_mod      , only : marbl_config_autotrophs
     use marbl_parms           , only : tracer_init_ext
     use marbl_parms           , only : ciso_tracer_init_ext
     use marbl_parms           , only : marbl_parms_set_defaults
@@ -210,6 +212,17 @@ contains
     !-----------------------------------------------------------------------
     !  Set up tracer indices
     !-----------------------------------------------------------------------
+
+      call marbl_config_zooplankton(this%StatusLog)
+      if (this%StatusLog%labort_marbl) then
+        call this%StatusLog%log_error_trace('marbl_config_zooplankton', subname)
+        return
+      end if
+      call marbl_config_autotrophs(this%StatusLog)
+      if (this%StatusLog%labort_marbl) then
+        call this%StatusLog%log_error_trace('marbl_config_autotroph', subname)
+        return
+      end if
 
     call this%tracer_indices%construct(gcm_ciso_on, autotrophs, zooplankton,  &
          auto_names, zoo_names, gcm_tracer_cnt, this%StatusLog)
