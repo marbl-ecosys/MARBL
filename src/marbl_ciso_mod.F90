@@ -23,8 +23,8 @@ module marbl_ciso_mod
   use marbl_constants_mod   , only : c1000
   use marbl_constants_mod   , only : mpercm
 
-  use marbl_parms           , only : autotrophs  
-  use marbl_parms           , only : zooplankton 
+  use marbl_config_mod      , only : autotrophs  
+  use marbl_config_mod      , only : zooplankton 
   use marbl_parms           , only : grazing     
 
   use marbl_sizes           , only : autotroph_cnt
@@ -92,7 +92,7 @@ contains
     !  Set tracer and forcing metadata
 
     use marbl_interface_types, only : marbl_tracer_read_type
-    use marbl_parms          , only : ciso_lecovars_full_depth_tavg
+    use marbl_config_mod     , only : ciso_lecovars_full_depth_tavg
     use marbl_parms          , only : ciso_init_ecosys_init_file
     use marbl_parms          , only : ciso_init_ecosys_init_file_fmt
 
@@ -235,7 +235,7 @@ contains
     !  13C code is based on code from X. Giraud, ETH ZÃ¼rich, 2008, for pop1
     !  Also added biotic 14C
 
-    use marbl_parms            , only : ciso_lsource_sink
+    use marbl_config_mod       , only : ciso_lsource_sink
     use marbl_parms            , only : ciso_fract_factors
     use marbl_parms            , only : f_graze_CaCO3_REMIN
     use marbl_constants_mod    , only : R13c_std

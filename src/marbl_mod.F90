@@ -153,18 +153,20 @@ module marbl_mod
   use marbl_parms, only : r_Nfix_photo
   use marbl_parms, only : spc_poc_fac
   use marbl_parms, only : grazing  
-  use marbl_parms, only : autotrophs
-  use marbl_parms, only : zooplankton
-
   use marbl_parms, only : liron_flux_derived
-  use marbl_parms, only : lsource_sink
-  use marbl_parms, only : lecovars_full_depth_tavg
   use marbl_parms, only : caco3_bury_thres_iopt
   use marbl_parms, only : caco3_bury_thres_iopt_fixed_depth
   use marbl_parms, only : caco3_bury_thres_iopt_omega_calc
   use marbl_parms, only : caco3_bury_thres_depth
   use marbl_parms, only : PON_bury_coeff
   use marbl_parms, only : POP_bury_coeff
+
+  use marbl_config_mod, only : autotrophs
+  use marbl_config_mod, only : zooplankton
+  use marbl_config_mod, only : lsource_sink
+  use marbl_config_mod, only : lflux_gas_o2
+  use marbl_config_mod, only : lflux_gas_co2
+  use marbl_config_mod, only : lecovars_full_depth_tavg
 
   use marbl_sizes, only : ecosys_base_tracer_cnt    
   use marbl_sizes, only : autotroph_cnt
@@ -210,7 +212,6 @@ module marbl_mod
   !  public/private member procedure declarations
   !-----------------------------------------------------------------------
 
-  public  :: marbl_init_nml
   public  :: marbl_init_surface_forcing_fields
   public  :: marbl_init_tracer_metadata
   public  :: marbl_update_tracer_file_metadata
@@ -266,50 +267,6 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_init_nml(nl_buffer, marbl_status_log)
-
-    !  Initialize ecosys tracer module. This involves setting metadata, reading
-    !  the module namelist, setting initial conditions, setting up forcing,
-    !  and defining additional tavg variables.
-    !
-    use marbl_namelist_mod, only : marbl_nl_cnt
-    use marbl_namelist_mod, only : marbl_nl_buffer_size
-    use marbl_namelist_mod, only : marbl_namelist
-    use marbl_parms       , only : marbl_parms_set_defaults
-    use marbl_parms       , only : marbl_parms_read_namelist
-
-    implicit none
-
-    character(marbl_nl_buffer_size), intent(in)  :: nl_buffer(marbl_nl_cnt)
-    type(marbl_log_type)           , intent(inout) :: marbl_status_log
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-
-    character(*), parameter :: subname = 'marbl_mod:marbl_init_nml'
-    character(len=char_len) :: log_message
-
-    !---------------------------------------------------------------------------
-    ! set defaults for namelist variables before reading them
-    !---------------------------------------------------------------------------
-
-    call marbl_parms_set_defaults()
-
-    !-----------------------------------------------------------------------
-    !  read marbl namelists
-    !-----------------------------------------------------------------------
-
-    call marbl_parms_read_namelist(nl_buffer, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('marbl_parms_read_namelist', subname)
-      return
-    end if
-
-  end subroutine marbl_init_nml
-
-  !*****************************************************************************
-
   subroutine marbl_init_surface_forcing_fields(&
        ciso_on, num_elements, num_surface_forcing_fields, &
        surface_forcing_indices, surface_forcing_fields,   &
@@ -353,8 +310,6 @@ contains
     use marbl_parms    , only : ndep_shr_stream_year_align
     use marbl_parms    , only : ndep_shr_stream_file
     use marbl_parms    , only : ndep_shr_stream_scale_factor
-    use marbl_parms    , only : lflux_gas_co2
-    use marbl_parms    , only : lflux_gas_o2
 
     implicit none
 
@@ -2237,8 +2192,6 @@ contains
     use marbl_co2calc_mod        , only : thermodynamic_coefficients_type
     use marbl_oxygen             , only : o2sat_surf
     use marbl_constants_mod      , only : molw_Fe
-    use marbl_parms              , only : lflux_gas_o2
-    use marbl_parms              , only : lflux_gas_co2
     use marbl_parms              , only : ndep_data_type
     use marbl_parms              , only : gas_flux_forcing_iopt_drv
     use marbl_parms              , only : gas_flux_forcing_iopt_file

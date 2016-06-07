@@ -145,15 +145,20 @@ contains
     use marbl_namelist_mod    , only : marbl_nl_cnt
     use marbl_namelist_mod    , only : marbl_nl_buffer_size
     use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
-    use marbl_mod             , only : marbl_init_nml
     use marbl_mod             , only : marbl_init_surface_forcing_fields
     use marbl_mod             , only : marbl_init_tracer_metadata
     use marbl_mod             , only : marbl_update_tracer_file_metadata
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
-    use marbl_parms           , only : autotrophs
-    use marbl_parms           , only : zooplankton
+    use marbl_config_mod      , only : autotrophs
+    use marbl_config_mod      , only : zooplankton
+    use marbl_config_mod      , only : auto_names
+    use marbl_config_mod      , only : zoo_names
+    use marbl_config_mod      , only : marbl_config_set_defaults
+    use marbl_config_mod      , only : marbl_config_read_namelist
     use marbl_parms           , only : tracer_init_ext
     use marbl_parms           , only : ciso_tracer_init_ext
+    use marbl_parms           , only : marbl_parms_set_defaults
+    use marbl_parms           , only : marbl_parms_read_namelist
     use marbl_saved_state_mod , only : marbl_saved_state_init
     
     implicit none
@@ -190,26 +195,44 @@ contains
     this%ciso_on = gcm_ciso_on
     call this%StatusLog%construct()
 
-    !--------------------------------------------------------------------
-    ! initialize marbl namelists
-    !--------------------------------------------------------------------
+    !---------------------------------------------------------------------------
+    ! set default values for config
+    !---------------------------------------------------------------------------
 
-    call marbl_init_nml(gcm_nl_buffer, this%StatusLog)
+    call marbl_config_set_defaults()
+
+    call marbl_config_read_namelist(gcm_nl_buffer, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_init_nml()", subname)
+      call this%StatusLog%log_error_trace('marbl_parms_read_namelist', subname)
+      return
+    end if
+
+    !-----------------------------------------------------------------------
+    !  Set up tracer indices
+    !-----------------------------------------------------------------------
+
+    call this%tracer_indices%construct(gcm_ciso_on, autotrophs, zooplankton,  &
+         auto_names, zoo_names, gcm_tracer_cnt, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("tracer_indices%construct", subname)
+      return
+    end if
+
+    !---------------------------------------------------------------------------
+    ! set default values for parameters
+    !---------------------------------------------------------------------------
+
+    call marbl_parms_set_defaults(gcm_num_levels)
+
+    call marbl_parms_read_namelist(gcm_nl_buffer, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('marbl_parms_read_namelist', subname)
       return
     end if
 
     !--------------------------------------------------------------------
     ! call constructors and allocate memory
     !--------------------------------------------------------------------
-
-    call this%tracer_indices%construct(gcm_ciso_on, autotrophs, zooplankton,  &
-         gcm_tracer_cnt, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("tracer_indices%construct", subname)
-      return
-    end if
 
     call this%PAR%construct(num_levels, num_PAR_subcols)
 

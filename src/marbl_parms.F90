@@ -23,8 +23,6 @@ module marbl_parms
   use marbl_constants_mod, only : c1
   use marbl_constants_mod, only : dps
 
-  use marbl_internal_types, only : zooplankton_type
-  use marbl_internal_types, only : autotroph_type
   use marbl_internal_types, only : grazing_type
 
   use marbl_interface_types, only : marbl_tracer_read_type
@@ -47,18 +45,6 @@ module marbl_parms
 
   public
   save
-
-  !---------------------------------------------------------------------
-  !  Variables read in via &marbl_config_nml
-  !---------------------------------------------------------------------
-
-  logical(log_kind), target ::  lsource_sink                  ! control which portion of code is executed, useful for debugging
-  logical(log_kind), target :: ciso_lsource_sink              ! control which portion of carbon isotope code is executed, useful for debugging
-  logical(log_kind), target :: lecovars_full_depth_tavg       ! should base ecosystem vars be written full depth
-  logical(log_kind), target :: ciso_lecovars_full_depth_tavg  ! should carbon isotope vars be written full depth
-  logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
-  logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
-  logical(log_kind), target :: locmip_k1_k2_bug_fix
 
   !---------------------------------------------------------------------
   !  Variables read in via &marbl_parms_nml
@@ -84,10 +70,7 @@ module marbl_parms
        parm_scalelen_z,       & ! depths of prescribed scalelen values
        parm_scalelen_vals       ! prescribed scalelen values
 
-  type(zooplankton_type) :: zooplankton(zooplankton_cnt)
-  type(autotroph_type)   :: autotrophs(autotroph_cnt)
   type(grazing_type)     :: grazing(grazer_prey_cnt, zooplankton_cnt)
-
   !---------------------------------------------------------------------
   !  Variables read in via &marbl_ecosys_base_nml
   !---------------------------------------------------------------------
@@ -131,10 +114,10 @@ module marbl_parms
   !  Variables read in via &marbl_restore_nml
   !---------------------------------------------------------------------
 
-  character(len=char_len), allocatable, dimension(:) :: restore_short_names, &
+  character(len=char_len), allocatable, target, dimension(:) :: restore_short_names, &
                                                         restore_filenames,   &
                                                         restore_file_varnames
-  real(r8) :: rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
+  real(r8), target :: rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
 
   !---------------------------------------------------------------------
   !  Variables read in via &marbl_forcing_tmp_nml
@@ -214,6 +197,7 @@ module marbl_parms
     procedure :: construct        => marbl_parms_construct
     procedure :: add_parms        => marbl_parms_add
     procedure :: add_parms_1d_r8  => marbl_parms_add_1d_r8
+    procedure :: add_parms_1d_str => marbl_parms_add_1d_str
     procedure :: list_parms       => marbl_parms_list
   end type marbl_parms_type
 
@@ -356,6 +340,8 @@ module marbl_parms
   integer (int_kind), parameter :: marbl_freq_opt_nyear    = 1
   integer (int_kind), parameter :: marbl_freq_opt_nmonth   = 2
 
+  real(r8), dimension(:), allocatable :: inv_tau
+
   integer(int_kind)             :: gas_flux_forcing_iopt
   integer (int_kind), parameter :: gas_flux_forcing_iopt_drv  = 1
   integer (int_kind), parameter :: gas_flux_forcing_iopt_file = 2
@@ -410,21 +396,25 @@ module marbl_parms
 
   ! Variables used from other modules should be private
   ! (So we don't accidentally use them from this module)
-  private :: r8, int_kind, log_kind
+  private :: r8, int_kind, log_kind, char_len
   private :: c1, dps
-  private :: zooplankton_type, autotroph_type, grazing_type
+  private :: grazing_type
   private :: autotroph_cnt, zooplankton_cnt, grazer_prey_cnt
+  private :: marbl_log_type
 
 contains
 
   !*****************************************************************************
 
-  subroutine marbl_parms_set_defaults()
-
-    use marbl_constants_mod, only : c0
+  subroutine marbl_parms_set_defaults(km)
     ! assign default values to all module variables
 
-    implicit none
+    use marbl_constants_mod, only : c0, c2, c1000
+    use marbl_sizes        , only : marbl_total_tracer_cnt
+    use marbl_config_mod   , only : autotrophs
+    use marbl_config_mod   , only : zooplankton
+
+    integer,              intent(in)    :: km ! max number of levels
 
     !---------------------------------------------------------------------------
     !   local variables
@@ -433,19 +423,9 @@ contains
     !---------------------------------------------------------------------------
 
     !-----------------------------------------------------------------------
-    !  &marbl_config_nml
-    !-----------------------------------------------------------------------
-    lsource_sink                  = .true.
-    ciso_lsource_sink             = .true.
-    lecovars_full_depth_tavg      = .false.
-    ciso_lecovars_full_depth_tavg = .false.
-    lflux_gas_o2                  = .true.
-    lflux_gas_co2                 = .true.
-    locmip_k1_k2_bug_fix          = .true.
-
-    !-----------------------------------------------------------------------
     !  &marbl_parms_nml
     !-----------------------------------------------------------------------
+
     parm_Fe_bioavail       = 1.0_r8
     parm_o2_min            = 5.0_r8
     parm_o2_min_delta      = 5.0_r8
@@ -462,94 +442,6 @@ contains
     fe_max_scale2          = 2200.0_r8      ! x1 default
     parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8,  750.0e2_r8 /)
     parm_scalelen_vals = (/     1.0_r8,     3.3_r8,     4.6_r8,      5.0_r8 /) ! x1 default
-
-    zoo_ind = 1
-    zooplankton(zoo_ind)%sname          ='zoo'
-    zooplankton(zoo_ind)%lname          = 'Zooplankton'
-    zooplankton(zoo_ind)%z_mort_0       = 0.1_r8 * dps
-    zooplankton(zoo_ind)%z_mort2_0      = 0.4_r8 * dps
-    zooplankton(zoo_ind)%loss_thres     = 0.075_r8     !zoo conc. where losses go to zero
-
-    auto_ind = sp_ind
-    autotrophs(auto_ind)%sname         = 'sp'
-    autotrophs(auto_ind)%lname         = 'Small Phyto'
-    autotrophs(auto_ind)%Nfixer        = .false.
-    autotrophs(auto_ind)%imp_calcifier = .true.
-    autotrophs(auto_ind)%exp_calcifier = .false.
-    autotrophs(auto_ind)%kFe           = 0.03e-3_r8
-    autotrophs(auto_ind)%kPO4          = 0.01_r8
-    autotrophs(auto_ind)%kDOP          = 0.2_r8
-    autotrophs(auto_ind)%kNO3          = 0.25_r8
-    autotrophs(auto_ind)%kNH4          = 0.0125_r8
-    autotrophs(auto_ind)%kSiO3         = 0.0_r8
-    autotrophs(auto_ind)%Qp            = 0.00855_r8
-    autotrophs(auto_ind)%gQfe_0        = 30.0e-6_r8
-    autotrophs(auto_ind)%gQfe_min      = 3.0e-6_r8
-    autotrophs(auto_ind)%alphaPI       = 0.39_r8 * dps
-    autotrophs(auto_ind)%PCref         = 5.5_r8 * dps
-    autotrophs(auto_ind)%thetaN_max    = 2.5_r8
-    autotrophs(auto_ind)%loss_thres    = 0.02_r8
-    autotrophs(auto_ind)%loss_thres2   = 0.0_r8
-    autotrophs(auto_ind)%temp_thres    = -10.0_r8
-    autotrophs(auto_ind)%mort          = 0.1_r8 * dps
-    autotrophs(auto_ind)%mort2         = 0.01_r8 * dps
-    autotrophs(auto_ind)%agg_rate_max  = 0.5_r8
-    autotrophs(auto_ind)%agg_rate_min  = 0.01_r8
-    autotrophs(auto_ind)%loss_poc      = 0.0_r8
-
-    auto_ind = diat_ind
-    autotrophs(auto_ind)%sname         = 'diat'
-    autotrophs(auto_ind)%lname         = 'Diatom'
-    autotrophs(auto_ind)%Nfixer        = .false.
-    autotrophs(auto_ind)%imp_calcifier = .false.
-    autotrophs(auto_ind)%exp_calcifier = .false.
-    autotrophs(auto_ind)%kFe           = 0.07e-3_r8
-    autotrophs(auto_ind)%kPO4          = 0.05_r8
-    autotrophs(auto_ind)%kDOP          = 0.5_r8
-    autotrophs(auto_ind)%kNO3          = 1.0_r8
-    autotrophs(auto_ind)%kNH4          = 0.05_r8
-    autotrophs(auto_ind)%kSiO3         = 0.8_r8
-    autotrophs(auto_ind)%Qp            = 0.00855_r8
-    autotrophs(auto_ind)%gQfe_0        = 30.0e-6_r8
-    autotrophs(auto_ind)%gQfe_min      = 3.0e-6_r8
-    autotrophs(auto_ind)%alphaPI       = 0.29_r8 * dps
-    autotrophs(auto_ind)%PCref         = 5.5_r8 * dps
-    autotrophs(auto_ind)%thetaN_max    = 4.0_r8
-    autotrophs(auto_ind)%loss_thres    = 0.02_r8
-    autotrophs(auto_ind)%loss_thres2   = 0.0_r8
-    autotrophs(auto_ind)%temp_thres    = -10.0_r8
-    autotrophs(auto_ind)%mort          = 0.1_r8 * dps
-    autotrophs(auto_ind)%mort2         = 0.01_r8 * dps
-    autotrophs(auto_ind)%agg_rate_max  = 0.5_r8
-    autotrophs(auto_ind)%agg_rate_min  = 0.02_r8
-    autotrophs(auto_ind)%loss_poc      = 0.0_r8
-
-    auto_ind = diaz_ind
-    autotrophs(auto_ind)%sname         = 'diaz'
-    autotrophs(auto_ind)%lname         = 'Diazotroph'
-    autotrophs(auto_ind)%Nfixer        = .true.
-    autotrophs(auto_ind)%imp_calcifier = .false.
-    autotrophs(auto_ind)%exp_calcifier = .false.
-    autotrophs(auto_ind)%kFe           = 0.03e-3_r8
-    autotrophs(auto_ind)%kPO4          = 0.0125_r8
-    autotrophs(auto_ind)%kDOP          = 0.05_r8
-    autotrophs(auto_ind)%kNO3          = 4.0_r8
-    autotrophs(auto_ind)%kNH4          = 0.4_r8
-    autotrophs(auto_ind)%kSiO3         = 0.0_r8
-    autotrophs(auto_ind)%Qp            = 0.002735_r8
-    autotrophs(auto_ind)%gQfe_0        = 60.0e-6_r8
-    autotrophs(auto_ind)%gQfe_min      = 6.0e-6_r8
-    autotrophs(auto_ind)%alphaPI       = 0.39_r8 * dps
-    autotrophs(auto_ind)%PCref         = 1.55_r8 * dps
-    autotrophs(auto_ind)%thetaN_max    = 2.5_r8
-    autotrophs(auto_ind)%loss_thres    = 0.02_r8
-    autotrophs(auto_ind)%loss_thres2   = 0.001_r8
-    autotrophs(auto_ind)%temp_thres    = 15.0_r8
-    autotrophs(auto_ind)%mort          = 0.1_r8 * dps
-    autotrophs(auto_ind)%mort2         = 0.01_r8 * dps
-    autotrophs(auto_ind)%agg_rate_max  = 0.5_r8
-    autotrophs(auto_ind)%agg_rate_min  = 0.01_r8
-    autotrophs(auto_ind)%loss_poc      = 0.0_r8
 
     ! predator-prey relationships
     zoo_ind = 1
@@ -601,6 +493,7 @@ contains
     !-----------------------------------------------------------------------
     !  &marbl_ecosys_base_nml
     !-----------------------------------------------------------------------
+
     init_ecosys_option = 'unknown'
     init_ecosys_init_file = 'unknown'
     init_ecosys_init_file_fmt = 'bin'
@@ -641,6 +534,30 @@ contains
        ciso_tracer_init_ext(n)%default_val  = c0
        ciso_tracer_init_ext(n)%file_fmt     = 'bin'
     end do
+
+    !-----------------------------------------------------------------------
+    !  &marbl_restore_nml
+    !-----------------------------------------------------------------------
+
+    ! FIXME #69: not thread-safe!
+    if (.not.allocated(inv_tau)) &
+      allocate(inv_tau(km))
+    if (.not.allocated(restore_short_names)) &
+      allocate(restore_short_names(marbl_total_tracer_cnt))
+    if (.not.allocated(restore_filenames)) &
+      allocate(restore_filenames(marbl_total_tracer_cnt))
+    if (.not.allocated(restore_file_varnames)) &
+      allocate(restore_file_varnames(marbl_total_tracer_cnt))
+
+    ! initialize namelist variables to default values
+    restore_short_names = ''
+    restore_filenames = ''
+    restore_file_varnames = ''
+
+    rest_time_inv_surf = c0
+    rest_time_inv_deep = c0
+    rest_z0 = c1000
+    rest_z1 = c2*c1000
 
     !-----------------------------------------------------------------------
     !  &marbl_forcing_tmp_nml
@@ -769,8 +686,6 @@ contains
     use marbl_namelist_mod, only : marbl_nl_buffer_size
     use marbl_namelist_mod, only : marbl_namelist
 
-    implicit none
-
     character(marbl_nl_buffer_size), dimension(marbl_nl_cnt), intent(in) :: nl_buffer
     type(marbl_log_type), intent(inout) :: marbl_status_log
 
@@ -781,23 +696,16 @@ contains
     character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
     character(len=char_len) :: log_message
 
-    integer(kind=int_kind) :: io_error
-
     integer (int_kind)           :: n                           ! index for looping over tracers
     integer (int_kind)           :: nml_error                   ! namelist i/o error flag
     integer (int_kind)           :: zoo_ind                     ! zooplankton functional group index
-
-    namelist /marbl_config_nml/                                               &
-         lsource_sink, ciso_lsource_sink, lecovars_full_depth_tavg,           &
-         ciso_lecovars_full_depth_tavg, lflux_gas_o2, lflux_gas_co2,          &
-         locmip_k1_k2_bug_fix
 
     namelist /marbl_parms_nml/                                                &
          parm_Fe_bioavail, parm_o2_min, parm_o2_min_delta, parm_kappa_nitrif, &
          parm_nitrif_par_lim, parm_labile_ratio, parm_POMbury, parm_BSIbury,  &
          parm_fe_scavenge_rate0, parm_f_prod_sp_CaCO3, parm_POC_diss,         &
          parm_SiO2_diss, parm_CaCO3_diss, fe_max_scale2, parm_scalelen_z,     &
-         parm_scalelen_vals, autotrophs, zooplankton, grazing
+         parm_scalelen_vals, grazing
 
     namelist /marbl_ecosys_base_nml/                                          &
          init_ecosys_option, init_ecosys_init_file, tracer_init_ext,          &
@@ -810,6 +718,10 @@ contains
          ciso_init_ecosys_option, ciso_init_ecosys_init_file,                 &
          ciso_init_ecosys_init_file_fmt, ciso_tracer_init_ext,                &
          ciso_fract_factors
+
+    namelist /marbl_restore_nml/                                              &
+         restore_short_names, restore_filenames, restore_file_varnames,       &
+         rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
 
     namelist /marbl_forcing_tmp_nml/                                          &
          dust_flux_source, dust_flux_input, iron_flux_source,                 &
@@ -828,24 +740,13 @@ contains
          ciso_atm_d14c_opt, ciso_atm_d14c_const, ciso_atm_d14c_filename,      &
          ciso_atm_model_year, ciso_atm_data_year
 
-    !-----------------------------------------------------------------------
-    ! read the &marbl_config_nml namelist
-    !-----------------------------------------------------------------------
-
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_config_nml')
-    read(tmp_nl_buffer, nml=marbl_config_nml, iostat=nml_error)
-    if (nml_error /= 0) then
-      call marbl_status_log%log_error("error reading &marbl_config_nml", subname)
-      return
-    end if
-
     !---------------------------------------------------------------------------
     ! read the &marbl_parms_nml namelist
     !---------------------------------------------------------------------------
 
     tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_parms_nml')
-    read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=io_error)
-    if (io_error /= 0) then
+    read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=nml_error)
+    if (nml_error /= 0) then
        call marbl_status_log%log_error("Error reading marbl_parms_nml", subname)
        return
     end if
@@ -883,6 +784,16 @@ contains
     read(tmp_nl_buffer, nml=marbl_ciso_nml, iostat=nml_error)
     if (nml_error /= 0) then
        call marbl_status_log%log_error("error reading &marbl_ciso_nml", subname)
+       return
+    end if
+
+    !-----------------------------------------------------------------------
+    ! read the &marbl_restore_nml namelist
+    !-----------------------------------------------------------------------
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_restore_nml')
+    read(tmp_nl_buffer, nml=marbl_restore_nml, iostat=nml_error)
+    if (nml_error /= 0) then
+       call marbl_status_log%log_error("error reading &marbl_restore_nml", subname)
        return
     end if
 
@@ -976,6 +887,16 @@ contains
   !*****************************************************************************
 
   subroutine marbl_parms_construct(this, marbl_status_log)
+
+    use marbl_config_mod, only : lsource_sink
+    use marbl_config_mod, only : ciso_lsource_sink
+    use marbl_config_mod, only : lecovars_full_depth_tavg
+    use marbl_config_mod, only : ciso_lecovars_full_depth_tavg
+    use marbl_config_mod, only : lflux_gas_o2
+    use marbl_config_mod, only : lflux_gas_co2
+    use marbl_config_mod, only : locmip_k1_k2_bug_fix
+    use marbl_config_mod, only : auto_names
+    use marbl_config_mod, only : zoo_names
 
     class(marbl_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
@@ -1529,6 +1450,95 @@ contains
       return
     end if
 
+    !-------------------!
+    ! marbl_restore_nml !
+    !-------------------!
+
+    sname     = 'restore_short_names'
+    lname     = 'Tracer names for tracers that are restored'
+    units     = 'unitless'
+    group     = 'marbl_restore_nml'
+    call this%add_parms_1d_str(sname, lname, units, group, restore_short_names, &
+                               marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_parms_1d_r8', subname)
+      return
+    end if
+
+    sname     = 'restore_filenames'
+    lname     = 'Files containing tracer restoring fields'
+    units     = 'unitless'
+    group     = 'marbl_restore_nml'
+    call this%add_parms_1d_str(sname, lname, units, group, restore_filenames, &
+                               marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_parms_1d_r8', subname)
+      return
+    end if
+
+    sname     = 'restore_file_varnames'
+    lname     = 'Name of fields for tracer restoring (as appearing in restore_filenames)'
+    units     = 'unitless'
+    group     = 'marbl_restore_nml'
+    call this%add_parms_1d_str(sname, lname, units, group, restore_file_varnames, &
+                               marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_parms_1d_r8', subname)
+      return
+    end if
+
+    sname     = 'rest_time_inv_surf'
+    lname     = 'Restoring time scale at rest_z0'
+    units     = '1/sec'
+    datatype  = 'real'
+    group     = 'marbl_restore_nml'
+    rptr      => rest_time_inv_surf
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'rest_time_inv_deep'
+    lname     = 'Restoring time scale at rest_z1'
+    units     = '1/sec'
+    datatype  = 'real'
+    group     = 'marbl_restore_nml'
+    rptr      => rest_time_inv_deep
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'rest_z0'
+    lname     = 'Above this depth, restoring time scale is rest_time_inv_surf'
+    units     = 'cm'
+    datatype  = 'real'
+    group     = 'marbl_restore_nml'
+    rptr      => rest_z0
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'rest_z1'
+    lname     = 'Below this depth, restoring time scale is rest_time_inv_deep'
+    units     = 'cm'
+    datatype  = 'real'
+    group     = 'marbl_restore_nml'
+    rptr      => rest_z1
+    call this%add_parms(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_parms_error(marbl_status_log, sname, subname)
+      return
+    end if
+
     !-----------------------!
     ! marbl_forcing_tmp_nml !
     !-----------------------!
@@ -1810,7 +1820,7 @@ contains
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       rptr => r8array(n)
       call this%add_parms(sname_loc, lname, units, 'real', group,             &
-                          marbl_status_log, rptr)
+                          marbl_status_log, rptr=rptr)
       if (marbl_status_log%labort_marbl) then
         call log_add_parms_error(marbl_status_log, sname_loc, subname)
         return
@@ -1818,6 +1828,37 @@ contains
     end do
 
   end subroutine marbl_parms_add_1d_r8
+
+  !*****************************************************************************
+
+  subroutine marbl_parms_add_1d_str(this, sname, lname, units, group,         &
+                                    strarray, marbl_status_log)
+
+    class(marbl_parms_type),             intent(inout) :: this
+    character(len=char_len),             intent(in)    :: sname
+    character(len=char_len),             intent(in)    :: lname
+    character(len=char_len),             intent(in)    :: units
+    character(len=char_len),             intent(in)    :: group
+    character(len=char_len),     target, intent(in)    :: strarray(:)
+    type(marbl_log_type),                intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_parms:marbl_parms_add'
+    character(len=char_len) :: sname_loc
+    character(len=char_len), pointer :: sptr => NULL()
+    integer :: n
+
+    do n=1,size(strarray)
+      write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
+      sptr => strarray(n)
+      call this%add_parms(sname_loc, lname, units, 'string', group,           &
+                          marbl_status_log, sptr=sptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_parms_error(marbl_status_log, sname_loc, subname)
+        return
+      end if
+    end do
+
+  end subroutine marbl_parms_add_1d_str
 
   !*****************************************************************************
 

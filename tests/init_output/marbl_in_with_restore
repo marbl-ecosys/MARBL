@@ -1,5 +1,8 @@
 &marbl_driver_nml
 testname="namelist_write"
+ciso_on=.true.
+/
+&marbl_config_nml
 /
 &marbl_ecosys_base_nml
 /
@@ -11,4 +14,8 @@ testname="namelist_write"
  restore_short_names = 'SiO3', 'NO3', 'PO4'
  restore_filenames = 3*'$DIN_LOC_ROOT/ocn/pop/gx3v7/ic/ecosys_jan_IC_gx3v7_Nov2012_corrO2.nc'
  restore_file_varnames = 'SiO3', 'NO3', 'PO4'
+ rest_time_inv_surf = 2.3e-6
+ rest_time_inv_deep = 2.3e-6
+/
+&marbl_forcing_tmp_nml
 /

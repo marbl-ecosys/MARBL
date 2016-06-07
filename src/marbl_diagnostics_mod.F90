@@ -12,15 +12,13 @@ module marbl_diagnostics_mod
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
 
-  use marbl_parms           , only : autotrophs
-  use marbl_parms           , only : zooplankton
+  use marbl_config_mod      , only : autotrophs
+  use marbl_config_mod      , only : zooplankton
 
   use marbl_constants_mod   , only : c0
   use marbl_constants_mod   , only : c1
 
   use marbl_internal_types  , only : carbonate_type
-  use marbl_internal_types  , only : zooplankton_type
-  use marbl_internal_types  , only : autotroph_type
   use marbl_internal_types  , only : zooplankton_secondary_species_type
   use marbl_internal_types  , only : autotroph_secondary_species_type
   use marbl_internal_types  , only : dissolved_organic_matter_type
@@ -4199,8 +4197,8 @@ contains
     !  Compute surface fluxes for ecosys tracer module.
 
     use marbl_internal_types , only : marbl_surface_saved_state_indexing_type
-    use marbl_parms          , only : lflux_gas_o2
-    use marbl_parms          , only : lflux_gas_co2
+    use marbl_config_mod     , only : lflux_gas_o2
+    use marbl_config_mod     , only : lflux_gas_co2
     use marbl_parms          , only : iron_flux_file     
     use marbl_parms          , only : din_riv_flux_file     
     use marbl_parms          , only : dip_riv_flux_file          

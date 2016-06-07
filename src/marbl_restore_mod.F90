@@ -27,11 +27,6 @@ module marbl_restore_mod
      procedure, public :: restore_tracers
   end type marbl_restore_type
 
-  real (r8), parameter, private :: default_rest_time_inv_surf = c0
-  real (r8), parameter, private :: default_rest_time_inv_deep = c0
-  real (r8), parameter, private :: default_rest_z0 = c1000
-  real (r8), parameter, private :: default_rest_z1 = c2 * c1000
-
 contains
 
 !*****************************************************************************
@@ -54,6 +49,7 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   use marbl_parms       , only : rest_time_inv_deep
   use marbl_parms       , only : rest_z0
   use marbl_parms       , only : rest_z1
+  use marbl_parms       , only : inv_tau
 
   implicit none
 
@@ -76,7 +72,6 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   !  local variables
   !-----------------------------------------------------------------------
 
-  real(r8), dimension(:), allocatable :: inv_tau
   integer(int_kind) :: nml_error, k, n, t
   character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
   character(*), parameter :: subname = 'marbl_restore_mod:init'
@@ -84,42 +79,8 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
 
   !-----------------------------------------------------------------------
 
-  namelist /marbl_restore_nml/        &
-       restore_short_names,           &
-       restore_filenames,             &
-       restore_file_varnames,         &
-       rest_time_inv_surf,            &
-       rest_time_inv_deep,            &
-       rest_z0, rest_z1
-
   this%lrestore_any = .false.
   allocate(this%tracer_restore(marbl_total_tracer_cnt))
-  allocate(inv_tau(domain%km))
-  ! FIXME #69: not thread-safe!
-  if (.not.allocated(restore_short_names)) &
-    allocate(restore_short_names(marbl_total_tracer_cnt))
-  if (.not.allocated(restore_filenames)) &
-    allocate(restore_filenames(marbl_total_tracer_cnt))
-  if (.not.allocated(restore_file_varnames)) &
-    allocate(restore_file_varnames(marbl_total_tracer_cnt))
-
-  ! initialize namelist variables to default values
-  restore_short_names = ''
-  restore_filenames = ''
-  restore_file_varnames = ''
-
-  rest_time_inv_surf = default_rest_time_inv_surf
-  rest_time_inv_deep = default_rest_time_inv_deep
-  rest_z0 = default_rest_z0
-  rest_z1 = default_rest_z1
-
-  tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_restore_nml')
-  read(tmp_nl_buffer, nml=marbl_restore_nml, iostat=nml_error)
-  if (nml_error /= 0) then
-     log_message = "Error reading marbl_restore_nml"
-     call status_log%log_error(log_message, subname)
-     return
-  end if
 
   ! Set up inverse tau based on namelist values
   if (rest_z1 == rest_z0) then
