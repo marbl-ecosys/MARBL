@@ -14,12 +14,10 @@ module marbl_init_output_drv
 
 Contains
 
-  subroutine marbl_init_output_test(marbl_instance, ciso_on, tracer_cnt,      &
-                                    gcm_namelist)
+  subroutine marbl_init_output_test(marbl_instance, ciso_on, gcm_namelist)
 
     type(marbl_interface_class), intent(inout) :: marbl_instance
     logical,                        intent(in) :: ciso_on
-    integer,                        intent(in) :: tracer_cnt
     character(len=*), dimension(:), intent(in) :: gcm_namelist
 
     character(*), parameter      :: subname = 'marbl_init_output_drv:test'
@@ -53,7 +51,6 @@ Contains
 
     ! Call marbl%init
     call marbl_instance%init(gcm_nl_buffer = gcm_namelist,                    &
-                             gcm_tracer_cnt = tracer_cnt,                     &
                              gcm_num_levels = km,                             &
                              gcm_num_PAR_subcols = 1,                         &
                              gcm_num_elements_interior_forcing = 1,           &

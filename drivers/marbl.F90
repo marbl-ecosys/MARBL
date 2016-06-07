@@ -24,7 +24,6 @@ Program marbl
   integer                             :: m, n
   character(len=256)                  :: testname
   logical                             :: ciso_on
-  integer                             :: tracer_cnt
   namelist /marbl_driver_nml/testname, ciso_on
 
   ! (1) Read namelist file to array of strings
@@ -67,17 +66,12 @@ Program marbl
     write(*,*) "ERROR reading marbl_driver_nml"
     stop 1
   end if
-  if (ciso_on) then
-    tracer_cnt = 41
-  else
-    tracer_cnt = 27
-  end if
 
   ! (3) Run proper test
   write(*,"(3A)") "Beginning ", trim(testname), " test..."
   select case (trim(testname))
     case ("namelist_write")
-      call marbl_init_output_test(marbl_instance, ciso_on, tracer_cnt, nl_buffer)
+      call marbl_init_output_test(marbl_instance, ciso_on, nl_buffer)
     case DEFAULT
       write(*,*) "ERROR: testname = ", trim(testname), " is not a valid option"
       stop 1

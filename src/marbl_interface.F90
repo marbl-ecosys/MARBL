@@ -181,14 +181,14 @@ contains
   
   subroutine init(this,                   &
        gcm_nl_buffer,                     &
-       gcm_tracer_cnt,                    &
        gcm_num_levels,                    &
        gcm_num_PAR_subcols,               &
        gcm_num_elements_interior_forcing, &
        gcm_num_elements_surface_forcing,  &
        gcm_dz,                            &
        gcm_zw,                            &
-       gcm_zt)
+       gcm_zt,                            &
+       marbl_tracer_cnt)
 
     use marbl_namelist_mod    , only : marbl_nl_cnt
     use marbl_namelist_mod    , only : marbl_nl_buffer_size
@@ -213,7 +213,6 @@ contains
 
     class     (marbl_interface_class)      , intent(inout) :: this
     character (marbl_nl_buffer_size)       , intent(in)    :: gcm_nl_buffer(marbl_nl_cnt)
-    integer   (int_kind)                   , intent(in)    :: gcm_tracer_cnt
     integer   (int_kind)                   , intent(in)    :: gcm_num_levels
     integer   (int_kind)                   , intent(in)    :: gcm_num_PAR_subcols
     integer   (int_kind)                   , intent(in)    :: gcm_num_elements_surface_forcing
@@ -221,6 +220,7 @@ contains
     real      (r8)                         , intent(in)    :: gcm_dz(gcm_num_levels) ! thickness of layer k
     real      (r8)                         , intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real      (r8)                         , intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
+    integer   (int_kind), optional         , intent(out)   :: marbl_tracer_cnt
 
     character(*), parameter :: subname = 'marbl_interface:marbl_init'
     integer :: i
@@ -251,11 +251,13 @@ contains
       end if
 
     call this%tracer_indices%construct(this%ciso_on, autotrophs, zooplankton, &
-         auto_names, zoo_names, gcm_tracer_cnt, this%StatusLog)
+         auto_names, zoo_names, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("tracer_indices%construct", subname)
       return
     end if
+    if (present(marbl_tracer_cnt)) &
+      marbl_tracer_cnt = marbl_total_tracer_cnt
 
     !---------------------------------------------------------------------------
     ! set default values for parameters

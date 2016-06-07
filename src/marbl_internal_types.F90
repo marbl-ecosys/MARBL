@@ -542,7 +542,7 @@ contains
   !*****************************************************************************
 
   subroutine tracer_index_constructor(this, ciso_on, autotrophs, zooplankton, &
-             auto_names, zoo_names, gcm_tracer_cnt, marbl_status_log)
+             auto_names, zoo_names, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -554,7 +554,6 @@ contains
     use marbl_constants_mod, only : c0
 
     class(marbl_tracer_index_type), intent(inout) :: this
-    integer,                        intent(in)    :: gcm_tracer_cnt
     logical,                        intent(in)    :: ciso_on
     type(zooplankton_type),         intent(inout) :: zooplankton(:)
     type(autotroph_type),           intent(inout) :: autotrophs(:)
@@ -741,12 +740,6 @@ contains
       end if
 
     call marbl_status_log%log_noerror('', subname)
-    if (tracer_cnt.ne.gcm_tracer_cnt) then
-      write(log_message,"(A,I0,A,I0)") "MARBL has defined ", tracer_cnt,      &
-                            " tracers, but GCM is expecting ", gcm_tracer_cnt
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
     if (ciso_on) then
       n = this%ciso_ind_end - (this%ciso_ind_beg-1)
       if (n.ne.ciso_tracer_cnt) then
