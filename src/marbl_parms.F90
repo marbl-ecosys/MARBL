@@ -1013,6 +1013,28 @@ contains
       return
     end if
 
+    sname     = 'auto_names'
+    lname     = 'Short names of active autotrophs'
+    units     = 'unitless'
+    group     = 'marbl_config_nml'
+    call this%add_parms_1d_str(sname, lname, units, group, auto_names,        &
+                               marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_parms_1d_str', subname)
+      return
+    end if
+
+    sname     = 'zoo_names'
+    lname     = 'Short names of active zooplankton'
+    units     = 'unitless'
+    group     = 'marbl_config_nml'
+    call this%add_parms_1d_str(sname, lname, units, group, zoo_names,         &
+                               marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_parms_1d_str', subname)
+      return
+    end if
+
     !-----------------!
     ! marbl_parms_nml !
     !-----------------!
@@ -1461,7 +1483,7 @@ contains
     call this%add_parms_1d_str(sname, lname, units, group, restore_short_names, &
                                marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_parms_1d_r8', subname)
+      call marbl_status_log%log_error_trace('add_parms_1d_str', subname)
       return
     end if
 
@@ -1472,7 +1494,7 @@ contains
     call this%add_parms_1d_str(sname, lname, units, group, restore_filenames, &
                                marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_parms_1d_r8', subname)
+      call marbl_status_log%log_error_trace('add_parms_1d_str', subname)
       return
     end if
 
@@ -1483,7 +1505,7 @@ contains
     call this%add_parms_1d_str(sname, lname, units, group, restore_file_varnames, &
                                marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_parms_1d_r8', subname)
+      call marbl_status_log%log_error_trace('add_parms_1d_str', subname)
       return
     end if
 
