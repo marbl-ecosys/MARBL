@@ -51,7 +51,14 @@ Contains
       return
     end if
 
-    call marbl_instance%parameters%list_parms(ciso_on, marbl_instance%StatusLog)
+    call marbl_instance%configuration%list_vars(ciso_on, marbl_instance%StatusLog)
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error_trace('marbl_configuration%list', &
+           subname)
+      return
+    end if
+
+    call marbl_instance%parameters%list_vars(ciso_on, marbl_instance%StatusLog)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl_parmeters%list',   &
            subname)

@@ -20,6 +20,10 @@ module marbl_parms
   use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : char_len
 
+  use marbl_config_mod, only : marbl_single_config_var_type
+  use marbl_config_mod, only : marbl_config_vars_type
+  use marbl_config_mod, only : log_add_var_error
+
   use marbl_constants_mod, only : c1
   use marbl_constants_mod, only : dps
 
@@ -176,29 +180,9 @@ module marbl_parms
   !  Datatype for accessing parameters without namelist
   !---------------------------------------------------------------------
 
-  type, public :: marbl_single_parms_type
-    ! Metadata
-    character(len=char_len) :: long_name
-    character(len=char_len) :: short_name
-    character(len=char_len) :: units
-    character(len=char_len) :: group
-    character(len=char_len) :: datatype
-    ! Actual parameter data
-    real(r8),                pointer :: rptr => NULL()
-    integer(int_kind),       pointer :: iptr => NULL()
-    logical(log_kind),       pointer :: lptr => NULL()
-    character(len=char_len), pointer :: sptr => NULL()
-  end type marbl_single_parms_type
-
-  type, public :: marbl_parms_type
-    integer :: parms_cnt
-    type(marbl_single_parms_type), dimension(:), pointer :: parms => NULL()
+  type, extends(marbl_config_vars_type), public :: marbl_parms_type
   contains
     procedure :: construct        => marbl_parms_construct
-    procedure :: add_parms        => marbl_parms_add
-    procedure :: add_parms_1d_r8  => marbl_parms_add_1d_r8
-    procedure :: add_parms_1d_str => marbl_parms_add_1d_str
-    procedure :: list_parms       => marbl_parms_list
   end type marbl_parms_type
 
   !---------------------------------------------------------------------
@@ -390,9 +374,6 @@ module marbl_parms
   public :: &
        marbl_parms_read_namelist, &
        marbl_parms_set_defaults
-
-  private ::                     &
-       log_add_parms_error
 
   ! Variables used from other modules should be private
   ! (So we don't accidentally use them from this module)
@@ -888,16 +869,6 @@ contains
 
   subroutine marbl_parms_construct(this, marbl_status_log)
 
-    use marbl_config_mod, only : lsource_sink
-    use marbl_config_mod, only : ciso_lsource_sink
-    use marbl_config_mod, only : lecovars_full_depth_tavg
-    use marbl_config_mod, only : ciso_lecovars_full_depth_tavg
-    use marbl_config_mod, only : lflux_gas_o2
-    use marbl_config_mod, only : lflux_gas_co2
-    use marbl_config_mod, only : locmip_k1_k2_bug_fix
-    use marbl_config_mod, only : auto_names
-    use marbl_config_mod, only : zoo_names
-
     class(marbl_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
@@ -909,131 +880,14 @@ contains
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
 
-    if (associated(this%parms)) then
+    if (associated(this%vars)) then
       write(log_message, "(A)") "this%parameters has been constructed already"
       call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
-    this%parms_cnt = 0
-    allocate(this%parms(this%parms_cnt))
-
-    !------------------!
-    ! marbl_config_nml !
-    !------------------!
-
-    sname     = 'lsource_sink'
-    lname     = 'Control which portions of code are executed (useful for debugging)'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_config_nml'
-    lptr      => lsource_sink
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'ciso_lsource_sink'
-    lname     = 'Control which portions of carbon isotope code are executed (useful for debugging)'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_config_nml'
-    lptr      => ciso_lsource_sink
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'lecovars_full_depth_tavg'
-    lname     = 'Are base ecosystem tracers full depth?'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_config_nml'
-    lptr      => lecovars_full_depth_tavg
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'ciso_lecovars_full_depth_tavg'
-    lname     = 'Are carbon isotope tracers full depth?'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_config_nml'
-    lptr      => ciso_lecovars_full_depth_tavg
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'lflux_gas_o2'
-    lname     = 'Run O2 gas flux portion of the code'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_config_nml'
-    lptr      => lflux_gas_o2
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'lflux_gas_co2'
-    lname     = 'Run CO2 gas flux portion of the code'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_config_nml'
-    lptr      => lflux_gas_co2
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'locmip_k1_k2_bug_fix'
-    lname     = 'Fix bug that was in code in OCMIP runs?'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_config_nml'
-    lptr      => locmip_k1_k2_bug_fix
-    call this%add_parms(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'auto_names'
-    lname     = 'Short names of active autotrophs'
-    units     = 'unitless'
-    group     = 'marbl_config_nml'
-    call this%add_parms_1d_str(sname, lname, units, group, auto_names,        &
-                               marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_parms_1d_str', subname)
-      return
-    end if
-
-    sname     = 'zoo_names'
-    lname     = 'Short names of active zooplankton'
-    units     = 'unitless'
-    group     = 'marbl_config_nml'
-    call this%add_parms_1d_str(sname, lname, units, group, zoo_names,         &
-                               marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_parms_1d_str', subname)
-      return
-    end if
+    this%cnt = 0
+    allocate(this%vars(this%cnt))
 
     !-----------------!
     ! marbl_parms_nml !
@@ -1045,10 +899,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_Fe_bioavail
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1058,10 +912,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_o2_min
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1071,10 +925,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_o2_min_delta
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1084,10 +938,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_kappa_nitrif
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1097,10 +951,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_nitrif_par_lim
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1110,10 +964,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_labile_ratio
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1123,10 +977,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_POMbury
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1136,10 +990,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_BSIbury
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1149,10 +1003,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_fe_scavenge_rate0
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1162,10 +1016,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_f_prod_sp_CaCO3
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1175,10 +1029,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_POC_diss
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1188,10 +1042,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_SiO2_diss
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1201,10 +1055,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_CaCO3_diss
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1214,10 +1068,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => fe_max_scale2
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1225,10 +1079,10 @@ contains
     lname     = 'Depths of prescribed scale length values'
     units     = 'cm'
     group     = 'marbl_parms_nml'
-    call this%add_parms_1d_r8(sname, lname, units, group, parm_scalelen_z,    &
+    call this%add_var_1d_r8(sname, lname, units, group, parm_scalelen_z,    &
                               marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_parms_1d_r8', subname)
+      call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
       return
     end if
 
@@ -1236,10 +1090,10 @@ contains
     lname     = 'Prescribed scale length values'
     units     = 'cm'
     group     = 'marbl_parms_nml'
-    call this%add_parms_1d_r8(sname, lname, units, group, parm_scalelen_vals, &
+    call this%add_var_1d_r8(sname, lname, units, group, parm_scalelen_vals, &
                               marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_parms_1d_r8', subname)
+      call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
       return
     end if
 
@@ -1253,10 +1107,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_ecosys_base_nml'
     sptr      => init_ecosys_option
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1266,10 +1120,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_ecosys_base_nml'
     sptr      => init_ecosys_init_file
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1279,10 +1133,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_ecosys_base_nml'
     sptr      => init_ecosys_init_file_fmt
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1292,10 +1146,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_ecosys_base_nml'
     rptr      => iron_frac_in_dust
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1305,10 +1159,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_ecosys_base_nml'
     rptr      => iron_frac_in_dust
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1318,10 +1172,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_ecosys_base_nml'
     sptr      => caco3_bury_thres_opt
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1331,10 +1185,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_ecosys_base_nml'
     rptr      => caco3_bury_thres_depth
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1344,10 +1198,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_ecosys_base_nml'
     rptr      => PON_bury_coeff
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1357,10 +1211,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_ecosys_base_nml'
     rptr      => POP_bury_coeff
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1370,10 +1224,10 @@ contains
     datatype  = 'logical'
     group     = 'marbl_ecosys_base_nml'
     lptr      => lnutr_variable_restore
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1383,10 +1237,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_ecosys_base_nml'
     sptr      => nutr_rest_file
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1396,10 +1250,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_ecosys_base_nml'
     sptr      => nutr_variable_rest_file
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1409,10 +1263,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_ecosys_base_nml'
     sptr      => nutr_variable_rest_file_fmt
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1426,10 +1280,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_ciso_nml'
     sptr      => ciso_init_ecosys_option
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1439,10 +1293,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_ciso_nml'
     sptr      => ciso_init_ecosys_init_file
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1452,10 +1306,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_ciso_nml'
     sptr      => ciso_init_ecosys_init_file_fmt
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1465,10 +1319,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_ciso_nml'
     sptr      => ciso_fract_factors
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1480,10 +1334,10 @@ contains
     lname     = 'Tracer names for tracers that are restored'
     units     = 'unitless'
     group     = 'marbl_restore_nml'
-    call this%add_parms_1d_str(sname, lname, units, group, restore_short_names, &
+    call this%add_var_1d_str(sname, lname, units, group, restore_short_names, &
                                marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_parms_1d_str', subname)
+      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
       return
     end if
 
@@ -1491,10 +1345,10 @@ contains
     lname     = 'Files containing tracer restoring fields'
     units     = 'unitless'
     group     = 'marbl_restore_nml'
-    call this%add_parms_1d_str(sname, lname, units, group, restore_filenames, &
+    call this%add_var_1d_str(sname, lname, units, group, restore_filenames, &
                                marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_parms_1d_str', subname)
+      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
       return
     end if
 
@@ -1502,10 +1356,10 @@ contains
     lname     = 'Name of fields for tracer restoring (as appearing in restore_filenames)'
     units     = 'unitless'
     group     = 'marbl_restore_nml'
-    call this%add_parms_1d_str(sname, lname, units, group, restore_file_varnames, &
+    call this%add_var_1d_str(sname, lname, units, group, restore_file_varnames, &
                                marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_parms_1d_str', subname)
+      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
       return
     end if
 
@@ -1515,10 +1369,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_restore_nml'
     rptr      => rest_time_inv_surf
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1528,10 +1382,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_restore_nml'
     rptr      => rest_time_inv_deep
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1541,10 +1395,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_restore_nml'
     rptr      => rest_z0
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1554,10 +1408,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_restore_nml'
     rptr      => rest_z1
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1571,10 +1425,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_forcing_tmp_nml'
     sptr      => gas_flux_forcing_file
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1584,10 +1438,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_forcing_tmp_nml'
     rptr      => atm_co2_const
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1597,10 +1451,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_forcing_tmp_nml'
     rptr      => atm_alt_co2_const
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1610,10 +1464,10 @@ contains
     datatype  = 'integer'
     group     = 'marbl_forcing_tmp_nml'
     iptr      => ndep_shr_stream_year_first
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, iptr=iptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1623,10 +1477,10 @@ contains
     datatype  = 'integer'
     group     = 'marbl_forcing_tmp_nml'
     iptr      => ndep_shr_stream_year_last
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, iptr=iptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1636,10 +1490,10 @@ contains
     datatype  = 'integer'
     group     = 'marbl_forcing_tmp_nml'
     iptr      => ndep_shr_stream_year_align
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, iptr=iptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1649,10 +1503,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_forcing_tmp_nml'
     sptr      => ndep_shr_stream_file
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1662,10 +1516,10 @@ contains
     datatype  = 'real'
     group     = 'marbl_forcing_tmp_nml'
     rptr      => ndep_shr_stream_scale_factor
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1675,10 +1529,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_forcing_tmp_nml'
     sptr      => dust_flux_source
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1688,10 +1542,10 @@ contains
     datatype  = 'string'
     group     = 'marbl_forcing_tmp_nml'
     sptr      => iron_flux_source
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
@@ -1701,256 +1555,14 @@ contains
     datatype  = 'logical'
     group     = 'marbl_forcing_tmp_nml'
     lptr      => liron_patch
-    call this%add_parms(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
-      call log_add_parms_error(marbl_status_log, sname, subname)
+      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
   end subroutine marbl_parms_construct
-
-  !*****************************************************************************
-
-  subroutine marbl_parms_add(this, sname, lname, units, datatype, group,      &
-             marbl_status_log, rptr, iptr, lptr, sptr)
-
-    class(marbl_parms_type), intent(inout) :: this
-    character(len=*),        intent(in)    :: sname
-    character(len=*),        intent(in)    :: lname
-    character(len=*),        intent(in)    :: units
-    character(len=*),        intent(in)    :: datatype
-    character(len=*),        intent(in)    :: group
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
-    real(r8),                optional, pointer, intent(in) :: rptr
-    integer,                 optional, pointer, intent(in) :: iptr
-    logical,                 optional, pointer, intent(in) :: lptr
-    character(len=char_len), optional, pointer, intent(in) :: sptr
-
-    character(*), parameter :: subname = 'marbl_parms:marbl_parms_add'
-    type(marbl_single_parms_type), dimension(:), pointer :: new_parms
-    integer :: old_size, id, n
-    character(len=char_len) :: log_message
-
-    if (.not.associated(this%parms)) then
-      write(log_message, "(A)") 'Parms constructor must be run'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    old_size = size(this%parms)
-    id = old_size+1
-
-    ! 1) Allocate new_parms to be size N (one element larger than this%parms)
-    allocate(new_parms(id))
-
-    ! 2) copy this%parms into first N-1 elements of new_parms
-    do n=1, old_size
-      new_parms(n)%long_name  = this%parms(n)%long_name
-      new_parms(n)%short_name = this%parms(n)%short_name
-      new_parms(n)%units      = this%parms(n)%units
-      new_parms(n)%datatype   = this%parms(n)%datatype
-      new_parms(n)%group      = this%parms(n)%group
-      if (associated(this%parms(n)%lptr)) &
-        new_parms(n)%lptr => this%parms(n)%lptr
-      if (associated(this%parms(n)%iptr)) &
-        new_parms(n)%iptr => this%parms(n)%iptr
-      if (associated(this%parms(n)%rptr)) &
-        new_parms(n)%rptr => this%parms(n)%rptr
-      if (associated(this%parms(n)%sptr)) &
-        new_parms(n)%sptr => this%parms(n)%sptr
-    end do
-
-    ! 3) add newest parm variable
-    select case (trim(datatype))
-      case ('real')
-        if (present(rptr)) then
-          new_parms(id)%rptr => rptr
-        else
-          write(log_message, "(A)")                                           &
-               "Defining real parameter but rptr not present!"
-          call marbl_status_log%log_error(log_message, subname)
-          return
-        end if
-      case ('integer')
-        if (present(iptr)) then
-          new_parms(id)%iptr => iptr
-        else
-          write(log_message, "(A)")                                           &
-               "Defining integer parameter but iptr not present!"
-          call marbl_status_log%log_error(log_message, subname)
-          return
-        end if
-      case ('logical')
-        if (present(lptr)) then
-          new_parms(id)%lptr => lptr
-        else
-          write(log_message, "(A)")                                           &
-               "Defining logical parameter but lptr not present!"
-          call marbl_status_log%log_error(log_message, subname)
-          return
-        end if
-      case ('string')
-        if (present(sptr)) then
-          new_parms(id)%sptr => sptr
-        else
-          write(log_message, "(A)")                                           &
-               "Defining string parameter but aptr not present!"
-          call marbl_status_log%log_error(log_message, subname)
-          return
-        end if
-      case DEFAULT
-        write(log_message, "(2A)") "Unknown datatype: ", trim(datatype)
-        call marbl_status_log%log_error(log_message, subname)
-        return
-    end select
-    new_parms(id)%short_name = trim(sname)
-    new_parms(id)%long_name  = trim(lname)
-    new_parms(id)%units      = trim(units)
-    new_parms(id)%datatype   = trim(datatype)
-    new_parms(id)%group      = trim(group)
-
-    ! 4) deallocate / nullify this%parms
-    deallocate(this%parms)
-    nullify(this%parms)
-
-    ! 5) point this%parms => new_parms and update parms_cnt
-    this%parms => new_parms
-    this%parms_cnt = id
-
-  end subroutine marbl_parms_add
-
-  !*****************************************************************************
-
-  subroutine marbl_parms_add_1d_r8(this, sname, lname, units, group, r8array, &
-                                   marbl_status_log)
-
-    class(marbl_parms_type),             intent(inout) :: this
-    character(len=char_len),             intent(in)    :: sname
-    character(len=char_len),             intent(in)    :: lname
-    character(len=char_len),             intent(in)    :: units
-    character(len=char_len),             intent(in)    :: group
-    real(kind=r8), dimension(:), target, intent(in)    :: r8array
-    type(marbl_log_type),                intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_parms:marbl_parms_add'
-    character(len=char_len) :: sname_loc
-    real(r8), pointer :: rptr => NULL()
-    integer :: n
-
-    do n=1,size(r8array)
-      write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
-      rptr => r8array(n)
-      call this%add_parms(sname_loc, lname, units, 'real', group,             &
-                          marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_parms_error(marbl_status_log, sname_loc, subname)
-        return
-      end if
-    end do
-
-  end subroutine marbl_parms_add_1d_r8
-
-  !*****************************************************************************
-
-  subroutine marbl_parms_add_1d_str(this, sname, lname, units, group,         &
-                                    strarray, marbl_status_log)
-
-    class(marbl_parms_type),             intent(inout) :: this
-    character(len=char_len),             intent(in)    :: sname
-    character(len=char_len),             intent(in)    :: lname
-    character(len=char_len),             intent(in)    :: units
-    character(len=char_len),             intent(in)    :: group
-    character(len=char_len),     target, intent(in)    :: strarray(:)
-    type(marbl_log_type),                intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_parms:marbl_parms_add'
-    character(len=char_len) :: sname_loc
-    character(len=char_len), pointer :: sptr => NULL()
-    integer :: n
-
-    do n=1,size(strarray)
-      write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
-      sptr => strarray(n)
-      call this%add_parms(sname_loc, lname, units, 'string', group,           &
-                          marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_parms_error(marbl_status_log, sname_loc, subname)
-        return
-      end if
-    end do
-
-  end subroutine marbl_parms_add_1d_str
-
-  !*****************************************************************************
-
-  subroutine marbl_parms_list(this, ciso_on, marbl_status_log)
-
-    class(marbl_parms_type), intent(inout) :: this
-    logical,                 intent(in)    :: ciso_on
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_parms:marbl_parms_list'
-    character(len=char_len) :: log_message
-    character(len=char_len) :: group
-    character(len=7)        :: logic
-    integer :: n
-
-    group = ''
-    do n=1,this%parms_cnt
-      if (this%parms(n)%group.ne.group) then
-        group = trim(this%parms(n)%group)
-        if (ciso_on.or.(trim(group).ne.'marbl_ciso_nml')) then
-          call marbl_status_log%log_noerror('', subname)
-          write(log_message, "(2A)") trim(group), ' parameter values: '
-          call marbl_status_log%log_noerror(log_message, subname)
-          call marbl_status_log%log_noerror('---', subname)
-        end if
-      end if
-      if (ciso_on.or.(trim(group).ne.'marbl_ciso_nml')) then
-        select case(trim(this%parms(n)%datatype))
-          case ('string')
-            write(log_message, "(4A)") trim(this%parms(n)%short_name), " = '",  &
-                                       trim(this%parms(n)%sptr), "'"
-          case ('real')
-            write(log_message, "(2A,E24.16)") trim(this%parms(n)%short_name),   &
-                                              " = ", this%parms(n)%rptr
-          case ('integer')
-            write(log_message, "(2A,I0)") trim(this%parms(n)%short_name), " = ", &
-                                          this%parms(n)%iptr
-          case ('logical')
-            if (this%parms(n)%lptr) then
-              logic = '.true.'
-            else
-              logic = '.false.'
-            end if
-            write(log_message, "(3A)") trim(this%parms(n)%short_name), " = ",   &
-                                       trim(logic)
-          case DEFAULT
-            write(log_message, "(2A)") trim(this%parms(n)%datatype),            &
-                                       ' is not a valid datatype for parameter'
-            call marbl_status_log%log_error(log_message, subname)
-            return
-        end select
-        call marbl_status_log%log_noerror(log_message, subname)
-      end if
-    end do
-
-  end subroutine marbl_parms_list
-
-  !***********************************************************************
-
-  subroutine log_add_parms_error(marbl_status_log, sname, subname)
-
-    type(marbl_log_type), intent(inout) :: marbl_status_log
-    character(len=*),     intent(in)    :: sname
-    character(len=*),     intent(in)    :: subname
-    character(len=char_len) :: routine_name
-
-    write(routine_name,"(3A)") "this%add_parms(", trim(sname), ")"
-    call marbl_status_log%log_error_trace(routine_name, subname)
-
-  end subroutine log_add_parms_error
 
   !*****************************************************************************
 

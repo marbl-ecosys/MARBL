@@ -49,6 +49,8 @@ module marbl_interface
 
   use marbl_restore_mod     , only : marbl_restore_type
 
+  use marbl_config_mod, only : marbl_config_type
+
   use marbl_parms, only : marbl_parms_type
 
   implicit none
@@ -72,6 +74,7 @@ module marbl_interface
      type(marbl_tracer_read_type)              , public, allocatable  :: tracer_read(:)
      type(marbl_tracer_index_type)             , public               :: tracer_indices
      type(marbl_log_type)                      , public               :: StatusLog
+     type(marbl_config_type)                   , public               :: configuration
      type(marbl_parms_type)                    , public               :: parameters
 
      type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
@@ -206,6 +209,12 @@ contains
     call marbl_config_read_namelist(gcm_nl_buffer, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('marbl_parms_read_namelist', subname)
+      return
+    end if
+
+    call this%configuration%construct(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("configuration%construct()", subname)
       return
     end if
 
