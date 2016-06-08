@@ -41,11 +41,10 @@ Contains
       return
     end if
 
-    ! Log configuration setup
-    call marbl_instance%configuration%list_vars(ciso_on, marbl_instance%StatusLog)
+    ! Call marbl%living_init
+    call marbl_instance%living_init(gcm_nl_buffer = gcm_namelist)
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl_configuration%list', &
-           subname)
+      call marbl_instance%StatusLog%log_error_trace('marbl%living_init', subname)
       return
     end if
 
@@ -64,7 +63,7 @@ Contains
     end if
 
     ! Log parameter setup
-    call marbl_instance%parameters%list_vars(ciso_on, marbl_instance%StatusLog)
+    call marbl_instance%parameters%lock_and_log(marbl_instance%StatusLog)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl_parmeters%list',   &
            subname)

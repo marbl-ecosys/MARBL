@@ -20,17 +20,21 @@ module marbl_internal_types
 
   ! derived type for grazers
   type, public :: zooplankton_type
+     logical                 :: llock_sname = .false.
      character(char_len)     :: sname
      character(char_len)     :: lname
      real    (KIND=r8)       :: z_mort_0   ! zoo linear mort rate (1/sec)
      real    (KIND=r8)       :: z_mort2_0  ! zoo quad mort rate (1/sec/((mmol C/m3))
      real    (KIND=r8)       :: loss_thres ! zoo conc. where losses go to zero
+  contains
+     procedure, public :: put_sname => zooplankton_put_sname
   end type zooplankton_type
 
   !****************************************************************************
 
   ! derived type for functional group
   type, public :: autotroph_type
+     logical                 :: llock_sname = .false.
      character(char_len)     :: sname
      character(char_len)     :: lname
      logical (KIND=log_kind) :: Nfixer                             ! flag set to true if this autotroph fixes N2
@@ -47,6 +51,8 @@ module marbl_internal_types
      real    (KIND=r8)       :: mort, mort2                        ! linear and quadratic mortality rates (1/sec), (1/sec/((mmol C/m3))
      real    (KIND=r8)       :: agg_rate_max, agg_rate_min         ! max and min agg. rate (1/d)
      real    (KIND=r8)       :: loss_poc                           ! routing of loss term
+  contains
+     procedure, public :: put_sname => autotrophs_put_sname
   end type autotroph_type
 
   !****************************************************************************
@@ -765,6 +771,52 @@ contains
     end associate
 
   end subroutine tracer_index_constructor
+
+  !*****************************************************************************
+
+  subroutine autotrophs_put_sname(this, sname, marbl_status_log)
+
+    class(autotroph_type), intent(inout) :: this
+    character(len=*),      intent(in)    :: sname
+    type(marbl_log_type),  intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_internal_types:autotrophs_put_sname'
+    character(len=char_len) :: log_message
+
+    if (this%llock_sname) then
+      write(log_message, "(5A)") 'Can not change sname from ', trim(this%sname), &
+                                 ' to ', trim(sname), ' because name is locked'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    this%sname = trim(sname)
+    this%llock_sname = .true.
+
+  end subroutine autotrophs_put_sname
+
+  !*****************************************************************************
+
+  subroutine zooplankton_put_sname(this, sname, marbl_status_log)
+
+    class(zooplankton_type), intent(inout) :: this
+    character(len=*),        intent(in)    :: sname
+    type(marbl_log_type),    intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_internal_types:zooplankton_put_sname'
+    character(len=char_len) :: log_message
+
+    if (this%llock_sname) then
+      write(log_message, "(5A)") 'Can not change sname from ', trim(this%sname), &
+                                 ' to ', trim(sname), ' because name is locked'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    this%sname = trim(sname)
+    this%llock_sname = .true.
+
+  end subroutine zooplankton_put_sname
 
   !*****************************************************************************
 

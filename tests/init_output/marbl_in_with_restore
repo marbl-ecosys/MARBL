@@ -4,9 +4,7 @@ ciso_on=.true.
 /
 &marbl_config_nml
 /
-&marbl_ecosys_base_nml
-/
-&marbl_ciso_nml
+&marbl_living_parms_nml
 /
 &marbl_parms_nml
 /
@@ -16,6 +14,10 @@ ciso_on=.true.
  restore_file_varnames = 'SiO3', 'NO3', 'PO4'
  rest_time_inv_surf = 2.3e-6
  rest_time_inv_deep = 2.3e-6
+/
+&marbl_ecosys_base_nml
+/
+&marbl_ciso_nml
 /
 &marbl_forcing_tmp_nml
 /

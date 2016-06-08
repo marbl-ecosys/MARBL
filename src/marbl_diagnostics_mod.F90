@@ -12,8 +12,8 @@ module marbl_diagnostics_mod
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
 
-  use marbl_config_mod      , only : autotrophs
-  use marbl_config_mod      , only : zooplankton
+  use marbl_living_parms_mod, only : autotrophs
+  use marbl_living_parms_mod, only : zooplankton
 
   use marbl_constants_mod   , only : c0
   use marbl_constants_mod   , only : c1

@@ -390,10 +390,10 @@ contains
   subroutine marbl_parms_set_defaults(km)
     ! assign default values to all module variables
 
-    use marbl_constants_mod, only : c0, c2, c1000
-    use marbl_sizes        , only : marbl_total_tracer_cnt
-    use marbl_config_mod   , only : autotrophs
-    use marbl_config_mod   , only : zooplankton
+    use marbl_constants_mod   , only : c0, c2, c1000
+    use marbl_sizes           , only : marbl_total_tracer_cnt
+    use marbl_living_parms_mod, only : autotrophs
+    use marbl_living_parms_mod, only : zooplankton
 
     integer,              intent(in)    :: km ! max number of levels
 

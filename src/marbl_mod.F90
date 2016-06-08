@@ -91,7 +91,14 @@ module marbl_mod
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : char_len
 
-  use marbl_parms, only : marbl_parms_read_namelist
+  use marbl_config_mod, only : lsource_sink
+  use marbl_config_mod, only : lflux_gas_o2
+  use marbl_config_mod, only : lflux_gas_co2
+  use marbl_config_mod, only : lecovars_full_depth_tavg
+
+  use marbl_living_parms_mod, only : autotrophs
+  use marbl_living_parms_mod, only : zooplankton
+
   use marbl_parms, only : grz_fnc_michaelis_menten
   use marbl_parms, only : grz_fnc_sigmoidal
   use marbl_parms, only : f_qsw_par
@@ -160,13 +167,6 @@ module marbl_mod
   use marbl_parms, only : caco3_bury_thres_depth
   use marbl_parms, only : PON_bury_coeff
   use marbl_parms, only : POP_bury_coeff
-
-  use marbl_config_mod, only : autotrophs
-  use marbl_config_mod, only : zooplankton
-  use marbl_config_mod, only : lsource_sink
-  use marbl_config_mod, only : lflux_gas_o2
-  use marbl_config_mod, only : lflux_gas_co2
-  use marbl_config_mod, only : lecovars_full_depth_tavg
 
   use marbl_sizes, only : ecosys_base_tracer_cnt    
   use marbl_sizes, only : autotroph_cnt
