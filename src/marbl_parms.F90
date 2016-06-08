@@ -22,7 +22,6 @@ module marbl_parms
 
   use marbl_config_mod, only : marbl_single_config_var_type
   use marbl_config_mod, only : marbl_config_vars_type
-  use marbl_config_mod, only : log_add_var_error
 
   use marbl_constants_mod, only : c1
   use marbl_constants_mod, only : dps
@@ -869,6 +868,8 @@ contains
 
   subroutine marbl_parms_construct(this, marbl_status_log)
 
+    use marbl_config_mod, only : log_add_var_error
+
     class(marbl_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
@@ -1330,6 +1331,8 @@ contains
     ! marbl_restore_nml !
     !-------------------!
 
+    ! TODO: instead of add_var_1d_str, loop (as in autotrophs) so index matches
+    !       tracer name
     sname     = 'restore_short_names'
     lname     = 'Tracer names for tracers that are restored'
     units     = 'unitless'

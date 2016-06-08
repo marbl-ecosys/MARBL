@@ -44,6 +44,7 @@ module marbl_config_mod
     character(len=char_len) :: units
     character(len=char_len) :: group
     character(len=char_len) :: datatype
+    logical                 :: add_space ! used for formatting log output
     ! Actual parameter data
     real(r8),                pointer :: rptr => NULL()
     integer(int_kind),       pointer :: iptr => NULL()
@@ -281,7 +282,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_var_add(this, sname, lname, units, datatype, group,        &
-             marbl_status_log, rptr, iptr, lptr, sptr)
+             marbl_status_log, rptr, iptr, lptr, sptr, add_space)
 
     class(marbl_config_vars_type), intent(inout) :: this
     character(len=*),        intent(in)    :: sname
@@ -294,6 +295,7 @@ contains
     integer,                 optional, pointer, intent(in) :: iptr
     logical,                 optional, pointer, intent(in) :: lptr
     character(len=char_len), optional, pointer, intent(in) :: sptr
+    logical,                 optional,          intent(in) :: add_space
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add'
     type(marbl_single_config_var_type), dimension(:), pointer :: new_parms
@@ -319,6 +321,7 @@ contains
       new_parms(n)%units      = this%vars(n)%units
       new_parms(n)%datatype   = this%vars(n)%datatype
       new_parms(n)%group      = this%vars(n)%group
+      new_parms(n)%add_space  = this%vars(n)%add_space
       if (associated(this%vars(n)%lptr)) &
         new_parms(n)%lptr => this%vars(n)%lptr
       if (associated(this%vars(n)%iptr)) &
@@ -377,6 +380,11 @@ contains
     new_parms(id)%units      = trim(units)
     new_parms(id)%datatype   = trim(datatype)
     new_parms(id)%group      = trim(group)
+    if (present(add_space)) then
+      new_parms(id)%add_space = add_space
+    else
+      new_parms(id)%add_space = .false.
+    end if
 
     ! 4) deallocate / nullify this%vars
     deallocate(this%vars)
@@ -436,12 +444,14 @@ contains
     character(len=char_len) :: sname_loc
     character(len=char_len), pointer :: sptr => NULL()
     integer :: n
+    logical :: islast
 
     do n=1,size(strarray)
+      islast = (n.eq.size(strarray))
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       sptr => strarray(n)
       call this%add_var(sname_loc, lname, units, 'string', group,           &
-                          marbl_status_log, sptr=sptr)
+                          marbl_status_log, sptr=sptr, add_space=islast)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname_loc, subname)
         return
@@ -461,7 +471,7 @@ contains
     character(len=char_len) :: log_message
     character(len=char_len) :: group
     character(len=7)        :: logic
-    integer :: n
+    integer :: i,n
 
     ! (1) Lock data type (put calls will now cause MARBL to abort)
     this%locked = .true.
@@ -472,9 +482,14 @@ contains
       if (this%vars(n)%group.ne.group) then
         group = trim(this%vars(n)%group)
         call marbl_status_log%log_noerror('', subname)
-        write(log_message, "(2A)") trim(group), ' parameter values: '
+        log_message = ''
+        do i=1,len(trim(group))
+          log_message(i:i) = '-'
+        end do
         call marbl_status_log%log_noerror(log_message, subname)
-        call marbl_status_log%log_noerror('---', subname)
+        call marbl_status_log%log_noerror(trim(group), subname)
+        call marbl_status_log%log_noerror(log_message, subname)
+        call marbl_status_log%log_noerror('', subname)
       end if
 
       ! (3) write parameter to log_message (format depends on datatype)
@@ -505,6 +520,8 @@ contains
 
       ! (4) Write log_message to the log
       call marbl_status_log%log_noerror(log_message, subname)
+      if (this%vars(n)%add_space) &
+        call marbl_status_log%log_noerror('', subname)
     end do
 
   end subroutine marbl_vars_lock_and_log
