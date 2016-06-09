@@ -997,7 +997,7 @@ contains
     character(len=char_len), pointer :: sptr => NULL()
 
     character(len=char_len) :: prefix, comment
-    integer :: n
+    integer :: m, n
 
     if (associated(this%vars)) then
       write(log_message, "(A)") "this%parameters has been constructed already"
@@ -1188,7 +1188,7 @@ contains
     group     = 'marbl_parms_nml'
     rptr      => fe_max_scale2
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, add_space=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -1199,7 +1199,7 @@ contains
     units     = 'cm'
     group     = 'marbl_parms_nml'
     call this%add_var_1d_r8(sname, lname, units, group, parm_scalelen_z,    &
-                              marbl_status_log)
+                              marbl_status_log, add_space=.true.)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
       return
@@ -1210,7 +1210,7 @@ contains
     units     = 'cm'
     group     = 'marbl_parms_nml'
     call this%add_var_1d_r8(sname, lname, units, group, parm_scalelen_vals, &
-                              marbl_status_log)
+                              marbl_status_log, add_space=.true.)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
       return
@@ -1522,12 +1522,187 @@ contains
       group    = 'marbl_parms_nml'
       rptr     => zooplankton(n)%z_mort2_0
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr, comment=comment)
+                        marbl_status_log, rptr=rptr, add_space=.true.,      &
+                        comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
       end if
 
+    end do
+
+    do n=1,zooplankton_cnt
+      do m=1,grazer_prey_cnt
+        write(prefix, "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%'
+
+        write(sname, "(2A)") trim(prefix), 'sname'
+        lname    = 'Short name of grazer'
+        units    = 'unitless'
+        datatype = 'string'
+        group    = 'marbl_parms_nml'
+        sptr     => grazing(m,n)%sname
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, sptr=sptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'lname'
+        lname    = 'Long name of grazer'
+        units    = 'unitless'
+        datatype = 'string'
+        group    = 'marbl_parms_nml'
+        sptr     => grazing(m,n)%lname
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, sptr=sptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'auto_ind_cnt'
+        lname    = 'number of autotrophs in prey-clase auto_ind'
+        units    = 'unitless'
+        datatype = 'integer'
+        group    = 'marbl_parms_nml'
+        iptr     => grazing(m,n)%auto_ind_cnt
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, iptr=iptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'zoo_ind_cnt'
+        lname    = 'number of zooplankton in prey-clase auto_ind'
+        units    = 'unitless'
+        datatype = 'integer'
+        group    = 'marbl_parms_nml'
+        iptr     => grazing(m,n)%zoo_ind_cnt
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, iptr=iptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'grazing_function'
+        lname    = 'functional form of grazing parmaeterization'
+        units    = 'unitless'
+        datatype = 'integer'
+        group    = 'marbl_parms_nml'
+        iptr     => grazing(m,n)%grazing_function
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, iptr=iptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'z_umax_0'
+        lname    = 'max zoo growth rate at Tref'
+        units    = '1/s'
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%z_umax_0
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'z_grz'
+        lname    = 'Grazing coefficient'
+        units    = '(mmol C/m^3)^2'
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%z_grz
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'graze_zoo'
+        lname    = 'routing of grazed term (remainder goes to DIC)'
+        units    = ''
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%graze_zoo
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'graze_poc'
+        lname    = 'routing of grazed term (remainder goes to DIC)'
+        units    = ''
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%graze_poc
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'graze_doc'
+        lname    = 'routing of grazed term (remainder goes to DIC)'
+        units    = ''
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%graze_doc
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'f_zoo_detr'
+        lname    = 'Fraction of zoo losses to detrital'
+        units    = 'unitless'
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%f_zoo_detr
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'auto_ind'
+        lname     = 'Indices of autotrophs in class'
+        units     = 'unitless'
+        group     = 'marbl_parms_nml'
+        call this%add_var_1d_int(sname, lname, units, group,                  &
+                                 grazing(m,n)%auto_ind, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_status_log%log_error_trace('add_var_1d_int', subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'zoo_ind'
+        lname     = 'Indices of autotrophs in class'
+        units     = 'unitless'
+        group     = 'marbl_parms_nml'
+        call this%add_var_1d_int(sname, lname, units, group,                  &
+                                 grazing(m,n)%zoo_ind, marbl_status_log,      &
+                                 add_space=((m.ne.grazer_prey_cnt).or.        &
+                                            (n.ne.zooplankton_cnt)))
+        if (marbl_status_log%labort_marbl) then
+          call marbl_status_log%log_error_trace('add_var_1d_int', subname)
+          return
+        end if
+
+      end do
     end do
 
     !-----------------------!
@@ -1763,8 +1938,6 @@ contains
     ! marbl_restore_nml !
     !-------------------!
 
-    ! TODO: instead of add_var_1d_str, loop (as in autotrophs) so index matches
-    !       tracer name
     sname     = 'restore_short_names'
     lname     = 'Tracer names for tracers that are restored'
     units     = 'unitless'

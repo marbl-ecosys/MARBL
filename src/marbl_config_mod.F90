@@ -61,6 +61,7 @@ module marbl_config_mod
   contains
     procedure :: add_var        => marbl_var_add
     procedure :: add_var_1d_r8  => marbl_var_add_1d_r8
+    procedure :: add_var_1d_int => marbl_var_add_1d_int
     procedure :: add_var_1d_str => marbl_var_add_1d_str
     procedure :: lock_and_log   => marbl_vars_lock_and_log
   end type marbl_config_vars_type
@@ -277,7 +278,7 @@ contains
     group     = 'marbl_config_nml'
     lptr      => locmip_k1_k2_bug_fix
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
+                        marbl_status_log, lptr=lptr, add_space=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -526,7 +527,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_var_add_1d_r8(this, sname, lname, units, group, r8array,  &
-                                 marbl_status_log)
+                                 marbl_status_log, add_space)
 
     class(marbl_config_vars_type),       intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
@@ -535,17 +536,24 @@ contains
     character(len=char_len),             intent(in)    :: group
     real(kind=r8), dimension(:), target, intent(in)    :: r8array
     type(marbl_log_type),                intent(inout) :: marbl_status_log
+    logical, optional,                   intent(in)    :: add_space
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add_1d_r8'
     character(len=char_len) :: sname_loc
     real(r8), pointer :: rptr => NULL()
+    logical :: space
     integer :: n
 
     do n=1,size(r8array)
+      if (present(add_space)) then
+        space = add_space.and.(n.eq.size(r8array))
+      else
+        space = .false.
+      end if
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       rptr => r8array(n)
       call this%add_var(sname_loc, lname, units, 'real', group,             &
-                          marbl_status_log, rptr=rptr)
+                          marbl_status_log, rptr=rptr, add_space=space)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname_loc, subname)
         return
@@ -553,6 +561,44 @@ contains
     end do
 
   end subroutine marbl_var_add_1d_r8
+
+  !*****************************************************************************
+
+  subroutine marbl_var_add_1d_int(this, sname, lname, units, group, intarray, &
+                                 marbl_status_log, add_space)
+
+    class(marbl_config_vars_type),       intent(inout) :: this
+    character(len=char_len),             intent(in)    :: sname
+    character(len=char_len),             intent(in)    :: lname
+    character(len=char_len),             intent(in)    :: units
+    character(len=char_len),             intent(in)    :: group
+    integer, dimension(:), target,       intent(in)    :: intarray
+    type(marbl_log_type),                intent(inout) :: marbl_status_log
+    logical, optional,                   intent(in)    :: add_space
+
+    character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add_1d_int'
+    character(len=char_len) :: sname_loc
+    integer, pointer :: iptr => NULL()
+    integer :: n
+    logical :: space
+
+    do n=1,size(intarray)
+      if (present(add_space)) then
+        space = add_space.and.(n.eq.size(intarray))
+      else
+        space = .false.
+      end if
+      write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
+      iptr => intarray(n)
+      call this%add_var(sname_loc, lname, units, 'integer', group,            &
+                          marbl_status_log, iptr=iptr, add_space=space)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname_loc, subname)
+        return
+      end if
+    end do
+
+  end subroutine marbl_var_add_1d_int
 
   !*****************************************************************************
 

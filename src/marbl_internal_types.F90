@@ -17,7 +17,7 @@ module marbl_internal_types
   private
 
   !****************************************************************************
-  ! derived type for grazers
+  ! derived types for zooplankton
 
   type, public :: zooplankton_config_type
      character(char_len)     :: sname
@@ -58,8 +58,8 @@ module marbl_internal_types
   end type autotroph_parms_type
 
   !****************************************************************************
-
   ! derived type for grazing
+
   type, public :: grazing_type
      character(char_len)     :: sname
      character(char_len)     :: lname
