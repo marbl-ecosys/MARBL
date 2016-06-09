@@ -69,7 +69,7 @@ module marbl_parms
        parm_CaCO3_diss,       & ! base CaCO3 diss len scale (cm)
        fe_max_scale2            ! scaling coeff. (cm^3 / nmol / yr = m^3 / mmol / yr)
 
-  real(kind=r8), dimension(4) :: &
+  real(kind=r8), dimension(4), target :: &
        parm_scalelen_z,       & ! depths of prescribed scalelen values
        parm_scalelen_vals       ! prescribed scalelen values
 

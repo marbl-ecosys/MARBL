@@ -39,13 +39,21 @@ contains
   !***********************************************************************
 
   subroutine marbl_nl_split_string(str_in, array_out)
+  ! This routine takes a string (str_in) containing the entire contents of a
+  ! a namelist file and returns an array of strings (array_out) where each
+  ! element contains a single namelist. It also removes all carriage returns
+  ! from the elements of array_out
 
     ! FIXME #34: This routine depends on the namelist file conforming
     !            to very specific formatting - a more general / robust
     !            solution would be preferred
+
+    ! FIXME #74: Strip comments out of str_in (without accidentally removing
+    !            strings that happen to contain exclamation points)
+
     character(len=marbl_nl_in_size), intent(in) :: str_in
-    ! intent(inout) because we initialized to '' previously
-    ! and also to save memory
+    ! array_out is intent(inout) because we initialized to '' previously
+    ! (and also to save memory)
     character(len=marbl_nl_buffer_size), dimension(marbl_nl_cnt), intent(inout) :: &
              array_out
 
