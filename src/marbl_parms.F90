@@ -391,7 +391,7 @@ contains
 
     use marbl_constants_mod   , only : c0, c2, c1000
     use marbl_sizes           , only : marbl_total_tracer_cnt
-    use marbl_living_parms_mod, only : autotrophs
+    use marbl_config_mod      , only : autotrophs_config
     use marbl_living_parms_mod, only : zooplankton
 
     integer,              intent(in)    :: km ! max number of levels
@@ -426,8 +426,12 @@ contains
     ! predator-prey relationships
     zoo_ind = 1
     prey_ind = sp_ind
-    grazing(prey_ind,zoo_ind)%sname            = 'grz_' // autotrophs(prey_ind)%sname // '_' // zooplankton(zoo_ind)%sname
-    grazing(prey_ind,zoo_ind)%lname            = 'Grazing of ' // autotrophs(prey_ind)%sname // ' by ' // zooplankton(zoo_ind)%sname
+    write(grazing(prey_ind,zoo_ind)%sname, "(4A)") 'grz_',                    &
+                                     trim(autotrophs_config(prey_ind)%sname), &
+                                     '_', trim(zooplankton(zoo_ind)%sname)
+    write(grazing(prey_ind,zoo_ind)%lname, "(4A)") 'Grazing of ',             &
+                                     trim(autotrophs_config(prey_ind)%sname), &
+                                     ' by ', trim(zooplankton(zoo_ind)%sname)
     grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
     grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
     grazing(prey_ind,zoo_ind)%zoo_ind          = -1
@@ -441,8 +445,12 @@ contains
     grazing(prey_ind,zoo_ind)%grazing_function = grz_fnc_michaelis_menten
 
     prey_ind = diat_ind
-    grazing(prey_ind,zoo_ind)%sname            = 'grz_' // autotrophs(prey_ind)%sname // '_' // zooplankton(zoo_ind)%sname
-    grazing(prey_ind,zoo_ind)%lname            = 'Grazing of ' // autotrophs(prey_ind)%sname // ' by ' // zooplankton(zoo_ind)%sname
+    write(grazing(prey_ind,zoo_ind)%sname, "(4A)") 'grz_',                    &
+                                     trim(autotrophs_config(prey_ind)%sname), &
+                                     '_', trim(zooplankton(zoo_ind)%sname)
+    write(grazing(prey_ind,zoo_ind)%lname, "(4A)") 'Grazing of ',             &
+                                     trim(autotrophs_config(prey_ind)%sname), &
+                                     ' by ', trim(zooplankton(zoo_ind)%sname)
     grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
     grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
     grazing(prey_ind,zoo_ind)%zoo_ind          = -1
@@ -456,8 +464,12 @@ contains
     grazing(prey_ind,zoo_ind)%grazing_function = grz_fnc_michaelis_menten
 
     prey_ind = diaz_ind
-    grazing(prey_ind,zoo_ind)%sname            = 'grz_' // autotrophs(prey_ind)%sname // '_' // zooplankton(zoo_ind)%sname
-    grazing(prey_ind,zoo_ind)%lname            = 'Grazing of ' // autotrophs(prey_ind)%sname // ' by ' // zooplankton(zoo_ind)%sname
+    write(grazing(prey_ind,zoo_ind)%sname, "(4A)") 'grz_',                    &
+                                     trim(autotrophs_config(prey_ind)%sname), &
+                                     '_', trim(zooplankton(zoo_ind)%sname)
+    write(grazing(prey_ind,zoo_ind)%lname, "(4A)") 'Grazing of ',             &
+                                     trim(autotrophs_config(prey_ind)%sname), &
+                                     ' by ', trim(zooplankton(zoo_ind)%sname)
     grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
     grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
     grazing(prey_ind,zoo_ind)%zoo_ind          = -1

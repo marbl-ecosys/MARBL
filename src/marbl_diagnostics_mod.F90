@@ -12,6 +12,8 @@ module marbl_diagnostics_mod
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
 
+  use marbl_config_mod, only : autotrophs_config
+
   use marbl_living_parms_mod, only : autotrophs
   use marbl_living_parms_mod, only : zooplankton
 
@@ -1785,8 +1787,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' C Fixation Vertical Integral'
-             sname = 'photoC_' // trim(autotrophs(n)%sname) // '_zint'
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'C Fixation Vertical Integral'
+             write(sname, "(3A)") 'photoC_',                                  &
+                                  trim(autotrophs_config(n)%sname), '_zint'
              units = 'mmol/m^3 cm/s'
              vgrid = 'none'
              truncate = .false.
@@ -1801,8 +1805,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' C Fixation from NO3 Vertical Integral'
-             sname = 'photoC_NO3_' // trim(autotrophs(n)%sname) // '_zint'
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'C Fixation from NO3 Vertical Integral'
+             write(sname, "(3A)") 'photoC_NO3_',                              &
+                                  trim(autotrophs_config(n)%sname), '_zint'
              units = 'mmol/m^3 cm/s'
              vgrid = 'none'
              truncate = .false.
@@ -1818,8 +1824,10 @@ contains
              num_interior_diags = num_interior_diags + 1
           else
              if (marbl_tracer_indices%auto_inds(n)%CaCO3_ind.gt.0) then
-                lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation Vertical Integral'
-                sname = trim(autotrophs(n)%sname) // '_CaCO3_form_zint'
+                write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),    &
+                                         'CaCO3 Formation Vertical Integral'
+                write(sname, "(2A)") trim(autotrophs_config(n)%sname),        &
+                                     '_CaCO3_form_zint'
                 units = 'mmol/m^3 cm/s'
                 vgrid = 'none'
                 truncate = .false.
@@ -2611,8 +2619,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' N Limitation'
-             sname = trim(autotrophs(n)%sname) // '_N_lim'
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'N Limitation'
+             write(sname, "(2A)") trim(autotrophs_config(n)%sname),           &
+                                  '_N_lim'
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2627,8 +2637,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' P Limitation'
-             sname = trim(autotrophs(n)%sname) // '_P_lim'
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'P Limitation'
+             write(sname, "(2A)") trim(autotrophs_config(n)%sname),           &
+                                  '_P_lim'
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2643,8 +2655,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' Fe Limitation'
-             sname = trim(autotrophs(n)%sname) // '_Fe_lim'
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'Fe Limitation'
+             write(sname, "(2A)") trim(autotrophs_config(n)%sname),           &
+                                  '_Fe_lim'
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2659,9 +2673,11 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             if (autotrophs(n)%kSiO3 > c0) then
-                lname = trim(autotrophs(n)%lname) // ' SiO3 Limitation'
-                sname = trim(autotrophs(n)%sname) // '_SiO3_lim'
+             if (autotrophs_config(n)%silicifier) then
+                write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),    &
+                                         'SiO3 Limitation'
+                write(sname, "(2A)") trim(autotrophs_config(n)%sname),        &
+                                     '_SiO3_lim'
                 units = 'none'
                 vgrid = 'layer_avg'
                 truncate = .true.
@@ -2679,8 +2695,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' Light Limitation'
-             sname = trim(autotrophs(n)%sname) // '_light_lim'
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'Light Limitation'
+             write(sname, "(2A)") trim(autotrophs_config(n)%sname),           &
+                                  '_light_lim'
              units = 'none'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2695,8 +2713,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' C Fixation'
-             sname = 'photoC_' // trim(autotrophs(n)%sname)
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'C Fixation'
+             write(sname, "(2A)") 'photoC_',                                  &
+                                  trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2711,8 +2731,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' C Fixation from NO3'
-             sname = 'photoC_NO3_' // trim(autotrophs(n)%sname)
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'C Fixation from NO3'
+             write(sname, "(2A)") 'photoC_NO3_',                              &
+                                  trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2727,8 +2749,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' Fe Uptake'
-             sname = 'photoFe_' // trim(autotrophs(n)%sname)
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'Fe Uptake'
+             write(sname, "(2A)") 'photoFe_',                                 &
+                                  trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2743,8 +2767,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' NO3 Uptake'
-             sname = 'photoNO3_' // trim(autotrophs(n)%sname)
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'NO3 Uptake'
+             write(sname, "(2A)") 'photoNO3_',                                &
+                                  trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2759,8 +2785,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' NH4 Uptake'
-             sname = 'photoNH4_' // trim(autotrophs(n)%sname)
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'NH4 Uptake'
+             write(sname, "(2A)") 'photoNH4_',                                &
+                                  trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2775,8 +2803,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' DOP Uptake'
-             sname = 'DOP_' // trim(autotrophs(n)%sname) // '_uptake'
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'DOP Uptake'
+             write(sname, "(3A)") 'DOP_', trim(autotrophs_config(n)%sname),   &
+                                  '_uptake'
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2791,8 +2821,10 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' PO4 Uptake'
-             sname = 'PO4_' // trim(autotrophs(n)%sname) // '_uptake'
+             write(lname, "(A,1X,A)") trim(autotrophs_config(n)%lname),       &
+                                      'PO4 Uptake'
+             write(sname, "(3A)") 'PO4_', trim(autotrophs_config(n)%sname),   &
+                                  '_uptake'
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2807,8 +2839,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' Grazing'
-             sname = 'graze_' // trim(autotrophs(n)%sname)
+             lname = trim(autotrophs_config(n)%lname) // ' Grazing'
+             sname = 'graze_' // trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2823,8 +2855,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' Grazing to POC'
-             sname = 'graze_' // trim(autotrophs(n)%sname) // '_poc'
+             lname = trim(autotrophs_config(n)%lname) // ' Grazing to POC'
+             sname = 'graze_' // trim(autotrophs_config(n)%sname) // '_poc'
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2839,8 +2871,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' Grazing to DOC'
-             sname = 'graze_' // trim(autotrophs(n)%sname) // '_doc'
+             lname = trim(autotrophs_config(n)%lname) // ' Grazing to DOC'
+             sname = 'graze_' // trim(autotrophs_config(n)%sname) // '_doc'
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2855,8 +2887,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' Grazing to ZOO'
-             sname = 'graze_' // trim(autotrophs(n)%sname) // '_zoo'
+             lname = trim(autotrophs_config(n)%lname) // ' Grazing to ZOO'
+             sname = 'graze_' // trim(autotrophs_config(n)%sname) // '_zoo'
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2871,8 +2903,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' Loss'
-             sname = trim(autotrophs(n)%sname) // '_loss'
+             lname = trim(autotrophs_config(n)%lname) // ' Loss'
+             sname = trim(autotrophs_config(n)%sname) // '_loss'
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2887,8 +2919,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' Loss to POC'
-             sname = trim(autotrophs(n)%sname) // '_loss_poc'
+             lname = trim(autotrophs_config(n)%lname) // ' Loss to POC'
+             sname = trim(autotrophs_config(n)%sname) // '_loss_poc'
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2903,8 +2935,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' Loss to DOC'
-             sname = trim(autotrophs(n)%sname) // '_loss_doc'
+             lname = trim(autotrophs_config(n)%lname) // ' Loss to DOC'
+             sname = trim(autotrophs_config(n)%sname) // '_loss_doc'
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2919,8 +2951,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname = trim(autotrophs(n)%lname) // ' Aggregate'
-             sname = trim(autotrophs(n)%sname) // '_agg'
+             lname = trim(autotrophs_config(n)%lname) // ' Aggregate'
+             sname = trim(autotrophs_config(n)%sname) // '_agg'
              units = 'mmol/m^3/s'
              vgrid = 'layer_avg'
              truncate = .true.
@@ -2936,10 +2968,10 @@ contains
              num_interior_diags = num_interior_diags + 1
           else
              if (marbl_tracer_indices%auto_inds(n)%Si_ind.gt.0) then
-                lname = trim(autotrophs(n)%lname) // ' Si Uptake'
+                lname = trim(autotrophs_config(n)%lname) // ' Si Uptake'
                 ! FIXME #22 - eventually add _
-                sname = trim(autotrophs(n)%sname) // 'bSi_form'
-                !sname = trim(autotrophs(n)%sname) // '_bSi_form'
+                sname = trim(autotrophs_config(n)%sname) // 'bSi_form'
+                !sname = trim(autotrophs_config(n)%sname) // '_bSi_form'
                 units = 'mmol/m^3/s'
                 vgrid = 'layer_avg'
                 truncate = .true.
@@ -2958,8 +2990,8 @@ contains
              num_interior_diags = num_interior_diags + 1
           else
              if (marbl_tracer_indices%auto_inds(n)%CaCO3_ind.gt.0) then
-                lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation'
-                sname = trim(autotrophs(n)%sname) // '_CaCO3_form'
+                lname = trim(autotrophs_config(n)%lname) // ' CaCO3 Formation'
+                sname = trim(autotrophs_config(n)%sname) // '_CaCO3_form'
                 units = 'mmol/m^3/s'
                 vgrid = 'layer_avg'
                 truncate = .true.
@@ -2977,9 +3009,9 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             if (autotrophs(n)%Nfixer) then
-                lname = trim(autotrophs(n)%lname) // ' N Fixation'
-                sname = trim(autotrophs(n)%sname) // '_Nfix'
+             if (autotrophs_config(n)%Nfixer) then
+                lname = trim(autotrophs_config(n)%lname) // ' N Fixation'
+                sname = trim(autotrophs_config(n)%sname) // '_Nfix'
                 units = 'mmol/m^3/s'
                 vgrid = 'layer_avg'
                 truncate = .true.
@@ -3671,8 +3703,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' Ca13CO3 Formation'
-                sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca13CO3_form'
+                lname    = trim(autotrophs_config(n)%lname) // ' Ca13CO3 Formation'
+                sname    = 'CISO_' // trim(autotrophs_config(n)%sname) // '_Ca13CO3_form'
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
@@ -3687,7 +3719,7 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' Ca13CO3 Formation Vertical Integral'
+                lname    = trim(lname) // ' Vertical Integral'
                 sname    = trim(sname) // '_zint'
                 units    = 'mmol/m^3 cm/s' 
                 vgrid    = 'none'
@@ -3703,8 +3735,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' Ca14CO3 Formation'
-                sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca14CO3_form'
+                lname    = trim(autotrophs_config(n)%lname) // ' Ca14CO3 Formation'
+                sname    = 'CISO_' // trim(autotrophs_config(n)%sname) // '_Ca14CO3_form'
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
@@ -3719,7 +3751,7 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' Ca14CO3 Formation Vertical Integral'
+                lname    = trim(lname) // ' Vertical Integral'
                 sname    = trim(sname) // '_zint'
                 units    = 'mmol/m^3 cm/s' 
                 vgrid    = 'none'
@@ -3735,8 +3767,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' d13C of CaCO3'
-                sname    = 'CISO_autotrophCaCO3_d13C_' // trim(autotrophs(n)%sname)
+                lname    = trim(autotrophs_config(n)%lname) // ' d13C of CaCO3'
+                sname    = 'CISO_autotrophCaCO3_d13C_' // trim(autotrophs_config(n)%sname)
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .false.
@@ -3751,8 +3783,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' d14C of CaCO3'
-                sname    = 'CISO_autotrophCaCO3_d14C_' // trim(autotrophs(n)%sname)
+                lname    = trim(autotrophs_config(n)%lname) // ' d14C of CaCO3'
+                sname    = 'CISO_autotrophCaCO3_d14C_' // trim(autotrophs_config(n)%sname)
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .false.
@@ -3767,8 +3799,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' 13C Fixation'
-                sname    = 'CISO_photo13C_' // trim(autotrophs(n)%sname)
+                lname    = trim(autotrophs_config(n)%lname) // ' 13C Fixation'
+                sname    = 'CISO_photo13C_' // trim(autotrophs_config(n)%sname)
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
@@ -3783,8 +3815,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' 14C Fixation'
-                sname    = 'CISO_photo14C_' // trim(autotrophs(n)%sname)
+                lname    = trim(autotrophs_config(n)%lname) // ' 14C Fixation'
+                sname    = 'CISO_photo14C_' // trim(autotrophs_config(n)%sname)
                 units    = 'mmol/m^3/s'
                 vgrid    = 'layer_avg'
                 truncate = .true.
@@ -3799,8 +3831,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' 13C Fixation Vertical Integral'
-                sname    = 'CISO_photo13C_' // trim(autotrophs(n)%sname) // '_zint'
+                lname    = trim(autotrophs_config(n)%lname) // ' 13C Fixation Vertical Integral'
+                sname    = 'CISO_photo13C_' // trim(autotrophs_config(n)%sname) // '_zint'
                 units    = 'mmol/m^3 cm/s'
                 vgrid    = 'none'
                 truncate = .false.
@@ -3815,8 +3847,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' 14C Fixation Vertical Integral'
-                sname    = 'CISO_photo14C_' // trim(autotrophs(n)%sname) // '_zint'
+                lname    = trim(autotrophs_config(n)%lname) // ' 14C Fixation Vertical Integral'
+                sname    = 'CISO_photo14C_' // trim(autotrophs_config(n)%sname) // '_zint'
                 units    = 'mmol/m^3 cm/s'
                 vgrid    = 'none'
                 truncate = .false.
@@ -3831,8 +3863,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' discrimination factor (eps)'
-                sname    = 'CISO_eps_autotroph_' // trim(autotrophs(n)%sname)
+                lname    = trim(autotrophs_config(n)%lname) // ' discrimination factor (eps)'
+                sname    = 'CISO_eps_autotroph_' // trim(autotrophs_config(n)%sname)
                 units    = 'permil'
                 vgrid    = 'layer_avg'
                 truncate = .false.
@@ -3847,8 +3879,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' d13C'
-                sname    = 'CISO_d13C_' // trim(autotrophs(n)%sname)
+                lname    = trim(autotrophs_config(n)%lname) // ' d13C'
+                sname    = 'CISO_d13C_' // trim(autotrophs_config(n)%sname)
                 units    = 'permil'
                 vgrid    = 'layer_avg'
                 truncate = .false.
@@ -3863,8 +3895,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' d14C'
-                sname    = 'CISO_d14C_' // trim(autotrophs(n)%sname)
+                lname    = trim(autotrophs_config(n)%lname) // ' d14C'
+                sname    = 'CISO_d14C_' // trim(autotrophs_config(n)%sname)
                 units    = 'permil'
                 vgrid    = 'layer_avg'
                 truncate = .false.
@@ -3879,8 +3911,8 @@ contains
              if (count_only) then
                 num_interior_diags = num_interior_diags + 1
              else
-                lname    = trim(autotrophs(n)%lname) // ' instanteous growth rate over [CO2*]'
-                sname    = 'CISO_mui_to_co2star_' // trim(autotrophs(n)%sname)
+                lname    = trim(autotrophs_config(n)%lname) // ' instanteous growth rate over [CO2*]'
+                sname    = 'CISO_mui_to_co2star_' // trim(autotrophs_config(n)%sname)
                 units    = 'm^3/mmol C/s'
                 vgrid    = 'layer_avg'
                 truncate = .false.
@@ -5011,7 +5043,7 @@ contains
            denitrif(:) + sed_denitrif(:)
     ! subtract out N fixation
     do n = 1, autotroph_cnt
-       if (autotrophs(n)%Nfixer) then
+       if (autotrophs_config(n)%Nfixer) then
           work = work - autotroph_secondary_species(n,:)%Nfix
        end if
     end do
@@ -5337,7 +5369,7 @@ contains
 
           diags(ind%CISO_mui_to_co2star(n))%field_3d(k, 1)      = mui_to_co2star(n,k)
 
-          if (autotrophs(n)%imp_calcifier) then
+          if (autotrophs_config(n)%imp_calcifier) then
              diags(ind%CISO_Ca13CO3_form(n))%field_3d(k, 1)     = Ca13CO3_prod(n,k)
              diags(ind%CISO_Ca14CO3_form(n))%field_3d(k, 1)     = Ca14CO3_prod(n,k)
           end if

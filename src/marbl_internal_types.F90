@@ -20,26 +20,27 @@ module marbl_internal_types
 
   ! derived type for grazers
   type, public :: zooplankton_type
-     logical                 :: llock_sname = .false.
      character(char_len)     :: sname
      character(char_len)     :: lname
      real    (KIND=r8)       :: z_mort_0   ! zoo linear mort rate (1/sec)
      real    (KIND=r8)       :: z_mort2_0  ! zoo quad mort rate (1/sec/((mmol C/m3))
      real    (KIND=r8)       :: loss_thres ! zoo conc. where losses go to zero
-  contains
-     procedure, public :: put_sname => zooplankton_put_sname
   end type zooplankton_type
 
   !****************************************************************************
 
   ! derived type for functional group
-  type, public :: autotroph_type
-     logical                 :: llock_sname = .false.
+  type, public :: autotroph_config_type
      character(char_len)     :: sname
      character(char_len)     :: lname
      logical (KIND=log_kind) :: Nfixer                             ! flag set to true if this autotroph fixes N2
      logical (KIND=log_kind) :: imp_calcifier                      ! flag set to true if this autotroph implicitly handles calcification
      logical (KIND=log_kind) :: exp_calcifier                      ! flag set to true if this autotroph explicitly handles calcification
+     logical (KIND=log_kind) :: silicifier                         ! flag set to true if this autotroph is a silicifier
+  end type autotroph_config_type
+
+  ! derived type for functional group
+  type, public :: autotroph_parms_type
      real    (KIND=r8)       :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3 ! nutrient uptake half-sat constants
      real    (KIND=r8)       :: Qp                                 ! P/C ratio
      real    (KIND=r8)       :: gQfe_0, gQfe_min                   ! initial and minimum fe/C ratio
@@ -51,9 +52,7 @@ module marbl_internal_types
      real    (KIND=r8)       :: mort, mort2                        ! linear and quadratic mortality rates (1/sec), (1/sec/((mmol C/m3))
      real    (KIND=r8)       :: agg_rate_max, agg_rate_min         ! max and min agg. rate (1/d)
      real    (KIND=r8)       :: loss_poc                           ! routing of loss term
-  contains
-     procedure, public :: put_sname => autotrophs_put_sname
-  end type autotroph_type
+  end type autotroph_parms_type
 
   !****************************************************************************
 
@@ -547,8 +546,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine tracer_index_constructor(this, ciso_on, autotrophs, zooplankton, &
-             auto_names, zoo_names, marbl_status_log)
+  subroutine tracer_index_constructor(this, ciso_on, autotrophs_config,       &
+             autotrophs, zooplankton, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -561,10 +560,9 @@ contains
 
     class(marbl_tracer_index_type), intent(inout) :: this
     logical,                        intent(in)    :: ciso_on
+    type(autotroph_config_type),    intent(inout) :: autotrophs_config(:)
+    type(autotroph_parms_type),     intent(inout) :: autotrophs(:)
     type(zooplankton_type),         intent(inout) :: zooplankton(:)
-    type(autotroph_type),           intent(inout) :: autotrophs(:)
-    character(len=char_len),        intent(in)    :: auto_names(:)
-    character(len=char_len),        intent(in)    :: zoo_names(:)
     type(marbl_log_type),           intent(inout) :: marbl_status_log
 
     integer :: n
@@ -653,33 +651,39 @@ contains
         tracer_cnt    = tracer_cnt + 1
         this%auto_inds(n)%Fe_ind = tracer_cnt
 
-        if (autotrophs(n)%kSiO3.gt.c0) then
+        if (autotrophs_config(n)%silicifier) then
           tracer_cnt    = tracer_cnt + 1
           this%auto_inds(n)%Si_ind = tracer_cnt
         end if
 
-        if (autotrophs(n)%imp_calcifier.or.autotrophs(n)%exp_calcifier) then
+        if (autotrophs_config(n)%imp_calcifier.or.                            &
+            autotrophs_config(n)%exp_calcifier) then
           tracer_cnt    = tracer_cnt + 1
           this%auto_inds(n)%CaCO3_ind = tracer_cnt
         end if
 
-        write (log_message, "(3A,I0)") 'Chl_ind(', trim(autotrophs(n)%sname), &
+        write (log_message, "(3A,I0)") 'Chl_ind(',                            &
+                                       trim(autotrophs_config(n)%sname),      &
                                        ') = ', this%auto_inds(n)%Chl_ind
         call marbl_status_log%log_noerror(log_message, subname)
 
-        write (log_message, "(3A,I0)") 'C_ind(', trim(autotrophs(n)%sname),   &
+        write (log_message, "(3A,I0)") 'C_ind(',                              &
+                                       trim(autotrophs_config(n)%sname),      &
               ') = ', this%auto_inds(n)%C_ind
         call marbl_status_log%log_noerror(log_message, subname)
 
-        write (log_message, "(3A,I0)") 'Fe_ind(', trim(autotrophs(n)%sname),  &
+        write (log_message, "(3A,I0)") 'Fe_ind(',                             &
+                                       trim(autotrophs_config(n)%sname),      &
                                        ') = ', this%auto_inds(n)%Fe_ind
         call marbl_status_log%log_noerror(log_message, subname)
 
-        write (log_message, "(3A,I0)") 'Si_ind(', trim(autotrophs(n)%sname),  &
+        write (log_message, "(3A,I0)") 'Si_ind(',                             &
+                                       trim(autotrophs_config(n)%sname),      &
                                        ') = ', this%auto_inds(n)%Si_ind
         call marbl_status_log%log_noerror(log_message, subname)
 
-        write (log_message, "(3A,I0)") 'CaCO3_ind(', trim(autotrophs(n)%sname), &
+        write (log_message, "(3A,I0)") 'CaCO3_ind(',                          &
+                                       trim(autotrophs_config(n)%sname),      &
                                        ') = ', this%auto_inds(n)%CaCO3_ind
         call marbl_status_log%log_noerror(log_message, subname)
 
@@ -719,7 +723,8 @@ contains
           tracer_cnt    = tracer_cnt + 1
           this%auto_inds(n)%C14_ind = tracer_cnt
 
-          if (autotrophs(n)%imp_calcifier.or.autotrophs(n)%exp_calcifier) then
+          if (autotrophs_config(n)%imp_calcifier.or.                          &
+              autotrophs_config(n)%exp_calcifier) then
             tracer_cnt    = tracer_cnt + 1
             this%auto_inds(n)%Ca13CO3_ind = tracer_cnt
 
@@ -727,18 +732,26 @@ contains
             this%auto_inds(n)%Ca14CO3_ind = tracer_cnt
           end if
 
-          write (log_message, "(3A,I0)") 'C13_ind(', trim(autotrophs(n)%sname), &
+          write (log_message, "(3A,I0)") 'C13_ind(',                          &
+                                         trim(autotrophs_config(n)%sname),    &
                                          ') = ', this%auto_inds(n)%C13_ind
           call marbl_status_log%log_noerror(log_message, subname)
-          write (log_message, "(3A,I0)") 'C14_ind(', trim(autotrophs(n)%sname), &
+
+          write (log_message, "(3A,I0)") 'C14_ind(',                          &
+                                         trim(autotrophs_config(n)%sname),    &
                                          ') = ', this%auto_inds(n)%C14_ind
           call marbl_status_log%log_noerror(log_message, subname)
-          write (log_message, "(3A,I0)") 'Ca13CO3_ind(', trim(autotrophs(n)%sname), &
+
+          write (log_message, "(3A,I0)") 'Ca13CO3_ind(',                      &
+                                         trim(autotrophs_config(n)%sname),    &
                                          ') = ', this%auto_inds(n)%Ca13CO3_ind
           call marbl_status_log%log_noerror(log_message, subname)
-          write (log_message, "(3A,I0)") 'Ca14CO3_ind(', trim(autotrophs(n)%sname), &
+
+          write (log_message, "(3A,I0)") 'Ca14CO3_ind(',                      &
+                                         trim(autotrophs_config(n)%sname),    &
                                          ') = ', this%auto_inds(n)%Ca14CO3_ind
           call marbl_status_log%log_noerror(log_message, subname)
+
         end do
 
         this%ciso_ind_end = tracer_cnt
@@ -771,52 +784,6 @@ contains
     end associate
 
   end subroutine tracer_index_constructor
-
-  !*****************************************************************************
-
-  subroutine autotrophs_put_sname(this, sname, marbl_status_log)
-
-    class(autotroph_type), intent(inout) :: this
-    character(len=*),      intent(in)    :: sname
-    type(marbl_log_type),  intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_internal_types:autotrophs_put_sname'
-    character(len=char_len) :: log_message
-
-    if (this%llock_sname) then
-      write(log_message, "(5A)") 'Can not change sname from ', trim(this%sname), &
-                                 ' to ', trim(sname), ' because name is locked'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    this%sname = trim(sname)
-    this%llock_sname = .true.
-
-  end subroutine autotrophs_put_sname
-
-  !*****************************************************************************
-
-  subroutine zooplankton_put_sname(this, sname, marbl_status_log)
-
-    class(zooplankton_type), intent(inout) :: this
-    character(len=*),        intent(in)    :: sname
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_internal_types:zooplankton_put_sname'
-    character(len=char_len) :: log_message
-
-    if (this%llock_sname) then
-      write(log_message, "(5A)") 'Can not change sname from ', trim(this%sname), &
-                                 ' to ', trim(sname), ' because name is locked'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    this%sname = trim(sname)
-    this%llock_sname = .true.
-
-  end subroutine zooplankton_put_sname
 
   !*****************************************************************************
 

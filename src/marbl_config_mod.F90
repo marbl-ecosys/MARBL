@@ -12,6 +12,8 @@ module marbl_config_mod
 
   use marbl_constants_mod, only : dps
 
+  use marbl_internal_types, only : autotroph_config_type
+
   implicit none
   public
   save
@@ -27,10 +29,7 @@ module marbl_config_mod
   logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: locmip_k1_k2_bug_fix
-
-  ! Need to know what autotrophs / zooplankton to use before living_init()
-  character(len=char_len), dimension(autotroph_cnt),   target :: auto_names
-  character(len=char_len), dimension(zooplankton_cnt), target :: zoo_names
+  type(autotroph_config_type), dimension(autotroph_cnt), target :: autotrophs_config
 
   !---------------------------------------------------------------------------
   !  Datatypes extended to use for marbl_instance%configuration,
@@ -45,6 +44,7 @@ module marbl_config_mod
     character(len=char_len) :: group
     character(len=char_len) :: datatype
     logical                 :: add_space ! used for formatting log output
+    character(len=char_len) :: comment   ! used to add comment in log
     ! Actual parameter data
     real(r8),                pointer :: rptr => NULL()
     integer(int_kind),       pointer :: iptr => NULL()
@@ -95,8 +95,27 @@ contains
     lflux_gas_o2                  = .true.
     lflux_gas_co2                 = .true.
     locmip_k1_k2_bug_fix          = .true.
-    zoo_names = (/'zoo'/)
-    auto_names = (/'sp  ', 'diat', 'diaz'/)
+
+    autotrophs_config(1)%sname         = 'sp'
+    autotrophs_config(1)%lname         = 'Small Phyto'
+    autotrophs_config(1)%Nfixer        = .false.
+    autotrophs_config(1)%imp_calcifier = .true.
+    autotrophs_config(1)%exp_calcifier = .false.
+    autotrophs_config(1)%silicifier    = .false.
+
+    autotrophs_config(2)%sname         = 'diat'
+    autotrophs_config(2)%lname         = 'Diatom'
+    autotrophs_config(2)%Nfixer        = .false.
+    autotrophs_config(2)%imp_calcifier = .false.
+    autotrophs_config(2)%exp_calcifier = .false.
+    autotrophs_config(2)%silicifier    = .true.
+
+    autotrophs_config(3)%sname         = 'diaz'
+    autotrophs_config(3)%lname         = 'Diazotroph'
+    autotrophs_config(3)%Nfixer        = .true.
+    autotrophs_config(3)%imp_calcifier = .false.
+    autotrophs_config(3)%exp_calcifier = .false.
+    autotrophs_config(3)%silicifier    = .false.
 
   end subroutine marbl_config_set_defaults
 
@@ -150,6 +169,9 @@ contains
     integer(int_kind),       pointer :: iptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
+
+    integer :: n
+    character(len=char_len) :: prefix
 
     if (associated(this%vars)) then
       write(log_message, "(A)") "this%configuration has been constructed already"
@@ -255,34 +277,95 @@ contains
       return
     end if
 
-    sname     = 'auto_names'
-    lname     = 'Short names of active autotrophs'
-    units     = 'unitless'
-    group     = 'marbl_config_nml'
-    call this%add_var_1d_str(sname, lname, units, group, auto_names,        &
-                               marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
-      return
-    end if
+    do n=1,autotroph_cnt
+      write(prefix, "(A,I0,A)") 'autotrophs_config(', n, ')%'
 
-    sname     = 'zoo_names'
-    lname     = 'Short names of active zooplankton'
-    units     = 'unitless'
-    group     = 'marbl_config_nml'
-    call this%add_var_1d_str(sname, lname, units, group, zoo_names,         &
-                               marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
-      return
-    end if
+      write(sname, "(2A)") trim(prefix), 'sname'
+      lname    = 'Short name of autotroph'
+      units    = 'unitless'
+      datatype = 'string'
+      group    = 'marbl_config_nml'
+      sptr     => autotrophs_config(n)%sname
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, sptr=sptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'lname'
+      lname    = 'Long name of autotroph'
+      units    = 'unitless'
+      datatype = 'string'
+      group    = 'marbl_config_nml'
+      sptr     => autotrophs_config(n)%lname
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, sptr=sptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'Nfixer'
+      lname    = 'Flag is true if this autotroph fixes N2'
+      units    = 'unitless'
+      datatype = 'logical'
+      group    = 'marbl_config_nml'
+      lptr     => autotrophs_config(n)%Nfixer
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, lptr=lptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'imp_calcifier'
+      lname    = 'Flag is true if this autotroph implicitly handles calcification'
+      units    = 'unitless'
+      datatype = 'logical'
+      group    = 'marbl_config_nml'
+      lptr     => autotrophs_config(n)%imp_calcifier
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, lptr=lptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'exp_calcifier'
+      lname    = 'Flag is true if this autotroph explicitly handles calcification'
+      units    = 'unitless'
+      datatype = 'logical'
+      group    = 'marbl_config_nml'
+      lptr     => autotrophs_config(n)%exp_calcifier
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, lptr=lptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'silicifier'
+      lname    = 'Flag is true if this autotroph is a silicifier'
+      units    = 'unitless'
+      datatype = 'logical'
+      group    = 'marbl_config_nml'
+      lptr     => autotrophs_config(n)%silicifier
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, lptr=lptr, add_space=.true.)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+    end do
 
   end subroutine marbl_config_construct
 
   !*****************************************************************************
 
   subroutine marbl_var_add(this, sname, lname, units, datatype, group,        &
-             marbl_status_log, rptr, iptr, lptr, sptr, add_space)
+             marbl_status_log, rptr, iptr, lptr, sptr, comment, add_space)
 
     class(marbl_config_vars_type), intent(inout) :: this
     character(len=*),        intent(in)    :: sname
@@ -295,6 +378,7 @@ contains
     integer,                 optional, pointer, intent(in) :: iptr
     logical,                 optional, pointer, intent(in) :: lptr
     character(len=char_len), optional, pointer, intent(in) :: sptr
+    character(len=char_len), optional,          intent(in) :: comment
     logical,                 optional,          intent(in) :: add_space
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add'
@@ -322,6 +406,7 @@ contains
       new_parms(n)%datatype   = this%vars(n)%datatype
       new_parms(n)%group      = this%vars(n)%group
       new_parms(n)%add_space  = this%vars(n)%add_space
+      new_parms(n)%comment    = this%vars(n)%comment
       if (associated(this%vars(n)%lptr)) &
         new_parms(n)%lptr => this%vars(n)%lptr
       if (associated(this%vars(n)%iptr)) &
@@ -384,6 +469,11 @@ contains
       new_parms(id)%add_space = add_space
     else
       new_parms(id)%add_space = .false.
+    end if
+    if (present(comment)) then
+      new_parms(id)%comment = comment
+    else
+      new_parms(id)%comment = ''
     end if
 
     ! 4) deallocate / nullify this%vars
@@ -519,6 +609,9 @@ contains
       end select
 
       ! (4) Write log_message to the log
+      if (this%vars(n)%comment.ne.'') &
+        write(log_message, "(3A)") trim(log_message), ' ! ',                  &
+                                   trim(this%vars(n)%comment)
       call marbl_status_log%log_noerror(log_message, subname)
       if (this%vars(n)%add_space) &
         call marbl_status_log%log_noerror('', subname)

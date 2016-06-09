@@ -272,8 +272,7 @@ contains
     use marbl_mod             , only : marbl_init_tracer_metadata
     use marbl_mod             , only : marbl_update_tracer_file_metadata
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
-    use marbl_config_mod      , only : auto_names
-    use marbl_config_mod      , only : zoo_names
+    use marbl_config_mod      , only : autotrophs_config
     use marbl_living_parms_mod, only : autotrophs
     use marbl_living_parms_mod, only : zooplankton
     use marbl_parms           , only : tracer_init_ext
@@ -322,8 +321,8 @@ contains
     !  Set up tracer indices
     !-----------------------------------------------------------------------
 
-    call this%tracer_indices%construct(this%ciso_on, autotrophs, zooplankton, &
-         auto_names, zoo_names, this%StatusLog)
+    call this%tracer_indices%construct(this%ciso_on, autotrophs_config,       &
+         autotrophs, zooplankton, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("tracer_indices%construct", subname)
       return

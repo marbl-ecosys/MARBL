@@ -95,6 +95,7 @@ module marbl_mod
   use marbl_config_mod, only : lflux_gas_o2
   use marbl_config_mod, only : lflux_gas_co2
   use marbl_config_mod, only : lecovars_full_depth_tavg
+  use marbl_config_mod, only : autotrophs_config
 
   use marbl_living_parms_mod, only : autotrophs
   use marbl_living_parms_mod, only : zooplankton
@@ -175,7 +176,8 @@ module marbl_mod
 
   use marbl_internal_types  , only : carbonate_type
   use marbl_internal_types  , only : zooplankton_type
-  use marbl_internal_types  , only : autotroph_type
+  use marbl_internal_types  , only : autotroph_parms_type
+  use marbl_internal_types  , only : autotroph_config_type
   use marbl_internal_types  , only : zooplankton_secondary_species_type
   use marbl_internal_types  , only : autotroph_secondary_species_type
   use marbl_internal_types  , only : dissolved_organic_matter_type
@@ -230,7 +232,6 @@ module marbl_mod
   private :: marbl_setup_local_zooplankton                        
   private :: marbl_setup_local_autotrophs                         
   private :: marbl_consistency_check_autotrophs                    
-  private :: marbl_check_ecosys_tracer_count_consistency          
   private :: marbl_compute_particulate_terms                      
   private :: marbl_compute_autotroph_elemental_ratios             
   private :: marbl_compute_PAR
@@ -1010,14 +1011,6 @@ contains
     call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_metadata,      &
          marbl_tracer_indices, non_living_biomass_ecosys_tracer_cnt)
 
-    call marbl_check_ecosys_tracer_count_consistency(non_living_biomass_ecosys_tracer_cnt, marbl_status_log)
-
-    if (marbl_status_log%labort_marbl) then
-       call marbl_status_log%log_error_trace(                                 &
-            'marbl_check_ecosys_tracer_count_consistency()', subname)
-       return
-    end if
-
     call marbl_init_zooplankton_tracer_metadata(marbl_tracer_metadata,        &
          marbl_tracer_indices)
 
@@ -1240,7 +1233,7 @@ contains
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace(&
-            'marbl_check_ecosys_tracer_count_consistency()', subname)
+            'marbl_compute_carbonate_chemistry()', subname)
        return
     end if
 
@@ -1260,8 +1253,8 @@ contains
        call marbl_compute_Pprime(k, domain, autotroph_cnt, autotrophs, &
             autotroph_local(:, k), temperature(k), autotroph_secondary_species(:, k))
 
-       call marbl_compute_autotroph_uptake(autotroph_cnt, autotrophs,         &
-            tracer_local(:, k), marbl_tracer_indices,                         &
+       call marbl_compute_autotroph_uptake(autotroph_cnt, autotrophs_config,  &
+            autotrophs, tracer_local(:, k), marbl_tracer_indices,             &
             autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_photosynthesis(autotroph_cnt,       &
@@ -1273,21 +1266,22 @@ contains
             autotroph_local(:, k), marbl_tracer_indices,                      &
             autotroph_secondary_species(:, k))
 
-       call marbl_compute_autotroph_calcification(autotroph_cnt, autotrophs, &
-            autotroph_local(:, k),  temperature(k), autotroph_secondary_species(:, k))
-
-       call marbl_compute_autotroph_nfixation(autotroph_cnt, autotrophs, &
+       call marbl_compute_autotroph_calcification(autotroph_cnt,              &
+            autotrophs_config, autotroph_local(:, k), temperature(k),         &
             autotroph_secondary_species(:, k))
 
-       call marbl_compute_autotroph_loss(autotroph_cnt, autotrophs, &
-            Tfunc(k), autotroph_secondary_species(:, k))
+       call marbl_compute_autotroph_nfixation(autotroph_cnt, autotrophs_config, &
+            autotroph_secondary_species(:, k))
+
+       call marbl_compute_autotroph_loss(autotroph_cnt, autotrophs_config,    &
+            autotrophs, Tfunc(k), autotroph_secondary_species(:, k))
 
        call marbl_compute_Zprime(k, domain, &
             zooplankton_cnt, zooplankton, zooplankton_local(:, k)%C, &
             Tfunc(k), zooplankton_secondary_species(:, k))
 
-       call marbl_compute_grazing (autotroph_cnt, zooplankton_cnt, grazer_prey_cnt, autotrophs, &
-            Tfunc(k), zooplankton_local(:, k), &
+       call marbl_compute_grazing (autotroph_cnt, zooplankton_cnt,                 &
+            grazer_prey_cnt, autotrophs_config, Tfunc(k), zooplankton_local(:, k), &
             zooplankton_secondary_species(:, k), autotroph_secondary_species(:, k))
 
        call marbl_compute_routing (autotroph_cnt, zooplankton_cnt, autotrophs, &
@@ -1330,7 +1324,8 @@ contains
             dissolved_organic_matter(k)%DOCr_remin, &
             POC%remin(k), other_remin(k), sed_denitrif(k), denitrif(k))
 
-       call marbl_compute_dtracer_local (autotroph_cnt, zooplankton_cnt, autotrophs, zooplankton, &
+       call marbl_compute_dtracer_local (autotroph_cnt, zooplankton_cnt,      &
+            autotrophs_config, autotrophs, zooplankton, &
             autotroph_secondary_species(:, k), &
             zooplankton_secondary_species(:, k), &
             dissolved_organic_matter(k), &
@@ -2839,51 +2834,6 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_check_ecosys_tracer_count_consistency(non_living_biomass_ecosys_tracer_cnt, marbl_status_log)
-
-    implicit none
-
-    integer (int_kind), intent(in) :: &
-         non_living_biomass_ecosys_tracer_cnt ! number of non-autotroph ecosystem tracers
-    type(marbl_log_type)           , intent(inout) :: marbl_status_log
-
-    integer (int_kind) :: &
-         n,               &
-         auto_ind,        & ! autotroph functional group index
-         zoo_ind            ! zooplankton functional group index
-
-    character(*), parameter :: subname = 'marbl_mod:check_ecosys_tracer_count_consistency'
-    character(len=char_len) :: log_message
-
-    !-----------------------------------------------------------------------
-    !  confirm that ecosys_base_tracer_cnt is consistent with autotroph declarations
-    !-----------------------------------------------------------------------
-    n = non_living_biomass_ecosys_tracer_cnt
-    ! Do we really need a loop here, or would simple addition work?!
-    do zoo_ind = 1, zooplankton_cnt
-       n = n + 1 ! C
-    end do
-
-    do auto_ind = 1, autotroph_cnt
-       n = n + 3 ! Chl, C, Fe tracers
-       if (autotrophs(auto_ind)%kSiO3 > c0) n = n + 1 ! Si tracer
-       if (autotrophs(auto_ind)%imp_calcifier .or. &
-            autotrophs(auto_ind)%exp_calcifier) n = n + 1 ! CaCO3 tracer
-    end do
-
-    if (ecosys_base_tracer_cnt /= n) then
-       write(log_message, "(A,I0,A,I0)")                                      &
-                                 "ecosys_base_tracer_cnt = ",                 &
-                                 ecosys_base_tracer_cnt,                      &
-                                "but computed ecosys_base_tracer_cnt = ", n
-       call marbl_status_log%log_error(log_message, subname)
-        return
-    endif
-
-  end subroutine marbl_check_ecosys_tracer_count_consistency
-
-  !***********************************************************************
-
   subroutine marbl_init_zooplankton_tracer_metadata(marbl_tracer_metadata, &
              marbl_tracer_indices)
 
@@ -2935,30 +2885,30 @@ contains
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Chl'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Chlorophyll'
+       marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Chl'
+       marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Chlorophyll'
        marbl_tracer_metadata(n)%units      = 'mg/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mg/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mg/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon'
+       marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'C'
+       marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Carbon'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Fe'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Iron'
+       marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Fe'
+       marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Iron'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
        if (n.gt.0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Si'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Silicon'
+          marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Si'
+          marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Silicon'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
@@ -2966,8 +2916,8 @@ contains
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n.gt.0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'CaCO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' CaCO3'
+          marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'CaCO3'
+          marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' CaCO3'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
@@ -3166,7 +3116,7 @@ contains
     implicit none
 
     integer (int_kind)         , intent(in) :: auto_cnt
-    type(autotroph_type)       , intent(in) :: auto_meta(auto_cnt)             ! autotrophs
+    type(autotroph_parms_type) , intent(in) :: auto_meta(auto_cnt)             ! autotrophs
     type(autotroph_local_type) , intent(in) :: autotroph_local(auto_cnt)
     real (r8)                  , intent(in) :: tracer_local(ecosys_base_tracer_cnt) ! local copies of model tracer concentrations
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
@@ -3535,7 +3485,7 @@ contains
     integer(int_kind)                      , intent(in)  :: k
     type(marbl_domain_type)                , intent(in)  :: domain
     integer(int_kind)                      , intent(in)  :: auto_cnt
-    type(autotroph_type)                   , intent(in)  :: auto_meta(auto_cnt)
+    type(autotroph_parms_type)             , intent(in)  :: auto_meta(auto_cnt)
     type(autotroph_local_type)             , intent(in)  :: autotroph_local(auto_cnt)
     real(r8)                               , intent(in)  :: column_temperature
     type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(auto_cnt)
@@ -3633,11 +3583,12 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_autotroph_uptake (auto_cnt, auto_meta, &
+  subroutine marbl_compute_autotroph_uptake (auto_cnt, auto_config, auto_meta, &
        tracer_local, marbl_tracer_indices, autotroph_secondary_species)
 
     integer(int_kind)                      , intent(in)  :: auto_cnt
-    type(autotroph_type)                   , intent(in)  :: auto_meta(auto_cnt)
+    type(autotroph_config_type)            , intent(in)  :: auto_config(auto_cnt)
+    type(autotroph_parms_type)             , intent(in)  :: auto_meta(auto_cnt)
     real(r8)                               , intent(in)  :: tracer_local(ecosys_base_tracer_cnt)
     type(marbl_tracer_index_type)          , intent(in)  :: marbl_tracer_indices
     type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(auto_cnt)
@@ -3673,14 +3624,16 @@ contains
                  VPO4  => autotroph_secondary_species(auto_ind)%VPO4,         &
                  VPtot => autotroph_secondary_species(auto_ind)%VPtot,        &
                  VSiO3 => autotroph_secondary_species(auto_ind)%VSiO3,        &
+                 ! AUTO_CONFIG
+                 Nfixer     => auto_config(auto_ind)%Nfixer,                  &
+                 silicifier => auto_config(auto_ind)%silicifier,              &
                  ! AUTO_META
                  kNO3   => auto_meta(auto_ind)%kNO3,                          &
                  kNH4   => auto_meta(auto_ind)%kNH4,                          &
                  kFe    => auto_meta(auto_ind)%kFe,                           &
                  kPO4   => auto_meta(auto_ind)%kPO4,                          &
                  kDOP   => auto_meta(auto_ind)%kDOP,                          &
-                 kSiO3  => auto_meta(auto_ind)%kSiO3,                         &
-                 Nfixer => auto_meta(auto_ind)%Nfixer                         &
+                 kSiO3  => auto_meta(auto_ind)%kSiO3                          &
                 )
 
        VNO3 = (NO3_loc / kNO3) / (c1 + (NO3_loc / kNO3) + (NH4_loc / kNH4))
@@ -3696,13 +3649,13 @@ contains
        VDOP = (DOP_loc / kDOP) / (c1 + (PO4_loc / kPO4) + (DOP_loc / kDOP))
        VPtot = VPO4 + VDOP
 
-       if (kSiO3 > c0) then
+       if (silicifier) then
           VSiO3 = SiO3_loc / (SiO3_loc + kSiO3)
        endif
 
        f_nut = min(VNtot, VFe)
        f_nut = min(f_nut, VPO4)
-       if (kSiO3 > c0) then
+       if (silicifier) then
           f_nut = min(f_nut, VSiO3)
        endif
 
@@ -3726,7 +3679,7 @@ contains
 
     integer(int_kind)                      , intent(in)    :: auto_cnt
     integer(int_kind)                      , intent(in)    :: PAR_nsubcols
-    type(autotroph_type)                   , intent(in)    :: auto_meta(auto_cnt)
+    type(autotroph_parms_type)             , intent(in)    :: auto_meta(auto_cnt)
     type(autotroph_local_type)             , intent(in)    :: autotroph_loc(auto_cnt)
     real(r8)                               , intent(in)    :: temperature
     real(r8)                               , intent(in)    :: Tfunc
@@ -3814,7 +3767,7 @@ contains
     use marbl_parms     , only : Q
 
     integer(int_kind)                      , intent(in)    :: auto_cnt
-    type(autotroph_type)                   , intent(in)    :: auto_meta(auto_cnt)
+    type(autotroph_parms_type)             , intent(in)    :: auto_meta(auto_cnt)
     type(autotroph_local_type)             , intent(in)    :: autotroph_loc(auto_cnt)
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(auto_cnt)
@@ -3879,8 +3832,8 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_autotroph_calcification (auto_cnt, auto_meta, &
-       autotroph_loc, temperature, autotroph_secondary_species)
+  subroutine marbl_compute_autotroph_calcification (auto_cnt, auto_config,    &
+             autotroph_loc, temperature, autotroph_secondary_species)
 
     !-----------------------------------------------------------------------
     !  CaCO3 Production, parameterized as function of small phyto production
@@ -3896,7 +3849,7 @@ contains
     use marbl_parms     , only : f_photosp_CaCO3
 
     integer(int_kind)                      , intent(in)    :: auto_cnt
-    type(autotroph_type)                   , intent(in)    :: auto_meta(auto_cnt)
+    type(autotroph_config_type)            , intent(in)    :: auto_config(auto_cnt)
     type(autotroph_local_type)             , intent(in)    :: autotroph_loc(auto_cnt)
     real(r8)                               , intent(in)    :: temperature
     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(auto_cnt)
@@ -3914,7 +3867,7 @@ contains
          )
 
     do auto_ind = 1, auto_cnt
-       if (auto_meta(auto_ind)%imp_calcifier) then
+       if (auto_config(auto_ind)%imp_calcifier) then
           CaCO3_PROD(auto_ind) = parm_f_prod_sp_CaCO3 * photoC(auto_ind)
           CaCO3_PROD(auto_ind) = CaCO3_PROD(auto_ind) * f_nut(auto_ind) * f_nut(auto_ind)
 
@@ -3935,8 +3888,8 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_autotroph_nfixation (auto_cnt, auto_meta, &
-       autotroph_secondary_species)
+  subroutine marbl_compute_autotroph_nfixation (auto_cnt, auto_config,        &
+             autotroph_secondary_species)
 
     !-----------------------------------------------------------------------
     !  Get N fixation by diazotrophs based on C fixation,
@@ -3946,8 +3899,8 @@ contains
     use marbl_parms     , only : Q
     use marbl_parms     , only : r_Nfix_photo
 
-    integer(int_kind)                          , intent(in)  :: auto_cnt
-    type(autotroph_type)                       , intent(in)  :: auto_meta(auto_cnt)
+    integer(int_kind)                      , intent(in)  :: auto_cnt
+    type(autotroph_config_type)            , intent(in)  :: auto_config(auto_cnt)
     type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(auto_cnt)
 
     !-----------------------------------------------------------------------
@@ -3966,7 +3919,7 @@ contains
          )
 
     do auto_ind = 1, autotroph_cnt
-       if (auto_meta(auto_ind)%Nfixer) then
+       if (auto_config(auto_ind)%Nfixer) then
           work1 = photoC(auto_ind) * Q
           Nfix(auto_ind) = (work1 * r_Nfix_photo) - NO3_V(auto_ind) - NH4_V(auto_ind)
           Nexcrete(auto_ind) = Nfix(auto_ind) + NO3_V(auto_ind) + NH4_V(auto_ind) - work1
@@ -3978,7 +3931,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_autotroph_loss (auto_cnt, auto_meta, &
+  subroutine marbl_compute_autotroph_loss (auto_cnt, auto_config, auto_meta,  &
        Tfunc, autotroph_secondary_species)
 
     !-----------------------------------------------------------------------
@@ -3986,9 +3939,10 @@ contains
     ! loss terms
     !-----------------------------------------------------------------------
 
-    integer(int_kind)                          , intent(in)    :: auto_cnt
-    type(autotroph_type)                       , intent(in)    :: auto_meta(auto_cnt)
-    real(r8)                                   , intent(in)    :: Tfunc
+    integer(int_kind)                      , intent(in)    :: auto_cnt
+    type(autotroph_config_type)            , intent(in)    :: auto_config(auto_cnt)
+    type(autotroph_parms_type)             , intent(in)    :: auto_meta(auto_cnt)
+    real(r8)                               , intent(in)    :: Tfunc
     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(auto_cnt)
 
     !-----------------------------------------------------------------------
@@ -4025,7 +3979,7 @@ contains
        !  min.%C routed from sp_loss = 0.59 * QCaCO3, or P_CaCO3%rho
        !-----------------------------------------------------------------------
 
-       if (auto_meta(auto_ind)%imp_calcifier) then
+       if (auto_config(auto_ind)%imp_calcifier) then
           auto_loss_poc(auto_ind) = QCaCO3(auto_ind) * auto_loss(auto_ind)
        else
           auto_loss_poc(auto_ind) = auto_meta(auto_ind)%loss_poc * auto_loss(auto_ind)
@@ -4039,8 +3993,8 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_grazing (auto_cnt, zoo_cnt, grazer_prey_cnt, auto_meta, &
-       Tfunc, zooplankton_loc, &
+  subroutine marbl_compute_grazing (auto_cnt, zoo_cnt, grazer_prey_cnt,       &
+             auto_config, Tfunc, zooplankton_loc,                             &
        zooplankton_secondary_species, autotroph_secondary_species)
 
     !-----------------------------------------------------------------------
@@ -4063,7 +4017,7 @@ contains
     integer(int_kind)                        , intent(in)    :: auto_cnt
     integer(int_kind)                        , intent(in)    :: zoo_cnt
     integer(int_kind)                        , intent(in)    :: grazer_prey_cnt
-    type(autotroph_type)                     , intent(in)    :: auto_meta(auto_cnt)
+    type(autotroph_config_type)              , intent(in)    :: auto_config(auto_cnt)
     real(r8)                                 , intent(in)    :: Tfunc
     type(zooplankton_local_type)             , intent(in)    :: zooplankton_loc(zoo_cnt)
     type(zooplankton_secondary_species_type) , intent(inout) :: zooplankton_secondary_species(zoo_cnt)
@@ -4176,7 +4130,7 @@ contains
              x_graze_zoo(pred_ind)    = x_graze_zoo(pred_ind)    + grazing(prey_ind, pred_ind)%graze_zoo * work2
 
              ! routed to POC
-             if (auto_meta(auto_ind)%imp_calcifier) then
+             if (auto_config(auto_ind)%imp_calcifier) then
                 auto_graze_poc(auto_ind) = auto_graze_poc(auto_ind) &
                      + work2 * max((caco3_poc_min * QCaCO3(auto_ind)),  &
                      min(spc_poc_fac * (Pprime(auto_ind)+0.5_r8)**1.5_r8,    &
@@ -4242,7 +4196,7 @@ contains
 
     integer(int_kind)                        , intent(in)    :: auto_cnt
     integer(int_kind)                        , intent(in)    :: zoo_cnt
-    type(autotroph_type)                     , intent(in)    :: auto_meta(auto_cnt)
+    type(autotroph_parms_type)               , intent(in)    :: auto_meta(auto_cnt)
     type(zooplankton_secondary_species_type) , intent(inout) :: zooplankton_secondary_species(zoo_cnt)
     type(autotroph_secondary_species_type)   , intent(inout) :: autotroph_secondary_species(auto_cnt)
 
@@ -4348,7 +4302,7 @@ contains
     integer                                 , intent(in)  :: auto_cnt
     integer                                 , intent(in)  :: zoo_cnt
     integer(int_kind)                       , intent(in)  :: PAR_nsubcols
-    type(autotroph_type)                    , intent(in)  :: auto_meta(auto_cnt)
+    type(autotroph_parms_type)              , intent(in)  :: auto_meta(auto_cnt)
     type(zooplankton_secondary_species_type), intent(in)  :: zooplankton_secondary_species(zoo_cnt)
     type(autotroph_secondary_species_type)  , intent(in)  :: autotroph_secondary_species(auto_cnt)
     real(r8)                                , intent(in)  :: PAR_col_frac(PAR_nsubcols)
@@ -4486,7 +4440,7 @@ contains
     integer                                  , intent(in)    :: k
     integer                                  , intent(in)    :: auto_cnt
     integer                                  , intent(in)    :: zoo_cnt
-    type(autotroph_type)                     , intent(in)    :: auto_meta(auto_cnt)
+    type(autotroph_parms_type)               , intent(in)    :: auto_meta(auto_cnt)
     type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(zoo_cnt)
     type(autotroph_secondary_species_type)   , intent(in)    :: autotroph_secondary_species(auto_cnt)
     real(r8)                                 , intent(in)    :: Fe_loc
@@ -4684,21 +4638,18 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_dtracer_local (auto_cnt, zoo_cnt, auto_meta, zoo_meta, &
-       autotroph_secondary_species, &
-       zooplankton_secondary_species, &
-       dissolved_organic_matter, &
-       nitrif, denitrif, sed_denitrif, &
-       Fe_scavenge, Fe_scavenge_rate, &
-       P_iron_remin, POC_remin, &
-       P_SiO2_remin, P_CaCO3_remin, other_remin, PON_remin, POP_remin, &
-       interior_restore, &
-       O2_loc, o2_production, o2_consumption, &
-       dtracers, marbl_tracer_indices)
+  subroutine marbl_compute_dtracer_local (auto_cnt, zoo_cnt, auto_config,       &
+             auto_meta, zoo_meta, autotroph_secondary_species,                  &
+             zooplankton_secondary_species, dissolved_organic_matter,           &
+             nitrif, denitrif, sed_denitrif, Fe_scavenge, Fe_scavenge_rate,     &
+             P_iron_remin, POC_remin, P_SiO2_remin, P_CaCO3_remin, other_remin, &
+             PON_remin, POP_remin, interior_restore, O2_loc, o2_production,     &
+             o2_consumption, dtracers, marbl_tracer_indices)
 
     integer                                  , intent(in)  :: auto_cnt
     integer                                  , intent(in)  :: zoo_cnt
-    type(autotroph_type)                     , intent(in)  :: auto_meta(auto_cnt)
+    type(autotroph_config_type)              , intent(in)  :: auto_config(auto_cnt)
+    type(autotroph_parms_type)               , intent(in)  :: auto_meta(auto_cnt)
     type(zooplankton_type)                   , intent(in)  :: zoo_meta(zoo_cnt)
     type(zooplankton_secondary_species_type) , intent(in)  :: zooplankton_secondary_species(zoo_cnt)
     type(autotroph_secondary_species_type)   , intent(in)  :: autotroph_secondary_species(auto_cnt)
@@ -4804,7 +4755,7 @@ contains
          + PON_remin * (c1 - PONremin_refract)
 
     do auto_ind = 1, auto_cnt
-       if (auto_meta(auto_ind)%Nfixer) then
+       if (auto_config(auto_ind)%Nfixer) then
           dtracers(nh4_ind) = dtracers(nh4_ind) + Nexcrete(auto_ind)
        end if
     end do
@@ -4949,7 +4900,7 @@ contains
 
     o2_production = c0
     do auto_ind = 1, auto_cnt
-       if (.not. auto_meta(auto_ind)%Nfixer) then
+       if (.not. auto_config(auto_ind)%Nfixer) then
           if (photoC(auto_ind) > c0) then
              o2_production = o2_production + photoC(auto_ind) * &
                   ((NO3_V(auto_ind) / (NO3_V(auto_ind) + NH4_V(auto_ind))) / parm_Red_D_C_O2 + &

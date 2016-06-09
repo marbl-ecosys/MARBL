@@ -23,9 +23,11 @@ module marbl_ciso_mod
   use marbl_constants_mod   , only : c1000
   use marbl_constants_mod   , only : mpercm
 
-  use marbl_living_parms_mod, only : autotrophs  
-  use marbl_living_parms_mod, only : zooplankton 
-  use marbl_parms           , only : grazing     
+  use marbl_config_mod, only : autotrophs_config
+
+  use marbl_living_parms_mod, only : autotrophs
+  use marbl_living_parms_mod, only : zooplankton
+  use marbl_parms           , only : grazing
 
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
@@ -38,7 +40,7 @@ module marbl_ciso_mod
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_interior_forcing_input_type
 
-  use marbl_internal_types  , only : autotroph_type
+  use marbl_internal_types  , only : autotroph_parms_type
   use marbl_internal_types  , only : column_sinking_particle_type
   use marbl_internal_types  , only : marbl_interior_share_type
   use marbl_internal_types  , only : marbl_zooplankton_share_type
@@ -158,23 +160,23 @@ contains
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '13C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon-13'
+       marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // '13C'
+       marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Carbon-13'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '14C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon-14'
+       marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // '14C'
+       marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Carbon-14'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
        if (n.gt.0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Ca13CO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Ca13CO3'
+          marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Ca13CO3'
+          marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Ca13CO3'
         end if
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
        if (n.gt.0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Ca14CO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Ca14CO3'
+          marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Ca14CO3'
+          marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Ca14CO3'
        endif
     end do
 
@@ -692,7 +694,7 @@ contains
           ! C13 & C14 CaCO3 production
           !-----------------------------------------------------------------------
 
-          if (autotrophs(auto_ind)%imp_calcifier) then
+          if (autotrophs_config(auto_ind)%imp_calcifier) then
              
              R13C_CaCO3_PROD(k) = R13C_DIC(k) + R13C_std * eps_carb / c1000 
              
@@ -962,7 +964,7 @@ contains
     case ('KellerMorel')
        do auto_ind = 1, autotroph_cnt
 
-          if (autotrophs(auto_ind)%kSiO3 > c0) then
+          if (autotrophs_config(auto_ind)%silicifier) then
              !----------------------------------------------------------------------------------------
              ! Diatom based on P. tricornumtum ( Keller and morel, 1999; Popp et al., 1998 )
              !----------------------------------------------------------------------------------------
@@ -973,7 +975,7 @@ contains
              cell_permea(auto_ind)          = 3.3e-5_r8    ! cell wall permeability to CO2(aq) (m/s)
              cell_eps_fix(auto_ind)         = 26.6_r8      ! fractionation effect of carbon fixation
 
-          else if (autotrophs(auto_ind)%Nfixer) then
+          else if (autotrophs_config(auto_ind)%Nfixer) then
              !----------------------------------------------------------------------------------------
              ! Diazotroph based on  Standard Phyto of Rau et al., (1996)
              !----------------------------------------------------------------------------------------
@@ -993,7 +995,7 @@ contains
              cell_permea(auto_ind)          = 3.0e-8_r8     ! cell wall permeability to CO2(aq) (m/s)
              cell_eps_fix(auto_ind)         = 30.0_r8       ! fractionation effect of carbon fixation
 
-         !else if (autotrophs(auto_ind)%exp_calcifier) then
+         !else if (autotrophs_config(auto_ind)%exp_calcifier) then
              !Currently not set up to separate exp_calcifiers, needs cell_radius value from data
              !----------------------------------------------------------------------------------------
              ! Calcifier based on P. glacialis ( Keller and morel, 1999; Popp et al., 1998 )
@@ -1007,7 +1009,8 @@ contains
              !   cell_permea(auto_ind)          = 1.1e-5_r8    ! cell wall permeability to CO2(aq) (m/s)
              !   cell_eps_fix(auto_ind)         = 23.0_r8      ! fractionation effect of carbon fixation
              
-          else if (autotrophs(auto_ind)%Nfixer .and. autotrophs(auto_ind)%kSiO3 > c0) then
+          else if (autotrophs_config(auto_ind)%Nfixer .and.                   &
+                   autotrophs_config(auto_ind)%silicifier) then
               log_message = "ciso: Currently Keller and Morel fractionation does not work for Diatoms-Diazotrophs"
               call marbl_status_log%log_error(log_message, subname)
               return
@@ -1656,7 +1659,7 @@ contains
 
     integer(int_kind)                , intent(in)    :: column_km                     ! number of active model layers
     integer(int_kind)                , intent(in)    :: autotroph_cnt                 ! autotroph_cnt
-    type(autotroph_type)             , intent(in)    :: autotroph_meta(autotroph_cnt) ! autotroph metadata
+    type(autotroph_parms_type)       , intent(in)    :: autotroph_meta(autotroph_cnt) ! autotroph metadata
     type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
     type(marbl_autotroph_share_type) , intent(in)    :: autotroph_share(autotroph_cnt, column_km)
     type(autotroph_local_type)       , intent(inout) :: autotroph_loc(autotroph_cnt, column_km)

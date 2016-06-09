@@ -11,7 +11,8 @@ module marbl_living_parms_mod
   use marbl_config_mod, only : marbl_config_vars_type
 
   use marbl_internal_types, only : zooplankton_type
-  use marbl_internal_types, only : autotroph_type
+  use marbl_internal_types, only : autotroph_config_type
+  use marbl_internal_types, only : autotroph_parms_type
 
   use marbl_logging, only : marbl_log_type
 
@@ -28,8 +29,8 @@ module marbl_living_parms_mod
 
   ! Zooplankton & autotrophs are needed prior to rest of initialization because
   ! tracer count depends on them
-  type(zooplankton_type), target :: zooplankton(zooplankton_cnt)
-  type(autotroph_type),   target :: autotrophs(autotroph_cnt)
+  type(zooplankton_type),     target :: zooplankton(zooplankton_cnt)
+  type(autotroph_parms_type), target :: autotrophs(autotroph_cnt)
 
   !---------------------------------------------------------------------
   !  Datatype for marbl_instance%living_parameters
@@ -42,7 +43,7 @@ module marbl_living_parms_mod
 
   private :: r8, int_kind, log_kind, char_len
   private :: marbl_config_vars_type
-  private :: zooplankton_type, autotroph_type
+  private :: zooplankton_type, autotroph_config_type, autotroph_parms_type
   private :: marbl_log_type
   private :: c0, dps
   private :: autotroph_cnt, zooplankton_cnt
@@ -51,8 +52,7 @@ contains
 
   subroutine marbl_living_parms_set_defaults(marbl_status_log)
 
-    use marbl_config_mod, only : auto_names
-    use marbl_config_mod, only : zoo_names
+    use marbl_config_mod, only : autotrophs_config
 
     type(marbl_log_type), intent(inout) :: marbl_status_log
 
@@ -64,18 +64,9 @@ contains
     !  &marbl_living_parms_nml
     !-----------------------------------------------------------------------
 
-    do n=1,size(auto_names)
-      call autotrophs(n)%put_sname(auto_names(n), marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace('autotroph%put_sname', subname)
-        return
-      end if
-      select case (trim(auto_names(n)))
+    do n=1,autotroph_cnt
+      select case (trim(autotrophs_config(n)%sname))
         case ('sp')
-          autotrophs(n)%lname         = 'Small Phyto'
-          autotrophs(n)%Nfixer        = .false.
-          autotrophs(n)%imp_calcifier = .true.
-          autotrophs(n)%exp_calcifier = .false.
           autotrophs(n)%kFe           = 0.03e-3_r8
           autotrophs(n)%kPO4          = 0.01_r8
           autotrophs(n)%kDOP          = 0.2_r8
@@ -97,10 +88,6 @@ contains
           autotrophs(n)%agg_rate_min  = 0.01_r8
           autotrophs(n)%loss_poc      = 0.0_r8
         case ('diat')
-          autotrophs(n)%lname         = 'Diatom'
-          autotrophs(n)%Nfixer        = .false.
-          autotrophs(n)%imp_calcifier = .false.
-          autotrophs(n)%exp_calcifier = .false.
           autotrophs(n)%kFe           = 0.07e-3_r8
           autotrophs(n)%kPO4          = 0.05_r8
           autotrophs(n)%kDOP          = 0.5_r8
@@ -122,10 +109,6 @@ contains
           autotrophs(n)%agg_rate_min  = 0.02_r8
           autotrophs(n)%loss_poc      = 0.0_r8
         case ('diaz')
-          autotrophs(n)%lname         = 'Diazotroph'
-          autotrophs(n)%Nfixer        = .true.
-          autotrophs(n)%imp_calcifier = .false.
-          autotrophs(n)%exp_calcifier = .false.
           autotrophs(n)%kFe           = 0.03e-3_r8
           autotrophs(n)%kPO4          = 0.0125_r8
           autotrophs(n)%kDOP          = 0.05_r8
@@ -147,10 +130,6 @@ contains
           autotrophs(n)%agg_rate_min  = 0.01_r8
           autotrophs(n)%loss_poc      = 0.0_r8
         case DEFAULT
-          autotrophs(n)%lname         = 'unknown'
-          autotrophs(n)%Nfixer        = .false.
-          autotrophs(n)%imp_calcifier = .false.
-          autotrophs(n)%exp_calcifier = .false.
           autotrophs(n)%kFe           = c0
           autotrophs(n)%kPO4          = c0
           autotrophs(n)%kDOP          = c0
@@ -174,25 +153,11 @@ contains
       end select
     end do
 
-    do n=1,size(zoo_names)
-      call zooplankton(n)%put_sname(zoo_names(n), marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace('zooplankton%put_sname', subname)
-        return
-      end if
-      select case (trim(zoo_names(n)))
-        case ('zoo')
-          zooplankton(n)%lname      = 'Zooplankton'
-          zooplankton(n)%z_mort_0   = 0.1_r8 * dps
-          zooplankton(n)%z_mort2_0  = 0.4_r8 * dps
-          zooplankton(n)%loss_thres = 0.075_r8
-        case DEFAULT
-          zooplankton(n)%lname      = 'unknown'
-          zooplankton(n)%z_mort_0   = c0
-          zooplankton(n)%z_mort2_0  = c0
-          zooplankton(n)%loss_thres = c0
-      end select
-    end do
+    zooplankton(1)%sname      = 'zoo'
+    zooplankton(1)%lname      = 'Zooplankton'
+    zooplankton(1)%z_mort_0   = 0.1_r8 * dps
+    zooplankton(1)%z_mort2_0  = 0.4_r8 * dps
+    zooplankton(1)%loss_thres = 0.075_r8
 
   end subroutine marbl_living_parms_set_defaults
 
@@ -236,6 +201,7 @@ contains
   subroutine marbl_living_parms_construct(this, marbl_status_log)
 
     use marbl_config_mod, only : log_add_var_error
+    use marbl_config_mod, only : autotrophs_config
 
     class(marbl_living_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
@@ -249,7 +215,7 @@ contains
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
 
-    character(len=char_len) :: prefix
+    character(len=char_len) :: prefix, comment
     integer :: n
 
     if (associated(this%vars)) then
@@ -266,59 +232,9 @@ contains
     !-----------------------------!
 
     do n=1,size(autotrophs)
-      write(prefix, "(3A)") 'autotrophs(', trim(autotrophs(n)%sname), ')%'
-
-      write(sname, "(2A)") trim(prefix), 'lname'
-      lname    = 'Long name of autotroph'
-      units    = 'unitless'
-      datatype = 'string'
-      group    = 'marbl_living_parms_nml'
-      sptr     => autotrophs(n)%lname
-      call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      write(sname, "(2A)") trim(prefix), 'Nfixer'
-      lname    = 'Flag is true if this autotroph fixes N2'
-      units    = 'unitless'
-      datatype = 'logical'
-      group    = 'marbl_living_parms_nml'
-      lptr     => autotrophs(n)%Nfixer
-      call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, lptr=lptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      write(sname, "(2A)") trim(prefix), 'imp_calcifier'
-      lname    = 'Flag is true if this autotroph implicitly handles calcification'
-      units    = 'unitless'
-      datatype = 'logical'
-      group    = 'marbl_living_parms_nml'
-      lptr     => autotrophs(n)%imp_calcifier
-      call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, lptr=lptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      write(sname, "(2A)") trim(prefix), 'exp_calcifier'
-      lname    = 'Flag is true if this autotroph explicitly handles calcification'
-      units    = 'unitless'
-      datatype = 'logical'
-      group    = 'marbl_living_parms_nml'
-      lptr     => autotrophs(n)%exp_calcifier
-      call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, lptr=lptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+      write(prefix, "(A,I0,A)") 'autotrophs(', n, ')%'
+      write(comment, "(2A)") 'autotroph short name = ',                       &
+                             trim(autotrophs_config(n)%sname)
 
       write(sname, "(2A)") trim(prefix), 'kFe'
       lname    = 'nutrient uptake half-sat constants'
@@ -327,7 +243,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%kFe
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -340,7 +256,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%kPO4
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -353,7 +269,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%kDOP
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -366,7 +282,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%kNO3
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -379,7 +295,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%kNH4
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -392,7 +308,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%kSiO3
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -405,7 +321,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%Qp
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -418,7 +334,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%gQFe_0
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -431,7 +347,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%gQFe_min
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -444,7 +360,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%alphaPi
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -457,7 +373,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%PCref
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -470,7 +386,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%thetaN_max
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -483,7 +399,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%loss_thres
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -496,7 +412,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%loss_thres2
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -509,7 +425,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%temp_thres
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -522,7 +438,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%mort
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -535,7 +451,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%mort2
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -548,7 +464,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%agg_rate_max
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -561,7 +477,7 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%agg_rate_min
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -574,7 +490,8 @@ contains
       group    = 'marbl_living_parms_nml'
       rptr     => autotrophs(n)%loss_poc
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr, add_space=.true.)
+                        marbl_status_log, rptr=rptr, add_space=.true.,      &
+                        comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -583,7 +500,20 @@ contains
     end do
 
     do n=1,size(zooplankton)
-      write(prefix, "(3A)") 'zooplankton(', trim(zooplankton(n)%sname), ')%'
+      write(prefix, "(A,I0,A)") 'zooplankton(', n, ')%'
+
+      write(sname, "(2A)") trim(prefix), 'sname'
+      lname    = 'Short name of zooplankton'
+      units    = 'unitless'
+      datatype = 'string'
+      group    = 'marbl_living_parms_nml'
+      sptr     => zooplankton(n)%sname
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, sptr=sptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
 
       write(sname, "(2A)") trim(prefix), 'lname'
       lname    = 'Long name of zooplankton'
