@@ -120,12 +120,13 @@ module marbl_interface
 
    contains
 
-     procedure, public :: init             
-     procedure, public :: get_tracer_index
-     procedure, public :: set_interior_forcing     
-     procedure, public :: set_surface_forcing
-     procedure, public :: set_global_scalars
-     procedure, public :: shutdown         
+     procedure, public  :: init             
+     procedure, private :: glo_vars_init
+     procedure, public  :: get_tracer_index
+     procedure, public  :: set_interior_forcing     
+     procedure, public  :: set_surface_forcing
+     procedure, public  :: set_global_scalars
+     procedure, public  :: shutdown         
 
   end type marbl_interface_class
   
@@ -275,7 +276,7 @@ contains
       return
     end if
 
-    call glo_vars_init(this, num_surface_elements)
+    call this%glo_vars_init(num_surface_elements)
 
     !--------------------------------------------------------------------
     ! Initialize public data / general tracer metadata
