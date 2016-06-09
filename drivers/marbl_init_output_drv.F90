@@ -41,13 +41,6 @@ Contains
       return
     end if
 
-    ! Call marbl%living_init
-    call marbl_instance%living_init(gcm_nl_buffer = gcm_namelist)
-    if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%living_init', subname)
-      return
-    end if
-
     ! Call marbl%init
     call marbl_instance%init(gcm_nl_buffer = gcm_namelist,                    &
                              gcm_num_levels = km,                             &

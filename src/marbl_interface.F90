@@ -51,8 +51,6 @@ module marbl_interface
 
   use marbl_config_mod, only : marbl_config_type
 
-  use marbl_living_parms_mod, only : marbl_living_parms_type
-
   use marbl_parms, only : marbl_parms_type
 
   implicit none
@@ -77,7 +75,6 @@ module marbl_interface
      type(marbl_tracer_index_type)             , public               :: tracer_indices
      type(marbl_log_type)                      , public               :: StatusLog
      type(marbl_config_type)                   , public               :: configuration
-     type(marbl_living_parms_type)             , public               :: living_parameters
      type(marbl_parms_type)                    , public               :: parameters
 
      type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
@@ -118,7 +115,6 @@ module marbl_interface
    contains
 
      procedure, public :: config
-     procedure, public :: living_init
      procedure, public :: init
      procedure, public :: get_tracer_index
      procedure, public :: set_interior_forcing
@@ -196,64 +192,6 @@ contains
 
   !***********************************************************************
   
-  subroutine living_init(this,            &
-       gcm_nl_buffer)
-
-    use marbl_namelist_mod    , only : marbl_nl_cnt
-    use marbl_namelist_mod    , only : marbl_nl_buffer_size
-    use marbl_living_parms_mod, only : marbl_living_parms_set_defaults
-    use marbl_living_parms_mod, only : marbl_living_parms_read_namelist
-
-    class(marbl_interface_class), intent(inout)     :: this
-    character(marbl_nl_buffer_size),  intent(in)    :: gcm_nl_buffer(marbl_nl_cnt)
-
-    character(*), parameter :: subname = 'marbl_interface:living_init'
-
-    !-----------------------------------------------------------------------
-    !  Lock and log this%configuration
-    !-----------------------------------------------------------------------
-
-    call this%configuration%lock_and_log(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('configuration%lock_and_log', subname)
-      return
-    end if
-
-    !---------------------------------------------------------------------------
-    ! set default values for living parameters
-    !---------------------------------------------------------------------------
-
-    call marbl_living_parms_set_defaults(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_living_parms_set_defaults', subname)
-      return
-    end if
-
-    !---------------------------------------------------------------------------
-    ! read living parameters from namelist
-    ! TODO: if present
-    !---------------------------------------------------------------------------
-
-    call marbl_living_parms_read_namelist(gcm_nl_buffer, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_living_parms_read_namelist', subname)
-      return
-    end if
-
-    !---------------------------------------------------------------------------
-    ! construct living_parameters_type
-    !---------------------------------------------------------------------------
-
-    call this%living_parameters%construct(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("living_parameters%construct()", subname)
-      return
-    end if
-
-  end subroutine living_init
-
-  !***********************************************************************
-  
   subroutine init(this,                   &
        gcm_nl_buffer,                     &
        gcm_num_levels,                    &
@@ -273,8 +211,7 @@ contains
     use marbl_mod             , only : marbl_update_tracer_file_metadata
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
     use marbl_config_mod      , only : autotrophs_config
-    use marbl_living_parms_mod, only : autotrophs
-    use marbl_living_parms_mod, only : zooplankton
+    use marbl_config_mod      , only : zooplankton_config
     use marbl_parms           , only : tracer_init_ext
     use marbl_parms           , only : ciso_tracer_init_ext
     use marbl_parms           , only : marbl_parms_set_defaults
@@ -308,12 +245,12 @@ contains
          )
 
     !-----------------------------------------------------------------------
-    !  Lock and log this%living_parameters
+    !  Lock and log this%configuration
     !-----------------------------------------------------------------------
 
-    call this%living_parameters%lock_and_log(this%StatusLog)
+    call this%configuration%lock_and_log(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('living_parameters%lock_and_log', subname)
+      call this%StatusLog%log_error_trace('configuration%lock_and_log', subname)
       return
     end if
 
@@ -322,7 +259,7 @@ contains
     !-----------------------------------------------------------------------
 
     call this%tracer_indices%construct(this%ciso_on, autotrophs_config,       &
-         autotrophs, zooplankton, this%StatusLog)
+         zooplankton_config, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("tracer_indices%construct", subname)
       return

@@ -96,10 +96,10 @@ module marbl_mod
   use marbl_config_mod, only : lflux_gas_co2
   use marbl_config_mod, only : lecovars_full_depth_tavg
   use marbl_config_mod, only : autotrophs_config
+  use marbl_config_mod, only : zooplankton_config
 
-  use marbl_living_parms_mod, only : autotrophs
-  use marbl_living_parms_mod, only : zooplankton
-
+  use marbl_parms, only : autotrophs
+  use marbl_parms, only : zooplankton
   use marbl_parms, only : grz_fnc_michaelis_menten
   use marbl_parms, only : grz_fnc_sigmoidal
   use marbl_parms, only : f_qsw_par
@@ -175,7 +175,7 @@ module marbl_mod
   use marbl_sizes, only : grazer_prey_cnt
 
   use marbl_internal_types  , only : carbonate_type
-  use marbl_internal_types  , only : zooplankton_type
+  use marbl_internal_types  , only : zooplankton_parms_type
   use marbl_internal_types  , only : autotroph_parms_type
   use marbl_internal_types  , only : autotroph_config_type
   use marbl_internal_types  , only : zooplankton_secondary_species_type
@@ -2854,8 +2854,8 @@ contains
 
     do zoo_ind = 1, zooplankton_cnt
        n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
-       marbl_tracer_metadata(n)%short_name = trim(zooplankton(zoo_ind)%sname) // 'C'
-       marbl_tracer_metadata(n)%long_name  = trim(zooplankton(zoo_ind)%lname) // ' Carbon'
+       marbl_tracer_metadata(n)%short_name = trim(zooplankton_config(zoo_ind)%sname) // 'C'
+       marbl_tracer_metadata(n)%long_name  = trim(zooplankton_config(zoo_ind)%lname) // ' Carbon'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
@@ -3540,7 +3540,7 @@ contains
     integer(int_kind)                        , intent(in)    :: k
     type(marbl_domain_type)                  , intent(in)    :: domain
     integer(int_kind)                        , intent(in)    :: zoo_cnt
-    type(zooplankton_type)                   , intent(in)    :: zoo_meta(zoo_cnt)
+    type(zooplankton_parms_type)             , intent(in)    :: zoo_meta(zoo_cnt)
     real(r8)                                 , intent(in)    :: zooC(zoo_cnt)
     real(r8)                                 , intent(in)    :: Tfunc
     type(zooplankton_secondary_species_type) , intent(inout) :: zooplankton_secondary_species(zoo_cnt)
@@ -4650,7 +4650,7 @@ contains
     integer                                  , intent(in)  :: zoo_cnt
     type(autotroph_config_type)              , intent(in)  :: auto_config(auto_cnt)
     type(autotroph_parms_type)               , intent(in)  :: auto_meta(auto_cnt)
-    type(zooplankton_type)                   , intent(in)  :: zoo_meta(zoo_cnt)
+    type(zooplankton_parms_type)             , intent(in)  :: zoo_meta(zoo_cnt)
     type(zooplankton_secondary_species_type) , intent(in)  :: zooplankton_secondary_species(zoo_cnt)
     type(autotroph_secondary_species_type)   , intent(in)  :: autotroph_secondary_species(auto_cnt)
     type(dissolved_organic_matter_type)      , intent(in)  :: dissolved_organic_matter

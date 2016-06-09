@@ -13,9 +13,9 @@ module marbl_diagnostics_mod
   use marbl_sizes           , only : zooplankton_cnt
 
   use marbl_config_mod, only : autotrophs_config
+  use marbl_config_mod, only : zooplankton_config
 
-  use marbl_living_parms_mod, only : autotrophs
-  use marbl_living_parms_mod, only : zooplankton
+  use marbl_parms, only : autotrophs
 
   use marbl_constants_mod   , only : c0
   use marbl_constants_mod   , only : c1
@@ -3082,8 +3082,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname    = trim(zooplankton(n)%lname) // ' Loss'
-             sname    = trim(zooplankton(n)%sname) // '_loss'
+             lname    = trim(zooplankton_config(n)%lname) // ' Loss'
+             sname    = trim(zooplankton_config(n)%sname) // '_loss'
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
@@ -3098,8 +3098,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname    = trim(zooplankton(n)%lname) // ' Loss to POC'
-             sname    = trim(zooplankton(n)%sname) // '_loss_poc'
+             lname    = trim(zooplankton_config(n)%lname) // ' Loss to POC'
+             sname    = trim(zooplankton_config(n)%sname) // '_loss_poc'
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
@@ -3114,8 +3114,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname    = trim(zooplankton(n)%lname) // ' Loss to DOC'
-             sname    = trim(zooplankton(n)%sname) // '_loss_doc'
+             lname    = trim(zooplankton_config(n)%lname) // ' Loss to DOC'
+             sname    = trim(zooplankton_config(n)%sname) // '_loss_doc'
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
@@ -3130,8 +3130,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname    = trim(zooplankton(n)%lname) // ' grazing loss'
-             sname    = 'graze_' // trim(zooplankton(n)%sname)
+             lname    = trim(zooplankton_config(n)%lname) // ' grazing loss'
+             sname    = 'graze_' // trim(zooplankton_config(n)%sname)
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
@@ -3146,8 +3146,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname    = trim(zooplankton(n)%lname) // ' grazing loss to POC'
-             sname    = 'graze_' // trim(zooplankton(n)%sname) // '_poc'
+             lname    = trim(zooplankton_config(n)%lname) // ' grazing loss to POC'
+             sname    = 'graze_' // trim(zooplankton_config(n)%sname) // '_poc'
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
@@ -3162,8 +3162,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname    = trim(zooplankton(n)%lname) // ' grazing loss to DOC'
-             sname    = 'graze_' // trim(zooplankton(n)%sname) // '_doc'
+             lname    = trim(zooplankton_config(n)%lname) // ' grazing loss to DOC'
+             sname    = 'graze_' // trim(zooplankton_config(n)%sname) // '_doc'
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
@@ -3178,8 +3178,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname    = trim(zooplankton(n)%lname) // ' grazing loss to ZOO'
-             sname    = 'graze_' // trim(zooplankton(n)%sname) // '_zoo'
+             lname    = trim(zooplankton_config(n)%lname) // ' grazing loss to ZOO'
+             sname    = 'graze_' // trim(zooplankton_config(n)%sname) // '_zoo'
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.
@@ -3194,8 +3194,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             lname    = trim(zooplankton(n)%lname) // ' grazing gain'
-             sname    = 'x_graze_' // trim(zooplankton(n)%sname)
+             lname    = trim(zooplankton_config(n)%lname) // ' grazing gain'
+             sname    = 'x_graze_' // trim(zooplankton_config(n)%sname)
              units    = 'mmol/m^3/s'
              vgrid    = 'layer_avg'
              truncate = .true.

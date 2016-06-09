@@ -26,6 +26,8 @@ module marbl_parms
   use marbl_constants_mod, only : c1
   use marbl_constants_mod, only : dps
 
+  use marbl_internal_types, only : autotroph_parms_type
+  use marbl_internal_types, only : zooplankton_parms_type
   use marbl_internal_types, only : grazing_type
 
   use marbl_interface_types, only : marbl_tracer_read_type
@@ -73,7 +75,10 @@ module marbl_parms
        parm_scalelen_z,       & ! depths of prescribed scalelen values
        parm_scalelen_vals       ! prescribed scalelen values
 
-  type(grazing_type)     :: grazing(grazer_prey_cnt, zooplankton_cnt)
+  type(zooplankton_parms_type), target :: zooplankton(zooplankton_cnt)
+  type(autotroph_parms_type),   target :: autotrophs(autotroph_cnt)
+  type(grazing_type),           target :: grazing(grazer_prey_cnt, zooplankton_cnt)
+
   !---------------------------------------------------------------------
   !  Variables read in via &marbl_ecosys_base_nml
   !---------------------------------------------------------------------
@@ -392,7 +397,7 @@ contains
     use marbl_constants_mod   , only : c0, c2, c1000
     use marbl_sizes           , only : marbl_total_tracer_cnt
     use marbl_config_mod      , only : autotrophs_config
-    use marbl_living_parms_mod, only : zooplankton
+    use marbl_config_mod      , only : zooplankton_config
 
     integer,              intent(in)    :: km ! max number of levels
 
@@ -423,15 +428,111 @@ contains
     parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8,  750.0e2_r8 /)
     parm_scalelen_vals = (/     1.0_r8,     3.3_r8,     4.6_r8,      5.0_r8 /) ! x1 default
 
+    ! Autotrophs
+    do n=1,autotroph_cnt
+      select case (trim(autotrophs_config(n)%sname))
+        case ('sp')
+          autotrophs(n)%kFe           = 0.03e-3_r8
+          autotrophs(n)%kPO4          = 0.01_r8
+          autotrophs(n)%kDOP          = 0.2_r8
+          autotrophs(n)%kNO3          = 0.25_r8
+          autotrophs(n)%kNH4          = 0.0125_r8
+          autotrophs(n)%kSiO3         = 0.0_r8
+          autotrophs(n)%Qp            = 0.00855_r8
+          autotrophs(n)%gQfe_0        = 30.0e-6_r8
+          autotrophs(n)%gQfe_min      = 3.0e-6_r8
+          autotrophs(n)%alphaPI       = 0.39_r8 * dps
+          autotrophs(n)%PCref         = 5.5_r8 * dps
+          autotrophs(n)%thetaN_max    = 2.5_r8
+          autotrophs(n)%loss_thres    = 0.02_r8
+          autotrophs(n)%loss_thres2   = 0.0_r8
+          autotrophs(n)%temp_thres    = -10.0_r8
+          autotrophs(n)%mort          = 0.1_r8 * dps
+          autotrophs(n)%mort2         = 0.01_r8 * dps
+          autotrophs(n)%agg_rate_max  = 0.5_r8
+          autotrophs(n)%agg_rate_min  = 0.01_r8
+          autotrophs(n)%loss_poc      = 0.0_r8
+        case ('diat')
+          autotrophs(n)%kFe           = 0.07e-3_r8
+          autotrophs(n)%kPO4          = 0.05_r8
+          autotrophs(n)%kDOP          = 0.5_r8
+          autotrophs(n)%kNO3          = 1.0_r8
+          autotrophs(n)%kNH4          = 0.05_r8
+          autotrophs(n)%kSiO3         = 0.8_r8
+          autotrophs(n)%Qp            = 0.00855_r8
+          autotrophs(n)%gQfe_0        = 30.0e-6_r8
+          autotrophs(n)%gQfe_min      = 3.0e-6_r8
+          autotrophs(n)%alphaPI       = 0.29_r8 * dps
+          autotrophs(n)%PCref         = 5.5_r8 * dps
+          autotrophs(n)%thetaN_max    = 4.0_r8
+          autotrophs(n)%loss_thres    = 0.02_r8
+          autotrophs(n)%loss_thres2   = 0.0_r8
+          autotrophs(n)%temp_thres    = -10.0_r8
+          autotrophs(n)%mort          = 0.1_r8 * dps
+          autotrophs(n)%mort2         = 0.01_r8 * dps
+          autotrophs(n)%agg_rate_max  = 0.5_r8
+          autotrophs(n)%agg_rate_min  = 0.02_r8
+          autotrophs(n)%loss_poc      = 0.0_r8
+        case ('diaz')
+          autotrophs(n)%kFe           = 0.03e-3_r8
+          autotrophs(n)%kPO4          = 0.0125_r8
+          autotrophs(n)%kDOP          = 0.05_r8
+          autotrophs(n)%kNO3          = 4.0_r8
+          autotrophs(n)%kNH4          = 0.4_r8
+          autotrophs(n)%kSiO3         = 0.0_r8
+          autotrophs(n)%Qp            = 0.002735_r8
+          autotrophs(n)%gQfe_0        = 60.0e-6_r8
+          autotrophs(n)%gQfe_min      = 6.0e-6_r8
+          autotrophs(n)%alphaPI       = 0.39_r8 * dps
+          autotrophs(n)%PCref         = 1.55_r8 * dps
+          autotrophs(n)%thetaN_max    = 2.5_r8
+          autotrophs(n)%loss_thres    = 0.02_r8
+          autotrophs(n)%loss_thres2   = 0.001_r8
+          autotrophs(n)%temp_thres    = 15.0_r8
+          autotrophs(n)%mort          = 0.1_r8 * dps
+          autotrophs(n)%mort2         = 0.01_r8 * dps
+          autotrophs(n)%agg_rate_max  = 0.5_r8
+          autotrophs(n)%agg_rate_min  = 0.01_r8
+          autotrophs(n)%loss_poc      = 0.0_r8
+        case DEFAULT
+          autotrophs(n)%kFe           = c0
+          autotrophs(n)%kPO4          = c0
+          autotrophs(n)%kDOP          = c0
+          autotrophs(n)%kNO3          = c0
+          autotrophs(n)%kNH4          = c0
+          autotrophs(n)%kSiO3         = c0
+          autotrophs(n)%Qp            = c0
+          autotrophs(n)%gQfe_0        = c0
+          autotrophs(n)%gQfe_min      = c0
+          autotrophs(n)%alphaPI       = c0
+          autotrophs(n)%PCref         = c0
+          autotrophs(n)%thetaN_max    = c0
+          autotrophs(n)%loss_thres    = c0
+          autotrophs(n)%loss_thres2   = c0
+          autotrophs(n)%temp_thres    = c0
+          autotrophs(n)%mort          = c0
+          autotrophs(n)%mort2         = c0
+          autotrophs(n)%agg_rate_max  = c0
+          autotrophs(n)%agg_rate_min  = c0
+          autotrophs(n)%loss_poc      = c0
+      end select
+    end do
+
+    ! zooplankton
+    zooplankton(1)%z_mort_0   = 0.1_r8 * dps
+    zooplankton(1)%z_mort2_0  = 0.4_r8 * dps
+    zooplankton(1)%loss_thres = 0.075_r8
+
+
     ! predator-prey relationships
     zoo_ind = 1
     prey_ind = sp_ind
     write(grazing(prey_ind,zoo_ind)%sname, "(4A)") 'grz_',                    &
                                      trim(autotrophs_config(prey_ind)%sname), &
-                                     '_', trim(zooplankton(zoo_ind)%sname)
+                                     '_', trim(zooplankton_config(zoo_ind)%sname)
     write(grazing(prey_ind,zoo_ind)%lname, "(4A)") 'Grazing of ',             &
                                      trim(autotrophs_config(prey_ind)%sname), &
-                                     ' by ', trim(zooplankton(zoo_ind)%sname)
+                                     ' by ', trim(zooplankton_config(zoo_ind)%sname)
     grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
     grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
     grazing(prey_ind,zoo_ind)%zoo_ind          = -1
@@ -447,10 +548,10 @@ contains
     prey_ind = diat_ind
     write(grazing(prey_ind,zoo_ind)%sname, "(4A)") 'grz_',                    &
                                      trim(autotrophs_config(prey_ind)%sname), &
-                                     '_', trim(zooplankton(zoo_ind)%sname)
+                                     '_', trim(zooplankton_config(zoo_ind)%sname)
     write(grazing(prey_ind,zoo_ind)%lname, "(4A)") 'Grazing of ',             &
                                      trim(autotrophs_config(prey_ind)%sname), &
-                                     ' by ', trim(zooplankton(zoo_ind)%sname)
+                                     ' by ', trim(zooplankton_config(zoo_ind)%sname)
     grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
     grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
     grazing(prey_ind,zoo_ind)%zoo_ind          = -1
@@ -466,10 +567,10 @@ contains
     prey_ind = diaz_ind
     write(grazing(prey_ind,zoo_ind)%sname, "(4A)") 'grz_',                    &
                                      trim(autotrophs_config(prey_ind)%sname), &
-                                     '_', trim(zooplankton(zoo_ind)%sname)
+                                     '_', trim(zooplankton_config(zoo_ind)%sname)
     write(grazing(prey_ind,zoo_ind)%lname, "(4A)") 'Grazing of ',             &
                                      trim(autotrophs_config(prey_ind)%sname), &
-                                     ' by ', trim(zooplankton(zoo_ind)%sname)
+                                     ' by ', trim(zooplankton_config(zoo_ind)%sname)
     grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
     grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
     grazing(prey_ind,zoo_ind)%zoo_ind          = -1
@@ -881,6 +982,8 @@ contains
   subroutine marbl_parms_construct(this, marbl_status_log)
 
     use marbl_config_mod, only : log_add_var_error
+    use marbl_config_mod, only : autotrophs_config
+    use marbl_config_mod, only : zooplankton_config
 
     class(marbl_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
@@ -892,6 +995,9 @@ contains
     integer(int_kind),       pointer :: iptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
+
+    character(len=char_len) :: prefix, comment
+    integer :: n
 
     if (associated(this%vars)) then
       write(log_message, "(A)") "this%parameters has been constructed already"
@@ -1109,6 +1215,320 @@ contains
       call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
       return
     end if
+
+    do n=1,size(autotrophs)
+      write(prefix, "(A,I0,A)") 'autotrophs(', n, ')%'
+      write(comment, "(2A)") 'autotroph short name = ',                       &
+                             trim(autotrophs_config(n)%sname)
+
+      write(sname, "(2A)") trim(prefix), 'kFe'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kFe
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'kPO4'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kPO4
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'kDOP'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kDOP
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'kNO3'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kNO3
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'kNH4'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kNH4
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'kSiO3'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kSiO3
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'Qp'
+      lname    = 'P/C ratio'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%Qp
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'gQfe_0'
+      lname    = 'initial Fe/C ratio'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%gQFe_0
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'gQfe_min'
+      lname    = 'minimum Fe/C ratio'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%gQFe_min
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'alphaPi'
+      lname    = 'Initial slope of P_I curve (GD98)'
+      units    = 'mmol C m^2 / (mg Chl W s)'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%alphaPi
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'PCref'
+      lname    = 'max C-spec growth rate at Tref'
+      units    = '1/s'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%PCref
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'thetaN_max'
+      lname    = 'max thetaN (Chl/N)'
+      units    = 'mg Chl / mmol N'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%thetaN_max
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'loss_thres'
+      lname    = 'concentration where losses go to zero'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%loss_thres
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'loss_thres2'
+      lname    = 'concentration where losses go to zero'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%loss_thres2
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'temp_thres'
+      lname    = 'Temperature where concentration threshold and photosynthesis rate drop'
+      units    = 'deg C'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%temp_thres
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'mort'
+      lname    = 'linear mortality rate'
+      units    = '1/s'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%mort
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'mort2'
+      lname    = 'quadratic mortality rate'
+      units    = '1/s/(mmol C/m^3)'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%mort2
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'agg_rate_max'
+      lname    = 'Maximum agg rate'
+      units    = '1/d'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%agg_rate_max
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'agg_rate_min'
+      lname    = 'Minimum agg rate'
+      units    = '1/d'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%agg_rate_min
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'loss_poc'
+      lname    = 'routing of loss term'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%loss_poc
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, add_space=.true.,      &
+                        comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+    end do
+
+    do n=1,size(zooplankton)
+      write(prefix, "(A,I0,A)") 'zooplankton(', n, ')%'
+      write(comment, "(2A)") 'zooplankton short name = ',                     &
+                             trim(zooplankton_config(n)%sname)
+
+      write(sname, "(2A)") trim(prefix), 'z_mort_0'
+      lname    = 'Linear mortality rate'
+      units    = '1/s'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => zooplankton(n)%z_mort_0
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'loss_thres'
+      lname    = 'Concentration where losses go to zero'
+      units    = ''
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => zooplankton(n)%loss_thres
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'z_mort2_0'
+      lname    = 'Quadratic mortality rate'
+      units    = '1/s/(mmol C / m^3)'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => zooplankton(n)%z_mort2_0
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+    end do
 
     !-----------------------!
     ! marbl_ecosys_base_nml !

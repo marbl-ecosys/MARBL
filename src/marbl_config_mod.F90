@@ -13,6 +13,7 @@ module marbl_config_mod
   use marbl_constants_mod, only : dps
 
   use marbl_internal_types, only : autotroph_config_type
+  use marbl_internal_types, only : zooplankton_config_type
 
   implicit none
   public
@@ -30,6 +31,7 @@ module marbl_config_mod
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: locmip_k1_k2_bug_fix
   type(autotroph_config_type), dimension(autotroph_cnt), target :: autotrophs_config
+  type(zooplankton_config_type), dimension(zooplankton_cnt), target :: zooplankton_config
 
   !---------------------------------------------------------------------------
   !  Datatypes extended to use for marbl_instance%configuration,
@@ -116,6 +118,10 @@ contains
     autotrophs_config(3)%imp_calcifier = .false.
     autotrophs_config(3)%exp_calcifier = .false.
     autotrophs_config(3)%silicifier    = .false.
+
+    ! zooplankton
+    zooplankton_config(1)%sname = 'zoo'
+    zooplankton_config(1)%lname = 'Zooplankton'
 
   end subroutine marbl_config_set_defaults
 
@@ -353,6 +359,37 @@ contains
       lptr     => autotrophs_config(n)%silicifier
       call this%add_var(sname, lname, units, datatype, group,               &
                         marbl_status_log, lptr=lptr, add_space=.true.)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+    end do
+
+    do n=1, zooplankton_cnt
+      write(prefix, "(A,I0,A)") 'zooplankton_config(', n, ')%'
+
+      write(sname, "(2A)") trim(prefix), 'sname'
+      lname    = 'Short name of zooplankton'
+      units    = 'unitless'
+      datatype = 'string'
+      group    = 'marbl_config_nml'
+      sptr     => zooplankton_config(n)%sname
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, sptr=sptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'lname'
+      lname    = 'Long name of zooplankton'
+      units    = 'unitless'
+      datatype = 'string'
+      group    = 'marbl_config_nml'
+      sptr     => zooplankton_config(n)%lname
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, sptr=sptr)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return

@@ -17,19 +17,22 @@ module marbl_internal_types
   private
 
   !****************************************************************************
-
   ! derived type for grazers
-  type, public :: zooplankton_type
+
+  type, public :: zooplankton_config_type
      character(char_len)     :: sname
      character(char_len)     :: lname
+  end type zooplankton_config_type
+
+  type, public :: zooplankton_parms_type
      real    (KIND=r8)       :: z_mort_0   ! zoo linear mort rate (1/sec)
      real    (KIND=r8)       :: z_mort2_0  ! zoo quad mort rate (1/sec/((mmol C/m3))
      real    (KIND=r8)       :: loss_thres ! zoo conc. where losses go to zero
-  end type zooplankton_type
+  end type zooplankton_parms_type
 
   !****************************************************************************
+  ! derived types for autotrophs
 
-  ! derived type for functional group
   type, public :: autotroph_config_type
      character(char_len)     :: sname
      character(char_len)     :: lname
@@ -547,7 +550,7 @@ contains
   !*****************************************************************************
 
   subroutine tracer_index_constructor(this, ciso_on, autotrophs_config,       &
-             autotrophs, zooplankton, marbl_status_log)
+             zooplankton_config, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -561,8 +564,7 @@ contains
     class(marbl_tracer_index_type), intent(inout) :: this
     logical,                        intent(in)    :: ciso_on
     type(autotroph_config_type),    intent(inout) :: autotrophs_config(:)
-    type(autotroph_parms_type),     intent(inout) :: autotrophs(:)
-    type(zooplankton_type),         intent(inout) :: zooplankton(:)
+    type(zooplankton_config_type),  intent(inout) :: zooplankton_config(:)
     type(marbl_log_type),           intent(inout) :: marbl_status_log
 
     integer :: n
@@ -631,7 +633,7 @@ contains
         tracer_cnt    = tracer_cnt + 1
         this%zoo_inds(n)%C_ind = tracer_cnt
 
-        write (log_message, "(3A,I0)") 'C_ind(', trim(zooplankton(n)%sname),  &
+        write (log_message, "(3A,I0)") 'C_ind(', trim(zooplankton_config(n)%sname),  &
                                        ') = ', this%zoo_inds(n)%C_ind
         call marbl_status_log%log_noerror(log_message, subname)
 

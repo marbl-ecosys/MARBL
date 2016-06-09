@@ -25,9 +25,9 @@ module marbl_ciso_mod
 
   use marbl_config_mod, only : autotrophs_config
 
-  use marbl_living_parms_mod, only : autotrophs
-  use marbl_living_parms_mod, only : zooplankton
-  use marbl_parms           , only : grazing
+  use marbl_parms, only : autotrophs
+  use marbl_parms, only : zooplankton
+  use marbl_parms, only : grazing
 
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
