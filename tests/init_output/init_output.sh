@@ -15,7 +15,7 @@ build() {
 #------------------------------------------------------------------------------
 
 run() {
-  ../../exe/marbl.exe
+  ../../exe/marbl.exe < $NAMELIST
 }
 
 #------------------------------------------------------------------------------
@@ -24,6 +24,11 @@ if [ -z $1 ]; then
   COMPILER=gnu
 else
   COMPILER=$1
+fi
+if [ -z $2 ]; then
+  NAMELIST=marbl_in
+else
+  NAMELIST=$2
 fi
 build
 run

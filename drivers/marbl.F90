@@ -19,32 +19,24 @@ Program marbl
   character(len=marbl_nl_buffer_size) :: nl_buffer(marbl_nl_cnt)
   character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
   character(len=marbl_nl_in_size)     :: nl_str, tmp_str
-  integer                             :: nl_unit
-  integer                             :: ioerr
+  integer                             :: ioerr=0
   integer                             :: m, n
   character(len=256)                  :: testname
   logical                             :: ciso_on
   namelist /marbl_driver_nml/testname, ciso_on
 
-  ! (1) Read namelist file to array of strings
-  nl_unit      = 10
-  nl_buffer(:) = ''
-  nl_str       = ''
+  ! (1) Set namelist defaults, empty strings to pass to MARBL
   testname     = ''
   ciso_on      = .false.
+  nl_buffer(:) = ''
+  nl_str       = ''
 
-  ! Open file pop_in to read
-  open(nl_unit, file='marbl_in', action='read', access='stream', form="formatted", iostat=ioerr)
-  if (ioerr.ne.0) then
-    write(*,"(A,I0,A)") "ERROR ", ioerr, ": encountered when opening marbl_in"
-    stop 1
-  end if
-
+  ! Read namelist
   n = 0
   m = 0
   do while(ioerr.eq.0)
     n = n+m+1
-    read(unit=nl_unit, fmt="(A)", iostat=ioerr) tmp_str
+    read(*, fmt="(A)", iostat=ioerr) tmp_str
     m = len(trim(tmp_str))
     nl_str(n:n+m-1) = trim(tmp_str)
     if (ioerr.eq.0) nl_str(n+m:n+m) = achar(10)
@@ -54,7 +46,6 @@ Program marbl
     write(*,"(A)") "ERROR encountered when reading marbl_in to buffer"
     stop 1
   end if
-  close(nl_unit)
   write(*,"(A,I0,A)") "marbl_in contained ", len_trim(nl_str), " characters"
   call marbl_nl_split_string(nl_str, nl_buffer)
 
