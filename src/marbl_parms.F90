@@ -86,7 +86,7 @@ module marbl_parms
   character(char_len), target :: init_ecosys_option           ! namelist option for initialization of bgc
   character(char_len), target :: init_ecosys_init_file        ! filename for option 'file'
   character(char_len), target :: init_ecosys_init_file_fmt    ! file format for option 'file'
-  type(marbl_tracer_read_type) :: tracer_init_ext(ecosys_base_tracer_cnt) ! namelist variable for initializing tracers
+  type(marbl_tracer_read_type), target :: tracer_init_ext(ecosys_base_tracer_cnt) ! namelist variable for initializing tracers
   real(r8),            target :: iron_frac_in_dust            ! fraction by weight of iron in dust
   real(r8),            target :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
   character(char_len), target :: caco3_bury_thres_opt         ! option of threshold of caco3 burial ['fixed_depth', 'omega_calc']
@@ -115,7 +115,7 @@ module marbl_parms
   character(char_len), target :: ciso_init_ecosys_option        ! option for initialization of bgc
   character(char_len), target :: ciso_init_ecosys_init_file     ! filename for option 'file'
   character(char_len), target :: ciso_init_ecosys_init_file_fmt ! file format for option 'file'
-  type(marbl_tracer_read_type) :: ciso_tracer_init_ext(ciso_tracer_cnt) ! namelist variable for initializing tracers
+  type(marbl_tracer_read_type), target :: ciso_tracer_init_ext(ciso_tracer_cnt) ! namelist variable for initializing tracers
   character(char_len), target :: ciso_fract_factors             ! option for which biological fractionation calculation to use
 
   !---------------------------------------------------------------------
@@ -1729,11 +1729,22 @@ contains
     group     = 'marbl_ecosys_base_nml'
     sptr      => init_ecosys_init_file
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
+                        marbl_status_log, sptr=sptr, add_space=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
+
+    do n=1,ecosys_base_tracer_cnt
+      write(sname,"(A,I0,A)") 'tracer_init_ext(', n, ')'
+      group = 'marbl_ecosys_base_nml'
+      call this%add_var_tcr_rd(sname, group, tracer_init_ext(n),              &
+           marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+        return
+      end if
+    end do
 
     sname     = 'init_ecosys_init_file_fmt'
     lname     = 'Format of file containing base ecosys init conditions'
@@ -1920,6 +1931,17 @@ contains
       call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
+
+    do n=1,ciso_tracer_cnt
+      write(sname,"(A,I0,A)") 'ciso_tracer_init_ext(', n, ')'
+      group = 'marbl_ciso_nml'
+      call this%add_var_tcr_rd(sname, group, ciso_tracer_init_ext(n),         &
+           marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+        return
+      end if
+    end do
 
     sname     = 'ciso_fract_factors'
     lname     = 'Optiob for which biological fractionation calculation to use'
