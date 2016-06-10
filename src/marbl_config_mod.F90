@@ -768,6 +768,7 @@ contains
       ! (3) write parameter to log_message (format depends on datatype)
       select case(trim(this%vars(n)%datatype))
         case ('string')
+!          print*, trim(this%vars(n)%short_name), len(trim(this%vars(n)%sptr))
           write(log_message, "(4A)") trim(this%vars(n)%short_name), " = '",  &
                                      trim(this%vars(n)%sptr), "'"
         case ('real')

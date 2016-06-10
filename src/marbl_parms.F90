@@ -132,53 +132,53 @@ module marbl_parms
   !---------------------------------------------------------------------
 
   character(char_len),  target :: dust_flux_source             ! option for atmospheric dust deposition
-  type(marbl_tracer_read_type) :: dust_flux_input             ! namelist input for dust_flux
+  type(marbl_tracer_read_type), target :: dust_flux_input             ! namelist input for dust_flux
   character(char_len),  target :: iron_flux_source             ! option for atmospheric iron deposition
-  type(marbl_tracer_read_type) :: iron_flux_input             ! namelist input for iron_flux
-  type(marbl_tracer_read_type) :: fesedflux_input                    ! namelist input for iron_flux
+  type(marbl_tracer_read_type), target :: iron_flux_input             ! namelist input for iron_flux
+  type(marbl_tracer_read_type), target :: fesedflux_input                    ! namelist input for iron_flux
   character(char_len),  target :: ndep_data_type               ! type of ndep forcing
-  type(marbl_tracer_read_type) :: nox_flux_monthly_input      ! namelist input for nox_flux_monthly
-  type(marbl_tracer_read_type) :: nhy_flux_monthly_input      ! namelist input for nhy_flux_monthly
+  type(marbl_tracer_read_type), target :: nox_flux_monthly_input      ! namelist input for nox_flux_monthly
+  type(marbl_tracer_read_type), target :: nhy_flux_monthly_input      ! namelist input for nhy_flux_monthly
   integer(int_kind),    target :: ndep_shr_stream_year_first   ! first year in stream to use
   integer(int_kind),    target :: ndep_shr_stream_year_last    ! last year in stream to use
   integer(int_kind),    target :: ndep_shr_stream_year_align   ! align ndep_shr_stream_year_first with this model year
   character(char_len),  target :: ndep_shr_stream_file         ! file containing domain and input data
   real(r8),             target :: ndep_shr_stream_scale_factor ! unit conversion factor
-  type(marbl_tracer_read_type) :: din_riv_flux_input          ! namelist input for din_riv_flux
-  type(marbl_tracer_read_type) :: dip_riv_flux_input          ! namelist input for dip_riv_flux
-  type(marbl_tracer_read_type) :: don_riv_flux_input          ! namelist input for don_riv_flux
-  type(marbl_tracer_read_type) :: dop_riv_flux_input          ! namelist input for dop_riv_flux
-  type(marbl_tracer_read_type) :: dsi_riv_flux_input          ! namelist input for dsi_riv_flux
-  type(marbl_tracer_read_type) :: dfe_riv_flux_input          ! namelist input for dfe_riv_flux
-  type(marbl_tracer_read_type) :: dic_riv_flux_input          ! namelist input for dic_riv_flux
-  type(marbl_tracer_read_type) :: alk_riv_flux_input          ! namelist input for alk_riv_flux
-  type(marbl_tracer_read_type) :: doc_riv_flux_input          ! namelist input for doc_riv_flux
-  character(char_len)          :: gas_flux_forcing_opt        ! option for forcing gas fluxes
+  type(marbl_tracer_read_type), target :: din_riv_flux_input          ! namelist input for din_riv_flux
+  type(marbl_tracer_read_type), target :: dip_riv_flux_input          ! namelist input for dip_riv_flux
+  type(marbl_tracer_read_type), target :: don_riv_flux_input          ! namelist input for don_riv_flux
+  type(marbl_tracer_read_type), target :: dop_riv_flux_input          ! namelist input for dop_riv_flux
+  type(marbl_tracer_read_type), target :: dsi_riv_flux_input          ! namelist input for dsi_riv_flux
+  type(marbl_tracer_read_type), target :: dfe_riv_flux_input          ! namelist input for dfe_riv_flux
+  type(marbl_tracer_read_type), target :: dic_riv_flux_input          ! namelist input for dic_riv_flux
+  type(marbl_tracer_read_type), target :: alk_riv_flux_input          ! namelist input for alk_riv_flux
+  type(marbl_tracer_read_type), target :: doc_riv_flux_input          ! namelist input for doc_riv_flux
+  character(char_len),  target :: gas_flux_forcing_opt        ! option for forcing gas fluxes
   character(char_len),  target :: gas_flux_forcing_file        ! file containing gas flux forcing fields
-  type(marbl_tracer_read_type) :: gas_flux_fice               ! ice fraction for gas fluxes
-  type(marbl_tracer_read_type) :: gas_flux_ws                 ! wind speed for gas fluxes
-  type(marbl_tracer_read_type) :: gas_flux_ap                 ! atmospheric pressure for gas fluxes
-  character(char_len)          :: atm_co2_opt                 ! option for atmospheric co2 concentration
+  type(marbl_tracer_read_type), target :: gas_flux_fice               ! ice fraction for gas fluxes
+  type(marbl_tracer_read_type), target :: gas_flux_ws                 ! wind speed for gas fluxes
+  type(marbl_tracer_read_type), target :: gas_flux_ap                 ! atmospheric pressure for gas fluxes
+  character(char_len),  target :: atm_co2_opt                 ! option for atmospheric co2 concentration
   real(r8),             target :: atm_co2_const                ! value of atmospheric co2 (ppm, dry-air, 1 atm)
-  character(char_len)          :: atm_alt_co2_opt             ! option for atmospheric alternative CO2
+  character(char_len),  target :: atm_alt_co2_opt             ! option for atmospheric alternative CO2
   real(r8),             target :: atm_alt_co2_const            ! value of atmospheric alternative co2 (ppm, dry-air, 1 atm)
   logical(log_kind),    target :: liron_patch                  ! flag for iron patch fertilization
   character(char_len),  target :: iron_patch_flux_filename     ! file containing name of iron patch file
   integer(int_kind),    target :: iron_patch_month             ! integer month to add patch flux
-  integer(int_kind)            :: ciso_atm_model_year            ! arbitrary model year
-  integer(int_kind)            :: ciso_atm_data_year             ! year in atmospheric ciso data that corresponds to ciso_atm_model_year
-  integer(int_kind)            :: ciso_atm_d13c_data_nbval       ! number of values in ciso_atm_d13c_filename
-  integer(int_kind)            :: ciso_atm_d14c_data_nbval       ! number of values in ciso_atm_d14c_filename
-  real(r8), allocatable        :: ciso_atm_d13c_data(:)          ! atmospheric D13C values in datafile
-  real(r8), allocatable        :: ciso_atm_d13c_data_yr(:)       ! date of atmospheric D13C values in datafile
-  real(r8), allocatable        :: ciso_atm_d14c_data(:,:)        ! atmospheric D14C values in datafile (sh, eq, nh, in permil)
-  real(r8), allocatable        :: ciso_atm_d14c_data_yr(:,:)     ! date of atmospheric D14C values in datafile (sh, eq, nh)
-  real(r8)                     :: ciso_atm_d13c_const            ! atmospheric D13C constant [permil]
-  real(r8)                     :: ciso_atm_d14c_const            ! atmospheric D14C constant [permil]
-  character(char_len)          :: ciso_atm_d13c_opt              ! option for CO2 and D13C varying or constant forcing
-  character(char_len)          :: ciso_atm_d13c_filename         ! filenames for varying atm D13C
-  character(char_len)          :: ciso_atm_d14c_opt              ! option for CO2 and D13C varying or constant forcing
-  character(char_len)          :: ciso_atm_d14c_filename(3)      ! filenames for varying atm D14C (one each for NH, SH, EQ)
+  integer(int_kind),    target :: ciso_atm_model_year            ! arbitrary model year
+  integer(int_kind),    target :: ciso_atm_data_year             ! year in atmospheric ciso data that corresponds to ciso_atm_model_year
+  integer(int_kind),    target :: ciso_atm_d13c_data_nbval       ! number of values in ciso_atm_d13c_filename
+  integer(int_kind),    target :: ciso_atm_d14c_data_nbval       ! number of values in ciso_atm_d14c_filename
+  real(r8), allocatable, target :: ciso_atm_d13c_data(:)          ! atmospheric D13C values in datafile
+  real(r8), allocatable, target :: ciso_atm_d13c_data_yr(:)       ! date of atmospheric D13C values in datafile
+  real(r8), allocatable, target :: ciso_atm_d14c_data(:,:)        ! atmospheric D14C values in datafile (sh, eq, nh, in permil)
+  real(r8), allocatable, target :: ciso_atm_d14c_data_yr(:,:)     ! date of atmospheric D14C values in datafile (sh, eq, nh)
+  real(r8),             target :: ciso_atm_d13c_const            ! atmospheric D13C constant [permil]
+  real(r8),             target :: ciso_atm_d14c_const            ! atmospheric D14C constant [permil]
+  character(char_len),  target :: ciso_atm_d13c_opt              ! option for CO2 and D13C varying or constant forcing
+  character(char_len),  target :: ciso_atm_d13c_filename         ! filenames for varying atm D13C
+  character(char_len),  target :: ciso_atm_d14c_opt              ! option for CO2 and D13C varying or constant forcing
+  character(char_len),  target :: ciso_atm_d14c_filename(3)      ! filenames for varying atm D14C (one each for NH, SH, EQ)
 
   !---------------------------------------------------------------------
   !  Datatype for accessing parameters without namelist
@@ -386,6 +386,7 @@ module marbl_parms
   private :: grazing_type
   private :: autotroph_cnt, zooplankton_cnt, grazer_prey_cnt
   private :: marbl_log_type
+  private :: set_defaults_tcr_rd
 
 contains
 
@@ -597,12 +598,7 @@ contains
     PON_bury_coeff = 0.5_r8
     POP_bury_coeff = 1.0_r8
     do n = 1, ecosys_base_tracer_cnt
-       tracer_init_ext(n)%mod_varname  = 'unknown'
-       tracer_init_ext(n)%filename     = 'unknown'
-       tracer_init_ext(n)%file_varname = 'unknown'
-       tracer_init_ext(n)%scale_factor = c1
-       tracer_init_ext(n)%default_val  = c0
-       tracer_init_ext(n)%file_fmt     = 'bin'
+       call set_defaults_tcr_rd(tracer_init_ext(n))
     end do
 
     ! MNL MNL TODO: are these ever used?
@@ -620,12 +616,7 @@ contains
     ciso_init_ecosys_init_file_fmt          = 'bin'
     ciso_fract_factors                      = 'Rau'
     do n = 1,ciso_tracer_cnt
-       ciso_tracer_init_ext(n)%mod_varname  = 'unknown'
-       ciso_tracer_init_ext(n)%filename     = 'unknown'
-       ciso_tracer_init_ext(n)%file_varname = 'unknown'
-       ciso_tracer_init_ext(n)%scale_factor = c1
-       ciso_tracer_init_ext(n)%default_val  = c0
-       ciso_tracer_init_ext(n)%file_fmt     = 'bin'
+       call set_defaults_tcr_rd(ciso_tracer_init_ext(n))
     end do
 
     !-----------------------------------------------------------------------
@@ -658,99 +649,40 @@ contains
 
     gas_flux_forcing_opt  = 'drv'
     gas_flux_forcing_file = 'unknown'
-    gas_flux_fice%filename     = 'unknown'
-    gas_flux_fice%file_varname = 'FICE'
-    gas_flux_fice%scale_factor = c1
-    gas_flux_fice%default_val  = c0
-    gas_flux_fice%file_fmt     = 'bin'
-    gas_flux_ws%filename     = 'unknown'
-    gas_flux_ws%file_varname = 'XKW'
-    gas_flux_ws%scale_factor = c1
-    gas_flux_ws%default_val  = c0
-    gas_flux_ws%file_fmt     = 'bin'
-    gas_flux_ap%filename     = 'unknown'
-    gas_flux_ap%file_varname = 'P'
-    gas_flux_ap%scale_factor = c1
-    gas_flux_ap%default_val  = c0
-    gas_flux_ap%file_fmt     = 'bin'
+    call set_defaults_tcr_rd(gas_flux_fice, file_varname='FICE')
+    call set_defaults_tcr_rd(gas_flux_ws, file_varname='XKW')
+    call set_defaults_tcr_rd(gas_flux_ap, file_varname='P')
     dust_flux_source             = 'monthly-calendar'
-    dust_flux_input%filename     = 'unknown'
-    dust_flux_input%file_varname = 'dust_flux'
-    dust_flux_input%scale_factor = c1
-    dust_flux_input%default_val  = c0
-    dust_flux_input%file_fmt     = 'bin'
+    call set_defaults_tcr_rd(dust_flux_input, file_varname='dust_flux')
     iron_flux_source             = 'monthly-calendar'
-    iron_flux_input%filename     = 'unknown'
-    iron_flux_input%file_varname = 'iron_flux'
-    iron_flux_input%scale_factor = c1
-    iron_flux_input%default_val  = c0
-    iron_flux_input%file_fmt     = 'bin'
-    fesedflux_input%filename     = 'unknown'
-    fesedflux_input%file_varname = 'FESEDFLUXIN'
-    fesedflux_input%scale_factor = c1
-    fesedflux_input%default_val  = c0
-    fesedflux_input%file_fmt     = 'bin'
+    call set_defaults_tcr_rd(iron_flux_input, file_varname='iron_flux')
+    call set_defaults_tcr_rd(fesedflux_input, file_varname='FESEDFLUXIN')
     ndep_data_type = 'monthly-calendar'
-    nox_flux_monthly_input%filename     = 'unknown'
-    nox_flux_monthly_input%file_varname = 'nox_flux'
-    nox_flux_monthly_input%scale_factor = c1
-    nox_flux_monthly_input%default_val  = c0
-    nox_flux_monthly_input%file_fmt     = 'bin'
-    nhy_flux_monthly_input%filename     = 'unknown'
-    nhy_flux_monthly_input%file_varname = 'nhy_flux'
-    nhy_flux_monthly_input%scale_factor = c1
-    nhy_flux_monthly_input%default_val  = c0
-    nhy_flux_monthly_input%file_fmt     = 'bin'
+    call set_defaults_tcr_rd(nox_flux_monthly_input, file_varname='nox_flux')
+    call set_defaults_tcr_rd(nhy_flux_monthly_input, file_varname='nhy_flux')
     ndep_shr_stream_year_first = 1
     ndep_shr_stream_year_last  = 1
     ndep_shr_stream_year_align = 1
     ndep_shr_stream_file       = 'unknown'
     ndep_shr_stream_scale_factor = c1
-    din_riv_flux_input%filename     = 'unknown'
-    din_riv_flux_input%file_varname = 'din_riv_flux'
-    din_riv_flux_input%scale_factor = c1
-    din_riv_flux_input%default_val  = c0
-    din_riv_flux_input%file_fmt     = 'nc'
-    dip_riv_flux_input%filename     = 'unknown'
-    dip_riv_flux_input%file_varname = 'dip_riv_flux'
-    dip_riv_flux_input%scale_factor = c1
-    dip_riv_flux_input%default_val  = c0
-    dip_riv_flux_input%file_fmt     = 'nc'
-    don_riv_flux_input%filename     = 'unknown'
-    don_riv_flux_input%file_varname = 'don_riv_flux'
-    don_riv_flux_input%scale_factor = c1
-    don_riv_flux_input%default_val  = c0
-    don_riv_flux_input%file_fmt     = 'nc'
-    dop_riv_flux_input%filename     = 'unknown'
-    dop_riv_flux_input%file_varname = 'dop_riv_flux'
-    dop_riv_flux_input%scale_factor = c1
-    dop_riv_flux_input%default_val  = c0
-    dop_riv_flux_input%file_fmt     = 'nc'
-    dsi_riv_flux_input%filename     = 'unknown'
-    dsi_riv_flux_input%file_varname = 'dsi_riv_flux'
-    dsi_riv_flux_input%scale_factor = c1
-    dsi_riv_flux_input%default_val  = c0
-    dsi_riv_flux_input%file_fmt     = 'nc'
-    dfe_riv_flux_input%filename     = 'unknown'
-    dfe_riv_flux_input%file_varname = 'dfe_riv_flux'
-    dfe_riv_flux_input%scale_factor = c1
-    dfe_riv_flux_input%default_val  = c0
-    dfe_riv_flux_input%file_fmt     = 'nc'
-    dic_riv_flux_input%filename     = 'unknown'
-    dic_riv_flux_input%file_varname = 'dic_riv_flux'
-    dic_riv_flux_input%scale_factor = c1
-    dic_riv_flux_input%default_val  = c0
-    dic_riv_flux_input%file_fmt     = 'nc'
-    alk_riv_flux_input%filename     = 'unknown'
-    alk_riv_flux_input%file_varname = 'alk_riv_flux'
-    alk_riv_flux_input%scale_factor = c1
-    alk_riv_flux_input%default_val  = c0
-    alk_riv_flux_input%file_fmt     = 'nc'
-    doc_riv_flux_input%filename     = 'unknown'
-    doc_riv_flux_input%file_varname = 'doc_riv_flux'
-    doc_riv_flux_input%scale_factor = c1
-    doc_riv_flux_input%default_val  = c0
-    doc_riv_flux_input%file_fmt     = 'nc'
+    call set_defaults_tcr_rd(din_riv_flux_input, file_varname='din_riv_flux', &
+                                                 file_fmt='nc')
+    call set_defaults_tcr_rd(dip_riv_flux_input, file_varname='dip_riv_flux', &
+                                                 file_fmt='nc')
+    call set_defaults_tcr_rd(don_riv_flux_input, file_varname='don_riv_flux', &
+                                                 file_fmt='nc')
+    call set_defaults_tcr_rd(dop_riv_flux_input, file_varname='dop_riv_flux', &
+                                                 file_fmt='nc')
+    call set_defaults_tcr_rd(dsi_riv_flux_input, file_varname='dsi_riv_flux', &
+                                                 file_fmt='nc')
+    call set_defaults_tcr_rd(dfe_riv_flux_input, file_varname='dfe_riv_flux', &
+                                                 file_fmt='nc')
+    call set_defaults_tcr_rd(dic_riv_flux_input, file_varname='dic_riv_flux', &
+                                                 file_fmt='nc')
+    call set_defaults_tcr_rd(alk_riv_flux_input, file_varname='alk_riv_flux', &
+                                                 file_fmt='nc')
+    call set_defaults_tcr_rd(doc_riv_flux_input, file_varname='doc_riv_flux', &
+                                                 file_fmt='nc')
     liron_patch              = .false.
     iron_patch_flux_filename = 'unknown_iron_patch_filename'
     iron_patch_month         = 1
@@ -2049,12 +1981,12 @@ contains
     ! marbl_forcing_tmp_nml !
     !-----------------------!
 
-    sname     = 'gas_flux_forcing_file'
-    lname     = 'File containing gas flux forcing fields'
+    sname     = 'dust_flux_source'
+    lname     = 'Option for atmospheric dust deposition'
     units     = 'unitless'
     datatype  = 'string'
     group     = 'marbl_forcing_tmp_nml'
-    sptr      => gas_flux_forcing_file
+    sptr      => dust_flux_source
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
@@ -2062,29 +1994,69 @@ contains
       return
     end if
 
-    sname     = 'atm_co2_const'
-    lname     = 'Value of atmospheric co2'
-    units     = 'ppm (dry air; 1 atm)'
-    datatype  = 'real'
+    sname = 'dust_flux_input'
     group     = 'marbl_forcing_tmp_nml'
-    rptr      => atm_co2_const
+    call this%add_var_tcr_rd(sname, group, dust_flux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname     = 'iron_flux_source'
+    lname     = 'Option for atmospheric iron deposition'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => iron_flux_source
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
-    sname     = 'atm_alt_co2_const'
-    lname     = 'Value of atmospheric alternative co2'
-    units     = 'ppm (dry air; 1 atm)'
-    datatype  = 'real'
+    sname = 'iron_flux_input'
     group     = 'marbl_forcing_tmp_nml'
-    rptr      => atm_alt_co2_const
+    call this%add_var_tcr_rd(sname, group, iron_flux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'fesedflux_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, fesedflux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname     = 'ndep_data_type'
+    lname     = 'Type of ndep forcing'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => ndep_data_type
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname = 'nox_flux_monthly_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, nox_flux_monthly_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'nhy_flux_monthly_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, nhy_flux_monthly_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
       return
     end if
 
@@ -2147,18 +2119,166 @@ contains
     group     = 'marbl_forcing_tmp_nml'
     rptr      => ndep_shr_stream_scale_factor
     call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr, add_space=.true.)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname = 'din_riv_flux_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, din_riv_flux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'dip_riv_flux_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, dip_riv_flux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'don_riv_flux_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, don_riv_flux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'dop_riv_flux_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, dop_riv_flux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'dsi_riv_flux_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, dsi_riv_flux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'dfe_riv_flux_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, dfe_riv_flux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'dic_riv_flux_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, dic_riv_flux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'alk_riv_flux_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, alk_riv_flux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'doc_riv_flux_input'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, doc_riv_flux_input, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname     = 'gas_flux_forcing_opt'
+    lname     = 'Option for where to get gas fluxes'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => gas_flux_forcing_opt
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'gas_flux_forcing_file'
+    lname     = 'File containing gas flux forcing fields'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => gas_flux_forcing_file
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname = 'gas_flux_fice'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, gas_flux_fice, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'gas_flux_ws'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, gas_flux_ws, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname = 'gas_flux_ap'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_tcr_rd(sname, group, gas_flux_ap, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+      return
+    end if
+
+    sname     = 'atm_co2_opt'
+    lname     = 'Option for where to get atmospheric CO2 concentration'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => atm_co2_opt
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'atm_co2_const'
+    lname     = 'Value of atmospheric co2'
+    units     = 'ppm (dry air; 1 atm)'
+    datatype  = 'real'
+    group     = 'marbl_forcing_tmp_nml'
+    rptr      => atm_co2_const
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
-    sname     = 'dust_flux_source'
-    lname     = 'Option for atmospheric dust deposition'
+    sname     = 'atm_alt_co2_opt'
+    lname     = 'Option for where to get alternative atmospheric CO2 concentration'
     units     = 'unitless'
     datatype  = 'string'
     group     = 'marbl_forcing_tmp_nml'
-    sptr      => dust_flux_source
+    sptr      => atm_alt_co2_opt
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
@@ -2166,14 +2286,14 @@ contains
       return
     end if
 
-    sname     = 'iron_flux_source'
-    lname     = 'Option for atmospheric iron deposition'
-    units     = 'unitless'
-    datatype  = 'string'
+    sname     = 'atm_alt_co2_const'
+    lname     = 'Value of atmospheric alternative co2'
+    units     = 'ppm (dry air; 1 atm)'
+    datatype  = 'real'
     group     = 'marbl_forcing_tmp_nml'
-    sptr      => iron_flux_source
+    rptr      => atm_alt_co2_const
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
+                        marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -2192,8 +2312,228 @@ contains
       return
     end if
 
+    sname     = 'iron_patch_flux_filename'
+    lname     = 'File containing iron patch flux'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => iron_patch_flux_filename
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'iron_patch_month'
+    lname     = 'integer month to add patch flux'
+    units     = 'unitless'
+    datatype  = 'integer'
+    group     = 'marbl_forcing_tmp_nml'
+    iptr      => iron_patch_month
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_model_year'
+    lname     = 'Arbirtrary model year'
+    units     = 'unitless'
+    datatype  = 'integer'
+    group     = 'marbl_forcing_tmp_nml'
+    iptr      => ciso_atm_model_year
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_data_year'
+    lname     = 'Year in atmospheric ciso data that corresponds to ciso_atm_model_year'
+    units     = 'unitless'
+    datatype  = 'integer'
+    group     = 'marbl_forcing_tmp_nml'
+    iptr      => ciso_atm_data_year
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d13c_data_nbval'
+    lname     = 'Number of values in ciso_atm_d13c_filename'
+    units     = 'unitless'
+    datatype  = 'integer'
+    group     = 'marbl_forcing_tmp_nml'
+    iptr      => ciso_atm_d13c_data_nbval
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    if (allocated(ciso_atm_d13c_data)) then
+      sname     = 'ciso_atm_d13c_data'
+      lname     = 'Atmospheric D13C values in datafile'
+      units     = ''
+      group     = 'marbl_forcing_tmp_nml'
+      call this%add_var_1d_r8(sname, lname, units, group, ciso_atm_d13c_data,   &
+                              marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
+        return
+      end if
+    end if
+
+    if (allocated(ciso_atm_d13c_data_yr)) then
+      sname     = 'ciso_atm_d13c_data_yr'
+      lname     = 'Date of atmospheric D13C values in datafile'
+      units     = 'date'
+      group     = 'marbl_forcing_tmp_nml'
+      call this%add_var_1d_r8(sname, lname, units, group, ciso_atm_d13c_data_yr, &
+                              marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
+        return
+      end if
+    end if
+
+    ! ciso_atm_d14c_data, ciso_atm_d14c_data_year
+
+    sname     = 'ciso_atm_d13c_const'
+    lname     = 'Atmospheric D13C constant'
+    units     = 'permil'
+    datatype  = 'real'
+    group     = 'marbl_forcing_tmp_nml'
+    rptr      => ciso_atm_d13c_const
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d14c_const'
+    lname     = 'Atmospheric D14C constant'
+    units     = 'permil'
+    datatype  = 'real'
+    group     = 'marbl_forcing_tmp_nml'
+    rptr      => ciso_atm_d14c_const
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d13c_opt'
+    lname     = 'Option for CO2 and D13C (varying or constant forcing)'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => ciso_atm_d13c_opt
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d13c_filename'
+    lname     = 'Filename for varying atm D13C'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => ciso_atm_d13c_filename
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d14c_opt'
+    lname     = 'Option for CO2 and D14C (varying or constant forcing)'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => ciso_atm_d14c_opt
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d14c_filename'
+    lname     = 'Filenames for varying atm D14C'
+    units     = 'unitless'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_1d_str(sname, lname, units, group, ciso_atm_d14c_filename, &
+                        marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
+      return
+    end if
+
   end subroutine marbl_parms_construct
 
   !*****************************************************************************
+  
+  subroutine set_defaults_tcr_rd(tracer_read_var, mod_varname, filename,      &
+             file_varname, scale_factor, default_val, file_fmt)
+
+    use marbl_constants_mod, only : c0, c1
+
+    type(marbl_tracer_read_type), intent(inout) :: tracer_read_var
+    character(len=*), optional :: mod_varname
+    character(len=*), optional :: filename
+    character(len=*), optional :: file_varname
+    real(r8),                optional :: scale_factor
+    real(r8),                optional :: default_val
+    character(len=*), optional :: file_fmt
+
+    if (present(mod_varname)) then
+      tracer_read_var%mod_varname = trim(mod_varname)
+    else
+      tracer_read_var%mod_varname = 'unknown'
+    end if
+
+    if (present(filename)) then
+      tracer_read_var%filename = trim(filename)
+    else
+      tracer_read_var%filename = 'unknown'
+    end if
+
+    if (present(file_varname)) then
+      tracer_read_var%file_varname = trim(file_varname)
+    else
+      tracer_read_var%file_varname = 'unknown'
+    end if
+
+    if (present(scale_factor)) then
+      tracer_read_var%scale_factor = scale_factor
+    else
+      tracer_read_var%scale_factor = c1
+    end if
+
+    if (present(default_val)) then
+      tracer_read_var%default_val = default_val
+    else
+      tracer_read_var%default_val = c0
+    end if
+
+    if (present(file_fmt)) then
+      tracer_read_var%file_fmt = trim(file_fmt)
+    else
+      tracer_read_var%file_fmt = 'bin'
+    end if
+
+  end subroutine set_defaults_tcr_rd
 
 end module marbl_parms
