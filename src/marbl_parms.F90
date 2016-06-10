@@ -1661,6 +1661,19 @@ contains
     group     = 'marbl_ecosys_base_nml'
     sptr      => init_ecosys_init_file
     call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'init_ecosys_init_file_fmt'
+    lname     = 'Format of file containing base ecosys init conditions'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_ecosys_base_nml'
+    sptr      => init_ecosys_init_file_fmt
+    call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr, add_space=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -1677,19 +1690,6 @@ contains
         return
       end if
     end do
-
-    sname     = 'init_ecosys_init_file_fmt'
-    lname     = 'Format of file containing base ecosys init conditions'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_ecosys_base_nml'
-    sptr      => init_ecosys_init_file_fmt
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
 
     sname     = 'iron_frac_in_dust'
     lname     = 'Fraction by weight of iron in dust'
@@ -1858,7 +1858,7 @@ contains
     group     = 'marbl_ciso_nml'
     sptr      => ciso_init_ecosys_init_file_fmt
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
+                        marbl_status_log, sptr=sptr, add_space=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
