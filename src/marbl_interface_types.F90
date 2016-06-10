@@ -56,13 +56,32 @@ module marbl_interface_types
 
   !*****************************************************************************
 
+  type, public :: marbl_single_saved_state_type
+    integer                 :: rank
+    character(len=char_len) :: long_name
+    character(len=char_len) :: short_name
+    character(len=char_len) :: units
+    character(len=char_len) :: vertical_grid ! 'none', 'layer_avg', 'layer_iface'
+    real(r8), allocatable, dimension(:)   :: field_2d  ! num_elements
+    real(r8), allocatable, dimension(:,:) :: field_3d  ! num_levels, num_elements
+  contains
+    procedure :: construct => marbl_single_saved_state_construct
+  end type marbl_single_saved_state_type
+
+  !*****************************************************************************
+
   type, public :: marbl_saved_state_type
-     real (r8), allocatable :: ph_prev_col(:)          ! (km)
-     real (r8), allocatable :: ph_prev_alt_co2_col(:)  ! (km)
-     real (r8), allocatable :: ph_prev_surf(:)         ! (num_elements)
-     real (r8), allocatable :: ph_prev_alt_co2_surf(:) ! (num_elements)
+    integer :: saved_state_cnt
+    integer :: num_elements
+    integer :: num_levels
+    type(marbl_single_saved_state_type), dimension(:), pointer :: state => NULL()
+!     real (r8), allocatable :: ph_prev_col(:)          ! (km)
+!     real (r8), allocatable :: ph_prev_alt_co2_col(:)  ! (km)
+!     real (r8), allocatable :: ph_prev_surf(:)         ! (num_elements)
+!     real (r8), allocatable :: ph_prev_alt_co2_surf(:) ! (num_elements)
    contains
      procedure, public :: construct => marbl_saved_state_constructor
+     procedure, public :: add_state => marbl_saved_state_add
   end type marbl_saved_state_type
 
   !*****************************************************************************
@@ -336,18 +355,142 @@ contains
   
   !*****************************************************************************
 
+  subroutine marbl_single_saved_state_construct(this, lname, sname, units,    &
+             vgrid, rank, num_elements, num_levels, marbl_status_log)
+
+    class(marbl_single_saved_state_type), intent(inout) :: this
+    type(marbl_log_type),                 intent(inout) :: marbl_status_log
+
+    character(*), intent(in) :: lname
+    character(*), intent(in) :: sname
+    character(*), intent(in) :: units
+    character(*), intent(in) :: vgrid
+    integer,      intent(in) :: rank
+    integer,      intent(in) :: num_elements
+    integer,      intent(in) :: num_levels
+
+    character(*), parameter :: subname =                                      &
+                  'marbl_interface_types:marbl_single_saved_state_construct'
+    character(char_len)     :: log_message
+
+    select case (rank)
+      case (3)
+        select case (trim(vgrid))
+          case ('layer_avg')
+            allocate(this%field_3d(num_levels, num_elements))
+          case ('layer_iface')
+            allocate(this%field_3d(num_levels+1, num_elements))
+          case DEFAULT
+            write(log_message,"(2A)") trim(vgrid),                            &
+                  " is not a valid vertical grid for 3D saved state"
+            call marbl_status_log%log_error(log_message, subname)
+        end select
+      case (2)
+        if (trim(vgrid).eq.'none') then
+          allocate(this%field_2d(num_elements))
+        else
+          write(log_message,"(2A)") trim(vgrid),                              &
+                " is not a valid vertical grid for 2D saved state"
+            call marbl_status_log%log_error(log_message, subname)
+        end if
+      case DEFAULT
+        write(log_message,"(I0, 2A)") rank, " is not a valid rank for saved", &
+              " state"
+        call marbl_status_log%log_error(log_message, subname)
+        return
+    end select
+
+    this%long_name     = trim(lname)
+    this%short_name    = trim(sname)
+    this%units         = trim(units)
+    this%vertical_grid = trim(vgrid)
+    this%rank          = rank
+
+  end subroutine marbl_single_saved_state_construct
+
+  !*****************************************************************************
+
   subroutine marbl_saved_state_constructor(this, num_elements, num_levels)
 
     class(marbl_saved_state_type), intent(inout) :: this
     integer (int_kind) , intent(in) :: num_elements
     integer (int_kind) , intent(in) :: num_levels
 
-    allocate(this%ph_prev_surf         (num_elements))
-    allocate(this%ph_prev_alt_co2_surf (num_elements))
-    allocate(this%ph_prev_col          (num_levels))
-    allocate(this%ph_prev_alt_co2_col  (num_levels))
+    this%saved_state_cnt = 0
+    this%num_elements    = num_elements
+    this%num_levels      = num_levels
 
   end subroutine marbl_saved_state_constructor
+
+  !*****************************************************************************
+
+  subroutine marbl_saved_state_add(this, lname, sname, units, vgrid, rank,    &
+             id, marbl_status_log)
+
+    class(marbl_saved_state_type), intent(inout) :: this
+    type(marbl_log_type),          intent(inout) :: marbl_status_log
+
+    character(*),      intent(in)  :: lname
+    character(*),      intent(in)  :: sname
+    character(*),      intent(in)  :: units
+    character(*),      intent(in)  :: vgrid
+    integer(int_kind), intent(in)  :: rank
+    integer(int_kind), intent(out) :: id
+
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_saved_state_add'
+    character(len=char_len) :: log_message
+    type(marbl_single_saved_state_type), dimension(:), pointer :: new_state
+    integer :: old_size,n, nlev
+
+    if (associated(this%state)) then
+      old_size = size(this%state)
+    else
+      old_size = 0
+    end if
+    id = old_size + 1
+
+    ! 1) allocate new_state to be size N (one element larger than this%state)
+    allocate(new_state(id))
+
+    ! 2) copy this%state into first N-1 elements of new_state
+    do n=1,old_size
+      new_state(n)%rank          = this%state(n)%rank
+      new_state(n)%long_name     = this%state(n)%long_name
+      new_state(n)%short_name    = this%state(n)%short_name
+      new_state(n)%units         = this%state(n)%units
+      new_state(n)%vertical_grid = this%state(n)%vertical_grid
+      select case (new_state(n)%rank)
+        case (2)
+          allocate(new_state(n)%field_2d(this%num_elements))
+          new_state(n)%field_2d = this%state(n)%field_2d
+          deallocate(this%state(n)%field_2d)
+        case (3)
+          nlev = size(this%state(n)%field_3d, dim=1)
+          allocate(new_state(n)%field_3d(nlev, this%num_elements))
+          new_state(n)%field_3d = this%state(n)%field_3d
+          deallocate(this%state(n)%field_3d)
+      end select
+    end do
+
+    ! 3) add newest saved state variable
+    call new_state(id)%construct(lname, sname, units, vgrid, rank,            &
+              this%num_elements, this%num_levels, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('this%state%initialize', subname)
+      return
+    end if
+
+    ! 4) deallocate / nullify this%state
+    if (old_size.gt.0) then
+      deallocate(this%state)
+      nullify(this%state)
+    end if
+
+    ! 5) point this%state => new_state and update saved_state_cnt
+    this%state => new_state
+    this%saved_state_cnt = id
+
+  end subroutine marbl_saved_state_add
 
   !*****************************************************************************
 
