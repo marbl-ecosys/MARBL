@@ -34,11 +34,10 @@ module marbl_config_mod
   type(zooplankton_config_type), dimension(zooplankton_cnt), target :: zooplankton_config
 
   !---------------------------------------------------------------------------
-  !  Datatypes extended to use for marbl_instance%configuration,
-  !  marbl_instance%living_parameters, and marbl_instance%parameters
+  !  Datatypes for marbl_instance%configuration and marbl_instance%parameters
   !---------------------------------------------------------------------------
 
-  type, public :: marbl_single_config_var_type
+  type, public :: marbl_single_config_or_parm_type
     ! Metadata
     character(len=char_len) :: long_name
     character(len=char_len) :: short_name
@@ -52,12 +51,12 @@ module marbl_config_mod
     integer(int_kind),       pointer :: iptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
-  end type marbl_single_config_var_type
+  end type marbl_single_config_or_parm_type
 
-  type, public :: marbl_config_vars_type
+  type, public :: marbl_config_and_parms_type
     logical :: locked = .false.
     integer :: cnt = 0
-    type(marbl_single_config_var_type), dimension(:), pointer :: vars => NULL()
+    type(marbl_single_config_or_parm_type), dimension(:), pointer :: vars => NULL()
   contains
     procedure :: add_var        => marbl_var_add
     procedure :: add_var_tcr_rd => marbl_var_add_tcr_rd
@@ -65,16 +64,7 @@ module marbl_config_mod
     procedure :: add_var_1d_int => marbl_var_add_1d_int
     procedure :: add_var_1d_str => marbl_var_add_1d_str
     procedure :: lock_and_log   => marbl_vars_lock_and_log
-  end type marbl_config_vars_type
-
-  !---------------------------------------------------------------------
-  !  Datatype for marbl_instance%configuration
-  !---------------------------------------------------------------------
-
-  type, extends(marbl_config_vars_type), public :: marbl_config_type
-  contains
-    procedure :: construct        => marbl_config_construct
-  end type marbl_config_type
+  end type marbl_config_and_parms_type
 
   !*****************************************************************************
 
@@ -188,7 +178,7 @@ contains
 
   subroutine marbl_config_construct(this, marbl_status_log)
 
-    class(marbl_config_type), intent(inout) :: this
+    class(marbl_config_and_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_config_construct'
@@ -427,7 +417,7 @@ contains
   subroutine marbl_var_add(this, sname, lname, units, datatype, group,        &
              marbl_status_log, rptr, iptr, lptr, sptr, comment, add_space)
 
-    class(marbl_config_vars_type), intent(inout) :: this
+    class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),        intent(in)    :: sname
     character(len=*),        intent(in)    :: lname
     character(len=*),        intent(in)    :: units
@@ -442,7 +432,7 @@ contains
     logical,                 optional,          intent(in) :: add_space
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add'
-    type(marbl_single_config_var_type), dimension(:), pointer :: new_parms
+    type(marbl_single_config_or_parm_type), dimension(:), pointer :: new_parms
     integer :: old_size, id, n
     character(len=char_len) :: log_message
 
@@ -553,7 +543,7 @@ contains
 
     use marbl_interface_types, only : marbl_tracer_read_type
 
-    class(marbl_config_vars_type),        intent(inout) :: this
+    class(marbl_config_and_parms_type),        intent(inout) :: this
     character(len=char_len),              intent(in)    :: sname
     character(len=char_len),              intent(in)    :: group
     type(marbl_tracer_read_type), target, intent(in)    :: tracer_read_var
@@ -650,7 +640,7 @@ contains
   subroutine marbl_var_add_1d_r8(this, sname, lname, units, group, r8array,  &
                                  marbl_status_log, add_space)
 
-    class(marbl_config_vars_type),       intent(inout) :: this
+    class(marbl_config_and_parms_type),       intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
@@ -688,7 +678,7 @@ contains
   subroutine marbl_var_add_1d_int(this, sname, lname, units, group, intarray, &
                                  marbl_status_log, add_space)
 
-    class(marbl_config_vars_type),       intent(inout) :: this
+    class(marbl_config_and_parms_type),       intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
@@ -726,7 +716,7 @@ contains
   subroutine marbl_var_add_1d_str(this, sname, lname, units, group,          &
                                   strarray, marbl_status_log)
 
-    class(marbl_config_vars_type),       intent(inout) :: this
+    class(marbl_config_and_parms_type),       intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
@@ -758,7 +748,7 @@ contains
 
   subroutine marbl_vars_lock_and_log(this, marbl_status_log)
 
-    class(marbl_config_vars_type), intent(inout) :: this
+    class(marbl_config_and_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_vars_lock_and_log'

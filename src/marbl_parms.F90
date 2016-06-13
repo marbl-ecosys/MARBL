@@ -20,8 +20,7 @@ module marbl_parms
   use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : char_len
 
-  use marbl_config_mod, only : marbl_single_config_var_type
-  use marbl_config_mod, only : marbl_config_vars_type
+  use marbl_config_mod, only : marbl_config_and_parms_type
 
   use marbl_constants_mod, only : c1
   use marbl_constants_mod, only : dps
@@ -179,15 +178,6 @@ module marbl_parms
   character(char_len),  target :: ciso_atm_d13c_filename         ! filenames for varying atm D13C
   character(char_len),  target :: ciso_atm_d14c_opt              ! option for CO2 and D13C varying or constant forcing
   character(char_len),  target :: ciso_atm_d14c_filename(3)      ! filenames for varying atm D14C (one each for NH, SH, EQ)
-
-  !---------------------------------------------------------------------
-  !  Datatype for accessing parameters without namelist
-  !---------------------------------------------------------------------
-
-  type, extends(marbl_config_vars_type), public :: marbl_parms_type
-  contains
-    procedure :: construct        => marbl_parms_construct
-  end type marbl_parms_type
 
   !---------------------------------------------------------------------
   !  BGC parameters that are not part of marbl_parms_nml
@@ -924,7 +914,7 @@ contains
     use marbl_config_mod, only : autotrophs_config
     use marbl_config_mod, only : zooplankton_config
 
-    class(marbl_parms_type), intent(inout) :: this
+    class(marbl_config_and_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_parms:marbl_parms_construct'

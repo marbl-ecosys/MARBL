@@ -49,9 +49,7 @@ module marbl_interface
 
   use marbl_restore_mod     , only : marbl_restore_type
 
-  use marbl_config_mod, only : marbl_config_type
-
-  use marbl_parms, only : marbl_parms_type
+  use marbl_config_mod, only : marbl_config_and_parms_type
 
   implicit none
 
@@ -74,8 +72,8 @@ module marbl_interface
      type(marbl_tracer_read_type)              , public, allocatable  :: tracer_read(:)
      type(marbl_tracer_index_type)             , public               :: tracer_indices
      type(marbl_log_type)                      , public               :: StatusLog
-     type(marbl_config_type)                   , public               :: configuration
-     type(marbl_parms_type)                    , public               :: parameters
+     type(marbl_config_and_parms_type)         , public               :: configuration
+     type(marbl_config_and_parms_type)         , public               :: parameters
 
      type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
      type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
@@ -143,6 +141,7 @@ contains
     use marbl_namelist_mod    , only : marbl_nl_buffer_size
     use marbl_config_mod      , only : marbl_config_set_defaults
     use marbl_config_mod      , only : marbl_config_read_namelist
+    use marbl_config_mod      , only : marbl_config_construct
 
     class(marbl_interface_class)   , intent(inout) :: this
     character(marbl_nl_buffer_size), intent(in)    :: gcm_nl_buffer(marbl_nl_cnt)
@@ -178,9 +177,9 @@ contains
     ! construct configuration_type
     !---------------------------------------------------------------------------
 
-    call this%configuration%construct(this%StatusLog)
+    call marbl_config_construct(this%configuration, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("configuration%construct()", subname)
+      call this%StatusLog%log_error_trace("marbl_config_construct()", subname)
       return
     end if
 
@@ -212,6 +211,7 @@ contains
     use marbl_parms           , only : ciso_tracer_init_ext
     use marbl_parms           , only : marbl_parms_set_defaults
     use marbl_parms           , only : marbl_parms_read_namelist
+    use marbl_parms           , only : marbl_parms_construct
     use marbl_saved_state_mod , only : marbl_saved_state_init
     
     implicit none
@@ -433,9 +433,9 @@ contains
     ! construct parameters_type
     !---------------------------------------------------------------------------
 
-    call this%parameters%construct(this%StatusLog)
+    call marbl_parms_construct(this%parameters, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("parameters%construct()", subname)
+      call this%StatusLog%log_error_trace("marbl_parms_construct()", subname)
       return
     end if
 
