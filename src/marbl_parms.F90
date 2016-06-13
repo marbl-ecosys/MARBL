@@ -102,10 +102,6 @@ module marbl_parms
   ! i.e. POP_sed_loss = P inputs (riverine + atm dep)
   ! -----------
   real(r8),            target :: POP_bury_coeff
-  logical(log_kind),   target :: lnutr_variable_restore      ! geographically varying nutrient restoring (maltrud)
-  character(char_len), target :: nutr_rest_file              ! file containing nutrient fields
-  character(char_len), target :: nutr_variable_rest_file     ! file containing variable restoring info
-  character(char_len), target :: nutr_variable_rest_file_fmt ! format of file containing variable restoring info
 
   !---------------------------------------------------------------------
   !  Variables read in via &marbl_ciso_nml
@@ -329,10 +325,6 @@ module marbl_parms
   integer (int_kind), parameter :: atm_co2_iopt_const         = 1
   integer (int_kind), parameter :: atm_co2_iopt_drv_prog      = 2
   integer (int_kind), parameter :: atm_co2_iopt_drv_diag      = 3
-
-  integer (kind=int_kind), parameter :: sp_ind   = 1  ! small phytoplankton
-  integer (kind=int_kind), parameter :: diat_ind = 2  ! diatoms
-  integer (kind=int_kind), parameter :: diaz_ind = 3  ! diazotrophs
 
   ! grazing functions
   integer (kind=int_kind), parameter ::           &
@@ -598,12 +590,6 @@ contains
        call set_defaults_tcr_rd(tracer_init_ext(n))
     end do
 
-    ! MNL MNL TODO: are these ever used?
-    nutr_rest_file = 'unknown'
-    lnutr_variable_restore      = .false.
-    nutr_variable_rest_file     = 'unknown'
-    nutr_variable_rest_file_fmt = 'bin'
-
     !-----------------------------------------------------------------------
     !  &marbl_ciso_nml
     !-----------------------------------------------------------------------
@@ -733,8 +719,7 @@ contains
          init_ecosys_option, init_ecosys_init_file, tracer_init_ext,          &
          init_ecosys_init_file_fmt, iron_frac_in_dust, iron_frac_in_bc,       &
          caco3_bury_thres_opt, caco3_bury_thres_depth, PON_bury_coeff,        &
-         POP_bury_coeff, lnutr_variable_restore, nutr_variable_rest_file,     &
-         nutr_rest_file, nutr_variable_rest_file_fmt
+         POP_bury_coeff
 
     namelist /marbl_ciso_nml/ &
          ciso_init_ecosys_option, ciso_init_ecosys_init_file,                 &
@@ -1761,58 +1746,6 @@ contains
     rptr      => POP_bury_coeff
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'lnutr_variable_restore'
-    lname     = 'Flag to use spatially-varying nutrient restoring'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_ecosys_base_nml'
-    lptr      => lnutr_variable_restore
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'nutr_rest_file'
-    lname     = 'File containing nutrient fields'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_ecosys_base_nml'
-    sptr      => nutr_rest_file
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'nutr_variable_rest_file'
-    lname     = 'File containing spatially-varying nutrient restoring info'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_ecosys_base_nml'
-    sptr      => nutr_variable_rest_file
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'nutr_variable_rest_file_fmt'
-    lname     = 'Format of file containing spatially-varying nutrient restoring info'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_ecosys_base_nml'
-    sptr      => nutr_variable_rest_file_fmt
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
