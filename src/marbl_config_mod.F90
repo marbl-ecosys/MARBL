@@ -126,8 +126,8 @@ contains
           autotrophs_config(n)%exp_calcifier = .false.
           autotrophs_config(n)%silicifier    = .false.
         case DEFAULT
-          autotrophs_config(n)%sname         = 'unknown'
-          autotrophs_config(n)%lname         = 'Unknown'
+          write(autotrophs_config(n)%sname,"(A,I0)") 'auto', n
+          write(autotrophs_config(n)%lname,"(A,I0)") 'Autotroph number ', n
           autotrophs_config(n)%Nfixer        = .false.
           autotrophs_config(n)%imp_calcifier = .false.
           autotrophs_config(n)%exp_calcifier = .false.
@@ -141,8 +141,8 @@ contains
           zooplankton_config(n)%sname = 'zoo'
           zooplankton_config(n)%lname = 'Zooplankton'
         case DEFAULT
-          zooplankton_config(n)%sname = 'unknown'
-          zooplankton_config(n)%lname = 'Unknown'
+          write(zooplankton_config(n)%sname, "(A,I0)") 'zoo', n
+          write(zooplankton_config(n)%lname, "(A,I0)") 'Zooplankton number ', n
       end select
     end do
 
