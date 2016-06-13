@@ -88,6 +88,8 @@ contains
 
   subroutine marbl_config_set_defaults()
 
+    integer :: n
+
     !-----------------------------------------------------------------------
     !  &marbl_config_nml
     !-----------------------------------------------------------------------
@@ -100,30 +102,49 @@ contains
     lflux_gas_co2                 = .true.
     locmip_k1_k2_bug_fix          = .true.
 
-    autotrophs_config(1)%sname         = 'sp'
-    autotrophs_config(1)%lname         = 'Small Phyto'
-    autotrophs_config(1)%Nfixer        = .false.
-    autotrophs_config(1)%imp_calcifier = .true.
-    autotrophs_config(1)%exp_calcifier = .false.
-    autotrophs_config(1)%silicifier    = .false.
+    do n=1,autotroph_cnt
+      select case (n)
+        case (1)
+          autotrophs_config(n)%sname         = 'sp'
+          autotrophs_config(n)%lname         = 'Small Phyto'
+          autotrophs_config(n)%Nfixer        = .false.
+          autotrophs_config(n)%imp_calcifier = .true.
+          autotrophs_config(n)%exp_calcifier = .false.
+          autotrophs_config(n)%silicifier    = .false.
+        case (2)
+          autotrophs_config(n)%sname         = 'diat'
+          autotrophs_config(n)%lname         = 'Diatom'
+          autotrophs_config(n)%Nfixer        = .false.
+          autotrophs_config(n)%imp_calcifier = .false.
+          autotrophs_config(n)%exp_calcifier = .false.
+          autotrophs_config(n)%silicifier    = .true.
+        case (3)
+          autotrophs_config(n)%sname         = 'diaz'
+          autotrophs_config(n)%lname         = 'Diazotroph'
+          autotrophs_config(n)%Nfixer        = .true.
+          autotrophs_config(n)%imp_calcifier = .false.
+          autotrophs_config(n)%exp_calcifier = .false.
+          autotrophs_config(n)%silicifier    = .false.
+        case DEFAULT
+          autotrophs_config(n)%sname         = 'unknown'
+          autotrophs_config(n)%lname         = 'Unknown'
+          autotrophs_config(n)%Nfixer        = .false.
+          autotrophs_config(n)%imp_calcifier = .false.
+          autotrophs_config(n)%exp_calcifier = .false.
+          autotrophs_config(n)%silicifier    = .false.
+      end select
+    end do
 
-    autotrophs_config(2)%sname         = 'diat'
-    autotrophs_config(2)%lname         = 'Diatom'
-    autotrophs_config(2)%Nfixer        = .false.
-    autotrophs_config(2)%imp_calcifier = .false.
-    autotrophs_config(2)%exp_calcifier = .false.
-    autotrophs_config(2)%silicifier    = .true.
-
-    autotrophs_config(3)%sname         = 'diaz'
-    autotrophs_config(3)%lname         = 'Diazotroph'
-    autotrophs_config(3)%Nfixer        = .true.
-    autotrophs_config(3)%imp_calcifier = .false.
-    autotrophs_config(3)%exp_calcifier = .false.
-    autotrophs_config(3)%silicifier    = .false.
-
-    ! zooplankton
-    zooplankton_config(1)%sname = 'zoo'
-    zooplankton_config(1)%lname = 'Zooplankton'
+    do n=1,zooplankton_cnt
+      select case (n)
+        case (1)
+          zooplankton_config(n)%sname = 'zoo'
+          zooplankton_config(n)%lname = 'Zooplankton'
+        case DEFAULT
+          zooplankton_config(n)%sname = 'unknown'
+          zooplankton_config(n)%lname = 'Unknown'
+      end select
+    end do
 
   end subroutine marbl_config_set_defaults
 

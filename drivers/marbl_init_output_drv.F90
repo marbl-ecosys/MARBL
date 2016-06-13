@@ -41,6 +41,8 @@ Contains
       return
     end if
 
+    ! Optional: call marbl_instance%configuration%put()
+
     ! Call marbl%init
     call marbl_instance%init(gcm_nl_buffer = gcm_namelist,                    &
                              gcm_num_levels = km,                             &
@@ -54,6 +56,8 @@ Contains
       call marbl_instance%StatusLog%log_error_trace('marbl%init', subname)
       return
     end if
+
+    ! Optional: call marbl_instance%parameters%put()
 
     ! Log parameter setup
     call marbl_instance%parameters%lock_and_log(marbl_instance%StatusLog)

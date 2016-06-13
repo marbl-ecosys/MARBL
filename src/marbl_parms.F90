@@ -405,7 +405,7 @@ contains
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    integer :: auto_ind, zoo_ind, prey_ind, n
+    integer :: m, n
     !---------------------------------------------------------------------------
 
     !-----------------------------------------------------------------------
@@ -520,69 +520,76 @@ contains
     end do
 
     ! zooplankton
-    zooplankton(1)%z_mort_0   = 0.1_r8 * dps
-    zooplankton(1)%z_mort2_0  = 0.4_r8 * dps
-    zooplankton(1)%loss_thres = 0.075_r8
-
+    ! TODO: add do loop and select case
+    do n=1,zooplankton_cnt
+      select case (trim(zooplankton_config(n)%sname))
+        case ('zoo')
+          zooplankton(n)%z_mort_0   = 0.1_r8 * dps
+          zooplankton(n)%z_mort2_0  = 0.4_r8 * dps
+          zooplankton(n)%loss_thres = 0.075_r8
+        case DEFAULT
+          zooplankton(n)%z_mort_0   = c0
+          zooplankton(n)%z_mort2_0  = c0
+          zooplankton(n)%loss_thres = c0
+      end select
+    end do
 
     ! predator-prey relationships
-    zoo_ind = 1
-    prey_ind = sp_ind
-    write(grazing(prey_ind,zoo_ind)%sname, "(4A)") 'grz_',                    &
-                                     trim(autotrophs_config(prey_ind)%sname), &
-                                     '_', trim(zooplankton_config(zoo_ind)%sname)
-    write(grazing(prey_ind,zoo_ind)%lname, "(4A)") 'Grazing of ',             &
-                                     trim(autotrophs_config(prey_ind)%sname), &
-                                     ' by ', trim(zooplankton_config(zoo_ind)%sname)
-    grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
-    grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
-    grazing(prey_ind,zoo_ind)%zoo_ind          = -1
-    grazing(prey_ind,zoo_ind)%zoo_ind_cnt      = 0
-    grazing(prey_ind,zoo_ind)%z_umax_0         = 3.25_r8 * dps
-    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8
-    grazing(prey_ind,zoo_ind)%graze_zoo        = 0.3_r8
-    grazing(prey_ind,zoo_ind)%graze_poc        = 0.0_r8
-    grazing(prey_ind,zoo_ind)%graze_doc        = 0.06_r8
-    grazing(prey_ind,zoo_ind)%f_zoo_detr       = 0.1_r8
-    grazing(prey_ind,zoo_ind)%grazing_function = grz_fnc_michaelis_menten
+    do n=1,zooplankton_cnt
+      do m=1,grazer_prey_cnt
 
-    prey_ind = diat_ind
-    write(grazing(prey_ind,zoo_ind)%sname, "(4A)") 'grz_',                    &
-                                     trim(autotrophs_config(prey_ind)%sname), &
-                                     '_', trim(zooplankton_config(zoo_ind)%sname)
-    write(grazing(prey_ind,zoo_ind)%lname, "(4A)") 'Grazing of ',             &
-                                     trim(autotrophs_config(prey_ind)%sname), &
-                                     ' by ', trim(zooplankton_config(zoo_ind)%sname)
-    grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
-    grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
-    grazing(prey_ind,zoo_ind)%zoo_ind          = -1
-    grazing(prey_ind,zoo_ind)%zoo_ind_cnt      = 0
-    grazing(prey_ind,zoo_ind)%z_umax_0         = 2.9_r8 * dps
-    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8
-    grazing(prey_ind,zoo_ind)%graze_zoo        = 0.3_r8
-    grazing(prey_ind,zoo_ind)%graze_poc        = 0.4_r8
-    grazing(prey_ind,zoo_ind)%graze_doc        = 0.06_r8
-    grazing(prey_ind,zoo_ind)%f_zoo_detr       = 0.2_r8
-    grazing(prey_ind,zoo_ind)%grazing_function = grz_fnc_michaelis_menten
+        ! Properties that are the same for all grazers
+        write(grazing(m,n)%sname, "(4A)") 'grz_',                             &
+                                   trim(autotrophs_config(m)%sname),          &
+                                   '_', trim(zooplankton_config(n)%sname)
+        write(grazing(m,n)%lname, "(4A)") 'Grazing of ',                      &
+                                   trim(autotrophs_config(m)%sname),          &
+                                   ' by ', trim(zooplankton_config(n)%sname)
+        grazing(m,n)%auto_ind(:)      = 0
+        grazing(m,n)%auto_ind(1)      = m
+        grazing(m,n)%auto_ind_cnt     = 1
+        grazing(m,n)%zoo_ind          = -1
+        grazing(m,n)%zoo_ind_cnt      = 0
 
-    prey_ind = diaz_ind
-    write(grazing(prey_ind,zoo_ind)%sname, "(4A)") 'grz_',                    &
-                                     trim(autotrophs_config(prey_ind)%sname), &
-                                     '_', trim(zooplankton_config(zoo_ind)%sname)
-    write(grazing(prey_ind,zoo_ind)%lname, "(4A)") 'Grazing of ',             &
-                                     trim(autotrophs_config(prey_ind)%sname), &
-                                     ' by ', trim(zooplankton_config(zoo_ind)%sname)
-    grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
-    grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
-    grazing(prey_ind,zoo_ind)%zoo_ind          = -1
-    grazing(prey_ind,zoo_ind)%zoo_ind_cnt      = 0
-    grazing(prey_ind,zoo_ind)%z_umax_0         = 1.85_r8 * dps
-    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8
-    grazing(prey_ind,zoo_ind)%graze_zoo        = 0.3_r8
-    grazing(prey_ind,zoo_ind)%graze_poc        = 0.08_r8
-    grazing(prey_ind,zoo_ind)%graze_doc        = 0.06_r8
-    grazing(prey_ind,zoo_ind)%f_zoo_detr       = 0.1_r8
-    grazing(prey_ind,zoo_ind)%grazing_function = grz_fnc_michaelis_menten
+        ! Properties that depend on m & n
+        if ((trim(zooplankton_config(n)%sname).eq.'zoo').and.                 &
+            (trim(autotrophs_config(m)%sname).eq.'sp')) then
+          grazing(m,n)%z_umax_0         = 3.25_r8 * dps
+          grazing(m,n)%z_grz            = 1.15_r8
+          grazing(m,n)%graze_zoo        = 0.3_r8
+          grazing(m,n)%graze_poc        = 0.0_r8
+          grazing(m,n)%graze_doc        = 0.06_r8
+          grazing(m,n)%f_zoo_detr       = 0.1_r8
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+        elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
+                (trim(autotrophs_config(m)%sname).eq.'diat')) then
+          grazing(m,n)%z_umax_0         = 2.9_r8 * dps
+          grazing(m,n)%z_grz            = 1.15_r8
+          grazing(m,n)%graze_zoo        = 0.3_r8
+          grazing(m,n)%graze_poc        = 0.4_r8
+          grazing(m,n)%graze_doc        = 0.06_r8
+          grazing(m,n)%f_zoo_detr       = 0.2_r8
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+        elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
+                (trim(autotrophs_config(m)%sname).eq.'diaz')) then
+          grazing(m,n)%z_umax_0         = 1.85_r8 * dps
+          grazing(m,n)%z_grz            = 1.15_r8
+          grazing(m,n)%graze_zoo        = 0.3_r8
+          grazing(m,n)%graze_poc        = 0.08_r8
+          grazing(m,n)%graze_doc        = 0.06_r8
+          grazing(m,n)%f_zoo_detr       = 0.1_r8
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+        else
+          grazing(m,n)%z_umax_0         = c0
+          grazing(m,n)%z_grz            = c0
+          grazing(m,n)%graze_zoo        = c0
+          grazing(m,n)%graze_poc        = c0
+          grazing(m,n)%graze_doc        = c0
+          grazing(m,n)%f_zoo_detr       = c0
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+        end if
+      end do
+    end do
 
     !-----------------------------------------------------------------------
     !  &marbl_ecosys_base_nml
