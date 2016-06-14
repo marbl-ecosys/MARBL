@@ -50,6 +50,7 @@ module marbl_interface
   use marbl_restore_mod     , only : marbl_restore_type
 
   use marbl_config_mod, only : marbl_config_and_parms_type
+  use marbl_config_mod, only : ciso_on
 
   implicit none
 
@@ -101,7 +102,6 @@ module marbl_interface
 
 
      ! private data 
-     logical (log_kind)                        , private              :: ciso_on
      type(marbl_PAR_type)                      , private              :: PAR
      type(marbl_particulate_share_type)        , private              :: particulate_share
      type(marbl_interior_share_type)           , private, allocatable :: interior_share(:)
@@ -134,8 +134,7 @@ contains
   !***********************************************************************
   
   subroutine config(this,                 &
-       gcm_nl_buffer,                     &
-       gcm_ciso_on)
+       gcm_nl_buffer)
 
     use marbl_namelist_mod    , only : marbl_nl_cnt
     use marbl_namelist_mod    , only : marbl_nl_buffer_size
@@ -145,15 +144,13 @@ contains
 
     class(marbl_interface_class)   , intent(inout) :: this
     character(marbl_nl_buffer_size), intent(in)    :: gcm_nl_buffer(marbl_nl_cnt)
-    logical(log_kind)              , intent(in)    :: gcm_ciso_on
 
     character(*), parameter :: subname = 'marbl_interface:config'
 
     !--------------------------------------------------------------------
-    ! initialize ciso_on and status log
+    ! initialize status log
     !--------------------------------------------------------------------
 
-    this%ciso_on = gcm_ciso_on
     call this%StatusLog%construct()
 
     !---------------------------------------------------------------------------
@@ -254,7 +251,7 @@ contains
     !  Set up tracer indices
     !-----------------------------------------------------------------------
 
-    call this%tracer_indices%construct(this%ciso_on, autotrophs_config,       &
+    call this%tracer_indices%construct(ciso_on, autotrophs_config,            &
          zooplankton_config, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("tracer_indices%construct", subname)
@@ -357,7 +354,7 @@ contains
       return
     end if
 
-    if (this%ciso_on) then
+    if (ciso_on) then
        call marbl_ciso_init_tracer_metadata(this%tracer_metadata,          &
             this%tracer_read, this%tracer_indices)
     end if
@@ -368,7 +365,7 @@ contains
       call this%StatusLog%log_error_trace("marbl_update_tracer_file_metadata()", subname)
       return
     end if
-    if (this%ciso_on) then
+    if (ciso_on) then
       call marbl_update_tracer_file_metadata(this%tracer_indices, this%tracer_read, &
            ciso_tracer_init_ext, this%StatusLog)
       if (this%StatusLog%labort_marbl) then
@@ -382,7 +379,6 @@ contains
     !--------------------------------------------------------------------
 
     call marbl_init_surface_forcing_fields(                         &
-         ciso_on                      = this%ciso_on,               &
          num_elements                 = num_surface_elements,       &
          num_surface_forcing_fields   = num_surface_forcing_fields, &  
          surface_forcing_indices      = this%surface_forcing_ind,   &
@@ -414,7 +410,6 @@ contains
     !--------------------------------------------------------------------
 
     call marbl_diagnostics_init(                                              &
-         ciso_on                      = this%ciso_on,                         &
          marbl_domain                 = this%domain,                          &
          marbl_tracer_metadata        = this%tracer_metadata,                 &
          marbl_tracer_indices         = this%tracer_indices,                  &
@@ -459,7 +454,6 @@ contains
          this%column_restore)
 
     call marbl_set_interior_forcing(   &
-         ciso_on                 = this%ciso_on,                 &
          domain                  = this%domain,                  &
          interior_forcing_input  = this%interior_forcing_input,  &
          saved_state             = this%interior_saved_state,    &
@@ -495,7 +489,6 @@ contains
     class(marbl_interface_class), intent(inout) :: this
 
     call marbl_set_surface_forcing(                                           &
-         ciso_on                  = this%ciso_on,                             &
          num_elements             = this%domain%num_elements_surface_forcing, &
          surface_forcing_ind      = this%surface_forcing_ind,                 &
          surface_input_forcings   = this%surface_input_forcings,              &

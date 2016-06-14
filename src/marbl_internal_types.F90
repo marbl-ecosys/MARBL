@@ -557,8 +557,8 @@ contains
     ! tracer_cnt by 1 for each tracer that is included. Note that this gives an
     ! accurate count whether the carbon isotope tracers are included or not.
 
-    use marbl_sizes,   only : marbl_total_tracer_cnt
-    use marbl_sizes,   only : ciso_tracer_cnt
+    use marbl_sizes,         only : marbl_total_tracer_cnt
+    use marbl_sizes,         only : ciso_tracer_cnt
     use marbl_constants_mod, only : c0
 
     class(marbl_tracer_index_type), intent(inout) :: this

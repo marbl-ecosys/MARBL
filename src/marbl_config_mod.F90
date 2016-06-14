@@ -23,6 +23,7 @@ module marbl_config_mod
   !  Variables read in via &marbl_config_nml
   !---------------------------------------------------------------------
 
+  logical(log_kind), target ::  ciso_on                       ! control whether ciso tracer module is active
   logical(log_kind), target ::  lsource_sink                  ! control which portion of code is executed, useful for debugging
   logical(log_kind), target :: ciso_lsource_sink              ! control which portion of carbon isotope code is executed, useful for debugging
   logical(log_kind), target :: lecovars_full_depth_tavg       ! should base ecosystem vars be written full depth
@@ -84,6 +85,7 @@ contains
     !  &marbl_config_nml
     !-----------------------------------------------------------------------
 
+    ciso_on                       = .false.
     lsource_sink                  = .true.
     ciso_lsource_sink             = .true.
     lecovars_full_depth_tavg      = .false.
@@ -157,7 +159,7 @@ contains
     integer (int_kind)           :: nml_error                   ! namelist i/o error flag
 
     namelist /marbl_config_nml/                                               &
-         lsource_sink, ciso_lsource_sink, lecovars_full_depth_tavg,           &
+         ciso_on, lsource_sink, ciso_lsource_sink, lecovars_full_depth_tavg,  &
          ciso_lecovars_full_depth_tavg, lflux_gas_o2, lflux_gas_co2,          &
          locmip_k1_k2_bug_fix
 
@@ -205,12 +207,12 @@ contains
     ! marbl_config_nml !
     !------------------!
 
-    sname     = 'lsource_sink'
-    lname     = 'Control which portions of code are executed (useful for debugging)'
+    sname     = 'ciso_on'
+    lname     = 'Control whether CISO tracer module is active'
     units     = 'unitless'
     datatype  = 'logical'
     group     = 'marbl_config_nml'
-    lptr      => lsource_sink
+    lptr      => ciso_on
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
@@ -218,12 +220,12 @@ contains
       return
     end if
 
-    sname     = 'ciso_lsource_sink'
-    lname     = 'Control which portions of carbon isotope code are executed (useful for debugging)'
+    sname     = 'lsource_sink'
+    lname     = 'Control which portions of code are executed (useful for debugging)'
     units     = 'unitless'
     datatype  = 'logical'
     group     = 'marbl_config_nml'
-    lptr      => ciso_lsource_sink
+    lptr      => lsource_sink
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
@@ -244,17 +246,32 @@ contains
       return
     end if
 
-    sname     = 'ciso_lecovars_full_depth_tavg'
-    lname     = 'Are carbon isotope tracers full depth?'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_config_nml'
-    lptr      => ciso_lecovars_full_depth_tavg
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    if (ciso_on) then
+      sname     = 'ciso_lsource_sink'
+      lname     = 'Control which portions of carbon isotope code are executed (useful for debugging)'
+      units     = 'unitless'
+      datatype  = 'logical'
+      group     = 'marbl_config_nml'
+      lptr      => ciso_lsource_sink
+      call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      sname     = 'ciso_lecovars_full_depth_tavg'
+      lname     = 'Are carbon isotope tracers full depth?'
+      units     = 'unitless'
+      datatype  = 'logical'
+      group     = 'marbl_config_nml'
+      lptr      => ciso_lecovars_full_depth_tavg
+      call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, lptr=lptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
     end if
 
     sname     = 'lflux_gas_o2'

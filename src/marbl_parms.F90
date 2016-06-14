@@ -855,6 +855,7 @@ contains
 
   subroutine marbl_parms_construct(this, marbl_status_log)
 
+    use marbl_config_mod, only : ciso_on
     use marbl_config_mod, only : log_add_var_error
     use marbl_config_mod, only : autotrophs_config
     use marbl_config_mod, only : zooplankton_config
@@ -1657,17 +1658,19 @@ contains
       return
     end if
 
-    sname     = 'ciso_fract_factors'
-    lname     = 'Optiob for which biological fractionation calculation to use'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_parms_nml'
-    sptr      => ciso_fract_factors
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    if (ciso_on) then
+      sname     = 'ciso_fract_factors'
+      lname     = 'Optiob for which biological fractionation calculation to use'
+      units     = 'unitless'
+      datatype  = 'string'
+      group     = 'marbl_parms_nml'
+      sptr      => ciso_fract_factors
+      call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
     end if
 
     sname     = 'restore_short_names'
@@ -1809,55 +1812,57 @@ contains
       end if
     end do
 
-    sname     = 'ciso_init_ecosys_option'
-    lname     = 'How carbon isotope module is initialized'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_tracer_init_tmp_nml'
-    sptr      => ciso_init_ecosys_option
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    if (ciso_on) then
+      sname     = 'ciso_init_ecosys_option'
+      lname     = 'How carbon isotope module is initialized'
+      units     = 'unitless'
+      datatype  = 'string'
+      group     = 'marbl_tracer_init_tmp_nml'
+      sptr      => ciso_init_ecosys_option
+      call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'ciso_init_ecosys_init_file'
-    lname     = 'File containing carbon isotope init conditions'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_tracer_init_tmp_nml'
-    sptr      => ciso_init_ecosys_init_file
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'ciso_init_ecosys_init_file_fmt'
-    lname     = 'Format of file containing carbon isotope init conditions'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_tracer_init_tmp_nml'
-    sptr      => ciso_init_ecosys_init_file_fmt
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr, add_space=.true.)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    do n=1,ciso_tracer_cnt
-      write(sname,"(A,I0,A)") 'ciso_tracer_init_ext(', n, ')'
-      group = 'marbl_tracer_init_tmp_nml'
-      call this%add_var_tcr_rd(sname, group, ciso_tracer_init_ext(n),         &
-           marbl_status_log)
       if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+        call log_add_var_error(marbl_status_log, sname, subname)
         return
       end if
-    end do
+
+      sname     = 'ciso_init_ecosys_init_file'
+      lname     = 'File containing carbon isotope init conditions'
+      units     = 'unitless'
+      datatype  = 'string'
+      group     = 'marbl_tracer_init_tmp_nml'
+      sptr      => ciso_init_ecosys_init_file
+      call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      sname     = 'ciso_init_ecosys_init_file_fmt'
+      lname     = 'Format of file containing carbon isotope init conditions'
+      units     = 'unitless'
+      datatype  = 'string'
+      group     = 'marbl_tracer_init_tmp_nml'
+      sptr      => ciso_init_ecosys_init_file_fmt
+      call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr, add_space=.true.)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      do n=1,ciso_tracer_cnt
+        write(sname,"(A,I0,A)") 'ciso_tracer_init_ext(', n, ')'
+        group = 'marbl_tracer_init_tmp_nml'
+        call this%add_var_tcr_rd(sname, group, ciso_tracer_init_ext(n),       &
+             marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+          return
+        end if
+      end do
+    end if
 
     !-----------------------!
     ! marbl_forcing_tmp_nml !
@@ -2220,147 +2225,148 @@ contains
       return
     end if
 
-    sname     = 'ciso_atm_model_year'
-    lname     = 'Arbirtrary model year'
-    units     = 'unitless'
-    datatype  = 'integer'
-    group     = 'marbl_forcing_tmp_nml'
-    iptr      => ciso_atm_model_year
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, iptr=iptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'ciso_atm_data_year'
-    lname     = 'Year in atmospheric ciso data that corresponds to ciso_atm_model_year'
-    units     = 'unitless'
-    datatype  = 'integer'
-    group     = 'marbl_forcing_tmp_nml'
-    iptr      => ciso_atm_data_year
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, iptr=iptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'ciso_atm_d13c_data_nbval'
-    lname     = 'Number of values in ciso_atm_d13c_filename'
-    units     = 'unitless'
-    datatype  = 'integer'
-    group     = 'marbl_forcing_tmp_nml'
-    iptr      => ciso_atm_d13c_data_nbval
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, iptr=iptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    if (allocated(ciso_atm_d13c_data)) then
-      sname     = 'ciso_atm_d13c_data'
-      lname     = 'Atmospheric D13C values in datafile'
-      units     = ''
+    if (ciso_on) then
+      sname     = 'ciso_atm_model_year'
+      lname     = 'Arbirtrary model year'
+      units     = 'unitless'
+      datatype  = 'integer'
       group     = 'marbl_forcing_tmp_nml'
-      call this%add_var_1d_r8(sname, lname, units, group, ciso_atm_d13c_data,   &
-                              marbl_status_log)
+      iptr      => ciso_atm_model_year
+      call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, iptr=iptr)
       if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
+        call log_add_var_error(marbl_status_log, sname, subname)
         return
       end if
-    end if
 
-    if (allocated(ciso_atm_d13c_data_yr)) then
-      sname     = 'ciso_atm_d13c_data_yr'
-      lname     = 'Date of atmospheric D13C values in datafile'
-      units     = 'date'
+      sname     = 'ciso_atm_data_year'
+      lname     = 'Year in atmospheric ciso data that corresponds to ciso_atm_model_year'
+      units     = 'unitless'
+      datatype  = 'integer'
       group     = 'marbl_forcing_tmp_nml'
-      call this%add_var_1d_r8(sname, lname, units, group, ciso_atm_d13c_data_yr, &
-                              marbl_status_log)
+      iptr      => ciso_atm_data_year
+      call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, iptr=iptr)
       if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
+        call log_add_var_error(marbl_status_log, sname, subname)
         return
       end if
-    end if
 
-    ! ciso_atm_d14c_data, ciso_atm_d14c_data_year
+      sname     = 'ciso_atm_d13c_data_nbval'
+      lname     = 'Number of values in ciso_atm_d13c_filename'
+      units     = 'unitless'
+      datatype  = 'integer'
+      group     = 'marbl_forcing_tmp_nml'
+      iptr      => ciso_atm_d13c_data_nbval
+      call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, iptr=iptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
 
-    sname     = 'ciso_atm_d13c_const'
-    lname     = 'Atmospheric D13C constant'
-    units     = 'permil'
-    datatype  = 'real'
-    group     = 'marbl_forcing_tmp_nml'
-    rptr      => ciso_atm_d13c_const
-    call this%add_var(sname, lname, units, datatype, group,                 &
+      if (allocated(ciso_atm_d13c_data)) then
+        sname     = 'ciso_atm_d13c_data'
+        lname     = 'Atmospheric D13C values in datafile'
+        units     = ''
+        group     = 'marbl_forcing_tmp_nml'
+        call this%add_var_1d_r8(sname, lname, units, group, ciso_atm_d13c_data,   &
+                                marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
+          return
+        end if
+      end if
+
+      if (allocated(ciso_atm_d13c_data_yr)) then
+        sname     = 'ciso_atm_d13c_data_yr'
+        lname     = 'Date of atmospheric D13C values in datafile'
+        units     = 'date'
+        group     = 'marbl_forcing_tmp_nml'
+        call this%add_var_1d_r8(sname, lname, units, group, ciso_atm_d13c_data_yr, &
+                                marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
+          return
+        end if
+      end if
+
+      ! ciso_atm_d14c_data, ciso_atm_d14c_data_year
+      sname     = 'ciso_atm_d13c_const'
+      lname     = 'Atmospheric D13C constant'
+      units     = 'permil'
+      datatype  = 'real'
+      group     = 'marbl_forcing_tmp_nml'
+      rptr      => ciso_atm_d13c_const
+      call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
 
-    sname     = 'ciso_atm_d14c_const'
-    lname     = 'Atmospheric D14C constant'
-    units     = 'permil'
-    datatype  = 'real'
-    group     = 'marbl_forcing_tmp_nml'
-    rptr      => ciso_atm_d14c_const
-    call this%add_var(sname, lname, units, datatype, group,                 &
+      sname     = 'ciso_atm_d14c_const'
+      lname     = 'Atmospheric D14C constant'
+      units     = 'permil'
+      datatype  = 'real'
+      group     = 'marbl_forcing_tmp_nml'
+      rptr      => ciso_atm_d14c_const
+      call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
 
-    sname     = 'ciso_atm_d13c_opt'
-    lname     = 'Option for CO2 and D13C (varying or constant forcing)'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_forcing_tmp_nml'
-    sptr      => ciso_atm_d13c_opt
-    call this%add_var(sname, lname, units, datatype, group,                 &
+      sname     = 'ciso_atm_d13c_opt'
+      lname     = 'Option for CO2 and D13C (varying or constant forcing)'
+      units     = 'unitless'
+      datatype  = 'string'
+      group     = 'marbl_forcing_tmp_nml'
+      sptr      => ciso_atm_d13c_opt
+      call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
 
-    sname     = 'ciso_atm_d13c_filename'
-    lname     = 'Filename for varying atm D13C'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_forcing_tmp_nml'
-    sptr      => ciso_atm_d13c_filename
-    call this%add_var(sname, lname, units, datatype, group,                 &
+      sname     = 'ciso_atm_d13c_filename'
+      lname     = 'Filename for varying atm D13C'
+      units     = 'unitless'
+      datatype  = 'string'
+      group     = 'marbl_forcing_tmp_nml'
+      sptr      => ciso_atm_d13c_filename
+      call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
 
-    sname     = 'ciso_atm_d14c_opt'
-    lname     = 'Option for CO2 and D14C (varying or constant forcing)'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_forcing_tmp_nml'
-    sptr      => ciso_atm_d14c_opt
-    call this%add_var(sname, lname, units, datatype, group,                 &
+      sname     = 'ciso_atm_d14c_opt'
+      lname     = 'Option for CO2 and D14C (varying or constant forcing)'
+      units     = 'unitless'
+      datatype  = 'string'
+      group     = 'marbl_forcing_tmp_nml'
+      sptr      => ciso_atm_d14c_opt
+      call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
 
-    sname     = 'ciso_atm_d14c_filename'
-    lname     = 'Filenames for varying atm D14C'
-    units     = 'unitless'
-    group     = 'marbl_forcing_tmp_nml'
-    call this%add_var_1d_str(sname, lname, units, group, ciso_atm_d14c_filename, &
-                        marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
-      return
+      sname     = 'ciso_atm_d14c_filename'
+      lname     = 'Filenames for varying atm D14C'
+      units     = 'unitless'
+      group     = 'marbl_forcing_tmp_nml'
+      call this%add_var_1d_str(sname, lname, units, group, ciso_atm_d14c_filename, &
+                               marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('add_var_1d_str', subname)
+        return
+      end if
     end if
 
   end subroutine marbl_parms_construct

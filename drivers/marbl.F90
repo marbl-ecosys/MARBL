@@ -22,12 +22,11 @@ Program marbl
   integer                             :: ioerr=0
   integer                             :: m, n
   character(len=256)                  :: testname
-  logical                             :: ciso_on
-  namelist /marbl_driver_nml/testname, ciso_on
+
+  namelist /marbl_driver_nml/testname
 
   ! (1) Set namelist defaults, empty strings to pass to MARBL
   testname     = ''
-  ciso_on      = .false.
   nl_buffer(:) = ''
   nl_str       = ''
 
@@ -62,7 +61,7 @@ Program marbl
   write(*,"(3A)") "Beginning ", trim(testname), " test..."
   select case (trim(testname))
     case ("namelist_write")
-      call marbl_init_output_test(marbl_instance, ciso_on, nl_buffer)
+      call marbl_init_output_test(marbl_instance, nl_buffer)
     case DEFAULT
       write(*,*) "ERROR: testname = ", trim(testname), " is not a valid option"
       stop 1

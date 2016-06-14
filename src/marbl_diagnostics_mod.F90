@@ -339,7 +339,6 @@ contains
   !***********************************************************************
 
   subroutine marbl_diagnostics_init( &
-       ciso_on,                      &
        marbl_domain,                 &
        marbl_tracer_metadata,        &
        marbl_tracer_indices,         &
@@ -348,7 +347,8 @@ contains
        marbl_surface_forcing_diags,  &
        marbl_status_log)
 
-    logical (log_kind)                , intent(in)    :: ciso_on 
+    use marbl_config_mod, only : ciso_on
+
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices

@@ -91,6 +91,7 @@ module marbl_mod
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : char_len
 
+  use marbl_config_mod, only : ciso_on
   use marbl_config_mod, only : lsource_sink
   use marbl_config_mod, only : lflux_gas_o2
   use marbl_config_mod, only : lflux_gas_co2
@@ -269,7 +270,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_init_surface_forcing_fields(&
-       ciso_on, num_elements, num_surface_forcing_fields, &
+       num_elements, num_surface_forcing_fields, &
        surface_forcing_indices, surface_forcing_fields,   &
        marbl_status_log)
 
@@ -314,7 +315,6 @@ contains
 
     implicit none
 
-    logical (kind=log_kind)                   , intent(in)    :: ciso_on
     integer (KIND=int_kind)                   , intent(in)    :: num_elements
     integer (kind=int_kind)                   , intent(out)   :: num_surface_forcing_fields
     type(marbl_surface_forcing_indexing_type) , intent(out)   :: surface_forcing_indices
@@ -1062,7 +1062,6 @@ contains
   !***********************************************************************
 
   subroutine marbl_set_interior_forcing( &
-       ciso_on,                          &
        domain,                           &
        interior_forcing_input,           &
        saved_state,                      &
@@ -1088,7 +1087,6 @@ contains
 
     implicit none 
 
-    logical (log_kind)                          , intent(in)    :: ciso_on   ! flag to turn on carbon isotope calculations
     type    (marbl_domain_type)                 , intent(in)    :: domain                                
     type    (marbl_interior_forcing_input_type) , intent(in)    :: interior_forcing_input
     real    (r8)                                , intent(in)    :: interior_restore(:,:) ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec) 
@@ -1306,7 +1304,7 @@ contains
             P_iron, PON_remin(k), PON_sed_loss(k), POP_remin(k),              &
             POP_sed_loss(k), QA_dust_def(k), temperature(k),                  &
             tracer_local(:, k), carbonate(k), sed_denitrif(k),                &
-            other_remin(k), fesedflux(k), ciso_on, marbl_tracer_indices,      &
+            other_remin(k), fesedflux(k), marbl_tracer_indices,               &
             marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
@@ -1581,8 +1579,7 @@ contains
              marbl_particulate_share, POC, P_CaCO3, P_SiO2, dust, P_iron,     &
              PON_remin, PON_sed_loss, POP_remin, POP_sed_loss, QA_dust_def,   &
              temperature, tracer_local, carbonate, sed_denitrif, other_remin, &
-             fesedflux, lexport_shared_vars, marbl_tracer_indices,            &
-             marbl_status_log)
+             fesedflux, marbl_tracer_indices, marbl_status_log)
 
     !  Compute outgoing fluxes and remineralization terms. Assumes that
     !  production terms have been set. Incoming fluxes are assumed to be the
@@ -1639,7 +1636,6 @@ contains
     real (r8)                               , intent(in)    :: temperature         ! temperature for scaling functions bsi%diss
     real (r8), dimension(ecosys_base_tracer_cnt) , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
     type(carbonate_type)                    , intent(in)    :: carbonate
-    logical (log_kind)                      , intent(in)    :: lexport_shared_vars ! flag to save shared_vars or not
     real(r8)                                , intent(in)    :: fesedflux           ! sedimentary Fe input
     real(r8)                                , intent(out)   :: PON_remin           ! remin of PON
     real(r8)                                , intent(out)   :: PON_sed_loss        ! loss of PON to sediments
@@ -1664,6 +1660,7 @@ contains
          sio2_diss, & ! diss. length varies spatially with O2
          caco3_diss, &
          dust_diss
+    logical (log_kind) :: lexport_shared_vars ! flag to save shared_vars or not
 
     character(*), parameter :: &
          subname = 'marbl_mod:marbl_compute_particulate_terms'
@@ -1696,6 +1693,8 @@ contains
 
     logical (log_kind) :: poc_error   ! POC error flag
     !-----------------------------------------------------------------------
+
+    lexport_shared_vars = ciso_on
 
     associate(                                                                         &
          column_kmt               => domain%kmt,                                       &
@@ -2162,7 +2161,6 @@ contains
   !***********************************************************************
 
   subroutine marbl_set_surface_forcing( &
-       ciso_on,                         &
        num_elements,                    &
        surface_forcing_ind,             &
        surface_input_forcings,          &
@@ -2213,7 +2211,6 @@ contains
     implicit none
 
     integer (int_kind)                        , intent(in)    :: num_elements
-    logical (log_kind)                        , intent(in)    :: ciso_on ! flag to save shared_vars or not
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind         
     real(r8)                                  , intent(in)    :: surface_input_forcings(:,:)
     real (r8)                                 , intent(in)    :: surface_vals(:,:)            

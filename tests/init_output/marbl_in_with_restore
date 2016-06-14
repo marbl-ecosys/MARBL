@@ -1,8 +1,8 @@
 &marbl_driver_nml
 testname="namelist_write"
-ciso_on=.true.
 /
 &marbl_config_nml
+ciso_on=.true.
 /
 &marbl_parms_nml
  restore_short_names = 'SiO3', 'NO3', 'PO4'
