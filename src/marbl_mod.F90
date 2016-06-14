@@ -98,6 +98,7 @@ module marbl_mod
   use marbl_config_mod, only : lecovars_full_depth_tavg
   use marbl_config_mod, only : autotrophs_config
   use marbl_config_mod, only : zooplankton_config
+  use marbl_config_mod, only : grazing_config
 
   use marbl_parms, only : autotrophs
   use marbl_parms, only : zooplankton
@@ -4074,12 +4075,12 @@ contains
           !  compute sum of carbon in the grazee class, both autotrophs and zoop
           !-----------------------------------------------------------------------
           work1 = c0 ! biomass in prey class prey_ind
-          do auto_ind2 = 1, grazing(prey_ind, pred_ind)%auto_ind_cnt
+          do auto_ind2 = 1, grazing_config(prey_ind, pred_ind)%auto_ind_cnt
              auto_ind = grazing(prey_ind, pred_ind)%auto_ind(auto_ind2)
              work1 = work1 + Pprime(auto_ind)
           end do
 
-          do zoo_ind2 = 1, grazing(prey_ind, pred_ind)%zoo_ind_cnt
+          do zoo_ind2 = 1, grazing_config(prey_ind, pred_ind)%zoo_ind_cnt
              zoo_ind = grazing(prey_ind, pred_ind)%zoo_ind(zoo_ind2)
              work1 = work1 + Zprime(zoo_ind)
           end do
@@ -4111,7 +4112,7 @@ contains
           !  autotroph prey
           !-----------------------------------------------------------------------
 
-          do auto_ind2 = 1, grazing(prey_ind, pred_ind)%auto_ind_cnt
+          do auto_ind2 = 1, grazing_config(prey_ind, pred_ind)%auto_ind_cnt
              auto_ind = grazing(prey_ind, pred_ind)%auto_ind(auto_ind2)
 
              ! scale by biomass from autotroph pool
@@ -4148,7 +4149,7 @@ contains
           !-----------------------------------------------------------------------
           !  Zooplankton prey
           !-----------------------------------------------------------------------
-          do zoo_ind2 = 1, grazing(prey_ind, pred_ind)%zoo_ind_cnt
+          do zoo_ind2 = 1, grazing_config(prey_ind, pred_ind)%zoo_ind_cnt
              zoo_ind = grazing(prey_ind, pred_ind)%zoo_ind(zoo_ind2)
 
              ! scale by biomass from zooplankton pool

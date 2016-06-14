@@ -7,6 +7,7 @@ module marbl_config_mod
 
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
+  use marbl_sizes, only : grazer_prey_cnt
 
   use marbl_logging, only : marbl_log_type
 
@@ -14,6 +15,7 @@ module marbl_config_mod
 
   use marbl_internal_types, only : autotroph_config_type
   use marbl_internal_types, only : zooplankton_config_type
+  use marbl_internal_types, only : grazing_config_type
 
   implicit none
   public
@@ -33,6 +35,7 @@ module marbl_config_mod
   logical(log_kind), target :: locmip_k1_k2_bug_fix
   type(autotroph_config_type), dimension(autotroph_cnt), target :: autotrophs_config
   type(zooplankton_config_type), dimension(zooplankton_cnt), target :: zooplankton_config
+  type(grazing_config_type), dimension(grazer_prey_cnt, zooplankton_cnt), target :: grazing_config
 
   !---------------------------------------------------------------------------
   !  Datatypes for marbl_instance%configuration and marbl_instance%parameters
@@ -79,7 +82,7 @@ contains
 
   subroutine marbl_config_set_defaults()
 
-    integer :: n
+    integer :: m, n
 
     !-----------------------------------------------------------------------
     !  &marbl_config_nml
@@ -138,6 +141,21 @@ contains
       end select
     end do
 
+    ! predator-prey relationships
+    do n=1,zooplankton_cnt
+      do m=1,grazer_prey_cnt
+
+        write(grazing_config(m,n)%sname, "(4A)") 'grz_',                      &
+                                   trim(autotrophs_config(m)%sname),          &
+                                   '_', trim(zooplankton_config(n)%sname)
+        write(grazing_config(m,n)%lname, "(4A)") 'Grazing of ',               &
+                                   trim(autotrophs_config(m)%sname),          &
+                                   ' by ', trim(zooplankton_config(n)%sname)
+        grazing_config(m,n)%auto_ind_cnt = 1
+        grazing_config(m,n)%zoo_ind_cnt  = 0
+      end do
+    end do
+
   end subroutine marbl_config_set_defaults
 
   !*****************************************************************************
@@ -161,7 +179,8 @@ contains
     namelist /marbl_config_nml/                                               &
          ciso_on, lsource_sink, ciso_lsource_sink, lecovars_full_depth_tavg,  &
          ciso_lecovars_full_depth_tavg, lflux_gas_o2, lflux_gas_co2,          &
-         locmip_k1_k2_bug_fix
+         locmip_k1_k2_bug_fix, autotrophs_config, zooplankton_config,         &
+         grazing_config
 
     !-----------------------------------------------------------------------
     ! read the &marbl_config_nml namelist
@@ -191,7 +210,7 @@ contains
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
 
-    integer :: n
+    integer :: m, n
     character(len=char_len) :: prefix
 
     if (associated(this%vars)) then
@@ -424,7 +443,64 @@ contains
         call log_add_var_error(marbl_status_log, sname, subname)
         return
       end if
+    end do
 
+    do n=1,zooplankton_cnt
+      do m=1,grazer_prey_cnt
+        write(prefix, "(A,I0,A,I0,A)") 'grazing_config(', m, ',', n, ')%'
+
+        write(sname, "(2A)") trim(prefix), 'sname'
+        lname    = 'Short name of grazer'
+        units    = 'unitless'
+        datatype = 'string'
+        group    = 'marbl_config_nml'
+        sptr     => grazing_config(m,n)%sname
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, sptr=sptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'lname'
+        lname    = 'Long name of grazer'
+        units    = 'unitless'
+        datatype = 'string'
+        group    = 'marbl_config_nml'
+        sptr     => grazing_config(m,n)%lname
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, sptr=sptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'auto_ind_cnt'
+        lname    = 'number of autotrophs in prey-clase auto_ind'
+        units    = 'unitless'
+        datatype = 'integer'
+        group    = 'marbl_config_nml'
+        iptr     => grazing_config(m,n)%auto_ind_cnt
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, iptr=iptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'zoo_ind_cnt'
+        lname    = 'number of zooplankton in prey-clase auto_ind'
+        units    = 'unitless'
+        datatype = 'integer'
+        group    = 'marbl_config_nml'
+        iptr     => grazing_config(m,n)%zoo_ind_cnt
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, iptr=iptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+      end do
     end do
 
   end subroutine marbl_config_construct

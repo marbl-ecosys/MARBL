@@ -26,7 +26,7 @@ module marbl_parms
 
   use marbl_internal_types, only : autotroph_parms_type
   use marbl_internal_types, only : zooplankton_parms_type
-  use marbl_internal_types, only : grazing_type
+  use marbl_internal_types, only : grazing_parms_type
 
   use marbl_interface_types, only : marbl_tracer_read_type
   use marbl_interface_types, only : marbl_forcing_monthly_every_ts_type
@@ -75,7 +75,7 @@ module marbl_parms
 
   type(zooplankton_parms_type), target :: zooplankton(zooplankton_cnt)
   type(autotroph_parms_type),   target :: autotrophs(autotroph_cnt)
-  type(grazing_type),           target :: grazing(grazer_prey_cnt, zooplankton_cnt)
+  type(grazing_parms_type),     target :: grazing(grazer_prey_cnt, zooplankton_cnt)
 
   real(r8),            target :: iron_frac_in_dust            ! fraction by weight of iron in dust
   real(r8),            target :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
@@ -357,7 +357,7 @@ module marbl_parms
   ! (So we don't accidentally use them from this module)
   private :: r8, int_kind, log_kind, char_len
   private :: c1, dps
-  private :: grazing_type
+  private :: zooplankton_parms_type, autotroph_parms_type, grazing_parms_type
   private :: autotroph_cnt, zooplankton_cnt, grazer_prey_cnt
   private :: marbl_log_type
   private :: set_defaults_tcr_rd
@@ -513,17 +513,9 @@ contains
       do m=1,grazer_prey_cnt
 
         ! Properties that are the same for all grazers
-        write(grazing(m,n)%sname, "(4A)") 'grz_',                             &
-                                   trim(autotrophs_config(m)%sname),          &
-                                   '_', trim(zooplankton_config(n)%sname)
-        write(grazing(m,n)%lname, "(4A)") 'Grazing of ',                      &
-                                   trim(autotrophs_config(m)%sname),          &
-                                   ' by ', trim(zooplankton_config(n)%sname)
         grazing(m,n)%auto_ind(:)      = 0
         grazing(m,n)%auto_ind(1)      = m
-        grazing(m,n)%auto_ind_cnt     = 1
         grazing(m,n)%zoo_ind          = -1
-        grazing(m,n)%zoo_ind_cnt      = 0
 
         ! Properties that depend on m & n
         if ((trim(zooplankton_config(n)%sname).eq.'zoo').and.                 &
@@ -565,13 +557,13 @@ contains
       end do
     end do
 
-    iron_frac_in_dust            = 0.035_r8 * 0.01_r8
-    iron_frac_in_bc              = 0.06_r8
-    caco3_bury_thres_opt = 'omega_calc'
+    iron_frac_in_dust      = 0.035_r8 * 0.01_r8
+    iron_frac_in_bc        = 0.06_r8
+    caco3_bury_thres_opt   = 'omega_calc'
     caco3_bury_thres_depth = 3000.0e2
-    PON_bury_coeff = 0.5_r8
-    POP_bury_coeff = 1.0_r8
-    ciso_fract_factors                      = 'Rau'
+    PON_bury_coeff         = 0.5_r8
+    POP_bury_coeff         = 1.0_r8
+    ciso_fract_factors     = 'Rau'
 
     ! FIXME #69: not thread-safe!
     if (.not.allocated(inv_tau)) &
@@ -1409,58 +1401,6 @@ contains
     do n=1,zooplankton_cnt
       do m=1,grazer_prey_cnt
         write(prefix, "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%'
-
-        write(sname, "(2A)") trim(prefix), 'sname'
-        lname    = 'Short name of grazer'
-        units    = 'unitless'
-        datatype = 'string'
-        group    = 'marbl_parms_nml'
-        sptr     => grazing(m,n)%sname
-        call this%add_var(sname, lname, units, datatype, group,               &
-                          marbl_status_log, sptr=sptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        write(sname, "(2A)") trim(prefix), 'lname'
-        lname    = 'Long name of grazer'
-        units    = 'unitless'
-        datatype = 'string'
-        group    = 'marbl_parms_nml'
-        sptr     => grazing(m,n)%lname
-        call this%add_var(sname, lname, units, datatype, group,               &
-                          marbl_status_log, sptr=sptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        write(sname, "(2A)") trim(prefix), 'auto_ind_cnt'
-        lname    = 'number of autotrophs in prey-clase auto_ind'
-        units    = 'unitless'
-        datatype = 'integer'
-        group    = 'marbl_parms_nml'
-        iptr     => grazing(m,n)%auto_ind_cnt
-        call this%add_var(sname, lname, units, datatype, group,               &
-                          marbl_status_log, iptr=iptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        write(sname, "(2A)") trim(prefix), 'zoo_ind_cnt'
-        lname    = 'number of zooplankton in prey-clase auto_ind'
-        units    = 'unitless'
-        datatype = 'integer'
-        group    = 'marbl_parms_nml'
-        iptr     => grazing(m,n)%zoo_ind_cnt
-        call this%add_var(sname, lname, units, datatype, group,               &
-                          marbl_status_log, iptr=iptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
 
         write(sname, "(2A)") trim(prefix), 'grazing_function'
         lname    = 'functional form of grazing parmaeterization'

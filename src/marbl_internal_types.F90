@@ -7,8 +7,9 @@ module marbl_internal_types
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : char_len
 
+  use marbl_sizes, only : autotroph_cnt
+  use marbl_sizes, only : zooplankton_cnt
   use marbl_sizes, only : max_prey_class_size
-  use marbl_sizes, only : autotroph_cnt, zooplankton_cnt
 
   use marbl_logging, only : marbl_log_type
 
@@ -42,7 +43,6 @@ module marbl_internal_types
      logical (KIND=log_kind) :: silicifier                         ! flag set to true if this autotroph is a silicifier
   end type autotroph_config_type
 
-  ! derived type for functional group
   type, public :: autotroph_parms_type
      real    (KIND=r8)       :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3 ! nutrient uptake half-sat constants
      real    (KIND=r8)       :: Qp                                 ! P/C ratio
@@ -58,23 +58,34 @@ module marbl_internal_types
   end type autotroph_parms_type
 
   !****************************************************************************
-  ! derived type for grazing
+  ! derived types for grazing
 
-  type, public :: grazing_type
-     character(char_len)     :: sname
-     character(char_len)     :: lname
-     integer (KIND=int_kind) :: auto_ind_cnt     ! number of autotrophs in prey-clase auto_ind
-     integer (KIND=int_kind) :: zoo_ind_cnt      ! number of zooplankton in prey-clase zoo_ind
-     integer (KIND=int_kind) :: grazing_function ! functional form of grazing parameterization
-     real    (KIND=r8)       :: z_umax_0         ! max zoo growth rate at tref (1/sec)
-     real    (KIND=r8)       :: z_grz            ! grazing coef. (mmol C/m^3)^2
-     real    (KIND=r8)       :: graze_zoo        ! routing of grazed term, remainder goes to dic
-     real    (KIND=r8)       :: graze_poc        ! routing of grazed term, remainder goes to dic
-     real    (KIND=r8)       :: graze_doc        ! routing of grazed term, remainder goes to dic
-     real    (KIND=r8)       :: f_zoo_detr       ! fraction of zoo losses to detrital
-     integer (KIND=int_kind) :: auto_ind(max_prey_class_size)
-     integer (KIND=int_kind) :: zoo_ind(max_prey_class_size)
-  end type grazing_type
+  type, public :: grazing_config_type
+    character(char_len)     :: sname
+    character(char_len)     :: lname
+    integer (KIND=int_kind) :: auto_ind_cnt     ! number of autotrophs in prey-clase auto_ind
+    integer (KIND=int_kind) :: zoo_ind_cnt      ! number of zooplankton in prey-clase zoo_ind
+  end type grazing_config_type
+
+  type, public :: grazing_parms_type
+    integer (KIND=int_kind) :: grazing_function ! functional form of grazing parameterization
+    real    (KIND=r8)       :: z_umax_0         ! max zoo growth rate at tref (1/sec)
+    real    (KIND=r8)       :: z_grz            ! grazing coef. (mmol C/m^3)^2
+    real    (KIND=r8)       :: graze_zoo        ! routing of grazed term, remainder goes to dic
+    real    (KIND=r8)       :: graze_poc        ! routing of grazed term, remainder goes to dic
+    real    (KIND=r8)       :: graze_doc        ! routing of grazed term, remainder goes to dic
+    real    (KIND=r8)       :: f_zoo_detr       ! fraction of zoo losses to detrital
+    ! FIXME #78: we want auto_ind and zoo_ind to be allocatable, but gfortran
+    !            does not support having derived types with allocatable components
+    !            in a namelist (at least as of 5.2.0). Eventually these two
+    !            components should be made allocatable and then we can
+    !             (1) remove max_prey_class_size from marbl_sizes
+    !             (2) uncomment the constructor for this class
+    integer (KIND=int_kind), dimension(max_prey_class_size) :: auto_ind
+    integer (KIND=int_kind), dimension(max_prey_class_size) :: zoo_ind
+!  contains
+!    procedure, public :: construct => grazing_parms_constructor
+  end type grazing_parms_type
 
   !****************************************************************************
 
@@ -786,6 +797,37 @@ contains
     end associate
 
   end subroutine tracer_index_constructor
+
+  !*****************************************************************************
+
+#if 0
+  ! FIXME #78: commented because auto_ind and zoo_ind are not allocatable yet
+  subroutine grazing_parms_constructor(this, grazing_conf, marbl_status_log)
+
+    class(grazing_parms_type), intent(inout) :: this
+    type(grazing_config_type), intent(in)    :: grazing_conf
+    type(marbl_log_type),      intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_internal_types:grazing_config_constructor'
+    character(len=char_len) :: log_message
+
+    if (allocated(this%auto_ind)) then
+      log_message = 'grazing%auto_inds is already allocated!'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    if (allocated(this%zoo_ind)) then
+      log_message = 'grazing%zoo_inds is already allocated!'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    allocate(this%auto_ind(grazing_conf%auto_ind_cnt))
+    allocate(this%zoo_ind(grazing_conf%zoo_ind_cnt))
+
+  end subroutine grazing_parms_constructor
+#endif
 
   !*****************************************************************************
 
