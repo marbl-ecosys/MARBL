@@ -114,6 +114,7 @@ module marbl_interface
 
      procedure, public :: config
      procedure, public :: init
+     procedure, public :: complete_config_and_init
      procedure, public :: get_tracer_index
      procedure, public :: set_interior_forcing
      procedure, public :: set_surface_forcing
@@ -241,9 +242,9 @@ contains
     !  Lock and log this%configuration
     !-----------------------------------------------------------------------
 
-    call this%configuration%lock_and_log(this%StatusLog)
+    call this%configuration%finalize_vars(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('configuration%lock_and_log', subname)
+      call this%StatusLog%log_error_trace('configuration%finalize_vars', subname)
       return
     end if
 
@@ -435,6 +436,27 @@ contains
     end if
 
   end subroutine init
+
+  !***********************************************************************
+  
+  subroutine complete_config_and_init(this)
+
+    implicit none
+
+    class(marbl_interface_class), intent(inout) :: this
+
+    character(*), parameter :: subname = 'marbl_interface:set_interior_forcing'
+
+    ! Log parameter setup
+    call this%parameters%finalize_vars(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('parmeters%finalize_list', &
+           subname)
+      return
+    end if
+
+
+  end subroutine complete_config_and_init
 
   !***********************************************************************
   

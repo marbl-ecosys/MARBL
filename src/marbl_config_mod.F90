@@ -67,7 +67,7 @@ module marbl_config_mod
     procedure :: add_var_1d_r8  => marbl_var_add_1d_r8
     procedure :: add_var_1d_int => marbl_var_add_1d_int
     procedure :: add_var_1d_str => marbl_var_add_1d_str
-    procedure :: lock_and_log   => marbl_vars_lock_and_log
+    procedure :: finalize_vars  => marbl_vars_finalize
   end type marbl_config_and_parms_type
 
   !*****************************************************************************
@@ -839,12 +839,12 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_vars_lock_and_log(this, marbl_status_log)
+  subroutine marbl_vars_finalize(this, marbl_status_log)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_config_mod:marbl_vars_lock_and_log'
+    character(*), parameter :: subname = 'marbl_config_mod:marbl_vars_finalize'
     character(len=char_len) :: log_message
     character(len=char_len) :: group
     character(len=7)        :: logic
@@ -905,7 +905,7 @@ contains
         call marbl_status_log%log_noerror('', subname)
     end do
 
-  end subroutine marbl_vars_lock_and_log
+  end subroutine marbl_vars_finalize
 
   !***********************************************************************
 

@@ -57,11 +57,10 @@ Contains
 
     ! Optional: call marbl_instance%parameters%put()
 
-    ! Log parameter setup
-    call marbl_instance%parameters%lock_and_log(marbl_instance%StatusLog)
+    call marbl_instance%complete_config_and_init
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl_parmeters%list',   &
-           subname)
+      call marbl_instance%StatusLog%log_error_trace(                          &
+           'marbl%complete_config_and_init', subname)
       return
     end if
 
