@@ -95,6 +95,7 @@ module marbl_mod
   use marbl_config_mod, only : lsource_sink
   use marbl_config_mod, only : lflux_gas_o2
   use marbl_config_mod, only : lflux_gas_co2
+  use marbl_config_mod, only : liron_flux_derived
   use marbl_config_mod, only : lecovars_full_depth_tavg
   use marbl_config_mod, only : autotrophs_config
   use marbl_config_mod, only : zooplankton_config
@@ -163,7 +164,6 @@ module marbl_mod
   use marbl_parms, only : r_Nfix_photo
   use marbl_parms, only : spc_poc_fac
   use marbl_parms, only : grazing  
-  use marbl_parms, only : liron_flux_derived
   use marbl_parms, only : caco3_bury_thres_iopt
   use marbl_parms, only : caco3_bury_thres_iopt_fixed_depth
   use marbl_parms, only : caco3_bury_thres_iopt_omega_calc
@@ -278,41 +278,41 @@ contains
     !  Initialize the surface forcing_fields datatype with information from the
     !  namelist read
     !
-    use marbl_parms    , only : gas_flux_forcing_iopt_drv
-    use marbl_parms    , only : gas_flux_forcing_iopt_file
-    use marbl_parms    , only : gas_flux_forcing_iopt
-    use marbl_parms    , only : gas_flux_forcing_file
-    use marbl_parms    , only : dust_flux_source
-    use marbl_parms    , only : dust_flux_file
-    use marbl_parms    , only : iron_flux_source
-    use marbl_parms    , only : iron_flux_file
-    use marbl_parms    , only : fice_file
-    use marbl_parms    , only : xkw_file
-    use marbl_parms    , only : ap_file
-    use marbl_parms    , only : nox_flux_monthly_file
-    use marbl_parms    , only : nhy_flux_monthly_file
-    use marbl_parms    , only : din_riv_flux_file
-    use marbl_parms    , only : dip_riv_flux_file
-    use marbl_parms    , only : don_riv_flux_file
-    use marbl_parms    , only : dop_riv_flux_file
-    use marbl_parms    , only : dsi_riv_flux_file
-    use marbl_parms    , only : dfe_riv_flux_file
-    use marbl_parms    , only : dic_riv_flux_file
-    use marbl_parms    , only : alk_riv_flux_file
-    use marbl_parms    , only : doc_riv_flux_file
-    use marbl_parms    , only : atm_co2_iopt
-    use marbl_parms    , only : atm_co2_iopt_drv_prog
-    use marbl_parms    , only : atm_co2_iopt_drv_diag
-    use marbl_parms    , only : atm_co2_iopt_const
-    use marbl_parms    , only : atm_co2_const
-    use marbl_parms    , only : atm_alt_co2_const
-    use marbl_parms    , only : atm_alt_co2_iopt
-    use marbl_parms    , only : ndep_data_type 
-    use marbl_parms    , only : ndep_shr_stream_year_first
-    use marbl_parms    , only : ndep_shr_stream_year_last
-    use marbl_parms    , only : ndep_shr_stream_year_align
-    use marbl_parms    , only : ndep_shr_stream_file
-    use marbl_parms    , only : ndep_shr_stream_scale_factor
+    use marbl_config_mod, only : gas_flux_forcing_iopt_drv
+    use marbl_config_mod, only : gas_flux_forcing_iopt_file
+    use marbl_config_mod, only : gas_flux_forcing_iopt
+    use marbl_config_mod, only : gas_flux_forcing_file
+    use marbl_config_mod, only : dust_flux_source
+    use marbl_config_mod, only : dust_flux_file
+    use marbl_config_mod, only : iron_flux_source
+    use marbl_config_mod, only : iron_flux_file
+    use marbl_config_mod, only : fice_file
+    use marbl_config_mod, only : xkw_file
+    use marbl_config_mod, only : ap_file
+    use marbl_config_mod, only : nox_flux_monthly_file
+    use marbl_config_mod, only : nhy_flux_monthly_file
+    use marbl_config_mod, only : din_riv_flux_file
+    use marbl_config_mod, only : dip_riv_flux_file
+    use marbl_config_mod, only : don_riv_flux_file
+    use marbl_config_mod, only : dop_riv_flux_file
+    use marbl_config_mod, only : dsi_riv_flux_file
+    use marbl_config_mod, only : dfe_riv_flux_file
+    use marbl_config_mod, only : dic_riv_flux_file
+    use marbl_config_mod, only : alk_riv_flux_file
+    use marbl_config_mod, only : doc_riv_flux_file
+    use marbl_config_mod, only : atm_co2_iopt
+    use marbl_config_mod, only : atm_co2_iopt_drv_prog
+    use marbl_config_mod, only : atm_co2_iopt_drv_diag
+    use marbl_config_mod, only : atm_co2_iopt_const
+    use marbl_config_mod, only : atm_co2_const
+    use marbl_config_mod, only : atm_alt_co2_const
+    use marbl_config_mod, only : atm_alt_co2_iopt
+    use marbl_config_mod, only : ndep_data_type 
+    use marbl_config_mod, only : ndep_shr_stream_year_first
+    use marbl_config_mod, only : ndep_shr_stream_year_last
+    use marbl_config_mod, only : ndep_shr_stream_year_align
+    use marbl_config_mod, only : ndep_shr_stream_file
+    use marbl_config_mod, only : ndep_shr_stream_scale_factor
 
     implicit none
 
@@ -975,8 +975,8 @@ contains
 
     !  Set tracer and forcing metadata
 
-    use marbl_parms    , only : init_ecosys_init_file
-    use marbl_parms    , only : init_ecosys_init_file_fmt
+    use marbl_parms, only : init_ecosys_init_file
+    use marbl_parms, only : init_ecosys_init_file_fmt
 
     implicit none
 
@@ -1431,8 +1431,8 @@ contains
     !  The first 6 arguments are intent(inout) in
     !  order to preserve contents on other blocks.
 
-    use marbl_parms    , only : dust_flux_source
-    use marbl_parms    , only : dust_flux_file        
+    use marbl_config_mod, only : dust_flux_source
+    use marbl_config_mod, only : dust_flux_file        
 
     integer(int_kind)                  , intent(in)    :: k
     real (r8)                          , intent(in)    :: net_dust_in     ! dust flux
@@ -2186,26 +2186,26 @@ contains
     use marbl_co2calc_mod        , only : thermodynamic_coefficients_type
     use marbl_oxygen             , only : o2sat_surf
     use marbl_constants_mod      , only : molw_Fe
-    use marbl_parms              , only : ndep_data_type
-    use marbl_parms              , only : gas_flux_forcing_iopt_drv
-    use marbl_parms              , only : gas_flux_forcing_iopt_file
-    use marbl_parms              , only : gas_flux_forcing_iopt
-    use marbl_parms              , only : fice_file        
-    use marbl_parms              , only : xkw_file         
-    use marbl_parms              , only : ap_file          
+    use marbl_config_mod         , only : ndep_data_type
+    use marbl_config_mod         , only : gas_flux_forcing_iopt_drv
+    use marbl_config_mod         , only : gas_flux_forcing_iopt_file
+    use marbl_config_mod         , only : gas_flux_forcing_iopt
+    use marbl_config_mod         , only : fice_file        
+    use marbl_config_mod         , only : xkw_file         
+    use marbl_config_mod         , only : ap_file          
+    use marbl_config_mod         , only : dust_flux_file       
+    use marbl_config_mod         , only : iron_flux_file          
+    use marbl_config_mod         , only : din_riv_flux_file      
+    use marbl_config_mod         , only : dip_riv_flux_file    
+    use marbl_config_mod         , only : don_riv_flux_file    
+    use marbl_config_mod         , only : dop_riv_flux_file    
+    use marbl_config_mod         , only : dsi_riv_flux_file    
+    use marbl_config_mod         , only : dfe_riv_flux_file    
+    use marbl_config_mod         , only : dic_riv_flux_file    
+    use marbl_config_mod         , only : alk_riv_flux_file    
+    use marbl_config_mod         , only : doc_riv_flux_file    
     use marbl_parms              , only : iron_frac_in_dust
     use marbl_parms              , only : iron_frac_in_bc
-    use marbl_parms              , only : dust_flux_file       
-    use marbl_parms              , only : iron_flux_file          
-    use marbl_parms              , only : din_riv_flux_file      
-    use marbl_parms              , only : dip_riv_flux_file    
-    use marbl_parms              , only : don_riv_flux_file    
-    use marbl_parms              , only : dop_riv_flux_file    
-    use marbl_parms              , only : dsi_riv_flux_file    
-    use marbl_parms              , only : dfe_riv_flux_file    
-    use marbl_parms              , only : dic_riv_flux_file    
-    use marbl_parms              , only : alk_riv_flux_file    
-    use marbl_parms              , only : doc_riv_flux_file    
     use marbl_sizes              , only : marbl_total_tracer_cnt
     use marbl_ciso_mod           , only : marbl_ciso_set_surface_forcing
 
@@ -2662,22 +2662,22 @@ contains
     ! initialize surface forcing metadata
     !-----------------------------------------------------------------------
 
-    use marbl_parms     , only : fice_file        
-    use marbl_parms     , only : xkw_file         
-    use marbl_parms     , only : ap_file          
-    use marbl_parms     , only : dust_flux_file          
-    use marbl_parms     , only : iron_flux_file          
-    use marbl_parms     , only : nox_flux_monthly_file  
-    use marbl_parms     , only : nhy_flux_monthly_file  
-    use marbl_parms     , only : din_riv_flux_file       
-    use marbl_parms     , only : dip_riv_flux_file     
-    use marbl_parms     , only : don_riv_flux_file     
-    use marbl_parms     , only : dop_riv_flux_file     
-    use marbl_parms     , only : dsi_riv_flux_file     
-    use marbl_parms     , only : dfe_riv_flux_file     
-    use marbl_parms     , only : dic_riv_flux_file     
-    use marbl_parms     , only : alk_riv_flux_file     
-    use marbl_parms     , only : doc_riv_flux_file     
+    use marbl_config_mod, only : fice_file        
+    use marbl_config_mod, only : xkw_file         
+    use marbl_config_mod, only : ap_file          
+    use marbl_config_mod, only : dust_flux_file          
+    use marbl_config_mod, only : iron_flux_file          
+    use marbl_config_mod, only : nox_flux_monthly_file  
+    use marbl_config_mod, only : nhy_flux_monthly_file  
+    use marbl_config_mod, only : din_riv_flux_file       
+    use marbl_config_mod, only : dip_riv_flux_file     
+    use marbl_config_mod, only : don_riv_flux_file     
+    use marbl_config_mod, only : dop_riv_flux_file     
+    use marbl_config_mod, only : dsi_riv_flux_file     
+    use marbl_config_mod, only : dfe_riv_flux_file     
+    use marbl_config_mod, only : dic_riv_flux_file     
+    use marbl_config_mod, only : alk_riv_flux_file     
+    use marbl_config_mod, only : doc_riv_flux_file     
 
     implicit none
 

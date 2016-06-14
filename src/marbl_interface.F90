@@ -205,6 +205,7 @@ contains
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
     use marbl_config_mod      , only : autotrophs_config
     use marbl_config_mod      , only : zooplankton_config
+    use marbl_config_mod      , only : set_derived_config
     use marbl_parms           , only : tracer_init_ext
     use marbl_parms           , only : ciso_tracer_init_ext
     use marbl_parms           , only : marbl_parms_set_defaults
@@ -241,6 +242,12 @@ contains
     !-----------------------------------------------------------------------
     !  Lock and log this%configuration
     !-----------------------------------------------------------------------
+
+    call set_derived_config(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('set_derived_config', subname)
+      return
+    end if
 
     call this%configuration%finalize_vars(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -441,20 +448,26 @@ contains
   
   subroutine complete_config_and_init(this)
 
-    implicit none
+    use marbl_parms, only : set_derived_parms
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(*), parameter :: subname = 'marbl_interface:set_interior_forcing'
+    character(*), parameter :: subname = 'marbl_interface:complete_config_and_init'
 
-    ! Log parameter setup
+    ! Update values of any parameters that depend on namelist / put statements
+    call set_derived_parms(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('set_derived_parms', subname)
+      return
+    end if
+
+    ! Lock this%parameters and write values to the log
     call this%parameters%finalize_vars(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('parmeters%finalize_list', &
            subname)
       return
     end if
-
 
   end subroutine complete_config_and_init
 
