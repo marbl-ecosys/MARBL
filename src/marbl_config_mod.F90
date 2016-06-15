@@ -179,12 +179,22 @@ module marbl_config_mod
     integer :: cnt = 0
     type(marbl_single_config_or_parm_type), dimension(:), pointer :: vars => NULL()
   contains
-    procedure :: add_var        => marbl_var_add
-    procedure :: add_var_tcr_rd => marbl_var_add_tcr_rd
-    procedure :: add_var_1d_r8  => marbl_var_add_1d_r8
-    procedure :: add_var_1d_int => marbl_var_add_1d_int
-    procedure :: add_var_1d_str => marbl_var_add_1d_str
-    procedure :: finalize_vars  => marbl_vars_finalize
+    procedure          :: add_var        => marbl_var_add
+    procedure          :: add_var_tcr_rd => marbl_var_add_tcr_rd
+    procedure          :: add_var_1d_r8  => marbl_var_add_1d_r8
+    procedure          :: add_var_1d_int => marbl_var_add_1d_int
+    procedure          :: add_var_1d_str => marbl_var_add_1d_str
+    procedure          :: finalize_vars  => marbl_vars_finalize
+    procedure          :: inquire_id     => marbl_var_inquire_id
+    generic            :: put            => put_real,                         &
+                                            put_integer,                      &
+                                            put_logical,                      &
+                                            put_string
+    procedure, private :: put_real       => marbl_var_put_real
+    procedure, private :: put_integer    => marbl_var_put_integer
+    procedure, private :: put_logical    => marbl_var_put_logical
+    procedure, private :: put_string     => marbl_var_put_string
+    procedure, private :: put_general    => marbl_var_put_all_types
   end type marbl_config_and_parms_type
 
   !*****************************************************************************
@@ -192,6 +202,8 @@ module marbl_config_mod
   private :: r8, int_kind, log_kind, char_len
   private :: autotroph_cnt, zooplankton_cnt
   private :: marbl_log_type
+  private :: marbl_var_put_real, marbl_var_put_integer, marbl_var_put_logical
+  private :: marbl_var_put_string, marbl_var_put_all_types
 
 contains
 
@@ -1757,6 +1769,147 @@ contains
     end select
 
   end subroutine set_derived_config
+
+  !*****************************************************************************
+
+  subroutine marbl_var_put_all_types(this, var, marbl_status_log, rval, ival, &
+                                     lval, sval)
+
+    class(marbl_config_and_parms_type), intent(inout) :: this
+    character(len=*),                   intent(in)    :: var
+    real(r8),         optional,         intent(in)    :: rval
+    integer,          optional,         intent(in)    :: ival
+    logical,          optional,         intent(in)    :: lval
+    character(len=*), optional,         intent(in)    :: sval
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_config_mod%marbl_var_put_all_types'
+    character(len=char_len) :: log_message
+    integer :: varid
+
+    if (this%locked) then
+      write(log_message, "(3A)") 'Can not change value of ', trim(var),       &
+                                 ', parameters are locked!'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    varid = this%inquire_id(var, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      write(log_message, "(3A)") 'config_parms%put(', trim(var), ')'
+      call marbl_status_log%log_error_trace(log_message, subname)
+      return
+    end if
+
+    select case(trim(this%vars(varid)%datatype))
+      case ('real')
+        if (present(rval)) then
+          this%vars(varid)%rptr = rval
+        else
+          write(log_message, "(2A)") trim(var), ' requires real value'
+          call marbl_status_log%log_error(log_message, subname)
+        end if
+      case ('integer')
+        if (present(ival)) then
+          this%vars(varid)%iptr = ival
+        else
+          write(log_message, "(2A)") trim(var), ' requires integer value'
+          call marbl_status_log%log_error(log_message, subname)
+        end if
+      case ('logical')
+        if (present(lval)) then
+          this%vars(varid)%lptr = lval
+        else
+          write(log_message, "(2A)") trim(var), ' requires logical value'
+          call marbl_status_log%log_error(log_message, subname)
+        end if
+      case ('string')
+        if (present(sval)) then
+          this%vars(varid)%sptr = sval
+        else
+          write(log_message, "(2A)") trim(var), ' requires string value'
+          call marbl_status_log%log_error(log_message, subname)
+        end if
+    end select
+
+  end subroutine marbl_var_put_all_types
+
+  !*****************************************************************************
+
+  subroutine marbl_var_put_real(this, var, val, marbl_status_log)
+
+    class(marbl_config_and_parms_type), intent(inout) :: this
+    character(len=*),                   intent(in)    :: var
+    real(r8),                           intent(in)    :: val
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
+
+    call this%put_general(var, marbl_status_log, rval = val)
+
+  end subroutine marbl_var_put_real
+
+  !*****************************************************************************
+
+  subroutine marbl_var_put_integer(this, var, val, marbl_status_log)
+
+    class(marbl_config_and_parms_type), intent(inout) :: this
+    character(len=*),                   intent(in)    :: var
+    integer,                            intent(in)    :: val
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
+
+    call this%put_general(var, marbl_status_log, ival=val, rval=real(val,r8))
+
+  end subroutine marbl_var_put_integer
+
+  !*****************************************************************************
+
+  subroutine marbl_var_put_string(this, var, val, marbl_status_log)
+
+    class(marbl_config_and_parms_type), intent(inout) :: this
+    character(len=*),                   intent(in)    :: var
+    character(len=*),                   intent(in)    :: val
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
+
+    call this%put_general(var, marbl_status_log, sval=val)
+
+  end subroutine marbl_var_put_string
+
+  !*****************************************************************************
+
+  subroutine marbl_var_put_logical(this, var, val, marbl_status_log)
+
+    class(marbl_config_and_parms_type), intent(inout) :: this
+    character(len=*),                   intent(in)    :: var
+    logical,                            intent(in)    :: val
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
+
+    call this%put_general(var, marbl_status_log, lval=val)
+
+  end subroutine marbl_var_put_logical
+
+  !*****************************************************************************
+
+  function marbl_var_inquire_id(this, var, marbl_status_log) result(id)
+
+    class(marbl_config_and_parms_type), intent(inout) :: this
+    character(len=*),                   intent(in)    :: var
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    integer                                           :: id
+
+    character(*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_id'
+    character(len=char_len) :: log_message
+    integer :: n
+
+    id = 0
+    do n=1,this%cnt
+      if (trim(var).eq.trim(this%vars(n)%short_name)) then
+        id = n
+        return
+      end if
+    end do
+    write(log_message, "(2A)") trim(var), ' is not a valid variable name for put'
+    call marbl_status_log%log_error(log_message, subname)
+
+  end function marbl_var_inquire_id
 
   !*****************************************************************************
   

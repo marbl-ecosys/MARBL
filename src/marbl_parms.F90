@@ -1253,7 +1253,7 @@ contains
     units     = 'unitless (kg/kg)'
     datatype  = 'real'
     group     = 'marbl_parms_nml'
-    rptr      => iron_frac_in_dust
+    rptr      => iron_frac_in_bc
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
