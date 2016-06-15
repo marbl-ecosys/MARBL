@@ -525,7 +525,8 @@ contains
          caco3_bury_thres_opt, caco3_bury_thres_depth, PON_bury_coeff,        &
          POP_bury_coeff, ciso_fract_factors, restore_short_names,             &
          restore_filenames, restore_file_varnames, rest_time_inv_surf,        &
-         rest_time_inv_deep, rest_z0, rest_z1
+         rest_time_inv_deep, rest_z0, rest_z1, autotrophs, zooplankton,       &
+         grazing
 
     namelist /marbl_tracer_init_tmp_nml/                                      &
          init_ecosys_option, init_ecosys_init_file, tracer_init_ext,          &
