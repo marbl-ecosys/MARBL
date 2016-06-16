@@ -576,6 +576,7 @@ contains
     use marbl_config_mod, only : log_add_var_error
     use marbl_config_mod, only : autotrophs_config
     use marbl_config_mod, only : zooplankton_config
+    use marbl_config_mod, only : grazing_config
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
@@ -589,7 +590,7 @@ contains
     character(len=char_len), pointer :: sptr => NULL()
 
     character(len=char_len) :: prefix, comment
-    integer :: m, n
+    integer :: m, n, cnt
 
     if (associated(this%vars)) then
       write(log_message, "(A)") "this%parameters has been constructed already"
@@ -1218,28 +1219,35 @@ contains
           return
         end if
 
-        write(sname, "(2A)") trim(prefix), 'auto_ind'
-        lname     = 'Indices of autotrophs in class'
-        units     = 'unitless'
-        group     = 'marbl_parms_nml'
-        call this%add_var_1d_int(sname, lname, units, group,                  &
-                                 grazing(m,n)%auto_ind, marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_status_log%log_error_trace('add_var_1d_int', subname)
-          return
+        cnt = grazing_config(m,n)%auto_ind_cnt
+        if (cnt.gt.0) then
+          write(sname, "(2A)") trim(prefix), 'auto_ind'
+          lname     = 'Indices of autotrophs in class'
+          units     = 'unitless'
+          group     = 'marbl_parms_nml'
+          call this%add_var_1d_int(sname, lname, units, group,                &
+                            grazing(m,n)%auto_ind(1:cnt),                     &
+                            marbl_status_log,                                 &
+                            add_space=(grazing_config(m,n)%zoo_ind_cnt.eq.0))
+          if (marbl_status_log%labort_marbl) then
+            call marbl_status_log%log_error_trace('add_var_1d_int', subname)
+            return
+          end if
         end if
 
-        write(sname, "(2A)") trim(prefix), 'zoo_ind'
-        lname     = 'Indices of autotrophs in class'
-        units     = 'unitless'
-        group     = 'marbl_parms_nml'
-        call this%add_var_1d_int(sname, lname, units, group,                  &
-                                 grazing(m,n)%zoo_ind, marbl_status_log,      &
-                                 add_space=((m.ne.grazer_prey_cnt).or.        &
-                                            (n.ne.zooplankton_cnt)))
-        if (marbl_status_log%labort_marbl) then
-          call marbl_status_log%log_error_trace('add_var_1d_int', subname)
-          return
+        cnt = grazing_config(m,n)%zoo_ind_cnt
+        if (cnt.gt.0) then
+          write(sname, "(2A)") trim(prefix), 'zoo_ind'
+          lname     = 'Indices of autotrophs in class'
+          units     = 'unitless'
+          group     = 'marbl_parms_nml'
+          call this%add_var_1d_int(sname, lname, units, group,                &
+                                   grazing(m,n)%zoo_ind(1:cnt),               &
+                                   marbl_status_log, add_space=.true.)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_status_log%log_error_trace('add_var_1d_int', subname)
+            return
+          end if
         end if
 
       end do
@@ -1317,7 +1325,7 @@ contains
     group     = 'marbl_parms_nml'
     rptr      => POP_bury_coeff
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, add_space=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
