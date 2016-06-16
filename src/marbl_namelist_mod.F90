@@ -88,18 +88,26 @@ contains
     end do
   end subroutine marbl_nl_split_string
 
+  !*****************************************************************************
+
   function marbl_namelist(nl_buffer, nl_name)
 
-    character(len=marbl_nl_buffer_size), dimension(marbl_nl_cnt), intent(in) :: nl_buffer
+    character(len=marbl_nl_buffer_size), intent(in) :: nl_buffer(:)
     character(len=*), intent(in) :: nl_name
     character(len=marbl_nl_buffer_size) :: marbl_namelist
 
+    character(len=marbl_nl_buffer_size) :: single_namelist
     integer :: j, n
 
-    do j = 1, marbl_nl_cnt
-      marbl_namelist = nl_buffer(j)
+    ! Will return empty string if namelist not found
+    marbl_namelist = ''
+
+    ! Look for correct namelist in array
+    do j = 1, size(nl_buffer)
+      single_namelist = nl_buffer(j)
       n = len_trim(nl_name)
-      if (marbl_namelist(2:n+1).eq.trim(nl_name)) then
+      if (single_namelist(2:n+1).eq.trim(nl_name)) then
+         marbl_namelist = single_namelist
          exit
       end if
     end do
@@ -108,5 +116,7 @@ contains
     !            (just check to see if j>marbl_nl_cnt)
 
   end function marbl_namelist
+
+  !*****************************************************************************
 
 end module marbl_namelist_mod

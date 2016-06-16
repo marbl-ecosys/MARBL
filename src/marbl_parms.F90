@@ -502,15 +502,15 @@ contains
     use marbl_namelist_mod, only : marbl_nl_buffer_size
     use marbl_namelist_mod, only : marbl_namelist
 
-    character(marbl_nl_buffer_size), dimension(marbl_nl_cnt), intent(in) :: nl_buffer
-    type(marbl_log_type), intent(inout) :: marbl_status_log
+    character(marbl_nl_buffer_size), intent(in)    :: nl_buffer(:)
+    type(marbl_log_type),            intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_parms:marbl_parms_read_namelist'
-    character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
+    character(*), parameter :: subname = 'marbl_parms:marbl_parms_read_namelist'
     character(len=char_len) :: log_message
+    character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
 
     integer (int_kind)           :: n                           ! index for looping over tracers
     integer (int_kind)           :: nml_error                   ! namelist i/o error flag
@@ -537,23 +537,33 @@ contains
     !---------------------------------------------------------------------------
     ! read the &marbl_parms_nml namelist
     !---------------------------------------------------------------------------
-
     tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_parms_nml')
-    read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=nml_error)
-    if (nml_error /= 0) then
-       call marbl_status_log%log_error("Error reading marbl_parms_nml", subname)
-       return
+    if (tmp_nl_buffer.ne.'') then
+      read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=nml_error)
+      if (nml_error /= 0) then
+        write(log_message, "(A)") 'error reading &marbl_parms_nml'
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+    else
+      write(log_message, "(A)") '&marbl_parms_nml not included in nl_buffer'
+      call marbl_status_log%log_noerror(log_message, subname)
     end if
 
     !-----------------------------------------------------------------------
     ! read the &marbl_tracer_init_tmp_nml namelist
     !-----------------------------------------------------------------------
-
     tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_tracer_init_tmp_nml')
-    read(tmp_nl_buffer, nml=marbl_tracer_init_tmp_nml, iostat=nml_error)
-    if (nml_error /= 0) then
-      call marbl_status_log%log_error("error reading &marbl_tracer_init_tmp_nml", subname)
-      return
+    if (tmp_nl_buffer.ne.'') then
+      read(tmp_nl_buffer, nml=marbl_tracer_init_tmp_nml, iostat=nml_error)
+      if (nml_error /= 0) then
+        write(log_message, "(A)") 'error reading &marbl_tracer_init_tmp_nml'
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+    else
+      write(log_message, "(A)") '&marbl_tracer_init_tmp_nml not included in nl_buffer'
+      call marbl_status_log%log_noerror(log_message, subname)
     end if
 
   end subroutine marbl_parms_read_namelist

@@ -141,12 +141,14 @@ contains
     use marbl_namelist_mod    , only : marbl_nl_buffer_size
     use marbl_config_mod      , only : marbl_config_set_defaults
     use marbl_config_mod      , only : marbl_config_read_namelist
+    use marbl_config_mod      , only : marbl_config_set_local_pointers
     use marbl_config_mod      , only : marbl_config_construct
 
-    class(marbl_interface_class)   , intent(inout) :: this
-    character(marbl_nl_buffer_size), intent(in)    :: gcm_nl_buffer(marbl_nl_cnt)
+    class(marbl_interface_class)   , intent(inout)        :: this
+    character(marbl_nl_buffer_size), optional, intent(in) :: gcm_nl_buffer(:)
 
     character(*), parameter :: subname = 'marbl_interface:config'
+    character(len=char_len) :: log_message
 
     !--------------------------------------------------------------------
     ! initialize status log
@@ -161,15 +163,25 @@ contains
     call marbl_config_set_defaults()
 
     !---------------------------------------------------------------------------
-    ! read configuration from namelist
-    ! TODO: if present
+    ! read configuration from namelist (if present)
     !---------------------------------------------------------------------------
 
-    call marbl_config_read_namelist(gcm_nl_buffer, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_config_read_namelist', subname)
-      return
+    if (present(gcm_nl_buffer)) then
+      call marbl_config_read_namelist(gcm_nl_buffer, this%StatusLog)
+      if (this%StatusLog%labort_marbl) then
+        call this%StatusLog%log_error_trace('marbl_config_read_namelist', subname)
+        return
+      end if
+    else
+      write(log_message, "(A)") 'No namelists were provided to config'
+      call this%StatusLog%log_noerror(log_message, subname)
     end if
+
+    !---------------------------------------------------------------------------
+    ! Set up local pointers in marbl_config_mod
+    !---------------------------------------------------------------------------
+
+    call marbl_config_set_local_pointers()
 
     !---------------------------------------------------------------------------
     ! construct configuration_type
@@ -186,7 +198,6 @@ contains
   !***********************************************************************
   
   subroutine init(this,                   &
-       gcm_nl_buffer,                     &
        gcm_num_levels,                    &
        gcm_num_PAR_subcols,               &
        gcm_num_elements_interior_forcing, &
@@ -194,6 +205,7 @@ contains
        gcm_dz,                            &
        gcm_zw,                            &
        gcm_zt,                            &
+       gcm_nl_buffer,                     &
        marbl_tracer_cnt)
 
     use marbl_namelist_mod    , only : marbl_nl_cnt
@@ -216,7 +228,6 @@ contains
     implicit none
 
     class     (marbl_interface_class)      , intent(inout) :: this
-    character (marbl_nl_buffer_size)       , intent(in)    :: gcm_nl_buffer(marbl_nl_cnt)
     integer   (int_kind)                   , intent(in)    :: gcm_num_levels
     integer   (int_kind)                   , intent(in)    :: gcm_num_PAR_subcols
     integer   (int_kind)                   , intent(in)    :: gcm_num_elements_surface_forcing
@@ -224,9 +235,11 @@ contains
     real      (r8)                         , intent(in)    :: gcm_dz(gcm_num_levels) ! thickness of layer k
     real      (r8)                         , intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real      (r8)                         , intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
+    character(marbl_nl_buffer_size), optional, intent(in)  :: gcm_nl_buffer(:)
     integer   (int_kind), optional         , intent(out)   :: marbl_tracer_cnt
 
     character(*), parameter :: subname = 'marbl_interface:marbl_init'
+    character(len=char_len) :: log_message
     integer :: i
     !--------------------------------------------------------------------
 
@@ -275,14 +288,18 @@ contains
     call marbl_parms_set_defaults(gcm_num_levels)
 
     !---------------------------------------------------------------------------
-    ! read parameters from namelist
-    ! TODO: if present
+    ! read parameters from namelist (if present)
     !---------------------------------------------------------------------------
 
-    call marbl_parms_read_namelist(gcm_nl_buffer, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_parms_read_namelist', subname)
-      return
+    if (present(gcm_nl_buffer)) then
+      call marbl_parms_read_namelist(gcm_nl_buffer, this%StatusLog)
+      if (this%StatusLog%labort_marbl) then
+        call this%StatusLog%log_error_trace('marbl_parms_read_namelist', subname)
+        return
+      end if
+    else
+      write(log_message, "(A)") 'No namelists were provided to init'
+      call this%StatusLog%log_noerror(log_message, subname)
     end if
 
     !--------------------------------------------------------------------

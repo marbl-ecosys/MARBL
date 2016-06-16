@@ -362,13 +362,14 @@ contains
     use marbl_namelist_mod, only : marbl_nl_buffer_size
     use marbl_namelist_mod, only : marbl_namelist
 
-    character(marbl_nl_buffer_size), dimension(marbl_nl_cnt), intent(in) :: nl_buffer
-    type(marbl_log_type), intent(inout) :: marbl_status_log
+    character(marbl_nl_buffer_size), intent(in)    :: nl_buffer(:)
+    type(marbl_log_type),            intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_config:marbl_config_read_namelist'
+    character(*), parameter :: subname = 'marbl_config:marbl_config_read_namelist'
+    character(len=char_len) :: log_message
     character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
     integer (int_kind)           :: nml_error                   ! namelist i/o error flag
 
@@ -400,10 +401,16 @@ contains
     !-----------------------------------------------------------------------
 
     tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_config_nml')
-    read(tmp_nl_buffer, nml=marbl_config_nml, iostat=nml_error)
-    if (nml_error /= 0) then
-      call marbl_status_log%log_error("error reading &marbl_config_nml", subname)
-      return
+    if (tmp_nl_buffer.ne.'') then
+      read(tmp_nl_buffer, nml=marbl_config_nml, iostat=nml_error)
+      if (nml_error /= 0) then
+        write(log_message, "(A)") 'error reading &marbl_config_nml'
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+    else
+      write(log_message, "(A)") '&marbl_config_nml not included in nl_buffer'
+      call marbl_status_log%log_noerror(log_message, subname)
     end if
 
     !-----------------------------------------------------------------------
@@ -411,13 +418,24 @@ contains
     !-----------------------------------------------------------------------
 
     tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_forcing_tmp_nml')
-    read(tmp_nl_buffer, nml=marbl_forcing_tmp_nml, iostat=nml_error)
-    if (nml_error /= 0) then
-      call marbl_status_log%log_error("error reading &marbl_forcing_tmp_nml", subname)
-      return
+    if (tmp_nl_buffer.ne.'') then
+      read(tmp_nl_buffer, nml=marbl_forcing_tmp_nml, iostat=nml_error)
+      if (nml_error /= 0) then
+        write(log_message, "(A)") 'error reading &marbl_forcing_tmp_nml'
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+    else
+      write(log_message, "(A)") '&marbl_forcing_tmp_nml not included in nl_buffer'
+      call marbl_status_log%log_noerror(log_message, subname)
     end if
 
-    ! set local pointers
+  end subroutine marbl_config_read_namelist
+
+  !*****************************************************************************
+
+  subroutine marbl_config_set_local_pointers()
+
     dust_flux_file        => dust_flux_file_loc
     iron_flux_file        => iron_flux_file_loc
     fice_file             => fice_file_loc
@@ -435,7 +453,7 @@ contains
     alk_riv_flux_file     => alk_riv_flux_file_loc
     doc_riv_flux_file     => doc_riv_flux_file_loc
 
-  end subroutine marbl_config_read_namelist
+  end subroutine marbl_config_set_local_pointers
 
   !*****************************************************************************
 
