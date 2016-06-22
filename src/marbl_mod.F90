@@ -170,7 +170,6 @@ module marbl_mod
   use marbl_parms, only : caco3_bury_thres_iopt_omega_calc
   use marbl_parms, only : caco3_bury_thres_depth
   use marbl_parms, only : PON_bury_coeff
-  use marbl_parms, only : POP_bury_coeff
 
   use marbl_sizes, only : ecosys_base_tracer_cnt    
   use marbl_sizes, only : autotroph_cnt

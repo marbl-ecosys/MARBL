@@ -92,12 +92,6 @@ module marbl_parms
   ! is when total C burial is matched to C riverine input
   ! -----------
   real(r8),            target :: PON_bury_coeff
-  ! -----------
-  ! POP_sed_loss = POP_bury_coeff * Qp_zoo_pom * POC_sed_loss
-  ! factor is used to enable forced closure of the P cycle
-  ! i.e. POP_sed_loss = P inputs (riverine + atm dep)
-  ! -----------
-  real(r8),            target :: POP_bury_coeff
   character(char_len), target :: ciso_fract_factors             ! option for which biological fractionation calculation to use
 
   character(len=char_len), allocatable, target, dimension(:) :: restore_short_names, &
@@ -455,7 +449,6 @@ contains
     caco3_bury_thres_opt   = 'omega_calc'
     caco3_bury_thres_depth = 3000.0e2
     PON_bury_coeff         = 0.5_r8
-    POP_bury_coeff         = 1.0_r8
     ciso_fract_factors     = 'Rau'
 
     ! FIXME #69: not thread-safe!
@@ -536,6 +529,19 @@ contains
          parm_SiO2_diss, &
          parm_CaCO3_diss, &
          fe_max_scale2, &
+         iron_frac_in_dust, &
+         iron_frac_in_bc, &
+         caco3_bury_thres_opt, &
+         caco3_bury_thres_depth, &
+         PON_bury_coeff, &
+         ciso_fract_factors, &
+         restore_short_names, &
+         restore_filenames, &
+         restore_file_varnames, &
+         rest_time_inv_surf, &
+         rest_time_inv_deep, &
+         rest_z0, &
+         rest_z1, &
          bury_coeff_rmean_timescale_years, &
          parm_scalelen_z, &
          parm_scalelen_vals, &
@@ -1354,19 +1360,6 @@ contains
     rptr      => PON_bury_coeff
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'POP_bury_coeff'
-    lname     = ''
-    units     = ''
-    datatype  = 'real'
-    group     = 'marbl_parms_nml'
-    rptr      => POP_bury_coeff
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr, add_space=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
