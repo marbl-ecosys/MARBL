@@ -63,16 +63,18 @@ module marbl_parms
        parm_kappa_nitrif,     & ! nitrification inverse time constant (1/sec)
        parm_nitrif_par_lim,   & ! PAR limit for nitrif. (W/m^2)
        parm_labile_ratio,     & ! fraction of loss to DOC that routed directly to DIC (non-dimensional)
-       parm_POMbury,          & ! scale factor for burial of POC, PON, and POP
-       parm_BSIbury,          & ! scale factor burial of bSi
-       parm_fe_scavenge_rate0,& ! base scavenging rate (1/yr)
-       parm_f_prod_sp_CaCO3,  & ! fraction of sp prod. as CaCO3 prod.
-       parm_POC_diss,         & ! base POC diss len scale (cm)
-       parm_SiO2_diss,        & ! base SiO2 diss len scale (cm)
-       parm_CaCO3_diss,       & ! base CaCO3 diss len scale (cm)
-       fe_max_scale2            ! scaling coeff. (cm^3 / nmol / yr = m^3 / mmol / yr)
+       parm_init_POC_bury_coeff,& ! initial scale factor for burial of POC, PON
+       parm_init_POP_bury_coeff,& ! initial scale factor for burial of POP
+       parm_init_bSi_bury_coeff,& ! initial scale factor burial of bSi
+       parm_fe_scavenge_rate0,& ! base scavenging rate
+       parm_f_prod_sp_CaCO3,  & !fraction of sp prod. as CaCO3 prod.
+       parm_POC_diss,         & ! base POC diss len scale
+       parm_SiO2_diss,        & ! base SiO2 diss len scale
+       parm_CaCO3_diss,       & ! base CaCO3 diss len scale
+       fe_max_scale2,         & ! unitless scaling coeff.
+       bury_coeff_rmean_timescale_years
 
-  real(kind=r8), dimension(4), target :: &
+  real(kind=r8), dimension(4) :: &
        parm_scalelen_z,       & ! depths of prescribed scalelen values
        parm_scalelen_vals       ! prescribed scalelen values
 
@@ -275,20 +277,22 @@ contains
     !  &marbl_parms_nml
     !-----------------------------------------------------------------------
 
-    parm_Fe_bioavail       = 1.0_r8
-    parm_o2_min            = 5.0_r8
-    parm_o2_min_delta      = 5.0_r8
-    parm_kappa_nitrif      = 0.06_r8 * dps  ! (= 1/( days))
-    parm_nitrif_par_lim    = 1.0_r8
-    parm_labile_ratio      = 0.94_r8
-    parm_POMbury           = 1.1_r8         ! x1 default
-    parm_BSIbury           = 1.0_r8         ! x1 default
-    parm_fe_scavenge_rate0 = 1.9_r8         ! x1 default
-    parm_f_prod_sp_CaCO3   = 0.065_r8       ! x1 default
-    parm_POC_diss          = 90.0e2_r8
-    parm_SiO2_diss         = 600.0e2_r8
-    parm_CaCO3_diss        = 450.0e2_r8
-    fe_max_scale2          = 2200.0_r8      ! x1 default
+    parm_Fe_bioavail         = 1.0_r8
+    parm_o2_min              = 5.0_r8
+    parm_o2_min_delta        = 5.0_r8
+    parm_kappa_nitrif        = 0.06_r8 * dps  ! (= 1/( days))
+    parm_nitrif_par_lim      = 1.0_r8
+    parm_labile_ratio        = 0.94_r8
+    parm_init_POC_bury_coeff = 1.1_r8         ! x1 default
+    parm_init_POP_bury_coeff = 1.1_r8         ! x1 default
+    parm_init_bSi_bury_coeff = 1.0_r8         ! x1 default
+    parm_fe_scavenge_rate0   = 1.9_r8         ! x1 default
+    parm_f_prod_sp_CaCO3     = 0.065_r8       ! x1 default
+    parm_POC_diss            = 90.0e2_r8
+    parm_SiO2_diss           = 600.0e2_r8
+    parm_CaCO3_diss          = 450.0e2_r8
+    fe_max_scale2            = 2200.0_r8      ! x1 default
+    bury_coeff_rmean_timescale_years = 10.0_r8
     parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8,  750.0e2_r8 /)
     parm_scalelen_vals = (/     1.0_r8,     3.3_r8,     4.6_r8,      5.0_r8 /) ! x1 default
 
@@ -516,16 +520,27 @@ contains
     integer (int_kind)           :: nml_error                   ! namelist i/o error flag
     integer (int_kind)           :: zoo_ind                     ! zooplankton functional group index
 
-    namelist /marbl_parms_nml/                                                &
-         parm_Fe_bioavail, parm_o2_min, parm_o2_min_delta, parm_kappa_nitrif, &
-         parm_nitrif_par_lim, parm_labile_ratio, parm_POMbury, parm_BSIbury,  &
-         parm_fe_scavenge_rate0, parm_f_prod_sp_CaCO3, parm_POC_diss,         &
-         parm_SiO2_diss, parm_CaCO3_diss, fe_max_scale2, parm_scalelen_z,     &
-         parm_scalelen_vals, grazing, iron_frac_in_dust, iron_frac_in_bc,     &
-         caco3_bury_thres_opt, caco3_bury_thres_depth, PON_bury_coeff,        &
-         POP_bury_coeff, ciso_fract_factors, restore_short_names,             &
-         restore_filenames, restore_file_varnames, rest_time_inv_surf,        &
-         rest_time_inv_deep, rest_z0, rest_z1, autotrophs, zooplankton,       &
+    NAMELIST /marbl_parms_nml/ &
+         parm_Fe_bioavail, &
+         parm_o2_min, &
+         parm_o2_min_delta, &
+         parm_kappa_nitrif, &
+         parm_nitrif_par_lim, &
+         parm_labile_ratio, &
+         parm_init_POC_bury_coeff, &
+         parm_init_POP_bury_coeff, &
+         parm_init_bSi_bury_coeff, &
+         parm_fe_scavenge_rate0, &
+         parm_f_prod_sp_CaCO3, &
+         parm_POC_diss, &
+         parm_SiO2_diss, &
+         parm_CaCO3_diss, &
+         fe_max_scale2, &
+         bury_coeff_rmean_timescale_years, &
+         parm_scalelen_z, &
+         parm_scalelen_vals, &
+         autotrophs, & 
+         zooplankton, &
          grazing
 
     namelist /marbl_tracer_init_tmp_nml/                                      &
@@ -683,12 +698,12 @@ contains
       return
     end if
 
-    sname     = 'parm_POMbury'
-    lname     = 'scale factor for burial of POC, PON, and POP'
+    sname     = 'parm_init_POC_bury_coeff'
+    lname     = 'initial scale factor for burial of POC, PON'
     units     = 'unitless'
     datatype  = 'real'
     group     = 'marbl_parms_nml'
-    rptr      => parm_POMbury
+    rptr      => parm_init_POC_bury_coeff
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
@@ -696,12 +711,25 @@ contains
       return
     end if
 
-    sname     = 'parm_BSIbury'
-    lname     = 'scale factor for burial of bSi'
+    sname     = 'parm_init_POP_bury_coeff'
+    lname     = 'initial scale factor for burial of POP'
     units     = 'unitless'
     datatype  = 'real'
     group     = 'marbl_parms_nml'
-    rptr      => parm_BSIbury
+    rptr      => parm_init_POP_bury_coeff
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_init_bSi_bury_coeff'
+    lname     = 'initial scale factor for burial of bSi'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_init_bSi_bury_coeff
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
@@ -780,6 +808,19 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => fe_max_scale2
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr, add_space=.true.)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'bury_coeff_rmean_timescale_years'
+    lname     = 'Timescale for bury coefficient running means'
+    units     = 'yr'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => bury_coeff_rmean_timescale_years
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr, add_space=.true.)
     if (marbl_status_log%labort_marbl) then

@@ -1377,7 +1377,6 @@ contains
     !----------------------------------------------------------------------------------------
     
     use marbl_parms         , only : denitrif_C_N
-    use marbl_parms         , only : parm_POMbury
     use marbl_constants_mod , only : spd
 
     implicit none
@@ -1399,7 +1398,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_ciso_mod:ciso_compute_particulate_terms'
+    character(*), parameter :: subname = 'marbl_ciso_mod:compute_particulate_terms'
     character(len=char_len) :: log_message
 
     real (r8) ::              &
@@ -1424,7 +1423,8 @@ contains
          POC_sflux_out     => marbl_particulate_share%POC_sflux_out_fields  , & ! IN
          POC_hflux_out     => marbl_particulate_share%POC_hflux_out_fields  , & ! IN
          POC_remin         => marbl_particulate_share%POC_remin_fields      , & ! IN
-         P_CaCO3_remin     => marbl_particulate_share%P_CaCO3_remin_fields    & ! IN
+         P_CaCO3_remin     => marbl_particulate_share%P_CaCO3_remin_fields  , & ! IN
+         POC_bury_coeff    => marbl_particulate_share%POC_bury_coeff          & ! IN
          )
 
     !-----------------------------------------------------------------------
@@ -1593,7 +1593,7 @@ contains
        if (flux > c0) then
           flux_alt = flux * mpercm * spd ! convert to mmol/m^2/day
 
-          POC_ciso%sed_loss(k) = flux * min(0.8_r8, parm_POMbury &
+          POC_ciso%sed_loss(k) = flux * min(0.8_r8, POC_bury_coeff &
                * (0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2))
 
 

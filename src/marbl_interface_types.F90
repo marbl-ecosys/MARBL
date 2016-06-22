@@ -299,6 +299,20 @@ module marbl_interface_types
 
   !*****************************************************************************
 
+  ! FIXME : move to marbl_internal_types.F90 when running means are moved to MARBL
+
+  type, public :: marbl_running_mean_0d_type
+     character(char_len) :: sname
+     real(kind=r8)       :: timescale
+     real(kind=r8)       :: rmean
+
+     ! FIXME : perhaps the following get removed from the type when running means are moved to MARBL
+     logical(log_kind)   :: linit_by_val
+     real(kind=r8)       :: init_val
+  end type marbl_running_mean_0d_type
+
+  !*****************************************************************************
+
 contains
 
   !*****************************************************************************

@@ -35,6 +35,7 @@ module marbl_interface
   use marbl_interface_types , only : marbl_surface_forcing_indexing_type
   use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_saved_state_type
+  use marbl_interface_types , only : marbl_running_mean_0d_type
 
   use marbl_internal_types , only : marbl_surface_saved_state_indexing_type
   use marbl_internal_types , only : marbl_interior_saved_state_indexing_type
@@ -100,6 +101,22 @@ module marbl_interface
      type(marbl_surface_forcing_output_type)   , public               :: surface_forcing_output      ! output
      type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
 
+     ! public data - global averages
+     real (r8)                                 , public, allocatable  :: glo_avg_fields_interior(:)   ! output (nfields)
+     real (r8)                                 , public, allocatable  :: glo_avg_averages_interior(:) ! input (nfields)
+     real (r8)                                 , public, allocatable  :: glo_avg_fields_surface(:,:)  ! output (num_elements,nfields)
+     real (r8)                                 , public, allocatable  :: glo_avg_averages_surface(:)  ! input (nfields)
+
+     ! FIXME
+     ! for now, running means are being computed in the driver
+     ! they will eventually be moved from the interface to inside MARBL
+     real (r8)                                 , public, allocatable  :: glo_scalar_interior(:)
+     real (r8)                                 , public, allocatable  :: glo_scalar_surface(:)
+
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_interior(:)
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_surface(:)
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_interior(:)
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface(:)
 
      ! private data 
      type(marbl_PAR_type)                      , private              :: PAR
@@ -112,18 +129,21 @@ module marbl_interface
 
    contains
 
-     procedure, public :: config
-     procedure, public :: init
-     procedure, public :: complete_config_and_init
-     procedure, public :: get_tracer_index
-     procedure, public :: set_interior_forcing
-     procedure, public :: set_surface_forcing
-     procedure, public :: shutdown
+     procedure, public  :: config
+     procedure, public  :: init
+     procedure, public  :: complete_config_and_init
+     procedure, private :: glo_vars_init
+     procedure, public  :: get_tracer_index
+     procedure, public  :: set_interior_forcing
+     procedure, public  :: set_surface_forcing
+     procedure, public  :: set_global_scalars
+     procedure, public  :: shutdown
 
   end type marbl_interface_class
   
   private :: config
   private :: init
+  private :: glo_vars_init
   private :: set_interior_forcing
   private :: set_surface_forcing
   private :: shutdown
@@ -213,6 +233,7 @@ contains
     use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
     use marbl_mod             , only : marbl_init_surface_forcing_fields
     use marbl_mod             , only : marbl_init_tracer_metadata
+    use marbl_mod             , only : marbl_init_bury_coeff
     use marbl_mod             , only : marbl_update_tracer_file_metadata
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
     use marbl_config_mod      , only : autotrophs_config
@@ -238,7 +259,7 @@ contains
     character(marbl_nl_buffer_size), optional, intent(in)  :: gcm_nl_buffer(:)
     integer   (int_kind), optional         , intent(out)   :: marbl_tracer_cnt
 
-    character(*), parameter :: subname = 'marbl_interface:marbl_init'
+    character(*), parameter :: subname = 'marbl_interface:init'
     character(len=char_len) :: log_message
     integer :: i
     !--------------------------------------------------------------------
@@ -341,6 +362,14 @@ contains
     allocate(this%column_dtracers(marbl_total_tracer_cnt, num_levels))
 
     allocate(this%column_restore(marbl_total_tracer_cnt, gcm_num_levels))
+
+    call marbl_init_bury_coeff(this%particulate_share, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
+      return
+    end if
+
+    call this%glo_vars_init(num_surface_elements)
 
     !--------------------------------------------------------------------
     ! set up saved state variables
@@ -490,6 +519,48 @@ contains
 
   !***********************************************************************
   
+  subroutine glo_vars_init(this, num_surface_elements)
+
+    use marbl_mod, only : marbl_set_glo_vars_cnt
+    use marbl_mod, only : marbl_set_rmean_init_vals
+
+    class (marbl_interface_class), intent(inout) :: this
+    integer (int_kind)           , intent(in)    :: num_surface_elements
+
+    integer (int_kind) :: glo_avg_field_cnt_interior
+    integer (int_kind) :: glo_avg_field_cnt_surface
+    integer (int_kind) :: glo_scalar_cnt_interior
+    integer (int_kind) :: glo_scalar_cnt_surface
+
+    call marbl_set_glo_vars_cnt(glo_avg_field_cnt_interior, &
+                                glo_avg_field_cnt_surface,  &
+                                glo_scalar_cnt_interior,    &
+                                glo_scalar_cnt_surface)
+
+    allocate(this%glo_avg_fields_interior(glo_avg_field_cnt_interior))
+    allocate(this%glo_avg_averages_interior(glo_avg_field_cnt_interior))
+
+    allocate(this%glo_avg_fields_surface(num_surface_elements, glo_avg_field_cnt_surface))
+    allocate(this%glo_avg_averages_surface(glo_avg_field_cnt_surface))
+
+    allocate(this%glo_scalar_interior(glo_scalar_cnt_interior))
+
+    allocate(this%glo_scalar_surface(glo_scalar_cnt_surface))
+
+    allocate(this%glo_avg_rmean_interior(glo_avg_field_cnt_interior))
+    allocate(this%glo_avg_rmean_surface(glo_avg_field_cnt_surface))
+    allocate(this%glo_scalar_rmean_interior(glo_scalar_cnt_interior))
+    allocate(this%glo_scalar_rmean_surface(glo_scalar_cnt_surface))
+
+    call marbl_set_rmean_init_vals(this%glo_avg_rmean_interior,    &
+                                   this%glo_avg_rmean_surface,     &
+                                   this%glo_scalar_rmean_interior, &
+                                   this%glo_scalar_rmean_surface)
+
+  end subroutine glo_vars_init
+
+  !***********************************************************************
+  
   subroutine set_interior_forcing(this)
 
     use marbl_mod, only : marbl_set_interior_forcing
@@ -521,6 +592,7 @@ contains
          marbl_particulate_share = this%particulate_share,       &
          interior_forcing_diags  = this%interior_forcing_diags,  &
          interior_restore_diags  = this%interior_restore_diags,  &
+         glo_avg_fields_interior = this%glo_avg_fields_interior, &
          marbl_status_log        = this%StatusLog)
 
     if (this%StatusLog%labort_marbl) then
@@ -553,12 +625,36 @@ contains
          surface_forcing_internal = this%surface_forcing_internal,            &
          surface_forcing_share    = this%surface_forcing_share,               &
          surface_forcing_diags    = this%surface_forcing_diags,               &
+         glo_avg_fields_surface   = this%glo_avg_fields_surface,              &
          marbl_status_log         = this%statuslog)
 
   end subroutine set_surface_forcing
   
   !***********************************************************************
   
+  subroutine set_global_scalars(this, field_source)
+
+    use marbl_mod, only : marbl_set_global_scalars_interior
+
+    implicit none
+
+    class(marbl_interface_class), intent(inout) :: this
+    character (*)               , intent(in)    :: field_source ! 'interior' or 'surface'
+
+    if (field_source == 'interior') then
+       call marbl_set_global_scalars_interior(                          &
+            marbl_particulate_share   = this%particulate_share,         &
+            glo_avg_rmean_interior    = this%glo_avg_rmean_interior,    &
+            glo_avg_rmean_surface     = this%glo_avg_rmean_surface,     &
+            glo_scalar_rmean_interior = this%glo_scalar_rmean_interior, &
+            glo_scalar_rmean_surface  = this%glo_scalar_rmean_surface,  &
+            glo_scalar_interior       = this%glo_scalar_interior)
+    end if
+
+  end subroutine set_global_scalars
+
+  !***********************************************************************
+
   subroutine shutdown(this)
 
     implicit none

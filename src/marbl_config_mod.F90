@@ -42,6 +42,17 @@ module marbl_config_mod
   type(zooplankton_config_type), dimension(zooplankton_cnt), target :: zooplankton_config
   type(grazing_config_type), dimension(grazer_prey_cnt, zooplankton_cnt), target :: grazing_config
 
+  !-----------------------------------------------------------------------
+  !  bury to sediment options
+  !  bury coefficients (POC_bury_coeff, POP_bury_coeff, bSi_bury_coeff) reside in marbl_particulate_share_type
+  !  when ladjust_bury_coeff is .true., bury coefficients are adjusted
+  !  to preserve C, P, Si inventories on timescales exceeding bury_coeff_rmean_timescale_years
+  !  this is done primarily in spinup runs
+  !-----------------------------------------------------------------------
+  character(char_len), target :: init_bury_coeff_opt
+  logical (log_kind),  target :: ladjust_bury_coeff
+
+
   !---------------------------------------------------------------------
   !  Variables read in via &marbl_forcing_tmp_nml
   !---------------------------------------------------------------------
@@ -234,6 +245,8 @@ contains
     lflux_gas_o2                  = .true.
     lflux_gas_co2                 = .true.
     locmip_k1_k2_bug_fix          = .true.
+    init_bury_coeff_opt           = 'nml'
+    ladjust_bury_coeff            = .false.
 
     do n=1,autotroph_cnt
       select case (n)
@@ -376,8 +389,8 @@ contains
     namelist /marbl_config_nml/                                               &
          ciso_on, lsource_sink, ciso_lsource_sink, lecovars_full_depth_tavg,  &
          ciso_lecovars_full_depth_tavg, lflux_gas_o2, lflux_gas_co2,          &
-         locmip_k1_k2_bug_fix, autotrophs_config, zooplankton_config,         &
-         grazing_config
+         locmip_k1_k2_bug_fix, init_bury_coeff_opt, ladjust_bury_coeff,       &
+         autotrophs_config, zooplankton_config, grazing_config
 
     namelist /marbl_forcing_tmp_nml/                                          &
          dust_flux_source, dust_flux_input, iron_flux_source,                 &
@@ -586,7 +599,33 @@ contains
     group     = 'marbl_config_nml'
     lptr      => locmip_k1_k2_bug_fix
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr, add_space=.true.)
+                        marbl_status_log, lptr=lptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ladjust_bury_coeff'
+    lname     = 'Adjust the bury coefficient to maintain equilibrium'
+    units     = 'unitless'
+    datatype  = 'logical'
+    group     = 'marbl_config_nml'
+    lptr      => ladjust_bury_coeff
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, lptr=lptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'init_bury_coeff_opt'
+    lname     = 'How to set initial bury coefficients'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_config_nml'
+    sptr      => init_bury_coeff_opt
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr, add_space=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return

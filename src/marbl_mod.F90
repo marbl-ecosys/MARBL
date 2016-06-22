@@ -100,6 +100,8 @@ module marbl_mod
   use marbl_config_mod, only : autotrophs_config
   use marbl_config_mod, only : zooplankton_config
   use marbl_config_mod, only : grazing_config
+  use marbl_config_mod, only : init_bury_coeff_opt
+  use marbl_config_mod, only : ladjust_bury_coeff
 
   use marbl_parms, only : autotrophs
   use marbl_parms, only : zooplankton
@@ -108,8 +110,6 @@ module marbl_mod
   use marbl_parms, only : f_qsw_par
   use marbl_parms, only : parm_Fe_bioavail
   use marbl_parms, only : dust_to_Fe
-  use marbl_parms, only : parm_BSIbury
-  use marbl_parms, only : parm_POMbury
   use marbl_parms, only : denitrif_C_N
   use marbl_parms, only : parm_Red_Fe_C
   use marbl_parms, only : Q
@@ -148,6 +148,7 @@ module marbl_mod
   use marbl_parms, only : f_graze_sp_poc_lim
   use marbl_parms, only : f_photosp_CaCO3
   use marbl_parms, only : fe_max_scale2
+  use marbl_parms, only : bury_coeff_rmean_timescale_years
   use marbl_parms, only : Fe_scavenge_thres1
   use marbl_parms, only : parm_f_prod_sp_CaCO3
   use marbl_parms, only : parm_Fe_scavenge_rate0
@@ -203,6 +204,7 @@ module marbl_mod
   use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_forcing_monthly_every_ts_type
   use marbl_interface_types , only : marbl_diagnostics_type
+  use marbl_interface_types , only : marbl_running_mean_0d_type
 
   use marbl_diagnostics_mod , only : marbl_diagnostics_set_surface_forcing
   use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
@@ -218,9 +220,13 @@ module marbl_mod
 
   public  :: marbl_init_surface_forcing_fields
   public  :: marbl_init_tracer_metadata
+  public  :: marbl_init_bury_coeff
+  public  :: marbl_set_glo_vars_cnt
+  public  :: marbl_set_rmean_init_vals
   public  :: marbl_update_tracer_file_metadata
   public  :: marbl_set_interior_forcing
   public  :: marbl_set_surface_forcing
+  public  :: marbl_set_global_scalars_interior
 
   private :: marbl_init_non_autotroph_tracer_metadata
   private :: marbl_init_surface_forcing_metadata
@@ -253,6 +259,22 @@ module marbl_mod
      real (r8) :: Si    ! local copy of model autotroph Si
      real (r8) :: CaCO3 ! local copy of model autotroph CaCO3
   end type autotroph_local_type
+
+  integer (int_kind) :: glo_avg_field_ind_interior_CaCO3_bury = 0
+  integer (int_kind) :: glo_avg_field_ind_interior_POC_bury = 0
+  integer (int_kind) :: glo_avg_field_ind_interior_POP_bury = 0
+  integer (int_kind) :: glo_avg_field_ind_interior_bSi_bury = 0
+  integer (int_kind) :: glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff = 0
+  integer (int_kind) :: glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff = 0
+  integer (int_kind) :: glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff = 0
+
+  integer (int_kind) :: glo_avg_field_ind_surface_C_input = 0
+  integer (int_kind) :: glo_avg_field_ind_surface_P_input = 0
+  integer (int_kind) :: glo_avg_field_ind_surface_Si_input = 0
+
+  integer (int_kind) :: glo_scalar_ind_interior_POC_bury_coeff = 0
+  integer (int_kind) :: glo_scalar_ind_interior_POP_bury_coeff = 0
+  integer (int_kind) :: glo_scalar_ind_interior_bSi_bury_coeff = 0
 
   !-----------------------------------------------------------------------
   ! pH parameters
@@ -1062,6 +1084,236 @@ contains
 
   !***********************************************************************
 
+  subroutine marbl_init_bury_coeff(marbl_particulate_share, marbl_status_log)
+
+    use marbl_logging, only : marbl_log_type
+    use marbl_parms  , only : parm_init_POC_bury_coeff
+    use marbl_parms  , only : parm_init_POP_bury_coeff
+    use marbl_parms  , only : parm_init_bSi_bury_coeff
+
+    type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
+    type(marbl_log_type)              , intent(inout) :: marbl_status_log
+
+    !---------------------------------------------------------------------------
+    !   local variables
+    !---------------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_init_bury_coeff'
+
+    !---------------------------------------------------------------------------
+
+    ! if ladjust_bury_coeff is true, then bury coefficients are set at runtime
+    ! so they do not need to be initialized here
+
+    if (.not. ladjust_bury_coeff) then
+       if (init_bury_coeff_opt == 'nml') then
+          marbl_particulate_share%POC_bury_coeff = parm_init_POC_bury_coeff
+          marbl_particulate_share%POP_bury_coeff = parm_init_POP_bury_coeff
+          marbl_particulate_share%bSi_bury_coeff = parm_init_bSi_bury_coeff
+       else
+          call marbl_status_log%log_error("ladjust_bury_coeff=.false., init_bury_coeff_opt='restfile' not implemented", subname)
+          return
+       end if
+    end if
+
+  end subroutine marbl_init_bury_coeff
+
+  !***********************************************************************
+
+  subroutine marbl_set_glo_vars_cnt(   &
+       glo_avg_field_cnt_interior, &
+       glo_avg_field_cnt_surface,  &
+       glo_scalar_cnt_interior,    &
+       glo_scalar_cnt_surface)
+
+    integer (int_kind), intent(out) :: glo_avg_field_cnt_interior
+    integer (int_kind), intent(out) :: glo_avg_field_cnt_surface
+    integer (int_kind), intent(out) :: glo_scalar_cnt_interior
+    integer (int_kind), intent(out) :: glo_scalar_cnt_surface
+
+    glo_avg_field_cnt_interior = 0
+    glo_avg_field_cnt_surface  = 0
+    glo_scalar_cnt_interior    = 0
+    glo_scalar_cnt_surface     = 0
+
+    if (ladjust_bury_coeff) then
+       glo_avg_field_cnt_interior = glo_avg_field_cnt_interior + 1
+       glo_avg_field_ind_interior_CaCO3_bury = glo_avg_field_cnt_interior
+
+       glo_avg_field_cnt_interior = glo_avg_field_cnt_interior + 1
+       glo_avg_field_ind_interior_POC_bury = glo_avg_field_cnt_interior
+
+       glo_avg_field_cnt_interior = glo_avg_field_cnt_interior + 1
+       glo_avg_field_ind_interior_POP_bury = glo_avg_field_cnt_interior
+
+       glo_avg_field_cnt_interior = glo_avg_field_cnt_interior + 1
+       glo_avg_field_ind_interior_bSi_bury = glo_avg_field_cnt_interior
+
+       glo_avg_field_cnt_interior = glo_avg_field_cnt_interior + 1
+       glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff = glo_avg_field_cnt_interior
+
+       glo_avg_field_cnt_interior = glo_avg_field_cnt_interior + 1
+       glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff = glo_avg_field_cnt_interior
+
+       glo_avg_field_cnt_interior = glo_avg_field_cnt_interior + 1
+       glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff = glo_avg_field_cnt_interior
+
+
+       glo_avg_field_cnt_surface = glo_avg_field_cnt_surface + 1
+       glo_avg_field_ind_surface_C_input = glo_avg_field_cnt_surface
+
+       glo_avg_field_cnt_surface = glo_avg_field_cnt_surface + 1
+       glo_avg_field_ind_surface_P_input = glo_avg_field_cnt_surface
+
+       glo_avg_field_cnt_surface = glo_avg_field_cnt_surface + 1
+       glo_avg_field_ind_surface_Si_input = glo_avg_field_cnt_surface
+
+
+       glo_scalar_cnt_interior = glo_scalar_cnt_interior + 1
+       glo_scalar_ind_interior_POC_bury_coeff = glo_scalar_cnt_interior
+
+       glo_scalar_cnt_interior = glo_scalar_cnt_interior + 1
+       glo_scalar_ind_interior_POP_bury_coeff = glo_scalar_cnt_interior
+
+       glo_scalar_cnt_interior = glo_scalar_cnt_interior + 1
+       glo_scalar_ind_interior_bSi_bury_coeff = glo_scalar_cnt_interior
+    end if
+
+  end subroutine marbl_set_glo_vars_cnt
+
+  !***********************************************************************
+
+  subroutine marbl_set_rmean_init_vals(      &
+       glo_avg_rmean_interior,    &
+       glo_avg_rmean_surface,     &
+       glo_scalar_rmean_interior, &
+       glo_scalar_rmean_surface)
+
+    use marbl_interface_types, only : marbl_running_mean_0d_type
+    use marbl_parms          , only : parm_init_POC_bury_coeff
+    use marbl_parms          , only : parm_init_POP_bury_coeff
+    use marbl_parms          , only : parm_init_bSi_bury_coeff
+
+    type(marbl_running_mean_0d_type), intent(out) :: glo_avg_rmean_interior(:)
+    type(marbl_running_mean_0d_type), intent(out) :: glo_avg_rmean_surface(:)
+    type(marbl_running_mean_0d_type), intent(out) :: glo_scalar_rmean_interior(:)
+    type(marbl_running_mean_0d_type), intent(out) :: glo_scalar_rmean_surface(:)
+
+    !-----------------------------------------------------------------------
+
+    integer (int_kind) :: glo_ind
+    real (r8)          :: bury_coeff_rmean_timescale_sec
+
+    real (r8) :: rmean_CaCO3_bury_integral
+    real (r8) :: rmean_C_input_integral
+    real (r8) :: rmean_P_input_integral
+    real (r8) :: rmean_Si_input_integral
+
+    real (r8) :: rmean_POC_bury_integral
+    real (r8) :: rmean_d_POC_bury_d_bury_coeff_integral
+
+    real (r8) :: rmean_POP_bury_integral
+    real (r8) :: rmean_d_POP_bury_d_bury_coeff_integral
+
+    real (r8) :: rmean_bSi_bury_integral
+    real (r8) :: rmean_d_bSi_bury_d_bury_coeff_integral
+
+    !-----------------------------------------------------------------------
+
+    if (ladjust_bury_coeff) then
+       ! FIXME : change 365*spd to spy
+       bury_coeff_rmean_timescale_sec = bury_coeff_rmean_timescale_years * 365.0_r8 * spd
+
+       glo_avg_rmean_interior(:)%timescale       = bury_coeff_rmean_timescale_sec
+       glo_avg_rmean_interior(:)%linit_by_val    = (init_bury_coeff_opt == 'nml')
+
+       glo_avg_rmean_surface(:)%timescale        = bury_coeff_rmean_timescale_sec
+       glo_avg_rmean_surface(:)%linit_by_val     = (init_bury_coeff_opt == 'nml')
+
+       glo_scalar_rmean_interior(:)%timescale    = bury_coeff_rmean_timescale_sec
+       glo_scalar_rmean_interior(:)%linit_by_val = (init_bury_coeff_opt == 'nml')
+
+       glo_scalar_rmean_surface(:)%timescale     = bury_coeff_rmean_timescale_sec
+       glo_scalar_rmean_surface(:)%linit_by_val  = (init_bury_coeff_opt == 'nml')
+
+
+       ! these initial values are only used if linit_by_val is .true. (i.e., if init_bury_coeff_opt == 'nml')
+       ! always set them, for simpler code
+
+!      rmean_ALK_nonN_input_integral = 1.62e-4_r8 ! GNEWS2000 value on gx1v6 grid [neq/cm^2/s]
+       rmean_CaCO3_bury_integral     = 1.62e-4_r8 ! matches rmean_ALK_nonN_input_integral
+       rmean_C_input_integral        = 2.69e-4_r8 ! GNEWS2000 value on gx1v6 grid [nmol C/cm^2/s]
+       rmean_P_input_integral        = 9.66e-7_r8 ! GNEWS2000 value on gx1v6 grid [nmol P/cm^2/s]
+       rmean_Si_input_integral       = 4.10e-5_r8 ! GNEWS2000 value on gx1v6 grid [nmol Si/cm^2/s]
+
+       rmean_POC_bury_integral = (rmean_C_input_integral - rmean_CaCO3_bury_integral)
+       rmean_d_POC_bury_d_bury_coeff_integral = rmean_POC_bury_integral / parm_init_POC_bury_coeff
+
+       rmean_POP_bury_integral = rmean_P_input_integral
+       rmean_d_POP_bury_d_bury_coeff_integral = rmean_POP_bury_integral / parm_init_POP_bury_coeff
+
+       rmean_bSi_bury_integral = rmean_Si_input_integral
+       rmean_d_bSi_bury_d_bury_coeff_integral = rmean_bSi_bury_integral / parm_init_bSi_bury_coeff
+
+
+       glo_ind = glo_avg_field_ind_interior_CaCO3_bury
+       glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_CaCO3_bury'
+       glo_avg_rmean_interior(glo_ind)%init_val = rmean_CaCO3_bury_integral
+
+       glo_ind = glo_avg_field_ind_interior_POC_bury
+       glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_POC_bury'
+       glo_avg_rmean_interior(glo_ind)%init_val = rmean_POC_bury_integral
+
+       glo_ind = glo_avg_field_ind_interior_POP_bury
+       glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_POP_bury'
+       glo_avg_rmean_interior(glo_ind)%init_val = rmean_POP_bury_integral
+
+       glo_ind = glo_avg_field_ind_interior_bSi_bury
+       glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_bSi_bury'
+       glo_avg_rmean_interior(glo_ind)%init_val = rmean_bSi_bury_integral
+
+       glo_ind = glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff
+       glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_d_POC_bury_d_bury_coeff'
+       glo_avg_rmean_interior(glo_ind)%init_val = rmean_d_POC_bury_d_bury_coeff_integral
+
+       glo_ind = glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff
+       glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_d_POP_bury_d_bury_coeff'
+       glo_avg_rmean_interior(glo_ind)%init_val = rmean_d_POP_bury_d_bury_coeff_integral
+
+       glo_ind = glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff
+       glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_d_bSi_bury_d_bury_coeff'
+       glo_avg_rmean_interior(glo_ind)%init_val = rmean_d_bSi_bury_d_bury_coeff_integral
+
+
+       glo_ind = glo_avg_field_ind_surface_C_input
+       glo_avg_rmean_surface(glo_ind)%sname    = 'MARBL_rmean_glo_avg_C_input'
+       glo_avg_rmean_surface(glo_ind)%init_val = rmean_C_input_integral
+
+       glo_ind = glo_avg_field_ind_surface_P_input
+       glo_avg_rmean_surface(glo_ind)%sname    = 'MARBL_rmean_glo_avg_P_input'
+       glo_avg_rmean_surface(glo_ind)%init_val = rmean_P_input_integral
+
+       glo_ind = glo_avg_field_ind_surface_Si_input
+       glo_avg_rmean_surface(glo_ind)%sname    = 'MARBL_rmean_glo_avg_Si_input'
+       glo_avg_rmean_surface(glo_ind)%init_val = rmean_Si_input_integral
+
+
+       glo_ind = glo_scalar_ind_interior_POC_bury_coeff
+       glo_scalar_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_scalar_POC_bury_coeff'
+       glo_scalar_rmean_interior(glo_ind)%init_val = parm_init_POC_bury_coeff
+
+       glo_ind = glo_scalar_ind_interior_POP_bury_coeff
+       glo_scalar_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_scalar_POP_bury_coeff'
+       glo_scalar_rmean_interior(glo_ind)%init_val = parm_init_POP_bury_coeff
+
+       glo_ind = glo_scalar_ind_interior_bSi_bury_coeff
+       glo_scalar_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_scalar_bSi_bury_coeff'
+       glo_scalar_rmean_interior(glo_ind)%init_val = parm_init_bSi_bury_coeff
+    end if
+
+  end subroutine marbl_set_rmean_init_vals
+
+  !***********************************************************************
+
   subroutine marbl_set_interior_forcing( &
        domain,                           &
        interior_forcing_input,           &
@@ -1078,6 +1330,7 @@ contains
        marbl_particulate_share,          &
        interior_forcing_diags,           &
        interior_restore_diags,           &
+       glo_avg_fields_interior,          &
        marbl_status_log)
     
     !  Compute time derivatives for ecosystem state variables
@@ -1104,6 +1357,7 @@ contains
     type    (marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
     type    (marbl_diagnostics_type)            , intent(inout) :: interior_forcing_diags
     type    (marbl_diagnostics_type)            , intent(inout) :: interior_restore_diags
+    real    (r8)                                , intent(out)   :: glo_avg_fields_interior(:)
     type(marbl_log_type)                        , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
@@ -1306,7 +1560,7 @@ contains
             POP_sed_loss(k), QA_dust_def(k), temperature(k),                  &
             tracer_local(:, k), carbonate(k), sed_denitrif(k),                &
             other_remin(k), fesedflux(k), marbl_tracer_indices,               &
-            marbl_status_log)
+            glo_avg_fields_interior, marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
           call marbl_status_log%log_error_trace('marbl_compute_particulate_terms()', &
@@ -1580,7 +1834,8 @@ contains
              marbl_particulate_share, POC, P_CaCO3, P_SiO2, dust, P_iron,     &
              PON_remin, PON_sed_loss, POP_remin, POP_sed_loss, QA_dust_def,   &
              temperature, tracer_local, carbonate, sed_denitrif, other_remin, &
-             fesedflux, marbl_tracer_indices, marbl_status_log)
+             fesedflux, marbl_tracer_indices, glo_avg_fields_interior,        &
+             marbl_status_log)
 
     !  Compute outgoing fluxes and remineralization terms. Assumes that
     !  production terms have been set. Incoming fluxes are assumed to be the
@@ -1652,6 +1907,7 @@ contains
     real (r8)                               , intent(out)   :: other_remin         ! sedimentary remin not due to oxic or denitrification
     type(marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
     type(marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
+    real (r8)                               , intent(inout) :: glo_avg_fields_interior(:)
     type(marbl_log_type)                    , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
@@ -1683,6 +1939,7 @@ contains
          scalelength,        & ! used to scale dissolution length scales as function of depth
          o2_scalefactor,     & ! used to scale dissolution length scales as function of o2
          flux, flux_alt,     & ! temp variables used to update sinking flux
+         bury_frac,          & ! fraction of flux hitting floor that gets buried
          dz_loc, dzr_loc       ! dz, dzr at a particular i, j location
 
     real (r8), parameter :: &  ! o2_sf is an abbreviation for o2_scalefactor
@@ -1714,7 +1971,10 @@ contains
          POC_hflux_out_fields     => marbl_particulate_share%POC_hflux_out_fields,     & ! IN/OUT
          POC_remin_fields         => marbl_particulate_share%POC_remin_fields,         & ! IN/OUT
          P_CaCO3_remin_fields     => marbl_particulate_share%P_CaCO3_remin_fields,     & ! IN/OUT
-         DECAY_Hard_fields        => marbl_particulate_share%DECAY_Hard_fields         & ! IN/OUT
+         DECAY_Hard_fields        => marbl_particulate_share%DECAY_Hard_fields,        & ! IN/OUT
+         POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff,           & ! IN/OUT
+         POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff,           & ! IN/OUT
+         bSi_bury_coeff           => marbl_particulate_share%bSi_bury_coeff            & ! IN/OUT
          )
 
     !-----------------------------------------------------------------------
@@ -2040,12 +2300,29 @@ contains
        if (flux > c0) then
           flux_alt = flux*mpercm*spd ! convert to mmol/m^2/day
 
-          POC%sed_loss(k) = flux * min(0.8_r8, parm_POMbury &
-               * (0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2))
+          ! first compute burial efficiency, then compute loss to sediments
+          bury_frac = 0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2
+          POC%sed_loss(k) = flux * min(0.8_r8, POC_bury_coeff * bury_frac)
 
           PON_sed_loss = PON_bury_coeff * Q * POC%sed_loss(k)
 
-          POP_sed_loss = POP_bury_coeff * Qp_zoo_pom * POC%sed_loss(k)
+          POP_sed_loss = Qp_zoo_pom * (flux * min(0.8_r8, POP_bury_coeff * bury_frac))
+
+          if (ladjust_bury_coeff) then
+             glo_avg_fields_interior(glo_avg_field_ind_interior_POC_bury) = POC%sed_loss(k)
+             if (POC_bury_coeff * bury_frac < 0.8_r8) then
+                glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = flux * bury_frac
+             else
+                glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = c0
+             endif
+
+             glo_avg_fields_interior(glo_avg_field_ind_interior_POP_bury) = POP_sed_loss
+             if (POP_bury_coeff * bury_frac < 0.8_r8) then
+                glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = Qp_zoo_pom * flux * bury_frac
+             else
+                glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = c0
+             endif
+          endif
 
           sed_denitrif = dzr_loc * flux &
                * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
@@ -2070,11 +2347,16 @@ contains
        flux_alt = flux*mpercm*spd ! convert to mmol/m^2/day
        ! first compute burial efficiency, then compute loss to sediments
        if (flux_alt > c2) then
-          P_SiO2%sed_loss(k) = 0.2_r8
+          bury_frac = 0.2_r8
        else
-          P_SiO2%sed_loss(k) = 0.04_r8
+          bury_frac = 0.04_r8
        endif
-       P_SiO2%sed_loss(k) = flux * parm_BSIbury * P_SiO2%sed_loss(k)
+       P_SiO2%sed_loss(k) = flux * bSi_bury_coeff * bury_frac
+
+       if (ladjust_bury_coeff) then
+          glo_avg_fields_interior(glo_avg_field_ind_interior_bSi_bury) = P_SiO2%sed_loss(k)
+          glo_avg_fields_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff) = flux * bury_frac
+       endif
 
        if (caco3_bury_thres_iopt == caco3_bury_thres_iopt_fixed_depth) then
           if (zw(k) < caco3_bury_thres_depth) then
@@ -2084,6 +2366,10 @@ contains
           if (carbonate%CO3 > carbonate%CO3_sat_calcite) then
              P_CaCO3%sed_loss(k) = P_CaCO3%sflux_out(k) + P_CaCO3%hflux_out(k)
           endif
+       endif
+
+       if (ladjust_bury_coeff) then
+          glo_avg_fields_interior(glo_avg_field_ind_interior_CaCO3_bury) = P_CaCO3%sed_loss(k)
        endif
 
        !----------------------------------------------------------------------------------
@@ -2161,6 +2447,87 @@ contains
 
   !***********************************************************************
 
+  subroutine marbl_set_global_scalars_interior(marbl_particulate_share, &
+       glo_avg_rmean_interior, glo_avg_rmean_surface,                   &
+       glo_scalar_rmean_interior, glo_scalar_rmean_surface,             &
+       glo_scalar_interior)
+
+    type (marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
+    type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_interior(:)
+    type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_surface(:)
+    type (marbl_running_mean_0d_type)  , intent(in)    :: glo_scalar_rmean_interior(:)
+    type (marbl_running_mean_0d_type)  , intent(in)    :: glo_scalar_rmean_surface(:)
+    real (r8)                          , intent(out)   :: glo_scalar_interior(:)
+
+    if (ladjust_bury_coeff) then
+       call marbl_adjust_bury_coeff(marbl_particulate_share, &
+            glo_avg_rmean_interior, glo_avg_rmean_surface,   &
+            glo_scalar_rmean_interior, glo_scalar_interior)
+    end if
+
+  end subroutine marbl_set_global_scalars_interior
+
+  !***********************************************************************
+
+  subroutine marbl_adjust_bury_coeff(marbl_particulate_share, &
+       glo_avg_rmean_interior, glo_avg_rmean_surface,         &
+       glo_scalar_rmean_interior, glo_scalar_interior)
+
+    type (marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
+    type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_interior(:)
+    type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_surface(:)
+    type (marbl_running_mean_0d_type)  , intent(in)    :: glo_scalar_rmean_interior(:)
+    real (r8)                          , intent(inout) :: glo_scalar_interior(:)
+
+    !-----------------------------------------------------------------------
+
+    associate( &
+         POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff, &
+         POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff, &
+         bSi_bury_coeff           => marbl_particulate_share%bSi_bury_coeff, &
+         rmean_CaCO3_bury_avg     => glo_avg_rmean_interior(glo_avg_field_ind_interior_CaCO3_bury)%rmean, &
+         rmean_POC_bury_avg       => glo_avg_rmean_interior(glo_avg_field_ind_interior_POC_bury)%rmean, &
+         rmean_POP_bury_avg       => glo_avg_rmean_interior(glo_avg_field_ind_interior_POP_bury)%rmean, &
+         rmean_bSi_bury_avg       => glo_avg_rmean_interior(glo_avg_field_ind_interior_bSi_bury)%rmean, &
+         rmean_POC_bury_deriv_avg => glo_avg_rmean_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff)%rmean, &
+         rmean_POP_bury_deriv_avg => glo_avg_rmean_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff)%rmean, &
+         rmean_bSi_bury_deriv_avg => glo_avg_rmean_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff)%rmean, &
+         rmean_C_input_avg        => glo_avg_rmean_surface(glo_avg_field_ind_surface_C_input)%rmean, &
+         rmean_P_input_avg        => glo_avg_rmean_surface(glo_avg_field_ind_surface_P_input)%rmean, &
+         rmean_Si_input_avg       => glo_avg_rmean_surface(glo_avg_field_ind_surface_Si_input)%rmean, &
+         rmean_POC_bury_coeff     => glo_scalar_rmean_interior(glo_scalar_ind_interior_POC_bury_coeff)%rmean, &
+         rmean_POP_bury_coeff     => glo_scalar_rmean_interior(glo_scalar_ind_interior_POP_bury_coeff)%rmean, &
+         rmean_bSi_bury_coeff     => glo_scalar_rmean_interior(glo_scalar_ind_interior_bSi_bury_coeff)%rmean &
+         )
+
+    ! Newton's method for POC_bury(coeff) + CaCO3_bury - C_input = 0
+
+    POC_bury_coeff = rmean_POC_bury_coeff &
+       - (rmean_POC_bury_avg + rmean_CaCO3_bury_avg - rmean_C_input_avg) &
+         / rmean_POC_bury_deriv_avg
+
+    ! Newton's method for POP_bury(coeff) - P_input = 0
+
+    POP_bury_coeff = rmean_POP_bury_coeff &
+       - (rmean_POP_bury_avg - rmean_P_input_avg) / rmean_POP_bury_coeff
+
+    ! Newton's method for bSi_bury(coeff) - Si_input = 0
+
+    bSi_bury_coeff = rmean_bSi_bury_coeff &
+       - (rmean_bSi_bury_avg - rmean_Si_input_avg) / rmean_bSi_bury_deriv_avg
+
+    ! copy computed bury coefficients into output argument
+
+    glo_scalar_interior(glo_scalar_ind_interior_POC_bury_coeff) = POC_bury_coeff
+    glo_scalar_interior(glo_scalar_ind_interior_POP_bury_coeff) = POP_bury_coeff
+    glo_scalar_interior(glo_scalar_ind_interior_bSi_bury_coeff) = bSi_bury_coeff
+
+    end associate
+
+  end subroutine marbl_adjust_bury_coeff
+
+  !***********************************************************************
+
   subroutine marbl_set_surface_forcing( &
        num_elements,                    &
        surface_forcing_ind,             &
@@ -2174,6 +2541,7 @@ contains
        surface_forcing_internal,        &
        surface_forcing_share,           &
        surface_forcing_diags,           &
+       glo_avg_fields_surface,          &
        marbl_status_log)
 
     !  Compute surface forcing fluxes 
@@ -2223,6 +2591,7 @@ contains
     type(marbl_surface_forcing_output_type)   , intent(inout) :: surface_forcing_output
     type(marbl_surface_forcing_share_type)    , intent(inout) :: surface_forcing_share
     type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
+    real (r8)                                 , intent(out)   :: glo_avg_fields_surface(:,:)
     type(marbl_log_type)                      , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
@@ -2648,6 +3017,19 @@ contains
             marbl_tracer_indices        = marbl_tracer_indices,                          &
             marbl_surface_forcing_share = surface_forcing_share,                         &
             marbl_surface_forcing_diags = surface_forcing_diags)
+    end if
+
+    !-----------------------------------------------------------------------
+
+    if (ladjust_bury_coeff) then
+       glo_avg_fields_surface(:,glo_avg_field_ind_surface_C_input) = &
+          stf(:,dic_ind) - flux_co2_loc(:) + stf(:,doc_ind) + stf(:,docr_ind)
+
+       glo_avg_fields_surface(:,glo_avg_field_ind_surface_P_input) = &
+          stf(:,po4_ind) + stf(:,dop_ind) + stf(:,dopr_ind)
+
+       glo_avg_fields_surface(:,glo_avg_field_ind_surface_Si_input) = &
+          stf(:,sio3_ind)
     end if
 
     end associate
