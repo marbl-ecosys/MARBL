@@ -11,7 +11,8 @@ Program marbl
   use marbl_namelist_mod, only : marbl_namelist
 
   ! Use from drivers/
-  use marbl_init_output_drv
+  use marbl_init_namelist_drv
+  use marbl_init_no_namelist_drv
 
   Implicit None
 
@@ -22,6 +23,7 @@ Program marbl
   integer                             :: ioerr=0
   integer                             :: m, n
   character(len=256)                  :: testname
+  logical :: have_namelist
 
   namelist /marbl_driver_nml/testname
 
@@ -60,8 +62,10 @@ Program marbl
   ! (3) Run proper test
   write(*,"(3A)") "Beginning ", trim(testname), " test..."
   select case (trim(testname))
-    case ("namelist_write")
-      call marbl_init_output_test(marbl_instance, nl_buffer)
+    case ('init_from_namelist')
+      call marbl_init_namelist_test(marbl_instance, nl_buffer)
+    case ('init_without_namelist')
+      call marbl_init_no_namelist_test(marbl_instance)
     case DEFAULT
       write(*,*) "ERROR: testname = ", trim(testname), " is not a valid option"
       stop 1

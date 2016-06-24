@@ -11,7 +11,8 @@ DRV_DIR = .
 COMP_ARGS = OBJ_DIR=$(OBJ_DIR) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_DIR) CPPDEFS="-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3"
 EXE       = ../exe/marbl.exe
 
-OBJS = marbl_init_output_drv.o    \
+OBJS = marbl_init_namelist_drv.o       \
+       marbl_init_no_namelist_drv.o    \
        marbl.o
 
 .PHONY: intel pgi gnu nag cray clean

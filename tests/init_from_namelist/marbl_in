@@ -1,7 +1,8 @@
 &marbl_driver_nml
-testname="namelist_write"
+testname="init_from_namelist"
 /
 &marbl_config_nml
+ciso_on=.true.
 /
 &marbl_parms_nml
 /
