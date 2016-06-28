@@ -190,31 +190,32 @@ module marbl_config_mod
     integer :: cnt = 0
     type(marbl_single_config_or_parm_type), dimension(:), pointer :: vars => NULL()
   contains
-    procedure          :: add_var        => marbl_var_add
-    procedure          :: add_var_tcr_rd => marbl_var_add_tcr_rd
-    procedure          :: add_var_1d_r8  => marbl_var_add_1d_r8
-    procedure          :: add_var_1d_int => marbl_var_add_1d_int
-    procedure          :: add_var_1d_str => marbl_var_add_1d_str
-    procedure          :: finalize_vars  => marbl_vars_finalize
-    procedure          :: inquire_id     => marbl_var_inquire_id
-    generic            :: put            => put_real,                         &
-                                            put_integer,                      &
-                                            put_logical,                      &
-                                            put_string
-    generic            :: get            => get_real,                         &
-                                            get_integer,                      &
-                                            get_logical,                      &
-                                            get_string
-    procedure, private :: put_real       => marbl_var_put_real
-    procedure, private :: put_integer    => marbl_var_put_integer
-    procedure, private :: put_logical    => marbl_var_put_logical
-    procedure, private :: put_string     => marbl_var_put_string
-    procedure, private :: get_real       => marbl_var_get_real
-    procedure, private :: get_integer    => marbl_var_get_integer
-    procedure, private :: get_logical    => marbl_var_get_logical
-    procedure, private :: get_string     => marbl_var_get_string
-    procedure, private :: put_general    => marbl_var_put_all_types
-    procedure, private :: get_general    => marbl_var_get_all_types
+    procedure          :: add_var          => marbl_var_add
+    procedure          :: add_var_tcr_rd   => marbl_var_add_tcr_rd
+    procedure          :: add_var_1d_r8    => marbl_var_add_1d_r8
+    procedure          :: add_var_1d_int   => marbl_var_add_1d_int
+    procedure          :: add_var_1d_str   => marbl_var_add_1d_str
+    procedure          :: finalize_vars    => marbl_vars_finalize
+    procedure          :: inquire_id       => marbl_var_inquire_id
+    procedure          :: inquire_metadata => marbl_var_inquire_metadata
+    generic            :: put              => put_real,                       &
+                                              put_integer,                    &
+                                              put_logical,                    &
+                                              put_string
+    generic            :: get              => get_real,                       &
+                                              get_integer,                    &
+                                              get_logical,                    &
+                                              get_string
+    procedure, private :: put_real         => marbl_var_put_real
+    procedure, private :: put_integer      => marbl_var_put_integer
+    procedure, private :: put_logical      => marbl_var_put_logical
+    procedure, private :: put_string       => marbl_var_put_string
+    procedure, private :: get_real         => marbl_var_get_real
+    procedure, private :: get_integer      => marbl_var_get_integer
+    procedure, private :: get_logical      => marbl_var_get_logical
+    procedure, private :: get_string       => marbl_var_get_string
+    procedure, private :: put_general      => marbl_var_put_all_types
+    procedure, private :: get_general      => marbl_var_get_all_types
   end type marbl_config_and_parms_type
 
   !*****************************************************************************
@@ -2112,5 +2113,48 @@ contains
   end function marbl_var_inquire_id
 
   !*****************************************************************************
-  
+
+  subroutine marbl_var_inquire_metadata(this, ind, marbl_status_log, lname,   &
+             sname, units, group, datatype)
+
+    class(marbl_config_and_parms_type), intent(inout) :: this
+    integer,                            intent(in)    :: ind
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    character(len=*), optional,         intent(out)   :: lname, sname, units
+    character(len=*), optional,         intent(out)   :: group, datatype
+
+    character(*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_metadata'
+    character(len=char_len) :: log_message
+
+    if ((ind.lt.1).or.(ind.gt.this%cnt)) then
+      write(log_message,'(I0,2A,I0)') ind, ' is not a valid index: must be ', &
+                                      'between 1 and ', this%cnt
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    if (present(lname)) then
+      lname = this%vars(ind)%long_name
+    end if
+
+    if (present(sname)) then
+      sname = this%vars(ind)%short_name
+    end if
+
+    if (present(units)) then
+      units = this%vars(ind)%units
+    end if
+
+    if (present(group)) then
+      group = this%vars(ind)%group
+    end if
+
+    if (present(datatype)) then
+      datatype = this%vars(ind)%datatype
+    end if
+
+  end subroutine marbl_var_inquire_metadata
+
+  !*****************************************************************************
+
 end module marbl_config_mod
