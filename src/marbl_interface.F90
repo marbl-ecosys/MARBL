@@ -102,6 +102,7 @@ module marbl_interface
      type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
 
      ! public data - global averages
+     logical                                   , public               :: lallow_glo_ops = .false.
      real (r8)                                 , public, allocatable  :: glo_avg_fields_interior(:)   ! output (nfields)
      real (r8)                                 , public, allocatable  :: glo_avg_averages_interior(:) ! input (nfields)
      real (r8)                                 , public, allocatable  :: glo_avg_fields_surface(:,:)  ! output (num_elements,nfields)
@@ -155,6 +156,7 @@ contains
   !***********************************************************************
   
   subroutine config(this,                 &
+       lgcm_has_global_ops,               &
        gcm_nl_buffer)
 
     use marbl_namelist_mod    , only : marbl_nl_cnt
@@ -166,6 +168,7 @@ contains
 
     class(marbl_interface_class)   , intent(inout)        :: this
     character(marbl_nl_buffer_size), optional, intent(in) :: gcm_nl_buffer(:)
+    logical,                         optional, intent(in) :: lgcm_has_global_ops
 
     character(*), parameter :: subname = 'marbl_interface:config'
     character(len=char_len) :: log_message
@@ -175,6 +178,12 @@ contains
     !--------------------------------------------------------------------
 
     call this%StatusLog%construct()
+
+    if (present(lgcm_has_global_ops)) then
+      this%lallow_glo_ops = lgcm_has_global_ops
+    else
+      this%lallow_glo_ops = .false.
+    end if
 
     !---------------------------------------------------------------------------
     ! set default values for configuration
@@ -236,6 +245,7 @@ contains
     use marbl_mod             , only : marbl_init_bury_coeff
     use marbl_mod             , only : marbl_update_tracer_file_metadata
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
+    use marbl_config_mod      , only : ladjust_bury_coeff
     use marbl_config_mod      , only : autotrophs_config
     use marbl_config_mod      , only : zooplankton_config
     use marbl_config_mod      , only : set_derived_config
@@ -286,6 +296,16 @@ contains
     call this%configuration%finalize_vars(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('configuration%finalize_vars', subname)
+      return
+    end if
+
+    !-----------------------------------------------------------------------
+    !  Abort if GCM doesn't support global ops but configuration requires them
+    !-----------------------------------------------------------------------
+    if (ladjust_bury_coeff .and. (.not.this%lallow_glo_ops)) then
+      write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
+             '.true. unless GCM can perform global operations'
+      call this%StatusLog%log_error(log_message, subname)
       return
     end if
 
