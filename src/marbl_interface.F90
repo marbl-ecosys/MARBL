@@ -302,6 +302,7 @@ contains
     !-----------------------------------------------------------------------
     !  Abort if GCM doesn't support global ops but configuration requires them
     !-----------------------------------------------------------------------
+
     if (ladjust_bury_coeff .and. (.not.this%lallow_glo_ops)) then
       write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
              '.true. unless GCM can perform global operations'
@@ -388,8 +389,6 @@ contains
       call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
       return
     end if
-
-    call this%glo_vars_init(num_surface_elements)
 
     !--------------------------------------------------------------------
     ! set up saved state variables
@@ -535,22 +534,26 @@ contains
       return
     end if
 
+    ! Set up running mean variables (dependent on parms namelist)
+    call this%glo_vars_init()
+
   end subroutine complete_config_and_init
 
   !***********************************************************************
   
-  subroutine glo_vars_init(this, num_surface_elements)
+  subroutine glo_vars_init(this)
 
     use marbl_mod, only : marbl_set_glo_vars_cnt
     use marbl_mod, only : marbl_set_rmean_init_vals
 
     class (marbl_interface_class), intent(inout) :: this
-    integer (int_kind)           , intent(in)    :: num_surface_elements
 
     integer (int_kind) :: glo_avg_field_cnt_interior
     integer (int_kind) :: glo_avg_field_cnt_surface
     integer (int_kind) :: glo_scalar_cnt_interior
     integer (int_kind) :: glo_scalar_cnt_surface
+
+    associate(num_surface_elements => this%domain%num_elements_surface_forcing)
 
     call marbl_set_glo_vars_cnt(glo_avg_field_cnt_interior, &
                                 glo_avg_field_cnt_surface,  &
@@ -576,6 +579,8 @@ contains
                                    this%glo_avg_rmean_surface,     &
                                    this%glo_scalar_rmean_interior, &
                                    this%glo_scalar_rmean_surface)
+
+    end associate
 
   end subroutine glo_vars_init
 
