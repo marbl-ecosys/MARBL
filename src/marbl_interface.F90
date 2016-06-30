@@ -469,7 +469,6 @@ contains
     !--------------------------------------------------------------------
 
     call this%restoring%init(                                                   &
-         nl_buffer       = gcm_nl_buffer,                                       &
          domain          = this%domain,                                         &
          tracer_metadata = this%tracer_metadata(ecosys_base_ind_beg:ecosys_base_ind_end), &
          status_log      = this%StatusLog)

@@ -31,7 +31,7 @@ contains
 
 !*****************************************************************************
 
-subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
+subroutine init(this, domain, tracer_metadata, status_log)
 
   ! initialize marbl_restore instance to default values, then read
   ! namelist and setup tracers that need to be restored
@@ -39,9 +39,6 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   use marbl_kinds_mod   , only : char_len, int_kind, i4, log_kind
   use marbl_logging     , only : marbl_log_type
   use marbl_interface_types, only : marbl_tracer_metadata_type
-  use marbl_namelist_mod, only : marbl_nl_cnt
-  use marbl_namelist_mod, only : marbl_nl_buffer_size
-  use marbl_namelist_mod, only : marbl_namelist
   use marbl_parms       , only : restore_short_names
   use marbl_parms       , only : restore_filenames
   use marbl_parms       , only : restore_file_varnames
@@ -64,7 +61,6 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   !  input variables
   !-----------------------------------------------------------------------
 
-  character(marbl_nl_buffer_size), dimension(marbl_nl_cnt), intent(in) :: nl_buffer
   type(marbl_domain_type),                                  intent(in) :: domain
   type(marbl_tracer_metadata_type), dimension(:),           intent(in) :: tracer_metadata
 
@@ -72,8 +68,7 @@ subroutine init(this, nl_buffer, domain, tracer_metadata, status_log)
   !  local variables
   !-----------------------------------------------------------------------
 
-  integer(int_kind) :: nml_error, k, n, t
-  character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
+  integer(int_kind) :: k, n, t
   character(*), parameter :: subname = 'marbl_restore_mod:init'
   character(len=char_len) :: log_message
 

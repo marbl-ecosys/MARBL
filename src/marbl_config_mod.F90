@@ -1311,7 +1311,7 @@ contains
   end subroutine marbl_config_construct
 
   !*****************************************************************************
-  
+
   subroutine set_defaults_tcr_rd(tracer_read_var, mod_varname, filename,      &
              file_varname, scale_factor, default_val, file_fmt)
 
