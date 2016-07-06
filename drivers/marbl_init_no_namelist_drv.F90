@@ -10,11 +10,11 @@ module marbl_init_no_namelist_drv
 
   integer, parameter :: km = 5
 
-  Public :: marbl_init_no_namelist_test
+  Public :: test
 
 Contains
 
-  subroutine marbl_init_no_namelist_test(marbl_instance)
+  subroutine test(marbl_instance)
 
     type(marbl_interface_class), intent(inout) :: marbl_instance
 
@@ -73,6 +73,6 @@ Contains
       return
     end if
 
-  end subroutine marbl_init_no_namelist_test
+  end subroutine test
 
 end module marbl_init_no_namelist_drv

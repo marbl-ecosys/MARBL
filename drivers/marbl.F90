@@ -11,21 +11,27 @@ Program marbl
   use marbl_namelist_mod, only : marbl_namelist
 
   ! Use from drivers/
-  use marbl_init_namelist_drv
-  use marbl_init_no_namelist_drv
+  use marbl_init_namelist_drv,    only : marbl_init_namelist_test    => test
+  use marbl_init_no_namelist_drv, only : marbl_init_no_namelist_test => test
+  use marbl_get_put_drv,          only : marbl_get_put_test          => test
 
   Implicit None
 
   type(marbl_interface_class) :: marbl_instance
+  type(marbl_log_type)        :: marbl_status_log
   character(len=marbl_nl_buffer_size) :: nl_buffer(marbl_nl_cnt)
   character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
   character(len=marbl_nl_in_size)     :: nl_str, tmp_str
   integer                             :: ioerr=0
   integer                             :: m, n
   character(len=256)                  :: testname
-  logical :: have_namelist
+  logical                             :: have_namelist, ldiff_log
 
   namelist /marbl_driver_nml/testname
+
+  ! (0) Set up local variables
+  ldiff_log = .false.
+  call marbl_status_log%construct()
 
   ! (1) Set namelist defaults, empty strings to pass to MARBL
   testname     = ''
@@ -66,13 +72,22 @@ Program marbl
       call marbl_init_namelist_test(marbl_instance, nl_buffer)
     case ('init_without_namelist')
       call marbl_init_no_namelist_test(marbl_instance)
+    case ('get_put')
+      ldiff_log = .true.
+      call marbl_get_put_test(marbl_instance, marbl_status_log)
     case DEFAULT
       write(*,*) "ERROR: testname = ", trim(testname), " is not a valid option"
       stop 1
   end select
 
   ! (4) Print marbl_log
-  call print_marbl_log(marbl_instance%StatusLog)
+  if (ldiff_log) then
+    call print_marbl_log(marbl_status_log)
+    if (marbl_instance%StatusLog%labort_marbl) &
+      call print_marbl_log(marbl_instance%StatusLog)
+  else
+    call print_marbl_log(marbl_instance%StatusLog)
+  end if
 
 Contains
 

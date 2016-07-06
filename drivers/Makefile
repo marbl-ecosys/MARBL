@@ -16,6 +16,7 @@ EXE       = ../exe/marbl.exe
 
 OBJS = marbl_init_namelist_drv.o       \
        marbl_init_no_namelist_drv.o    \
+       marbl_get_put_drv.o             \
        marbl.o
 
 .PHONY: intel pgi gnu nag cray clean clean_exe
