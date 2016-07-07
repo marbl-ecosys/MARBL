@@ -27,7 +27,7 @@ Contains
 
     character(*), parameter      :: subname = 'marbl_get_put_drv:test'
     real(kind=r8), dimension(km) :: dz, zw, zt
-    integer                      :: k, n
+    integer                      :: k
 
     ! Initialize levels
     dz = c1

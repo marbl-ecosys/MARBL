@@ -25,7 +25,7 @@ Program marbl
   integer                             :: ioerr=0
   integer                             :: m, n
   character(len=256)                  :: testname
-  logical                             :: have_namelist, ldiff_log
+  logical                             :: ldiff_log
 
   namelist /marbl_driver_nml/testname
 
