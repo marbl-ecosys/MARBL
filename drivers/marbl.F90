@@ -30,13 +30,16 @@ Program marbl
   namelist /marbl_driver_nml/testname
 
   ! (0) Set up local variables
+  !     * Empty strings used to pass namelist file contents to MARBL
+  nl_buffer(:) = ''
+  nl_str       = ''
+  !     * Some tests use a different status log than marbl_instance%StatusLog
+  !       (default is to use marbl_instance%StatusLog)
   ldiff_log = .false.
   call marbl_status_log%construct()
 
-  ! (1) Set namelist defaults, empty strings to pass to MARBL
+  ! (1) Set marbl_driver_nml defaults
   testname     = ''
-  nl_buffer(:) = ''
-  nl_str       = ''
 
   ! Read namelist
   n = 0
