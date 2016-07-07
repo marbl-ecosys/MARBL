@@ -50,10 +50,11 @@ Program marbl
   end do
   if (.not.is_iostat_end(ioerr)) then
     print*, ioerr
-    write(*,"(A)") "ERROR encountered when reading marbl_in to buffer"
+    write(*,"(A)") "ERROR encountered when reading MARBL namelist from stdin"
     stop 1
   end if
-  write(*,"(A,I0,A)") "marbl_in contained ", len_trim(nl_str), " characters"
+  write(*,"(A,I0,A)") "MARBL namelist file contained ", len_trim(nl_str),     &
+                      " characters"
   call marbl_nl_split_string(nl_str, nl_buffer)
 
 
@@ -61,7 +62,7 @@ Program marbl
   tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_driver_nml')
   read(tmp_nl_buffer, nml=marbl_driver_nml, iostat=ioerr)
   if (ioerr.ne.0) then
-    write(*,*) "ERROR reading marbl_driver_nml"
+    write(*,*) "ERROR reading &marbl_driver_nml"
     stop 1
   end if
 
