@@ -1,10 +1,13 @@
 #!/bin/bash
 
 build() {
+  CWD=$PWD
   compiler=$1
   module purge
-  module load compiler/$compiler
+  module load $compiler
+  cd ../../src
   make $compiler
+  cd $CWD
 }
 
 pause() {
@@ -12,7 +15,5 @@ pause() {
 }
 
 build intel
-pause
-build nag
 pause
 build gnu

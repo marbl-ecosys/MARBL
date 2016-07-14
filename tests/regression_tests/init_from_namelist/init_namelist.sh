@@ -43,7 +43,7 @@ parse_input() {
 
 build() {
   CWD=$PWD
-  cd ../../drivers
+  cd ../../../drivers
   make $COMPILER
   if [ $? -ne 0 ]; then
     exit
@@ -54,7 +54,7 @@ build() {
 #------------------------------------------------------------------------------
 
 run() {
-  ../../exe/marbl.exe < $NAMELIST
+  ../../../exe/marbl.exe < $NAMELIST
 }
 
 #------------------------------------------------------------------------------

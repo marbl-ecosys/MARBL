@@ -1,13 +1,11 @@
 .SUFFIXES: .F90 .o
 extension = .F90
 
-SRC_DIR = .
-OBJ_DIR = .
-LIB_DIR = .
-INC_DIR = .
+SRC_DIR=./
+OBJ_DIR=../obj
+LIB_DIR=../lib
+INC_DIR=../include
 FC = NONE
-
-LIB_NAME = $(LIB_DIR)/libmarbl.a
 
 # Dependency Generation
 MAKE_DEP = $(SRC_DIR)/makedep.py
@@ -36,37 +34,31 @@ ifeq ($(USE_DEPS),TRUE)
   include $(DEP_FILE)
 endif
 
+CPPDEFS=-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
+
 ### TARGETS ###
 
-all: lib
+.PHONY: depends check intel pgi gnu nag clean
+
+all: gnu
 
 # Create all object and module files
 # Note that .mod files need to be copied to INC_DIR if OBJ_DIR != INC_DIR
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.F90
-	$(FC) $(FCFLAGS) $(CPPDEFS) -c $< -o $@
+	$(FC) $(CPPDEFS) $(FCFLAGS) -c $< -o $@
 
 $(INC_DIR)/%.mod: $(OBJ_DIR)/%.mod
 ifneq ($(INC_DIR),$(OBJ_DIR))
 	cp $< $@
 endif
 
-### Combine into library
-$(LIB_NAME): $(OBJS)
-	ar -ru $(LIB_NAME) $(OBJS)
-
 $(DEP_FILE): $(MAKE_DEP) $(SRC_DIR)/*.F90
 	$(MAKE_DEP) $(DEP_FILE) $(OBJ_DIR) $(SRC_DIR)
 	@echo "Generated dependencies!"
 
-.PHONY: depends recurse check clean
-
 # Shorthand for making dependency file
 depends: $(DEP_FILE)
-
-# Shorthand for making the library (and all .mod files)
-lib: check depends
-	$(MAKE) -e -f $(SRC_DIR)/Makefile $(LIB_NAME) $(INCS) USE_DEPS=TRUE
 
 # Make sure a Fortran compiler was specified (the Makefile for the stand-alone
 # driver passes FC along with FCFLAGS, SRC_DIR, OBJ_DIR, LIB_DIR, and INC_DIR)
@@ -76,7 +68,27 @@ check:
      out the stand-alone CVMix driver set then you should"; echo "run \"make  \
      lib\" from the src/ directory to use CVMix compile options."; exit 1)
 
+intel:
+	$(MAKE) $(LIB_DIR)/libmarbl-intel.a USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel INC_DIR=$(INC_DIR)/intel
+
+pgi:
+	$(MAKE) $(LIB_DIR)/libmarbl-pgi.a USE_DEPS=TRUE FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi OBJ_DIR=$(OBJ_DIR)/pgi" INC_DIR=$(INC_DIR)/pgi
+
+gnu:
+	$(MAKE) $(LIB_DIR)/libmarbl-gnu.a USE_DEPS=TRUE FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR)/gnu -cpp" OBJ_DIR=$(OBJ_DIR)/gnu INC_DIR=$(INC_DIR)/gnu
+
+nag:
+	$(MAKE) $(LIB_DIR)/libmarbl-nag.a USE_DEPS=TRUE FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR)/nag -mdir $(OBJ_DIR)/nag -kind=byte" OBJ_DIR=$(OBJ_DIR)/nag INC_DIR=$(INC_DIR)/nag
+
+cray:
+	$(MAKE) $(LIB_DIR)/libmarbl-cray.a USE_DEPS=TRUE FC=ftn FCFLAGS="-O2 -f free -e mf -J $(OBJ_DIR)/cray" OBJ_DIR=$(OBJ_DIR)/cray INC_DIR=$(INC_DIR)/cray
+
 # Remove library, object files, module files, and dependency file
 clean:
-	/bin/rm -f $(LIB_NAME) $(OBJS) $(MODS) $(DEP_FILE)
+	/bin/rm -f $(OBJ_DIR)/*/* $(LIB_DIR)/* $(INC_DIR)/*/*
+
+# Actual library build
+
+$(LIB_DIR)/%.a: check depends $(OBJS)
+	ar -ru $@ $(OBJS)
 
