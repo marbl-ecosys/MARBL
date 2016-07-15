@@ -1,7 +1,7 @@
 .SUFFIXES: .F90 .o
 extension = .F90
 
-SRC_DIR=./
+SRC_DIR=.
 OBJ_DIR=../obj
 LIB_DIR=../lib
 INC_DIR=../include
@@ -14,6 +14,10 @@ DEP_FILE = $(OBJ_DIR)/shared_deps.d
 ifeq ($(FC),NONE)
   NOFC = TRUE
 endif
+
+ifneq ($(INC_DIR),$(OBJ_DIR))
+  DIFF_INC = TRUE
+ endif
 
 MODULES = $(shell ls *.F90)
 
@@ -30,48 +34,40 @@ MODS = $(addprefix $(OBJ_DIR)/,${MODS_TMP:.F90=.mod}) \
        $(INCS)
 OBJS = $(addprefix $(OBJ_DIR)/,${MODULES:.F90=.o})
 
-ifeq ($(USE_DEPS),TRUE)
-  include $(DEP_FILE)
-endif
+-include $(DEP_FILE)
 
 CPPDEFS=-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
 
 ### TARGETS ###
-
-.PHONY: depends check intel pgi gnu nag includes clean
-
+.PHONY: mv_mods depends check intel pgi gnu nag clean
 all: gnu
 
 # Create all object and module files
-# Note that .mod files need to be copied to INC_DIR if OBJ_DIR != INC_DIR
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.F90
 	$(FC) $(CPPDEFS) $(FCFLAGS) -c $< -o $@
 
-includes: $(INCS)
+# Note that .mod files need to be copied to INC_DIR if OBJ_DIR != INC_DIR
+# Shorthand for moving files in $INC_DIR (if needed)
+mv_mods: $(INCS)
 
 $(INC_DIR)/%.mod: $(OBJ_DIR)/%.mod
-ifneq ($(INC_DIR),$(OBJ_DIR))
-	cp $< $@
-endif
-
-$(DEP_FILE): $(MAKE_DEP) $(SRC_DIR)/*.F90
-	$(MAKE_DEP) $(DEP_FILE) $(OBJ_DIR) $(SRC_DIR)
-	@echo "Generated dependencies!"
+	$(if $(DIFF_INC), cp $< $@)
 
 # Shorthand for making dependency file
 depends: $(DEP_FILE)
+
+$(DEP_FILE): $(MAKE_DEP) $(SRC_DIR)/*.F90
+	@$(MAKE_DEP) $(DEP_FILE) $(OBJ_DIR) $(SRC_DIR); echo "Generated dependency file $(DEP_FILE)"
 
 # Make sure a Fortran compiler was specified (the Makefile for the stand-alone
 # driver passes FC along with FCFLAGS, SRC_DIR, OBJ_DIR, LIB_DIR, and INC_DIR)
 check:
 	@$(if $(NOFC), echo "ERROR: you must specify FC (and it is recommended that \
-     you specify FCFLAGS as"; echo "well)."; echo "NOTE: if you have checked  \
-     out the stand-alone CVMix driver set then you should"; echo "run \"make  \
-     lib\" from the src/ directory to use CVMix compile options."; exit 1)
+     you specify FCFLAGS as"; echo "well)."; exit 1)
 
 intel:
-	$(MAKE) $(LIB_DIR)/libmarbl-intel.a USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel INC_DIR=$(INC_DIR)/intel
+	$(MAKE) USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel INC_DIR=$(INC_DIR)/intel $(LIB_DIR)/libmarbl-intel.a
 
 pgi:
 	$(MAKE) $(LIB_DIR)/libmarbl-pgi.a USE_DEPS=TRUE FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi OBJ_DIR=$(OBJ_DIR)/pgi" INC_DIR=$(INC_DIR)/pgi
@@ -91,6 +87,6 @@ clean:
 
 # Actual library build
 
-$(LIB_DIR)/%.a: check depends $(OBJS) $(INCS)
-	ar -ru $@ $(OBJS)
+$(LIB_DIR)/libmarb%.a: check depends $(OBJS)
+	$(MAKE) mv_mods ; ar -ru $@ $(OBJS)
 
