@@ -38,7 +38,7 @@ CPPDEFS=-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
 
 ### TARGETS ###
 
-.PHONY: depends check intel pgi gnu nag clean
+.PHONY: depends check intel pgi gnu nag includes clean
 
 all: gnu
 
@@ -47,6 +47,8 @@ all: gnu
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.F90
 	$(FC) $(CPPDEFS) $(FCFLAGS) -c $< -o $@
+
+includes: $(INCS)
 
 $(INC_DIR)/%.mod: $(OBJ_DIR)/%.mod
 ifneq ($(INC_DIR),$(OBJ_DIR))
@@ -85,10 +87,10 @@ cray:
 
 # Remove library, object files, module files, and dependency file
 clean:
-	/bin/rm -f $(OBJ_DIR)/*/* $(LIB_DIR)/* $(INC_DIR)/*/*
+	/bin/rm -f $(OBJ_DIR)/*/*.* $(LIB_DIR)/* $(INC_DIR)/*/*
 
 # Actual library build
 
-$(LIB_DIR)/%.a: check depends $(OBJS)
+$(LIB_DIR)/%.a: check depends $(OBJS) $(INCS)
 	ar -ru $@ $(OBJS)
 

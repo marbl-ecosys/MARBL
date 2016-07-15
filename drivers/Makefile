@@ -2,17 +2,25 @@
 
 extension = .F90
 
+COMP_NAME=NONE
+
+OBJ_ROOT = ../obj
+OBJ_DIR = $(OBJ_ROOT)/$(COMP_NAME)/driver
 LIB_DIR = ../lib
 INC_DIR = ../include
-OBJ_DIR = ../obj
 SRC_DIR = ../src
 DRV_DIR = .
 
-OBJ_LOC = $(OBJ_DIR)
-LIB_NAME = libmarbl.a
-LFLAG = -lmarbl
+OBJ_LOC = $(OBJ_ROOT)/$(COMP_NAME)
+INC_LOC = $(INC_DIR)/$(COMP_NAME)
+ifeq ($(COMP_NAME),NONE)
+  LIB_NAME = libmarbl.a
+else
+  LIB_NAME = libmarbl-$(COMP_NAME).a
+endif
+LFLAG = -lmarbl-$(COMP_NAME)
 
-COMP_ARGS = OBJ_DIR=$(OBJ_DIR) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_DIR) CPPDEFS="-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3"
+COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3"
 EXE       = ../exe/marbl.exe
 
 OBJS = marbl_init_namelist_drv.o       \
@@ -25,33 +33,33 @@ OBJS = marbl_init_namelist_drv.o       \
 all: gnu
 
 $(EXE): $(LIB_DIR)/$(LIB_NAME)           \
-        $(addprefix $(OBJ_LOC)/,$(OBJS)) \
+        $(addprefix $(OBJ_DIR)/,$(OBJS)) \
         clean_exe
-	$(FC) -o $(EXE) $(OBJ_LOC)/*.o -L$(LIB_DIR) $(LFLAG)
+	$(FC) -o $(EXE) $(OBJ_DIR)/*.o -L$(LIB_DIR) $(LFLAG)
 
-$(OBJ_LOC)/%.o: $(DRV_DIR)/%.F90
-	$(FC) $(FCFLAGS) -c $< -o $@
+$(OBJ_DIR)/%.o: $(DRV_DIR)/%.F90
+	$(FC) $(FCFLAGS) $(INC2) -I$(INC_LOC) -c $< -o $@
 
 $(LIB_DIR)/%.a: $(SRC_DIR)/*.F90
-	cd $(SRC_DIR) ; make FC=$(FC) FCFLAGS="$(FCFLAGS)" $(COMP_ARGS) LIB_NAME=$@
+	cd $(SRC_DIR) ; make FC=$(FC) FCFLAGS="$(FCFLAGS) $(INC)" USE_DEPS=TRUE $(COMP_ARGS) $@
 
 intel:
-	$(MAKE) $(EXE) FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel -cpp -nogen-interface -fp-model source" LIB_NAME=libmarbl-intel.a LFLAG=-lmarbl-intel OBJ_LOC=$(OBJ_DIR)/intel
+	$(MAKE) $(EXE) COMP_NAME=intel FC=ifort FCFLAGS="-O2 -free -cpp -nogen-interface -fp-model source" INC="-module $(OBJ_ROOT)/intel" INC2="-module $(OBJ_ROOT)/intel/driver" 
 
 pgi:
-	$(MAKE) $(EXE) FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi" LIB_NAME=libmarbl-pgi.a LFLAG=-lmarbl-pgi OBJ_LOC=$(OBJ_DIR)/pgi
+	$(MAKE) $(EXE) COMP_NAME=pgi FC=pgf90 FCFLAGS="-O2 -Mfree" INC="-module $(OBJ_ROOT)/pgi" INC2="-module $(OBJ_ROOT)/pgi/driver"
 
 gnu:
-	$(MAKE) $(EXE) FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR)/gnu -cpp" LIB_NAME=libmarbl-gnu.a LFLAG=-lmarbl-gnu OBJ_LOC=$(OBJ_DIR)/gnu
+	$(MAKE) $(EXE) COMP_NAME=gnu FC=gfortran FCFLAGS="-O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu" INC2="-J $(OBJ_ROOT)/gnu/driver"
 
 nag:
-	$(MAKE) $(EXE) FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR)/nag -mdir $(OBJ_DIR)/nag -kind=byte" LIB_NAME=libmarbl-nag.a LFLAG=-lmarbl-nag OBJ_LOC=$(OBJ_DIR)/nag
+	$(MAKE) $(EXE) COMP_NAME=nag FC=nagfor FCFLAGS="-O2 -free -kind=byte" INC="-mdir $(OBJ_ROOT)/nag -I$(OBJ_ROOT)/nag" INC2="-mdir $(OBJ_ROOT)/nag/driver -I$(OBJ_ROOT)/nag/driver"
 
 cray:
-	$(MAKE) $(EXE) FC=ftn FCFLAGS="-O2 -f free -e mf -J $(OBJ_DIR)/cray" LIB_NAME=libmarbl-cray.a LFLAG=-lmarbl-cray OBJ_LOC=$(OBJ_DIR)/cray
+	$(MAKE) $(EXE) COMP_NAME=cray FC=ftn FCFLAGS="-O2 -f free -e mf" INC="-J $(OBJ_ROOT)/cray" INC2="-J $(OBJ_ROOT)/cray/driver"
 
 clean_exe:
 	rm -f $(EXE)
 
 clean: clean_exe
-	rm -f $(OBJ_DIR)/*/* $(LIB_DIR)/* $(INC_DIR)/*/*
+	rm -f $(OBJ_ROOT)/*/*.* $(OBJ_ROOT)/*/*/* $(LIB_DIR)/* $(INC_DIR)/*/*
