@@ -11,10 +11,6 @@ FC = NONE
 MAKE_DEP = $(SRC_DIR)/makedep.py
 DEP_FILE = $(OBJ_DIR)/shared_deps.d
 
-ifeq ($(FC),NONE)
-  NOFC = TRUE
-endif
-
 ifneq ($(INC_DIR),$(OBJ_DIR))
   DIFF_INC = TRUE
  endif
@@ -34,14 +30,34 @@ MODS = $(addprefix $(OBJ_DIR)/,${MODS_TMP:.F90=.mod}) \
        $(INCS)
 OBJS = $(addprefix $(OBJ_DIR)/,${MODULES:.F90=.o})
 
--include $(DEP_FILE)
-
 CPPDEFS=-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
 
-### TARGETS ###
-.PHONY: mv_mods depends check intel pgi gnu nag clean
-all: gnu
+ifeq ($(USE_DEPS),TRUE)
+  include $(DEP_FILE)
+endif
 
+### TARGETS ###
+
+all : gnu
+.PHONY : all gnu intel pgi nag cray mv_mods depends clean
+
+# Shorthand for specific compilers
+gnu:
+	$(MAKE) $(LIB_DIR)/libmarbl-gnu.a USE_DEPS=TRUE FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR)/gnu -cpp" OBJ_DIR=$(OBJ_DIR)/gnu INC_DIR=$(INC_DIR)/gnu
+
+intel:
+	$(MAKE) $(LIB_DIR)/libmarbl-intel.a USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel INC_DIR=$(INC_DIR)/intel
+
+pgi:
+	$(MAKE) $(LIB_DIR)/libmarbl-pgi.a USE_DEPS=TRUE FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi OBJ_DIR=$(OBJ_DIR)/pgi" INC_DIR=$(INC_DIR)/pgi
+
+nag:
+	$(MAKE) $(LIB_DIR)/libmarbl-nag.a USE_DEPS=TRUE FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR)/nag -mdir $(OBJ_DIR)/nag -kind=byte" OBJ_DIR=$(OBJ_DIR)/nag INC_DIR=$(INC_DIR)/nag
+
+cray:
+	$(MAKE) $(LIB_DIR)/libmarbl-cray.a USE_DEPS=TRUE FC=ftn FCFLAGS="-O2 -f free -e mf -J $(OBJ_DIR)/cray" OBJ_DIR=$(OBJ_DIR)/cray INC_DIR=$(INC_DIR)/cray
+
+# Remove library, object files, module files, and dependency file
 # Create all object and module files
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.F90
@@ -60,33 +76,11 @@ depends: $(DEP_FILE)
 $(DEP_FILE): $(MAKE_DEP) $(SRC_DIR)/*.F90
 	@$(MAKE_DEP) $(DEP_FILE) $(OBJ_DIR) $(SRC_DIR); echo "Generated dependency file $(DEP_FILE)"
 
-# Make sure a Fortran compiler was specified (the Makefile for the stand-alone
-# driver passes FC along with FCFLAGS, SRC_DIR, OBJ_DIR, LIB_DIR, and INC_DIR)
-check:
-	@$(if $(NOFC), echo "ERROR: you must specify FC (and it is recommended that \
-     you specify FCFLAGS as"; echo "well)."; exit 1)
-
-intel:
-	$(MAKE) USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel INC_DIR=$(INC_DIR)/intel $(LIB_DIR)/libmarbl-intel.a
-
-pgi:
-	$(MAKE) $(LIB_DIR)/libmarbl-pgi.a USE_DEPS=TRUE FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi OBJ_DIR=$(OBJ_DIR)/pgi" INC_DIR=$(INC_DIR)/pgi
-
-gnu:
-	$(MAKE) $(LIB_DIR)/libmarbl-gnu.a USE_DEPS=TRUE FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR)/gnu -cpp" OBJ_DIR=$(OBJ_DIR)/gnu INC_DIR=$(INC_DIR)/gnu
-
-nag:
-	$(MAKE) $(LIB_DIR)/libmarbl-nag.a USE_DEPS=TRUE FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR)/nag -mdir $(OBJ_DIR)/nag -kind=byte" OBJ_DIR=$(OBJ_DIR)/nag INC_DIR=$(INC_DIR)/nag
-
-cray:
-	$(MAKE) $(LIB_DIR)/libmarbl-cray.a USE_DEPS=TRUE FC=ftn FCFLAGS="-O2 -f free -e mf -J $(OBJ_DIR)/cray" OBJ_DIR=$(OBJ_DIR)/cray INC_DIR=$(INC_DIR)/cray
-
-# Remove library, object files, module files, and dependency file
 clean:
 	/bin/rm -f $(OBJ_DIR)/*/*.* $(LIB_DIR)/* $(INC_DIR)/*/*
 
 # Actual library build
 
-$(LIB_DIR)/libmarb%.a: check depends $(OBJS)
+$(LIB_DIR)/libmarb%.a: depends $(OBJS)
 	$(MAKE) mv_mods ; ar -ru $@ $(OBJS)
 
