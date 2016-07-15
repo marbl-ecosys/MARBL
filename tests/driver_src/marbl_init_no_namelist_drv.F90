@@ -59,12 +59,6 @@ Contains
     end if
 
     ! Optional: call marbl_instance%parameters%put()
-    call marbl_instance%parameters%put('fe_max_scale2', 2050,                 &
-                                       marbl_instance%StatusLog)
-    if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%parms%put', subname)
-      return
-    end if
 
     call marbl_instance%complete_config_and_init
     if (marbl_instance%StatusLog%labort_marbl) then

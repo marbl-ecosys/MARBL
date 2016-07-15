@@ -4,15 +4,16 @@ extension = .F90
 
 COMP_NAME=NONE
 
-OBJ_ROOT = ../obj
+OBJ_ROOT = $(realpath ../../obj)
 OBJ_DIR = $(OBJ_ROOT)/$(COMP_NAME)/driver
-LIB_DIR = ../lib
-INC_DIR = ../include
-SRC_DIR = ../src
-DRV_DIR = .
+INC_DIR = $(realpath ../../include)
+LIB_DIR = $(realpath ../../lib)
+EXE_DIR = $(realpath ../../exe)
+SRC_DIR = $(realpath ../../src)
+DRV_DIR = $(realpath .)
 
-OBJ_LOC = $(OBJ_ROOT)/$(COMP_NAME)
-INC_LOC = $(INC_DIR)/$(COMP_NAME)
+OBJ_LOC = $(realpath $(OBJ_ROOT)/$(COMP_NAME))
+INC_LOC = $(realpath $(INC_DIR)/$(COMP_NAME))
 ifeq ($(COMP_NAME),NONE)
   LIB_NAME = libmarbl.a
 else
@@ -21,7 +22,7 @@ endif
 LFLAG = -lmarbl-$(COMP_NAME)
 
 COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3"
-EXE       = ../exe/marbl.exe
+EXE       = $(EXE_DIR)/marbl.exe
 
 OBJS = marbl_init_namelist_drv.o       \
        marbl_init_no_namelist_drv.o    \
