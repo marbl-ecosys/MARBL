@@ -2,6 +2,8 @@
 import sys
 from os import system as sh_command
 from os import path
+from machines import load_module
+from machines import machine_specific
 
 compiler = None # compiler name
 mach = None # machine name
@@ -66,7 +68,7 @@ def parse_args(desc, HaveCompiler=True, HaveNamelist=True, CleanLibOnly=False):
   if HaveNamelist:
     namelist = args.namelist
 
-  machine_specific()
+  machine_specific(mach, supported_compilers, supported_machines)
   if compiler == None:
     compiler = supported_compilers[0]
 
@@ -80,47 +82,6 @@ def parse_args(desc, HaveCompiler=True, HaveNamelist=True, CleanLibOnly=False):
 
 # -----------------------------------------------
 
-# Set up supported compilers based on what machine you are running on
-# so code can abort if an unsupported compiler is requested.
-# If no compiler is specified, the supported_compilers[0] will be used.
-def machine_specific():
-
-  global mach
-  global supported_compilers
-  global supported_machines
-
-  if mach not in supported_machines:
-    print "%s is not a supported machine! Try one of the following:" % mach
-    print supported_machines
-    sys.exit(1)
-
-  if mach == 'yellowstone':
-    # NCAR machine
-    supported_compilers.append('intel')
-    supported_compilers.append('gnu')
-    return
-
-  if mach == 'hobart':
-    # NCAR machine (run by CGD)
-    supported_compilers.append('nag')
-    supported_compilers.append('intel')
-    supported_compilers.append('gnu')
-    return
-
-  if mach == 'edison':
-    # NERSC machine
-    supported_compilers.append('cray')
-    return
-
-  if mach == 'local-gnu':
-    # Not a specific machine, but a flag to specify
-    # "run with gnu without loading any modules"
-    supported_compilers.append('gnu')
-    return
-
-
-# -----------------------------------------------
-
 # clean libmarbl.a
 def clean_lib():
 
@@ -128,6 +89,16 @@ def clean_lib():
 
   src_dir = '%s/src' % marbl_dir
   sh_command('cd %s; make clean' % src_dir)
+
+# -----------------------------------------------
+
+# Clean marbl.exe
+def clean_exe():
+
+  global marbl_dir
+
+  drv_dir = '%s/tests/driver_src' % marbl_dir
+  sh_command('cd %s; make clean' % drv_dir)
 
 # -----------------------------------------------
 
@@ -143,36 +114,9 @@ def build_lib(loc_compiler=None):
   src_dir = '%s/src' % marbl_dir
 
   if mach != 'local-gnu':
-    load_module(loc_compiler=loc_compiler)
+    load_module(mach, loc_compiler)
 
   sh_command('cd %s; make %s' % (src_dir, loc_compiler))
-
-# -----------------------------------------------
-
-def load_module(loc_compiler):
-
-  global mach
-
-  print "Trying to load %s on %s" % (loc_compiler, mach)
-  if mach == 'hobart':
-    sh_command('module purge')
-    sh_command('module load compiler/%s' % loc_compiler)
-
-  if mach == 'yellowstone':
-    sys.path.insert(0,'/glade/apps/opt/lmod/lmod/init')
-    import env_modules_python as lmod
-    lmod.module('purge')
-    lmod.module(' load %s' % loc_compiler)
-
-# -----------------------------------------------
-
-# Clean marbl.exe
-def clean_exe():
-
-  global marbl_dir
-
-  drv_dir = '%s/tests/driver_src' % marbl_dir
-  sh_command('cd %s; make clean' % drv_dir)
 
 # -----------------------------------------------
 
@@ -188,7 +132,7 @@ def build_exe(loc_compiler=None):
   drv_dir = '%s/tests/driver_src' % marbl_dir
 
   if mach != 'local-gnu':
-    load_module(loc_compiler=loc_compiler)
+    load_module(mach, loc_compiler)
 
   sh_command('cd %s; make %s' % (drv_dir, loc_compiler))
 
@@ -205,9 +149,3 @@ def run_exe():
   sh_command('%s/marbl.exe < %s' % (exe_dir, namelist))
 
 # -----------------------------------------------
-
-def pause():
-
-  sys.stdout.write('Press [return] to continue...')
-  sys.stdout.flush()
-  raw_input()
