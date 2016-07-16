@@ -142,8 +142,27 @@ def build_lib(loc_compiler=None):
 
   src_dir = '%s/src' % marbl_dir
 
-  if mach == 'local-gnu':
-    sh_command('cd %s; make %s' % (src_dir, loc_compiler))
+  if mach != 'local-gnu':
+    load_module(loc_compiler=loc_compiler)
+
+  sh_command('cd %s; make %s' % (src_dir, loc_compiler))
+
+# -----------------------------------------------
+
+def load_module(loc_compiler):
+
+  global mach
+
+  print "Trying to load %s on %s" % (loc_compiler, mach)
+  if mach == 'hobart':
+    sh_command('module purge')
+    sh_command('module load compiler/%s' % loc_compiler)
+
+  if mach == 'yellowstone':
+    sys.path.insert(0,'/glade/apps/opt/lmod/lmod/init')
+    import env_modules_python as lmod
+    lmod.module('purge')
+    lmod.module(' load %s' % loc_compiler)
 
 # -----------------------------------------------
 
@@ -168,8 +187,10 @@ def build_exe(loc_compiler=None):
 
   drv_dir = '%s/tests/driver_src' % marbl_dir
 
-  if mach == 'local-gnu':
-    sh_command('cd %s; make %s' % (drv_dir, loc_compiler))
+  if mach != 'local-gnu':
+    load_module(loc_compiler=loc_compiler)
+
+  sh_command('cd %s; make %s' % (drv_dir, loc_compiler))
 
 # -----------------------------------------------
 
