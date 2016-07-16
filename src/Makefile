@@ -81,6 +81,6 @@ clean:
 
 # Actual library build
 
-$(LIB_DIR)/libmarb%.a: depends $(OBJS)
+%.a: depends $(OBJS)
 	$(MAKE) mv_mods ; ar -ru $@ $(OBJS)
 
