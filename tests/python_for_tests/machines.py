@@ -7,8 +7,10 @@ def load_module(mach, compiler):
 
   print "Trying to load %s on %s" % (compiler, mach)
   if mach == 'hobart':
-    sh_command('module purge')
-    sh_command('module load compiler/%s' % compiler)
+    sys.path.insert(0,'/usr/share/Modules/init')
+    from python import module
+    module('purge')
+    module(['load', 'compiler/%s' % compiler])
 
   if mach == 'yellowstone':
     sys.path.insert(0,'/glade/apps/opt/lmod/lmod/init')
