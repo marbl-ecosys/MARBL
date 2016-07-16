@@ -9,9 +9,9 @@ def load_module(mach, compiler):
   
   if mach == 'yellowstone':
     sys.path.insert(0,'/glade/apps/opt/lmod/lmod/init')
-    import env_modules_python as lmod
-    lmod.module('purge')
-    lmod.module(' load %s' % compiler)
+    from env_modules_python import module
+    module('purge')
+    module('load', compiler)
 
   if mach == 'hobart':
     sys.path.insert(0,'/usr/share/Modules/init')
