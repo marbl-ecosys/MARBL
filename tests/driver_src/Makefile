@@ -4,11 +4,11 @@ extension = .F90
 
 COMP_NAME=NONE
 
-OBJ_ROOT = $(realpath ../../obj)
+OBJ_ROOT = $(realpath ../obj)
 OBJ_DIR = $(OBJ_ROOT)/$(COMP_NAME)/driver
 INC_DIR = $(realpath ../../include)
 LIB_DIR = $(realpath ../../lib)
-EXE_DIR = $(realpath ../../exe)
+EXE_DIR = $(realpath ../driver_exe)
 SRC_DIR = $(realpath ../../src)
 DRV_DIR = $(realpath .)
 

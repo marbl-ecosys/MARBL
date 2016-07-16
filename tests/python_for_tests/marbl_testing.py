@@ -144,7 +144,7 @@ def run_exe():
   global marbl_dir
   global namelist
 
-  exe_dir = '%s/exe' % marbl_dir
+  exe_dir = '%s/tests/driver_exe' % marbl_dir
 
   sh_command('%s/marbl.exe < %s' % (exe_dir, namelist))
 

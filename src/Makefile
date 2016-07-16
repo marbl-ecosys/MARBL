@@ -2,7 +2,7 @@
 extension = .F90
 
 SRC_DIR=.
-OBJ_DIR=../obj
+OBJ_DIR=../tests/obj
 LIB_DIR=../lib
 INC_DIR=../include
 FC = NONE
