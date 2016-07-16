@@ -74,30 +74,35 @@ def parse_args(desc, HaveCompiler=True, HaveNamelist=True, CleanLibOnly=False):
       mach = 'edison'
     else:
       mach = 'local-gnu'
+
     if mach == 'local-gnu':
       print 'No machine specified and %s is not recognized' % hostname
-      print 'This test will assume you are running on local machine with gnu'
+      print 'This test will assume you are not running on a supported cluster'
     else:
       print 'No machine specified, but it looks like you are running on %s' % mach
-      print 'Override with the --mach option if this is not correct'
+
+    print 'Override with the --mach option if this is not correct'
   else:
     mach = args.mach
+    print 'Running test on %s' % mach
   if HaveCompiler:
     compiler = args.compiler
   if HaveNamelist:
     namelist = args.namelist
 
   machine_specific(mach, supported_compilers, supported_machines)
-  if compiler == None:
-    compiler = supported_compilers[0]
-    print 'No compiler specified, using %s by default' % compiler
+  if HaveCompiler:
+    if compiler == None:
+      compiler = supported_compilers[0]
+      print 'No compiler specified, using %s by default' % compiler
+    else:
+      print 'Testing with %s' % compiler
 
-  if not compiler in supported_compilers:
-    print("%s is not supported on %s, please use one of following:" % (compiler, mach))
-    print supported_compilers
-    sys.exit(1)
+    if not compiler in supported_compilers:
+      print("%s is not supported on %s, please use one of following:" % (compiler, mach))
+      print supported_compilers
+      sys.exit(1)
 
-  print 'Testing with %s on %s' % (compiler, mach)
   print '----'
   sys.stdout.flush()
 
