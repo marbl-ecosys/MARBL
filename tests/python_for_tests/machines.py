@@ -6,17 +6,26 @@ from os import system as sh_command
 def load_module(mach, compiler):
 
   print "Trying to load %s on %s" % (compiler, mach)
+  
+  if mach == 'yellowstone':
+    sys.path.insert(0,'/glade/apps/opt/lmod/lmod/init')
+    import env_modules_python as lmod
+    lmod.module('purge')
+    lmod.module(' load %s' % compiler)
+
   if mach == 'hobart':
     sys.path.insert(0,'/usr/share/Modules/init')
     from python import module
     module('purge')
     module(['load', 'compiler/%s' % compiler])
 
-  if mach == 'yellowstone':
-    sys.path.insert(0,'/glade/apps/opt/lmod/lmod/init')
-    import env_modules_python as lmod
-    lmod.module('purge')
-    lmod.module(' load %s' % compiler)
+  if mach == 'edison':
+    sys.path.insert(0,'/opt/modules/default/init')
+    from python import module
+    module('purge')
+    module(['load', 'PrgEnv-%s' % compiler])
+    if compiler == 'cray':
+      module(['swap', 'cce', 'cce/8.5.0.4664'])
 
 # -----------------------------------------------
 
