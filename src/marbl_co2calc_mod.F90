@@ -111,7 +111,7 @@ contains
     implicit none
 
     integer(kind=int_kind)                , intent(in)    :: num_elements
-    logical(kind=log_kind)                , intent(in)    :: mask(:)
+    logical(kind=log_kind)                , intent(in)    :: mask(num_elements)
     logical(kind=log_kind)                , intent(in)    :: lcomp_co3_coeffs
     real(kind=r8)                         , intent(in)    :: dic_in(num_elements)   ! total inorganic carbon (nmol/cm^3)
     real(kind=r8)                         , intent(in)    :: xco2_in(num_elements)  ! atmospheric mole fraction CO2 in dry air (ppmv)

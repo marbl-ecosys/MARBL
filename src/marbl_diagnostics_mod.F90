@@ -37,7 +37,6 @@ module marbl_diagnostics_mod
   use marbl_interface_types , only : marbl_tracer_metadata_type
   use marbl_interface_types , only : marbl_saved_state_type
   use marbl_interface_types , only : marbl_interior_forcing_input_type
-  use marbl_interface_types , only : marbl_surface_forcing_output_type
   use marbl_interface_types , only : sfo_ind
   use marbl_interface_types , only : marbl_surface_forcing_indexing_type
   use marbl_interface_types , only : marbl_diagnostics_type
@@ -294,6 +293,7 @@ module marbl_diagnostics_mod
      integer(int_kind) :: DUST_FLUX
      integer(int_kind) :: NOx_FLUX
      integer(int_kind) :: NHy_FLUX
+     integer(int_kind) :: NHx_SURFACE_EMIS
      integer(int_kind) :: DIN_RIV_FLUX
      integer(int_kind) :: DIP_RIV_FLUX
      integer(int_kind) :: DON_RIV_FLUX
@@ -827,6 +827,22 @@ contains
           truncate = .false.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%NHy_FLUX, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+       end if
+
+       if (count_only) then
+          num_forcing_diags = num_forcing_diags + 1
+       else
+          lname    = 'Emission of NHx to Atmosphere'
+          sname    = 'NHx_SURFACE_EMIS'
+          units    = 'nmol/cm^2/s'
+          vgrid    = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%NHx_SURFACE_EMIS, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
@@ -4191,7 +4207,6 @@ contains
        marbl_tracer_indices,                        &
        saved_state,                                 &
        saved_state_ind,                             &
-       surface_forcing_output,                      &
        surface_forcing_diags)
 
     ! !DESCRIPTION:
@@ -4220,7 +4235,6 @@ contains
     type(marbl_saved_state_type)              , intent(in)    :: saved_state 
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_forcing_internal_type) , intent(in)    :: surface_forcing_internal
-    type(marbl_surface_forcing_output_type)   , intent(in)    :: surface_forcing_output
     type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
 
     !-----------------------------------------------------------------------
@@ -4245,6 +4259,7 @@ contains
          ifrac             => surface_input_forcings(:,surface_forcing_ind%ifrac_id),           &
          dust_flux_in      => surface_input_forcings(:,surface_forcing_ind%dust_flux_id),       &
 
+         flux_co2          => surface_forcing_internal%flux_co2,                                &
          flux_alt_co2      => surface_forcing_internal%flux_alt_co2,                            &
          co2star           => surface_forcing_internal%co2star,                                 &
          dco2star          => surface_forcing_internal%dco2star,                                &
@@ -4260,6 +4275,7 @@ contains
          schmidt_o2        => surface_forcing_internal%schmidt_o2,                              &
          o2sat             => surface_forcing_internal%o2sat,                                   &
          iron_flux_in      => surface_forcing_internal%iron_flux,                               &
+         nhx_surface_emis  => surface_forcing_internal%nhx_surface_emis,                        &
 
 
          ph_prev           => saved_state%state(saved_state_ind%ph_surf)%field_2d,              &
@@ -4318,10 +4334,7 @@ contains
        
        diags(ind_diag%PV_CO2)%field_2d(:)               = pv_co2(:)
        diags(ind_diag%SCHMIDT_CO2)%field_2d(:)          = schmidt_co2(:)
-       if (sfo_ind%flux_co2_id.ne.0) then
-         diags(ind_diag%DIC_GAS_FLUX)%field_2d(:)       =                     &
-                surface_forcing_output%sfo(sfo_ind%flux_co2_id)%forcing_field
-       end if
+       diags(ind_diag%DIC_GAS_FLUX)%field_2d(:)         = flux_co2(:)
        diags(ind_diag%PH)%field_2d(:)                   = ph_prev(:)
        diags(ind_diag%ATM_CO2)%field_2d(:)              = xco2(:)
       
@@ -4352,6 +4365,8 @@ contains
     if (ind_forc%nox_flux_id.ne.0) then
        diags(ind_diag%NHy_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%nhy_flux_id)
     endif
+
+    diags(ind_diag%NHx_SURFACE_EMIS)%field_2d(:) = nhx_surface_emis(:)
 
     !-----------------------------------------------------------------------
     !  calculate river bgc fluxes if necessary

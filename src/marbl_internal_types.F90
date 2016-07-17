@@ -103,6 +103,7 @@ module marbl_internal_types
 
   type, public :: marbl_surface_forcing_internal_type
      real (r8), allocatable, dimension(:)   :: iron_flux    
+     real (r8), allocatable, dimension(:)   :: flux_co2
      real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (nmol/cm^2/s)
      real (r8), allocatable, dimension(:)   :: co2star
      real (r8), allocatable, dimension(:)   :: dco2star
@@ -118,6 +119,7 @@ module marbl_internal_types
      real (r8), allocatable, dimension(:)   :: pv_o2        ! piston velocity (cm/s)
      real (r8), allocatable, dimension(:)   :: pv_co2       ! piston velocity (cm/s)
      real (r8), allocatable, dimension(:)   :: o2sat        ! used O2 saturation (mmol/m^3)
+     real (r8), allocatable, dimension(:)   :: nhx_surface_emis
    contains
      procedure, public :: construct => marbl_surface_forcing_internal_constructor
   end type marbl_surface_forcing_internal_type
@@ -524,6 +526,7 @@ contains
     integer (int_kind)                         , intent(in)    :: num_elements
 
     allocate(this%iron_flux       (num_elements)) 
+    allocate(this%flux_co2        (num_elements))
     allocate(this%flux_alt_co2    (num_elements))
     allocate(this%co2star         (num_elements))
     allocate(this%dco2star        (num_elements))
@@ -539,6 +542,7 @@ contains
     allocate(this%pv_o2           (num_elements))       
     allocate(this%pv_co2          (num_elements))      
     allocate(this%o2sat           (num_elements))       
+    allocate(this%nhx_surface_emis(num_elements))
   end subroutine marbl_surface_forcing_internal_constructor
 
   !*****************************************************************************

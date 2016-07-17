@@ -253,6 +253,8 @@ module marbl_mod
 
   ! control which portion of code are executed, useful for debugging
   logical (log_kind) ::  lsource_sink
+  ! FIXME lapply_nhx_surface_emis belongs in marbl_config_mod.F90
+  logical (log_kind) ::  lapply_nhx_surface_emis
 
   ! should ecosystem vars be written full depth
   logical (log_kind)  :: lecovars_full_depth_tavg 
@@ -461,7 +463,8 @@ contains
          dic_riv_flux_input, alk_riv_flux_input, doc_riv_flux_input,      &
          gas_flux_forcing_opt, gas_flux_forcing_file,                     &
          gas_flux_fice, gas_flux_ws, gas_flux_ap, nutr_rest_file,         &
-         lsource_sink, lflux_gas_o2, lflux_gas_co2, locmip_k1_k2_bug_fix, &
+         lsource_sink, lapply_nhx_surface_emis,                           &
+         lflux_gas_o2, lflux_gas_co2, locmip_k1_k2_bug_fix,               &
          lnutr_variable_restore, nutr_variable_rest_file,                 &
          nutr_variable_rest_file_fmt, atm_co2_opt, atm_co2_const,         &
          atm_alt_co2_opt, atm_alt_co2_const,                              &
@@ -613,6 +616,7 @@ contains
     end do
 
     lsource_sink          = .true.
+    lapply_nhx_surface_emis = .false.
     lflux_gas_o2          = .true.
     lflux_gas_co2         = .true.
     locmip_k1_k2_bug_fix  = .true.
@@ -3025,6 +3029,7 @@ contains
     use marbl_co2calc_mod        , only : marbl_co2calc_surf
     use marbl_co2calc_mod        , only : thermodynamic_coefficients_type
     use marbl_oxygen             , only : o2sat_surf
+    use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
     use marbl_parms              , only : molw_Fe
     use marbl_share_mod          , only : lflux_gas_o2
     use marbl_share_mod          , only : lflux_gas_co2
@@ -3081,7 +3086,6 @@ contains
     real (r8)               :: xkw_ice(num_elements)    ! common portion of piston vel., (1-fice)*xkw (cm/s)
     real (r8)               :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (mmol/m^3)
     real (r8)               :: totalChl_loc(num_elements)  ! local value of totalChl
-    real (r8)               :: flux_co2_loc(num_elements)  ! local value of co2 flux
     real (r8)               :: flux_o2_loc(num_elements)   ! local value of o2 flux
     logical (log_kind)      :: mask(num_elements)
     type(thermodynamic_coefficients_type), dimension(num_elements) :: co3_coeffs
@@ -3098,6 +3102,7 @@ contains
          xco2_alt_co2         => surface_input_forcings(:,surface_forcing_ind%xco2_alt_co2_id),     & 
          ap_used              => surface_input_forcings(:,surface_forcing_ind%atm_pressure_id),     &
          xkw                  => surface_input_forcings(:,surface_forcing_ind%xkw_id),              &
+         u10_sqr              => surface_input_forcings(:,surface_forcing_ind%u10_sqr_id),          &
          dust_flux_in         => surface_input_forcings(:,surface_forcing_ind%dust_flux_id),        &
          iron_flux_in         => surface_input_forcings(:,surface_forcing_ind%iron_flux_id),        &
          black_carbon_flux_in => surface_input_forcings(:,surface_forcing_ind%black_carbon_flux_id),&
@@ -3114,6 +3119,7 @@ contains
          alk_riv_flux         => surface_input_forcings(:,surface_forcing_ind%alk_riv_flux_id),     & 
 
          iron_flux_in_new     => surface_forcing_internal%iron_flux(:),                             &
+         flux_co2             => surface_forcing_internal%flux_co2(:),                              &
          co2star              => surface_forcing_internal%co2star(:),                               & 
          dco2star             => surface_forcing_internal%dco2star(:),                              & 
          pco2surf             => surface_forcing_internal%pco2surf(:),                              & 
@@ -3129,6 +3135,7 @@ contains
          pv_co2               => surface_forcing_internal%pv_co2(:),                                & 
          o2sat                => surface_forcing_internal%o2sat(:),                                 & 
          flux_alt_co2         => surface_forcing_internal%flux_alt_co2(:),                          & 
+         nhx_surface_emis     => surface_forcing_internal%nhx_surface_emis(:),                      &
 
          stf                  => surface_tracer_fluxes(:,:),                                        &
 
@@ -3256,6 +3263,7 @@ contains
           end where
 
           ! Note the following computes a new ph_prev_surf
+          ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
           call marbl_co2calc_surf(                                         &
                num_elements     = num_elements,                            &
                lcomp_co3_coeffs = .true.,                                  &
@@ -3270,10 +3278,10 @@ contains
                atmpres    = surface_input_forcings(:,ind%atm_pressure_id), &
                co3_coeffs = co3_coeffs,                                    &
                co3        = co3,                                           &
-               co2star    = surface_forcing_internal%co2star,              &
-               dco2star   = surface_forcing_internal%dco2star,             &
-               pco2surf   = surface_forcing_internal%pco2surf,             &
-               dpco2      = surface_forcing_internal%dpco2,                &
+               co2star    = co2star,                                       &
+               dco2star   = dco2star,                                      &
+               pco2surf   = pco2surf,                                      &
+               dpco2      = dpco2,                                         &
                phlo       = phlo,                                          &
                phhi       = phhi,                                          &
                ph         = ph_prev_surf,                                  &
@@ -3284,9 +3292,9 @@ contains
              return
           end if
 
-          flux_co2_loc(:) = pv_co2(:) * dco2star(:)
+          flux_co2(:) = pv_co2(:) * dco2star(:)
           if (sfo_ind%flux_co2_id.ne.0) then
-            surface_forcing_output%sfo(sfo_ind%flux_co2_id)%forcing_field = flux_co2_loc
+            surface_forcing_output%sfo(sfo_ind%flux_co2_id)%forcing_field = flux_co2
           end if
  
           !-------------------------------------------------------------------
@@ -3315,6 +3323,7 @@ contains
           end where
 
           ! Note the following computes a new ph_prev_alt_co2
+          ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
           call marbl_co2calc_surf(                                         &
                num_elements     = num_elements,                            &
                lcomp_co3_coeffs = .false.,                                 &
@@ -3329,10 +3338,10 @@ contains
                atmpres    = surface_input_forcings(:,ind%atm_pressure_id), &
                co3_coeffs = co3_coeffs,                                    &
                co3        = co3,                                           &
-               co2star    = surface_forcing_internal%co2star_alt,          &
-               dco2star   = surface_forcing_internal%dco2star_alt,         &
-               pco2surf   = surface_forcing_internal%pco2surf_alt,         &
-               dpco2      = surface_forcing_internal%dpco2_alt,            &
+               co2star    = co2star_alt,                                   &
+               dco2star   = dco2star_alt,                                  &
+               pco2surf   = pco2surf_alt,                                  &
+               dpco2      = dpco2_alt,                                     &
                phlo       = phlo,                                          &
                phhi       = phhi,                                          &
                ph         = ph_prev_alt_co2_surf,                          &
@@ -3350,7 +3359,7 @@ contains
           !  nmol/cm^2/s (positive down) to kg CO2/m^2/s (positive down)
           !-----------------------------------------------------------------------
 
-          stf(:, dic_ind)         = stf(:, dic_ind)         + flux_co2_loc(:)
+          stf(:, dic_ind)         = stf(:, dic_ind)         + flux_co2(:)
           stf(:, dic_alt_co2_ind) = stf(:, dic_alt_co2_ind) + FLUX_ALT_CO2(:)
 
        else
@@ -3359,6 +3368,29 @@ contains
        endif  !  lflux_gas_co2
 
     endif  ! lflux_gas_o2 .or. lflux_gas_co2
+
+    !-----------------------------------------------------------------------
+    !  compute NHx emissions
+    !  FIXME: ensure that ph is computed, even if lflux_gas_co2=.false.
+    !-----------------------------------------------------------------------
+
+    call marbl_comp_nhx_surface_emis(                &
+         num_elements     = num_elements,            &
+         surface_mask     = surface_mask,            &
+         nh4              = surface_vals(:,nh4_ind), &
+         ph               = ph_prev_surf,            &
+         sst              = sst,                     &
+         sss              = sss,                     &
+         u10_sqr          = u10_sqr,                 &
+         atmpres          = ap_used,                 &
+         ifrac            = ifrac,                   &
+         nhx_surface_emis = nhx_surface_emis)
+
+    if (lapply_nhx_surface_emis) then
+       where (surface_mask(:) /= c0)
+         stf(:, nh4_ind) = stf(:, nh4_ind) - nhx_surface_emis(:)
+       end where
+    endif
 
     !-----------------------------------------------------------------------
     !  calculate iron and dust fluxes if necessary
@@ -3390,13 +3422,13 @@ contains
     !-----------------------------------------------------------------------
        
     if (surface_forcing_ind%nox_flux_id.ne.0) then
-       where (surface_mask(:).ne.c0)
+       where (surface_mask(:) /= c0)
          stf(:, no3_ind) = stf(:, no3_ind) + nox_flux(:)
        end where
     endif
        
     if (surface_forcing_ind%nhy_flux_id.ne.0) then
-       where (surface_mask(:).ne.c0)
+       where (surface_mask(:) /= c0)
          stf(:, nh4_ind) = stf(:, nh4_ind) + nhy_flux(:)
        end where
     endif
@@ -3472,7 +3504,6 @@ contains
          marbl_tracer_indices     = marbl_tracer_indices,     &
          saved_state              = saved_state,              & 
          saved_state_ind          = saved_state_ind,          & 
-         surface_forcing_output   = surface_forcing_output,   &
          surface_forcing_diags    = surface_forcing_diags)
 
     !-----------------------------------------------------------------------
@@ -3480,6 +3511,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (ciso_on) then
+       ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
        call marbl_ciso_set_surface_forcing(                                              &
             num_elements                = num_elements,                                  &
             surface_mask                = surface_input_forcings(:,ind%surface_mask_id), &
@@ -3498,7 +3530,7 @@ contains
 
     if (ladjust_bury_coeff) then
        glo_avg_fields_surface(:,glo_avg_field_ind_surface_C_input) = &
-          stf(:,dic_ind) - flux_co2_loc(:) + stf(:,doc_ind) + stf(:,docr_ind)
+          stf(:,dic_ind) - flux_co2(:) + stf(:,doc_ind) + stf(:,docr_ind)
 
        glo_avg_fields_surface(:,glo_avg_field_ind_surface_P_input) = &
           stf(:,po4_ind) + stf(:,dop_ind) + stf(:,dopr_ind)
