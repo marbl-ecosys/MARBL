@@ -1788,7 +1788,7 @@ contains
              num_interior_diags = num_interior_diags + 1
           else
              lname = trim(autotrophs_config(n)%lname) // ' C Fixation Vertical Integral'
-             sname = trim(autotrophs_config(n)%sname) // '_zint'
+             sname = 'photoC_' // trim(autotrophs_config(n)%sname) // '_zint'
              units = 'mmol/m^3 cm/s'
              vgrid = 'none'
              truncate = .false.
@@ -1816,7 +1816,8 @@ contains
              end if
           end if
 
-          if (marbl_tracer_indices%auto_inds(n)%CaCO3_ind.gt.0) then
+          if (autotrophs_config(n)%imp_calcifier .or.                         &
+              autotrophs_config(n)%exp_calcifier) then
             if (count_only) then
               num_interior_diags = num_interior_diags + 1
             else
@@ -2937,7 +2938,7 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             if (marbl_tracer_indices%auto_inds(n)%Si_ind.gt.0) then
+             if (autotrophs_config(n)%silicifier) then
                 lname = trim(autotrophs_config(n)%lname) // ' Si Uptake'
                 ! FIXME #22 - eventually add _
                 sname = trim(autotrophs_config(n)%sname) // 'bSi_form'
@@ -2959,7 +2960,8 @@ contains
           if (count_only) then
              num_interior_diags = num_interior_diags + 1
           else
-             if (marbl_tracer_indices%auto_inds(n)%CaCO3_ind.gt.0) then
+             if (autotrophs_config(n)%imp_calcifier .or.                      &
+                 autotrophs_config(n)%exp_calcifier) then
                 lname = trim(autotrophs_config(n)%lname) // ' CaCO3 Formation'
                 sname = trim(autotrophs_config(n)%sname) // '_CaCO3_form'
                 units = 'mmol/m^3/s'
