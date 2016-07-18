@@ -1887,7 +1887,7 @@ contains
     use marbl_constants_mod, only : Tref
 
     integer (int_kind)                      , intent(in)    :: k                   ! vertical model level
-    type(marbl_domain_type)                 , intent(in)    :: domain                              
+    type(marbl_domain_type)                 , intent(in)    :: domain
     real (r8)                               , intent(in)    :: temperature         ! temperature for scaling functions bsi%diss
     real (r8), dimension(ecosys_base_tracer_cnt) , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
     type(carbonate_type)                    , intent(in)    :: carbonate
@@ -1916,7 +1916,6 @@ contains
          sio2_diss, & ! diss. length varies spatially with O2
          caco3_diss, &
          dust_diss
-    logical (log_kind) :: lexport_shared_vars ! flag to save shared_vars or not
 
     character(*), parameter :: &
          subname = 'marbl_mod:marbl_compute_particulate_terms'
@@ -1950,8 +1949,6 @@ contains
 
     logical (log_kind) :: poc_error   ! POC error flag
     !-----------------------------------------------------------------------
-
-    lexport_shared_vars = ciso_on
 
     associate(                                                                         &
          column_kmt               => domain%kmt,                                       &
@@ -2125,7 +2122,7 @@ contains
        QA_dust_def = new_QA_dust_def
 
        ! Save certain fields for use by other modules
-       if (lexport_shared_vars) then
+       if (ciso_on) then
           POC_PROD_avail_fields(k) = POC_PROD_avail
           decay_POC_E_fields(k)    = decay_POC_E
           decay_CaCO3_fields(k)    = decay_CaCO3
@@ -2253,7 +2250,7 @@ contains
     endif
 
     ! Save some fields for use by other modules before setting outgoing fluxes to 0.0 in bottom cell below
-    if (lexport_shared_vars) then
+    if (ciso_on) then
        P_CaCO3_sflux_out_fields(k) = P_CaCO3%sflux_out(k)
        P_CaCO3_hflux_out_fields(k) = P_CaCO3%hflux_out(k)
        POC_sflux_out_fields(k)     = POC%sflux_out(k)

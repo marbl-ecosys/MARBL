@@ -3,7 +3,7 @@ module marbl_constants_mod
   !---------------------------------------------------------------------------
   !  This module contains non-BGC related parameters. There are three general
   !  categories:
-  !    * General constants (c0, c1, etc)
+  !    * Mathematical constants (c0, c1, etc)
   !    * Unit conversions (spy, spd, mpercm, etc)
   !    * Physical parameters (T0_Kelvin, rho_sw, etc)
   !
@@ -17,7 +17,7 @@ module marbl_constants_mod
   save
 
   !---------------------------------------------------------------------
-  !  General constants
+  !  Mathematical constants
   !---------------------------------------------------------------------
 
   real(kind=r8), parameter, public ::        &

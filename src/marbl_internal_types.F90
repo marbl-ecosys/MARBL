@@ -578,8 +578,8 @@ contains
 
     class(marbl_tracer_index_type), intent(inout) :: this
     logical,                        intent(in)    :: ciso_on
-    type(autotroph_config_type),    intent(inout) :: autotrophs_config(:)
-    type(zooplankton_config_type),  intent(inout) :: zooplankton_config(:)
+    type(autotroph_config_type),    intent(in)    :: autotrophs_config(:)
+    type(zooplankton_config_type),  intent(in)    :: zooplankton_config(:)
     type(marbl_log_type),           intent(inout) :: marbl_status_log
 
     integer :: n

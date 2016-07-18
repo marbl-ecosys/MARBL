@@ -176,7 +176,7 @@ module marbl_config_mod
     character(len=char_len) :: units
     character(len=char_len) :: group
     character(len=char_len) :: datatype
-    logical                 :: add_space ! used for formatting log output
+    logical                 :: add_newline ! used for formatting log output
     character(len=char_len) :: comment   ! used to add comment in log
     ! Actual parameter data
     real(r8),                pointer :: rptr => NULL()
@@ -191,7 +191,7 @@ module marbl_config_mod
     type(marbl_single_config_or_parm_type), dimension(:), pointer :: vars => NULL()
   contains
     procedure          :: add_var          => marbl_var_add
-    procedure          :: add_var_tcr_rd   => marbl_var_add_tcr_rd
+    procedure          :: add_var_tcr_rd   => marbl_var_add_tcr_rd ! tracer read type
     procedure          :: add_var_1d_r8    => marbl_var_add_1d_r8
     procedure          :: add_var_1d_int   => marbl_var_add_1d_int
     procedure          :: add_var_1d_str   => marbl_var_add_1d_str
@@ -314,40 +314,31 @@ contains
 
     gas_flux_forcing_opt  = 'drv'
     gas_flux_forcing_file = 'unknown'
-    call set_defaults_tcr_rd(gas_flux_fice, file_varname='FICE')
-    call set_defaults_tcr_rd(gas_flux_ws, file_varname='XKW')
-    call set_defaults_tcr_rd(gas_flux_ap, file_varname='P')
+    call set_defaults_tcr_rd(gas_flux_fice, file_varname='FICE', file_fmt='bin')
+    call set_defaults_tcr_rd(gas_flux_ws, file_varname='XKW', file_fmt='bin')
+    call set_defaults_tcr_rd(gas_flux_ap, file_varname='P', file_fmt='bin')
     dust_flux_source             = 'monthly-calendar'
-    call set_defaults_tcr_rd(dust_flux_input, file_varname='dust_flux')
+    call set_defaults_tcr_rd(dust_flux_input, file_varname='dust_flux', file_fmt='bin')
     iron_flux_source             = 'monthly-calendar'
-    call set_defaults_tcr_rd(iron_flux_input, file_varname='iron_flux')
-    call set_defaults_tcr_rd(fesedflux_input, file_varname='FESEDFLUXIN')
+    call set_defaults_tcr_rd(iron_flux_input, file_varname='iron_flux', file_fmt='bin')
+    call set_defaults_tcr_rd(fesedflux_input, file_varname='FESEDFLUXIN', file_fmt='bin')
     ndep_data_type = 'monthly-calendar'
-    call set_defaults_tcr_rd(nox_flux_monthly_input, file_varname='nox_flux')
-    call set_defaults_tcr_rd(nhy_flux_monthly_input, file_varname='nhy_flux')
+    call set_defaults_tcr_rd(nox_flux_monthly_input, file_varname='nox_flux', file_fmt='bin')
+    call set_defaults_tcr_rd(nhy_flux_monthly_input, file_varname='nhy_flux', file_fmt='bin')
     ndep_shr_stream_year_first = 1
     ndep_shr_stream_year_last  = 1
     ndep_shr_stream_year_align = 1
     ndep_shr_stream_file       = 'unknown'
     ndep_shr_stream_scale_factor = c1
-    call set_defaults_tcr_rd(din_riv_flux_input, file_varname='din_riv_flux', &
-                                                 file_fmt='nc')
-    call set_defaults_tcr_rd(dip_riv_flux_input, file_varname='dip_riv_flux', &
-                                                 file_fmt='nc')
-    call set_defaults_tcr_rd(don_riv_flux_input, file_varname='don_riv_flux', &
-                                                 file_fmt='nc')
-    call set_defaults_tcr_rd(dop_riv_flux_input, file_varname='dop_riv_flux', &
-                                                 file_fmt='nc')
-    call set_defaults_tcr_rd(dsi_riv_flux_input, file_varname='dsi_riv_flux', &
-                                                 file_fmt='nc')
-    call set_defaults_tcr_rd(dfe_riv_flux_input, file_varname='dfe_riv_flux', &
-                                                 file_fmt='nc')
-    call set_defaults_tcr_rd(dic_riv_flux_input, file_varname='dic_riv_flux', &
-                                                 file_fmt='nc')
-    call set_defaults_tcr_rd(alk_riv_flux_input, file_varname='alk_riv_flux', &
-                                                 file_fmt='nc')
-    call set_defaults_tcr_rd(doc_riv_flux_input, file_varname='doc_riv_flux', &
-                                                 file_fmt='nc')
+    call set_defaults_tcr_rd(din_riv_flux_input, file_varname='din_riv_flux')
+    call set_defaults_tcr_rd(dip_riv_flux_input, file_varname='dip_riv_flux')
+    call set_defaults_tcr_rd(don_riv_flux_input, file_varname='don_riv_flux')
+    call set_defaults_tcr_rd(dop_riv_flux_input, file_varname='dop_riv_flux')
+    call set_defaults_tcr_rd(dsi_riv_flux_input, file_varname='dsi_riv_flux')
+    call set_defaults_tcr_rd(dfe_riv_flux_input, file_varname='dfe_riv_flux')
+    call set_defaults_tcr_rd(dic_riv_flux_input, file_varname='dic_riv_flux')
+    call set_defaults_tcr_rd(alk_riv_flux_input, file_varname='alk_riv_flux')
+    call set_defaults_tcr_rd(doc_riv_flux_input, file_varname='doc_riv_flux')
     liron_patch              = .false.
     iron_patch_flux_filename = 'unknown_iron_patch_filename'
     iron_patch_month         = 1
@@ -414,34 +405,34 @@ contains
     ! read the &marbl_config_nml namelist
     !-----------------------------------------------------------------------
 
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_config_nml')
-    if (tmp_nl_buffer.ne.'') then
-      read(tmp_nl_buffer, nml=marbl_config_nml, iostat=nml_error)
-      if (nml_error /= 0) then
-        write(log_message, "(A)") 'error reading &marbl_config_nml'
-        call marbl_status_log%log_error(log_message, subname)
-        return
-      end if
-    else
-      write(log_message, "(A)") '&marbl_config_nml not included in nl_buffer'
-      call marbl_status_log%log_noerror(log_message, subname)
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_config_nml', marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('marbl_namelist', subname)
+      return
+    end if
+
+    read(tmp_nl_buffer, nml=marbl_config_nml, iostat=nml_error)
+    if (nml_error /= 0) then
+      write(log_message, "(A)") 'error reading &marbl_config_nml'
+      call marbl_status_log%log_error(log_message, subname)
+      return
     end if
 
     !-----------------------------------------------------------------------
     ! read the &marbl_forcing_tmp_nml namelist
     !-----------------------------------------------------------------------
 
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_forcing_tmp_nml')
-    if (tmp_nl_buffer.ne.'') then
-      read(tmp_nl_buffer, nml=marbl_forcing_tmp_nml, iostat=nml_error)
-      if (nml_error /= 0) then
-        write(log_message, "(A)") 'error reading &marbl_forcing_tmp_nml'
-        call marbl_status_log%log_error(log_message, subname)
-        return
-      end if
-    else
-      write(log_message, "(A)") '&marbl_forcing_tmp_nml not included in nl_buffer'
-      call marbl_status_log%log_noerror(log_message, subname)
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_forcing_tmp_nml', marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('marbl_namelist', subname)
+      return
+    end if
+
+    read(tmp_nl_buffer, nml=marbl_forcing_tmp_nml, iostat=nml_error)
+    if (nml_error /= 0) then
+      write(log_message, "(A)") 'error reading &marbl_forcing_tmp_nml'
+      call marbl_status_log%log_error(log_message, subname)
+      return
     end if
 
   end subroutine marbl_config_read_namelist
@@ -471,12 +462,12 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_config_construct(this, marbl_status_log)
+  subroutine marbl_define_config_vars(this, marbl_status_log)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_config_mod:marbl_config_construct'
+    character(*), parameter :: subname = 'marbl_config_mod:marbl_define_config_vars'
     character(len=char_len) :: log_message
     character(len=char_len) :: sname, lname, units, datatype, group
     real(r8),                pointer :: rptr => NULL()
@@ -539,32 +530,30 @@ contains
       return
     end if
 
-    if (ciso_on) then
-      sname     = 'ciso_lsource_sink'
-      lname     = 'Control which portions of carbon isotope code are executed (useful for debugging)'
-      units     = 'unitless'
-      datatype  = 'logical'
-      group     = 'marbl_config_nml'
-      lptr      => ciso_lsource_sink
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+    sname     = 'ciso_lsource_sink'
+    lname     = 'Control which portions of carbon isotope code are executed (useful for debugging)'
+    units     = 'unitless'
+    datatype  = 'logical'
+    group     = 'marbl_config_nml'
+    lptr      => ciso_lsource_sink
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                      marbl_status_log, lptr=lptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
 
-      sname     = 'ciso_lecovars_full_depth_tavg'
-      lname     = 'Are carbon isotope tracers full depth?'
-      units     = 'unitless'
-      datatype  = 'logical'
-      group     = 'marbl_config_nml'
-      lptr      => ciso_lecovars_full_depth_tavg
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+    sname     = 'ciso_lecovars_full_depth_tavg'
+    lname     = 'Are carbon isotope tracers full depth?'
+    units     = 'unitless'
+    datatype  = 'logical'
+    group     = 'marbl_config_nml'
+    lptr      => ciso_lecovars_full_depth_tavg
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                      marbl_status_log, lptr=lptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
     end if
 
     sname     = 'lflux_gas_o2'
@@ -626,7 +615,7 @@ contains
     group     = 'marbl_config_nml'
     sptr      => init_bury_coeff_opt
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr, add_space=.true.)
+                        marbl_status_log, sptr=sptr, add_newline=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -707,7 +696,7 @@ contains
       group    = 'marbl_config_nml'
       lptr     => autotrophs_config(n)%silicifier
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, lptr=lptr, add_space=.true.)
+                        marbl_status_log, lptr=lptr, add_newline=.true.)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -945,7 +934,7 @@ contains
     group     = 'marbl_forcing_tmp_nml'
     rptr      => ndep_shr_stream_scale_factor
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr, add_space=.true.)
+                        marbl_status_log, rptr=rptr, add_newline=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -1164,151 +1153,149 @@ contains
       return
     end if
 
-    if (ciso_on) then
-      sname     = 'ciso_atm_model_year'
-      lname     = 'Arbirtrary model year'
-      units     = 'unitless'
-      datatype  = 'integer'
+    sname     = 'ciso_atm_model_year'
+    lname     = 'Arbirtrary model year'
+    units     = 'unitless'
+    datatype  = 'integer'
+    group     = 'marbl_forcing_tmp_nml'
+    iptr      => ciso_atm_model_year
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                      marbl_status_log, iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_data_year'
+    lname     = 'Year in atmospheric ciso data that corresponds to ciso_atm_model_year'
+    units     = 'unitless'
+    datatype  = 'integer'
+    group     = 'marbl_forcing_tmp_nml'
+    iptr      => ciso_atm_data_year
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                      marbl_status_log, iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d13c_data_nbval'
+    lname     = 'Number of values in ciso_atm_d13c_filename'
+    units     = 'unitless'
+    datatype  = 'integer'
+    group     = 'marbl_forcing_tmp_nml'
+    iptr      => ciso_atm_d13c_data_nbval
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                      marbl_status_log, iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    if (allocated(ciso_atm_d13c_data)) then
+      sname     = 'ciso_atm_d13c_data'
+      lname     = 'Atmospheric D13C values in datafile'
+      units     = ''
       group     = 'marbl_forcing_tmp_nml'
-      iptr      => ciso_atm_model_year
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, iptr=iptr)
+      call this%add_var_1d_r8(sname, lname, units, group, ciso_atm_d13c_data,   &
+                              marbl_status_log)
       if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      sname     = 'ciso_atm_data_year'
-      lname     = 'Year in atmospheric ciso data that corresponds to ciso_atm_model_year'
-      units     = 'unitless'
-      datatype  = 'integer'
-      group     = 'marbl_forcing_tmp_nml'
-      iptr      => ciso_atm_data_year
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, iptr=iptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      sname     = 'ciso_atm_d13c_data_nbval'
-      lname     = 'Number of values in ciso_atm_d13c_filename'
-      units     = 'unitless'
-      datatype  = 'integer'
-      group     = 'marbl_forcing_tmp_nml'
-      iptr      => ciso_atm_d13c_data_nbval
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, iptr=iptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      if (allocated(ciso_atm_d13c_data)) then
-        sname     = 'ciso_atm_d13c_data'
-        lname     = 'Atmospheric D13C values in datafile'
-        units     = ''
-        group     = 'marbl_forcing_tmp_nml'
-        call this%add_var_1d_r8(sname, lname, units, group, ciso_atm_d13c_data,   &
-                                marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
-          return
-        end if
-      end if
-
-      if (allocated(ciso_atm_d13c_data_yr)) then
-        sname     = 'ciso_atm_d13c_data_yr'
-        lname     = 'Date of atmospheric D13C values in datafile'
-        units     = 'date'
-        group     = 'marbl_forcing_tmp_nml'
-        call this%add_var_1d_r8(sname, lname, units, group, ciso_atm_d13c_data_yr, &
-                                marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
-          return
-        end if
-      end if
-
-      ! ciso_atm_d14c_data, ciso_atm_d14c_data_year
-      sname     = 'ciso_atm_d13c_const'
-      lname     = 'Atmospheric D13C constant'
-      units     = 'permil'
-      datatype  = 'real'
-      group     = 'marbl_forcing_tmp_nml'
-      rptr      => ciso_atm_d13c_const
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      sname     = 'ciso_atm_d14c_const'
-      lname     = 'Atmospheric D14C constant'
-      units     = 'permil'
-      datatype  = 'real'
-      group     = 'marbl_forcing_tmp_nml'
-      rptr      => ciso_atm_d14c_const
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      sname     = 'ciso_atm_d13c_opt'
-      lname     = 'Option for CO2 and D13C (varying or constant forcing)'
-      units     = 'unitless'
-      datatype  = 'string'
-      group     = 'marbl_forcing_tmp_nml'
-      sptr      => ciso_atm_d13c_opt
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      sname     = 'ciso_atm_d13c_filename'
-      lname     = 'Filename for varying atm D13C'
-      units     = 'unitless'
-      datatype  = 'string'
-      group     = 'marbl_forcing_tmp_nml'
-      sptr      => ciso_atm_d13c_filename
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      sname     = 'ciso_atm_d14c_opt'
-      lname     = 'Option for CO2 and D14C (varying or constant forcing)'
-      units     = 'unitless'
-      datatype  = 'string'
-      group     = 'marbl_forcing_tmp_nml'
-      sptr      => ciso_atm_d14c_opt
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      sname     = 'ciso_atm_d14c_filename'
-      lname     = 'Filenames for varying atm D14C'
-      units     = 'unitless'
-      group     = 'marbl_forcing_tmp_nml'
-      call this%add_var_1d_str(sname, lname, units, group, ciso_atm_d14c_filename, &
-                               marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace('add_var_1d_str', subname)
+        call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
         return
       end if
     end if
 
-  end subroutine marbl_config_construct
+    if (allocated(ciso_atm_d13c_data_yr)) then
+      sname     = 'ciso_atm_d13c_data_yr'
+      lname     = 'Date of atmospheric D13C values in datafile'
+      units     = 'date'
+      group     = 'marbl_forcing_tmp_nml'
+      call this%add_var_1d_r8(sname, lname, units, group, ciso_atm_d13c_data_yr, &
+                              marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
+        return
+      end if
+    end if
+
+    ! ciso_atm_d14c_data, ciso_atm_d14c_data_year
+    sname     = 'ciso_atm_d13c_const'
+    lname     = 'Atmospheric D13C constant'
+    units     = 'permil'
+    datatype  = 'real'
+    group     = 'marbl_forcing_tmp_nml'
+    rptr      => ciso_atm_d13c_const
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                      marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d14c_const'
+    lname     = 'Atmospheric D14C constant'
+    units     = 'permil'
+    datatype  = 'real'
+    group     = 'marbl_forcing_tmp_nml'
+    rptr      => ciso_atm_d14c_const
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                      marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d13c_opt'
+    lname     = 'Option for CO2 and D13C (varying or constant forcing)'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => ciso_atm_d13c_opt
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                      marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d13c_filename'
+    lname     = 'Filename for varying atm D13C'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => ciso_atm_d13c_filename
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                      marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d14c_opt'
+    lname     = 'Option for CO2 and D14C (varying or constant forcing)'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_forcing_tmp_nml'
+    sptr      => ciso_atm_d14c_opt
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                      marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'ciso_atm_d14c_filename'
+    lname     = 'Filenames for varying atm D14C'
+    units     = 'unitless'
+    group     = 'marbl_forcing_tmp_nml'
+    call this%add_var_1d_str(sname, lname, units, group, ciso_atm_d14c_filename, &
+                             marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
+      return
+    end if
+
+  end subroutine marbl_define_config_vars
 
   !*****************************************************************************
 
@@ -1356,7 +1343,7 @@ contains
     if (present(file_fmt)) then
       tracer_read_var%file_fmt = trim(file_fmt)
     else
-      tracer_read_var%file_fmt = 'bin'
+      tracer_read_var%file_fmt = 'nc'
     end if
 
   end subroutine set_defaults_tcr_rd
@@ -1364,7 +1351,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_var_add(this, sname, lname, units, datatype, group,        &
-             marbl_status_log, rptr, iptr, lptr, sptr, comment, add_space)
+             marbl_status_log, rptr, iptr, lptr, sptr, comment, add_newline)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),        intent(in)    :: sname
@@ -1378,7 +1365,7 @@ contains
     logical,                 optional, pointer, intent(in) :: lptr
     character(len=char_len), optional, pointer, intent(in) :: sptr
     character(len=char_len), optional,          intent(in) :: comment
-    logical,                 optional,          intent(in) :: add_space
+    logical,                 optional,          intent(in) :: add_newline
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add'
     type(marbl_single_config_or_parm_type), dimension(:), pointer :: new_parms
@@ -1404,7 +1391,7 @@ contains
       new_parms(n)%units      = this%vars(n)%units
       new_parms(n)%datatype   = this%vars(n)%datatype
       new_parms(n)%group      = this%vars(n)%group
-      new_parms(n)%add_space  = this%vars(n)%add_space
+      new_parms(n)%add_newline  = this%vars(n)%add_newline
       new_parms(n)%comment    = this%vars(n)%comment
       if (associated(this%vars(n)%lptr)) &
         new_parms(n)%lptr => this%vars(n)%lptr
@@ -1464,10 +1451,10 @@ contains
     new_parms(id)%units      = trim(units)
     new_parms(id)%datatype   = trim(datatype)
     new_parms(id)%group      = trim(group)
-    if (present(add_space)) then
-      new_parms(id)%add_space = add_space
+    if (present(add_newline)) then
+      new_parms(id)%add_newline = add_newline
     else
-      new_parms(id)%add_space = .false.
+      new_parms(id)%add_newline = .false.
     end if
     if (present(comment)) then
       new_parms(id)%comment = comment
@@ -1576,7 +1563,7 @@ contains
     datatype  = 'real'
     rptr      => tracer_read_var%default_val
     call this%add_var(sname_loc, lname, units, datatype, group,               &
-                      marbl_status_log, rptr=rptr, add_space=.true.)
+                      marbl_status_log, rptr=rptr, add_newline=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -1587,7 +1574,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_var_add_1d_r8(this, sname, lname, units, group, r8array,  &
-                                 marbl_status_log, add_space)
+                                 marbl_status_log, add_newline)
 
     class(marbl_config_and_parms_type),       intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
@@ -1596,7 +1583,7 @@ contains
     character(len=char_len),             intent(in)    :: group
     real(kind=r8), dimension(:), target, intent(in)    :: r8array
     type(marbl_log_type),                intent(inout) :: marbl_status_log
-    logical, optional,                   intent(in)    :: add_space
+    logical, optional,                   intent(in)    :: add_newline
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add_1d_r8'
     character(len=char_len) :: sname_loc
@@ -1605,15 +1592,15 @@ contains
     integer :: n
 
     do n=1,size(r8array)
-      if (present(add_space)) then
-        space = add_space.and.(n.eq.size(r8array))
+      if (present(add_newline)) then
+        space = add_newline.and.(n.eq.size(r8array))
       else
         space = .false.
       end if
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       rptr => r8array(n)
       call this%add_var(sname_loc, lname, units, 'real', group,             &
-                          marbl_status_log, rptr=rptr, add_space=space)
+                          marbl_status_log, rptr=rptr, add_newline=space)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname_loc, subname)
         return
@@ -1625,7 +1612,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_var_add_1d_int(this, sname, lname, units, group, intarray, &
-                                 marbl_status_log, add_space)
+                                 marbl_status_log, add_newline)
 
     class(marbl_config_and_parms_type),       intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
@@ -1634,7 +1621,7 @@ contains
     character(len=char_len),             intent(in)    :: group
     integer, dimension(:), target,       intent(in)    :: intarray
     type(marbl_log_type),                intent(inout) :: marbl_status_log
-    logical, optional,                   intent(in)    :: add_space
+    logical, optional,                   intent(in)    :: add_newline
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add_1d_int'
     character(len=char_len) :: sname_loc
@@ -1643,15 +1630,15 @@ contains
     logical :: space
 
     do n=1,size(intarray)
-      if (present(add_space)) then
-        space = add_space.and.(n.eq.size(intarray))
+      if (present(add_newline)) then
+        space = add_newline.and.(n.eq.size(intarray))
       else
         space = .false.
       end if
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       iptr => intarray(n)
       call this%add_var(sname_loc, lname, units, 'integer', group,            &
-                          marbl_status_log, iptr=iptr, add_space=space)
+                          marbl_status_log, iptr=iptr, add_newline=space)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname_loc, subname)
         return
@@ -1684,7 +1671,7 @@ contains
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       sptr => strarray(n)
       call this%add_var(sname_loc, lname, units, 'string', group,           &
-                          marbl_status_log, sptr=sptr, add_space=islast)
+                          marbl_status_log, sptr=sptr, add_newline=islast)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname_loc, subname)
         return
@@ -1757,7 +1744,7 @@ contains
         write(log_message, "(3A)") trim(log_message), ' ! ',                  &
                                    trim(this%vars(n)%comment)
       call marbl_status_log%log_noerror(log_message, subname)
-      if (this%vars(n)%add_space) &
+      if (this%vars(n)%add_newline) &
         call marbl_status_log%log_noerror('', subname)
     end do
 
@@ -2107,7 +2094,7 @@ contains
         return
       end if
     end do
-    write(log_message, "(2A)") trim(var), ' is not a valid variable name for put'
+    write(log_message, "(2A)") trim(var), ' is not a known variable name for put'
     call marbl_status_log%log_error(log_message, subname)
 
   end function marbl_var_inquire_id

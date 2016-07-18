@@ -4,8 +4,8 @@ module marbl_parms
   !   This module manages BGC-specific parameters.
   !
   !   Most of the variables are not parameters in the Fortran sense. In the
-  !   the Fortran sense, they are vanilla module variables associated with the
-  !   MARBL namelist (marbl_parms_nml)
+  !   the Fortran sense, they are vanilla module variables most of which are
+  !   associated with the MARBL namelist (marbl_parms_nml)
   !
   !   In addition to containing all the namelist variables, this modules also
   !   handles initializing the variables in &marbl_parms_nml to default values
@@ -74,7 +74,7 @@ module marbl_parms
        fe_max_scale2,         & ! unitless scaling coeff.
        bury_coeff_rmean_timescale_years
 
-  real(kind=r8), dimension(4) :: &
+  real(kind=r8), dimension(4), target :: &
        parm_scalelen_z,       & ! depths of prescribed scalelen values
        parm_scalelen_vals       ! prescribed scalelen values
 
@@ -94,9 +94,10 @@ module marbl_parms
   real(r8),            target :: PON_bury_coeff
   character(char_len), target :: ciso_fract_factors             ! option for which biological fractionation calculation to use
 
-  character(len=char_len), allocatable, target, dimension(:) :: restore_short_names, &
-                                                        restore_filenames,   &
-                                                        restore_file_varnames
+  character(len=char_len), allocatable, target, dimension(:) :: restore_short_names
+  ! Should be in marbl_forcing_nml when moved to driver!
+  character(len=char_len), allocatable, target, dimension(:) :: restore_filenames, &
+                                                                restore_file_varnames
   real(r8), target :: rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
 
   !---------------------------------------------------------------------
@@ -479,14 +480,14 @@ contains
     init_ecosys_init_file = 'unknown'
     init_ecosys_init_file_fmt = 'bin'
     do n = 1, ecosys_base_tracer_cnt
-       call set_defaults_tcr_rd(tracer_init_ext(n))
+       call set_defaults_tcr_rd(tracer_init_ext(n), file_fmt='bin')
     end do
 
     ciso_init_ecosys_option                 = 'unknown'
     ciso_init_ecosys_init_file              = 'unknown'
     ciso_init_ecosys_init_file_fmt          = 'bin'
     do n = 1,ciso_tracer_cnt
-       call set_defaults_tcr_rd(ciso_tracer_init_ext(n))
+       call set_defaults_tcr_rd(ciso_tracer_init_ext(n), file_fmt='bin')
     end do
 
   end subroutine marbl_parms_set_defaults
@@ -558,40 +559,40 @@ contains
     !---------------------------------------------------------------------------
     ! read the &marbl_parms_nml namelist
     !---------------------------------------------------------------------------
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_parms_nml')
-    if (tmp_nl_buffer.ne.'') then
-      read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=nml_error)
-      if (nml_error /= 0) then
-        write(log_message, "(A)") 'error reading &marbl_parms_nml'
-        call marbl_status_log%log_error(log_message, subname)
-        return
-      end if
-    else
-      write(log_message, "(A)") '&marbl_parms_nml not included in nl_buffer'
-      call marbl_status_log%log_noerror(log_message, subname)
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_parms_nml', marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('marbl_namelist', subname)
+      return
+    end if
+
+    read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=nml_error)
+    if (nml_error /= 0) then
+      write(log_message, "(A)") 'error reading &marbl_parms_nml'
+      call marbl_status_log%log_error(log_message, subname)
+      return
     end if
 
     !-----------------------------------------------------------------------
     ! read the &marbl_tracer_init_tmp_nml namelist
     !-----------------------------------------------------------------------
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_tracer_init_tmp_nml')
-    if (tmp_nl_buffer.ne.'') then
-      read(tmp_nl_buffer, nml=marbl_tracer_init_tmp_nml, iostat=nml_error)
-      if (nml_error /= 0) then
-        write(log_message, "(A)") 'error reading &marbl_tracer_init_tmp_nml'
-        call marbl_status_log%log_error(log_message, subname)
-        return
-      end if
-    else
-      write(log_message, "(A)") '&marbl_tracer_init_tmp_nml not included in nl_buffer'
-      call marbl_status_log%log_noerror(log_message, subname)
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_tracer_init_tmp_nml', marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('marbl_namelist', subname)
+      return
+    end if
+
+    read(tmp_nl_buffer, nml=marbl_tracer_init_tmp_nml, iostat=nml_error)
+    if (nml_error /= 0) then
+      write(log_message, "(A)") 'error reading &marbl_tracer_init_tmp_nml'
+      call marbl_status_log%log_error(log_message, subname)
+      return
     end if
 
   end subroutine marbl_parms_read_namelist
 
   !*****************************************************************************
 
-  subroutine marbl_parms_construct(this, marbl_status_log)
+  subroutine marbl_define_parameters(this, marbl_status_log)
 
     use marbl_config_mod, only : ciso_on
     use marbl_config_mod, only : log_add_var_error
@@ -602,7 +603,7 @@ contains
     class(marbl_config_and_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_parms:marbl_parms_construct'
+    character(*), parameter :: subname = 'marbl_parms:marbl_define_parameters'
     character(len=char_len) :: log_message
     character(len=char_len) :: sname, lname, units, datatype, group
     real(r8),                pointer :: rptr => NULL()
@@ -815,7 +816,7 @@ contains
     group     = 'marbl_parms_nml'
     rptr      => fe_max_scale2
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr, add_space=.true.)
+                        marbl_status_log, rptr=rptr, add_newline=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -828,7 +829,7 @@ contains
     group     = 'marbl_parms_nml'
     rptr      => bury_coeff_rmean_timescale_years
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr, add_space=.true.)
+                        marbl_status_log, rptr=rptr, add_newline=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -839,7 +840,7 @@ contains
     units     = 'cm'
     group     = 'marbl_parms_nml'
     call this%add_var_1d_r8(sname, lname, units, group, parm_scalelen_z,    &
-                              marbl_status_log, add_space=.true.)
+                              marbl_status_log, add_newline=.true.)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
       return
@@ -850,7 +851,7 @@ contains
     units     = 'cm'
     group     = 'marbl_parms_nml'
     call this%add_var_1d_r8(sname, lname, units, group, parm_scalelen_vals, &
-                              marbl_status_log, add_space=.true.)
+                              marbl_status_log, add_newline=.true.)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
       return
@@ -1115,7 +1116,7 @@ contains
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%loss_poc
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr, add_space=.true.,      &
+                        marbl_status_log, rptr=rptr, add_newline=.true.,      &
                         comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
@@ -1162,7 +1163,7 @@ contains
       group    = 'marbl_parms_nml'
       rptr     => zooplankton(n)%z_mort2_0
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, rptr=rptr, add_space=.true.,      &
+                        marbl_status_log, rptr=rptr, add_newline=.true.,      &
                         comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
@@ -1275,7 +1276,7 @@ contains
           call this%add_var_1d_int(sname, lname, units, group,                &
                             grazing(m,n)%auto_ind(1:cnt),                     &
                             marbl_status_log,                                 &
-                            add_space=(grazing_config(m,n)%zoo_ind_cnt.eq.0))
+                            add_newline=(grazing_config(m,n)%zoo_ind_cnt.eq.0))
           if (marbl_status_log%labort_marbl) then
             call marbl_status_log%log_error_trace('add_var_1d_int', subname)
             return
@@ -1290,7 +1291,7 @@ contains
           group     = 'marbl_parms_nml'
           call this%add_var_1d_int(sname, lname, units, group,                &
                                    grazing(m,n)%zoo_ind(1:cnt),               &
-                                   marbl_status_log, add_space=.true.)
+                                   marbl_status_log, add_newline=.true.)
           if (marbl_status_log%labort_marbl) then
             call marbl_status_log%log_error_trace('add_var_1d_int', subname)
             return
@@ -1502,7 +1503,7 @@ contains
     group     = 'marbl_tracer_init_tmp_nml'
     sptr      => init_ecosys_init_file_fmt
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr, add_space=.true.)
+                        marbl_status_log, sptr=sptr, add_newline=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -1553,7 +1554,7 @@ contains
       group     = 'marbl_tracer_init_tmp_nml'
       sptr      => ciso_init_ecosys_init_file_fmt
       call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr, add_space=.true.)
+                        marbl_status_log, sptr=sptr, add_newline=.true.)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -1571,10 +1572,10 @@ contains
       end do
     end if
 
-  end subroutine marbl_parms_construct
+  end subroutine marbl_define_parameters
 
   !*****************************************************************************
-  
+
   subroutine set_derived_parms(marbl_status_log)
 
     type(marbl_log_type), intent(inout) :: marbl_status_log

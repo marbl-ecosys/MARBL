@@ -90,12 +90,18 @@ contains
 
   !*****************************************************************************
 
-  function marbl_namelist(nl_buffer, nl_name)
+  function marbl_namelist(nl_buffer, nl_name, marbl_status_log)
+
+    use marbl_logging,   only : marbl_log_type
+    use marbl_kinds_mod, only : char_len
 
     character(len=marbl_nl_buffer_size), intent(in) :: nl_buffer(:)
     character(len=*), intent(in) :: nl_name
+    type(marbl_log_type), intent(inout) :: marbl_status_log
     character(len=marbl_nl_buffer_size) :: marbl_namelist
 
+    character(*), parameter :: subname = 'marbl_namelist_mod:marbl_namelist'
+    character(len=char_len) :: log_message
     character(len=marbl_nl_buffer_size) :: single_namelist
     integer :: j, n
 
@@ -112,8 +118,11 @@ contains
       end if
     end do
 
-    ! FIXME #32: add error checking in case &nl_name is not found
-    !            (just check to see if j>marbl_nl_cnt)
+    if (trim(marbl_namelist).eq.'') then
+      write(log_message, "(2A)") trim(nl_name), ' is not included in nl_buffer'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
 
   end function marbl_namelist
 

@@ -48,13 +48,12 @@ module marbl_logging
 #endif
 
   use marbl_kinds_mod, only : char_len
-  use marbl_namelist_mod, only : marbl_nl_buffer_size
 
   implicit none
   private
   save
 
-  integer, parameter, private :: marbl_log_len = marbl_nl_buffer_size
+  integer, parameter, private :: marbl_log_len = 2*char_len
 
   !****************************************************************************
 
@@ -64,7 +63,7 @@ module marbl_logging
                            !         all tasks; False => master task only
     character(len=marbl_log_len) :: LogMessage   ! Message text
     character(len=char_len)      :: CodeLocation ! Information on where log was written
-                               
+
     type(marbl_status_log_entry_type), pointer :: next
   end type marbl_status_log_entry_type
 

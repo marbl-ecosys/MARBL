@@ -240,8 +240,8 @@ contains
     use marbl_config_mod       , only : ciso_lsource_sink
     use marbl_parms            , only : ciso_fract_factors
     use marbl_parms            , only : f_graze_CaCO3_REMIN
-    use marbl_constants_mod    , only : R13c_std
-    use marbl_constants_mod    , only : R14c_std
+    use marbl_constants_mod    , only : R13C_std
+    use marbl_constants_mod    , only : R14C_std
     use marbl_constants_mod    , only : spd
     use marbl_constants_mod    , only : spy
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_interior
@@ -1727,8 +1727,8 @@ contains
        marbl_surface_forcing_share ,         &
        marbl_surface_forcing_diags)
 
-    use marbl_constants_mod    , only : R13c_std
-    use marbl_constants_mod    , only : R14c_std
+    use marbl_constants_mod    , only : R13C_std
+    use marbl_constants_mod    , only : R14C_std
     use marbl_constants_mod    , only : p5
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_surface_forcing
 

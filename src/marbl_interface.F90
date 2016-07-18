@@ -63,7 +63,7 @@ module marbl_interface
   ! driver will read/write to interact with marbl.
   !
   !-----------------------------------------------------------------------------
-  
+
   ! note that column_restore is currently nutrients restoring (mmol ./m^3/sec)
 
   type, public :: marbl_interface_class
@@ -102,7 +102,6 @@ module marbl_interface
      type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
 
      ! public data - global averages
-     logical                                   , public               :: lallow_glo_ops = .false.
      real (r8)                                 , public, allocatable  :: glo_avg_fields_interior(:)   ! output (nfields)
      real (r8)                                 , public, allocatable  :: glo_avg_averages_interior(:) ! input (nfields)
      real (r8)                                 , public, allocatable  :: glo_avg_fields_surface(:,:)  ! output (num_elements,nfields)
@@ -127,6 +126,7 @@ module marbl_interface
      type(marbl_autotroph_share_type)          , private, allocatable :: autotroph_share(:,:)
      type(marbl_surface_forcing_share_type)    , private              :: surface_forcing_share
      type(marbl_surface_forcing_internal_type) , private              :: surface_forcing_internal
+     logical                                   , private              :: lallow_glo_ops
 
    contains
 
@@ -141,9 +141,10 @@ module marbl_interface
      procedure, public  :: shutdown
 
   end type marbl_interface_class
-  
+
   private :: config
   private :: init
+  private :: complete_config_and_init
   private :: glo_vars_init
   private :: set_interior_forcing
   private :: set_surface_forcing
@@ -154,7 +155,7 @@ module marbl_interface
 contains
 
   !***********************************************************************
-  
+
   subroutine config(this,                 &
        lgcm_has_global_ops,               &
        gcm_nl_buffer)
@@ -164,7 +165,7 @@ contains
     use marbl_config_mod      , only : marbl_config_set_defaults
     use marbl_config_mod      , only : marbl_config_read_namelist
     use marbl_config_mod      , only : marbl_config_set_local_pointers
-    use marbl_config_mod      , only : marbl_config_construct
+    use marbl_config_mod      , only : marbl_define_config_vars
 
     class(marbl_interface_class)   , intent(inout)        :: this
     character(marbl_nl_buffer_size), optional, intent(in) :: gcm_nl_buffer(:)
@@ -216,16 +217,16 @@ contains
     ! construct configuration_type
     !---------------------------------------------------------------------------
 
-    call marbl_config_construct(this%configuration, this%StatusLog)
+    call marbl_define_config_vars(this%configuration, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_config_construct()", subname)
+      call this%StatusLog%log_error_trace("marbl_define_config_vars()", subname)
       return
     end if
 
   end subroutine config
 
   !***********************************************************************
-  
+
   subroutine init(this,                   &
        gcm_num_levels,                    &
        gcm_num_PAR_subcols,               &
@@ -253,9 +254,9 @@ contains
     use marbl_parms           , only : ciso_tracer_init_ext
     use marbl_parms           , only : marbl_parms_set_defaults
     use marbl_parms           , only : marbl_parms_read_namelist
-    use marbl_parms           , only : marbl_parms_construct
+    use marbl_parms           , only : marbl_define_parameters
     use marbl_saved_state_mod , only : marbl_saved_state_init
-    
+
     implicit none
 
     class     (marbl_interface_class)      , intent(inout) :: this
@@ -500,16 +501,16 @@ contains
     ! construct parameters_type
     !---------------------------------------------------------------------------
 
-    call marbl_parms_construct(this%parameters, this%StatusLog)
+    call marbl_define_parameters(this%parameters, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_parms_construct()", subname)
+      call this%StatusLog%log_error_trace("marbl_define_parameters()", subname)
       return
     end if
 
   end subroutine init
 
   !***********************************************************************
-  
+
   subroutine complete_config_and_init(this)
 
     use marbl_parms, only : set_derived_parms
@@ -539,7 +540,7 @@ contains
   end subroutine complete_config_and_init
 
   !***********************************************************************
-  
+
   subroutine glo_vars_init(this)
 
     use marbl_mod, only : marbl_set_glo_vars_cnt
@@ -584,7 +585,7 @@ contains
   end subroutine glo_vars_init
 
   !***********************************************************************
-  
+
   subroutine set_interior_forcing(this)
 
     use marbl_mod, only : marbl_set_interior_forcing
@@ -623,15 +624,15 @@ contains
        call this%StatusLog%log_error_trace("marbl_set_interior_forcing()", subname)
        return
     end if
-    
+
   end subroutine set_interior_forcing
-  
+
   !***********************************************************************
-  
+
   subroutine set_surface_forcing(this)
 
     use marbl_mod      , only : marbl_set_surface_forcing
-    
+
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
@@ -653,9 +654,9 @@ contains
          marbl_status_log         = this%statuslog)
 
   end subroutine set_surface_forcing
-  
+
   !***********************************************************************
-  
+
   subroutine set_global_scalars(this, field_source)
 
     use marbl_mod, only : marbl_set_global_scalars_interior
@@ -686,11 +687,11 @@ contains
     class(marbl_interface_class), intent(inout) :: this
 
     ! free dynamically allocated memory, etc
-    
+
   end subroutine shutdown
 
   !***********************************************************************
-  
+
   function get_tracer_index(this, tracer_name)
 
     class(marbl_interface_class), intent(inout) :: this

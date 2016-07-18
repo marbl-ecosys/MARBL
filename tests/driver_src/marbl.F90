@@ -62,7 +62,11 @@ Program marbl
 
 
   ! (2) Read driver namelist to know what test to run
-  tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_driver_nml')
+  tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_driver_nml', marbl_status_log)
+  if (marbl_status_log%labort_marbl) then
+    call print_marbl_log(marbl_instance%StatusLog)
+  end if
+
   read(tmp_nl_buffer, nml=marbl_driver_nml, iostat=ioerr)
   if (ioerr.ne.0) then
     write(*,*) "ERROR reading &marbl_driver_nml"
