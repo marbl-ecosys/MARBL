@@ -1,6 +1,12 @@
 import sys
 from os import system as sh_command
 
+# Supported machines for running MARBL tests
+supported_machines = ['local-gnu', 
+                      'yellowstone',
+                      'hobart',
+                      'edison']
+
 # -----------------------------------------------
 
 def load_module(mach, compiler):
@@ -32,7 +38,9 @@ def load_module(mach, compiler):
 # Set up supported compilers based on what machine you are running on
 # so code can abort if an unsupported compiler is requested.
 # If no compiler is specified, the supported_compilers[0] will be used.
-def machine_specific(mach, supported_compilers, supported_machines):
+def machine_specific(mach, supported_compilers):
+
+  global supported_machines
 
   if mach not in supported_machines:
     print "%s is not a supported machine! Try one of the following:" % mach

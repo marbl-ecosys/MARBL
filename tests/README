@@ -64,7 +64,8 @@ The supported machines are the only valid values for the --mach option:
 * hobart -- smaller NCAR cluster (managed by CGD)
 * edison -- NERSC supercomputer
 
-If you do not specify a machine, the default is 'local-gnu'
+If you do not specify a machine, the script will try to recognize one of the
+supercomputers based on your hostname, otherwise the default is 'local-gnu'
 
 The supported compilers depend on the machine. For the --compiler option we use
 the following shorthand

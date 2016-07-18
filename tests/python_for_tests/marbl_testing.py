@@ -2,19 +2,12 @@
 import sys
 from os import system as sh_command
 from os import path
-from machines import load_module
+import machines as machs
 from machines import machine_specific
 
 compiler = None # compiler name
 mach = None # machine name
 namelist = 'marbl_in' # namelist file to read
-
-# Supported machines for running MARBL tests
-supported_machines = []
-supported_machines.append('local-gnu')
-supported_machines.append('yellowstone')
-supported_machines.append('hobart')
-supported_machines.append('edison')
 
 # List of supported compilers will be generated after machine is specified
 supported_compilers = []
@@ -36,7 +29,6 @@ def parse_args(desc, HaveCompiler=True, HaveNamelist=True, CleanLibOnly=False):
   global mach
   global namelist
   global supported_compilers
-  global supported_machines
 
   parser = argparse.ArgumentParser(description=desc)
   if HaveCompiler:
@@ -50,7 +42,7 @@ def parse_args(desc, HaveCompiler=True, HaveNamelist=True, CleanLibOnly=False):
   else:
     parser.add_argument('--clean', action='store_true', help='remove object, module, and library files for MARBL driver')
 
-  parser.add_argument('-m', '--mach', action='store', dest='mach', help='machine to build on', choices=supported_machines)
+  parser.add_argument('-m', '--mach', action='store', dest='mach', help='machine to build on', choices=machs.supported_machines)
 
   args = parser.parse_args()
 
@@ -90,7 +82,7 @@ def parse_args(desc, HaveCompiler=True, HaveNamelist=True, CleanLibOnly=False):
   if HaveNamelist:
     namelist = args.namelist
 
-  machine_specific(mach, supported_compilers, supported_machines)
+  machs.machine_specific(mach, supported_compilers)
   if HaveCompiler:
     if compiler == None:
       compiler = supported_compilers[0]
@@ -140,7 +132,7 @@ def build_lib(loc_compiler=None):
   src_dir = '%s/src' % marbl_dir
 
   if mach != 'local-gnu':
-    load_module(mach, loc_compiler)
+    machs.load_module(mach, loc_compiler)
 
   sh_command('cd %s; make %s' % (src_dir, loc_compiler))
 
@@ -158,7 +150,7 @@ def build_exe(loc_compiler=None):
   drv_dir = '%s/tests/driver_src' % marbl_dir
 
   if mach != 'local-gnu':
-    load_module(mach, loc_compiler)
+    machs.load_module(mach, loc_compiler)
 
   sh_command('cd %s; make %s' % (drv_dir, loc_compiler))
 

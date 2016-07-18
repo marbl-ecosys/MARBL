@@ -480,14 +480,14 @@ contains
     init_ecosys_init_file = 'unknown'
     init_ecosys_init_file_fmt = 'bin'
     do n = 1, ecosys_base_tracer_cnt
-       call set_defaults_tcr_rd(tracer_init_ext(n), file_fmt='bin')
+       call set_defaults_tcr_rd(tracer_init_ext(n))
     end do
 
     ciso_init_ecosys_option                 = 'unknown'
     ciso_init_ecosys_init_file              = 'unknown'
     ciso_init_ecosys_init_file_fmt          = 'bin'
     do n = 1,ciso_tracer_cnt
-       call set_defaults_tcr_rd(ciso_tracer_init_ext(n), file_fmt='bin')
+       call set_defaults_tcr_rd(ciso_tracer_init_ext(n))
     end do
 
   end subroutine marbl_parms_set_defaults

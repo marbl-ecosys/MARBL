@@ -2935,67 +2935,67 @@ contains
              end if
           end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
+          if (autotrophs_config(n)%silicifier) then
+            if (count_only) then
+              num_interior_diags = num_interior_diags + 1
+            else
+              lname = trim(autotrophs_config(n)%lname) // ' Si Uptake'
+              ! FIXME #22 - eventually add _
+              sname = trim(autotrophs_config(n)%sname) // 'bSi_form'
+              !sname = trim(autotrophs_config(n)%sname) // '_bSi_form'
+              units = 'mmol/m^3/s'
+              vgrid = 'layer_avg'
+              truncate = .true.
+              call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                   ind%bSi_form(n), marbl_status_log)
+              if (marbl_status_log%labort_marbl) then
+                call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                return
+              end if
+            end if
           else
-             if (autotrophs_config(n)%silicifier) then
-                lname = trim(autotrophs_config(n)%lname) // ' Si Uptake'
-                ! FIXME #22 - eventually add _
-                sname = trim(autotrophs_config(n)%sname) // 'bSi_form'
-                !sname = trim(autotrophs_config(n)%sname) // '_bSi_form'
-                units = 'mmol/m^3/s'
-                vgrid = 'layer_avg'
-                truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-                     ind%bSi_form(n), marbl_status_log)
-                if (marbl_status_log%labort_marbl) then
-                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
-                  return
-                end if
-             else
-                ind%bSi_form(n) = -1
-             end if
+            ind%bSi_form(n) = -1
           end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
+          if (autotrophs_config(n)%imp_calcifier .or.                         &
+              autotrophs_config(n)%exp_calcifier) then
+            if (count_only) then
+              num_interior_diags = num_interior_diags + 1
+            else
+              lname = trim(autotrophs_config(n)%lname) // ' CaCO3 Formation'
+              sname = trim(autotrophs_config(n)%sname) // '_CaCO3_form'
+              units = 'mmol/m^3/s'
+              vgrid = 'layer_avg'
+              truncate = .true.
+              call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                   ind%CaCO3_form(n), marbl_status_log)
+              if (marbl_status_log%labort_marbl) then
+                call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                return
+              end if
+            end if
           else
-             if (autotrophs_config(n)%imp_calcifier .or.                      &
-                 autotrophs_config(n)%exp_calcifier) then
-                lname = trim(autotrophs_config(n)%lname) // ' CaCO3 Formation'
-                sname = trim(autotrophs_config(n)%sname) // '_CaCO3_form'
-                units = 'mmol/m^3/s'
-                vgrid = 'layer_avg'
-                truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-                     ind%CaCO3_form(n), marbl_status_log)
-                if (marbl_status_log%labort_marbl) then
-                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
-                  return
-                end if
-             else
-                ind%CaCO3_form(n) = -1
-             end if
+            ind%CaCO3_form(n) = -1
           end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
+          if (autotrophs_config(n)%Nfixer) then
+            if (count_only) then
+              num_interior_diags = num_interior_diags + 1
+            else
+              lname = trim(autotrophs_config(n)%lname) // ' N Fixation'
+              sname = trim(autotrophs_config(n)%sname) // '_Nfix'
+              units = 'mmol/m^3/s'
+              vgrid = 'layer_avg'
+              truncate = .true.
+              call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                   ind%Nfix(n), marbl_status_log)
+              if (marbl_status_log%labort_marbl) then
+                call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                return
+              end if
+            end if
           else
-             if (autotrophs_config(n)%Nfixer) then
-                lname = trim(autotrophs_config(n)%lname) // ' N Fixation'
-                sname = trim(autotrophs_config(n)%sname) // '_Nfix'
-                units = 'mmol/m^3/s'
-                vgrid = 'layer_avg'
-                truncate = .true.
-                call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-                     ind%Nfix(n), marbl_status_log)
-                if (marbl_status_log%labort_marbl) then
-                  call log_add_diagnostics_error(marbl_status_log, sname, subname)
-                  return
-                end if
-             else
-                ind%Nfix(n) = -1
-             end if
+            ind%Nfix(n) = -1
           end if
 
        end do ! end do-loop for atutroph_cnt

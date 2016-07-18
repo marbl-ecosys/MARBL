@@ -314,17 +314,17 @@ contains
 
     gas_flux_forcing_opt  = 'drv'
     gas_flux_forcing_file = 'unknown'
-    call set_defaults_tcr_rd(gas_flux_fice, file_varname='FICE', file_fmt='bin')
-    call set_defaults_tcr_rd(gas_flux_ws, file_varname='XKW', file_fmt='bin')
-    call set_defaults_tcr_rd(gas_flux_ap, file_varname='P', file_fmt='bin')
+    call set_defaults_tcr_rd(gas_flux_fice, file_varname='FICE')
+    call set_defaults_tcr_rd(gas_flux_ws, file_varname='XKW')
+    call set_defaults_tcr_rd(gas_flux_ap, file_varname='P')
     dust_flux_source             = 'monthly-calendar'
-    call set_defaults_tcr_rd(dust_flux_input, file_varname='dust_flux', file_fmt='bin')
+    call set_defaults_tcr_rd(dust_flux_input, file_varname='dust_flux')
     iron_flux_source             = 'monthly-calendar'
-    call set_defaults_tcr_rd(iron_flux_input, file_varname='iron_flux', file_fmt='bin')
-    call set_defaults_tcr_rd(fesedflux_input, file_varname='FESEDFLUXIN', file_fmt='bin')
+    call set_defaults_tcr_rd(iron_flux_input, file_varname='iron_flux')
+    call set_defaults_tcr_rd(fesedflux_input, file_varname='FESEDFLUXIN')
     ndep_data_type = 'monthly-calendar'
-    call set_defaults_tcr_rd(nox_flux_monthly_input, file_varname='nox_flux', file_fmt='bin')
-    call set_defaults_tcr_rd(nhy_flux_monthly_input, file_varname='nhy_flux', file_fmt='bin')
+    call set_defaults_tcr_rd(nox_flux_monthly_input, file_varname='nox_flux')
+    call set_defaults_tcr_rd(nhy_flux_monthly_input, file_varname='nhy_flux')
     ndep_shr_stream_year_first = 1
     ndep_shr_stream_year_last  = 1
     ndep_shr_stream_year_align = 1
