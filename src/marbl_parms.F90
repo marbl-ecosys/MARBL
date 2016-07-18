@@ -864,7 +864,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'kFe'
       lname    = 'nutrient uptake half-sat constants'
-      units    = ''
+      units    = 'nmol/cm^3'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%kFe
@@ -877,7 +877,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'kPO4'
       lname    = 'nutrient uptake half-sat constants'
-      units    = ''
+      units    = 'nmol/cm^3'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%kPO4
@@ -890,7 +890,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'kDOP'
       lname    = 'nutrient uptake half-sat constants'
-      units    = ''
+      units    = 'nmol/cm^3'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%kDOP
@@ -903,7 +903,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'kNO3'
       lname    = 'nutrient uptake half-sat constants'
-      units    = ''
+      units    = 'nmol/cm^3'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%kNO3
@@ -916,7 +916,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'kNH4'
       lname    = 'nutrient uptake half-sat constants'
-      units    = ''
+      units    = 'nmol/cm^3'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%kNH4
@@ -929,7 +929,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'kSiO3'
       lname    = 'nutrient uptake half-sat constants'
-      units    = ''
+      units    = 'nmol/cm^3'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%kSiO3
@@ -942,7 +942,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'Qp'
       lname    = 'P/C ratio'
-      units    = ''
+      units    = 'unitless'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%Qp
@@ -955,7 +955,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'gQfe_0'
       lname    = 'initial Fe/C ratio'
-      units    = ''
+      units    = 'unitless'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%gQFe_0
@@ -968,7 +968,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'gQfe_min'
       lname    = 'minimum Fe/C ratio'
-      units    = ''
+      units    = 'unitless'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%gQFe_min
@@ -1020,7 +1020,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'loss_thres'
       lname    = 'concentration where losses go to zero'
-      units    = ''
+      units    = 'nmol/cm^3'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%loss_thres
@@ -1033,7 +1033,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'loss_thres2'
       lname    = 'concentration where losses go to zero'
-      units    = ''
+      units    = 'nmol/cm^3'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%loss_thres2
@@ -1111,7 +1111,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'loss_poc'
       lname    = 'routing of loss term'
-      units    = ''
+      units    = 'unitless'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%loss_poc
@@ -1145,7 +1145,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'loss_thres'
       lname    = 'Concentration where losses go to zero'
-      units    = ''
+      units    = 'nmol/cm^3'
       datatype = 'real'
       group    = 'marbl_parms_nml'
       rptr     => zooplankton(n)%loss_thres
@@ -1217,7 +1217,7 @@ contains
 
         write(sname, "(2A)") trim(prefix), 'graze_zoo'
         lname    = 'routing of grazed term (remainder goes to DIC)'
-        units    = ''
+        units    = 'unitless'
         datatype = 'real'
         group    = 'marbl_parms_nml'
         rptr     => grazing(m,n)%graze_zoo
@@ -1230,7 +1230,7 @@ contains
 
         write(sname, "(2A)") trim(prefix), 'graze_poc'
         lname    = 'routing of grazed term (remainder goes to DIC)'
-        units    = ''
+        units    = 'unitless'
         datatype = 'real'
         group    = 'marbl_parms_nml'
         rptr     => grazing(m,n)%graze_poc
@@ -1243,7 +1243,7 @@ contains
 
         write(sname, "(2A)") trim(prefix), 'graze_doc'
         lname    = 'routing of grazed term (remainder goes to DIC)'
-        units    = ''
+        units    = 'unitless'
         datatype = 'real'
         group    = 'marbl_parms_nml'
         rptr     => grazing(m,n)%graze_doc
@@ -1354,8 +1354,8 @@ contains
     end if
 
     sname     = 'PON_bury_coeff'
-    lname     = ''
-    units     = ''
+    lname     = 'scale factor for burial of PON'
+    units     = 'unitless'
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => PON_bury_coeff
