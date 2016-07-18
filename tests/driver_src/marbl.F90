@@ -36,7 +36,6 @@ Program marbl
   !     * Some tests use a different status log than marbl_instance%StatusLog
   !       (default is to use marbl_instance%StatusLog)
   ldiff_log = .false.
-  call marbl_status_log%construct()
 
   ! (1) Set marbl_driver_nml defaults
   testname     = ''
@@ -62,6 +61,7 @@ Program marbl
 
 
   ! (2) Read driver namelist to know what test to run
+  call marbl_status_log%construct()
   tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_driver_nml', marbl_status_log)
   if (marbl_status_log%labort_marbl) then
     call print_marbl_log(marbl_instance%StatusLog)
