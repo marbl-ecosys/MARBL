@@ -3386,6 +3386,10 @@ contains
          ifrac            = ifrac,                   &
          nhx_surface_emis = nhx_surface_emis)
 
+    if (sfo_ind%flux_nhx_id.ne.0) then
+       surface_forcing_output%sfo(sfo_ind%flux_nhx_id)%forcing_field = nhx_surface_emis
+    end if
+
     if (lapply_nhx_surface_emis) then
        where (surface_mask(:) /= c0)
          stf(:, nh4_ind) = stf(:, nh4_ind) - nhx_surface_emis(:)

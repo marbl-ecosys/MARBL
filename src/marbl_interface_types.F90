@@ -49,6 +49,7 @@ module marbl_interface_types
   type, public :: marbl_surface_forcing_output_indexing_type
     integer(int_kind) :: flux_o2_id = 0
     integer(int_kind) :: flux_co2_id = 0
+    integer(int_kind) :: flux_nhx_id = 0
     integer(int_kind) :: totalChl_id = 0
   end type marbl_surface_forcing_output_indexing_type
 
@@ -572,6 +573,11 @@ contains
         this%short_name = "flux_co2"
         this%units      = "nmol/cm^2/s"
         sfo_ind%flux_co2_id = id
+      case("flux_nhx")
+        this%long_name  = "NHx Surface Emissions"
+        this%short_name = "flux_nhx"
+        this%units      = "nmol/cm^2/s"
+        sfo_ind%flux_nhx_id = id
       case("totalChl")
         this%long_name  = "Total Chlorophyll Concentration"
         this%short_name = "totalChl"
