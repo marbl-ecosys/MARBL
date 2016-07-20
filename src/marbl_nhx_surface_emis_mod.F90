@@ -16,14 +16,10 @@ module marbl_nhx_surface_emis_mod
   private
 
   !-----------------------------------------------------------------------
-  ! public/private member procedure declarations
+  ! public member procedure declarations
   !-----------------------------------------------------------------------
 
-  public  :: marbl_comp_nhx_surface_emis
-
-  private :: marbl_comp_kw_nh3
-  private :: marbl_comp_kg_nh3
-  private :: marbl_comp_Hstar_nhx
+  public :: marbl_comp_nhx_surface_emis
 
   !***********************************************************************
 
@@ -62,7 +58,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
 
-    real (r8) :: u10_mps(num_elements) ! (m/s)
+    real (r8) :: u10_rms_mps(num_elements) ! (m/s)
     real (r8) :: kw_nh3(num_elements)
     real (r8) :: kg_nh3(num_elements)
     real (r8) :: Hstar_nhx(num_elements)
@@ -78,12 +74,12 @@ contains
     end if
 
     where (surface_mask(:) /= c0)
-       u10_mps(:) = mpercm * sqrt(u10_sqr(:))
+       u10_rms_mps(:) = mpercm * sqrt(u10_sqr(:))
     end where
 
-    call marbl_comp_kw_nh3(num_elements, surface_mask, sst, u10_mps, kw_nh3)
+    call marbl_comp_kw_nh3(num_elements, surface_mask, sst, u10_rms_mps, kw_nh3)
 
-    call marbl_comp_kg_nh3(num_elements, surface_mask, sst, u10_mps, atmpres, kg_nh3)
+    call marbl_comp_kg_nh3(num_elements, surface_mask, sst, u10_rms_mps, atmpres, kg_nh3)
 
     call marbl_comp_Hstar_nhx(num_elements, surface_mask, ph, sst, sss, Hstar_nhx)
 
@@ -100,7 +96,7 @@ contains
        num_elements,            &
        surface_mask,            &
        sst,                     &
-       u10_mps,                 &
+       u10_rms_mps,             &
        kw_nh3)
 
     use marbl_schmidt_number_mod, only : schmidt_nh3_surf
@@ -110,7 +106,7 @@ contains
     integer(int_kind)  , intent(in)  :: num_elements
     real (r8)          , intent(in)  :: surface_mask(num_elements)
     real (r8)          , intent(in)  :: sst(num_elements)
-    real (r8)          , intent(in)  :: u10_mps(num_elements)
+    real (r8)          , intent(in)  :: u10_rms_mps(num_elements)
     real (r8)          , intent(out) :: kw_nh3(num_elements)
 
     !-----------------------------------------------------------------------
@@ -129,7 +125,7 @@ contains
     !-----------------------------------------------------------------------
 
     where (surface_mask(:) /= c0)
-       kw_nh3(:) = hrpers * u10_mps(:) * (0.061_r8 + 0.24_r8 * u10_mps(:)) * sqrt(600.0_r8 / schmidt_nh3(:))
+       kw_nh3(:) = hrpers * u10_rms_mps(:) * (0.061_r8 + 0.24_r8 * u10_rms_mps(:)) * sqrt(600.0_r8 / schmidt_nh3(:))
     end where
 
   end subroutine marbl_comp_kw_nh3
@@ -140,7 +136,7 @@ contains
        num_elements,            &
        surface_mask,            &
        sst,                     &
-       u10_mps,                 &
+       u10_rms_mps,             &
        atmpres,                 &
        kg_nh3)
 
@@ -154,7 +150,7 @@ contains
     integer(int_kind)  , intent(in)  :: num_elements
     real (r8)          , intent(in)  :: surface_mask(num_elements)
     real (r8)          , intent(in)  :: sst(num_elements)
-    real (r8)          , intent(in)  :: u10_mps(num_elements)
+    real (r8)          , intent(in)  :: u10_rms_mps(num_elements)
     real (r8)          , intent(in)  :: atmpres(num_elements)
     real (r8)          , intent(out) :: kg_nh3(num_elements) ! (cm/s)
 
@@ -163,8 +159,8 @@ contains
     !-----------------------------------------------------------------------
 
     real (r8) :: schmidt_nh3(num_elements)   ! Schmidt number for NH3 in air
-    real (r8) :: ustar_div_u10(num_elements) ! ustar (m/s) divided by u10
-    real (r8) :: ustar(num_elements)         ! ustar (m/s)
+    real (r8) :: ustar_div_u10(num_elements) ! ustar divided by u10
+    real (r8) :: ustar(num_elements)         ! friction velocity (m/s)
 
     !-----------------------------------------------------------------------
 
@@ -181,8 +177,8 @@ contains
     !-----------------------------------------------------------------------
 
     where (surface_mask(:) /= c0)
-       ustar_div_u10(:) = sqrt(6.1e-4_r8 + 6.3e-5_r8 * u10_mps(:))
-       ustar(:) = ustar_div_u10(:) * u10_mps(:)
+       ustar_div_u10(:) = sqrt(6.1e-4_r8 + 6.3e-5_r8 * u10_rms_mps(:))
+       ustar(:) = ustar_div_u10(:) * u10_rms_mps(:)
        kg_nh3(:) = 1.0e-3_r8 + ustar(:) &
             / (13.3_r8 * sqrt(schmidt_nh3(:)) + c1 / ustar_div_u10(:) - 5.0_r8 + log(schmidt_nh3(:)) / (c2 * vonkar))
        kg_nh3(:) = cmperm * kg_nh3(:)

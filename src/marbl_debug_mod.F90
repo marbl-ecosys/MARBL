@@ -18,12 +18,10 @@ module marbl_debug_mod
   public :: marbl_debug_print_var
 
   interface marbl_debug_print_var
-     module procedure marbl_debug_print_var_int_0d,      &
-                      marbl_debug_print_var_r8_0d,       &
-                      marbl_debug_print_var_int_1d,      &
-                      marbl_debug_print_var_r8_1d,       &
-                      marbl_debug_print_var_int_1d_mask, &
-                      marbl_debug_print_var_r8_1d_mask
+     module procedure marbl_debug_print_var_int_0d, &
+                      marbl_debug_print_var_r8_0d,  &
+                      marbl_debug_print_var_int_1d, &
+                      marbl_debug_print_var_r8_1d
   end interface
 
   !-----------------------------------------------------------------------------
@@ -54,82 +52,62 @@ contains
     character(len=*), intent(in) :: msg
     real(r8),         intent(in) :: val
 
-    write(stdout, '(A,1X,E23.16)') 'marbl_debug:' // trim(msg), val
+    write(stdout, '(A,1X,E24.16)') 'marbl_debug:' // trim(msg), val
 
   end subroutine marbl_debug_print_var_r8_0d
 
   !*****************************************************************************
 
-  subroutine marbl_debug_print_var_int_1d(msg, num_elements, val)
+  subroutine marbl_debug_print_var_int_1d(msg, num_elements, val, mask)
 
-    character(len=*),  intent(in) :: msg
-    integer(int_kind), intent(in) :: num_elements
-    integer(int_kind), intent(in) :: val(num_elements)
+    character(len=*),            intent(in) :: msg
+    integer(int_kind),           intent(in) :: num_elements
+    integer(int_kind),           intent(in) :: val(num_elements)
+    logical(log_kind), optional, intent(in) :: mask(num_elements)
 
+    logical(log_kind) :: mask_loc(num_elements)
     integer(int_kind) :: n
+
+    if (present(mask)) then
+       mask_loc(:) = mask
+    else
+       mask_loc(:) = .true.
+    end if
 
     write(stdout, '(A,1X,I0)') 'marbl_debug:' // trim(msg) // ', num_elements=', num_elements
     do n = 1, num_elements
-       write(stdout, '(A,1X,I0,1X,I0)') 'marbl_debug:' // trim(msg), n, val(n)
+       if (mask_loc(n)) then
+          write(stdout, '(A,1X,I0,1X,I0)') 'marbl_debug:' // trim(msg), n, val(n)
+       end if
     end do
 
   end subroutine marbl_debug_print_var_int_1d
 
   !*****************************************************************************
 
-  subroutine marbl_debug_print_var_r8_1d(msg, num_elements, val)
+  subroutine marbl_debug_print_var_r8_1d(msg, num_elements, val, mask)
 
-    character(len=*),  intent(in) :: msg
-    integer(int_kind), intent(in) :: num_elements
-    real(r8),          intent(in) :: val(num_elements)
+    character(len=*),            intent(in) :: msg
+    integer(int_kind),           intent(in) :: num_elements
+    real(r8),                    intent(in) :: val(num_elements)
+    logical(log_kind), optional, intent(in) :: mask(num_elements)
 
+    logical(log_kind) :: mask_loc(num_elements)
     integer(int_kind) :: n
+
+    if (present(mask)) then
+       mask_loc(:) = mask
+    else
+       mask_loc(:) = .true.
+    end if
 
     write(stdout, '(A,1X,I0)') 'marbl_debug:' // trim(msg) // ', num_elements=', num_elements
     do n = 1, num_elements
-       write(stdout, '(A,1X,I0,1X,E23.16)') 'marbl_debug:' // trim(msg), n, val(n)
+       if (mask_loc(n)) then
+          write(stdout, '(A,1X,I0,1X,E24.16)') 'marbl_debug:' // trim(msg), n, val(n)
+       end if
     end do
 
   end subroutine marbl_debug_print_var_r8_1d
-
-  !*****************************************************************************
-
-  subroutine marbl_debug_print_var_int_1d_mask(msg, num_elements, mask, val)
-
-    character(len=*),  intent(in) :: msg
-    integer(int_kind), intent(in) :: num_elements
-    logical(log_kind), intent(in) :: mask(num_elements)
-    integer(int_kind), intent(in) :: val(num_elements)
-
-    integer(int_kind) :: n
-
-    write(stdout, '(A,1X,I0)') 'marbl_debug:' // trim(msg) // ', num_elements=', num_elements
-    do n = 1, num_elements
-       if (mask(n)) then
-          write(stdout, '(A,1X,I0,1X,I0)') 'marbl_debug:' // trim(msg), n, val(n)
-       end if
-    end do
-
-  end subroutine marbl_debug_print_var_int_1d_mask
-
-  !*****************************************************************************
-
-  subroutine marbl_debug_print_var_r8_1d_mask(msg, num_elements, mask, val)
-
-    character(len=*),  intent(in) :: msg
-    integer(int_kind), intent(in) :: num_elements
-    logical(log_kind), intent(in) :: mask(num_elements)
-    real(r8),          intent(in) :: val(num_elements)
-
-    integer(int_kind) :: n
-
-    write(stdout, '(A,1X,I0)') 'marbl_debug:' // trim(msg) // ', num_elements=', num_elements
-    do n = 1, num_elements
-       if (mask(n)) then
-          write(stdout, '(A,1X,I0,1X,E23.16)') 'marbl_debug:' // trim(msg), n, val(n)
-       end if
-    end do
-
-  end subroutine marbl_debug_print_var_r8_1d_mask
 
 end module marbl_debug_mod
