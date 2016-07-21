@@ -46,15 +46,24 @@ for src_file in files_in_src_dir:
       fin = open(src_dir+'/'+src_file,"r")
     except:
       fin = open(src_dir2+'/'+src_file,"r")
+
+    # (1) dependency list from current file should be empty
+    depends = ['']
     for line in fin:
+      # (2) look for statement that starts with "use"
+      #     (case insensitive)
       if re.match('^ *[Uu][Ss][Ee]',line):
         line_array = line.split()
-        # statements are usually "use module, only : subroutine"
-        # so we need to strip away the , to get the module name
+        # (3) statements are usually "use module, only : subroutine"
+        #     so we need to strip away the , to get the module name
         file_used = line_array[1].split(',')[0]
         if file_used+'.F90' in files_in_src_dir:
-          print file_name+'.o depends on '+file_used+'.o'
-          fout.write(obj_dir+'/'+file_name+'.o: '+obj_dir+'/'+file_used+'.o\n')
+          # (4) if file hasn't previously been used, add it to list
+          if file_used not in depends:
+            depends.append(file_used)
+            print file_name+'.o depends on '+file_used+'.o'
+            fout.write(obj_dir+'/'+file_name+'.o: '+obj_dir+'/'+file_used+'.o\n')
+
         else:
           if inc_dir != 'NONE':
             if file_used+'.mod' in files_in_inc_dir:

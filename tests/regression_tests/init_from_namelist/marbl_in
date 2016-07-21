@@ -1,0 +1,12 @@
+&marbl_driver_nml
+testname="init_from_namelist"
+/
+&marbl_config_nml
+ciso_on=.true.
+/
+&marbl_parms_nml
+/
+&marbl_tracer_init_tmp_nml
+/
+&marbl_forcing_tmp_nml
+/

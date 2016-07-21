@@ -1,0 +1,47 @@
+---------
+| ABOUT |
+---------
+
+The MARine Biogeochemistry Library (MARBL) is organized as follows:
+    
+    * include/  -- default location of mod files
+    * lib/ -- default location of libmarbl.a (or libmarbl-[compiler].a)
+    * src/ -- source code for building libmarbl.a
+    * tests/ -- all source and scripts required for stand-alone executable, as
+                well as the executable itself. Also moved the obj/ dir here so
+                that users don't use it instead of the include/ (especially once
+                we restrict include to just contain marbl_interface.mod)
+
+More details about the tests/ directory can be found in tests/README
+
+---------------------------------------------
+| INSTALLING THE LIBRARY FOR EXTERNAL USAGE |
+---------------------------------------------
+
+The Makefile in src/ provides all that is needed to build the library. For
+testing purposes, you can run
+
+$ make [gnu|intel|pgi|nag|cray]
+
+to build with a specific compiler using pre-set compiler flags. However, if
+you want to build MARBL to link with an outside program, you may want more
+control over the compile-time options. To that end, run
+
+$ make OBJ_DIR=[location of object files] depends
+$ make [desired_location_of_lib]/libmarbl.a \
+       USE_DEPS=TRUE \
+       FC=[compiler] \
+       FCFLAGS="[compiler flags]" \
+       OBJ_DIR=[location of object files] \
+       INC_DIR=[location of .mod files]
+
+The first call will produce the dependency file (shared_deps.d), the second call
+will build libmarbl.a and the *.mod files. When building the GCM, you will need
+to add
+
+-I$(INC_DIR)
+
+And when linking
+
+-L$(LIB_DIR) -lmarbl
+

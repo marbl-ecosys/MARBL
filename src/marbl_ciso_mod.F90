@@ -8,7 +8,7 @@ module marbl_ciso_mod
   !  13C code is based on code form G. Xavier, ETH, 2010, which
   !  was written for pop1 (CCSM3)
   !  This code needs the ecosystem model to run, as it uses several
-  !  variables computed there. Data is shared using marbl_share_mod.F90
+  !  variables computed there.
   !  This module adds 7 carbon pools for 13C and another 7 for 14C
   !-----------------------------------------------------------------------
 
@@ -17,14 +17,17 @@ module marbl_ciso_mod
   use marbl_kinds_mod       , only : log_kind
   use marbl_kinds_mod       , only : char_len
 
-  use marbl_parms           , only : c0
-  use marbl_parms           , only : c1
-  use marbl_parms           , only : c2
-  use marbl_parms           , only : c1000
-  use marbl_parms           , only : mpercm
-  use marbl_parms           , only : autotrophs  
-  use marbl_parms           , only : zooplankton 
-  use marbl_parms           , only : grazing     
+  use marbl_constants_mod   , only : c0
+  use marbl_constants_mod   , only : c1
+  use marbl_constants_mod   , only : c2
+  use marbl_constants_mod   , only : c1000
+  use marbl_constants_mod   , only : mpercm
+
+  use marbl_config_mod, only : autotrophs_config
+
+  use marbl_parms, only : autotrophs
+  use marbl_parms, only : zooplankton
+  use marbl_parms, only : grazing
 
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
@@ -37,7 +40,7 @@ module marbl_ciso_mod
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_interior_forcing_input_type
 
-  use marbl_internal_types  , only : autotroph_type
+  use marbl_internal_types  , only : autotroph_parms_type
   use marbl_internal_types  , only : column_sinking_particle_type
   use marbl_internal_types  , only : marbl_interior_share_type
   use marbl_internal_types  , only : marbl_zooplankton_share_type
@@ -53,7 +56,6 @@ module marbl_ciso_mod
   !  public/private declarations
   !-----------------------------------------------------------------------
 
-  public  :: marbl_ciso_init_nml
   public  :: marbl_ciso_init_tracer_metadata
   public  :: marbl_ciso_set_interior_forcing
   public  :: marbl_ciso_set_surface_forcing
@@ -72,13 +74,6 @@ module marbl_ciso_mod
      real (r8) :: Ca14CO3 ! local copy of model autotroph Ca14CO3
   end type autotroph_local_type
 
-  ! Using scaled isotopic carbon pools, so Rstd =1
-  real(r8), parameter :: R13C_std = 1.0_r8 ! actual 13C/12C PDB standard ratio (Craig, 1957) = 1123.72e-5_r8
-  real(r8), parameter :: R14C_std = 1.0_r8 ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
-
-  ! Module variables
-  real(r8) :: pi
-
   !-----------------------------------------------------------------------
   !  scalar constants for 14C decay calculation
   !-----------------------------------------------------------------------
@@ -92,115 +87,6 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_ciso_init_nml(nl_buffer, marbl_status_log)
-
-    use marbl_namelist_mod        , only : marbl_nl_in_size
-    use marbl_namelist_mod        , only : marbl_nl_cnt
-    use marbl_namelist_mod        , only : marbl_nl_buffer_size
-    use marbl_namelist_mod        , only : marbl_nl_split_string
-    use marbl_namelist_mod        , only : marbl_namelist
-    use marbl_share_mod           , only : ciso_tracer_cnt
-    use marbl_share_mod           , only : ciso_init_ecosys_option
-    use marbl_share_mod           , only : ciso_init_ecosys_init_file
-    use marbl_share_mod           , only : ciso_init_ecosys_init_file_fmt
-    use marbl_share_mod           , only : ciso_tracer_init_ext
-    use marbl_share_mod           , only : ciso_lsource_sink
-    use marbl_share_mod           , only : ciso_atm_d13c_opt
-    use marbl_share_mod           , only : ciso_atm_d13c_const
-    use marbl_share_mod           , only : ciso_atm_d13c_filename
-    use marbl_share_mod           , only : ciso_atm_d14c_opt
-    use marbl_share_mod           , only : ciso_atm_d14c_const
-    use marbl_share_mod           , only : ciso_atm_d14c_filename
-    use marbl_share_mod           , only : ciso_fract_factors
-    use marbl_share_mod           , only : ciso_atm_model_year
-    use marbl_share_mod           , only : ciso_atm_data_year
-    use marbl_share_mod           , only : ciso_lecovars_full_depth_tavg 
-    use marbl_share_mod           , only : marbl_freq_opt_never  
-    use marbl_share_mod           , only : marbl_freq_opt_nmonth 
-    use marbl_share_mod           , only : marbl_freq_opt_nyear  
-
-    implicit none
-
-    character(marbl_nl_buffer_size) , intent(in)    :: nl_buffer(marbl_nl_cnt)
-    type(marbl_log_type)            , intent(inout) :: marbl_status_log
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_init_nml'
-    character(len=char_len) :: log_message
-
-    integer (int_kind) ::               &
-         n,                             & ! index
-         nml_error                        ! namelist i/o error flag
-
-    character(len=marbl_nl_buffer_size) :: &
-         tmp_nl_buffer
-
-    ! ecosys_ciso_nml namelist
-    namelist /ecosys_ciso_nml/ &
-         ciso_init_ecosys_option, ciso_init_ecosys_init_file, &
-         ciso_init_ecosys_init_file_fmt, ciso_tracer_init_ext, &
-         ciso_lsource_sink, &
-         ciso_lecovars_full_depth_tavg, &
-         ciso_atm_d13c_opt, ciso_atm_d13c_const, ciso_atm_d13c_filename, &
-         ciso_atm_d14c_opt, ciso_atm_d14c_const, ciso_atm_d14c_filename, &
-         ciso_fract_factors, ciso_atm_model_year, ciso_atm_data_year
-    !-----------------------------------------------------------------------
-
-    !-----------------------------------------------------------------------
-    !  default namelist settings
-    !-----------------------------------------------------------------------
-
-    ciso_init_ecosys_option                 = 'unknown'
-    ciso_init_ecosys_init_file              = 'unknown'
-    ciso_init_ecosys_init_file_fmt          = 'bin'
-    do n = 1,ciso_tracer_cnt
-       ciso_tracer_init_ext(n)%mod_varname  = 'unknown'
-       ciso_tracer_init_ext(n)%filename     = 'unknown'
-       ciso_tracer_init_ext(n)%file_varname = 'unknown'
-       ciso_tracer_init_ext(n)%scale_factor = c1
-       ciso_tracer_init_ext(n)%default_val  = c0
-       ciso_tracer_init_ext(n)%file_fmt     = 'bin'
-    end do
-
-    ciso_lsource_sink                       = .true.
-
-    ciso_atm_d13c_opt                       = 'const'
-    ciso_atm_d13c_const                     = -6.379_r8
-    ciso_atm_d13c_filename                  = 'unknown'
-
-    ciso_atm_d14c_opt                       = 'const'
-    ciso_atm_d14c_const                     = 0.0_r8
-    ciso_atm_d14c_filename(1)               = 'unknown'
-    ciso_atm_d14c_filename(2)               = 'unknown'
-    ciso_atm_d14c_filename(3)               = 'unknown'
-
-    ciso_fract_factors                      = 'Rau'
-
-    ciso_lecovars_full_depth_tavg           = .false.
-
-    ciso_atm_model_year                     = 1
-    ciso_atm_data_year                      = 1
-
-    !-----------------------------------------------------------------------
-    ! read the namelist buffer on every processor
-    !-----------------------------------------------------------------------
-
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'ecosys_ciso_nml')
-    read(tmp_nl_buffer, nml=ecosys_ciso_nml, iostat=nml_error)
-    if (nml_error /= 0) then
-       call marbl_status_log%log_error("error reading &ecosys_ciso_nml", subname)
-       return
-    else
-       ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_ciso_nml
-       call marbl_status_log%log_namelist('ecosys_ciso_nml', tmp_nl_buffer, subname)
-    end if
-
-  end subroutine marbl_ciso_init_nml
-
-  !*****************************************************************************
-  
   subroutine marbl_ciso_init_tracer_metadata(marbl_tracer_metadata,           &
                                              marbl_tracer_read,               &
                                              marbl_tracer_indices)
@@ -208,9 +94,9 @@ contains
     !  Set tracer and forcing metadata
 
     use marbl_interface_types, only : marbl_tracer_read_type
-    use marbl_share_mod      , only : ciso_lecovars_full_depth_tavg
-    use marbl_share_mod      , only : ciso_init_ecosys_init_file
-    use marbl_share_mod      , only : ciso_init_ecosys_init_file_fmt
+    use marbl_config_mod     , only : ciso_lecovars_full_depth_tavg
+    use marbl_parms          , only : ciso_init_ecosys_init_file
+    use marbl_parms          , only : ciso_init_ecosys_init_file_fmt
 
     implicit none
 
@@ -274,23 +160,23 @@ contains
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '13C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon-13'
+       marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // '13C'
+       marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Carbon-13'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '14C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon-14'
+       marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // '14C'
+       marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Carbon-14'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
        if (n.gt.0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Ca13CO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Ca13CO3'
+          marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Ca13CO3'
+          marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Ca13CO3'
         end if
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
        if (n.gt.0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Ca14CO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Ca14CO3'
+          marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Ca14CO3'
+          marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Ca14CO3'
        endif
     end do
 
@@ -351,11 +237,13 @@ contains
     !  13C code is based on code from X. Giraud, ETH ZÃ¼rich, 2008, for pop1
     !  Also added biotic 14C
 
-    use marbl_share_mod        , only : ciso_lsource_sink
-    use marbl_share_mod        , only : ciso_fract_factors
+    use marbl_config_mod       , only : ciso_lsource_sink
+    use marbl_parms            , only : ciso_fract_factors
     use marbl_parms            , only : f_graze_CaCO3_REMIN
-    use marbl_parms            , only : R13c_std, R14c_std
-    use marbl_parms            , only : spd
+    use marbl_constants_mod    , only : R13C_std
+    use marbl_constants_mod    , only : R14C_std
+    use marbl_constants_mod    , only : spd
+    use marbl_constants_mod    , only : spy
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_interior
 
     implicit none
@@ -381,7 +269,6 @@ contains
     logical (log_kind) :: zero_mask
 
     real (r8) :: &
-         marbl_seconds_in_year, & 
          work1,     & ! temporaries
          ztop         ! depth of top of cell
 
@@ -540,14 +427,8 @@ contains
     ! Set module variables
     !-----------------------------------------------------------------------
 
-    ! FIXME #36: move this calculations to the init phase when 
-    !            the initialization is brought into this module
-
-    pi  = 4.0_r8 * atan( 1.0_r8 )
-
     !  Define decay variable for DI14C, using earlier defined half-life of 14C
-    marbl_seconds_in_year = 86400._r8 * 365._r8
-    c14_lambda_inv_sec = log(c2) / (c14_halflife_years * marbl_seconds_in_year)
+    c14_lambda_inv_sec = log(c2) / (c14_halflife_years * spy)
 
     !----------------------------------------------------------------------------------------
     ! Set cell attributes
@@ -813,7 +694,7 @@ contains
           ! C13 & C14 CaCO3 production
           !-----------------------------------------------------------------------
 
-          if (autotrophs(auto_ind)%imp_calcifier) then
+          if (autotrophs_config(auto_ind)%imp_calcifier) then
              
              R13C_CaCO3_PROD(k) = R13C_DIC(k) + R13C_std * eps_carb / c1000 
              
@@ -1083,7 +964,7 @@ contains
     case ('KellerMorel')
        do auto_ind = 1, autotroph_cnt
 
-          if (autotrophs(auto_ind)%kSiO3 > c0) then
+          if (autotrophs_config(auto_ind)%silicifier) then
              !----------------------------------------------------------------------------------------
              ! Diatom based on P. tricornumtum ( Keller and morel, 1999; Popp et al., 1998 )
              !----------------------------------------------------------------------------------------
@@ -1094,7 +975,7 @@ contains
              cell_permea(auto_ind)          = 3.3e-5_r8    ! cell wall permeability to CO2(aq) (m/s)
              cell_eps_fix(auto_ind)         = 26.6_r8      ! fractionation effect of carbon fixation
 
-          else if (autotrophs(auto_ind)%Nfixer) then
+          else if (autotrophs_config(auto_ind)%Nfixer) then
              !----------------------------------------------------------------------------------------
              ! Diazotroph based on  Standard Phyto of Rau et al., (1996)
              !----------------------------------------------------------------------------------------
@@ -1114,7 +995,7 @@ contains
              cell_permea(auto_ind)          = 3.0e-8_r8     ! cell wall permeability to CO2(aq) (m/s)
              cell_eps_fix(auto_ind)         = 30.0_r8       ! fractionation effect of carbon fixation
 
-         !else if (autotrophs(auto_ind)%exp_calcifier) then
+         !else if (autotrophs_config(auto_ind)%exp_calcifier) then
              !Currently not set up to separate exp_calcifiers, needs cell_radius value from data
              !----------------------------------------------------------------------------------------
              ! Calcifier based on P. glacialis ( Keller and morel, 1999; Popp et al., 1998 )
@@ -1128,7 +1009,8 @@ contains
              !   cell_permea(auto_ind)          = 1.1e-5_r8    ! cell wall permeability to CO2(aq) (m/s)
              !   cell_eps_fix(auto_ind)         = 23.0_r8      ! fractionation effect of carbon fixation
              
-          else if (autotrophs(auto_ind)%Nfixer .and. autotrophs(auto_ind)%kSiO3 > c0) then
+          else if (autotrophs_config(auto_ind)%Nfixer .and.                   &
+                   autotrophs_config(auto_ind)%silicifier) then
               log_message = "ciso: Currently Keller and Morel fractionation does not work for Diatoms-Diazotrophs"
               call marbl_status_log%log_error(log_message, subname)
               return
@@ -1305,7 +1187,9 @@ contains
     !
     !   Developed by X. Giraud, ETH ZÃ¼rich, 21.07.2008
     !---------------------------------------------------------------------------
-    
+
+    use marbl_constants_mod, only : pi
+
     implicit none
 
     real (r8), intent(in) :: &
@@ -1325,8 +1209,7 @@ contains
     real (r8) :: &
          var, theta, eps_up
 
-    real (r8) :: &
-         pi, Vol, Qc, Surf, radius_m
+    real (r8) :: Vol, Qc, Surf, radius_m
 
     real (r8) :: &
          eps_diff   = 0.7_r8, & ! fractionation by diffusion, O'Leary, 1984
@@ -1493,8 +1376,8 @@ contains
     !  For other comments, see compute_particulate_terms in marbl_mod
     !----------------------------------------------------------------------------------------
     
-    use marbl_parms     , only : denitrif_C_N
-    use marbl_parms     , only : spd
+    use marbl_parms         , only : denitrif_C_N
+    use marbl_constants_mod , only : spd
 
     implicit none
 
@@ -1776,7 +1659,7 @@ contains
 
     integer(int_kind)                , intent(in)    :: column_km                     ! number of active model layers
     integer(int_kind)                , intent(in)    :: autotroph_cnt                 ! autotroph_cnt
-    type(autotroph_type)             , intent(in)    :: autotroph_meta(autotroph_cnt) ! autotroph metadata
+    type(autotroph_parms_type)       , intent(in)    :: autotroph_meta(autotroph_cnt) ! autotroph metadata
     type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
     type(marbl_autotroph_share_type) , intent(in)    :: autotroph_share(autotroph_cnt, column_km)
     type(autotroph_local_type)       , intent(inout) :: autotroph_loc(autotroph_cnt, column_km)
@@ -1844,9 +1727,9 @@ contains
        marbl_surface_forcing_share ,         &
        marbl_surface_forcing_diags)
 
-    use marbl_parms            , only : R13c_std
-    use marbl_parms            , only : R14c_std
-    use marbl_parms            , only : p5
+    use marbl_constants_mod    , only : R13C_std
+    use marbl_constants_mod    , only : R14C_std
+    use marbl_constants_mod    , only : p5
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_surface_forcing
 
     implicit none

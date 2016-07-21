@@ -101,7 +101,7 @@ contains
 
     use marbl_schmidt_number_mod, only : schmidt_nh3_surf
     use marbl_constants_mod     , only : c0
-    use marbl_constants_mod     , only : hrpers
+    use marbl_constants_mod     , only : hrps
 
     integer(int_kind)  , intent(in)  :: num_elements
     real (r8)          , intent(in)  :: surface_mask(num_elements)
@@ -125,7 +125,7 @@ contains
     !-----------------------------------------------------------------------
 
     where (surface_mask(:) /= c0)
-       kw_nh3(:) = hrpers * u10_rms_mps(:) * (0.061_r8 + 0.24_r8 * u10_rms_mps(:)) * sqrt(600.0_r8 / schmidt_nh3(:))
+       kw_nh3(:) = hrps * u10_rms_mps(:) * (0.061_r8 + 0.24_r8 * u10_rms_mps(:)) * sqrt(600.0_r8 / schmidt_nh3(:))
     end where
 
   end subroutine marbl_comp_kw_nh3

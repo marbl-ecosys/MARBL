@@ -420,6 +420,7 @@ contains
     this%saved_state_cnt = 0
     this%num_elements    = num_elements
     this%num_levels      = num_levels
+    allocate(this%state(this%saved_state_cnt))
 
   end subroutine marbl_saved_state_constructor
 
@@ -443,11 +444,12 @@ contains
     type(marbl_single_saved_state_type), dimension(:), pointer :: new_state
     integer :: old_size,n, nlev
 
-    if (associated(this%state)) then
-      old_size = size(this%state)
-    else
-      old_size = 0
+    if (.not.associated(this%state)) then
+      write(log_message, "(A)") 'Saved state constructor must be run'
+      call marbl_status_log%log_error(log_message, subname)
+      return
     end if
+    old_size = size(this%state)
     id = old_size + 1
 
     ! 1) allocate new_state to be size N (one element larger than this%state)
@@ -482,10 +484,8 @@ contains
     end if
 
     ! 4) deallocate / nullify this%state
-    if (old_size.gt.0) then
-      deallocate(this%state)
-      nullify(this%state)
-    end if
+    deallocate(this%state)
+    nullify(this%state)
 
     ! 5) point this%state => new_state and update saved_state_cnt
     this%state => new_state

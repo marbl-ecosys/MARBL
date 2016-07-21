@@ -1,26 +1,46 @@
 module marbl_parms
 
   !-----------------------------------------------------------------------------
-  !   This module manages marbl parameter 
-  !   Most of the variables are not parameters in the Fortran sense. In the
-  !   the Fortran sense, they are vanilla module variables.
+  !   This module manages BGC-specific parameters.
   !
-  !   This modules handles initializing the variables to default values and
-  !   reading them from the namelist marbl_parms. The values used are echoed
-  !   to stdout for record keeping purposes.
+  !   Most of the variables are not parameters in the Fortran sense. In the
+  !   the Fortran sense, they are vanilla module variables most of which are
+  !   associated with the MARBL namelist (marbl_parms_nml)
+  !
+  !   In addition to containing all the namelist variables, this modules also
+  !   handles initializing the variables in &marbl_parms_nml to default values
+  !   and then reading that specific namelist.
+  !
+  !   This module also writes parameter values to the status log.
   !-----------------------------------------------------------------------------
 
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : log_kind
+  use marbl_kinds_mod, only : char_len
 
-  use marbl_internal_types, only : zooplankton_type
-  use marbl_internal_types, only : autotroph_type
-  use marbl_internal_types, only : grazing_type
+  use marbl_config_mod, only : marbl_config_and_parms_type
+  use marbl_config_mod, only : set_defaults_tcr_rd
+
+  use marbl_constants_mod, only : c0
+  use marbl_constants_mod, only : c1
+  use marbl_constants_mod, only : c2
+  use marbl_constants_mod, only : c1000
+  use marbl_constants_mod, only : dps
+
+  use marbl_internal_types, only : autotroph_parms_type
+  use marbl_internal_types, only : zooplankton_parms_type
+  use marbl_internal_types, only : grazing_parms_type
+
+  use marbl_interface_types, only : marbl_tracer_read_type
 
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
   use marbl_sizes, only : grazer_prey_cnt
+  use marbl_sizes, only : ecosys_base_tracer_cnt
+  use marbl_sizes, only : ciso_tracer_cnt
+
+  use marbl_logging, only: marbl_log_type
 
   implicit none
 
@@ -32,110 +52,11 @@ module marbl_parms
   public
   save
 
-  !-----------------------------------------------------------------------------
-  ! marbl zooplankton, autotrophs and grazing arrays
-  !-----------------------------------------------------------------------------
-
-  integer (KIND=int_kind), parameter :: sp_ind   = 1  ! small phytoplankton
-  integer (KIND=int_kind), parameter :: diat_ind = 2  ! diatoms
-  integer (KIND=int_kind), parameter :: diaz_ind = 3  ! diazotrophs
-
-  type(zooplankton_type) :: zooplankton(zooplankton_cnt)
-  type(autotroph_type)   :: autotrophs(autotroph_cnt)
-  type(grazing_type)     :: grazing(grazer_prey_cnt, zooplankton_cnt)
-
   !---------------------------------------------------------------------
-  !  molecular weights and isotope standards
+  !  Variables read in via &marbl_parms_nml
   !---------------------------------------------------------------------
 
-  real(r8), parameter :: molw_Fe = 55.845_r8
-
-  ! Using scaled isotopic carbon pools, so Rstd =1
-  real(r8), parameter :: R13C_std = 1.0_r8  ! actual 13C/12C PDB standard ratio (Craig, 1957) = 1123.72e-5_r8
-  real(r8), parameter :: R14C_std = 1.0_r8  ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
-
-  !-----------------------------------------------------------------------
-  !  numbers
-  !-----------------------------------------------------------------------
-  
-  real (r8), parameter :: c0     =    0.0_r8
-  real (r8), parameter :: c1     =    1.0_r8
-  real (r8), parameter :: c2     =    2.0_r8
-  real (r8), parameter :: c3     =    3.0_r8
-  real (r8), parameter :: c4     =    4.0_r8
-  real (r8), parameter :: c5     =    5.0_r8
-  real (r8), parameter :: c8     =    8.0_r8
-  real (r8), parameter :: c10    =   10.0_r8
-  real (r8), parameter :: c16    =   16.0_r8
-  real (r8), parameter :: c1000  = 1000.0_r8
-  real (r8), parameter :: c10000 =10000.0_r8
-  real (r8), parameter :: c1p5   =    1.5_r8
-  real (r8), parameter :: p33    = c1/c3    
-  real (r8), parameter :: p5     = 0.500_r8 
-  real (r8), parameter :: p25    = 0.250_r8 
-  real (r8), parameter :: p125   = 0.125_r8 
-  real (r8), parameter :: p001   = 0.001_r8 
-  real (r8), parameter :: eps    = 1.0e-10_r8
-  real (r8), parameter :: eps2   = 1.0e-20_r8
-  real (r8), parameter :: bignum = 1.0e+30_r8
-
-  !-----------------------------------------------------------------------
-  !  conversion factors
-  !-----------------------------------------------------------------------
-
-  real (r8) :: mpercm    = .01_r8        ! meters per cm
-
-  !-----------------------------------------------------------------------
-  !  common formats for formatted output
-  !-----------------------------------------------------------------------
-
-  character (1), parameter :: char_delim = ','
-  character (9), parameter :: delim_fmt  = "(72('-'))"
-  character (9), parameter :: ndelim_fmt = "(72('='))"
-  character (5), parameter :: blank_fmt  = "(' ')"
-
-  !-----------------------------------------------------------------------------
-  !   epsilon values
-  !-----------------------------------------------------------------------------
-
-   real(kind=r8), parameter :: &
-      epsC      = 1.00e-8, & ! small C concentration (mmol C/m^3)
-      epsTinv   = 3.17e-8    ! small inverse time scale (1/year) (1/sec)
-
-  !-----------------------------------------------------------------------------
-  !   floating point constants used across marbl
-  !-----------------------------------------------------------------------------
-
-  REAL(KIND=r8), PARAMETER :: &
-       spd = 86400.0_r8,        & ! number of seconds in a day
-       dps = c1 / spd,          & ! number of days in a second
-       yps = c1 / (365.0_r8*spd)  ! number of years in a second
-
-
-  !-----------------------------------------------------------------------------
-  !   Redfield Ratios, dissolved & particulate
-  !-----------------------------------------------------------------------------
-
-  REAL(KIND=r8), PARAMETER :: &
-       parm_Red_D_C_P  = 117.0_r8,                 & ! carbon:phosphorus
-       parm_Red_D_N_P  =  16.0_r8,                 & ! nitrogen:phosphorus
-       parm_Red_D_O2_P = 170.0_r8,                 & ! oxygen:phosphorus
-       parm_Remin_D_O2_P = 138.0_r8,               & ! oxygen:phosphorus
-       parm_Red_P_C_P  = parm_Red_D_C_P,                 & ! carbon:phosphorus
-       parm_Red_D_C_N  = parm_Red_D_C_P/parm_Red_D_N_P,  & ! carbon:nitrogen
-       parm_Red_P_C_N  = parm_Red_D_C_N,                 & ! carbon:nitrogen
-       parm_Red_D_C_O2 = parm_Red_D_C_P/parm_Red_D_O2_P, & ! carbon:oxygen
-       parm_Remin_D_C_O2 = parm_Red_D_C_P/parm_Remin_D_O2_P, & ! carbon:oxygen
-       parm_Red_P_C_O2 = parm_Red_D_C_O2,                & ! carbon:oxygen
-       parm_Red_Fe_C   = 3.0e-6_r8,                & ! iron:carbon
-       parm_Red_D_C_O2_diaz = parm_Red_D_C_P/150.0_r8! carbon:oxygen
-                                                           ! for diazotrophs
-
-  !----------------------------------------------------------------------------
-  !   marbl parameters accessible via namelist input
-  !----------------------------------------------------------------------------
-
-  REAL(KIND=r8) :: &
+  real(kind=r8), target :: &
        parm_Fe_bioavail,      & ! fraction of Fe flux that is bioavailable
        parm_o2_min,           & ! min O2 needed for prod & consump. (nmol/cm^3)
        parm_o2_min_delta,     & ! width of min O2 range (nmol/cm^3)
@@ -150,64 +71,105 @@ module marbl_parms
        parm_POC_diss,         & ! base POC diss len scale
        parm_SiO2_diss,        & ! base SiO2 diss len scale
        parm_CaCO3_diss,       & ! base CaCO3 diss len scale
-       fe_max_scale2            ! unitless scaling coeff.
+       fe_max_scale2,         & ! unitless scaling coeff.
+       bury_coeff_rmean_timescale_years
 
-  REAL(KIND=r8), DIMENSION(4) :: &
+  real(kind=r8), dimension(4), target :: &
        parm_scalelen_z,       & ! depths of prescribed scalelen values
        parm_scalelen_vals       ! prescribed scalelen values
 
+  type(zooplankton_parms_type), target :: zooplankton(zooplankton_cnt)
+  type(autotroph_parms_type),   target :: autotrophs(autotroph_cnt)
+  type(grazing_parms_type),     target :: grazing(grazer_prey_cnt, zooplankton_cnt)
+
+  real(r8),            target :: iron_frac_in_dust            ! fraction by weight of iron in dust
+  real(r8),            target :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
+  character(char_len), target :: caco3_bury_thres_opt         ! option of threshold of caco3 burial ['fixed_depth', 'omega_calc']
+  real(r8),            target :: caco3_bury_thres_depth       ! threshold depth for caco3_bury_thres_opt='fixed_depth'
+  ! -----------
+  ! PON_sed_loss = PON_bury_coeff * Q * POC_sed_loss
+  ! factor is used to avoid overburying PON like POC
+  ! is when total C burial is matched to C riverine input
+  ! -----------
+  real(r8),            target :: PON_bury_coeff
+  character(char_len), target :: ciso_fract_factors             ! option for which biological fractionation calculation to use
+
+  character(len=char_len), allocatable, target, dimension(:) :: restore_short_names
+  ! Should be in marbl_forcing_nml when moved to driver!
+  character(len=char_len), allocatable, target, dimension(:) :: restore_filenames, &
+                                                                restore_file_varnames
+  real(r8), target :: rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
+
   !---------------------------------------------------------------------
-  !     Misc. Rate constants
+  !  Variables read in via &marbl_tracer_init_tmp_nml
   !---------------------------------------------------------------------
 
-  REAL(KIND=r8), PARAMETER :: &
+  character(char_len), target :: init_ecosys_option           ! namelist option for initialization of bgc
+  character(char_len), target :: init_ecosys_init_file        ! filename for option 'file'
+  character(char_len), target :: init_ecosys_init_file_fmt    ! file format for option 'file'
+  type(marbl_tracer_read_type), target :: tracer_init_ext(ecosys_base_tracer_cnt) ! namelist variable for initializing tracers
+
+  character(char_len), target :: ciso_init_ecosys_option        ! option for initialization of bgc
+  character(char_len), target :: ciso_init_ecosys_init_file     ! filename for option 'file'
+  character(char_len), target :: ciso_init_ecosys_init_file_fmt ! file format for option 'file'
+  type(marbl_tracer_read_type), target :: ciso_tracer_init_ext(ciso_tracer_cnt) ! namelist variable for initializing tracers
+
+  !---------------------------------------------------------------------
+  !  BGC parameters that are not part of marbl_parms_nml
+  !---------------------------------------------------------------------
+
+  ! Redfield Ratios, dissolved & particulate
+  real(kind=r8), parameter :: &
+       parm_Red_D_C_P  = 117.0_r8,                           & ! carbon:phosphorus
+       parm_Red_D_N_P  =  16.0_r8,                           & ! nitrogen:phosphorus
+       parm_Red_D_O2_P = 170.0_r8,                           & ! oxygen:phosphorus
+       parm_Remin_D_O2_P = 138.0_r8,                         & ! oxygen:phosphorus
+       parm_Red_P_C_P  = parm_Red_D_C_P,                     & ! carbon:phosphorus
+       parm_Red_D_C_N  = parm_Red_D_C_P/parm_Red_D_N_P,      & ! carbon:nitrogen
+       parm_Red_P_C_N  = parm_Red_D_C_N,                     & ! carbon:nitrogen
+       parm_Red_D_C_O2 = parm_Red_D_C_P/parm_Red_D_O2_P,     & ! carbon:oxygen
+       parm_Remin_D_C_O2 = parm_Red_D_C_P/parm_Remin_D_O2_P, & ! carbon:oxygen
+       parm_Red_P_C_O2 = parm_Red_D_C_O2,                    & ! carbon:oxygen
+       parm_Red_Fe_C   = 3.0e-6_r8,                          & ! iron:carbon
+       parm_Red_D_C_O2_diaz = parm_Red_D_C_P/150.0_r8          ! carbon:oxygen
+                                                               ! for diazotrophs
+
+  ! Misc. Rate constants
+  real(kind=r8), parameter :: &
        fe_scavenge_thres1 = 0.8e-3_r8,  & !upper thres. for Fe scavenging
        dust_fescav_scale  = 1.0e9         !dust scavenging scale factor
 
-  !---------------------------------------------------------------------
-  !     Compute iron remineralization and flux out.
-  !     dust remin gDust = 0.035 gFe      mol Fe     1e9 nmolFe
-  !                        --------- *  ---------- * ----------
-  !			    gDust       55.847 gFe     molFe
+  ! Compute iron remineralization and flux out.
+  ! dust remin gDust = 0.035 gFe      mol Fe     1e9 nmolFe
+  !                    --------- *  ---------- * ----------
+  !                      gDust      55.847 gFe     molFe
   !
-  !     dust_to_Fe          conversion - dust to iron (nmol Fe/g Dust) 
-  !---------------------------------------------------------------------
-
-  REAL(KIND=r8), PARAMETER :: &
+  ! dust_to_Fe          conversion - dust to iron (nmol Fe/g Dust)
+  real(kind=r8), parameter :: &
        dust_to_Fe=0.035_r8/55.847_r8*1.0e9_r8
- 
-  !----------------------------------------------------------------------------
-  !     Partitioning of phytoplankton growth, grazing and losses
-  !
-  !     All f_* variables are fractions and are non-dimensional
-  !----------------------------------------------------------------------------
 
-  REAL(KIND=r8), PARAMETER :: &
-      caco3_poc_min         = 0.40_r8,  & ! minimum proportionality between 
-                                          !   QCaCO3 and grazing losses to POC 
+  ! Partitioning of phytoplankton growth, grazing and losses
+  ! All f_* variables are fractions and are non-dimensional
+  real(kind=r8), parameter :: &
+      caco3_poc_min         = 0.40_r8,  & ! minimum proportionality between
+                                          !   QCaCO3 and grazing losses to POC
                                           !   (mmol C/mmol CaCO3)
       spc_poc_fac           = 0.10_r8,  & ! small phyto grazing factor (1/mmolC)
-      f_graze_sp_poc_lim    = 0.40_r8,  & 
-      f_photosp_CaCO3       = 0.40_r8,  & ! proportionality between small phyto 
+      f_graze_sp_poc_lim    = 0.40_r8,  &
+      f_photosp_CaCO3       = 0.40_r8,  & ! proportionality between small phyto
                                           !    production and CaCO3 production
       f_graze_CaCO3_remin   = 0.33_r8,  & ! fraction of spCaCO3 grazing which is remin
       f_graze_si_remin      = 0.50_r8,  & ! fraction of diatom Si grazing which is remin
       f_toDON               = 0.66_r8     ! fraction lower to DOM for DON
 
-  !----------------------------------------------------------------------------
-  !     fixed ratios
-  !----------------------------------------------------------------------------
-
-  REAL(KIND=r8), PARAMETER :: &
+  ! fixed ratios
+  real(kind=r8), parameter :: &
        r_Nfix_photo=1.25_r8         ! N fix relative to C fix (non-dim)
 
-  !-----------------------------------------------------------------------
-  !     SET FIXED RATIOS for N/C, P/C, SiO3/C, Fe/C
-  !     assumes C/N/P of 117/16/1 based on Anderson and Sarmiento, 1994
-  !     for diazotrophs a N/P of 45 is assumed based on Letelier & Karl, 1998
-  !-----------------------------------------------------------------------
-
-  REAL(KIND=r8), PARAMETER :: &
+  ! SET FIXED RATIOS for N/C, P/C, SiO3/C, Fe/C
+  ! assumes C/N/P of 117/16/1 based on Anderson and Sarmiento, 1994
+  ! for diazotrophs a N/P of 45 is assumed based on Letelier & Karl, 1998
+  real(kind=r8), parameter :: &
       Q             = 0.137_r8,  & !N/C ratio (mmol/mmol) of phyto & zoo
       Qp_zoo_pom    = 0.00855_r8,& !P/C ratio (mmol/mmol) zoo & pom
       Qfe_zoo       = 3.0e-6_r8, & !zooplankton fe/C ratio
@@ -218,11 +180,8 @@ module marbl_parms
       ! carbon:nitrogen ratio for denitrification
       denitrif_C_N  = parm_Red_D_C_P/136.0_r8
 
-  !----------------------------------------------------------------------------
-  !     loss term threshold parameters, chl:c ratios
-  !----------------------------------------------------------------------------
-
-  REAL(KIND=r8), PARAMETER :: &
+  ! loss term threshold parameters, chl:c ratios
+  real(kind=r8), parameter :: &
       thres_z1_auto     =  80.0e2_r8, & !autotroph threshold = C_loss_thres for z shallower than this (cm)
       thres_z2_auto     = 120.0e2_r8, & !autotroph threshold = 0 for z deeper than this (cm)
       thres_z1_zoo      = 110.0e2_r8, & !zooplankton threshold = C_loss_thres for z shallower than this (cm)
@@ -231,35 +190,12 @@ module marbl_parms
       CaCO3_temp_thres2 = -2.0_r8,  & !lower temp threshold
       CaCO3_sp_thres    = 2.5_r8      ! bloom condition thres (mmolC/m3)
 
-  !---------------------------------------------------------------------
-  !     grazing functions
-  !---------------------------------------------------------------------
-
-  INTEGER (INT_KIND), PARAMETER ::   &
-         grz_fnc_michaelis_menten = 1,       &
-         grz_fnc_sigmoidal        = 2
-
-  !---------------------------------------------------------------------
-  !     fraction of incoming shortwave assumed to be PAR
-  !---------------------------------------------------------------------
-
-  REAL(KIND=r8), PARAMETER :: &
+  ! fraction of incoming shortwave assumed to be PAR
+  real(kind=r8), parameter :: &
        f_qsw_par = 0.45_r8   ! PAR fraction
 
-        
-  !---------------------------------------------------------------------
-  !     Temperature parameters
-  !---------------------------------------------------------------------
-
-  REAL(KIND=r8), PARAMETER :: &
-       Tref = 30.0_r8, & ! reference temperature (C)
-       Q_10 = 1.7_r8     ! factor for temperature dependence (non-dim)
-
-  !---------------------------------------------------------------------
-  !  DOM parameters for refractory components and DOP uptake
-  !---------------------------------------------------------------------
-
-  REAL(KIND=r8), PARAMETER :: &
+  ! DOM parameters for refractory components and DOP uptake
+  real(kind=r8), parameter :: &
        DOC_reminR_light  = (c1/(365.0_r8*15.0_r8)) * dps, & ! remin rate for semi-labile DOC, 1/15yr
        DON_reminR_light  = (c1/(365.0_r8*15.0_r8)) * dps, & ! remin rate for semi-labile DON, 1/15yr
        DOP_reminR_light  = (c1/(365.0_r8*60.0_r8)) * dps, & ! remin rate for semi-labile DOP, 1/60yr
@@ -267,13 +203,13 @@ module marbl_parms
        DON_reminR_dark   = (c1/(365.0_r8*5.5_r8)) * dps,  & ! remin rate in the dark, 1/5.5yr
        DOP_reminR_dark   = (c1/(365.0_r8*4.5_r8)) * dps     ! remin rate in the dark, 1/4.5yr
 
-  REAL(KIND=r8), PARAMETER :: &
+  real(kind=r8), parameter :: &
        DOCr_reminR0      = (c1/(365.0_r8*16000.0_r8)) * dps, & ! remin rate for refractory DOC, 1/16000yr
        DONr_reminR0      = (c1/(365.0_r8*9500.0_r8)) * dps,  & ! remin rate for refractory DON, 1/9500yr
        DOPr_reminR0      = (c1/(365.0_r8*5500.0_r8)) * dps,  & ! remin rate for refractory DOP, 1/5500yr
        DOMr_reminR_photo = (c1/(365.0_r8*18.0_r8)) * dps       ! additional remin from photochemistry, 1/18yrs over top 10m
 
-  REAL(KIND=r8), PARAMETER :: &
+  real(kind=r8), parameter :: &
        DOCprod_refract  = 0.01_r8,                   & ! fraction of DOCprod to refractory pool
        DONprod_refract  = 0.0115_r8,                 & ! fraction of DONprod to refractory pool
        DOPprod_refract  = 0.003_r8,                  & ! fraction of DOPprod to refractory pool
@@ -284,213 +220,301 @@ module marbl_parms
        DONriv_refract   = 0.1_r8,                    & ! fraction of DON river input to refractory pool
        DOPriv_refract   = 0.025_r8                     ! fraction of DOP river input to refractory pool
 
+  !---------------------------------------------------------------------
+  !  Auxiliary variables (str -> int conversions, indices, etc)
+  !---------------------------------------------------------------------
+
+  integer (int_kind)            :: caco3_bury_thres_iopt
+  integer (int_kind), parameter :: caco3_bury_thres_iopt_fixed_depth = 1
+  integer (int_kind), parameter :: caco3_bury_thres_iopt_omega_calc  = 2
+
+  real(r8), dimension(:), allocatable :: inv_tau
+
+  ! grazing functions
+  integer (kind=int_kind), parameter ::           &
+         grz_fnc_michaelis_menten = 1,       &
+         grz_fnc_sigmoidal        = 2
+
   !*****************************************************************************
 
   public :: &
-       marbl_params_init, &
-       marbl_params_print
+       marbl_parms_read_namelist, &
+       marbl_parms_set_defaults
 
-  private :: &
-       marbl_params_set_defaults
-  
+  ! Variables used from other modules should be private
+  ! (So we don't accidentally use them from this module)
+  private :: r8, int_kind, log_kind, char_len
+  private :: c1, dps
+  private :: zooplankton_parms_type, autotroph_parms_type, grazing_parms_type
+  private :: autotroph_cnt, zooplankton_cnt, grazer_prey_cnt
+  private :: marbl_log_type
+
 contains
 
   !*****************************************************************************
 
-  subroutine marbl_params_set_defaults()
-    ! assign default parameter values
+  subroutine marbl_parms_set_defaults(km)
+    ! assign default values to all module variables
 
-    implicit none
+    use marbl_sizes           , only : marbl_total_tracer_cnt
+    use marbl_config_mod      , only : autotrophs_config
+    use marbl_config_mod      , only : zooplankton_config
+
+    integer,              intent(in)    :: km ! max number of levels
 
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    integer :: auto_ind, zoo_ind, prey_ind
+    integer :: m, n
     !---------------------------------------------------------------------------
-    
-    parm_Fe_bioavail       = 1.0_r8
-    parm_o2_min            = 5.0_r8
-    parm_o2_min_delta      = 5.0_r8
-    parm_kappa_nitrif      = 0.06_r8 * dps  ! (= 1/( days))
-    parm_nitrif_par_lim    = 1.0_r8
-    parm_labile_ratio      = 0.94_r8
-    parm_init_POC_bury_coeff=1.1_r8         ! x1 default
-    parm_init_POP_bury_coeff=1.1_r8         ! x1 default
-    parm_init_bSi_bury_coeff=1.0_r8         ! x1 default
-    parm_fe_scavenge_rate0 = 1.9_r8         ! x1 default
-    parm_f_prod_sp_CaCO3   = 0.065_r8       ! x1 default
-    parm_POC_diss          = 90.0e2_r8
-    parm_SiO2_diss         = 600.0e2_r8
-    parm_CaCO3_diss        = 450.0e2_r8
-    fe_max_scale2          = 2200.0_r8      ! x1 default
 
+    !-----------------------------------------------------------------------
+    !  &marbl_parms_nml
+    !-----------------------------------------------------------------------
+
+    parm_Fe_bioavail         = 1.0_r8
+    parm_o2_min              = 5.0_r8
+    parm_o2_min_delta        = 5.0_r8
+    parm_kappa_nitrif        = 0.06_r8 * dps  ! (= 1/( days))
+    parm_nitrif_par_lim      = 1.0_r8
+    parm_labile_ratio        = 0.94_r8
+    parm_init_POC_bury_coeff = 1.1_r8         ! x1 default
+    parm_init_POP_bury_coeff = 1.1_r8         ! x1 default
+    parm_init_bSi_bury_coeff = 1.0_r8         ! x1 default
+    parm_fe_scavenge_rate0   = 1.9_r8         ! x1 default
+    parm_f_prod_sp_CaCO3     = 0.065_r8       ! x1 default
+    parm_POC_diss            = 90.0e2_r8
+    parm_SiO2_diss           = 600.0e2_r8
+    parm_CaCO3_diss          = 450.0e2_r8
+    fe_max_scale2            = 2200.0_r8      ! x1 default
+    bury_coeff_rmean_timescale_years = 10.0_r8
     parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8,  750.0e2_r8 /)
     parm_scalelen_vals = (/     1.0_r8,     3.3_r8,     4.6_r8,      5.0_r8 /) ! x1 default
 
-    zoo_ind = 1
-    zooplankton(zoo_ind)%sname          ='zoo'
-    zooplankton(zoo_ind)%lname          = 'Zooplankton'
-    zooplankton(zoo_ind)%z_mort_0       = 0.1_r8 * dps
-    zooplankton(zoo_ind)%z_mort2_0      = 0.4_r8 * dps
-    zooplankton(zoo_ind)%loss_thres     = 0.075_r8     !zoo conc. where losses go to zero
+    ! Autotrophs
+    do n=1,autotroph_cnt
+      select case (trim(autotrophs_config(n)%sname))
+        case ('sp')
+          autotrophs(n)%kFe           = 0.03e-3_r8
+          autotrophs(n)%kPO4          = 0.01_r8
+          autotrophs(n)%kDOP          = 0.2_r8
+          autotrophs(n)%kNO3          = 0.25_r8
+          autotrophs(n)%kNH4          = 0.0125_r8
+          autotrophs(n)%kSiO3         = 0.0_r8
+          autotrophs(n)%Qp            = 0.00855_r8
+          autotrophs(n)%gQfe_0        = 30.0e-6_r8
+          autotrophs(n)%gQfe_min      = 3.0e-6_r8
+          autotrophs(n)%alphaPI       = 0.39_r8 * dps
+          autotrophs(n)%PCref         = 5.5_r8 * dps
+          autotrophs(n)%thetaN_max    = 2.5_r8
+          autotrophs(n)%loss_thres    = 0.02_r8
+          autotrophs(n)%loss_thres2   = 0.0_r8
+          autotrophs(n)%temp_thres    = -10.0_r8
+          autotrophs(n)%mort          = 0.1_r8 * dps
+          autotrophs(n)%mort2         = 0.01_r8 * dps
+          autotrophs(n)%agg_rate_max  = 0.5_r8
+          autotrophs(n)%agg_rate_min  = 0.01_r8
+          autotrophs(n)%loss_poc      = 0.0_r8
+        case ('diat')
+          autotrophs(n)%kFe           = 0.07e-3_r8
+          autotrophs(n)%kPO4          = 0.05_r8
+          autotrophs(n)%kDOP          = 0.5_r8
+          autotrophs(n)%kNO3          = 1.0_r8
+          autotrophs(n)%kNH4          = 0.05_r8
+          autotrophs(n)%kSiO3         = 0.8_r8
+          autotrophs(n)%Qp            = 0.00855_r8
+          autotrophs(n)%gQfe_0        = 30.0e-6_r8
+          autotrophs(n)%gQfe_min      = 3.0e-6_r8
+          autotrophs(n)%alphaPI       = 0.29_r8 * dps
+          autotrophs(n)%PCref         = 5.5_r8 * dps
+          autotrophs(n)%thetaN_max    = 4.0_r8
+          autotrophs(n)%loss_thres    = 0.02_r8
+          autotrophs(n)%loss_thres2   = 0.0_r8
+          autotrophs(n)%temp_thres    = -10.0_r8
+          autotrophs(n)%mort          = 0.1_r8 * dps
+          autotrophs(n)%mort2         = 0.01_r8 * dps
+          autotrophs(n)%agg_rate_max  = 0.5_r8
+          autotrophs(n)%agg_rate_min  = 0.02_r8
+          autotrophs(n)%loss_poc      = 0.0_r8
+        case ('diaz')
+          autotrophs(n)%kFe           = 0.03e-3_r8
+          autotrophs(n)%kPO4          = 0.0125_r8
+          autotrophs(n)%kDOP          = 0.05_r8
+          autotrophs(n)%kNO3          = 4.0_r8
+          autotrophs(n)%kNH4          = 0.4_r8
+          autotrophs(n)%kSiO3         = 0.0_r8
+          autotrophs(n)%Qp            = 0.002735_r8
+          autotrophs(n)%gQfe_0        = 60.0e-6_r8
+          autotrophs(n)%gQfe_min      = 6.0e-6_r8
+          autotrophs(n)%alphaPI       = 0.39_r8 * dps
+          autotrophs(n)%PCref         = 1.55_r8 * dps
+          autotrophs(n)%thetaN_max    = 2.5_r8
+          autotrophs(n)%loss_thres    = 0.02_r8
+          autotrophs(n)%loss_thres2   = 0.001_r8
+          autotrophs(n)%temp_thres    = 15.0_r8
+          autotrophs(n)%mort          = 0.1_r8 * dps
+          autotrophs(n)%mort2         = 0.01_r8 * dps
+          autotrophs(n)%agg_rate_max  = 0.5_r8
+          autotrophs(n)%agg_rate_min  = 0.01_r8
+          autotrophs(n)%loss_poc      = 0.0_r8
+        case DEFAULT
+          autotrophs(n)%kFe           = c0
+          autotrophs(n)%kPO4          = c0
+          autotrophs(n)%kDOP          = c0
+          autotrophs(n)%kNO3          = c0
+          autotrophs(n)%kNH4          = c0
+          autotrophs(n)%kSiO3         = c0
+          autotrophs(n)%Qp            = c0
+          autotrophs(n)%gQfe_0        = c0
+          autotrophs(n)%gQfe_min      = c0
+          autotrophs(n)%alphaPI       = c0
+          autotrophs(n)%PCref         = c0
+          autotrophs(n)%thetaN_max    = c0
+          autotrophs(n)%loss_thres    = c0
+          autotrophs(n)%loss_thres2   = c0
+          autotrophs(n)%temp_thres    = c0
+          autotrophs(n)%mort          = c0
+          autotrophs(n)%mort2         = c0
+          autotrophs(n)%agg_rate_max  = c0
+          autotrophs(n)%agg_rate_min  = c0
+          autotrophs(n)%loss_poc      = c0
+      end select
+    end do
 
-    auto_ind = sp_ind
-    autotrophs(auto_ind)%sname         = 'sp'
-    autotrophs(auto_ind)%lname         = 'Small Phyto'
-    autotrophs(auto_ind)%Nfixer        = .false.
-    autotrophs(auto_ind)%imp_calcifier = .true.
-    autotrophs(auto_ind)%exp_calcifier = .false.
-    autotrophs(auto_ind)%kFe           = 0.03e-3_r8
-    autotrophs(auto_ind)%kPO4          = 0.01_r8
-    autotrophs(auto_ind)%kDOP          = 0.2_r8
-    autotrophs(auto_ind)%kNO3          = 0.25_r8
-    autotrophs(auto_ind)%kNH4          = 0.0125_r8
-    autotrophs(auto_ind)%kSiO3         = 0.0_r8
-    autotrophs(auto_ind)%Qp            = 0.00855_r8
-    autotrophs(auto_ind)%gQfe_0        = 30.0e-6_r8
-    autotrophs(auto_ind)%gQfe_min      = 3.0e-6_r8
-    autotrophs(auto_ind)%alphaPI       = 0.39_r8 * dps
-    autotrophs(auto_ind)%PCref         = 5.5_r8 * dps
-    autotrophs(auto_ind)%thetaN_max    = 2.5_r8
-    autotrophs(auto_ind)%loss_thres    = 0.02_r8
-    autotrophs(auto_ind)%loss_thres2   = 0.0_r8
-    autotrophs(auto_ind)%temp_thres    = -10.0_r8
-    autotrophs(auto_ind)%mort          = 0.1_r8 * dps
-    autotrophs(auto_ind)%mort2         = 0.01_r8 * dps
-    autotrophs(auto_ind)%agg_rate_max  = 0.5_r8
-    autotrophs(auto_ind)%agg_rate_min  = 0.01_r8
-    autotrophs(auto_ind)%loss_poc      = 0.0_r8
+    ! zooplankton
+    ! TODO: add do loop and select case
+    do n=1,zooplankton_cnt
+      select case (trim(zooplankton_config(n)%sname))
+        case ('zoo')
+          zooplankton(n)%z_mort_0   = 0.1_r8 * dps
+          zooplankton(n)%z_mort2_0  = 0.4_r8 * dps
+          zooplankton(n)%loss_thres = 0.075_r8
+        case DEFAULT
+          zooplankton(n)%z_mort_0   = c0
+          zooplankton(n)%z_mort2_0  = c0
+          zooplankton(n)%loss_thres = c0
+      end select
+    end do
 
-    auto_ind = diat_ind
-    autotrophs(auto_ind)%sname         = 'diat'
-    autotrophs(auto_ind)%lname         = 'Diatom'
-    autotrophs(auto_ind)%Nfixer        = .false.
-    autotrophs(auto_ind)%imp_calcifier = .false.
-    autotrophs(auto_ind)%exp_calcifier = .false.
-    autotrophs(auto_ind)%kFe           = 0.07e-3_r8
-    autotrophs(auto_ind)%kPO4          = 0.05_r8
-    autotrophs(auto_ind)%kDOP          = 0.5_r8
-    autotrophs(auto_ind)%kNO3          = 1.0_r8
-    autotrophs(auto_ind)%kNH4          = 0.05_r8
-    autotrophs(auto_ind)%kSiO3         = 0.8_r8
-    autotrophs(auto_ind)%Qp            = 0.00855_r8
-    autotrophs(auto_ind)%gQfe_0        = 30.0e-6_r8
-    autotrophs(auto_ind)%gQfe_min      = 3.0e-6_r8
-    autotrophs(auto_ind)%alphaPI       = 0.29_r8 * dps
-    autotrophs(auto_ind)%PCref         = 5.5_r8 * dps
-    autotrophs(auto_ind)%thetaN_max    = 4.0_r8
-    autotrophs(auto_ind)%loss_thres    = 0.02_r8
-    autotrophs(auto_ind)%loss_thres2   = 0.0_r8
-    autotrophs(auto_ind)%temp_thres    = -10.0_r8
-    autotrophs(auto_ind)%mort          = 0.1_r8 * dps
-    autotrophs(auto_ind)%mort2         = 0.01_r8 * dps
-    autotrophs(auto_ind)%agg_rate_max  = 0.5_r8
-    autotrophs(auto_ind)%agg_rate_min  = 0.02_r8
-    autotrophs(auto_ind)%loss_poc      = 0.0_r8
-   
-
-    auto_ind = diaz_ind
-    autotrophs(auto_ind)%sname         = 'diaz'
-    autotrophs(auto_ind)%lname         = 'Diazotroph'
-    autotrophs(auto_ind)%Nfixer        = .true.
-    autotrophs(auto_ind)%imp_calcifier = .false.
-    autotrophs(auto_ind)%exp_calcifier = .false.
-    autotrophs(auto_ind)%kFe           = 0.03e-3_r8
-    autotrophs(auto_ind)%kPO4          = 0.0125_r8
-    autotrophs(auto_ind)%kDOP          = 0.05_r8
-    autotrophs(auto_ind)%kNO3          = 4.0_r8
-    autotrophs(auto_ind)%kNH4          = 0.4_r8
-    autotrophs(auto_ind)%kSiO3         = 0.0_r8
-    autotrophs(auto_ind)%Qp            = 0.002735_r8
-    autotrophs(auto_ind)%gQfe_0        = 60.0e-6_r8
-    autotrophs(auto_ind)%gQfe_min      = 6.0e-6_r8
-    autotrophs(auto_ind)%alphaPI       = 0.39_r8 * dps
-    autotrophs(auto_ind)%PCref         = 1.55_r8 * dps
-    autotrophs(auto_ind)%thetaN_max    = 2.5_r8
-    autotrophs(auto_ind)%loss_thres    = 0.02_r8
-    autotrophs(auto_ind)%loss_thres2   = 0.001_r8
-    autotrophs(auto_ind)%temp_thres    = 15.0_r8
-    autotrophs(auto_ind)%mort          = 0.1_r8 * dps
-    autotrophs(auto_ind)%mort2         = 0.01_r8 * dps
-    autotrophs(auto_ind)%agg_rate_max  = 0.5_r8
-    autotrophs(auto_ind)%agg_rate_min  = 0.01_r8
-    autotrophs(auto_ind)%loss_poc      = 0.0_r8
- 
-
-    !---------------------------------------------------------------------------
     ! predator-prey relationships
-    !---------------------------------------------------------------------------
-    zoo_ind = 1
-    prey_ind = sp_ind
-    grazing(prey_ind,zoo_ind)%sname            = 'grz_' // autotrophs(prey_ind)%sname // '_' // zooplankton(zoo_ind)%sname
-    grazing(prey_ind,zoo_ind)%lname            = 'Grazing of ' // autotrophs(prey_ind)%sname // ' by ' // zooplankton(zoo_ind)%sname
-    grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
-    grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
-    grazing(prey_ind,zoo_ind)%zoo_ind          = -1
-    grazing(prey_ind,zoo_ind)%zoo_ind_cnt      = 0
-    grazing(prey_ind,zoo_ind)%z_umax_0         = 3.25_r8 * dps
-    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8              
-    grazing(prey_ind,zoo_ind)%graze_zoo        = 0.3_r8
-    grazing(prey_ind,zoo_ind)%graze_poc        = 0.0_r8
-    grazing(prey_ind,zoo_ind)%graze_doc        = 0.06_r8
-    grazing(prey_ind,zoo_ind)%f_zoo_detr       = 0.1_r8
-    grazing(prey_ind,zoo_ind)%grazing_function = grz_fnc_michaelis_menten
+    do n=1,zooplankton_cnt
+      do m=1,grazer_prey_cnt
 
-    prey_ind = diat_ind
-    grazing(prey_ind,zoo_ind)%sname            = 'grz_' // autotrophs(prey_ind)%sname // '_' // zooplankton(zoo_ind)%sname
-    grazing(prey_ind,zoo_ind)%lname            = 'Grazing of ' // autotrophs(prey_ind)%sname // ' by ' // zooplankton(zoo_ind)%sname
-    grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
-    grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
-    grazing(prey_ind,zoo_ind)%zoo_ind          = -1
-    grazing(prey_ind,zoo_ind)%zoo_ind_cnt      = 0
-    grazing(prey_ind,zoo_ind)%z_umax_0         = 2.9_r8 * dps
-    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8              
-    grazing(prey_ind,zoo_ind)%graze_zoo        = 0.3_r8
-    grazing(prey_ind,zoo_ind)%graze_poc        = 0.4_r8
-    grazing(prey_ind,zoo_ind)%graze_doc        = 0.06_r8
-    grazing(prey_ind,zoo_ind)%f_zoo_detr       = 0.2_r8
-    grazing(prey_ind,zoo_ind)%grazing_function = grz_fnc_michaelis_menten
+        ! Properties that are the same for all grazers
+        grazing(m,n)%auto_ind(:)      = 0
+        grazing(m,n)%auto_ind(1)      = m
+        grazing(m,n)%zoo_ind          = -1
 
-    prey_ind = diaz_ind
-    grazing(prey_ind,zoo_ind)%sname            = 'grz_' // autotrophs(prey_ind)%sname // '_' // zooplankton(zoo_ind)%sname
-    grazing(prey_ind,zoo_ind)%lname            = 'Grazing of ' // autotrophs(prey_ind)%sname // ' by ' // zooplankton(zoo_ind)%sname
-    grazing(prey_ind,zoo_ind)%auto_ind(1)      = prey_ind
-    grazing(prey_ind,zoo_ind)%auto_ind_cnt     = 1
-    grazing(prey_ind,zoo_ind)%zoo_ind          = -1
-    grazing(prey_ind,zoo_ind)%zoo_ind_cnt      = 0
-    grazing(prey_ind,zoo_ind)%z_umax_0         = 1.85_r8 * dps
-    grazing(prey_ind,zoo_ind)%z_grz            = 1.15_r8              
-    grazing(prey_ind,zoo_ind)%graze_zoo        = 0.3_r8
-    grazing(prey_ind,zoo_ind)%graze_poc        = 0.08_r8
-    grazing(prey_ind,zoo_ind)%graze_doc        = 0.06_r8
-    grazing(prey_ind,zoo_ind)%f_zoo_detr       = 0.1_r8
-    grazing(prey_ind,zoo_ind)%grazing_function = grz_fnc_michaelis_menten
+        ! Properties that depend on m & n
+        if ((trim(zooplankton_config(n)%sname).eq.'zoo').and.                 &
+            (trim(autotrophs_config(m)%sname).eq.'sp')) then
+          grazing(m,n)%z_umax_0         = 3.25_r8 * dps
+          grazing(m,n)%z_grz            = 1.15_r8
+          grazing(m,n)%graze_zoo        = 0.3_r8
+          grazing(m,n)%graze_poc        = 0.0_r8
+          grazing(m,n)%graze_doc        = 0.06_r8
+          grazing(m,n)%f_zoo_detr       = 0.1_r8
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+        elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
+                (trim(autotrophs_config(m)%sname).eq.'diat')) then
+          grazing(m,n)%z_umax_0         = 2.9_r8 * dps
+          grazing(m,n)%z_grz            = 1.15_r8
+          grazing(m,n)%graze_zoo        = 0.3_r8
+          grazing(m,n)%graze_poc        = 0.4_r8
+          grazing(m,n)%graze_doc        = 0.06_r8
+          grazing(m,n)%f_zoo_detr       = 0.2_r8
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+        elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
+                (trim(autotrophs_config(m)%sname).eq.'diaz')) then
+          grazing(m,n)%z_umax_0         = 1.85_r8 * dps
+          grazing(m,n)%z_grz            = 1.15_r8
+          grazing(m,n)%graze_zoo        = 0.3_r8
+          grazing(m,n)%graze_poc        = 0.08_r8
+          grazing(m,n)%graze_doc        = 0.06_r8
+          grazing(m,n)%f_zoo_detr       = 0.1_r8
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+        else
+          grazing(m,n)%z_umax_0         = c0
+          grazing(m,n)%z_grz            = c0
+          grazing(m,n)%graze_zoo        = c0
+          grazing(m,n)%graze_poc        = c0
+          grazing(m,n)%graze_doc        = c0
+          grazing(m,n)%f_zoo_detr       = c0
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+        end if
+      end do
+    end do
 
-  end subroutine marbl_params_set_defaults
+    iron_frac_in_dust      = 0.035_r8 * 0.01_r8
+    iron_frac_in_bc        = 0.06_r8
+    caco3_bury_thres_opt   = 'omega_calc'
+    caco3_bury_thres_depth = 3000.0e2
+    PON_bury_coeff         = 0.5_r8
+    ciso_fract_factors     = 'Rau'
+
+    ! FIXME #69: not thread-safe!
+    if (.not.allocated(inv_tau)) &
+      allocate(inv_tau(km))
+    if (.not.allocated(restore_short_names)) &
+      allocate(restore_short_names(marbl_total_tracer_cnt))
+    if (.not.allocated(restore_filenames)) &
+      allocate(restore_filenames(marbl_total_tracer_cnt))
+    if (.not.allocated(restore_file_varnames)) &
+      allocate(restore_file_varnames(marbl_total_tracer_cnt))
+
+    ! initialize namelist variables to default values
+    restore_short_names = ''
+    restore_filenames = ''
+    restore_file_varnames = ''
+
+    rest_time_inv_surf = c0
+    rest_time_inv_deep = c0
+    rest_z0 = c1000
+    rest_z1 = c2*c1000
+
+    !-----------------------------------------------------------------------
+    !  &marbl_tracer_init_tmp_nml
+    !-----------------------------------------------------------------------
+
+    init_ecosys_option = 'unknown'
+    init_ecosys_init_file = 'unknown'
+    init_ecosys_init_file_fmt = 'bin'
+    do n = 1, ecosys_base_tracer_cnt
+       call set_defaults_tcr_rd(tracer_init_ext(n))
+    end do
+
+    ciso_init_ecosys_option                 = 'unknown'
+    ciso_init_ecosys_init_file              = 'unknown'
+    ciso_init_ecosys_init_file_fmt          = 'bin'
+    do n = 1,ciso_tracer_cnt
+       call set_defaults_tcr_rd(ciso_tracer_init_ext(n))
+    end do
+
+  end subroutine marbl_parms_set_defaults
 
   !*****************************************************************************
 
-  subroutine marbl_params_init(nl_buffer, marbl_status_log)
+  subroutine marbl_parms_read_namelist(nl_buffer, marbl_status_log)
 
     use marbl_namelist_mod, only : marbl_nl_cnt
     use marbl_namelist_mod, only : marbl_nl_buffer_size
     use marbl_namelist_mod, only : marbl_namelist
-    use marbl_logging     , only: marbl_log_type
 
-    implicit none
-
-    character(marbl_nl_buffer_size), dimension(marbl_nl_cnt), intent(in) :: nl_buffer
-    type(marbl_log_type), intent(inout) :: marbl_status_log
+    character(marbl_nl_buffer_size), intent(in)    :: nl_buffer(:)
+    type(marbl_log_type),            intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    CHARACTER(LEN=*), PARAMETER :: subname = 'marbl_parms:marbl_parms_init'
+    character(*), parameter :: subname = 'marbl_parms:marbl_parms_read_namelist'
+    character(len=char_len) :: log_message
     character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
 
-    integer(kind=int_kind) :: io_error
+    integer (int_kind)           :: n                           ! index for looping over tracers
+    integer (int_kind)           :: nml_error                   ! namelist i/o error flag
+    integer (int_kind)           :: zoo_ind                     ! zooplankton functional group index
 
-    NAMELIST /ecosys_parms_nml/ &
+    NAMELIST /marbl_parms_nml/ &
          parm_Fe_bioavail, &
          parm_o2_min, &
          parm_o2_min_delta, &
@@ -506,125 +530,1072 @@ contains
          parm_SiO2_diss, &
          parm_CaCO3_diss, &
          fe_max_scale2, &
+         iron_frac_in_dust, &
+         iron_frac_in_bc, &
+         caco3_bury_thres_opt, &
+         caco3_bury_thres_depth, &
+         PON_bury_coeff, &
+         ciso_fract_factors, &
+         restore_short_names, &
+         restore_filenames, &
+         restore_file_varnames, &
+         rest_time_inv_surf, &
+         rest_time_inv_deep, &
+         rest_z0, &
+         rest_z1, &
+         bury_coeff_rmean_timescale_years, &
          parm_scalelen_z, &
          parm_scalelen_vals, &
          autotrophs, & 
          zooplankton, &
          grazing
 
-    !---------------------------------------------------------------------------
-    ! set defaults for namelist variables before reading them
-    !---------------------------------------------------------------------------
+    namelist /marbl_tracer_init_tmp_nml/                                      &
+         init_ecosys_option, init_ecosys_init_file, tracer_init_ext,          &
+         init_ecosys_init_file_fmt, ciso_init_ecosys_option,                  &
+         ciso_init_ecosys_init_file, ciso_init_ecosys_init_file_fmt,          &
+         ciso_tracer_init_ext
 
-    call marbl_params_set_defaults()
-
     !---------------------------------------------------------------------------
-    ! read in namelist to override some defaults
+    ! read the &marbl_parms_nml namelist
     !---------------------------------------------------------------------------
-
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'ecosys_parms_nml')
-    read(tmp_nl_buffer, nml=ecosys_parms_nml, iostat=io_error)
-    if (io_error /= 0) then
-       call marbl_status_log%log_error("Error reading ecosys_parms_nml", subname)
-       return
-    else
-       ! FIXME #16: this is printing contents of pop_in, not the entire ecosys_parms_nml
-      call marbl_status_log%log_namelist('ecosys_parms_nml', tmp_nl_buffer, subname)
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_parms_nml', marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('marbl_namelist', subname)
+      return
     end if
 
-  end subroutine marbl_params_init
+    read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=nml_error)
+    if (nml_error /= 0) then
+      write(log_message, "(A)") 'error reading &marbl_parms_nml'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    !-----------------------------------------------------------------------
+    ! read the &marbl_tracer_init_tmp_nml namelist
+    !-----------------------------------------------------------------------
+    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_tracer_init_tmp_nml', marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('marbl_namelist', subname)
+      return
+    end if
+
+    read(tmp_nl_buffer, nml=marbl_tracer_init_tmp_nml, iostat=nml_error)
+    if (nml_error /= 0) then
+      write(log_message, "(A)") 'error reading &marbl_tracer_init_tmp_nml'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+  end subroutine marbl_parms_read_namelist
 
   !*****************************************************************************
 
-  subroutine marbl_params_print(stdout)
-    ! echo all parameters to the specified output file
+  subroutine marbl_define_parameters(this, marbl_status_log)
 
-    implicit none
+    use marbl_config_mod, only : ciso_on
+    use marbl_config_mod, only : log_add_var_error
+    use marbl_config_mod, only : autotrophs_config
+    use marbl_config_mod, only : zooplankton_config
+    use marbl_config_mod, only : grazing_config
 
-    integer, intent(in) :: stdout
+    class(marbl_config_and_parms_type), intent(inout) :: this
+    type(marbl_log_type),    intent(inout) :: marbl_status_log
 
-    integer :: zoo_ind, auto_ind, prey_ind
-    
-    !---------------------------------------------------------------------------
+    character(*), parameter :: subname = 'marbl_parms:marbl_define_parameters'
+    character(len=char_len) :: log_message
+    character(len=char_len) :: sname, lname, units, datatype, group
+    real(r8),                pointer :: rptr => NULL()
+    integer(int_kind),       pointer :: iptr => NULL()
+    logical(log_kind),       pointer :: lptr => NULL()
+    character(len=char_len), pointer :: sptr => NULL()
 
-    write(stdout, *) '----------------------------------------'
-    write(stdout, *) '----- marbl_parms namelist values -----'
-    write(stdout, *) 'parm_Fe_bioavail       = ', parm_Fe_bioavail
-    write(stdout, *) 'parm_o2_min            = ', parm_o2_min
-    write(stdout, *) 'parm_o2_min_delta      = ', parm_o2_min_delta
-    write(stdout, *) 'parm_kappa_nitrif      = ', parm_kappa_nitrif
-    write(stdout, *) 'parm_nitrif_par_lim    = ', parm_nitrif_par_lim
-    write(stdout, *) 'parm_labile_ratio      = ', parm_labile_ratio
-    write(stdout, *) 'parm_init_POC_bury_coeff=', parm_init_POC_bury_coeff
-    write(stdout, *) 'parm_init_POP_bury_coeff=', parm_init_POP_bury_coeff
-    write(stdout, *) 'parm_init_bSi_bury_coeff=', parm_init_bSi_bury_coeff
-    write(stdout, *) 'parm_fe_scavenge_rate0 = ', parm_fe_scavenge_rate0
-    write(stdout, *) 'parm_f_prod_sp_CaCO3   = ', parm_f_prod_sp_CaCO3
-    write(stdout, *) 'parm_POC_diss          = ', parm_POC_diss
-    write(stdout, *) 'parm_SiO2_diss         = ', parm_SiO2_diss
-    write(stdout, *) 'parm_CaCO3_diss        = ', parm_CaCO3_diss
-    write(stdout, *) 'fe_max_scale2          = ', fe_max_scale2
-    write(stdout, *) 'parm_scalelen_z        = ', parm_scalelen_z
-    write(stdout, *) 'parm_scalelen_vals     = ', parm_scalelen_vals
+    character(len=char_len) :: prefix, comment
+    integer :: m, n, cnt
 
-    do zoo_ind = 1, zooplankton_cnt
-       write(stdout, *) 'lname('      , trim(zooplankton(zoo_ind)%sname), ') = ', zooplankton(zoo_ind)%lname
-       write(stdout, *) 'z_mort_0('   , trim(zooplankton(zoo_ind)%sname), ') = ', zooplankton(zoo_ind)%z_mort_0
-       write(stdout, *) 'z_mort2_0('  , trim(zooplankton(zoo_ind)%sname), ') = ', zooplankton(zoo_ind)%z_mort2_0
-       write(stdout, *) 'loss_thres(' , trim(zooplankton(zoo_ind)%sname), ') = ', zooplankton(zoo_ind)%loss_thres
+    if (associated(this%vars)) then
+      write(log_message, "(A)") "this%parameters has been constructed already"
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    this%cnt = 0
+    allocate(this%vars(this%cnt))
+
+    !-----------------!
+    ! marbl_parms_nml !
+    !-----------------!
+
+    sname     = 'parm_Fe_bioavail'
+    lname     = 'Fraction of Fe flux that is bioavailable'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_Fe_bioavail
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_o2_min'
+    lname     = 'Minimum O2 needed for production and consumption'
+    units     = 'nmol/cm^3'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_o2_min
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_o2_min_delta'
+    lname     = 'Width of minimum O2 range'
+    units     = 'nmol/cm^3'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_o2_min_delta
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_kappa_nitrif'
+    lname     = 'Nitrification inverse time constant'
+    units     = '1/s'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_kappa_nitrif
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_nitrif_par_lim'
+    lname     = 'PAR limit for nitrification'
+    units     = 'W/m^2'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_nitrif_par_lim
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_labile_ratio'
+    lname     = 'Fraction of loss to DOC that is routed directly to DIC'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_labile_ratio
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_init_POC_bury_coeff'
+    lname     = 'initial scale factor for burial of POC, PON'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_init_POC_bury_coeff
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_init_POP_bury_coeff'
+    lname     = 'initial scale factor for burial of POP'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_init_POP_bury_coeff
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_init_bSi_bury_coeff'
+    lname     = 'initial scale factor for burial of bSi'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_init_bSi_bury_coeff
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_fe_scavenge_rate0'
+    lname     = 'base scavenging rate'
+    units     = '1/yr'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_fe_scavenge_rate0
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_f_prod_sp_CaCO3'
+    lname     = 'Fraction of sp production as CaCO3 production'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_f_prod_sp_CaCO3
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_POC_diss'
+    lname     = 'base POC dissolution length scale'
+    units     = 'cm'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_POC_diss
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_SiO2_diss'
+    lname     = 'base SiO2 dissolution length scale'
+    units     = 'cm'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_SiO2_diss
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_CaCO3_diss'
+    lname     = 'base CaCO3 dissolution length scale'
+    units     = 'cm'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_CaCO3_diss
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'fe_max_scale2'
+    lname     = 'Scaling coefficient'
+    units     = 'm^3 / mmol / yr'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => fe_max_scale2
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr, add_newline=.true.)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'bury_coeff_rmean_timescale_years'
+    lname     = 'Timescale for bury coefficient running means'
+    units     = 'yr'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => bury_coeff_rmean_timescale_years
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr, add_newline=.true.)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_scalelen_z'
+    lname     = 'Depths of prescribed scale length values'
+    units     = 'cm'
+    group     = 'marbl_parms_nml'
+    call this%add_var_1d_r8(sname, lname, units, group, parm_scalelen_z,    &
+                              marbl_status_log, add_newline=.true.)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
+      return
+    end if
+
+    sname     = 'parm_scalelen_vals'
+    lname     = 'Prescribed scale length values'
+    units     = 'cm'
+    group     = 'marbl_parms_nml'
+    call this%add_var_1d_r8(sname, lname, units, group, parm_scalelen_vals, &
+                              marbl_status_log, add_newline=.true.)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
+      return
+    end if
+
+    do n=1,size(autotrophs)
+      write(prefix, "(A,I0,A)") 'autotrophs(', n, ')%'
+      write(comment, "(2A)") 'autotroph short name = ',                       &
+                             trim(autotrophs_config(n)%sname)
+
+      write(sname, "(2A)") trim(prefix), 'kFe'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = 'nmol/cm^3'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kFe
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'kPO4'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = 'nmol/cm^3'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kPO4
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'kDOP'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = 'nmol/cm^3'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kDOP
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'kNO3'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = 'nmol/cm^3'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kNO3
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'kNH4'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = 'nmol/cm^3'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kNH4
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'kSiO3'
+      lname    = 'nutrient uptake half-sat constants'
+      units    = 'nmol/cm^3'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%kSiO3
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'Qp'
+      lname    = 'P/C ratio'
+      units    = 'unitless'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%Qp
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'gQfe_0'
+      lname    = 'initial Fe/C ratio'
+      units    = 'unitless'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%gQFe_0
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'gQfe_min'
+      lname    = 'minimum Fe/C ratio'
+      units    = 'unitless'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%gQFe_min
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'alphaPi'
+      lname    = 'Initial slope of P_I curve (GD98)'
+      units    = 'mmol C m^2 / (mg Chl W s)'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%alphaPi
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'PCref'
+      lname    = 'max C-spec growth rate at Tref'
+      units    = '1/s'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%PCref
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'thetaN_max'
+      lname    = 'max thetaN (Chl/N)'
+      units    = 'mg Chl / mmol N'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%thetaN_max
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'loss_thres'
+      lname    = 'concentration where losses go to zero'
+      units    = 'nmol/cm^3'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%loss_thres
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'loss_thres2'
+      lname    = 'concentration where losses go to zero'
+      units    = 'nmol/cm^3'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%loss_thres2
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'temp_thres'
+      lname    = 'Temperature where concentration threshold and photosynthesis rate drop'
+      units    = 'deg C'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%temp_thres
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'mort'
+      lname    = 'linear mortality rate'
+      units    = '1/s'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%mort
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'mort2'
+      lname    = 'quadratic mortality rate'
+      units    = '1/s/(mmol C/m^3)'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%mort2
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'agg_rate_max'
+      lname    = 'Maximum agg rate'
+      units    = '1/d'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%agg_rate_max
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'agg_rate_min'
+      lname    = 'Minimum agg rate'
+      units    = '1/d'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%agg_rate_min
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'loss_poc'
+      lname    = 'routing of loss term'
+      units    = 'unitless'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => autotrophs(n)%loss_poc
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, add_newline=.true.,      &
+                        comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
     end do
-    
-    do auto_ind = 1, autotroph_cnt
-       write(stdout, *) 'lname('         , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%lname
-       write(stdout, *) 'Nfixer('        , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%Nfixer
-       write(stdout, *) 'imp_calcifier(' , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%imp_calcifier
-       write(stdout, *) 'exp_calcifier(' , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%exp_calcifier
-       write(stdout, *) 'kFe('           , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%kFe
-       write(stdout, *) 'kPO4('          , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%kPO4
-       write(stdout, *) 'kDOP('          , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%kDOP
-       write(stdout, *) 'kNO3('          , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%kNO3
-       write(stdout, *) 'kNH4('          , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%kNH4
-       write(stdout, *) 'kSiO3('         , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%kSiO3
-       write(stdout, *) 'Qp('            , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%Qp
-       write(stdout, *) 'gQfe_0('        , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%gQfe_0
-       write(stdout, *) 'gQfe_min('      , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%gQfe_min
-       write(stdout, *) 'alphaPI('       , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%alphaPI
-       write(stdout, *) 'PCref('         , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%PCref
-       write(stdout, *) 'thetaN_max('    , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%thetaN_max
-       write(stdout, *) 'loss_thres('    , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%loss_thres
-       write(stdout, *) 'loss_thres2('   , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%loss_thres2
-       write(stdout, *) 'temp_thres('    , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%temp_thres
-       write(stdout, *) 'mort('          , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%mort
-       write(stdout, *) 'mort2('         , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%mort2
-       write(stdout, *) 'agg_rate_max('  , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%agg_rate_max
-       write(stdout, *) 'agg_rate_min('  , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%agg_rate_min
-       write(stdout, *) 'loss_poc('      , trim(autotrophs(auto_ind)%sname), ') = ', autotrophs(auto_ind)%loss_poc
+
+    do n=1,size(zooplankton)
+      write(prefix, "(A,I0,A)") 'zooplankton(', n, ')%'
+      write(comment, "(2A)") 'zooplankton short name = ',                     &
+                             trim(zooplankton_config(n)%sname)
+
+      write(sname, "(2A)") trim(prefix), 'z_mort_0'
+      lname    = 'Linear mortality rate'
+      units    = '1/s'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => zooplankton(n)%z_mort_0
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'loss_thres'
+      lname    = 'Concentration where losses go to zero'
+      units    = 'nmol/cm^3'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => zooplankton(n)%loss_thres
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'z_mort2_0'
+      lname    = 'Quadratic mortality rate'
+      units    = '1/s/(mmol C / m^3)'
+      datatype = 'real'
+      group    = 'marbl_parms_nml'
+      rptr     => zooplankton(n)%z_mort2_0
+      call this%add_var(sname, lname, units, datatype, group,               &
+                        marbl_status_log, rptr=rptr, add_newline=.true.,      &
+                        comment=comment)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
     end do
 
-    
-    do prey_ind = 1, grazer_prey_cnt
-       do zoo_ind = 1, zooplankton_cnt
-          associate(grazer => grazing(prey_ind, zoo_ind))
-            write(stdout, *) 'lname(', trim(grazer%sname), ') = '            , grazer%lname
-            write(stdout, *) 'auto_ind(', trim(grazer%sname), ') = '         , grazer%auto_ind
-            write(stdout, *) 'auto_ind_cnt(', trim(grazer%sname), ') = '     , grazer%auto_ind_cnt
-            write(stdout, *) 'zoo_ind(', trim(grazer%sname), ') = '          , grazer%zoo_ind
-            write(stdout, *) 'zoo_ind_cnt(', trim(grazer%sname), ') = '      , grazer%zoo_ind_cnt
-            write(stdout, *) 'z_umax_0(', trim(grazer%sname), ') = '         , grazer%z_umax_0
-            write(stdout, *) 'z_grz(', trim(grazer%sname), ') = '            , grazer%z_grz
-            write(stdout, *) 'graze_zoo(', trim(grazer%sname), ') = '        , grazer%graze_zoo
-            write(stdout, *) 'graze_poc(', trim(grazer%sname), ') = '        , grazer%graze_poc
-            write(stdout, *) 'graze_doc(', trim(grazer%sname), ') = '        , grazer%graze_doc
-            write(stdout, *) 'f_zoo_detr(', trim(grazer%sname), ') = '       , grazer%f_zoo_detr
-            write(stdout, *) 'grazing_function(', trim(grazer%sname), ') = ' , grazer%grazing_function
-          end associate
-       end do
+    do n=1,zooplankton_cnt
+      do m=1,grazer_prey_cnt
+        write(prefix, "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%'
+
+        write(sname, "(2A)") trim(prefix), 'grazing_function'
+        lname    = 'functional form of grazing parmaeterization'
+        units    = 'unitless'
+        datatype = 'integer'
+        group    = 'marbl_parms_nml'
+        iptr     => grazing(m,n)%grazing_function
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, iptr=iptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'z_umax_0'
+        lname    = 'max zoo growth rate at Tref'
+        units    = '1/s'
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%z_umax_0
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'z_grz'
+        lname    = 'Grazing coefficient'
+        units    = '(mmol C/m^3)^2'
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%z_grz
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'graze_zoo'
+        lname    = 'routing of grazed term (remainder goes to DIC)'
+        units    = 'unitless'
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%graze_zoo
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'graze_poc'
+        lname    = 'routing of grazed term (remainder goes to DIC)'
+        units    = 'unitless'
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%graze_poc
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'graze_doc'
+        lname    = 'routing of grazed term (remainder goes to DIC)'
+        units    = 'unitless'
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%graze_doc
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'f_zoo_detr'
+        lname    = 'Fraction of zoo losses to detrital'
+        units    = 'unitless'
+        datatype = 'real'
+        group    = 'marbl_parms_nml'
+        rptr     => grazing(m,n)%f_zoo_detr
+        call this%add_var(sname, lname, units, datatype, group,               &
+                          marbl_status_log, rptr=rptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        cnt = grazing_config(m,n)%auto_ind_cnt
+        if (cnt.gt.0) then
+          write(sname, "(2A)") trim(prefix), 'auto_ind'
+          lname     = 'Indices of autotrophs in class'
+          units     = 'unitless'
+          group     = 'marbl_parms_nml'
+          call this%add_var_1d_int(sname, lname, units, group,                &
+                            grazing(m,n)%auto_ind(1:cnt),                     &
+                            marbl_status_log,                                 &
+                            add_newline=(grazing_config(m,n)%zoo_ind_cnt.eq.0))
+          if (marbl_status_log%labort_marbl) then
+            call marbl_status_log%log_error_trace('add_var_1d_int', subname)
+            return
+          end if
+        end if
+
+        cnt = grazing_config(m,n)%zoo_ind_cnt
+        if (cnt.gt.0) then
+          write(sname, "(2A)") trim(prefix), 'zoo_ind'
+          lname     = 'Indices of autotrophs in class'
+          units     = 'unitless'
+          group     = 'marbl_parms_nml'
+          call this%add_var_1d_int(sname, lname, units, group,                &
+                                   grazing(m,n)%zoo_ind(1:cnt),               &
+                                   marbl_status_log, add_newline=.true.)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_status_log%log_error_trace('add_var_1d_int', subname)
+            return
+          end if
+        end if
+
+      end do
     end do
 
-    write(stdout, *) '----------------------------------------'
+    sname     = 'iron_frac_in_dust'
+    lname     = 'Fraction by weight of iron in dust'
+    units     = 'unitless (kg/kg)'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => iron_frac_in_dust
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
 
-  end subroutine marbl_params_print
+    sname     = 'iron_frac_in_bc'
+    lname     = 'Fraction by weight of iron in black carbon'
+    units     = 'unitless (kg/kg)'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => iron_frac_in_bc
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'caco3_bury_thres_opt'
+    lname     = 'Option for CaCO3 burial threshold'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_parms_nml'
+    sptr      => caco3_bury_thres_opt
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'caco3_bury_thres_depth'
+    lname     = 'Threshold depth for CaCO3 burial (if using fixed_depth option)'
+    units     = 'cm'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => caco3_bury_thres_depth
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'PON_bury_coeff'
+    lname     = 'scale factor for burial of PON'
+    units     = 'unitless'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => PON_bury_coeff
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    if (ciso_on) then
+      sname     = 'ciso_fract_factors'
+      lname     = 'Optiob for which biological fractionation calculation to use'
+      units     = 'unitless'
+      datatype  = 'string'
+      group     = 'marbl_parms_nml'
+      sptr      => ciso_fract_factors
+      call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+    end if
+
+    sname     = 'restore_short_names'
+    lname     = 'Tracer names for tracers that are restored'
+    units     = 'unitless'
+    group     = 'marbl_parms_nml'
+    call this%add_var_1d_str(sname, lname, units, group, restore_short_names, &
+                               marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
+      return
+    end if
+
+    sname     = 'restore_filenames'
+    lname     = 'Files containing tracer restoring fields'
+    units     = 'unitless'
+    group     = 'marbl_parms_nml'
+    call this%add_var_1d_str(sname, lname, units, group, restore_filenames, &
+                               marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
+      return
+    end if
+
+    sname     = 'restore_file_varnames'
+    lname     = 'Name of fields for tracer restoring (as appearing in restore_filenames)'
+    units     = 'unitless'
+    group     = 'marbl_parms_nml'
+    call this%add_var_1d_str(sname, lname, units, group, restore_file_varnames, &
+                               marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
+      return
+    end if
+
+    sname     = 'rest_time_inv_surf'
+    lname     = 'Restoring time scale at rest_z0'
+    units     = '1/sec'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => rest_time_inv_surf
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'rest_time_inv_deep'
+    lname     = 'Restoring time scale at rest_z1'
+    units     = '1/sec'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => rest_time_inv_deep
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'rest_z0'
+    lname     = 'Above this depth, restoring time scale is rest_time_inv_surf'
+    units     = 'cm'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => rest_z0
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'rest_z1'
+    lname     = 'Below this depth, restoring time scale is rest_time_inv_deep'
+    units     = 'cm'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => rest_z1
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    !---------------------------!
+    ! marbl_tracer_init_tmp_nml !
+    !---------------------------!
+
+    sname     = 'init_ecosys_option'
+    lname     = 'How base ecosys module initialized'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_tracer_init_tmp_nml'
+    sptr      => init_ecosys_option
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'init_ecosys_init_file'
+    lname     = 'File containing base ecosys init conditions'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_tracer_init_tmp_nml'
+    sptr      => init_ecosys_init_file
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'init_ecosys_init_file_fmt'
+    lname     = 'Format of file containing base ecosys init conditions'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_tracer_init_tmp_nml'
+    sptr      => init_ecosys_init_file_fmt
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr, add_newline=.true.)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    do n=1,ecosys_base_tracer_cnt
+      write(sname,"(A,I0,A)") 'tracer_init_ext(', n, ')'
+      group = 'marbl_tracer_init_tmp_nml'
+      call this%add_var_tcr_rd(sname, group, tracer_init_ext(n),              &
+           marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+        return
+      end if
+    end do
+
+    if (ciso_on) then
+      sname     = 'ciso_init_ecosys_option'
+      lname     = 'How carbon isotope module is initialized'
+      units     = 'unitless'
+      datatype  = 'string'
+      group     = 'marbl_tracer_init_tmp_nml'
+      sptr      => ciso_init_ecosys_option
+      call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      sname     = 'ciso_init_ecosys_init_file'
+      lname     = 'File containing carbon isotope init conditions'
+      units     = 'unitless'
+      datatype  = 'string'
+      group     = 'marbl_tracer_init_tmp_nml'
+      sptr      => ciso_init_ecosys_init_file
+      call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      sname     = 'ciso_init_ecosys_init_file_fmt'
+      lname     = 'Format of file containing carbon isotope init conditions'
+      units     = 'unitless'
+      datatype  = 'string'
+      group     = 'marbl_tracer_init_tmp_nml'
+      sptr      => ciso_init_ecosys_init_file_fmt
+      call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, sptr=sptr, add_newline=.true.)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      do n=1,ciso_tracer_cnt
+        write(sname,"(A,I0,A)") 'ciso_tracer_init_ext(', n, ')'
+        group = 'marbl_tracer_init_tmp_nml'
+        call this%add_var_tcr_rd(sname, group, ciso_tracer_init_ext(n),       &
+             marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
+          return
+        end if
+      end do
+    end if
+
+  end subroutine marbl_define_parameters
 
   !*****************************************************************************
 
+  subroutine set_derived_parms(marbl_status_log)
+
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_parms:set_derived_parms'
+    character(len=char_len) :: log_message
+
+    select case (caco3_bury_thres_opt)
+    case ('fixed_depth')
+       caco3_bury_thres_iopt = caco3_bury_thres_iopt_fixed_depth
+    case ('omega_calc')
+       caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
+    case default
+       write(log_message, "(2A)") "unknown caco3_bury_thres_opt: ", trim(caco3_bury_thres_opt)
+       call marbl_status_log%log_error(log_message, subname)
+       return
+    end select
+
+  end subroutine set_derived_parms
+
+  !*****************************************************************************
+  
 end module marbl_parms

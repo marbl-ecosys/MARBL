@@ -39,13 +39,21 @@ contains
   !***********************************************************************
 
   subroutine marbl_nl_split_string(str_in, array_out)
+  ! This routine takes a string (str_in) containing the entire contents of a
+  ! a namelist file and returns an array of strings (array_out) where each
+  ! element contains a single namelist. It also removes all carriage returns
+  ! from the elements of array_out
 
     ! FIXME #34: This routine depends on the namelist file conforming
     !            to very specific formatting - a more general / robust
     !            solution would be preferred
+
+    ! FIXME #74: Strip comments out of str_in (without accidentally removing
+    !            strings that happen to contain exclamation points)
+
     character(len=marbl_nl_in_size), intent(in) :: str_in
-    ! intent(inout) because we initialized to '' previously
-    ! and also to save memory
+    ! array_out is intent(inout) because we initialized to '' previously
+    ! (and also to save memory)
     character(len=marbl_nl_buffer_size), dimension(marbl_nl_cnt), intent(inout) :: &
              array_out
 
@@ -80,25 +88,44 @@ contains
     end do
   end subroutine marbl_nl_split_string
 
-  function marbl_namelist(nl_buffer, nl_name)
+  !*****************************************************************************
 
-    character(len=marbl_nl_buffer_size), dimension(marbl_nl_cnt), intent(in) :: nl_buffer
+  function marbl_namelist(nl_buffer, nl_name, marbl_status_log)
+
+    use marbl_logging,   only : marbl_log_type
+    use marbl_kinds_mod, only : char_len
+
+    character(len=marbl_nl_buffer_size), intent(in) :: nl_buffer(:)
     character(len=*), intent(in) :: nl_name
+    type(marbl_log_type), intent(inout) :: marbl_status_log
     character(len=marbl_nl_buffer_size) :: marbl_namelist
 
+    character(*), parameter :: subname = 'marbl_namelist_mod:marbl_namelist'
+    character(len=char_len) :: log_message
+    character(len=marbl_nl_buffer_size) :: single_namelist
     integer :: j, n
 
-    do j = 1, marbl_nl_cnt
-      marbl_namelist = nl_buffer(j)
+    ! Will return empty string if namelist not found
+    marbl_namelist = ''
+
+    ! Look for correct namelist in array
+    do j = 1, size(nl_buffer)
+      single_namelist = nl_buffer(j)
       n = len_trim(nl_name)
-      if (marbl_namelist(2:n+1).eq.trim(nl_name)) then
+      if (single_namelist(2:n+1).eq.trim(nl_name)) then
+         marbl_namelist = single_namelist
          exit
       end if
     end do
 
-    ! FIXME #32: add error checking in case &nl_name is not found
-    !            (just check to see if j>marbl_nl_cnt)
+    if (trim(marbl_namelist).eq.'') then
+      write(log_message, "(2A)") trim(nl_name), ' is not included in nl_buffer'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
 
   end function marbl_namelist
+
+  !*****************************************************************************
 
 end module marbl_namelist_mod

@@ -9,17 +9,14 @@ module marbl_logging
 ! Use the following routines to write log entries
 ! -----------------------------------------------
 !
-! (1) StatusLog%log_namelist -- this stores a log message that contains a
-!     namelist that has been read in by MARBL. The log message will include
-!     "Contents of &[namelist_name]:" as a prefix to the actual namelist.
-! (2) StatusLog%log_noerror -- this stores a log message in StatusLog that does
+! (1) StatusLog%log_noerror -- this stores a log message in StatusLog that does
 !     not contain a fatal error
-! (3) StatusLog%log_error -- this stores a log message in StatusLog that DOES
+! (2) StatusLog%log_error -- this stores a log message in StatusLog that DOES
 !     contain a fatal error. It does this by setting StatusLog%labort_marbl =
 !     .true.; when a call from the GCM to MARBL returns, it is important for the
 !     GCM to check the value of StatusLog%labort_marbl and abort the run if an
 !     error has been reported.
-! (4) StatusLog%log_error_trace -- this routine helps trace the path in the code
+! (3) StatusLog%log_error_trace -- this routine helps trace the path in the code
 !     that resulted in an error being reported. If a MARBL routine logs an error
 !     message, then the routine that called the errant routine also logs an
 !     error message giving more information about where the call was made from.
@@ -51,13 +48,12 @@ module marbl_logging
 #endif
 
   use marbl_kinds_mod, only : char_len
-  use marbl_namelist_mod, only : marbl_nl_buffer_size
 
   implicit none
   private
   save
 
-  integer, parameter, private :: marbl_log_len = marbl_nl_buffer_size
+  integer, parameter, private :: marbl_log_len = 2*char_len
 
   !****************************************************************************
 
@@ -67,7 +63,7 @@ module marbl_logging
                            !         all tasks; False => master task only
     character(len=marbl_log_len) :: LogMessage   ! Message text
     character(len=char_len)      :: CodeLocation ! Information on where log was written
-                               
+
     type(marbl_status_log_entry_type), pointer :: next
   end type marbl_status_log_entry_type
 
@@ -105,7 +101,6 @@ module marbl_logging
     type(marbl_status_log_entry_type), pointer :: LastEntry
   contains
     procedure, public :: construct => marbl_log_constructor
-    procedure, public :: log_namelist => marbl_log_namelist
     procedure, public :: log_error    => marbl_log_error
     procedure, public :: log_noerror  => marbl_log_noerror
     procedure, public :: log_error_trace => marbl_log_error_trace
@@ -175,46 +170,6 @@ contains
     call this%OutputOptions%construct()
 
   end subroutine marbl_log_constructor
-
-  !****************************************************************************
-
-  subroutine marbl_log_namelist(this, NamelistName, NamelistContents, CodeLoc, ElemInd)
-
-    class(marbl_log_type), intent(inout) :: this
-    ! NamelistName is the name of the namelist
-    ! NamelistContents is a string containing the contents of the namelist
-    ! CodeLoc is the name of the subroutine that is calling StatusLog%log_namelist
-    character(len=*),      intent(in)    :: NamelistName, NamelistContents, CodeLoc
-    integer, optional,     intent(in)    :: ElemInd
-    type(marbl_status_log_entry_type), pointer :: new_entry
-
-    ! Only allocate memory and add entry if we want to log full namelist!
-    if (.not.this%OutputOptions%lLogNamelist) then
-      return
-    end if
-
-    allocate(new_entry)
-    nullify(new_entry%next)
-    if (present(ElemInd)) then
-      new_entry%ElementInd = ElemInd
-    else
-      new_entry%ElementInd = 1
-    end if
-    write(new_entry%LogMessage, "(4A)") "Contents of ", trim(NamelistName), ": ", &
-                                        trim(NamelistContents)
-    new_entry%CodeLocation = trim(CodeLoc)
-    new_entry%lall_tasks = .false.
-
-    if (associated(this%FullLog)) then
-      ! Append new entry to last entry in the log
-      this%LastEntry%next => new_entry
-    else
-      this%FullLog => new_entry
-    end if
-    ! Update LastEntry attribute of linked list
-    this%LastEntry => new_entry
-
-  end subroutine marbl_log_namelist
 
   !****************************************************************************
 
