@@ -95,9 +95,6 @@ module marbl_parms
   character(char_len), target :: ciso_fract_factors             ! option for which biological fractionation calculation to use
 
   character(len=char_len), allocatable, target, dimension(:) :: restore_short_names
-  ! Should be in marbl_forcing_nml when moved to driver!
-  character(len=char_len), allocatable, target, dimension(:) :: restore_filenames, &
-                                                                restore_file_varnames
   real(r8), target :: rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
 
   !---------------------------------------------------------------------
@@ -457,15 +454,9 @@ contains
       allocate(inv_tau(km))
     if (.not.allocated(restore_short_names)) &
       allocate(restore_short_names(marbl_total_tracer_cnt))
-    if (.not.allocated(restore_filenames)) &
-      allocate(restore_filenames(marbl_total_tracer_cnt))
-    if (.not.allocated(restore_file_varnames)) &
-      allocate(restore_file_varnames(marbl_total_tracer_cnt))
 
     ! initialize namelist variables to default values
     restore_short_names = ''
-    restore_filenames = ''
-    restore_file_varnames = ''
 
     rest_time_inv_surf = c0
     rest_time_inv_deep = c0
@@ -537,8 +528,6 @@ contains
          PON_bury_coeff, &
          ciso_fract_factors, &
          restore_short_names, &
-         restore_filenames, &
-         restore_file_varnames, &
          rest_time_inv_surf, &
          rest_time_inv_deep, &
          rest_z0, &
@@ -546,7 +535,7 @@ contains
          bury_coeff_rmean_timescale_years, &
          parm_scalelen_z, &
          parm_scalelen_vals, &
-         autotrophs, & 
+         autotrophs, &
          zooplankton, &
          grazing
 
@@ -1386,28 +1375,6 @@ contains
     units     = 'unitless'
     group     = 'marbl_parms_nml'
     call this%add_var_1d_str(sname, lname, units, group, restore_short_names, &
-                               marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
-      return
-    end if
-
-    sname     = 'restore_filenames'
-    lname     = 'Files containing tracer restoring fields'
-    units     = 'unitless'
-    group     = 'marbl_parms_nml'
-    call this%add_var_1d_str(sname, lname, units, group, restore_filenames, &
-                               marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
-      return
-    end if
-
-    sname     = 'restore_file_varnames'
-    lname     = 'Name of fields for tracer restoring (as appearing in restore_filenames)'
-    units     = 'unitless'
-    group     = 'marbl_parms_nml'
-    call this%add_var_1d_str(sname, lname, units, group, restore_file_varnames, &
                                marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('add_var_1d_str', subname)

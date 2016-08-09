@@ -8,5 +8,3 @@ ciso_on=.true.
 /
 &marbl_tracer_init_tmp_nml
 /
-&marbl_forcing_tmp_nml
-/

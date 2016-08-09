@@ -33,7 +33,7 @@ module marbl_interface
   use marbl_interface_types , only : marbl_surface_forcing_output_type
   use marbl_interface_types , only : marbl_diagnostics_type
   use marbl_interface_types , only : marbl_surface_forcing_indexing_type
-  use marbl_interface_types , only : marbl_forcing_fields_type
+  use marbl_interface_types , only : marbl_forcing_fields_metadata_type
   use marbl_interface_types , only : marbl_saved_state_type
   use marbl_interface_types , only : marbl_running_mean_0d_type
 
@@ -97,7 +97,7 @@ module marbl_interface
      real (r8)                                 , public, allocatable  :: surface_input_forcings(:,:) ! input  *
      real (r8)                                 , public, allocatable  :: surface_tracer_fluxes(:,:)  ! output *
      type(marbl_surface_forcing_indexing_type) , public               :: surface_forcing_ind         ! 
-     type(marbl_forcing_fields_type)           , public               :: surface_forcing_fields
+     type(marbl_forcing_fields_metadata_type)  , public               :: surface_forcing_fields
      type(marbl_surface_forcing_output_type)   , public               :: surface_forcing_output      ! output
      type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
 
@@ -164,7 +164,6 @@ contains
     use marbl_namelist_mod    , only : marbl_nl_buffer_size
     use marbl_config_mod      , only : marbl_config_set_defaults
     use marbl_config_mod      , only : marbl_config_read_namelist
-    use marbl_config_mod      , only : marbl_config_set_local_pointers
     use marbl_config_mod      , only : marbl_define_config_vars
 
     class(marbl_interface_class)   , intent(inout)        :: this
@@ -206,12 +205,6 @@ contains
       write(log_message, "(A)") 'No namelists were provided to config'
       call this%StatusLog%log_noerror(log_message, subname)
     end if
-
-    !---------------------------------------------------------------------------
-    ! Set up local pointers in marbl_config_mod
-    !---------------------------------------------------------------------------
-
-    call marbl_config_set_local_pointers()
 
     !---------------------------------------------------------------------------
     ! construct configuration_type

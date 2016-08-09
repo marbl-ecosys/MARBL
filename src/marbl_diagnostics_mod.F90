@@ -4217,15 +4217,6 @@ contains
     use marbl_internal_types , only : marbl_surface_saved_state_indexing_type
     use marbl_config_mod     , only : lflux_gas_o2
     use marbl_config_mod     , only : lflux_gas_co2
-    use marbl_config_mod     , only : iron_flux_file     
-    use marbl_config_mod     , only : din_riv_flux_file     
-    use marbl_config_mod     , only : dip_riv_flux_file          
-    use marbl_config_mod     , only : don_riv_flux_file          
-    use marbl_config_mod     , only : dop_riv_flux_file          
-    use marbl_config_mod     , only : dsi_riv_flux_file          
-    use marbl_config_mod     , only : dfe_riv_flux_file          
-    use marbl_config_mod     , only : dic_riv_flux_file          
-    use marbl_config_mod     , only : alk_riv_flux_file         
     use marbl_constants_mod  , only : mpercm
 
     implicit none
@@ -4374,19 +4365,19 @@ contains
     !  calculate river bgc fluxes if necessary
     !-----------------------------------------------------------------------
 
-    if (din_riv_flux_file%has_data) then
+    if (ind_forc%din_riv_flux_id.ne.0) then
        diags(ind_diag%DIN_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%din_riv_flux_id)
     endif
-    if (dsi_riv_flux_file%has_data) then
+    if (ind_forc%dsi_riv_flux_id.ne.0) then
        diags(ind_diag%DSI_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dsi_riv_flux_id)
     endif
-    if (dfe_riv_flux_file%has_data) then
+    if (ind_forc%dfe_riv_flux_id.ne.0) then
        diags(ind_diag%DFE_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dfe_riv_flux_id)
     endif
-    if (dic_riv_flux_file%has_data) then
+    if (ind_forc%dic_riv_flux_id.ne.0) then
        diags(ind_diag%DIC_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dic_riv_flux_id)
     endif
-    if (alk_riv_flux_file%has_data) then
+    if (ind_forc%alk_riv_flux_id.ne.0) then
        diags(ind_diag%ALK_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%alk_riv_flux_id)
     endif
     diags(ind_diag%O2_GAS_FLUX)%field_2d(:)   = stf(:, o2_ind)

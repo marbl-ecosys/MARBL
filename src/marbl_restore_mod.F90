@@ -5,7 +5,6 @@ module marbl_restore_mod
 
   use marbl_kinds_mod      , only : r8, log_kind, int_kind
   use marbl_constants_mod  , only : p5, c0, c2, c1000
-  use marbl_interface_types, only : marbl_forcing_file_type
   use marbl_interface_types, only : marbl_domain_type
   use marbl_sizes          , only : marbl_total_tracer_cnt
 
@@ -16,7 +15,6 @@ module marbl_restore_mod
   type :: marbl_single_restoring_field_type
     real(kind=r8), dimension(:), allocatable :: inv_tau ! 1/time_scale (s^-1)
     real(kind=r8), dimension(:), allocatable :: climatology ! Field we restore to
-    type(marbl_forcing_file_type) :: file_metadata ! file containing climatology
   end type marbl_single_restoring_field_type
 
   type, public :: marbl_restore_type
@@ -40,8 +38,6 @@ subroutine init(this, domain, tracer_metadata, status_log)
   use marbl_logging     , only : marbl_log_type
   use marbl_interface_types, only : marbl_tracer_metadata_type
   use marbl_parms       , only : restore_short_names
-  use marbl_parms       , only : restore_filenames
-  use marbl_parms       , only : restore_file_varnames
   use marbl_parms       , only : rest_time_inv_surf
   use marbl_parms       , only : rest_time_inv_deep
   use marbl_parms       , only : rest_z0
@@ -104,9 +100,6 @@ subroutine init(this, domain, tracer_metadata, status_log)
            call status_log%log_noerror(log_message, subname)
            this%lrestore_any = .true.
         end if
-        write(log_message, "(6A)") trim(restore_short_names(t)), " --> ", &
-             trim(restore_filenames(t)), " [ ", trim(restore_file_varnames(t)), " ]"
-        call status_log%log_noerror(log_message, subname)
         do n=1,size(tracer_metadata)
           if (trim(restore_short_names(t)).eq.trim(tracer_metadata(n)%short_name)) exit
         end do
@@ -118,8 +111,6 @@ subroutine init(this, domain, tracer_metadata, status_log)
           allocate(this%tracer_restore(n)%climatology(domain%km))
           this%tracer_restore(n)%inv_tau(:) = inv_tau
           this%tracer_restore(n)%climatology(:) = c0
-          this%tracer_restore(n)%file_metadata%filename = trim(restore_filenames(t))
-          this%tracer_restore(n)%file_metadata%file_varname = trim(restore_file_varnames(t))
         else
           write(log_message, "(2A)") "Can not find tracer named ", trim(restore_short_names(t))
           call status_log%log_error(log_message, subname)
