@@ -209,7 +209,7 @@ module marbl_interface_types
 
   type, private :: marbl_single_forcing_field_type
      ! single_forcing_field_type (contains the above 4 type definitions)
-     character(char_len)                        :: marbl_varname
+     character(char_len)                        :: varname
      character(char_len)                        :: field_units      ! field data units, not the file (driver must do unit conversion)
    contains
      procedure :: initialize  => marbl_single_forcing_field_init
@@ -695,12 +695,10 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_single_forcing_field_init(this, &
-       marbl_varname,                              &
-       field_units)
+  subroutine marbl_single_forcing_field_init(this, varname, field_units)
 
     class(marbl_single_forcing_field_type), intent(inout) :: this
-    character (char_len),                   intent(in)    :: marbl_varname ! required
+    character (char_len),                   intent(in)    :: varname
     character (char_len),                   intent(in)    :: field_units
 
     !-----------------------------------------------------------------------
@@ -711,7 +709,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! required variables for all forcing field sources
-    this%marbl_varname = marbl_varname
+    this%varname = varname
     this%field_units   = field_units
 
    end subroutine marbl_single_forcing_field_init
@@ -733,13 +731,11 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_forcing_fields_add(this, &
-       marbl_varname,                       &
-       field_units,                         &
-       id, marbl_status_log)
+  subroutine marbl_forcing_fields_add(this, varname, field_units, id,         &
+                                      marbl_status_log)
 
     class(marbl_forcing_fields_metadata_type) , intent(inout) :: this
-    character (char_len)             , intent(in)    :: marbl_varname
+    character (char_len)             , intent(in)    :: varname
     character (char_len)             , intent(in)    :: field_units
     integer (kind=int_kind)          , intent(out)   :: id
     type(marbl_log_type),              intent(inout) :: marbl_status_log
@@ -759,9 +755,7 @@ contains
     end if
     num_elem = this%num_elements
 
-    call this%forcing_fields(id)%initialize(             &
-         marbl_varname,          &
-         field_units)
+    call this%forcing_fields(id)%initialize(varname, field_units)
 
   end subroutine marbl_forcing_fields_add
 

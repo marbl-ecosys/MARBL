@@ -339,7 +339,7 @@ contains
           varname    = 'surface_mask'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, field_units=units,                      &
+               varname=varname, field_units=units,                            &
                id=ind%surface_mask_id, marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -352,9 +352,9 @@ contains
              num_surface_forcing_fields = num_surface_forcing_fields + 1
           else
              varname    = 'd13c'
-             units      = 'unknown' 
+             units      = 'unknown'
              call forcing_fields%add_forcing_field(&
-                  marbl_varname=varname, field_units=units,                   &
+                  varname=varname, field_units=units,                         &
                   id=ind%d13c_id, marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
                call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -366,9 +366,9 @@ contains
              num_surface_forcing_fields = num_surface_forcing_fields + 1
           else
              varname    = 'd14c'
-             units      = 'unknown' 
+             units      = 'unknown'
              call forcing_fields%add_forcing_field(&
-                  marbl_varname=varname, field_units=units,                   &
+                  varname=varname, field_units=units,                         &
                   id=ind%d14c_id, marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
                call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -380,9 +380,9 @@ contains
              num_surface_forcing_fields = num_surface_forcing_fields + 1
           else
              varname    = 'd14c_gloavg'
-             units      = 'unknown' 
+             units      = 'unknown'
              call forcing_fields%add_forcing_field(&
-                  marbl_varname=varname, field_units=units,                   &
+                  varname=varname, field_units=units,                         &
                   id=ind%d14c_glo_avg_id, marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
                call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -397,7 +397,7 @@ contains
           varname    = 'u10_sqr'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, field_units=units,                      &
+               varname=varname, field_units=units,                            &
                id=ind%u10_sqr_id, marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -411,7 +411,7 @@ contains
           varname    = 'sst'
           units      = 'Temperature (C)'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, field_units=units,                      &
+               varname=varname, field_units=units,                            &
                id=ind%sst_id, marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -425,7 +425,7 @@ contains
           varname    = 'sss'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, field_units=units,                      &
+               varname=varname, field_units=units,                            &
                id=ind%sss_id, marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -440,7 +440,7 @@ contains
              varname    = 'xco2'
              units      = 'unknown'
              call forcing_fields%add_forcing_field(&
-                  marbl_varname=varname, field_units=units,                   &
+                  varname=varname, field_units=units,                         &
                   id=ind%xco2_id, marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
                call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -454,7 +454,7 @@ contains
              varname    = 'xco2_alt_co2'
              units      = 'unknown'
              call forcing_fields%add_forcing_field(&
-                  marbl_varname=varname, field_units=units,                   &
+                  varname=varname, field_units=units,                         &
                   id=ind%xco2_alt_co2_id, marbl_status_log = marbl_status_log)
              if (marbl_status_log%labort_marbl) then
                call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -469,7 +469,7 @@ contains
           varname    = 'Ice Fraction'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, field_units=units,                      &
+               varname=varname, field_units=units,                            &
                id=ind%ifrac_id, marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -484,7 +484,7 @@ contains
              varname    = 'Atmospheric Pressure'
              units      = 'unknown'
              call forcing_fields%add_forcing_field(&
-                  marbl_varname=varname, field_units=units,                   &
+                  varname=varname, field_units=units,                         &
                   id=ind%atm_pressure_id, marbl_status_log=marbl_status_log)
              if (marbl_status_log%labort_marbl) then
                call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -499,7 +499,7 @@ contains
           varname = 'Dust Flux'
           units   = 'g/cm^2/s'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, field_units=units,                      &
+               varname=varname, field_units=units,                            &
                id=ind%dust_flux_id, marbl_status_log=marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -513,7 +513,7 @@ contains
           varname = 'Iron Flux'
           units   = 'nmol/cm^2/s'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, field_units=units,                      &
+               varname=varname, field_units=units,                            &
                id=ind%iron_flux_id, marbl_status_log = marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -527,7 +527,7 @@ contains
           varname    = 'NOx Flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-                  marbl_varname=varname, field_units=units,                   &
+                  varname=varname, field_units=units,                         &
                   id=ind%nox_flux_id, marbl_status_log=marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -541,7 +541,7 @@ contains
           varname    = 'NHy Flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, field_units=units,                      &
+               varname=varname, field_units=units,                            &
                id=ind%nhy_flux_id, marbl_status_log=marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call log_add_forcing_field_error(marbl_status_log, varname, subname)
@@ -555,7 +555,7 @@ contains
           varname    = 'DIN river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, &
+               varname=varname, &
                field_units=units, &
                id=ind%din_riv_flux_id, &
                marbl_status_log = marbl_status_log)
@@ -571,7 +571,7 @@ contains
           varname    = 'DIP river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, &
+               varname=varname, &
                field_units=units, &
                id=ind%dip_riv_flux_id, &
                marbl_status_log = marbl_status_log)
@@ -587,7 +587,7 @@ contains
           varname    = 'DON river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, &
+               varname=varname, &
                field_units=units, &
                id=ind%don_riv_flux_id, &
                marbl_status_log = marbl_status_log)
@@ -603,7 +603,7 @@ contains
           varname    = 'DOP river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, &
+               varname=varname, &
                field_units=units, &
                id=ind%dop_riv_flux_id, &
                marbl_status_log = marbl_status_log)
@@ -619,7 +619,7 @@ contains
           varname    = 'DSI river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, &
+               varname=varname, &
                field_units=units, &
                id=ind%dsi_riv_flux_id, &
                marbl_status_log = marbl_status_log)
@@ -635,7 +635,7 @@ contains
           varname    = 'DFE river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, &
+               varname=varname, &
                field_units=units, &
                id=ind%dfe_riv_flux_id, &
                marbl_status_log = marbl_status_log)
@@ -651,7 +651,7 @@ contains
           varname    = 'DIC river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, &
+               varname=varname, &
                field_units=units, &
                id=ind%dic_riv_flux_id, &
                marbl_status_log = marbl_status_log)
@@ -667,7 +667,7 @@ contains
           varname    = 'ALK river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, &
+               varname=varname, &
                field_units=units, &
                id=ind%alk_riv_flux_id, &
                marbl_status_log = marbl_status_log)
@@ -683,7 +683,7 @@ contains
           varname    = 'DOC river flux'
           units      = 'unknown'
           call forcing_fields%add_forcing_field(&
-               marbl_varname=varname, &
+               varname=varname, &
                field_units=units, &
                id=ind%doc_riv_flux_id, &
                marbl_status_log = marbl_status_log)
