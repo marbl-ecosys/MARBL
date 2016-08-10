@@ -83,7 +83,7 @@ module marbl_interface
      ! public data - interior forcing
      real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input  *
      real (r8)                                 , public, allocatable  :: column_dtracers(:,:)    ! output *
-     real (r8)                                 , public, allocatable  :: column_restore(:,:)     ! input  * 
+     real (r8)                                 , public, allocatable  :: column_restore(:,:)     ! input  *
      ! FIXME #25: update marbl_interior_forcing_input_type
      type(marbl_interior_forcing_input_type)   , public               :: interior_forcing_input
      type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
@@ -94,7 +94,7 @@ module marbl_interface
      real (r8)                                 , public, allocatable  :: surface_vals(:,:)           ! input  *
      real (r8)                                 , public, allocatable  :: surface_input_forcings(:,:) ! input  *
      real (r8)                                 , public, allocatable  :: surface_tracer_fluxes(:,:)  ! output *
-     type(marbl_surface_forcing_indexing_type) , public               :: surface_forcing_ind         ! 
+     type(marbl_surface_forcing_indexing_type) , public               :: surface_forcing_ind         !
      type(marbl_forcing_fields_metadata_type)  , public               :: surface_forcing_fields
      type(marbl_surface_forcing_output_type)   , public               :: surface_forcing_output      ! output
      type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
@@ -360,7 +360,6 @@ contains
          zw                            = gcm_zw,               &
          zt                            = gcm_zt)
 
-         
     call this%interior_forcing_input%construct(num_levels, num_PAR_subcols)
 
     allocate(this%surface_vals(num_surface_elements, marbl_total_tracer_cnt))
@@ -423,16 +422,22 @@ contains
     ! initialize marbl surface forcing fields
     !--------------------------------------------------------------------
 
-    call marbl_init_surface_forcing_fields(                          &
-         num_elements                 = num_surface_elements,        &
-         num_surface_forcing_fields   = num_surface_forcing_fields,  &
-         surface_forcing_indices      = this%surface_forcing_ind,    &
-         surface_forcing_fields       = this%surface_forcing_fields, &
+    call marbl_init_surface_forcing_fields(                                   &
+         num_elements                 = num_surface_elements,                 &
+         num_surface_forcing_fields   = num_surface_forcing_fields,           &
+         surface_forcing_indices      = this%surface_forcing_ind,             &
+         surface_forcing_fields       = this%surface_forcing_fields,          &
          marbl_status_log             = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_surface_forcing_fields()", subname)
       return
     end if
+
+    do i=1,this%surface_forcing_fields%forcing_field_cnt
+      write(log_message, "(2A)") "Required forcing field: ",                  &
+                                 trim(this%surface_forcing_fields%forcing_fields(i)%varname)
+      call this%StatusLog%log_noerror(log_message, subname)
+    end do
 
     allocate(this%surface_input_forcings(num_surface_elements, num_surface_forcing_fields))
 
