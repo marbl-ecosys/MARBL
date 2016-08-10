@@ -28,7 +28,6 @@ module marbl_interface
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
-  use marbl_interface_types , only : marbl_tracer_read_type
   use marbl_interface_types , only : marbl_interior_forcing_input_type
   use marbl_interface_types , only : marbl_surface_forcing_output_type
   use marbl_interface_types , only : marbl_diagnostics_type
@@ -71,7 +70,6 @@ module marbl_interface
      ! public data - general
      type(marbl_domain_type)                   , public               :: domain
      type(marbl_tracer_metadata_type)          , public, allocatable  :: tracer_metadata(:)
-     type(marbl_tracer_read_type)              , public, allocatable  :: tracer_read(:)
      type(marbl_tracer_index_type)             , public               :: tracer_indices
      type(marbl_log_type)                      , public               :: StatusLog
      type(marbl_config_and_parms_type)         , public               :: configuration
@@ -237,14 +235,11 @@ contains
     use marbl_mod             , only : marbl_init_surface_forcing_fields
     use marbl_mod             , only : marbl_init_tracer_metadata
     use marbl_mod             , only : marbl_init_bury_coeff
-    use marbl_mod             , only : marbl_update_tracer_file_metadata
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
     use marbl_config_mod      , only : ladjust_bury_coeff
     use marbl_config_mod      , only : autotrophs_config
     use marbl_config_mod      , only : zooplankton_config
     use marbl_config_mod      , only : set_derived_config
-    use marbl_parms           , only : tracer_init_ext
-    use marbl_parms           , only : ciso_tracer_init_ext
     use marbl_parms           , only : marbl_parms_set_defaults
     use marbl_parms           , only : marbl_parms_read_namelist
     use marbl_parms           , only : marbl_define_parameters
@@ -408,11 +403,9 @@ contains
     !--------------------------------------------------------------------
 
     allocate(this%tracer_metadata(marbl_total_tracer_cnt))
-    allocate(this%tracer_read(marbl_total_tracer_cnt))
 
     call marbl_init_tracer_metadata( &
          this%tracer_metadata,       &
-         this%tracer_read,           &
          this%tracer_indices,        &
          this%StatusLog)
 
@@ -422,34 +415,19 @@ contains
     end if
 
     if (ciso_on) then
-       call marbl_ciso_init_tracer_metadata(this%tracer_metadata,          &
-            this%tracer_read, this%tracer_indices)
-    end if
-
-    call marbl_update_tracer_file_metadata(this%tracer_indices, this%tracer_read, &
-         tracer_init_ext, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_update_tracer_file_metadata()", subname)
-      return
-    end if
-    if (ciso_on) then
-      call marbl_update_tracer_file_metadata(this%tracer_indices, this%tracer_read, &
-           ciso_tracer_init_ext, this%StatusLog)
-      if (this%StatusLog%labort_marbl) then
-        call this%StatusLog%log_error_trace("marbl_update_tracer_file_metadata() [ciso]", subname)
-        return
-      end if
+       call marbl_ciso_init_tracer_metadata(this%tracer_metadata,             &
+            this%tracer_indices)
     end if
 
     !--------------------------------------------------------------------
     ! initialize marbl surface forcing fields
     !--------------------------------------------------------------------
 
-    call marbl_init_surface_forcing_fields(                         &
-         num_elements                 = num_surface_elements,       &
-         num_surface_forcing_fields   = num_surface_forcing_fields, &  
-         surface_forcing_indices      = this%surface_forcing_ind,   &
-         surface_forcing_fields       = this%surface_forcing_fields,          &
+    call marbl_init_surface_forcing_fields(                          &
+         num_elements                 = num_surface_elements,        &
+         num_surface_forcing_fields   = num_surface_forcing_fields,  &
+         surface_forcing_indices      = this%surface_forcing_ind,    &
+         surface_forcing_fields       = this%surface_forcing_fields, &
          marbl_status_log             = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_surface_forcing_fields()", subname)

@@ -88,20 +88,15 @@ contains
   !*****************************************************************************
 
   subroutine marbl_ciso_init_tracer_metadata(marbl_tracer_metadata,           &
-                                             marbl_tracer_read,               &
                                              marbl_tracer_indices)
 
     !  Set tracer and forcing metadata
 
-    use marbl_interface_types, only : marbl_tracer_read_type
     use marbl_config_mod     , only : ciso_lecovars_full_depth_tavg
-    use marbl_parms          , only : ciso_init_ecosys_init_file
-    use marbl_parms          , only : ciso_init_ecosys_init_file_fmt
 
     implicit none
 
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
-    type (marbl_tracer_read_type)     , intent(inout) :: marbl_tracer_read(:)
     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
 
     !-----------------------------------------------------------------------
@@ -203,15 +198,6 @@ contains
        if (n > 0) then
           marbl_tracer_metadata(n)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
        endif
-    end do
-
-    do n=ciso_ind_beg,ciso_ind_end
-      marbl_tracer_read(n)%mod_varname  = marbl_tracer_metadata(n)%short_name
-      marbl_tracer_read(n)%filename     = ciso_init_ecosys_init_file
-      marbl_tracer_read(n)%file_varname = marbl_tracer_metadata(n)%short_name
-      marbl_tracer_read(n)%file_fmt     = ciso_init_ecosys_init_file_fmt
-      marbl_tracer_read(n)%scale_factor = c1
-      marbl_tracer_read(n)%default_val  = c0
     end do
 
     end associate

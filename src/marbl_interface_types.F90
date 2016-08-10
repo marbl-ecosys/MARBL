@@ -116,17 +116,6 @@ module marbl_interface_types
 
   !*****************************************************************************
 
-  type, public :: marbl_tracer_read_type
-     character(char_len) :: mod_varname
-     character(char_len) :: filename
-     character(char_len) :: file_varname
-     character(char_len) :: file_fmt
-     real(r8)            :: scale_factor
-     real(r8)            :: default_val
-  end type marbl_tracer_read_type
-
-  !*****************************************************************************
-
   ! FIXME #25: update marbl_interior_forcing_input_type
   type, public :: marbl_interior_forcing_input_type
      real(r8), allocatable :: temperature(:)    ! (km)

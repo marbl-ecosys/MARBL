@@ -20,7 +20,6 @@ module marbl_parms
   use marbl_kinds_mod, only : char_len
 
   use marbl_config_mod, only : marbl_config_and_parms_type
-  use marbl_config_mod, only : set_defaults_tcr_rd
 
   use marbl_constants_mod, only : c0
   use marbl_constants_mod, only : c1
@@ -31,8 +30,6 @@ module marbl_parms
   use marbl_internal_types, only : autotroph_parms_type
   use marbl_internal_types, only : zooplankton_parms_type
   use marbl_internal_types, only : grazing_parms_type
-
-  use marbl_interface_types, only : marbl_tracer_read_type
 
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
@@ -96,20 +93,6 @@ module marbl_parms
 
   character(len=char_len), allocatable, target, dimension(:) :: restore_short_names
   real(r8), target :: rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
-
-  !---------------------------------------------------------------------
-  !  Variables read in via &marbl_tracer_init_tmp_nml
-  !---------------------------------------------------------------------
-
-  character(char_len), target :: init_ecosys_option           ! namelist option for initialization of bgc
-  character(char_len), target :: init_ecosys_init_file        ! filename for option 'file'
-  character(char_len), target :: init_ecosys_init_file_fmt    ! file format for option 'file'
-  type(marbl_tracer_read_type), target :: tracer_init_ext(ecosys_base_tracer_cnt) ! namelist variable for initializing tracers
-
-  character(char_len), target :: ciso_init_ecosys_option        ! option for initialization of bgc
-  character(char_len), target :: ciso_init_ecosys_init_file     ! filename for option 'file'
-  character(char_len), target :: ciso_init_ecosys_init_file_fmt ! file format for option 'file'
-  type(marbl_tracer_read_type), target :: ciso_tracer_init_ext(ciso_tracer_cnt) ! namelist variable for initializing tracers
 
   !---------------------------------------------------------------------
   !  BGC parameters that are not part of marbl_parms_nml
@@ -463,24 +446,6 @@ contains
     rest_z0 = c1000
     rest_z1 = c2*c1000
 
-    !-----------------------------------------------------------------------
-    !  &marbl_tracer_init_tmp_nml
-    !-----------------------------------------------------------------------
-
-    init_ecosys_option = 'unknown'
-    init_ecosys_init_file = 'unknown'
-    init_ecosys_init_file_fmt = 'bin'
-    do n = 1, ecosys_base_tracer_cnt
-       call set_defaults_tcr_rd(tracer_init_ext(n))
-    end do
-
-    ciso_init_ecosys_option                 = 'unknown'
-    ciso_init_ecosys_init_file              = 'unknown'
-    ciso_init_ecosys_init_file_fmt          = 'bin'
-    do n = 1,ciso_tracer_cnt
-       call set_defaults_tcr_rd(ciso_tracer_init_ext(n))
-    end do
-
   end subroutine marbl_parms_set_defaults
 
   !*****************************************************************************
@@ -539,12 +504,6 @@ contains
          zooplankton, &
          grazing
 
-    namelist /marbl_tracer_init_tmp_nml/                                      &
-         init_ecosys_option, init_ecosys_init_file, tracer_init_ext,          &
-         init_ecosys_init_file_fmt, ciso_init_ecosys_option,                  &
-         ciso_init_ecosys_init_file, ciso_init_ecosys_init_file_fmt,          &
-         ciso_tracer_init_ext
-
     !---------------------------------------------------------------------------
     ! read the &marbl_parms_nml namelist
     !---------------------------------------------------------------------------
@@ -557,22 +516,6 @@ contains
     read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=nml_error)
     if (nml_error /= 0) then
       write(log_message, "(A)") 'error reading &marbl_parms_nml'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    !-----------------------------------------------------------------------
-    ! read the &marbl_tracer_init_tmp_nml namelist
-    !-----------------------------------------------------------------------
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_tracer_init_tmp_nml', marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('marbl_namelist', subname)
-      return
-    end if
-
-    read(tmp_nl_buffer, nml=marbl_tracer_init_tmp_nml, iostat=nml_error)
-    if (nml_error /= 0) then
-      write(log_message, "(A)") 'error reading &marbl_tracer_init_tmp_nml'
       call marbl_status_log%log_error(log_message, subname)
       return
     end if
@@ -1431,112 +1374,6 @@ contains
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
-    end if
-
-    !---------------------------!
-    ! marbl_tracer_init_tmp_nml !
-    !---------------------------!
-
-    sname     = 'init_ecosys_option'
-    lname     = 'How base ecosys module initialized'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_tracer_init_tmp_nml'
-    sptr      => init_ecosys_option
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'init_ecosys_init_file'
-    lname     = 'File containing base ecosys init conditions'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_tracer_init_tmp_nml'
-    sptr      => init_ecosys_init_file
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'init_ecosys_init_file_fmt'
-    lname     = 'Format of file containing base ecosys init conditions'
-    units     = 'unitless'
-    datatype  = 'string'
-    group     = 'marbl_tracer_init_tmp_nml'
-    sptr      => init_ecosys_init_file_fmt
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr, add_newline=.true.)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    do n=1,ecosys_base_tracer_cnt
-      write(sname,"(A,I0,A)") 'tracer_init_ext(', n, ')'
-      group = 'marbl_tracer_init_tmp_nml'
-      call this%add_var_tcr_rd(sname, group, tracer_init_ext(n),              &
-           marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
-        return
-      end if
-    end do
-
-    if (ciso_on) then
-      sname     = 'ciso_init_ecosys_option'
-      lname     = 'How carbon isotope module is initialized'
-      units     = 'unitless'
-      datatype  = 'string'
-      group     = 'marbl_tracer_init_tmp_nml'
-      sptr      => ciso_init_ecosys_option
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      sname     = 'ciso_init_ecosys_init_file'
-      lname     = 'File containing carbon isotope init conditions'
-      units     = 'unitless'
-      datatype  = 'string'
-      group     = 'marbl_tracer_init_tmp_nml'
-      sptr      => ciso_init_ecosys_init_file
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      sname     = 'ciso_init_ecosys_init_file_fmt'
-      lname     = 'Format of file containing carbon isotope init conditions'
-      units     = 'unitless'
-      datatype  = 'string'
-      group     = 'marbl_tracer_init_tmp_nml'
-      sptr      => ciso_init_ecosys_init_file_fmt
-      call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, sptr=sptr, add_newline=.true.)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      do n=1,ciso_tracer_cnt
-        write(sname,"(A,I0,A)") 'ciso_tracer_init_ext(', n, ')'
-        group = 'marbl_tracer_init_tmp_nml'
-        call this%add_var_tcr_rd(sname, group, ciso_tracer_init_ext(n),       &
-             marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_status_log%log_error_trace('add_var_tcr_rd', subname)
-          return
-        end if
-      end do
     end if
 
   end subroutine marbl_define_parameters

@@ -194,7 +194,6 @@ module marbl_mod
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
-  use marbl_interface_types , only : marbl_tracer_read_type
   use marbl_interface_types , only : marbl_saved_state_type
   use marbl_interface_types , only : marbl_interior_forcing_input_type
   use marbl_interface_types , only : marbl_surface_forcing_indexing_type
@@ -220,27 +219,26 @@ module marbl_mod
   public  :: marbl_init_bury_coeff
   public  :: marbl_set_glo_vars_cnt
   public  :: marbl_set_rmean_init_vals
-  public  :: marbl_update_tracer_file_metadata
   public  :: marbl_set_interior_forcing
   public  :: marbl_set_surface_forcing
   public  :: marbl_set_global_scalars_interior
 
   private :: marbl_init_non_autotroph_tracer_metadata
   private :: marbl_init_particulate_terms
-  private :: marbl_init_zooplankton_tracer_metadata         
-  private :: marbl_init_autotroph_tracer_metadata           
-  private :: marbl_update_particulate_terms_from_prior_level      
-  private :: marbl_update_sinking_particle_from_prior_level       
-  private :: marbl_setup_local_tracers                            
-  private :: marbl_setup_local_zooplankton                        
-  private :: marbl_setup_local_autotrophs                         
-  private :: marbl_consistency_check_autotrophs                    
-  private :: marbl_compute_particulate_terms                      
-  private :: marbl_compute_autotroph_elemental_ratios             
+  private :: marbl_init_zooplankton_tracer_metadata
+  private :: marbl_init_autotroph_tracer_metadata
+  private :: marbl_update_particulate_terms_from_prior_level
+  private :: marbl_update_sinking_particle_from_prior_level
+  private :: marbl_setup_local_tracers
+  private :: marbl_setup_local_zooplankton
+  private :: marbl_setup_local_autotrophs
+  private :: marbl_consistency_check_autotrophs
+  private :: marbl_compute_particulate_terms
+  private :: marbl_compute_autotroph_elemental_ratios
   private :: marbl_compute_PAR
-  private :: marbl_compute_carbonate_chemistry                    
-  private :: marbl_compute_function_scaling                       
-  private :: marbl_compute_Pprime                                 
+  private :: marbl_compute_carbonate_chemistry
+  private :: marbl_compute_function_scaling
+  private :: marbl_compute_Pprime
   private :: marbl_compute_Zprime
 
   type, private :: zooplankton_local_type
@@ -703,19 +701,15 @@ contains
   end subroutine marbl_init_surface_forcing_fields
 
   !*****************************************************************************
-  
+
   subroutine marbl_init_tracer_metadata(marbl_tracer_metadata,                &
-             marbl_tracer_read, marbl_tracer_indices, marbl_status_log)
+             marbl_tracer_indices, marbl_status_log)
 
     !  Set tracer and forcing metadata
-
-    use marbl_parms, only : init_ecosys_init_file
-    use marbl_parms, only : init_ecosys_init_file_fmt
 
     implicit none
 
     type (marbl_tracer_metadata_type), intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
-    type (marbl_tracer_read_type)    , intent(inout) :: marbl_tracer_read(:)
     type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
     type(marbl_log_type)             , intent(inout) :: marbl_status_log
 
@@ -779,15 +773,6 @@ contains
        if (n > 0) then
           marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
        endif
-    end do
-
-    do n=1,ecosys_base_tracer_cnt
-      marbl_tracer_read(n)%mod_varname  = marbl_tracer_metadata(n)%short_name
-      marbl_tracer_read(n)%filename     = init_ecosys_init_file
-      marbl_tracer_read(n)%file_varname = marbl_tracer_metadata(n)%short_name
-      marbl_tracer_read(n)%file_fmt     = init_ecosys_init_file_fmt
-      marbl_tracer_read(n)%scale_factor = c1
-      marbl_tracer_read(n)%default_val  = c0
     end do
 
   end subroutine marbl_init_tracer_metadata
@@ -5088,70 +5073,6 @@ contains
     end associate
 
   end subroutine marbl_export_autotroph_shared_variables
-
-  !***********************************************************************
-
-  subroutine marbl_update_tracer_file_metadata(marbl_tracer_indices,          &
-             marbl_tracer_read, tracer_ext, marbl_status_log)
-
-    ! MARBL is responsible for telling the  GCM driver where to read tracer
-    ! initial conditions from, and this information comes from the
-    ! marbl_tracer_read_type data structure (part of the marbl_interface_class)
-    ! By default, the ecosys tracers are expected to be in init_ecosys_init_file
-    ! and the CISO tracers are in ciso_init_ecosys_init_file [which is a
-    ! terrible variable name], but individual tracers can be read from other
-    ! files via the tracer_init_ext and ciso_tracer_init_ext namelist variables.
-    ! This routine parses the tracer_init_ext arrays and updates the file
-    ! metadata of any specified tracers.
-
-    type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
-    type(marbl_tracer_read_type),  intent(inout) :: marbl_tracer_read(:)
-    type(marbl_tracer_read_type),  intent(in)    :: tracer_ext(:)
-    type(marbl_log_type),          intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_mod:marbl_update_tracer_file_metadata'
-    character(len=char_len) :: log_message
-    integer :: n, ind, tracer_ind
-
-    do n=1,size(tracer_ext)
-      if (trim(tracer_ext(n)%mod_varname).ne.'unknown') then
-        ! (1) For each element of tracer_ext(:), determine the tracer index
-        !     of the tracer being updated (ignore 'unknown')
-        tracer_ind = 0
-        do ind=1,size(marbl_tracer_read)
-          if (trim(tracer_ext(n)%mod_varname).eq.                              &
-              trim(marbl_tracer_read(ind)%mod_varname)) then
-            tracer_ind = ind
-            exit
-          end if
-        end do
-
-        ! (1b) Return with an error if no tracer matches
-        if (tracer_ind.eq.0) then
-          write(log_message,"(A,1X,A)") 'No tracer defined with name',        &
-                                        trim(tracer_ext(n)%mod_varname)
-          call marbl_status_log%log_error(log_message, subname)
-          return
-        end if
-
-        ! (2) Given a match, update any fields provided via tracer_ext
-        associate(&
-                  tracer_read       => marbl_tracer_read(ind),                &
-                  namelist_metadata => tracer_ext(n)                          &
-                 )
-          if (namelist_metadata%filename.ne.'unknown') &
-            tracer_read%filename = namelist_metadata%filename
-          if (namelist_metadata%file_varname.ne.'unknown') &
-            tracer_read%file_varname = namelist_metadata%file_varname
-          if (namelist_metadata%scale_factor.ne.c1) &
-            tracer_read%scale_factor = namelist_metadata%scale_factor
-          if (namelist_metadata%default_val.ne.c0) &
-            tracer_read%default_val = namelist_metadata%default_val
-        end associate
-      end if
-    end do
-
-  end subroutine marbl_update_tracer_file_metadata
 
   !***********************************************************************
 

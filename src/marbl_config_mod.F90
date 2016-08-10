@@ -19,8 +19,6 @@ module marbl_config_mod
   use marbl_internal_types, only : zooplankton_config_type
   use marbl_internal_types, only : grazing_config_type
 
-  use marbl_interface_types, only : marbl_tracer_read_type
-
   implicit none
   public
   save
@@ -83,7 +81,6 @@ module marbl_config_mod
     type(marbl_single_config_or_parm_type), dimension(:), pointer :: vars => NULL()
   contains
     procedure          :: add_var          => marbl_var_add
-    procedure          :: add_var_tcr_rd   => marbl_var_add_tcr_rd ! tracer read type
     procedure          :: add_var_1d_r8    => marbl_var_add_1d_r8
     procedure          :: add_var_1d_int   => marbl_var_add_1d_int
     procedure          :: add_var_1d_str   => marbl_var_add_1d_str
@@ -597,57 +594,6 @@ contains
 
   !*****************************************************************************
 
-  subroutine set_defaults_tcr_rd(tracer_read_var, mod_varname, filename,      &
-             file_varname, scale_factor, default_val, file_fmt)
-
-    type(marbl_tracer_read_type), intent(inout) :: tracer_read_var
-    character(len=*), optional :: mod_varname
-    character(len=*), optional :: filename
-    character(len=*), optional :: file_varname
-    real(r8),                optional :: scale_factor
-    real(r8),                optional :: default_val
-    character(len=*), optional :: file_fmt
-
-    if (present(mod_varname)) then
-      tracer_read_var%mod_varname = trim(mod_varname)
-    else
-      tracer_read_var%mod_varname = 'unknown'
-    end if
-
-    if (present(filename)) then
-      tracer_read_var%filename = trim(filename)
-    else
-      tracer_read_var%filename = 'unknown'
-    end if
-
-    if (present(file_varname)) then
-      tracer_read_var%file_varname = trim(file_varname)
-    else
-      tracer_read_var%file_varname = 'unknown'
-    end if
-
-    if (present(scale_factor)) then
-      tracer_read_var%scale_factor = scale_factor
-    else
-      tracer_read_var%scale_factor = c1
-    end if
-
-    if (present(default_val)) then
-      tracer_read_var%default_val = default_val
-    else
-      tracer_read_var%default_val = c0
-    end if
-
-    if (present(file_fmt)) then
-      tracer_read_var%file_fmt = trim(file_fmt)
-    else
-      tracer_read_var%file_fmt = 'nc'
-    end if
-
-  end subroutine set_defaults_tcr_rd
-
-  !*****************************************************************************
-
   subroutine marbl_var_add(this, sname, lname, units, datatype, group,        &
              marbl_status_log, rptr, iptr, lptr, sptr, comment, add_newline)
 
@@ -769,105 +715,6 @@ contains
     this%cnt = id
 
   end subroutine marbl_var_add
-
-  !*****************************************************************************
-
-  subroutine marbl_var_add_tcr_rd(this, sname, group, tracer_read_var,        &
-                                 marbl_status_log)
-
-    use marbl_interface_types, only : marbl_tracer_read_type
-
-    class(marbl_config_and_parms_type),        intent(inout) :: this
-    character(len=char_len),              intent(in)    :: sname
-    character(len=char_len),              intent(in)    :: group
-    type(marbl_tracer_read_type), target, intent(in)    :: tracer_read_var
-    type(marbl_log_type),                 intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add_tcr_rd'
-
-    character(len=char_len)          :: sname_loc
-    character(len=char_len)          :: lname
-    character(len=char_len)          :: units
-    character(len=char_len)          :: datatype
-    character(len=char_len)          :: prefix
-    character(len=char_len), pointer :: sptr => NULL()
-    real(r8),                pointer :: rptr => NULL()
-
-    write(prefix,"(2A)") trim(sname), '%'
-
-    write(sname_loc, "(2A)") trim(prefix), 'mod_varname'
-    lname     = 'Variable name in module'
-    units     = 'unitless'
-    datatype  = 'string'
-    sptr      => tracer_read_var%mod_varname
-    call this%add_var(sname_loc, lname, units, datatype, group,               &
-                      marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    write(sname_loc, "(2A)") trim(prefix), 'filename'
-    lname     = 'File containing initial tracer values'
-    units     = 'unitless'
-    datatype  = 'string'
-    sptr      => tracer_read_var%filename
-    call this%add_var(sname_loc, lname, units, datatype, group,               &
-                      marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    write(sname_loc, "(2A)") trim(prefix), 'file_varname'
-    lname     = 'Tracer variable name in filename'
-    units     = 'unitless'
-    datatype  = 'string'
-    sptr      => tracer_read_var%file_varname
-    call this%add_var(sname_loc, lname, units, datatype, group,               &
-                      marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    write(sname_loc, "(2A)") trim(prefix), 'file_fmt'
-    lname     = 'Format of filename'
-    units     = 'unitless'
-    datatype  = 'string'
-    sptr      => tracer_read_var%file_fmt
-    call this%add_var(sname_loc, lname, units, datatype, group,               &
-                      marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    write(sname_loc, "(2A)") trim(prefix), 'scale_factor'
-    lname     = 'Scale factor to use when reading tracer from file'
-    units     = 'unitless (or conversion)'
-    datatype  = 'real'
-    rptr      => tracer_read_var%scale_factor
-    call this%add_var(sname_loc, lname, units, datatype, group,               &
-                      marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    write(sname_loc, "(2A)") trim(prefix), 'default_val'
-    lname     = 'Initial value of tracer if no file provided'
-    units     = 'tracer units'
-    datatype  = 'real'
-    rptr      => tracer_read_var%default_val
-    call this%add_var(sname_loc, lname, units, datatype, group,               &
-                      marbl_status_log, rptr=rptr, add_newline=.true.)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-  end subroutine marbl_var_add_tcr_rd
 
   !*****************************************************************************
 

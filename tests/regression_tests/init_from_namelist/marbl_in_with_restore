@@ -10,5 +10,3 @@ testname="init_from_namelist"
  rest_time_inv_surf = 2.3e-6
  rest_time_inv_deep = 2.3e-6
 /
-&marbl_tracer_init_tmp_nml
-/
