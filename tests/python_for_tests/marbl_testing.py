@@ -60,7 +60,7 @@ def parse_args(desc, HaveCompiler=True, HaveNamelist=True, CleanLibOnly=False):
     hostname = gethostname()
     if 'yslogin' in hostname:
       mach = 'yellowstone'
-    elif hostname == 'hobart':
+    elif 'hobart' in hostname:
       mach = 'hobart'
     elif 'edison' in hostname:
       mach = 'edison'
