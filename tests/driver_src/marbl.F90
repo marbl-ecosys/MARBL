@@ -99,7 +99,6 @@ Program marbl
     case ('request_tracers')
       ldiff_log = .true.
       call marbl_init_namelist_test(marbl_instance, nl_buffer, nt)
-      print*, nt
       ! Log requested forcing fields
       call marbl_status_log%log_noerror('', subname)
       call marbl_status_log%log_noerror('Requested tracers', subname)
