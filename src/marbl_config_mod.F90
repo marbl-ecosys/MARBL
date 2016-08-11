@@ -525,7 +525,7 @@ contains
       group    = 'marbl_config_nml'
       sptr     => zooplankton_config(n)%lname
       call this%add_var(sname, lname, units, datatype, group,               &
-                        marbl_status_log, sptr=sptr)
+                        marbl_status_log, sptr=sptr, add_newline=.true.)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -582,7 +582,7 @@ contains
         group    = 'marbl_config_nml'
         iptr     => grazing_config(m,n)%zoo_ind_cnt
         call this%add_var(sname, lname, units, datatype, group,               &
-                          marbl_status_log, iptr=iptr)
+                          marbl_status_log, iptr=iptr, add_newline=.true.)
         if (marbl_status_log%labort_marbl) then
           call log_add_var_error(marbl_status_log, sname, subname)
           return
@@ -846,7 +846,6 @@ contains
       ! (2) Log the group name if different than previous parameter
       if (this%vars(n)%group.ne.group) then
         group = trim(this%vars(n)%group)
-        call marbl_status_log%log_noerror('', subname)
         log_message = ''
         do i=1,len(trim(group))
           log_message(i:i) = '-'

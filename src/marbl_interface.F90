@@ -176,6 +176,7 @@ contains
     !--------------------------------------------------------------------
 
     call this%StatusLog%construct()
+    call this%StatusLog%log_noerror('', subname)
 
     if (present(lgcm_has_global_ops)) then
       this%lallow_glo_ops = lgcm_has_global_ops
@@ -200,8 +201,10 @@ contains
         return
       end if
     else
-      write(log_message, "(A)") 'No namelists were provided to config'
+      write(log_message, "(2A)") '** No namelists were provided to config, ', &
+           'use put() and get() to change configuration variables'
       call this%StatusLog%log_noerror(log_message, subname)
+      call this%StatusLog%log_noerror('', subname)
     end if
 
     !---------------------------------------------------------------------------
@@ -306,11 +309,7 @@ contains
     !-----------------------------------------------------------------------
 
     call this%tracer_indices%construct(ciso_on, autotrophs_config,            &
-         zooplankton_config, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("tracer_indices%construct", subname)
-      return
-    end if
+         zooplankton_config)
     if (present(marbl_tracer_cnt)) &
       marbl_tracer_cnt = marbl_total_tracer_cnt
 
@@ -337,8 +336,10 @@ contains
         return
       end if
     else
-      write(log_message, "(A)") 'No namelists were provided to init'
+      write(log_message, "(2A)") '** No namelists were provided to init, ',   &
+           'use put() and get() to change parameters'
       call this%StatusLog%log_noerror(log_message, subname)
+      call this%StatusLog%log_noerror('', subname)
     end if
 
     !--------------------------------------------------------------------
@@ -441,12 +442,6 @@ contains
       return
     end if
 
-    do i=1,num_surface_forcing_fields
-      write(log_message, "(2A)") "Required forcing field: ",                  &
-                                 trim(this%surface_forcing_metadata(i)%varname)
-      call this%StatusLog%log_noerror(log_message, subname)
-    end do
-
     allocate(this%surface_input_forcings(num_surface_elements, num_surface_forcing_fields))
 
     !--------------------------------------------------------------------
@@ -502,6 +497,8 @@ contains
     class(marbl_interface_class), intent(inout) :: this
 
     character(*), parameter :: subname = 'marbl_interface:complete_config_and_init'
+    character(len=char_len) :: log_message
+    integer :: n
 
     ! Update values of any parameters that depend on namelist / put statements
     call set_derived_parms(this%StatusLog)
@@ -517,6 +514,24 @@ contains
            subname)
       return
     end if
+
+    ! Report what tracers are being used
+      call this%StatusLog%log_noerror('', subname)
+      call this%StatusLog%log_noerror('Tracer indices', subname)
+      call this%StatusLog%log_noerror('-----', subname)
+    do n=1,marbl_total_tracer_cnt
+      write(log_message, "(I2,2A)") n, '. ', &
+                                 trim(this%tracer_metadata(n)%short_name)
+      call this%StatusLog%log_noerror(log_message, subname)
+    end do
+
+    ! Report what surface forcings are required from the driver
+      call this%StatusLog%log_noerror('', subname)
+    do n=1,num_surface_forcing_fields
+      write(log_message, "(2A)") "Required forcing field: ",                  &
+                                 trim(this%surface_forcing_metadata(n)%varname)
+      call this%StatusLog%log_noerror(log_message, subname)
+    end do
 
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
