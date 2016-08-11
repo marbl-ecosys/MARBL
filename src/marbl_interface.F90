@@ -517,19 +517,24 @@ contains
 
     ! Report what tracers are being used
       call this%StatusLog%log_noerror('', subname)
-      call this%StatusLog%log_noerror('Tracer indices', subname)
-      call this%StatusLog%log_noerror('-----', subname)
+      call this%StatusLog%log_noerror('--------------------', subname)
+      call this%StatusLog%log_noerror('MARBL Tracer indices', subname)
+      call this%StatusLog%log_noerror('--------------------', subname)
+      call this%StatusLog%log_noerror('', subname)
     do n=1,marbl_total_tracer_cnt
-      write(log_message, "(I2,2A)") n, '. ', &
+      write(log_message, "(I3,2A)") n, '. ', &
                                  trim(this%tracer_metadata(n)%short_name)
       call this%StatusLog%log_noerror(log_message, subname)
     end do
 
     ! Report what surface forcings are required from the driver
       call this%StatusLog%log_noerror('', subname)
+      call this%StatusLog%log_noerror('-----------------------------', subname)
+      call this%StatusLog%log_noerror('MARBL-Required Forcing Fields', subname)
+      call this%StatusLog%log_noerror('-----------------------------', subname)
+      call this%StatusLog%log_noerror('', subname)
     do n=1,num_surface_forcing_fields
-      write(log_message, "(2A)") "Required forcing field: ",                  &
-                                 trim(this%surface_forcing_metadata(n)%varname)
+      write(log_message, "(2A)") '* ', trim(this%surface_forcing_metadata(n)%varname)
       call this%StatusLog%log_noerror(log_message, subname)
     end do
 
