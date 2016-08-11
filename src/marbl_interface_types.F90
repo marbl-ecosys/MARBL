@@ -12,37 +12,6 @@ module marbl_interface_types
 
   !****************************************************************************
 
-  type, public :: marbl_surface_forcing_indexing_type
-     integer(int_kind) :: surface_mask_id      = 0
-     integer(int_kind) :: u10_sqr_id           = 0
-     integer(int_kind) :: ifrac_id             = 0
-     integer(int_kind) :: sst_id               = 0
-     integer(int_kind) :: sss_id               = 0
-     integer(int_kind) :: atm_pressure_id      = 0
-     integer(int_kind) :: xco2_id              = 0
-     integer(int_kind) :: xco2_alt_co2_id      = 0
-     integer(int_kind) :: xkw_id               = 0
-     integer(int_kind) :: dust_flux_id         = 0
-     integer(int_kind) :: black_carbon_flux_id = 0
-     integer(int_kind) :: iron_flux_id         = 0
-     integer(int_kind) :: nox_flux_id          = 0
-     integer(int_kind) :: nhy_flux_id          = 0
-     integer(int_kind) :: din_riv_flux_id      = 0
-     integer(int_kind) :: dip_riv_flux_id      = 0
-     integer(int_kind) :: don_riv_flux_id      = 0
-     integer(int_kind) :: dop_riv_flux_id      = 0
-     integer(int_kind) :: dsi_riv_flux_id      = 0
-     integer(int_kind) :: dfe_riv_flux_id      = 0
-     integer(int_kind) :: dic_riv_flux_id      = 0
-     integer(int_kind) :: alk_riv_flux_id      = 0
-     integer(int_kind) :: doc_riv_flux_id      = 0
-     integer(int_kind) :: d13c_id              = 0
-     integer(int_kind) :: d14c_id              = 0
-     integer(int_kind) :: d14c_glo_avg_id      = 0
-  end type marbl_surface_forcing_indexing_type
-
-  !****************************************************************************
-
   ! NOTE: when adding a new surface forcing output field (a field that the GCM
   !       may need to pass to flux coupler), remember to add a new index for it
   !       as well.
@@ -196,28 +165,13 @@ module marbl_interface_types
 
   !*****************************************************************************
 
-  type, private :: marbl_single_forcing_field_type
-     ! single_forcing_field_type (contains the above 4 type definitions)
-     character(char_len)                        :: varname
-     character(char_len)                        :: field_units      ! field data units, not the file (driver must do unit conversion)
-   contains
-     procedure :: initialize  => marbl_single_forcing_field_init
-  end type marbl_single_forcing_field_type
-
-  !*****************************************************************************
-
   type, public :: marbl_forcing_fields_metadata_type
      ! Contains variable names and units for required forcing fields; actual
      ! forcing data is in marbl_instance%surface_input_forcing(:,:)
      ! Note that surface_input_forcing_data(:,n) contains the data for forcing
      ! field n (i.e. varname(n) with units field_units(n)]
-     integer(kind=int_kind) :: num_elements
-     integer(kind=int_kind) :: forcing_field_cnt
-     type(marbl_single_forcing_field_type), dimension(:), allocatable :: forcing_fields
-   contains
-     procedure, public :: construct         => marbl_forcing_fields_constructor
-     procedure, public :: add_forcing_field => marbl_forcing_fields_add
-     procedure, public :: deconstruct       => marbl_forcing_fields_deconstructor
+     character(char_len)    :: varname
+     character(char_len)    :: field_units
   end type marbl_forcing_fields_metadata_type
 
   !*****************************************************************************
@@ -681,84 +635,6 @@ contains
     deallocate(this%diags)
 
   end subroutine marbl_diagnostics_deconstructor
-
-  !*****************************************************************************
-
-  subroutine marbl_single_forcing_field_init(this, varname, field_units)
-
-    class(marbl_single_forcing_field_type), intent(inout) :: this
-    character (char_len),                   intent(in)    :: varname
-    character (char_len),                   intent(in)    :: field_units
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_interface_types:marbl_single_forcing_field_init'
-    character(len=char_len) :: log_message
-    !-----------------------------------------------------------------------
-
-    ! required variables for all forcing field sources
-    this%varname = varname
-    this%field_units   = field_units
-
-   end subroutine marbl_single_forcing_field_init
-
-  !*****************************************************************************
-
-  subroutine marbl_forcing_fields_constructor(this, num_elements, num_forcing_fields)
-
-    class(marbl_forcing_fields_metadata_type), intent(inout) :: this
-    integer (int_kind),               intent(in)    :: num_elements
-    integer (int_kind),               intent(in)    :: num_forcing_fields
-
-    allocate(this%forcing_fields(num_forcing_fields))
-    this%forcing_field_cnt = 0
-    this%num_elements      = num_elements
-    !TODO: initialize forcing fields to null?
-
-  end subroutine marbl_forcing_fields_constructor
-
-  !*****************************************************************************
-
-  subroutine marbl_forcing_fields_add(this, varname, field_units, id,         &
-                                      marbl_status_log)
-
-    class(marbl_forcing_fields_metadata_type) , intent(inout) :: this
-    character (char_len)             , intent(in)    :: varname
-    character (char_len)             , intent(in)    :: field_units
-    integer (kind=int_kind)          , intent(out)   :: id
-    type(marbl_log_type),              intent(inout) :: marbl_status_log
-
-    integer (kind=int_kind) :: num_elem
-    character(*), parameter :: subname = 'marbl_interface_types:marbl_forcing_fields_add'
-    character(len=char_len) :: log_message
-
-    ! Note - the following sets the indices into the marble interface type surface_input_forcings(:,indices)
-
-    this%forcing_field_cnt = this%forcing_field_cnt + 1
-    id = this%forcing_field_cnt
-    if (id .gt. size(this%forcing_fields)) then
-      log_message = "not enough memory allocated for number of forcing fields!"
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-    num_elem = this%num_elements
-
-    call this%forcing_fields(id)%initialize(varname, field_units)
-
-  end subroutine marbl_forcing_fields_add
-
-  !*****************************************************************************
-
-  subroutine marbl_forcing_fields_deconstructor(this)
-
-    class(marbl_forcing_fields_metadata_type), intent(inout) :: this
-
-    integer (kind=int_kind) :: n
-
-    deallocate(this%forcing_fields)
-
-  end subroutine marbl_forcing_fields_deconstructor
 
   !*****************************************************************************
 

@@ -91,9 +91,9 @@ Program marbl
       call marbl_status_log%log_noerror('', subname)
       call marbl_status_log%log_noerror('Requested forcing fields', subname)
       call marbl_status_log%log_noerror('---', subname)
-      do n=1,marbl_instance%surface_forcing_fields%forcing_field_cnt
+      do n=1,size(marbl_instance%surface_forcing_metadata)
         write(log_message, "(I0, 2A)") n, '. ',                               &
-          trim(marbl_instance%surface_forcing_fields%forcing_fields(n)%varname)
+          trim(marbl_instance%surface_forcing_metadata(n)%varname)
         call marbl_status_log%log_noerror(log_message, subname)
       end do
     case ('request_tracers')

@@ -190,13 +190,13 @@ module marbl_mod
   use marbl_internal_types  , only : marbl_zooplankton_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
-  use marbl_internal_types , only : marbl_tracer_index_type
+  use marbl_internal_types  , only : marbl_tracer_index_type
+  use marbl_internal_types  , only : marbl_surface_forcing_indexing_type
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
   use marbl_interface_types , only : marbl_saved_state_type
   use marbl_interface_types , only : marbl_interior_forcing_input_type
-  use marbl_interface_types , only : marbl_surface_forcing_indexing_type
   use marbl_interface_types , only : marbl_surface_forcing_output_type
   use marbl_interface_types , only : marbl_forcing_fields_metadata_type
   use marbl_interface_types , only : marbl_diagnostics_type
@@ -286,8 +286,8 @@ contains
   !*****************************************************************************
 
   subroutine marbl_init_surface_forcing_fields(&
-       num_elements, num_surface_forcing_fields, &
-       surface_forcing_indices, surface_forcing_fields,   &
+       surface_forcing_indices, &
+       surface_forcing_metadata, &
        marbl_status_log)
 
     !  Initialize the surface forcing_fields datatype with information from the
@@ -296,10 +296,8 @@ contains
 
     implicit none
 
-    integer (KIND=int_kind)                   , intent(in)    :: num_elements
-    integer (kind=int_kind)                   , intent(out)   :: num_surface_forcing_fields
-    type(marbl_surface_forcing_indexing_type) , intent(out)   :: surface_forcing_indices
-    type(marbl_forcing_fields_metadata_type)  , intent(out)   :: surface_forcing_fields
+    type(marbl_surface_forcing_indexing_type) , intent(in)   :: surface_forcing_indices
+    type(marbl_forcing_fields_metadata_type)  , intent(inout)   :: surface_forcing_metadata(:)
     type(marbl_log_type)                      , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
@@ -307,389 +305,191 @@ contains
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_init_surface_forcing_fields'
     character(len=char_len) :: log_message
-    character(char_len) :: varname
-    character(char_len) :: units
-    real (kind=r8)      :: constant
-    logical             :: count_only ! true => count the diagnostics, false => add the diagnostics
-    integer             :: imode      ! imode = 1, count_only is true, otherwise count_only is false
+    integer                 :: id, max_size
+    logical                 :: found
     !-----------------------------------------------------------------------
 
-    associate(                                    &
-         ind => surface_forcing_indices,          &
-         forcing_fields => surface_forcing_fields &
-         )
+    associate(ind => surface_forcing_indices)
 
-    ! First count then allocate memory for surface forcing fields
+    max_size = size(surface_forcing_metadata)
+    surface_forcing_metadata(:)%varname = ''
+    do id=1,max_size
+      found = .false.
 
-    num_surface_forcing_fields = 0
-    do imode = 1,2
+      ! Surface Mask
+      if (id.eq.ind%surface_mask_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'surface_mask'
+        surface_forcing_metadata(id)%field_units   = 'unitless'
+      end if
 
-       if (imode == 1) then
-          count_only = .true.
-       else
-          count_only = .false.
-          call forcing_fields%construct(num_elements, num_surface_forcing_fields)
-       end if
+      ! Square of 10m wind
+      if (id.eq.ind%u10_sqr_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'u10_sqr'
+        surface_forcing_metadata(id)%field_units   = 'cm^2/s^2'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'surface_mask'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, field_units=units,                            &
-               id=ind%surface_mask_id, marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! Sea-surface salinity
+      if (id.eq.ind%sss_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'sss'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (ciso_on) then
-          if (count_only) then
-             num_surface_forcing_fields = num_surface_forcing_fields + 1
-          else
-             varname    = 'd13c'
-             units      = 'unknown'
-             call forcing_fields%add_forcing_field(&
-                  varname=varname, field_units=units,                         &
-                  id=ind%d13c_id, marbl_status_log = marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_forcing_field_error(marbl_status_log, varname, subname)
-               return
-             end if
-          end if
+      ! Sea-surface temperature
+      if (id.eq.ind%sst_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'sst'
+        surface_forcing_metadata(id)%field_units   = 'degrees C'
+      end if
 
-          if (count_only) then
-             num_surface_forcing_fields = num_surface_forcing_fields + 1
-          else
-             varname    = 'd14c'
-             units      = 'unknown'
-             call forcing_fields%add_forcing_field(&
-                  varname=varname, field_units=units,                         &
-                  id=ind%d14c_id, marbl_status_log = marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_forcing_field_error(marbl_status_log, varname, subname)
-               return
-             end if
-          end if
+      ! Ice Fraction
+      if (id.eq.ind%ifrac_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'Ice Fraction'
+        surface_forcing_metadata(id)%field_units   = 'unitless'
+      end if
 
-          if (count_only) then
-             num_surface_forcing_fields = num_surface_forcing_fields + 1
-          else
-             varname    = 'd14c_gloavg'
-             units      = 'unknown'
-             call forcing_fields%add_forcing_field(&
-                  varname=varname, field_units=units,                         &
-                  id=ind%d14c_glo_avg_id, marbl_status_log = marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_forcing_field_error(marbl_status_log, varname, subname)
-               return
-             end if
-          end if
-       end if ! ciso_on
+      ! Dust Flux
+      if (id.eq.ind%dust_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'Dust Flux'
+        surface_forcing_metadata(id)%field_units   = 'g/cm^2/s'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'u10_sqr'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, field_units=units,                            &
-               id=ind%u10_sqr_id, marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! Iron Flux
+      if (id.eq.ind%iron_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'Iron Flux'
+        surface_forcing_metadata(id)%field_units   = 'nmol/cm^2/s'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'sst'
-          units      = 'Temperature (C)'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, field_units=units,                            &
-               id=ind%sst_id, marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! NOx Flux
+      if (id.eq.ind%nox_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'NOx Flux'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'sss'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, field_units=units,                            &
-               id=ind%sss_id, marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! NHy Flux
+      if (id.eq.ind%nhy_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'NHy Flux'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (lflux_gas_co2) then
-          if (count_only) then
-             num_surface_forcing_fields = num_surface_forcing_fields + 1
-          else
-             varname    = 'xco2'
-             units      = 'unknown'
-             call forcing_fields%add_forcing_field(&
-                  varname=varname, field_units=units,                         &
-                  id=ind%xco2_id, marbl_status_log = marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_forcing_field_error(marbl_status_log, varname, subname)
-               return
-             end if
-          end if
+      ! DIN River Flux
+      if (id.eq.ind%din_riv_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'DIN River Flux'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-          if (count_only) then
-             num_surface_forcing_fields = num_surface_forcing_fields + 1
-          else
-             varname    = 'xco2_alt_co2'
-             units      = 'unknown'
-             call forcing_fields%add_forcing_field(&
-                  varname=varname, field_units=units,                         &
-                  id=ind%xco2_alt_co2_id, marbl_status_log = marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_forcing_field_error(marbl_status_log, varname, subname)
-               return
-             end if
-          end if
-       end if ! lflux_gas_co2
+      ! DIP River Flux
+      if (id.eq.ind%dip_riv_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'DIP River Flux'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'Ice Fraction'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, field_units=units,                            &
-               id=ind%ifrac_id, marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! DON River Flux
+      if (id.eq.ind%don_riv_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'DON River Flux'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (lflux_gas_o2 .or. lflux_gas_co2) then
-          if (count_only) then
-             num_surface_forcing_fields = num_surface_forcing_fields + 1
-          else
-             varname    = 'Atmospheric Pressure'
-             units      = 'unknown'
-             call forcing_fields%add_forcing_field(&
-                  varname=varname, field_units=units,                         &
-                  id=ind%atm_pressure_id, marbl_status_log=marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_forcing_field_error(marbl_status_log, varname, subname)
-               return
-             end if
-          end if
-       end if
+      ! DOP River Flux
+      if (id.eq.ind%dop_riv_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'DOP River Flux'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname = 'Dust Flux'
-          units   = 'g/cm^2/s'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, field_units=units,                            &
-               id=ind%dust_flux_id, marbl_status_log=marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! DSi River Flux
+      if (id.eq.ind%dsi_riv_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'DSi River Flux'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname = 'Iron Flux'
-          units   = 'nmol/cm^2/s'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, field_units=units,                            &
-               id=ind%iron_flux_id, marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! DFe River Flux
+      if (id.eq.ind%dfe_riv_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'DFe River Flux'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'NOx Flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-                  varname=varname, field_units=units,                         &
-                  id=ind%nox_flux_id, marbl_status_log=marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! DIC River Flux
+      if (id.eq.ind%dic_riv_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'DIC River Flux'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'NHy Flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, field_units=units,                            &
-               id=ind%nhy_flux_id, marbl_status_log=marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! ALK River Flux
+      if (id.eq.ind%alk_riv_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'ALK River Flux'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'DIN river flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, &
-               field_units=units, &
-               id=ind%din_riv_flux_id, &
-               marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! DOC River Flux
+      if (id.eq.ind%doc_riv_flux_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'DOC River Flux'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'DIP river flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, &
-               field_units=units, &
-               id=ind%dip_riv_flux_id, &
-               marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! atm pressure
+      if (id.eq.ind%atm_pressure_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'Atmospheric Pressure'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'DON river flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, &
-               field_units=units, &
-               id=ind%don_riv_flux_id, &
-               marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! xco2
+      if (id.eq.ind%xco2_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'xco2'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'DOP river flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, &
-               field_units=units, &
-               id=ind%dop_riv_flux_id, &
-               marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! xco2_alt_co2
+      if (id.eq.ind%xco2_alt_co2_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'xco2_alt_co2'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'DSI river flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, &
-               field_units=units, &
-               id=ind%dsi_riv_flux_id, &
-               marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! d13c
+      if (id.eq.ind%d13c_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'd13c'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'DFE river flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, &
-               field_units=units, &
-               id=ind%dfe_riv_flux_id, &
-               marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! d14c
+      if (id.eq.ind%d14c_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'd14c'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'DIC river flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, &
-               field_units=units, &
-               id=ind%dic_riv_flux_id, &
-               marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      ! d14c_gloavg
+      if (id.eq.ind%d14c_glo_avg_id) then
+        found = .true.
+        surface_forcing_metadata(id)%varname       = 'd14c_gloavg'
+        surface_forcing_metadata(id)%field_units   = 'unknown units'
+      end if
 
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'ALK river flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, &
-               field_units=units, &
-               id=ind%alk_riv_flux_id, &
-               marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_surface_forcing_fields = num_surface_forcing_fields + 1
-       else
-          varname    = 'DOC river flux'
-          units      = 'unknown'
-          call forcing_fields%add_forcing_field(&
-               varname=varname, &
-               field_units=units, &
-               id=ind%doc_riv_flux_id, &
-               marbl_status_log = marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_forcing_field_error(marbl_status_log, varname, subname)
-            return
-          end if
-       end if
+      if (.not.found) then
+        write(log_message, "(A,I0,A)") "Index number ", id, &
+             " is not associated with a forcing field!"
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
 
     end do
 
@@ -2252,9 +2052,9 @@ contains
     implicit none
 
     integer (int_kind)                        , intent(in)    :: num_elements
-    type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind         
+    type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
     real(r8)                                  , intent(in)    :: surface_input_forcings(:,:)
-    real (r8)                                 , intent(in)    :: surface_vals(:,:)            
+    real (r8)                                 , intent(in)    :: surface_vals(:,:)
     real (r8)                                 , intent(out)   :: surface_tracer_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(inout) :: saved_state
@@ -2285,30 +2085,28 @@ contains
 
     associate(                                                                                      &
          ind                  => surface_forcing_ind,                                               &
-  
+
          surface_mask         => surface_input_forcings(:,surface_forcing_ind%surface_mask_id),     &
          ifrac                => surface_input_forcings(:,surface_forcing_ind%ifrac_id),            &
          sst                  => surface_input_forcings(:,surface_forcing_ind%sst_id),              &
          sss                  => surface_input_forcings(:,surface_forcing_ind%sss_id),              &
          xco2                 => surface_input_forcings(:,surface_forcing_ind%xco2_id),             &
-         xco2_alt_co2         => surface_input_forcings(:,surface_forcing_ind%xco2_alt_co2_id),     & 
+         xco2_alt_co2         => surface_input_forcings(:,surface_forcing_ind%xco2_alt_co2_id),     &
          ap_used              => surface_input_forcings(:,surface_forcing_ind%atm_pressure_id),     &
-         xkw                  => surface_input_forcings(:,surface_forcing_ind%xkw_id),              &
          u10_sqr              => surface_input_forcings(:,surface_forcing_ind%u10_sqr_id),          &
          dust_flux_in         => surface_input_forcings(:,surface_forcing_ind%dust_flux_id),        &
          iron_flux_in         => surface_input_forcings(:,surface_forcing_ind%iron_flux_id),        &
-         black_carbon_flux_in => surface_input_forcings(:,surface_forcing_ind%black_carbon_flux_id),&
          nox_flux             => surface_input_forcings(:,surface_forcing_ind%nox_flux_id),         &
          nhy_flux             => surface_input_forcings(:,surface_forcing_ind%nhy_flux_id),         &
-         din_riv_flux         => surface_input_forcings(:,surface_forcing_ind%din_riv_flux_id),     & 
-         dip_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dip_riv_flux_id),     & 
-         don_riv_flux         => surface_input_forcings(:,surface_forcing_ind%don_riv_flux_id),     & 
-         dop_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dop_riv_flux_id),     & 
-         dsi_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dsi_riv_flux_id),     & 
-         dfe_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dfe_riv_flux_id),     & 
-         dic_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dic_riv_flux_id),     & 
-         doc_riv_flux         => surface_input_forcings(:,surface_forcing_ind%doc_riv_flux_id),     & 
-         alk_riv_flux         => surface_input_forcings(:,surface_forcing_ind%alk_riv_flux_id),     & 
+         din_riv_flux         => surface_input_forcings(:,surface_forcing_ind%din_riv_flux_id),     &
+         dip_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dip_riv_flux_id),     &
+         don_riv_flux         => surface_input_forcings(:,surface_forcing_ind%don_riv_flux_id),     &
+         dop_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dop_riv_flux_id),     &
+         dsi_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dsi_riv_flux_id),     &
+         dfe_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dfe_riv_flux_id),     &
+         dic_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dic_riv_flux_id),     &
+         doc_riv_flux         => surface_input_forcings(:,surface_forcing_ind%doc_riv_flux_id),     &
+         alk_riv_flux         => surface_input_forcings(:,surface_forcing_ind%alk_riv_flux_id),     &
 
          iron_flux_in_new     => surface_forcing_internal%iron_flux(:),                             &
          flux_co2             => surface_forcing_internal%flux_co2(:),                              &
@@ -2392,7 +2190,8 @@ contains
        !  Compute XKW_ICE. XKW is zero over land, so XKW_ICE is too.
        !-----------------------------------------------------------------------
 
-       xkw_ice(:) = (c1 - ifrac(:)) * xkw
+! MNL MNL MNL: commented out xkw
+!       xkw_ice(:) = (c1 - ifrac(:)) * xkw
 
        !-----------------------------------------------------------------------
        !  compute O2 flux
@@ -2403,7 +2202,7 @@ contains
 
           o2sat_1atm(:) = o2sat_surf(num_elements, sst, sss, surface_mask)
 
-          where (surface_mask(:) /= c0) 
+          where (surface_mask(:) /= c0)
              pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
              o2sat(:) = ap_used(:) * o2sat_1atm(:)
              flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - surface_vals(:, o2_ind))
@@ -2616,19 +2415,19 @@ contains
     !-----------------------------------------------------------------------
     !  calculate nox and nhy fluxes if necessary
     !-----------------------------------------------------------------------
-       
+
     if (surface_forcing_ind%nox_flux_id.ne.0) then
        where (surface_mask(:) /= c0)
          stf(:, no3_ind) = stf(:, no3_ind) + nox_flux(:)
        end where
     endif
-       
+
     if (surface_forcing_ind%nhy_flux_id.ne.0) then
        where (surface_mask(:) /= c0)
          stf(:, nh4_ind) = stf(:, nh4_ind) + nhy_flux(:)
        end where
     endif
-       
+
     !-----------------------------------------------------------------------
     !  calculate river bgc fluxes if necessary
     !-----------------------------------------------------------------------
@@ -2698,8 +2497,8 @@ contains
          surface_forcing_internal = surface_forcing_internal, &
          surface_tracer_fluxes    = stf,                      &
          marbl_tracer_indices     = marbl_tracer_indices,     &
-         saved_state              = saved_state,              & 
-         saved_state_ind          = saved_state_ind,          & 
+         saved_state              = saved_state,              &
+         saved_state_ind          = saved_state_ind,          &
          surface_forcing_diags    = surface_forcing_diags)
 
     !-----------------------------------------------------------------------

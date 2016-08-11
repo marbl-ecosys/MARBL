@@ -31,13 +31,13 @@ module marbl_interface
   use marbl_interface_types , only : marbl_interior_forcing_input_type
   use marbl_interface_types , only : marbl_surface_forcing_output_type
   use marbl_interface_types , only : marbl_diagnostics_type
-  use marbl_interface_types , only : marbl_surface_forcing_indexing_type
   use marbl_interface_types , only : marbl_forcing_fields_metadata_type
   use marbl_interface_types , only : marbl_saved_state_type
   use marbl_interface_types , only : marbl_running_mean_0d_type
 
-  use marbl_internal_types , only : marbl_surface_saved_state_indexing_type
-  use marbl_internal_types , only : marbl_interior_saved_state_indexing_type
+  use marbl_internal_types  , only : marbl_surface_forcing_indexing_type
+  use marbl_internal_types  , only : marbl_surface_saved_state_indexing_type
+  use marbl_internal_types  , only : marbl_interior_saved_state_indexing_type
   use marbl_internal_types  , only : marbl_PAR_type
   use marbl_internal_types  , only : marbl_interior_share_type
   use marbl_internal_types  , only : marbl_autotroph_share_type
@@ -95,7 +95,7 @@ module marbl_interface
      real (r8)                                 , public, allocatable  :: surface_input_forcings(:,:) ! input  *
      real (r8)                                 , public, allocatable  :: surface_tracer_fluxes(:,:)  ! output *
      type(marbl_surface_forcing_indexing_type) , public               :: surface_forcing_ind         !
-     type(marbl_forcing_fields_metadata_type)  , public               :: surface_forcing_fields
+     type(marbl_forcing_fields_metadata_type)  , public, allocatable  :: surface_forcing_metadata(:)
      type(marbl_surface_forcing_output_type)   , public               :: surface_forcing_output      ! output
      type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
 
@@ -240,6 +240,8 @@ contains
     use marbl_config_mod      , only : autotrophs_config
     use marbl_config_mod      , only : zooplankton_config
     use marbl_config_mod      , only : set_derived_config
+    use marbl_config_mod      , only : lflux_gas_o2
+    use marbl_config_mod      , only : lflux_gas_co2
     use marbl_parms           , only : marbl_parms_set_defaults
     use marbl_parms           , only : marbl_parms_read_namelist
     use marbl_parms           , only : marbl_define_parameters
@@ -311,6 +313,12 @@ contains
     end if
     if (present(marbl_tracer_cnt)) &
       marbl_tracer_cnt = marbl_total_tracer_cnt
+
+    !-----------------------------------------------------------------------
+    !  Set up surface forcing indices
+    !-----------------------------------------------------------------------
+
+    call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2)
 
     !---------------------------------------------------------------------------
     ! set default values for parameters
@@ -422,20 +430,20 @@ contains
     ! initialize marbl surface forcing fields
     !--------------------------------------------------------------------
 
+    allocate(this%surface_forcing_metadata(num_surface_forcing_fields))
+
     call marbl_init_surface_forcing_fields(                                   &
-         num_elements                 = num_surface_elements,                 &
-         num_surface_forcing_fields   = num_surface_forcing_fields,           &
-         surface_forcing_indices      = this%surface_forcing_ind,             &
-         surface_forcing_fields       = this%surface_forcing_fields,          &
-         marbl_status_log             = this%StatusLog)
+         surface_forcing_indices  = this%surface_forcing_ind,                 &
+         surface_forcing_metadata = this%surface_forcing_metadata,            &
+         marbl_status_log         = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_surface_forcing_fields()", subname)
       return
     end if
 
-    do i=1,this%surface_forcing_fields%forcing_field_cnt
+    do i=1,num_surface_forcing_fields
       write(log_message, "(2A)") "Required forcing field: ",                  &
-                                 trim(this%surface_forcing_fields%forcing_fields(i)%varname)
+                                 trim(this%surface_forcing_metadata(i)%varname)
       call this%StatusLog%log_noerror(log_message, subname)
     end do
 
