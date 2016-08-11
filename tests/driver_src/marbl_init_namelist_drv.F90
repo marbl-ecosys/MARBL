@@ -14,10 +14,11 @@ module marbl_init_namelist_drv
 
 Contains
 
-  subroutine test(marbl_instance, gcm_namelist)
+  subroutine test(marbl_instance, gcm_namelist, nt)
 
-    type(marbl_interface_class), intent(inout) :: marbl_instance
-    character(len=*), dimension(:), intent(in) :: gcm_namelist
+    type(marbl_interface_class),    intent(inout) :: marbl_instance
+    character(len=*), dimension(:), intent(in)    :: gcm_namelist
+    integer, intent(inout),  optional             :: nt
 
     character(*), parameter      :: subname = 'marbl_init_namelist_drv:test'
     real(kind=r8), dimension(km) :: dz, zw, zt
@@ -49,7 +50,8 @@ Contains
                              gcm_dz = dz,                                     &
                              gcm_zw = zw,                                     &
                              gcm_zt = zt,                                     &
-                             gcm_nl_buffer = gcm_namelist)
+                             gcm_nl_buffer = gcm_namelist,                    &
+                             marbl_tracer_cnt = nt)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%init', subname)
       return

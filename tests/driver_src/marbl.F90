@@ -17,14 +17,15 @@ Program marbl
 
   Implicit None
 
+  character(len=256), parameter :: subname = 'Program Marbl'
   type(marbl_interface_class) :: marbl_instance
   type(marbl_log_type)        :: marbl_status_log
   character(len=marbl_nl_buffer_size) :: nl_buffer(marbl_nl_cnt)
   character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
   character(len=marbl_nl_in_size)     :: nl_str, tmp_str
   integer                             :: ioerr=0
-  integer                             :: m, n
-  character(len=256)                  :: testname
+  integer                             :: m, n, nt
+  character(len=256)                  :: testname, log_message
   logical                             :: ldiff_log
 
   namelist /marbl_driver_nml/testname
@@ -83,6 +84,31 @@ Program marbl
     case ('get_put')
       ldiff_log = .true.
       call marbl_get_put_test(marbl_instance, marbl_status_log)
+    case ('request_forcings')
+      ldiff_log = .true.
+      call marbl_init_namelist_test(marbl_instance, nl_buffer)
+      ! Log requested forcing fields
+      call marbl_status_log%log_noerror('', subname)
+      call marbl_status_log%log_noerror('Requested forcing fields', subname)
+      call marbl_status_log%log_noerror('---', subname)
+      do n=1,marbl_instance%surface_forcing_fields%forcing_field_cnt
+        write(log_message, "(I0, 2A)") n, '. ',                               &
+          trim(marbl_instance%surface_forcing_fields%forcing_fields(n)%varname)
+        call marbl_status_log%log_noerror(log_message, subname)
+      end do
+    case ('request_tracers')
+      ldiff_log = .true.
+      call marbl_init_namelist_test(marbl_instance, nl_buffer, nt)
+      print*, nt
+      ! Log requested forcing fields
+      call marbl_status_log%log_noerror('', subname)
+      call marbl_status_log%log_noerror('Requested tracers', subname)
+      call marbl_status_log%log_noerror('---', subname)
+      do n=1,nt
+        write(log_message, "(I0, 2A)") n, '. ',                               &
+          trim(marbl_instance%tracer_metadata(n)%short_name)
+        call marbl_status_log%log_noerror(log_message, subname)
+      end do
     case DEFAULT
       write(*,*) "ERROR: testname = ", trim(testname), " is not a valid option"
       stop 1
