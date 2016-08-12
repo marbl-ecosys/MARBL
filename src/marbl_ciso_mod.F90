@@ -47,7 +47,7 @@ module marbl_ciso_mod
   use marbl_internal_types  , only : marbl_autotroph_share_type
   use marbl_internal_types  , only : marbl_particulate_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
-  use marbl_internal_types , only : marbl_tracer_index_type
+  use marbl_internal_types  , only : marbl_tracer_index_type
   
   implicit none
   private
@@ -59,6 +59,7 @@ module marbl_ciso_mod
   public  :: marbl_ciso_init_tracer_metadata
   public  :: marbl_ciso_set_interior_forcing
   public  :: marbl_ciso_set_surface_forcing
+  public  :: marbl_ciso_tracer_index_consistency_check
 
   private :: setup_cell_attributes
   private :: setup_local_column_tracers
@@ -914,6 +915,29 @@ contains
     call P_Ca14CO3%destruct()
 
   end subroutine marbl_ciso_set_interior_forcing
+
+  !***********************************************************************
+
+  subroutine marbl_ciso_tracer_index_consistency_check(tracer_indices, marbl_status_log)
+
+    use marbl_sizes, only : ciso_tracer_cnt
+
+    type(marbl_tracer_index_type), intent(in)    :: tracer_indices
+    type(marbl_log_type),          intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_ciso_mod:' // &
+                  'marbl_ciso_tracer_index_consistency_check'
+    character(len=char_len) :: log_message
+    integer                 :: tracer_cnt
+
+    tracer_cnt = tracer_indices%ciso_ind_end - (tracer_indices%ciso_ind_beg-1)
+    if (tracer_cnt.ne.ciso_tracer_cnt) then
+      write(log_message, "(A,I0,A,I0)") "Expected ", ciso_tracer_cnt,         &
+            " CISO tracers, but provided indexes for ", tracer_cnt
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+  end subroutine marbl_ciso_tracer_index_consistency_check
 
   !***********************************************************************
 

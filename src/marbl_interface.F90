@@ -238,6 +238,7 @@ contains
     use marbl_mod             , only : marbl_init_surface_forcing_fields
     use marbl_mod             , only : marbl_init_tracer_metadata
     use marbl_mod             , only : marbl_init_bury_coeff
+    use marbl_mod             , only : marbl_tracer_index_consistency_check
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
     use marbl_config_mod      , only : ladjust_bury_coeff
     use marbl_config_mod      , only : autotrophs_config
@@ -458,6 +459,41 @@ contains
     end if
 
     !--------------------------------------------------------------------
+    ! Report what tracers are being used, abort if count is not correct
+    !--------------------------------------------------------------------
+
+    call this%StatusLog%log_noerror('--------------------', subname)
+    call this%StatusLog%log_noerror('MARBL Tracer indices', subname)
+    call this%StatusLog%log_noerror('--------------------', subname)
+    call this%StatusLog%log_noerror('', subname)
+    do i=1,marbl_total_tracer_cnt
+      write(log_message, "(I3,2A)") i, '. ', &
+                                 trim(this%tracer_metadata(i)%short_name)
+      call this%StatusLog%log_noerror(log_message, subname)
+    end do
+    call this%StatusLog%log_noerror('', subname)
+
+    call marbl_tracer_index_consistency_check(this%tracer_indices, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('marbl_tracer_index_consistency_check', &
+           subname)
+      return
+    end if
+  
+    !--------------------------------------------------------------------
+    ! Report what surface forcings are required from the driver
+    !--------------------------------------------------------------------
+    call this%StatusLog%log_noerror('-----------------------------', subname)
+    call this%StatusLog%log_noerror('MARBL-Required Forcing Fields', subname)
+    call this%StatusLog%log_noerror('-----------------------------', subname)
+    call this%StatusLog%log_noerror('', subname)
+    do i=1,num_surface_forcing_fields
+      write(log_message, "(2A)") '* ', trim(this%surface_forcing_metadata(i)%varname)
+      call this%StatusLog%log_noerror(log_message, subname)
+    end do
+    call this%StatusLog%log_noerror('', subname)
+
+    !--------------------------------------------------------------------
     ! Initialize marbl diagnostics
     !--------------------------------------------------------------------
 
@@ -498,7 +534,6 @@ contains
 
     character(*), parameter :: subname = 'marbl_interface:complete_config_and_init'
     character(len=char_len) :: log_message
-    integer :: n
 
     ! Update values of any parameters that depend on namelist / put statements
     call set_derived_parms(this%StatusLog)
@@ -514,29 +549,6 @@ contains
            subname)
       return
     end if
-
-    ! Report what tracers are being used
-      call this%StatusLog%log_noerror('', subname)
-      call this%StatusLog%log_noerror('--------------------', subname)
-      call this%StatusLog%log_noerror('MARBL Tracer indices', subname)
-      call this%StatusLog%log_noerror('--------------------', subname)
-      call this%StatusLog%log_noerror('', subname)
-    do n=1,marbl_total_tracer_cnt
-      write(log_message, "(I3,2A)") n, '. ', &
-                                 trim(this%tracer_metadata(n)%short_name)
-      call this%StatusLog%log_noerror(log_message, subname)
-    end do
-
-    ! Report what surface forcings are required from the driver
-      call this%StatusLog%log_noerror('', subname)
-      call this%StatusLog%log_noerror('-----------------------------', subname)
-      call this%StatusLog%log_noerror('MARBL-Required Forcing Fields', subname)
-      call this%StatusLog%log_noerror('-----------------------------', subname)
-      call this%StatusLog%log_noerror('', subname)
-    do n=1,num_surface_forcing_fields
-      write(log_message, "(2A)") '* ', trim(this%surface_forcing_metadata(n)%varname)
-      call this%StatusLog%log_noerror(log_message, subname)
-    end do
 
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()

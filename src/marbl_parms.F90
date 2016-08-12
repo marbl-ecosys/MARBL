@@ -35,7 +35,6 @@ module marbl_parms
   use marbl_sizes, only : zooplankton_cnt
   use marbl_sizes, only : grazer_prey_cnt
   use marbl_sizes, only : ecosys_base_tracer_cnt
-  use marbl_sizes, only : ciso_tracer_cnt
 
   use marbl_logging, only: marbl_log_type
 

@@ -163,14 +163,14 @@ module marbl_mod
   use marbl_parms, only : Qfe_zoo
   use marbl_parms, only : r_Nfix_photo
   use marbl_parms, only : spc_poc_fac
-  use marbl_parms, only : grazing  
+  use marbl_parms, only : grazing
   use marbl_parms, only : caco3_bury_thres_iopt
   use marbl_parms, only : caco3_bury_thres_iopt_fixed_depth
   use marbl_parms, only : caco3_bury_thres_iopt_omega_calc
   use marbl_parms, only : caco3_bury_thres_depth
   use marbl_parms, only : PON_bury_coeff
 
-  use marbl_sizes, only : ecosys_base_tracer_cnt    
+  use marbl_sizes, only : ecosys_base_tracer_cnt
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
   use marbl_sizes, only : grazer_prey_cnt
@@ -222,6 +222,7 @@ module marbl_mod
   public  :: marbl_set_interior_forcing
   public  :: marbl_set_surface_forcing
   public  :: marbl_set_global_scalars_interior
+  public  :: marbl_tracer_index_consistency_check
 
   private :: marbl_init_non_autotroph_tracer_metadata
   private :: marbl_init_particulate_terms
@@ -2847,18 +2848,18 @@ contains
        else
           tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
           autotroph_local(auto_ind)%Chl = max(c0, tracers(tracer_ind))
-          
+
           tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
           autotroph_local(auto_ind)%C = max(c0, tracers(tracer_ind))
-          
+
           tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
           autotroph_local(auto_ind)%Fe = max(c0, tracers(tracer_ind))
-          
+
           tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
           if (tracer_ind > 0) then
              autotroph_local(auto_ind)%Si = max(c0, tracers(tracer_ind))
           endif
-          
+
           tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
           if (tracer_ind > 0) then
              autotroph_local(auto_ind)%CaCO3 = max(c0, tracers(tracer_ind))
@@ -2867,6 +2868,40 @@ contains
     end do
 
   end subroutine marbl_setup_local_autotrophs
+
+  !***********************************************************************
+
+  subroutine marbl_tracer_index_consistency_check(tracer_indices, marbl_status_log)
+
+    use marbl_ciso_mod, only : marbl_ciso_tracer_index_consistency_check
+
+    type(marbl_tracer_index_type), intent(in)    :: tracer_indices
+    type(marbl_log_type),          intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_mod:marbl_tracer_index_consistency_check'
+    character(len=char_len) :: log_message
+    integer                 :: tracer_cnt
+
+    tracer_cnt = tracer_indices%ecosys_base_ind_end -                         &
+                 (tracer_indices%ecosys_base_ind_beg-1)
+    if (tracer_cnt.ne.ecosys_base_tracer_cnt) then
+      write(log_message, "(A,I0,A,I0)") "Expected ", ecosys_base_tracer_cnt,  &
+            " base tracers, but provided indexes for ", tracer_cnt
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    if (ciso_on) then
+      call marbl_ciso_tracer_index_consistency_check(tracer_indices,          &
+           marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('ciso_tracer_ind_consistency', &
+             subname)
+        return
+      end if
+    end if
+
+  end subroutine marbl_tracer_index_consistency_check
 
   !***********************************************************************
 
