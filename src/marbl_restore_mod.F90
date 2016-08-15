@@ -96,6 +96,7 @@ subroutine init(this, domain, tracer_metadata, status_log)
         if (.not.this%lrestore_any) then
            ! first time we encounter variable to restore, add header to status
            ! log (and update lrestore_any)
+           call status_log%log_noerror('', subname)
            write(log_message, "(A)") "Found restore variables : "
            call status_log%log_noerror(log_message, subname)
            this%lrestore_any = .true.

@@ -116,7 +116,7 @@ module marbl_interface
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_interior(:)
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface(:)
 
-     ! private data 
+     ! private data
      type(marbl_PAR_type)                      , private              :: PAR
      type(marbl_particulate_share_type)        , private              :: particulate_share
      type(marbl_interior_share_type)           , private, allocatable :: interior_share(:)
@@ -273,9 +273,7 @@ contains
          num_levels           => gcm_num_levels,                               &
          num_PAR_subcols      => gcm_num_PAR_subcols,                          &
          num_surface_elements => gcm_num_elements_surface_forcing,             &
-         num_interior_forcing => gcm_num_elements_interior_forcing,            &
-         ecosys_base_ind_beg  => this%tracer_indices%ecosys_base_ind_beg,      &
-         ecosys_base_ind_end  => this%tracer_indices%ecosys_base_ind_end       &
+         num_interior_forcing => gcm_num_elements_interior_forcing             &
          )
 
     !-----------------------------------------------------------------------
@@ -320,29 +318,6 @@ contains
 
     call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2)
 
-    !---------------------------------------------------------------------------
-    ! set default values for parameters
-    !---------------------------------------------------------------------------
-
-    call marbl_parms_set_defaults(gcm_num_levels)
-
-    !---------------------------------------------------------------------------
-    ! read parameters from namelist (if present)
-    !---------------------------------------------------------------------------
-
-    if (present(gcm_nl_buffer)) then
-      call marbl_parms_read_namelist(gcm_nl_buffer, this%StatusLog)
-      if (this%StatusLog%labort_marbl) then
-        call this%StatusLog%log_error_trace('marbl_parms_read_namelist', subname)
-        return
-      end if
-    else
-      write(log_message, "(2A)") '** No namelists were provided to init, ',   &
-           'use put() and get() to change parameters'
-      call this%StatusLog%log_noerror(log_message, subname)
-      call this%StatusLog%log_noerror('', subname)
-    end if
-
     !--------------------------------------------------------------------
     ! call constructors and allocate memory
     !--------------------------------------------------------------------
@@ -380,7 +355,7 @@ contains
 
     allocate(this%column_dtracers(marbl_total_tracer_cnt, num_levels))
 
-    allocate(this%column_restore(marbl_total_tracer_cnt, gcm_num_levels))
+    allocate(this%column_restore(marbl_total_tracer_cnt, num_levels))
 
     call marbl_init_bury_coeff(this%particulate_share, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -446,19 +421,6 @@ contains
     allocate(this%surface_input_forcings(num_surface_elements, num_surface_forcing_fields))
 
     !--------------------------------------------------------------------
-    ! Initialize tracer restoring
-    !--------------------------------------------------------------------
-
-    call this%restoring%init(                                                   &
-         domain          = this%domain,                                         &
-         tracer_metadata = this%tracer_metadata(ecosys_base_ind_beg:ecosys_base_ind_end), &
-         status_log      = this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%restoring%init()", subname)
-      return
-    end if
-
-    !--------------------------------------------------------------------
     ! Report what tracers are being used, abort if count is not correct
     !--------------------------------------------------------------------
 
@@ -479,7 +441,7 @@ contains
            subname)
       return
     end if
-  
+
     !--------------------------------------------------------------------
     ! Report what surface forcings are required from the driver
     !--------------------------------------------------------------------
@@ -508,6 +470,29 @@ contains
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_diagnostics_init()", subname)
       return
+    end if
+
+    !---------------------------------------------------------------------------
+    ! set default values for parameters
+    !---------------------------------------------------------------------------
+
+    call marbl_parms_set_defaults(num_levels)
+
+    !---------------------------------------------------------------------------
+    ! read parameters from namelist (if present)
+    !---------------------------------------------------------------------------
+
+    if (present(gcm_nl_buffer)) then
+      call marbl_parms_read_namelist(gcm_nl_buffer, this%StatusLog)
+      if (this%StatusLog%labort_marbl) then
+        call this%StatusLog%log_error_trace('marbl_parms_read_namelist', subname)
+        return
+      end if
+    else
+      write(log_message, "(2A)") '** No namelists were provided to init, ',   &
+           'use put() and get() to change parameters'
+      call this%StatusLog%log_noerror(log_message, subname)
+      call this%StatusLog%log_noerror('', subname)
     end if
 
     end associate
@@ -549,6 +534,23 @@ contains
            subname)
       return
     end if
+
+    associate(&
+         ecosys_base_ind_beg  => this%tracer_indices%ecosys_base_ind_beg,      &
+         ecosys_base_ind_end  => this%tracer_indices%ecosys_base_ind_end       &
+         )
+
+    ! Initialize tracer restoring
+    call this%restoring%init(                                                   &
+         domain          = this%domain,                                         &
+         tracer_metadata = this%tracer_metadata(ecosys_base_ind_beg:ecosys_base_ind_end), &
+         status_log      = this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("this%restoring%init()", subname)
+      return
+    end if
+
+    end associate
 
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
@@ -605,7 +607,7 @@ contains
   subroutine set_interior_forcing(this)
 
     use marbl_mod, only : marbl_set_interior_forcing
-    
+
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
