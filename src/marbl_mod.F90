@@ -2043,6 +2043,7 @@ contains
     use marbl_co2calc_mod        , only : thermodynamic_coefficients_type
     use marbl_oxygen             , only : o2sat_surf
     use marbl_constants_mod      , only : molw_Fe
+    use marbl_constants_mod      , only : xkw_coeff
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
     use marbl_config_mod         , only : lapply_nhx_surface_emis
     use marbl_parms              , only : iron_frac_in_dust
@@ -2191,8 +2192,7 @@ contains
        !  Compute XKW_ICE. XKW is zero over land, so XKW_ICE is too.
        !-----------------------------------------------------------------------
 
-! MNL MNL MNL: commented out xkw
-!       xkw_ice(:) = (c1 - ifrac(:)) * xkw
+       xkw_ice(:) = (c1 - ifrac(:)) * (xkw_coeff*u10_sqr(:))
 
        !-----------------------------------------------------------------------
        !  compute O2 flux
@@ -2280,7 +2280,7 @@ contains
                marbl_status_log = marbl_status_log)
 
           if (marbl_status_log%labort_marbl) then
-             call marbl_status_log%log_error_trace('co2calc_surf()', subname)
+             call marbl_status_log%log_error_trace('first co2calc_surf()', subname)
              return
           end if
 
@@ -2340,7 +2340,7 @@ contains
                marbl_status_log = marbl_status_log)
 
             if (marbl_status_log%labort_marbl) then
-               call marbl_status_log%log_error_trace('co2calc_surf()', subname)
+               call marbl_status_log%log_error_trace('second co2calc_surf()', subname)
                return
             end if
 

@@ -4218,6 +4218,7 @@ contains
     use marbl_config_mod     , only : lflux_gas_o2
     use marbl_config_mod     , only : lflux_gas_co2
     use marbl_constants_mod  , only : mpercm
+    use marbl_constants_mod  , only : xkw_coeff
 
     implicit none
 
@@ -4245,6 +4246,7 @@ contains
          ind_forc          => surface_forcing_ind,                                              &
 
          diags             => surface_forcing_diags%diags(:),                                   &
+         u10_sqr           => surface_input_forcings(:,surface_forcing_ind%u10_sqr_id),         &
          xco2              => surface_input_forcings(:,surface_forcing_ind%xco2_id),            &
          xco2_alt_co2      => surface_input_forcings(:,surface_forcing_ind%xco2_alt_co2_id),    &
          ap_used           => surface_input_forcings(:,surface_forcing_ind%atm_pressure_id),    &
@@ -4295,8 +4297,7 @@ contains
     if (lflux_gas_o2 .or. lflux_gas_co2) then
 
        diags(ind_diag%ECOSYS_IFRAC)%field_2d(:)     = ifrac(:)
-! MNL MNL MNL commented out xkw
-!       diags(ind_diag%ECOSYS_XKW)%field_2d(:)       = xkw(:)
+       diags(ind_diag%ECOSYS_XKW)%field_2d(:)       = xkw_coeff*u10_sqr(:)
        diags(ind_diag%ECOSYS_ATM_PRESS)%field_2d(:) = ap_used(:)
 
     endif  ! lflux_gas_o2 .or. lflux_gas_co2
