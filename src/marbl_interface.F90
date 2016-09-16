@@ -237,7 +237,6 @@ contains
     use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
     use marbl_mod             , only : marbl_init_surface_forcing_fields
     use marbl_mod             , only : marbl_init_tracer_metadata
-    use marbl_mod             , only : marbl_init_bury_coeff
     use marbl_mod             , only : marbl_tracer_index_consistency_check
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
     use marbl_config_mod      , only : ladjust_bury_coeff
@@ -356,12 +355,6 @@ contains
     allocate(this%column_dtracers(marbl_total_tracer_cnt, num_levels))
 
     allocate(this%column_restore(marbl_total_tracer_cnt, num_levels))
-
-    call marbl_init_bury_coeff(this%particulate_share, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
-      return
-    end if
 
     !--------------------------------------------------------------------
     ! set up saved state variables
@@ -514,6 +507,7 @@ contains
   subroutine complete_config_and_init(this)
 
     use marbl_parms, only : set_derived_parms
+    use marbl_mod  , only : marbl_init_bury_coeff
 
     class(marbl_interface_class), intent(inout) :: this
 
@@ -524,6 +518,12 @@ contains
     call set_derived_parms(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('set_derived_parms', subname)
+      return
+    end if
+
+    call marbl_init_bury_coeff(this%particulate_share, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
       return
     end if
 
