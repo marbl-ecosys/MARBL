@@ -2392,13 +2392,7 @@ contains
     !  calculate iron and dust fluxes if necessary
     !-----------------------------------------------------------------------
 
-!    if (liron_flux_derived) then
-!       ! compute iron_flux gFe/cm^2/s, then convert to nmolFe/cm^2/s
-!       iron_flux_in_new(:) = dust_flux_in(:) * iron_frac_in_dust + black_carbon_flux_in(:) * iron_frac_in_bc
-!       iron_flux_in_new(:) = (1.0e9_r8 / molw_Fe) * iron_flux_in_new(:)
-!    else
-       iron_flux_in_new(:) = iron_flux_in(:) * parm_Fe_bioavail  ! TODO: this gets moved up and out - a forcing field modify
-!    endif
+    iron_flux_in_new(:) = iron_flux_in(:)
 
     stf(:, fe_ind) = stf(:, fe_ind) + iron_flux_in_new(:)
 
