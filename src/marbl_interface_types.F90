@@ -86,15 +86,18 @@ module marbl_interface_types
 
   ! FIXME #25: update marbl_interior_forcing_input_type
   type, public :: marbl_interior_forcing_input_type
-     real(r8), allocatable :: temperature(:)    ! (km)
-     real(r8), allocatable :: salinity(:)       ! (km)
-     real(r8), allocatable :: pressure(:)       ! (km)
-     real(r8), allocatable :: fesedflux(:)      ! (km)
-     real(r8), allocatable :: PAR_col_frac(:)   ! column fraction occupied by each sub-column
-     real(r8), allocatable :: surf_shortwave(:) ! surface shortwave for each sub-column (W/m^2)
-     real(r8)              :: dust_flux         ! (g/cm^2/s)
+     real(r8), allocatable            :: temperature(:)       ! (km)
+     real(r8), allocatable            :: salinity(:)          ! (km)
+     real(r8), allocatable            :: pressure(:)          ! (km)
+     real(r8), allocatable            :: fesedflux(:)         ! (km)
+     real(r8), allocatable            :: PAR_col_frac(:)      ! column fraction occupied by each sub-column
+     real(r8), allocatable            :: surf_shortwave(:)    ! surface shortwave for each sub-column (W/m^2)
+     real(r8)                         :: dust_flux            ! (g/cm^2/s)
+     real(r8), allocatable            :: tracer_restore(:,:)  ! tracer climatologies (km x nt)
+     character(char_len), allocatable :: tracer_names(:)
    contains
-     procedure, public :: construct => marbl_interior_forcing_input_constructor
+     procedure, public :: construct   => marbl_interior_forcing_input_constructor
+     procedure, public :: set_restore => marbl_interior_forcing_input_set_restore
   end type marbl_interior_forcing_input_type
 
   !*****************************************************************************
@@ -384,6 +387,55 @@ contains
     allocate(this%surf_shortwave   (num_PAR_subcols))
 
   end subroutine marbl_interior_forcing_input_constructor
+
+  !*****************************************************************************
+
+  subroutine marbl_interior_forcing_input_set_restore(this, num_levels,       &
+             tracer_names, marbl_status_log)
+
+    class(marbl_interior_forcing_input_type), intent(inout) :: this
+    integer,                                  intent(in)    :: num_levels
+    character(len=char_len), dimension (:),   intent(in)    :: tracer_names
+    type(marbl_log_type),                     intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname =                                  &
+                  'marbl_interface_types:interior_forcing_input_set_restore'
+    character(len=char_len) :: log_message
+    integer :: n, nt, num_tracers
+    character(len=char_len), dimension(:), allocatable :: local_names
+
+    nt = size(tracer_names)
+    allocate(local_names(nt))
+
+    num_tracers = 0
+    do n=1,nt
+      if (len_trim(tracer_names(n)).gt.0) then
+        num_tracers = num_tracers + 1
+        local_names(num_tracers) = tracer_names(n)
+      end if
+    end do
+
+    allocate(this%tracer_restore(num_levels, num_tracers))
+    allocate(this%tracer_names(num_tracers))
+
+    if (num_tracers.gt.0) then
+      call marbl_status_log%log_noerror('', subname)
+      log_message = "----------------------------------------"
+      call marbl_status_log%log_noerror(log_message, subname)
+      log_message = "MARBL wants to restore following tracers"
+      call marbl_status_log%log_noerror(log_message, subname)
+      log_message = "----------------------------------------"
+      call marbl_status_log%log_noerror(log_message, subname)
+      call marbl_status_log%log_noerror('', subname)
+
+      do n=1,num_tracers
+        this%tracer_names(n) = local_names(n)
+        write(log_message, "(I2,2A)") n, '. ', trim(local_names(n))
+        call marbl_status_log%log_noerror(log_message, subname)
+      end do
+    end if
+
+  end subroutine marbl_interior_forcing_input_set_restore
 
   !*****************************************************************************
 

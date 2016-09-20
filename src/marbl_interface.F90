@@ -507,6 +507,7 @@ contains
   subroutine complete_config_and_init(this)
 
     use marbl_parms, only : set_derived_parms
+    use marbl_parms, only : tracer_restore_vars
     use marbl_mod  , only : marbl_init_bury_coeff
 
     class(marbl_interface_class), intent(inout) :: this
@@ -534,6 +535,11 @@ contains
            subname)
       return
     end if
+
+    ! Set up tracer restore info in this%interior_forcing_input
+    call this%interior_forcing_input%set_restore(this%domain%km,              &
+                                                 tracer_restore_vars,         &
+                                                 this%StatusLog)
 
     associate(&
          ecosys_base_ind_beg  => this%tracer_indices%ecosys_base_ind_beg,      &
