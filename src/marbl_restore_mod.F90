@@ -37,7 +37,7 @@ subroutine init(this, domain, tracer_metadata, status_log)
   use marbl_kinds_mod   , only : char_len, int_kind, i4, log_kind
   use marbl_logging     , only : marbl_log_type
   use marbl_interface_types, only : marbl_tracer_metadata_type
-  use marbl_parms       , only : restore_short_names
+  use marbl_parms       , only : tracer_restore_vars
   use marbl_parms       , only : rest_time_inv_surf
   use marbl_parms       , only : rest_time_inv_deep
   use marbl_parms       , only : rest_z0
@@ -90,9 +90,9 @@ subroutine init(this, domain, tracer_metadata, status_log)
     end do
   endif
 
-  ! FIXME #35: assert(len(restore_short_names) == len(restore_filenames))
-  do t = 1, size(restore_short_names)
-     if (len(trim(restore_short_names(t))) > 0) then
+  ! FIXME #35: assert(len(tracer_restore_vars) == len(restore_filenames))
+  do t = 1, size(tracer_restore_vars)
+     if (len(trim(tracer_restore_vars(t))) > 0) then
         if (.not.this%lrestore_any) then
            ! first time we encounter variable to restore, add header to status
            ! log (and update lrestore_any)
@@ -102,10 +102,10 @@ subroutine init(this, domain, tracer_metadata, status_log)
            this%lrestore_any = .true.
         end if
         do n=1,size(tracer_metadata)
-          if (trim(restore_short_names(t)).eq.trim(tracer_metadata(n)%short_name)) exit
+          if (trim(tracer_restore_vars(t)).eq.trim(tracer_metadata(n)%short_name)) exit
         end do
         if (n.le.size(tracer_metadata)) then
-          write(log_message, "(3A,I0)") "Index for ", trim(restore_short_names(t)), &
+          write(log_message, "(3A,I0)") "Index for ", trim(tracer_restore_vars(t)), &
                                        " is ", n
           call status_log%log_noerror(log_message, subname)
           allocate(this%tracer_restore(n)%inv_tau(domain%km))
@@ -113,7 +113,7 @@ subroutine init(this, domain, tracer_metadata, status_log)
           this%tracer_restore(n)%inv_tau(:) = inv_tau
           this%tracer_restore(n)%climatology(:) = c0
         else
-          write(log_message, "(2A)") "Can not find tracer named ", trim(restore_short_names(t))
+          write(log_message, "(2A)") "Can not find tracer named ", trim(tracer_restore_vars(t))
           call status_log%log_error(log_message, subname)
         end if
      end if

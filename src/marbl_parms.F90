@@ -90,7 +90,7 @@ module marbl_parms
   real(r8),            target :: PON_bury_coeff
   character(char_len), target :: ciso_fract_factors             ! option for which biological fractionation calculation to use
 
-  character(len=char_len), allocatable, target, dimension(:) :: restore_short_names
+  character(len=char_len), allocatable, target, dimension(:) :: tracer_restore_vars
   real(r8), target :: rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
 
   !---------------------------------------------------------------------
@@ -434,11 +434,11 @@ contains
     ! FIXME #69: not thread-safe!
     if (.not.allocated(inv_tau)) &
       allocate(inv_tau(km))
-    if (.not.allocated(restore_short_names)) &
-      allocate(restore_short_names(marbl_total_tracer_cnt))
+    if (.not.allocated(tracer_restore_vars)) &
+      allocate(tracer_restore_vars(marbl_total_tracer_cnt))
 
     ! initialize namelist variables to default values
-    restore_short_names = ''
+    tracer_restore_vars = ''
 
     rest_time_inv_surf = c0
     rest_time_inv_deep = c0
@@ -491,7 +491,7 @@ contains
          caco3_bury_thres_depth, &
          PON_bury_coeff, &
          ciso_fract_factors, &
-         restore_short_names, &
+         tracer_restore_vars, &
          rest_time_inv_surf, &
          rest_time_inv_deep, &
          rest_z0, &
@@ -1312,11 +1312,11 @@ contains
       end if
     end if
 
-    sname     = 'restore_short_names'
+    sname     = 'tracer_restore_vars'
     lname     = 'Tracer names for tracers that are restored'
     units     = 'unitless'
     group     = 'marbl_parms_nml'
-    call this%add_var_1d_str(sname, lname, units, group, restore_short_names, &
+    call this%add_var_1d_str(sname, lname, units, group, tracer_restore_vars, &
                                marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('add_var_1d_str', subname)

@@ -529,11 +529,7 @@ contains
     ! initialize tracer metatdata
     !-----------------------------------------------------------------------
 
-    ! by default, all tracers are written to tavg as full depth and
-    ! have scale_factor equal to one
-
     marbl_tracer_metadata(:)%lfull_depth_tavg   = .true.
-    marbl_tracer_metadata(:)%scale_factor       = c1
     marbl_tracer_metadata(:)%tracer_module_name = 'ecosys'
 
     call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_metadata,      &

@@ -79,7 +79,6 @@ module marbl_interface_types
      character(char_len) :: tend_units
      character(char_len) :: flux_units
      logical             :: lfull_depth_tavg
-     real(r8)            :: scale_factor
      character(char_len) :: tracer_module_name
   end type marbl_tracer_metadata_type
 
