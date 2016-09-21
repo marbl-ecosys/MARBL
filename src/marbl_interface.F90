@@ -550,7 +550,7 @@ contains
     call this%restoring%init(                                                   &
          domain          = this%domain,                                         &
          tracer_metadata = this%tracer_metadata(ecosys_base_ind_beg:ecosys_base_ind_end), &
-         status_log      = this%StatusLog)
+        marbl_status_log = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("this%restoring%init()", subname)
       return

@@ -4026,7 +4026,7 @@ contains
        
        do n = 1,marbl_total_tracer_cnt
           ! Note that tmp_id is a temp variable because restoring diagnostics
-          ! have same indexing as the ecosys tracers
+          ! have same indexing as the MARBL tracers
           if (count_only) then
              num_restore_diags = num_restore_diags + 1
           else

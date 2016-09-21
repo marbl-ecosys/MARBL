@@ -15,6 +15,7 @@ module marbl_restore_mod
   type :: marbl_single_restoring_field_type
     real(kind=r8), dimension(:), allocatable :: inv_tau ! 1/time_scale (s^-1)
     real(kind=r8), dimension(:), allocatable :: climatology ! Field we restore to
+    integer                                  :: tracer_ind = 0
   end type marbl_single_restoring_field_type
 
   type, public :: marbl_restore_type
@@ -29,7 +30,7 @@ contains
 
 !*****************************************************************************
 
-subroutine init(this, domain, tracer_metadata, status_log)
+subroutine init(this, domain, tracer_metadata, marbl_status_log)
 
   ! initialize marbl_restore instance to default values, then read
   ! namelist and setup tracers that need to be restored
@@ -51,7 +52,7 @@ subroutine init(this, domain, tracer_metadata, status_log)
   !-----------------------------------------------------------------------
 
   class(marbl_restore_type), intent(inout) :: this
-  type(marbl_log_type),      intent(inout) :: status_log
+  type(marbl_log_type),      intent(inout) :: marbl_status_log
 
   !-----------------------------------------------------------------------
   !  input variables
@@ -90,31 +91,24 @@ subroutine init(this, domain, tracer_metadata, status_log)
     end do
   endif
 
-  ! FIXME #35: assert(len(tracer_restore_vars) == len(restore_filenames))
   do t = 1, size(tracer_restore_vars)
-     if (len(trim(tracer_restore_vars(t))) > 0) then
+     if (len_trim(tracer_restore_vars(t)).gt.0) then
         if (.not.this%lrestore_any) then
-           ! first time we encounter variable to restore, add header to status
-           ! log (and update lrestore_any)
-           call status_log%log_noerror('', subname)
-           write(log_message, "(A)") "Found restore variables : "
-           call status_log%log_noerror(log_message, subname)
+           ! first time we encounter variable to restore, update lrestore_any
            this%lrestore_any = .true.
         end if
         do n=1,size(tracer_metadata)
           if (trim(tracer_restore_vars(t)).eq.trim(tracer_metadata(n)%short_name)) exit
         end do
         if (n.le.size(tracer_metadata)) then
-          write(log_message, "(3A,I0)") "Index for ", trim(tracer_restore_vars(t)), &
-                                       " is ", n
-          call status_log%log_noerror(log_message, subname)
           allocate(this%tracer_restore(n)%inv_tau(domain%km))
           allocate(this%tracer_restore(n)%climatology(domain%km))
           this%tracer_restore(n)%inv_tau(:) = inv_tau
           this%tracer_restore(n)%climatology(:) = c0
+          this%tracer_restore(n)%tracer_ind = t
         else
           write(log_message, "(2A)") "Can not find tracer named ", trim(tracer_restore_vars(t))
-          call status_log%log_error(log_message, subname)
+          call marbl_status_log%log_error(log_message, subname)
         end if
      end if
   end do
@@ -152,19 +146,19 @@ subroutine restore_tracers(this, interior_tracers, km, nt, interior_restore)
   integer(int_kind) :: n
   !-----------------------------------------------------------------------
 
+  interior_restore(:,:) = c0
+
   if (this%lrestore_any) then
     do n=1,nt
-      associate(single_restore => this%tracer_restore(n))
+      associate(single_restore => this%tracer_restore(n),           &
+                m              => this%tracer_restore(n)%tracer_ind &
+                )
         if (allocated(single_restore%climatology)) then
-          interior_restore(n,:) = (single_restore%climatology(:)-interior_tracers(n,:))*&
+          interior_restore(m,:) = (single_restore%climatology(:)-interior_tracers(m,:))*&
                                   single_restore%inv_tau(:)
-        else
-          interior_restore(n,:) = c0
         end if
       end associate
     end do
-  else
-    interior_restore(:,:) = c0
   end if
 
 end subroutine restore_tracers
