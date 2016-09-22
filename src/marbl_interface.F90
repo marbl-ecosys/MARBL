@@ -538,8 +538,7 @@ contains
 
     ! Set up tracer restore info in this%interior_forcing_input
     call this%interior_forcing_input%set_restore(this%domain%km,              &
-                                                 tracer_restore_vars,         &
-                                                 this%StatusLog)
+                                                 tracer_restore_vars)
 
     associate(&
          ecosys_base_ind_beg  => this%tracer_indices%ecosys_base_ind_beg,      &

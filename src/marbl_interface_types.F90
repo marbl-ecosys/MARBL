@@ -93,7 +93,6 @@ module marbl_interface_types
      real(r8), allocatable            :: PAR_col_frac(:)      ! column fraction occupied by each sub-column
      real(r8), allocatable            :: surf_shortwave(:)    ! surface shortwave for each sub-column (W/m^2)
      real(r8)                         :: dust_flux            ! (g/cm^2/s)
-     real(r8), allocatable            :: tracer_restore(:,:)  ! tracer climatologies (km x nt)
      character(char_len), allocatable :: tracer_names(:)
    contains
      procedure, public :: construct   => marbl_interior_forcing_input_constructor
@@ -391,16 +390,12 @@ contains
   !*****************************************************************************
 
   subroutine marbl_interior_forcing_input_set_restore(this, num_levels,       &
-             tracer_names, marbl_status_log)
+             tracer_names)
 
     class(marbl_interior_forcing_input_type), intent(inout) :: this
     integer,                                  intent(in)    :: num_levels
     character(len=char_len), dimension (:),   intent(in)    :: tracer_names
-    type(marbl_log_type),                     intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname =                                  &
-                  'marbl_interface_types:interior_forcing_input_set_restore'
-    character(len=char_len) :: log_message
     integer :: n, nt, num_tracers
     character(len=char_len), dimension(:), allocatable :: local_names
 
@@ -415,23 +410,11 @@ contains
       end if
     end do
 
-    allocate(this%tracer_restore(num_levels, num_tracers))
     allocate(this%tracer_names(num_tracers))
 
     if (num_tracers.gt.0) then
-      call marbl_status_log%log_noerror('', subname)
-      log_message = "----------------------------------------"
-      call marbl_status_log%log_noerror(log_message, subname)
-      log_message = "MARBL wants to restore following tracers"
-      call marbl_status_log%log_noerror(log_message, subname)
-      log_message = "----------------------------------------"
-      call marbl_status_log%log_noerror(log_message, subname)
-      call marbl_status_log%log_noerror('', subname)
-
       do n=1,num_tracers
         this%tracer_names(n) = local_names(n)
-        write(log_message, "(I2,2A)") n, '. ', trim(local_names(n))
-        call marbl_status_log%log_noerror(log_message, subname)
       end do
     end if
 
