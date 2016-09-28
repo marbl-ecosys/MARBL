@@ -631,6 +631,7 @@ contains
          saved_state_ind         = this%interior_state_ind,      &
          interior_restore        = this%column_restore,          &
          tracers                 = this%column_tracers,          &
+         surface_forcing_indices = this%surface_forcing_ind,     &
          dtracers                = this%column_dtracers,         &
          marbl_tracer_indices    = this%tracer_indices,          &
          marbl_PAR               = this%PAR,                     &

@@ -812,6 +812,7 @@ contains
        saved_state_ind,                  &
        interior_restore,                 &
        tracers,                          &
+       surface_forcing_indices,          &
        dtracers,                         &
        marbl_tracer_indices,             &
        marbl_PAR,                        &
@@ -836,6 +837,7 @@ contains
     type    (marbl_interior_forcing_input_type) , intent(in)    :: interior_forcing_input
     real    (r8)                                , intent(in)    :: interior_restore(:,:) ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec) 
     real    (r8)                                , intent(in)    :: tracers(:,: )         ! (marbl_total_tracer_cnt, km) tracer values 
+    type(marbl_surface_forcing_indexing_type)   , intent(in)    :: surface_forcing_indices
     type    (marbl_PAR_type)                    , intent(inout) :: marbl_PAR
     type    (marbl_saved_state_type)            , intent(inout) :: saved_state
     type    (marbl_interior_saved_state_indexing_type), intent(in) :: saved_state_ind
@@ -965,7 +967,7 @@ contains
             marbl_tracer_indices, autotroph_local(:, k))
     enddo
 
-    call marbl_init_particulate_terms(1, &
+    call marbl_init_particulate_terms(1, surface_forcing_indices, &
          POC, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
 
     !FIXME #27: new marbl timers need to be implemented to turn
@@ -1167,7 +1169,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_particulate_terms(k, &
+  subroutine marbl_init_particulate_terms(k, surface_forcing_indices, &
        POC, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def, NET_DUST_IN)
 
     !  Set incoming fluxes (put into outgoing flux for first level usage).
@@ -1178,6 +1180,7 @@ contains
 
     integer(int_kind)                  , intent(in)    :: k
     real (r8)                          , intent(in)    :: net_dust_in     ! dust flux
+    type(marbl_surface_forcing_indexing_type), intent(in)   :: surface_forcing_indices
     type(column_sinking_particle_type) , intent(inout) :: POC             ! base units = nmol C
     type(column_sinking_particle_type) , intent(inout) :: P_CaCO3         ! base units = nmol CaCO3
     type(column_sinking_particle_type) , intent(inout) :: P_SiO2          ! base units = nmol SiO2
@@ -1235,8 +1238,7 @@ contains
     P_SiO2%sflux_in(k) = P_SiO2%sflux_out(k)
     P_SiO2%hflux_in(k) = P_SiO2%hflux_out(k)
 
-    ! FIXME #56 : need a better (i.e., extensible and maintainable) conditional here
-    if (.true.) then
+    if (surface_forcing_indices%dust_flux_id.ne.0) then
        dust%sflux_out(k) = (c1 - dust%gamma) * net_dust_in
        dust%hflux_out(k) = dust%gamma * net_dust_in
     else
@@ -2276,7 +2278,7 @@ contains
                marbl_status_log = marbl_status_log)
 
           if (marbl_status_log%labort_marbl) then
-             call marbl_status_log%log_error_trace('first co2calc_surf()', subname)
+             call marbl_status_log%log_error_trace('co2calc_surf() with flux_co2', subname)
              return
           end if
 
@@ -2336,7 +2338,7 @@ contains
                marbl_status_log = marbl_status_log)
 
             if (marbl_status_log%labort_marbl) then
-               call marbl_status_log%log_error_trace('second co2calc_surf()', subname)
+               call marbl_status_log%log_error_trace('co2calc_surf() with flux_alt_co2', subname)
                return
             end if
 

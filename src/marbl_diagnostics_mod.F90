@@ -4344,10 +4344,9 @@ contains
 
     ! multiply IRON flux by mpercm (.01) to convert from model units (cm/s)(mmol/m^3) to mmol/s/m^2
 
-    ! FIXME #56 : need better conditional here, perhaps based on iron_flux_id /= 0
-!   if (iron_flux_file%has_data) then
+   if (ind_diag%IRON_FLUX.ne.0) then
        diags(ind_diag%IRON_FLUX)%field_2d(:) = iron_flux_in(:) * mpercm
-!   endif
+   endif
 
     !-----------------------------------------------------------------------
     !  calculate nox and nhy fluxes if necessary
