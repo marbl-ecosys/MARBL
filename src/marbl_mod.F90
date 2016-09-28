@@ -84,7 +84,6 @@ module marbl_mod
   use marbl_constants_mod, only : spd
   use marbl_constants_mod, only : dps
   use marbl_constants_mod, only : yps
-  use marbl_constants_mod, only : Q_10
 
   use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : int_kind
@@ -2039,9 +2038,9 @@ contains
     use marbl_co2calc_mod        , only : thermodynamic_coefficients_type
     use marbl_oxygen             , only : o2sat_surf
     use marbl_constants_mod      , only : molw_Fe
-    use marbl_constants_mod      , only : xkw_coeff
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
     use marbl_config_mod         , only : lapply_nhx_surface_emis
+    use marbl_parms              , only : xkw_coeff
     use marbl_parms              , only : iron_frac_in_dust
     use marbl_parms              , only : iron_frac_in_bc
     use marbl_sizes              , only : marbl_total_tracer_cnt
@@ -2106,7 +2105,7 @@ contains
          doc_riv_flux         => surface_input_forcings(:,surface_forcing_ind%doc_riv_flux_id),     &
          alk_riv_flux         => surface_input_forcings(:,surface_forcing_ind%alk_riv_flux_id),     &
 
-         iron_flux_in_new     => surface_forcing_internal%iron_flux(:),                             &
+         piston_velocity      => surface_forcing_internal%piston_velocity(:),                       &
          flux_co2             => surface_forcing_internal%flux_co2(:),                              &
          co2star              => surface_forcing_internal%co2star(:),                               & 
          dco2star             => surface_forcing_internal%dco2star(:),                              & 
@@ -2188,7 +2187,8 @@ contains
        !  Compute XKW_ICE. XKW is zero over land, so XKW_ICE is too.
        !-----------------------------------------------------------------------
 
-       xkw_ice(:) = (c1 - ifrac(:)) * (xkw_coeff*u10_sqr(:))
+       piston_velocity = xkw_coeff*u10_sqr(:)
+       xkw_ice(:) = (c1 - ifrac(:)) * piston_velocity
 
        !-----------------------------------------------------------------------
        !  compute O2 flux
@@ -2388,9 +2388,7 @@ contains
     !  calculate iron and dust fluxes if necessary
     !-----------------------------------------------------------------------
 
-    iron_flux_in_new(:) = iron_flux_in(:)
-
-    stf(:, fe_ind) = stf(:, fe_ind) + iron_flux_in_new(:)
+    stf(:, fe_ind) = stf(:, fe_ind) + iron_flux_in(:)
 
     !-----------------------------------------------------------------------
     !  Add phosphate and silicate from dust after Krishnamurthy et al. (2010)
@@ -3308,7 +3306,7 @@ contains
     !  growth, mort and grazing rates scaled by Tfunc where they are computed
     !-----------------------------------------------------------------------
 
-    use marbl_constants_mod, only : Q_10
+    use marbl_parms,         only : Q_10
     use marbl_constants_mod, only : Tref
     use marbl_constants_mod, only : c10
 

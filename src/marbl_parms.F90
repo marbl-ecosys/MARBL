@@ -99,6 +99,8 @@ module marbl_parms
 
   ! Redfield Ratios, dissolved & particulate
   real(kind=r8), parameter :: &
+       Q_10      =   1.7_r8,                                 & ! factor for temperature dependence (non-dim)
+       xkw_coeff =   8.6e-9_r8,                              & ! in s/cm, from a = 0.31 cm/hr s^2/m^2 in Wannikhof 1992
        parm_Red_D_C_P  = 117.0_r8,                           & ! carbon:phosphorus
        parm_Red_D_N_P  =  16.0_r8,                           & ! nitrogen:phosphorus
        parm_Red_D_O2_P = 170.0_r8,                           & ! oxygen:phosphorus

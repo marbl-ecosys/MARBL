@@ -53,13 +53,11 @@ module marbl_constants_mod
       vonkar    =   0.4_r8,            & ! von Karman constant
       T0_Kelvin = 273.15_r8,           & ! freezing T of fresh water (deg K)
       Tref      =  30.0_r8,            & ! reference temperature (C)
-      Q_10      =   1.7_r8,            & ! factor for temperature dependence (non-dim)
       rho_sw    =   1.026_r8,          & ! density of salt water (g/cm^3)
       epsC      =   1.00e-8,           & ! small C concentration (mmol C/m^3)
       epsTinv   =   3.17e-8,           & ! small inverse time scale (1/year) (1/sec)
       molw_Fe   =  55.845_r8,          & ! molecular weight of iron
       R13C_std  =   1.0_r8,            & ! actual 13C/12C PDB standard ratio (Craig, 1957) = 1123.72e-5_r8
-      R14C_std =    1.0_r8,            & ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
-      xkw_coeff =   8.6e-9_r8            ! in s/cm, from a = 0.31 cm/hr s^2/m^2 in Wannikhof 1992
+      R14C_std =    1.0_r8               ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
 
 end module marbl_constants_mod

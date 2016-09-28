@@ -123,7 +123,7 @@ module marbl_internal_types
   !****************************************************************************
 
   type, public :: marbl_surface_forcing_internal_type
-     real (r8), allocatable, dimension(:)   :: iron_flux    
+     real (r8), allocatable, dimension(:)   :: piston_velocity
      real (r8), allocatable, dimension(:)   :: flux_co2
      real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (nmol/cm^2/s)
      real (r8), allocatable, dimension(:)   :: co2star
@@ -577,7 +577,7 @@ contains
     class(marbl_surface_forcing_internal_type) , intent(inout) :: this
     integer (int_kind)                         , intent(in)    :: num_elements
 
-    allocate(this%iron_flux       (num_elements))
+    allocate(this%piston_velocity (num_elements))
     allocate(this%flux_co2        (num_elements))
     allocate(this%flux_alt_co2    (num_elements))
     allocate(this%co2star         (num_elements))

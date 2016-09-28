@@ -4218,7 +4218,6 @@ contains
     use marbl_config_mod     , only : lflux_gas_o2
     use marbl_config_mod     , only : lflux_gas_co2
     use marbl_constants_mod  , only : mpercm
-    use marbl_constants_mod  , only : xkw_coeff
 
     implicit none
 
@@ -4252,7 +4251,9 @@ contains
          ap_used           => surface_input_forcings(:,surface_forcing_ind%atm_pressure_id),    &
          ifrac             => surface_input_forcings(:,surface_forcing_ind%ifrac_id),           &
          dust_flux_in      => surface_input_forcings(:,surface_forcing_ind%dust_flux_id),       &
+         iron_flux_in      => surface_input_forcings(:,surface_forcing_ind%iron_flux_id),       &
 
+         piston_velocity   => surface_forcing_internal%piston_velocity,                         &
          flux_co2          => surface_forcing_internal%flux_co2,                                &
          flux_alt_co2      => surface_forcing_internal%flux_alt_co2,                            &
          co2star           => surface_forcing_internal%co2star,                                 &
@@ -4268,7 +4269,6 @@ contains
          schmidt_co2       => surface_forcing_internal%schmidt_co2,                             &
          schmidt_o2        => surface_forcing_internal%schmidt_o2,                              &
          o2sat             => surface_forcing_internal%o2sat,                                   &
-         iron_flux_in      => surface_forcing_internal%iron_flux,                               &
          nhx_surface_emis  => surface_forcing_internal%nhx_surface_emis,                        &
 
 
@@ -4297,7 +4297,7 @@ contains
     if (lflux_gas_o2 .or. lflux_gas_co2) then
 
        diags(ind_diag%ECOSYS_IFRAC)%field_2d(:)     = ifrac(:)
-       diags(ind_diag%ECOSYS_XKW)%field_2d(:)       = xkw_coeff*u10_sqr(:)
+       diags(ind_diag%ECOSYS_XKW)%field_2d(:)       = piston_velocity(:)
        diags(ind_diag%ECOSYS_ATM_PRESS)%field_2d(:) = ap_used(:)
 
     endif  ! lflux_gas_o2 .or. lflux_gas_co2
