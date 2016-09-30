@@ -506,9 +506,10 @@ contains
 
   subroutine complete_config_and_init(this)
 
-    use marbl_parms, only : set_derived_parms
-    use marbl_parms, only : tracer_restore_vars
-    use marbl_mod  , only : marbl_init_bury_coeff
+    use marbl_parms,       only : set_derived_parms
+    use marbl_parms,       only : tracer_restore_vars
+    use marbl_mod  ,       only : marbl_init_bury_coeff
+    use marbl_restore_mod, only : tracer_restore_cnt
 
     class(marbl_interface_class), intent(inout) :: this
 
@@ -536,15 +537,10 @@ contains
       return
     end if
 
-    ! Set up tracer restore info in this%interior_forcing_input
-    call this%interior_forcing_input%set_restore(this%domain%km,              &
-                                                 tracer_restore_vars)
-
     associate(&
          ecosys_base_ind_beg  => this%tracer_indices%ecosys_base_ind_beg,      &
          ecosys_base_ind_end  => this%tracer_indices%ecosys_base_ind_end       &
          )
-
     ! Initialize tracer restoring
     call this%restoring%init(                                                   &
          domain          = this%domain,                                         &
@@ -554,8 +550,12 @@ contains
       call this%StatusLog%log_error_trace("this%restoring%init()", subname)
       return
     end if
-
     end associate
+
+    ! Set up tracer restore info in this%interior_forcing_input
+    call this%interior_forcing_input%set_restore(this%domain%km,              &
+                                   tracer_restore_vars(1:tracer_restore_cnt))
+
 
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
@@ -621,7 +621,6 @@ contains
     call this%restoring%restore_tracers( &
          this%column_tracers,            &
          this%domain%km,                 &
-         marbl_total_tracer_cnt,         &
          this%column_restore)
 
     call marbl_set_interior_forcing(   &

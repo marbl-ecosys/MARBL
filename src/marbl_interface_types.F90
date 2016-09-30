@@ -102,7 +102,7 @@ module marbl_interface_types
   !*****************************************************************************
 
   type, private :: marbl_single_diagnostic_type
-     ! marbl_single_diagnostic : 
+     ! marbl_single_diagnostic :
      ! a private type, this contains both the metadata
      ! and the actual diagnostic data for a single
      ! diagnostic quantity. Data must be accessed via
