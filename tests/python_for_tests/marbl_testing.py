@@ -58,7 +58,7 @@ def parse_args(desc, HaveCompiler=True, HaveNamelist=True, CleanLibOnly=False):
     # If --mach is not specified, guess at machine name from hostname
     from socket import gethostname
     hostname = gethostname()
-    if 'yslogin' in hostname:
+    if any(host in hostname for host in ['geyser', 'caldera', 'prong', 'yslogin']):
       mach = 'yellowstone'
     elif 'hobart' in hostname:
       mach = 'hobart'

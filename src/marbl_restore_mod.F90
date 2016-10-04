@@ -14,7 +14,7 @@ module marbl_restore_mod
 
   type :: marbl_single_restoring_field_type
     real(kind=r8), dimension(:), allocatable :: inv_tau ! 1/time_scale (s^-1)
-    real(kind=r8), dimension(:), allocatable :: climatology ! Field we restore to
+    real(kind=r8), dimension(:), allocatable :: data ! Field we restore to
     integer                                  :: restore_var_ind = 0
   end type marbl_single_restoring_field_type
 
@@ -113,7 +113,7 @@ subroutine init(this, domain, tracer_metadata, marbl_status_log)
 
   if (tracer_restore_cnt.gt.0) then
     call marbl_status_log%log_noerror('', subname)
-    log_message = "Restoring the following tracers to climatological data:"
+    log_message = "Restoring the following tracers to data:"
     call marbl_status_log%log_noerror(log_message, subname)
   end if
   do m=1, tracer_restore_cnt
@@ -122,9 +122,9 @@ subroutine init(this, domain, tracer_metadata, marbl_status_log)
     end do
     if (n.le.size(tracer_metadata)) then
       allocate(this%tracer_restore(m)%inv_tau(domain%km))
-      allocate(this%tracer_restore(m)%climatology(domain%km))
+      allocate(this%tracer_restore(m)%data(domain%km))
       this%tracer_restore(m)%inv_tau(:) = inv_tau
-      this%tracer_restore(m)%climatology(:) = c0
+      this%tracer_restore(m)%data(:) = c0
       this%tracer_restore(m)%restore_var_ind = n
       write(log_message, "(2A,I0,A)") trim(tracer_metadata(n)%short_name),    &
                                       " (tracer index: ", n, ')'
@@ -176,7 +176,7 @@ subroutine restore_tracers(this, interior_tracers, km, interior_restore)
   do m=1,tracer_restore_cnt
     n = this%tracer_restore(m)%restore_var_ind
     associate(single_restore => this%tracer_restore(m))
-    interior_restore(n,:) = (single_restore%climatology(:) - interior_tracers(n,:)) * &
+    interior_restore(n,:) = (single_restore%data(:) - interior_tracers(n,:)) * &
                             single_restore%inv_tau(:)
     end associate
   end do
