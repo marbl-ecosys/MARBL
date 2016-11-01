@@ -363,6 +363,7 @@ module marbl_internal_types
     integer (int_kind) :: sio3_ind        = 0 ! dissolved inorganic silicate
     integer (int_kind) :: nh4_ind         = 0 ! dissolved ammonia
     integer (int_kind) :: fe_ind          = 0 ! dissolved inorganic iron
+    integer (int_kind) :: lig_ind         = 0 ! Fe-binding Ligand
     integer (int_kind) :: o2_ind          = 0 ! dissolved oxygen
     integer (int_kind) :: dic_ind         = 0 ! dissolved inorganic carbon
     integer (int_kind) :: dic_alt_co2_ind = 0 ! dissolved inorganic carbon with alternative CO2
@@ -613,6 +614,9 @@ contains
 
       tracer_cnt  = tracer_cnt + 1
       this%fe_ind = tracer_cnt
+
+      tracer_cnt   = tracer_cnt + 1
+      this%lig_ind = tracer_cnt
 
       tracer_cnt  = tracer_cnt + 1
       this%o2_ind = tracer_cnt

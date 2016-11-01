@@ -61,9 +61,9 @@ module marbl_diagnostics_mod
   private :: store_diagnostics_particulates
   private :: store_diagnostics_oxygen
   private :: store_diagnostics_PAR
-  private :: store_diagnostics_misc
   private :: store_diagnostics_zooplankton
   private :: store_diagnostics_dissolved_organic_matter
+  private :: store_diagnostics_iron_cycle
   private :: store_diagnostics_carbon_fluxes
   private :: store_diagnostics_nitrogen_fluxes
   private :: store_diagnostics_phosphorus_fluxes
@@ -147,6 +147,12 @@ module marbl_diagnostics_mod
     integer(int_kind) :: DOPr_remin
     integer(int_kind) :: Fe_scavenge
     integer(int_kind) :: Fe_scavenge_rate
+    integer(int_kind) :: Lig_prod
+    integer(int_kind) :: Lig_loss
+    integer(int_kind) :: Lig_scavenge
+    integer(int_kind) :: Fefree
+    integer(int_kind) :: Lig_photochem
+    integer(int_kind) :: Lig_deg
 
     ! Particulate 3D diags
     integer(int_kind) :: POC_FLUX_IN
@@ -2350,6 +2356,102 @@ contains
           end if
        end if
 
+       if (count_only) then
+          num_interior_diags = num_interior_diags + 1
+       else
+          lname = 'Production of Fe-binding Ligand'
+          sname = 'Lig_prod'
+          units = 'mmol/m^3/s'
+          vgrid = 'layer_avg'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Lig_prod, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+       end if
+
+       if (count_only) then
+          num_interior_diags = num_interior_diags + 1
+       else
+          lname = 'Loss of Fe-binding Ligand'
+          sname = 'Lig_loss'
+          units = 'mmol/m^3/s'
+          vgrid = 'layer_avg'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Lig_loss, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+       end if
+
+       if (count_only) then
+          num_interior_diags = num_interior_diags + 1
+       else
+          lname = 'Loss of Fe-binding Ligand from Scavenging'
+          sname = 'Lig_scavenge'
+          units = 'mmol/m^3/s'
+          vgrid = 'layer_avg'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Lig_scavenge, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+       end if
+
+       if (count_only) then
+          num_interior_diags = num_interior_diags + 1
+       else
+          lname = 'Fe not bound to Ligand'
+          sname = 'Fefree'
+          units = 'mmol/m^3'
+          vgrid = 'layer_avg'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Fefree, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+       end if
+
+       if (count_only) then
+          num_interior_diags = num_interior_diags + 1
+       else
+          lname = 'Loss of Fe-binding Ligand from UV radiation'
+          sname = 'Lig_photochem'
+          units = 'mmol/m^3/s'
+          vgrid = 'layer_avg'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Lig_photochem, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+       end if
+
+       if (count_only) then
+          num_interior_diags = num_interior_diags + 1
+       else
+          lname = 'Loss of Fe-binding Ligand from Bacterial Degradation'
+          sname = 'Lig_deg'
+          units = 'mmol/m^3/s'
+          vgrid = 'layer_avg'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%Lig_deg, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+       end if
+
        ! Particulate 3D diags
        if (count_only) then
           num_interior_diags = num_interior_diags + 1
@@ -4091,6 +4193,8 @@ contains
        sed_denitrif, other_remin, nitrif, denitrif,   &
        column_o2, o2_production, o2_consumption,      &
        fe_scavenge, fe_scavenge_rate,                 &
+       Lig_prod, Lig_loss, Lig_scavenge, Fefree,      &
+       Lig_photochem, Lig_deg,                        &
        marbl_interior_forcing_diags,                  &
        marbl_status_log)
        
@@ -4119,6 +4223,12 @@ contains
     real (r8)                                 , intent(in) :: o2_consumption(:)
     real (r8)                                 , intent(in) :: fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient
     real (r8)                                 , intent(in) :: fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
+    real (r8)                                 , intent(in) :: Lig_prod(domain%km)
+    real (r8)                                 , intent(in) :: Lig_loss(domain%km)
+    real (r8)                                 , intent(in) :: Lig_scavenge(domain%km)
+    real (r8)                                 , intent(in) :: Fefree(domain%km)
+    real (r8)                                 , intent(in) :: Lig_photochem(domain%km)
+    real (r8)                                 , intent(in) :: Lig_deg(domain%km)
     type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_forcing_diags
     type (marbl_log_type)                     , intent(inout) :: marbl_status_log
 
@@ -4178,7 +4288,11 @@ contains
          PAR%col_frac(:), PAR%avg(:,:), marbl_interior_forcing_diags)
 
     call store_diagnostics_dissolved_organic_matter(domain, &
-         dissolved_organic_matter, fe_scavenge, fe_scavenge_rate, marbl_interior_forcing_diags)
+         dissolved_organic_matter, marbl_interior_forcing_diags)
+
+    call store_diagnostics_iron_cycle(domain, &
+         fe_scavenge, fe_scavenge_rate, Lig_prod, Lig_loss, Lig_scavenge, &
+         Fefree, Lig_photochem, Lig_deg, marbl_interior_forcing_diags)
 
     call store_diagnostics_nitrogen_fluxes(domain, &
          PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracers, &
@@ -4856,12 +4970,6 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_misc(marbl_interior_diags)
-    type(marbl_diagnostics_type), intent(inout) :: marbl_interior_diags
-  end subroutine store_diagnostics_misc
-
-  !***********************************************************************
-
   subroutine store_diagnostics_zooplankton(zooplankton_secondary_species, marbl_interior_diags)
 
     type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(:,:)
@@ -4896,12 +5004,10 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_dissolved_organic_matter(marbl_domain, &
-       dissolved_organic_matter, fe_scavenge, fe_scavenge_rate, marbl_diags)
+       dissolved_organic_matter, marbl_diags)
 
     type(marbl_domain_type)      , intent(in)    :: marbl_domain
     type(dissolved_organic_matter_type) , intent(in)    :: dissolved_organic_matter(:) ! (km)
-    real(r8)                            , intent(in)    :: fe_scavenge(:)              ! (km)
-    real(r8)                            , intent(in)    :: fe_scavenge_rate(:)         ! (km)
     type(marbl_diagnostics_type)        , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
@@ -4926,14 +5032,55 @@ contains
        diags(ind%DOP_prod)%field_3d(k, 1)         = dissolved_organic_matter(k)%DOP_prod
        diags(ind%DOP_remin)%field_3d(k, 1)        = dissolved_organic_matter(k)%DOP_remin
        diags(ind%DOPr_remin)%field_3d(k, 1)       = dissolved_organic_matter(k)%DOPr_remin
-
-       diags(ind%Fe_scavenge)%field_3d(k, 1)      = Fe_scavenge(k)
-       diags(ind%Fe_scavenge_rate)%field_3d(k, 1) = Fe_scavenge_rate(k)
     end do
 
     end associate
 
   end subroutine store_diagnostics_dissolved_organic_matter
+
+  !***********************************************************************
+
+  subroutine store_diagnostics_iron_cycle(marbl_domain, &
+       fe_scavenge, fe_scavenge_rate, Lig_prod, Lig_loss, Lig_scavenge, &
+       Fefree, Lig_photochem, Lig_deg, marbl_diags)
+
+    type(marbl_domain_type)             , intent(in)    :: marbl_domain
+    real(r8)                            , intent(in)    :: fe_scavenge(:)      ! (km)
+    real(r8)                            , intent(in)    :: fe_scavenge_rate(:) ! (km)
+    real(r8)                            , intent(in)    :: Lig_prod(:)         ! (km)
+    real(r8)                            , intent(in)    :: Lig_loss(:)         ! (km)
+    real(r8)                            , intent(in)    :: Lig_scavenge(:)     ! (km)
+    real(r8)                            , intent(in)    :: Fefree(:)           ! (km)
+    real(r8)                            , intent(in)    :: Lig_photochem(:)    ! (km)
+    real(r8)                            , intent(in)    :: Lig_deg(:)          ! (km)
+    type(marbl_diagnostics_type)        , intent(inout) :: marbl_diags
+
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer(int_kind) :: k
+    !-----------------------------------------------------------------------
+
+    associate(                            &
+         km    => marbl_domain%km,        &
+         diags => marbl_diags%diags,      &
+         ind   => marbl_interior_diag_ind &
+         )
+
+    do k = 1, km
+       diags(ind%Fe_scavenge)%field_3d(k, 1)      = Fe_scavenge(k)
+       diags(ind%Fe_scavenge_rate)%field_3d(k, 1) = Fe_scavenge_rate(k)
+       diags(ind%Lig_prod)%field_3d(k, 1)         = Lig_prod(k)
+       diags(ind%Lig_loss)%field_3d(k, 1)         = Lig_loss(k)
+       diags(ind%Lig_scavenge)%field_3d(k, 1)     = Lig_scavenge(k)
+       diags(ind%Fefree)%field_3d(k, 1)           = Fefree(k)
+       diags(ind%Lig_photochem)%field_3d(k, 1)    = Lig_photochem(k)
+       diags(ind%Lig_deg)%field_3d(k, 1)          = Lig_deg(k)
+    end do
+
+    end associate
+
+  end subroutine store_diagnostics_iron_cycle
 
   !***********************************************************************
 

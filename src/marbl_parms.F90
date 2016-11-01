@@ -66,12 +66,13 @@ module marbl_parms
        parm_init_POC_bury_coeff,& ! initial scale factor for burial of POC, PON
        parm_init_POP_bury_coeff,& ! initial scale factor for burial of POP
        parm_init_bSi_bury_coeff,& ! initial scale factor burial of bSi
-       parm_fe_scavenge_rate0,& ! base scavenging rate
+       parm_fe_scavenge_rate0,& ! Fe scavenging base rate
+       parm_Lig_scavenge_rate0, & ! Fe-binding ligand scavenging base rate coefficient
+       parm_Lig_degrade_rate0, & ! Fe-binding ligand bacterial degradation base rate coefficient
        parm_f_prod_sp_CaCO3,  & !fraction of sp prod. as CaCO3 prod.
        parm_POC_diss,         & ! base POC diss len scale
        parm_SiO2_diss,        & ! base SiO2 diss len scale
        parm_CaCO3_diss,       & ! base CaCO3 diss len scale
-       fe_max_scale2,         & ! unitless scaling coeff.
        bury_coeff_rmean_timescale_years
 
   real(kind=r8), dimension(4), target :: &
@@ -136,7 +137,6 @@ module marbl_parms
 
   ! Misc. Rate constants
   real(kind=r8), parameter :: &
-       fe_scavenge_thres1 = 0.8e-3_r8,  & !upper thres. for Fe scavenging
        dust_fescav_scale  = 1.0e9         !dust scavenging scale factor
 
   ! Compute iron remineralization and flux out.
@@ -147,6 +147,11 @@ module marbl_parms
   ! dust_to_Fe          conversion - dust to iron (nmol Fe/g Dust)
   real(kind=r8), parameter :: &
        dust_to_Fe=0.035_r8/55.847_r8*1.0e9_r8
+
+  ! parameters related to Iron binding ligands
+  integer (int_kind), parameter :: Lig_cnt = 2 ! valid values are 1 or 2
+  real(kind=r8), parameter :: &
+       remin_to_Lig = 0.0001_r8
 
   ! Partitioning of phytoplankton growth, grazing and losses
   ! All f_* variables are fractions and are non-dimensional
@@ -281,12 +286,13 @@ contains
     parm_init_POC_bury_coeff = 1.1_r8         ! x1 default
     parm_init_POP_bury_coeff = 1.1_r8         ! x1 default
     parm_init_bSi_bury_coeff = 1.0_r8         ! x1 default
-    parm_fe_scavenge_rate0   = 1.9_r8         ! x1 default
+    parm_fe_scavenge_rate0   = 60.0_r8        ! x1 default
+    parm_Lig_scavenge_rate0  = 5.0_r8         ! x1 default
+    parm_Lig_degrade_rate0   = 60.0_r8        ! x1 default
     parm_f_prod_sp_CaCO3     = 0.065_r8       ! x1 default
     parm_POC_diss            = 90.0e2_r8
     parm_SiO2_diss           = 600.0e2_r8
     parm_CaCO3_diss          = 450.0e2_r8
-    fe_max_scale2            = 2200.0_r8      ! x1 default
     bury_coeff_rmean_timescale_years = 10.0_r8
     parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8,  750.0e2_r8 /)
     parm_scalelen_vals = (/     1.0_r8,     3.3_r8,     4.6_r8,      5.0_r8 /) ! x1 default
@@ -525,11 +531,12 @@ contains
          parm_init_POP_bury_coeff, &
          parm_init_bSi_bury_coeff, &
          parm_fe_scavenge_rate0, &
+         parm_Lig_scavenge_rate0, &
+         parm_Lig_degrade_rate0, &
          parm_f_prod_sp_CaCO3, &
          parm_POC_diss, &
          parm_SiO2_diss, &
          parm_CaCO3_diss, &
-         fe_max_scale2, &
          iron_frac_in_dust, &
          iron_frac_in_bc, &
          caco3_bury_thres_opt, &
@@ -745,11 +752,37 @@ contains
     end if
 
     sname     = 'parm_fe_scavenge_rate0'
-    lname     = 'base scavenging rate'
-    units     = '1/yr'
+    lname     = 'Fe scavenging base rate'
+    units     = '1/yr/(g/cm^2/s)'
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_fe_scavenge_rate0
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_Lig_scavenge_rate0'
+    lname     = 'Fe-binding ligand scavenging base rate coefficient'
+    units     = '1/yr/(nmol/cm^2/s)/(g/cm^2/s)'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_Lig_scavenge_rate0
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'parm_Lig_degrade_rate0'
+    lname     = 'Fe-binding ligand bacterial degradation base rate coefficient'
+    units     = '1/day/(nmol/cm^2/s)^2'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_Lig_degrade_rate0
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
@@ -804,19 +837,6 @@ contains
     rptr      => parm_CaCO3_diss
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'fe_max_scale2'
-    lname     = 'Scaling coefficient'
-    units     = 'm^3 / mmol / yr'
-    datatype  = 'real'
-    group     = 'marbl_parms_nml'
-    rptr      => fe_max_scale2
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr, add_newline=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return

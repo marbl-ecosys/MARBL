@@ -1188,7 +1188,7 @@ contains
     !   Developed by X. Giraud, ETH ZÃ¼rich, 21.07.2008
     !---------------------------------------------------------------------------
 
-    use marbl_constants_mod, only : pi
+    use marbl_constants_mod, only : pi, c4, c3
 
     implicit none
 
@@ -1232,7 +1232,7 @@ contains
     if ( cell_surf > c0 ) then
        Surf = cell_surf
     else
-       Surf = 4.0_r8 * pi * (radius_m ** 2)
+       Surf = c4 * pi * (radius_m ** 2)
     endif
 
     !---------------------------------------------------------------------
@@ -1243,7 +1243,7 @@ contains
     if ( cell_carb_cont > c0 ) then
        Qc = cell_carb_cont
     else
-       Vol = 4.0_r8 * pi * (cell_radius ** 3) / 3.0_r8
+       Vol = c4 * pi * (cell_radius ** 3) / c3
        Qc = 3.154e-14_r8 * (Vol ** (0.758_r8 ))
     endif
 
