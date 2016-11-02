@@ -32,13 +32,12 @@ module marbl_diagnostics_mod
   use marbl_internal_types  , only : marbl_zooplankton_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
-  use marbl_internal_types , only : marbl_tracer_index_type
+  use marbl_internal_types  , only : marbl_tracer_index_type
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
   use marbl_interface_types , only : marbl_saved_state_type
   use marbl_interface_types , only : marbl_interior_forcing_input_type
-  use marbl_interface_types , only : marbl_surface_forcing_indexing_type
   use marbl_interface_types , only : marbl_diagnostics_type
 
   use marbl_logging,          only : marbl_log_type
@@ -4129,7 +4128,7 @@ contains
        
        do n = 1,marbl_total_tracer_cnt
           ! Note that tmp_id is a temp variable because restoring diagnostics
-          ! have same indexing as the ecosys tracers
+          ! have same indexing as the MARBL tracers
           if (count_only) then
              num_restore_diags = num_restore_diags + 1
           else
@@ -4183,7 +4182,7 @@ contains
        dtracers,                                      &
        marbl_tracer_indices,                          &
        carbonate,                                     &
-       autotroph_secondary_species,                   &         
+       autotroph_secondary_species,                   &
        zooplankton_secondary_species,                 &
        dissolved_organic_matter,                      &
        marbl_particulate_share,                       &
@@ -4328,18 +4327,10 @@ contains
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
 
+    use marbl_internal_types , only : marbl_surface_forcing_indexing_type
     use marbl_internal_types , only : marbl_surface_saved_state_indexing_type
     use marbl_config_mod     , only : lflux_gas_o2
     use marbl_config_mod     , only : lflux_gas_co2
-    use marbl_config_mod     , only : iron_flux_file     
-    use marbl_config_mod     , only : din_riv_flux_file     
-    use marbl_config_mod     , only : dip_riv_flux_file          
-    use marbl_config_mod     , only : don_riv_flux_file          
-    use marbl_config_mod     , only : dop_riv_flux_file          
-    use marbl_config_mod     , only : dsi_riv_flux_file          
-    use marbl_config_mod     , only : dfe_riv_flux_file          
-    use marbl_config_mod     , only : dic_riv_flux_file          
-    use marbl_config_mod     , only : alk_riv_flux_file         
     use marbl_constants_mod  , only : mpercm
 
     implicit none
@@ -4348,7 +4339,7 @@ contains
     real(r8)                                  , intent(in)    :: surface_input_forcings(:,:)
     real(r8)                                  , intent(in)    :: surface_tracer_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
-    type(marbl_saved_state_type)              , intent(in)    :: saved_state 
+    type(marbl_saved_state_type)              , intent(in)    :: saved_state
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_forcing_internal_type) , intent(in)    :: surface_forcing_internal
     type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
@@ -4368,13 +4359,15 @@ contains
          ind_forc          => surface_forcing_ind,                                              &
 
          diags             => surface_forcing_diags%diags(:),                                   &
-         xkw               => surface_input_forcings(:,surface_forcing_ind%xkw_id),             &
+         u10_sqr           => surface_input_forcings(:,surface_forcing_ind%u10_sqr_id),         &
          xco2              => surface_input_forcings(:,surface_forcing_ind%xco2_id),            &
          xco2_alt_co2      => surface_input_forcings(:,surface_forcing_ind%xco2_alt_co2_id),    &
          ap_used           => surface_input_forcings(:,surface_forcing_ind%atm_pressure_id),    &
          ifrac             => surface_input_forcings(:,surface_forcing_ind%ifrac_id),           &
          dust_flux_in      => surface_input_forcings(:,surface_forcing_ind%dust_flux_id),       &
+         iron_flux_in      => surface_input_forcings(:,surface_forcing_ind%iron_flux_id),       &
 
+         piston_velocity   => surface_forcing_internal%piston_velocity,                         &
          flux_co2          => surface_forcing_internal%flux_co2,                                &
          flux_alt_co2      => surface_forcing_internal%flux_alt_co2,                            &
          co2star           => surface_forcing_internal%co2star,                                 &
@@ -4390,7 +4383,6 @@ contains
          schmidt_co2       => surface_forcing_internal%schmidt_co2,                             &
          schmidt_o2        => surface_forcing_internal%schmidt_o2,                              &
          o2sat             => surface_forcing_internal%o2sat,                                   &
-         iron_flux_in      => surface_forcing_internal%iron_flux,                               &
          nhx_surface_emis  => surface_forcing_internal%nhx_surface_emis,                        &
 
 
@@ -4419,7 +4411,7 @@ contains
     if (lflux_gas_o2 .or. lflux_gas_co2) then
 
        diags(ind_diag%ECOSYS_IFRAC)%field_2d(:)     = ifrac(:)
-       diags(ind_diag%ECOSYS_XKW)%field_2d(:)       = xkw(:)
+       diags(ind_diag%ECOSYS_XKW)%field_2d(:)       = piston_velocity(:)
        diags(ind_diag%ECOSYS_ATM_PRESS)%field_2d(:) = ap_used(:)
 
     endif  ! lflux_gas_o2 .or. lflux_gas_co2
@@ -4429,35 +4421,35 @@ contains
        diags(ind_diag%PV_O2)%field_2d(:)      = pv_o2(:)
        diags(ind_diag%SCHMIDT_O2)%field_2d(:) = schmidt_o2(:)
        diags(ind_diag%O2SAT)%field_2d(:)      = o2sat(:)
-       
+
     endif  ! lflux_gas_o2
 
     !-----------------------------------------------------------------------
     !  compute CO2 flux, computing disequilibrium one row at a time
     !-----------------------------------------------------------------------
-    
+
     if (lflux_gas_co2) then
-       
+
        diags(ind_diag%CO2STAR)%field_2d(:)              = co2star(:)
        diags(ind_diag%DCO2STAR)%field_2d(:)             = dco2star(:)
        diags(ind_diag%pCO2SURF)%field_2d(:)             = pco2surf(:)
        diags(ind_diag%DpCO2)%field_2d(:)                = dpco2(:)
-       
+
        diags(ind_diag%CO2STAR_ALT_CO2)%field_2d(:)      = co2star_alt(:)
        diags(ind_diag%DCO2STAR_ALT_CO2)%field_2d(:)     = dco2star_alt(:)
        diags(ind_diag%pCO2SURF_ALT_CO2)%field_2d(:)     = pco2surf_alt(:)
        diags(ind_diag%DpCO2_ALT_CO2)%field_2d(:)        = dpco2_alt(:)
-       
+
        diags(ind_diag%PV_CO2)%field_2d(:)               = pv_co2(:)
        diags(ind_diag%SCHMIDT_CO2)%field_2d(:)          = schmidt_co2(:)
        diags(ind_diag%DIC_GAS_FLUX)%field_2d(:)         = flux_co2(:)
        diags(ind_diag%PH)%field_2d(:)                   = ph_prev(:)
        diags(ind_diag%ATM_CO2)%field_2d(:)              = xco2(:)
-      
+
        diags(ind_diag%DIC_GAS_FLUX_ALT_CO2)%field_2d(:) = flux_alt_co2(:)
        diags(ind_diag%PH_ALT_CO2)%field_2d(:)           = ph_prev_alt_co2(:)
        diags(ind_diag%ATM_ALT_CO2)%field_2d(:)          = xco2_alt_co2(:)
-       
+
     endif  !  lflux_gas_co2
 
     !-----------------------------------------------------------------------
@@ -4466,10 +4458,9 @@ contains
 
     ! multiply IRON flux by mpercm (.01) to convert from model units (cm/s)(mmol/m^3) to mmol/s/m^2
 
-    ! FIXME #56 : need better conditional here, perhaps based on iron_flux_id /= 0
-!   if (iron_flux_file%has_data) then
+   if (ind_diag%IRON_FLUX.ne.0) then
        diags(ind_diag%IRON_FLUX)%field_2d(:) = iron_flux_in(:) * mpercm
-!   endif
+   endif
 
     !-----------------------------------------------------------------------
     !  calculate nox and nhy fluxes if necessary
@@ -4488,19 +4479,19 @@ contains
     !  calculate river bgc fluxes if necessary
     !-----------------------------------------------------------------------
 
-    if (din_riv_flux_file%has_data) then
+    if (ind_forc%din_riv_flux_id.ne.0) then
        diags(ind_diag%DIN_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%din_riv_flux_id)
     endif
-    if (dsi_riv_flux_file%has_data) then
+    if (ind_forc%dsi_riv_flux_id.ne.0) then
        diags(ind_diag%DSI_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dsi_riv_flux_id)
     endif
-    if (dfe_riv_flux_file%has_data) then
+    if (ind_forc%dfe_riv_flux_id.ne.0) then
        diags(ind_diag%DFE_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dfe_riv_flux_id)
     endif
-    if (dic_riv_flux_file%has_data) then
+    if (ind_forc%dic_riv_flux_id.ne.0) then
        diags(ind_diag%DIC_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dic_riv_flux_id)
     endif
-    if (alk_riv_flux_file%has_data) then
+    if (ind_forc%alk_riv_flux_id.ne.0) then
        diags(ind_diag%ALK_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%alk_riv_flux_id)
     endif
     diags(ind_diag%O2_GAS_FLUX)%field_2d(:)   = stf(:, o2_ind)

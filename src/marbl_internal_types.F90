@@ -123,7 +123,7 @@ module marbl_internal_types
   !****************************************************************************
 
   type, public :: marbl_surface_forcing_internal_type
-     real (r8), allocatable, dimension(:)   :: iron_flux    
+     real (r8), allocatable, dimension(:)   :: piston_velocity
      real (r8), allocatable, dimension(:)   :: flux_co2
      real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (nmol/cm^2/s)
      real (r8), allocatable, dimension(:)   :: co2star
@@ -394,6 +394,37 @@ module marbl_internal_types
     procedure, public :: construct => tracer_index_constructor
   end type marbl_tracer_index_type
 
+  !****************************************************************************
+
+  type, public :: marbl_surface_forcing_indexing_type
+     integer(int_kind) :: surface_mask_id      = 0
+     integer(int_kind) :: u10_sqr_id           = 0
+     integer(int_kind) :: ifrac_id             = 0
+     integer(int_kind) :: sst_id               = 0
+     integer(int_kind) :: sss_id               = 0
+     integer(int_kind) :: atm_pressure_id      = 0
+     integer(int_kind) :: xco2_id              = 0
+     integer(int_kind) :: xco2_alt_co2_id      = 0
+     integer(int_kind) :: dust_flux_id         = 0
+     integer(int_kind) :: iron_flux_id         = 0
+     integer(int_kind) :: nox_flux_id          = 0
+     integer(int_kind) :: nhy_flux_id          = 0
+     integer(int_kind) :: din_riv_flux_id      = 0
+     integer(int_kind) :: dip_riv_flux_id      = 0
+     integer(int_kind) :: don_riv_flux_id      = 0
+     integer(int_kind) :: dop_riv_flux_id      = 0
+     integer(int_kind) :: dsi_riv_flux_id      = 0
+     integer(int_kind) :: dfe_riv_flux_id      = 0
+     integer(int_kind) :: dic_riv_flux_id      = 0
+     integer(int_kind) :: alk_riv_flux_id      = 0
+     integer(int_kind) :: doc_riv_flux_id      = 0
+     integer(int_kind) :: d13c_id              = 0
+     integer(int_kind) :: d14c_id              = 0
+     integer(int_kind) :: d14c_glo_avg_id      = 0
+   contains
+     procedure, public :: construct => surface_forcing_index_constructor
+  end type marbl_surface_forcing_indexing_type
+
   !*****************************************************************************
 
   type, public :: marbl_surface_saved_state_indexing_type
@@ -547,7 +578,7 @@ contains
     class(marbl_surface_forcing_internal_type) , intent(inout) :: this
     integer (int_kind)                         , intent(in)    :: num_elements
 
-    allocate(this%iron_flux       (num_elements)) 
+    allocate(this%piston_velocity (num_elements))
     allocate(this%flux_co2        (num_elements))
     allocate(this%flux_alt_co2    (num_elements))
     allocate(this%co2star         (num_elements))
@@ -559,18 +590,18 @@ contains
     allocate(this%dco2star_alt    (num_elements))
     allocate(this%pco2surf_alt    (num_elements))
     allocate(this%dpco2_alt       (num_elements))
-    allocate(this%schmidt_co2     (num_elements)) 
-    allocate(this%schmidt_o2      (num_elements))  
-    allocate(this%pv_o2           (num_elements))       
-    allocate(this%pv_co2          (num_elements))      
-    allocate(this%o2sat           (num_elements))       
+    allocate(this%schmidt_co2     (num_elements))
+    allocate(this%schmidt_o2      (num_elements))
+    allocate(this%pv_o2           (num_elements))
+    allocate(this%pv_co2          (num_elements))
+    allocate(this%o2sat           (num_elements))
     allocate(this%nhx_surface_emis(num_elements))
   end subroutine marbl_surface_forcing_internal_constructor
 
   !*****************************************************************************
 
   subroutine tracer_index_constructor(this, ciso_on, autotrophs_config,       &
-             zooplankton_config, marbl_status_log)
+             zooplankton_config)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -585,11 +616,8 @@ contains
     logical,                        intent(in)    :: ciso_on
     type(autotroph_config_type),    intent(in)    :: autotrophs_config(:)
     type(zooplankton_config_type),  intent(in)    :: zooplankton_config(:)
-    type(marbl_log_type),           intent(inout) :: marbl_status_log
 
     integer :: n
-    character(*), parameter :: subname='marbl_internal_types:tracer_index_constructor'
-    character(len=char_len) :: log_message
 
     associate(tracer_cnt      => marbl_total_tracer_cnt)
 
@@ -648,23 +676,10 @@ contains
       tracer_cnt    = tracer_cnt + 1
       this%docr_ind = tracer_cnt
 
-      call marbl_status_log%log_noerror('', subname)
-      write (log_message, "(A)") '----- zooplankton tracer indices -----'
-      call marbl_status_log%log_noerror(log_message, subname)
-
       do n=1,zooplankton_cnt
         tracer_cnt    = tracer_cnt + 1
         this%zoo_inds(n)%C_ind = tracer_cnt
-
-        write (log_message, "(3A,I0)") 'C_ind(', trim(zooplankton_config(n)%sname),  &
-                                       ') = ', this%zoo_inds(n)%C_ind
-        call marbl_status_log%log_noerror(log_message, subname)
-
       end do
-
-      call marbl_status_log%log_noerror('', subname)
-      write (log_message, "(A)") '----- autotroph tracer indices -----'
-      call marbl_status_log%log_noerror(log_message, subname)
 
       do n=1,autotroph_cnt
         tracer_cnt    = tracer_cnt + 1
@@ -686,32 +701,6 @@ contains
           tracer_cnt    = tracer_cnt + 1
           this%auto_inds(n)%CaCO3_ind = tracer_cnt
         end if
-
-        write (log_message, "(3A,I0)") 'Chl_ind(',                            &
-                                       trim(autotrophs_config(n)%sname),      &
-                                       ') = ', this%auto_inds(n)%Chl_ind
-        call marbl_status_log%log_noerror(log_message, subname)
-
-        write (log_message, "(3A,I0)") 'C_ind(',                              &
-                                       trim(autotrophs_config(n)%sname),      &
-              ') = ', this%auto_inds(n)%C_ind
-        call marbl_status_log%log_noerror(log_message, subname)
-
-        write (log_message, "(3A,I0)") 'Fe_ind(',                             &
-                                       trim(autotrophs_config(n)%sname),      &
-                                       ') = ', this%auto_inds(n)%Fe_ind
-        call marbl_status_log%log_noerror(log_message, subname)
-
-        write (log_message, "(3A,I0)") 'Si_ind(',                             &
-                                       trim(autotrophs_config(n)%sname),      &
-                                       ') = ', this%auto_inds(n)%Si_ind
-        call marbl_status_log%log_noerror(log_message, subname)
-
-        write (log_message, "(3A,I0)") 'CaCO3_ind(',                          &
-                                       trim(autotrophs_config(n)%sname),      &
-                                       ') = ', this%auto_inds(n)%CaCO3_ind
-        call marbl_status_log%log_noerror(log_message, subname)
-
       end do
       this%ecosys_base_ind_end = tracer_cnt
 
@@ -737,10 +726,6 @@ contains
         tracer_cnt      = tracer_cnt + 1
         this%zoo14C_ind = tracer_cnt
 
-        call marbl_status_log%log_noerror('', subname)
-        write (log_message, "(A)") '----- autotroph tracer indices (CISO) -----'
-        call marbl_status_log%log_noerror(log_message, subname)
-
         do n=1,autotroph_cnt
           tracer_cnt    = tracer_cnt + 1
           this%auto_inds(n)%C13_ind = tracer_cnt
@@ -757,58 +742,154 @@ contains
             this%auto_inds(n)%Ca14CO3_ind = tracer_cnt
           end if
 
-          write (log_message, "(3A,I0)") 'C13_ind(',                          &
-                                         trim(autotrophs_config(n)%sname),    &
-                                         ') = ', this%auto_inds(n)%C13_ind
-          call marbl_status_log%log_noerror(log_message, subname)
-
-          write (log_message, "(3A,I0)") 'C14_ind(',                          &
-                                         trim(autotrophs_config(n)%sname),    &
-                                         ') = ', this%auto_inds(n)%C14_ind
-          call marbl_status_log%log_noerror(log_message, subname)
-
-          write (log_message, "(3A,I0)") 'Ca13CO3_ind(',                      &
-                                         trim(autotrophs_config(n)%sname),    &
-                                         ') = ', this%auto_inds(n)%Ca13CO3_ind
-          call marbl_status_log%log_noerror(log_message, subname)
-
-          write (log_message, "(3A,I0)") 'Ca14CO3_ind(',                      &
-                                         trim(autotrophs_config(n)%sname),    &
-                                         ') = ', this%auto_inds(n)%Ca14CO3_ind
-          call marbl_status_log%log_noerror(log_message, subname)
-
         end do
 
         this%ciso_ind_end = tracer_cnt
 
       end if
 
-    call marbl_status_log%log_noerror('', subname)
-    if (ciso_on) then
-      n = this%ciso_ind_end - (this%ciso_ind_beg-1)
-      if (n.ne.ciso_tracer_cnt) then
-        write(log_message, "(A,I0,A,I0)") "ciso_tracer_cnt = ",               &
-                                        ciso_tracer_cnt,                      &
-                                        " but computed tracer count is ", n
-        call marbl_status_log%log_error(log_message, subname)
-      end if
-    end if
-
-    write(log_message, "(A,I0,A)") "MARBL has defined ", tracer_cnt, " tracers."
-    call marbl_status_log%log_noerror(log_message, subname)
-    write(log_message, "(A, I0,A,I0)") "General tracers: ",                   &
-                                       this%ecosys_base_ind_beg, " to ",      &
-                                       this%ecosys_base_ind_end
-    call marbl_status_log%log_noerror(log_message, subname)
-    if (ciso_on) then
-      write(log_message, "(A, I0,A,I0)") "CISO tracers: ", this%ciso_ind_beg, &
-                                         " to ", this%ciso_ind_end
-      call marbl_status_log%log_noerror(log_message, subname)
-    end if
-
     end associate
 
   end subroutine tracer_index_constructor
+
+  !*****************************************************************************
+
+  subroutine surface_forcing_index_constructor(this, ciso_on, lflux_gas_o2,   &
+             lflux_gas_co2)
+
+    ! This subroutine sets the surface forcing indexes, which are used to
+    ! determine what forcing fields are required from the driver.
+
+    use marbl_sizes,         only : num_surface_forcing_fields
+
+    class(marbl_surface_forcing_indexing_type), intent(inout) :: this
+    logical,                                    intent(in)    :: ciso_on
+    logical,                                    intent(in)    :: lflux_gas_o2
+    logical,                                    intent(in)    :: lflux_gas_co2
+
+    associate(forcing_cnt => num_surface_forcing_fields)
+
+      forcing_cnt = 0
+
+      ! -------------------------------
+      ! | Always request these fields |
+      ! -------------------------------
+
+      ! Surface Mask
+      forcing_cnt = forcing_cnt + 1
+      this%surface_mask_id = forcing_cnt
+
+      ! Square of 10m wind
+      forcing_cnt = forcing_cnt + 1
+      this%u10_sqr_id = forcing_cnt
+
+      ! Sea-surface salinity
+      forcing_cnt = forcing_cnt + 1
+      this%sss_id = forcing_cnt
+
+      ! Sea-surface temp
+      forcing_cnt = forcing_cnt + 1
+      this%sst_id = forcing_cnt
+
+      ! Ice Fraction
+      forcing_cnt = forcing_cnt + 1
+      this%ifrac_id = forcing_cnt
+
+      ! Dust Flux
+      forcing_cnt = forcing_cnt + 1
+      this%dust_flux_id = forcing_cnt
+
+      ! Iron Flux
+      forcing_cnt = forcing_cnt + 1
+      this%iron_flux_id = forcing_cnt
+
+      ! NOx Flux
+      forcing_cnt = forcing_cnt + 1
+      this%nox_flux_id = forcing_cnt
+
+      ! NHy Flux
+      forcing_cnt = forcing_cnt + 1
+      this%nhy_flux_id = forcing_cnt
+
+      ! DIN River Flux
+      forcing_cnt = forcing_cnt + 1
+      this%din_riv_flux_id = forcing_cnt
+
+      ! DIP River Flux
+      forcing_cnt = forcing_cnt + 1
+      this%dip_riv_flux_id = forcing_cnt
+
+      ! DON River Flux
+      forcing_cnt = forcing_cnt + 1
+      this%don_riv_flux_id = forcing_cnt
+
+      ! DOP River Flux
+      forcing_cnt = forcing_cnt + 1
+      this%dop_riv_flux_id = forcing_cnt
+
+      ! DSi River Flux
+      forcing_cnt = forcing_cnt + 1
+      this%dsi_riv_flux_id = forcing_cnt
+
+      ! DFe River Flux
+      forcing_cnt = forcing_cnt + 1
+      this%dfe_riv_flux_id = forcing_cnt
+
+      ! DIC River Flux
+      forcing_cnt = forcing_cnt + 1
+      this%dic_riv_flux_id = forcing_cnt
+
+      ! ALK River Flux
+      forcing_cnt = forcing_cnt + 1
+      this%alk_riv_flux_id = forcing_cnt
+
+      ! DOC River Flux
+      forcing_cnt = forcing_cnt + 1
+      this%doc_riv_flux_id = forcing_cnt
+
+      ! ------------------------------------------
+      ! | Request these if gas fluxes are needed |
+      ! ------------------------------------------
+
+      if (lflux_gas_o2.or.lflux_gas_co2) then
+        ! atm pressure
+        forcing_cnt = forcing_cnt + 1
+        this%atm_pressure_id = forcing_cnt
+      end if
+
+      if (lflux_gas_co2) then
+        ! xco2
+        forcing_cnt = forcing_cnt + 1
+        this%xco2_id = forcing_cnt
+
+        ! xco2_alt_co2
+        forcing_cnt = forcing_cnt + 1
+        this%xco2_alt_co2_id = forcing_cnt
+      end if
+
+      ! -----------------------------------
+      ! | Request these fields if ciso_on |
+      ! -----------------------------------
+
+      if (ciso_on) then
+
+        ! d13c
+        forcing_cnt = forcing_cnt + 1
+        this%d13c_id = forcing_cnt
+
+        ! d14c
+        forcing_cnt = forcing_cnt + 1
+        this%d14c_id = forcing_cnt
+
+        ! d14c_gloavg
+        forcing_cnt = forcing_cnt + 1
+        this%d14c_glo_avg_id = forcing_cnt
+
+      end if
+
+    end associate
+
+  end subroutine surface_forcing_index_constructor
 
   !*****************************************************************************
 

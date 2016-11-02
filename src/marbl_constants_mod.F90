@@ -56,7 +56,6 @@ module marbl_constants_mod
       vonkar    =   0.4_r8,            & ! von Karman constant
       T0_Kelvin = 273.15_r8,           & ! freezing T of fresh water (deg K)
       Tref      =  30.0_r8,            & ! reference temperature (C)
-      Q_10      =   1.7_r8,            & ! factor for temperature dependence (non-dim)
       rho_sw    =   1.026_r8,          & ! density of salt water (g/cm^3)
       epsC      =   1.00e-8,           & ! small C concentration (mmol C/m^3)
       epsTinv   =   3.17e-8,           & ! small inverse time scale (1/year) (1/sec)

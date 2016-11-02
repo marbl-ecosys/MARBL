@@ -33,9 +33,9 @@ OBJS = marbl_init_namelist_drv.o       \
 
 all: gnu
 
-$(EXE): $(LIB_DIR)/$(LIB_NAME)           \
-        $(addprefix $(OBJ_DIR)/,$(OBJS)) \
-        clean_exe
+$(EXE): clean_exe                        \
+        $(LIB_DIR)/$(LIB_NAME)           \
+        $(addprefix $(OBJ_DIR)/,$(OBJS))
 	$(FC) -o $(EXE) $(OBJ_DIR)/*.o -L$(LIB_DIR) $(LFLAG)
 
 $(OBJ_DIR)/%.o: $(DRV_DIR)/%.F90

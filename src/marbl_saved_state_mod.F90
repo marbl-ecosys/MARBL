@@ -33,7 +33,6 @@ Contains
     integer :: rank
 
     call surface_state%construct(num_surface_elements, num_levels)
-    call marbl_status_log%log_noerror('', subname)
 
     lname = 'surface pH'
     sname = 'PH_SURF'
