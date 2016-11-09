@@ -1043,13 +1043,13 @@ contains
             delta_z1, tracer_local(:, k), marbl_tracer_indices,                        &
             dissolved_organic_matter(k))
 
-       call marbl_compute_Fe_scavenging(k, domain, tracer_local(fe_ind, k),  &
+       call marbl_compute_scavenging(k, tracer_local(fe_ind, k),             &
             tracer_local(lig_ind, k), POC, P_CaCO3, P_SiO2, dust, P_iron,    &
             Fefree(k), Fe_scavenge_rate(k), Fe_scavenge(k), Lig_scavenge(k), &
             marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
-          call marbl_status_log%log_error_trace('marbl_compute_Fe_scavenging()', &
+          call marbl_status_log%log_error_trace('marbl_compute_scavenging()', &
                                                 subname)
           return
        end if
@@ -1075,9 +1075,8 @@ contains
           return
        end if
 
-       call marbl_compute_Lig_terms(k, domain, &
-            POC%remin(k), dissolved_organic_matter(k)%DOC_prod, &
-            num_PAR_subcols, PAR%col_frac(:), PAR%interface(k-1,:), delta_z1, POC%sflux_in(k), &
+       call marbl_compute_Lig_terms(k, POC%remin(k), dissolved_organic_matter(k)%DOC_prod, &
+            num_PAR_subcols, PAR%col_frac(:), PAR%interface(k-1,:), delta_z1, &
             tracer_local(lig_ind,k), Lig_scavenge(k), &
             autotroph_cnt, autotroph_secondary_species(:,k)%photoFe, &
             Lig_prod(k), Lig_photochem(k), Lig_deg(k), Lig_loss(k))
@@ -1398,6 +1397,7 @@ contains
     ! !USES:
 
     use marbl_constants_mod, only : Tref
+    use marbl_parms        , only : parm_Fe_desorption_rate0
 
     integer (int_kind)                      , intent(in)    :: k                   ! vertical model level
     type(marbl_domain_type)                 , intent(in)    :: domain
@@ -1708,7 +1708,7 @@ contains
 
        ! add term for desorption of iron from sinking particles
        P_iron%remin(k) = P_iron%remin(k) +                &
-            (P_iron%sflux_in(k) * 1.5e-5_r8)
+            (P_iron%sflux_in(k) * parm_Fe_desorption_rate0)
 
        P_iron%sflux_out(k) = P_iron%sflux_in(k) + dz_loc * &
             ((c1 - P_iron%gamma) * P_iron%prod(k) - P_iron%remin(k))
@@ -4292,19 +4292,21 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_Fe_scavenging(k, domain, Fe_loc, Lig_loc, &
+  subroutine marbl_compute_scavenging(k, Fe_loc, Lig_loc, &
        POC, P_CaCO3, P_SiO2, dust, P_iron, &
        Fefree, Fe_scavenge_rate, Fe_scavenge, Lig_scavenge, &
        marbl_status_log)
 
     use marbl_constants_mod, only : c1, c2, c3, c4
     use marbl_parms        , only : Lig_cnt
+    use marbl_parms        , only : parm_Fe_scavenge_coeffA
+    use marbl_parms        , only : parm_Fe_scavenge_coeffB
     use marbl_parms        , only : parm_Fe_scavenge_rate0
     use marbl_parms        , only : parm_Lig_scavenge_rate0
-    use marbl_parms        , only : dust_fescav_scale
+    use marbl_parms        , only : parm_FeLig_scavenge_rate0
+    use marbl_parms        , only : dust_Fe_scavenge_scale
 
     integer                                  , intent(in)    :: k
-    type(marbl_domain_type)                  , intent(in)    :: domain
     real(r8)                                 , intent(in)    :: Fe_loc
     real(r8)                                 , intent(in)    :: Lig_loc
     type(column_sinking_particle_type)       , intent(in)    :: POC
@@ -4322,26 +4324,28 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
 
-    ! ligand binding strengths (cm^3/nmol == L/umol == m^3/mmol)
-    real(kind=r8), parameter :: KfeLig1 = 10.0e13_r8 * 1.0e-6_r8
-    real(kind=r8), parameter :: KfeLig2 = 10.0e11_r8 * 1.0e-6_r8
-
-    ! Assume weaker ligands lig2 are present everywhere at 2nM concentration
-    real(kind=r8), parameter :: Lig2 = 0.002_r8
-
-    integer  :: n                    ! loop index
-    real(r8) :: Fefree_inc           ! increment in free iron in Newton's method
-    real(r8) :: p0,p1,p2,p3          ! polynomial coefficients of Fefree_fcn
-    real(r8) :: Fefree_fcn           ! function being solved to determine Fefree
-    real(r8) :: dFefree_fcn          ! derivative of Fefree_fcn wrt Fefree
-    real(r8) :: FeLig1               ! iron bound to ligand 1
-    real(r8) :: FeLig2               ! iron bound to ligand 2
-    real(r8) :: sinking_mass         ! sinking mass flux used in calculating scavenging
-    real(r8) :: Lig_scavenge_rate    ! scavenging rate of ironLig1 complex as % of ambient (1/yr)
-
-    logical (log_kind)      :: Newton_convergence
-    character(*), parameter :: subname = 'marbl_mod:marbl_compute_Fe_scavenging'
+    character(*), parameter :: subname = 'marbl_mod:marbl_compute_scavenging'
     character(len=char_len) :: log_message
+
+    ! ligand binding strengths, original values are L/mol, model units are L/umol
+    real(kind=r8), parameter :: KFeLig1 = 10.0e13_r8 * 1.0e-6_r8
+
+    real(r8) :: FeLig1               ! iron bound to ligand 1
+    real(r8) :: sinking_mass         ! sinking mass flux used in calculating scavenging
+    real(r8) :: rate0_to_rate        ! scavenging term
+    real(r8) :: Lig_scavenge_rate    ! scavenging rate of bound ligand (1/yr)
+    real(r8) :: FeLig_scavenge_rate  ! scavenging rate of bound iron (1/yr)
+
+    ! local vars specific to 2 ligand model
+    real(kind=r8), parameter :: KFeLig2 = 10.0e11_r8 * 1.0e-6_r8
+    real(kind=r8), parameter :: Lig2 = 0.002_r8      ! Lig2 are present everywhere at 2nM concentration
+    integer                  :: n                    ! Newton's method loop index
+    logical (log_kind)       :: Newton_convergence   ! has Newton's method converged
+    real(r8)                 :: FeLig2               ! iron bound to ligand 2
+    real(r8)                 :: Fefree_inc           ! increment in free iron in Newton's method
+    real(r8)                 :: p0,p1,p2,p3          ! polynomial coefficients of Fefree_fcn
+    real(r8)                 :: Fefree_fcn           ! function being solved to determine Fefree
+    real(r8)                 :: dFefree_fcn          ! derivative of Fefree_fcn wrt Fefree
 
     !-----------------------------------------------------------------------
     !  compute how much iron is bound to ligand
@@ -4368,17 +4372,17 @@ contains
        !--------------------------------------------------------------------
 
        if (Fe_loc > c0) then
-          p2 = KfeLig1
-          p1 = c1 + KfeLig1*(Lig_loc - Fe_loc)
+          p2 = KFeLig1
+          p1 = c1 + KFeLig1*(Lig_loc - Fe_loc)
           p0 = -Fe_loc
 
           ! formula for solution of quadratic equation for Fefree (Fef above)
           !
           ! the positive root arises from + in the quadratic formula,
-          ! because p2 (= KfeLig1) is positive
+          ! because p2 (= KFeLig1) is positive
           Fefree = (-p1 + sqrt(p1**2 - c4*p2*p0))/(c2*p2)
 
-          FeLig1 = KfeLig1 * Fefree * Lig_loc / (c1 + KfeLig1 * Fefree)
+          FeLig1 = KFeLig1 * Fefree * Lig_loc / (c1 + KFeLig1 * Fefree)
        else
           Fefree = c0
           FeLig1 = c0
@@ -4414,9 +4418,9 @@ contains
        !--------------------------------------------------------------------
 
        if (Fe_loc > c0) then
-          p3 = KfeLig1*KfeLig2
-          p2 = (KfeLig1+KfeLig2) + KfeLig1*KfeLig2*(Lig_loc+Lig2-Fe_loc)
-          p1 = c1 + KfeLig1*Lig_loc + KfeLig2*Lig2 - (KfeLig1+KfeLig2)*Fe_loc
+          p3 = KFeLig1*KFeLig2
+          p2 = (KFeLig1+KFeLig2) + KFeLig1*KFeLig2*(Lig_loc+Lig2-Fe_loc)
+          p1 = c1 + KFeLig1*Lig_loc + KFeLig2*Lig2 - (KFeLig1+KFeLig2)*Fe_loc
           p0 = -Fe_loc
 
           ! initial iterate for Newton's method
@@ -4456,8 +4460,8 @@ contains
              return
           end if
 
-          FeLig1 = KfeLig1 * (Fefree * Lig_loc) / (c1 + KfeLig1*Fefree)
-          FeLig2 = KfeLig2 * (Fefree * Lig_loc) / (c1 + KfeLig2*Fefree)
+          FeLig1 = KFeLig1 * (Fefree * Lig_loc) / (c1 + KFeLig1*Fefree)
+          FeLig2 = KFeLig2 * (Fefree * Lig_loc) / (c1 + KFeLig2*Fefree)
        else
           Fefree = c0
           FeLig1 = c0
@@ -4469,41 +4473,34 @@ contains
     !  Compute iron and ligand scavenging :
     !  1) compute in terms of loss per year per unit iron (%/year/fe)
     !  2) scale by sinking mass flux (POM + Dust + bSi + CaCO3)
+    !    POC x 12.01 x 3.0 = 36.03 > POM,
+    !              remin, particle number, and TEP production all scale with POC
+    !  3) Scavenging non-linear function of sinking mass,
+    !     1.6 ng/cm2/s = 500g/m2/yr, 1.44 450g/m2/yr,
+    !
+    ! scavening of FeLig2 is not implemented
     !-----------------------------------------------------------------------
 
     sinking_mass = &
-       ((POC%sflux_out(k)     + POC%hflux_out(k)    ) * 4.0_r8* 12.01_r8 + &
+       ((POC%sflux_out(k)     + POC%hflux_out(k)    ) * (3.0_r8 * 12.01_r8) + &
         (P_CaCO3%sflux_out(k) + P_CaCO3%hflux_out(k)) * P_CaCO3%mass + &
         (P_SiO2%sflux_out(k)  + P_SiO2%hflux_out(k) ) * P_SiO2%mass + &
-        (dust%sflux_out(k)    + dust%hflux_out(k)   ) * dust_fescav_scale)
+        (dust%sflux_out(k)    + dust%hflux_out(k)   ) * dust_Fe_scavenge_scale)
 
-    Fe_scavenge_rate = parm_Fe_scavenge_rate0 * sinking_mass
+    rate0_to_rate = parm_Fe_scavenge_coeffA * sinking_mass / (sinking_mass + parm_Fe_scavenge_coeffB)
 
-    Lig_scavenge_rate = parm_Lig_scavenge_rate0 * sinking_mass
+    Fe_scavenge_rate = parm_Fe_scavenge_rate0 * rate0_to_rate
 
-    !----------------------------------------------------------------------------
-    !  Modify the Lig scavenging rate by sinking POC (proxy for Remin & TEP)
-    !  fraction of ligand may be put on sinking particles to be released at depth
-    !----------------------------------------------------------------------------
+    Lig_scavenge_rate = parm_Lig_scavenge_rate0 * rate0_to_rate
 
-    Lig_scavenge_rate = Lig_scavenge_rate * POC%sflux_in(k)
-
-    ! Impose minimum loss in top 40m, and lower minimum in deep ocean
-    if (domain%zt(k) .lt. 40.0e2_r8) then
-       Lig_scavenge_rate = max(Lig_scavenge_rate, 0.05_r8)
-    else
-       Lig_scavenge_rate = max(Lig_scavenge_rate, 0.003_r8)
-    endif
+    FeLig_scavenge_rate = parm_FeLig_scavenge_rate0 * rate0_to_rate
 
 
-    Fe_scavenge = Fefree * Fe_scavenge_rate + FeLig1 * Lig_scavenge_rate &
-       + FeLig2 * Lig_scavenge_rate * 350.0_r8
+    Lig_scavenge = yps * FeLig1 * Lig_scavenge_rate
 
-    Fe_scavenge = yps * Fe_scavenge
+    Fe_scavenge = yps * (Fefree * Fe_scavenge_rate + FeLig1 * FeLig_scavenge_rate)
 
-    Lig_scavenge = yps * Lig_loc * Lig_scavenge_rate
-
-  end subroutine marbl_compute_Fe_scavenging
+  end subroutine marbl_compute_scavenging
 
   !***********************************************************************
 
@@ -4608,9 +4605,9 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_Lig_terms(k, domain, POC_remin, DOC_prod, &
-        PAR_nsubcols, PAR_col_frac, PAR_in, dz1, POC_sflux_in,       &
-        Lig_loc, Lig_scavenge, auto_cnt, photoFe,                    &
+  subroutine marbl_compute_Lig_terms(k, POC_remin, DOC_prod, &
+        PAR_nsubcols, PAR_col_frac, PAR_in, dz1,             &
+        Lig_loc, Lig_scavenge, auto_cnt, photoFe,            &
         Lig_prod, Lig_photochem, Lig_deg, Lig_loss)
 
     use marbl_constants_mod , only : c2, yps, ypd, dps
@@ -4618,14 +4615,12 @@ contains
     use marbl_parms         , only : parm_Lig_degrade_rate0
 
     integer(int_kind)       , intent(in)  :: k
-    type(marbl_domain_type) , intent(in)  :: domain
     real(r8)                , intent(in)  :: POC_remin
     real(r8)                , intent(in)  :: DOC_prod
     integer(int_kind)       , intent(in)  :: PAR_nsubcols
     real(r8)                , intent(in)  :: PAR_col_frac(PAR_nsubcols)
     real(r8)                , intent(in)  :: PAR_in(PAR_nsubcols)
     real(r8)                , intent(in)  :: dz1
-    real(r8)                , intent(in)  :: POC_sflux_in
     real(r8)                , intent(in)  :: Lig_loc
     real(r8)                , intent(in)  :: Lig_scavenge
     integer(int_kind)       , intent(in)  :: auto_cnt
@@ -4642,9 +4637,6 @@ contains
     integer  :: subcol_ind
     real(r8) :: rate_per_sec_subcol ! (1/sec)
     real(r8) :: rate_per_sec        ! (1/sec)
-    real(r8) :: rate_per_day        ! (1/day)
-    real(r8) :: rate_per_day_min    ! (1/day)
-    real(r8) :: rate_per_day_max    ! (1/day)
 
     !-----------------------------------------------------------------------
     !  Ligand production tied to remin of particulate organic matter
@@ -4664,7 +4656,7 @@ contains
        rate_per_sec = c0
        do subcol_ind = 1, PAR_nsubcols
           if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR_in(subcol_ind) > 1.0_r8)) then
-             rate_per_sec_subcol = (log(PAR_in(subcol_ind))*0.4373_r8)*(10.0e2/dz1)*(c2*yps) ! 1/(6 months)
+             rate_per_sec_subcol = (log(PAR_in(subcol_ind))*0.4373_r8)*(10.0e2/dz1)*((12.0_r8/3.0_r8)*yps) ! 1/(3 months)
              rate_per_sec = rate_per_sec + PAR_col_frac(subcol_ind) * rate_per_sec_subcol
           endif
        end do
@@ -4675,23 +4667,13 @@ contains
     !  Ligand losses due to degradation (by hetrotrophic bacteria)
     !----------------------------------------------------------------------
 
-    rate_per_day = POC_sflux_in * POC_sflux_in * parm_Lig_degrade_rate0
-
-    ! Impose minimum degradation rate in top 40m, (where sinking fluxes are low).
-    if (domain%zt(k) .lt. 40.0e2) then
-       rate_per_day = max(rate_per_day, 0.003_r8)
-    endif
-
-    ! Impose min/max ligand lifetimes of 2 months (6/year) to 250 years (0.004/year)
-    rate_per_day_max = 6.0_r8 * ypd
-    rate_per_day_min = 0.004_r8 * ypd
-    Lig_deg = Lig_loc * min(rate_per_day_max, max(rate_per_day_min, rate_per_day)) * dps
+    Lig_deg = POC_remin * parm_Lig_degrade_rate0
 
     !----------------------------------------------------------------------
     !  total ligand loss
     !----------------------------------------------------------------------
 
-    Lig_loss = Lig_scavenge + 0.33_r8*sum(photoFe(:)) + Lig_photochem + Lig_deg
+    Lig_loss = Lig_scavenge + 0.24_r8*sum(photoFe(:)) + Lig_photochem + Lig_deg
 
     !----------------------------------------------------------------------
 
