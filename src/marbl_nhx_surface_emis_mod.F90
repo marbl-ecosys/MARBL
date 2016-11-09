@@ -86,6 +86,8 @@ contains
     where (surface_mask(:) /= c0)
        K(:) = c1 / (c1 / kg_nh3(:) + Hstar_nhx / kw_nh3(:))
        nhx_surface_emis(:) = (c1 - ifrac(:)) * K(:) * Hstar_nhx(:) * max(nh4(:),c0)
+    elsewhere
+       nhx_surface_emis(:) = c0
     end where
 
   end subroutine marbl_comp_nhx_surface_emis
