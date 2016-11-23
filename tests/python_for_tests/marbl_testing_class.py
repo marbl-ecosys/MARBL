@@ -77,7 +77,7 @@ class MARBL_testcase(object):
         self._machine = 'local-gnu'
 
       if found:
-        print 'No machine specified, but it looks like you are running on %s' % mach
+        print 'No machine specified, but it looks like you are running on %s' % self._machine
 
       print 'Override with the --mach option if this is not correct'
     else:
