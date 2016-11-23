@@ -6,6 +6,9 @@ OBJ_DIR=../tests/obj
 LIB_DIR=../lib
 INC_DIR=../include
 FC = NONE
+USE_GPTL = FALSE
+GPTL_DIR = NONE
+INCLUDES=
 
 # Dependency Generation
 MAKE_DEP = $(SRC_DIR)/makedep.py
@@ -36,45 +39,57 @@ ifeq ($(USE_DEPS),TRUE)
   include $(DEP_FILE)
 endif
 
+ifeq ($(USE_GPTL),TRUE)
+  ifeq ($(GPTL_DIR),NONE)
+    ERR_MSG = $(shell echo "Set GPTL_DIR to build with timers turned on!")
+  endif
+  CPPDEFS+= -DUSE_GPTL
+  INCLUDES+= -I$(GPTL_DIR)/include
+  override FC=mpif90
+endif
+
 ### TARGETS ###
 
 all : gnu
-.PHONY : all gnu intel pgi nag cray mv_mods depends clean
+.PHONY : all gnu intel pgi nag cray mv_mods depends err_check clean
 
 # Shorthand for specific compilers
-gnu:
-	$(MAKE) $(LIB_DIR)/libmarbl-gnu.a USE_DEPS=TRUE FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR)/gnu -cpp" OBJ_DIR=$(OBJ_DIR)/gnu INC_DIR=$(INC_DIR)/gnu
+gnu: err_check
+	$(MAKE) $(LIB_DIR)/libmarbl-gnu.a USE_DEPS=TRUE FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR)/gnu -cpp" OBJ_DIR=$(OBJ_DIR)/gnu INC_DIR=$(INC_DIR)/gnu USE_GPTL=$(USE_GPTL)
 
-intel:
+intel: err_check
 	$(MAKE) $(LIB_DIR)/libmarbl-intel.a USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel INC_DIR=$(INC_DIR)/intel
 
-pgi:
+pgi: err_check
 	$(MAKE) $(LIB_DIR)/libmarbl-pgi.a USE_DEPS=TRUE FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi OBJ_DIR=$(OBJ_DIR)/pgi" INC_DIR=$(INC_DIR)/pgi
 
-nag:
+nag: err_check
 	$(MAKE) $(LIB_DIR)/libmarbl-nag.a USE_DEPS=TRUE FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR)/nag -mdir $(OBJ_DIR)/nag -kind=byte" OBJ_DIR=$(OBJ_DIR)/nag INC_DIR=$(INC_DIR)/nag
 
-cray:
+cray: err_check
 	$(MAKE) $(LIB_DIR)/libmarbl-cray.a USE_DEPS=TRUE FC=ftn FCFLAGS="-O2 -f free -e mf -J $(OBJ_DIR)/cray" OBJ_DIR=$(OBJ_DIR)/cray INC_DIR=$(INC_DIR)/cray
 
 # Remove library, object files, module files, and dependency file
 # Create all object and module files
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.F90
-	$(FC) $(CPPDEFS) $(FCFLAGS) -c $< -o $@
+	$(FC) $(CPPDEFS) $(FCFLAGS) $(INCLUDES) -c $< -o $@
 
 # Note that .mod files need to be copied to INC_DIR if OBJ_DIR != INC_DIR
 # Shorthand for moving files in $INC_DIR (if needed)
 mv_mods: $(INCS)
 
 $(INC_DIR)/%.mod: $(OBJ_DIR)/%.mod
-	$(if $(DIFF_INC), cp $< $@)
+	@$(if $(DIFF_INC), cp $< $@)
 
 # Shorthand for making dependency file
 depends: $(DEP_FILE)
 
 $(DEP_FILE): $(MAKE_DEP) $(SRC_DIR)/*.F90
 	@$(MAKE_DEP) $(DEP_FILE) $(OBJ_DIR) $(SRC_DIR); echo "Generated dependency file $(DEP_FILE)"
+
+err_check:
+	@$(if $(ERR_MSG), echo $(ERR_MSG); exit 1)
 
 clean:
 	/bin/rm -f $(OBJ_DIR)/*/*.* $(LIB_DIR)/* $(INC_DIR)/*/*

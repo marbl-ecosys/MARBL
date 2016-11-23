@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 from sys import path
-path.insert(0, '../python_for_tests')
 
-import marbl_testing as mt
+path.insert(0, '../python_for_tests')
+from marbl_testing_class import MARBL_testcase
 from general import pause
 
+mt = MARBL_testcase()
 mt.parse_args(desc='Build lib-marbl.a with every supported compiler on specified machine', HaveCompiler=False, HaveNamelist=False, CleanLibOnly=True)
+
 for i,compiler in enumerate(mt.supported_compilers):
   mt.build_lib(loc_compiler=compiler)
   print "Done with %s build" % compiler

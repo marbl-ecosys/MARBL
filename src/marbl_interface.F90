@@ -249,6 +249,7 @@ contains
     use marbl_parms           , only : marbl_parms_read_namelist
     use marbl_parms           , only : marbl_define_parameters
     use marbl_saved_state_mod , only : marbl_saved_state_init
+    use marbl_timing_mod, only : marbl_timing_init
 
     implicit none
 
@@ -301,6 +302,12 @@ contains
       call this%StatusLog%log_error(log_message, subname)
       return
     end if
+
+    !-----------------------------------------------------------------------
+    !  Set up timers
+    !-----------------------------------------------------------------------
+
+    call marbl_timing_init()
 
     !-----------------------------------------------------------------------
     !  Set up tracer indices

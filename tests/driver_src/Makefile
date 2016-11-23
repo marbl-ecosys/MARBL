@@ -16,12 +16,24 @@ OBJ_LOC = $(realpath $(OBJ_ROOT)/$(COMP_NAME))
 INC_LOC = $(realpath $(INC_DIR)/$(COMP_NAME))
 ifeq ($(COMP_NAME),NONE)
   LIB_NAME = libmarbl.a
+  LFLAG = -lmarbl
 else
   LIB_NAME = libmarbl-$(COMP_NAME).a
+  LFLAG = -lmarbl-$(COMP_NAME)
 endif
-LFLAG = -lmarbl-$(COMP_NAME)
+USE_GPTL = FALSE
+CPPDEFS=-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
+INCLUDES=-I$(INC_LOC)
+LINKS=-L$(LIB_DIR) $(LFLAG)
 
-COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3"
+ifeq ($(USE_GPTL),TRUE)
+  override FC=mpif90
+  CPPDEFS+= -DUSE_GPTL
+  INCLUDES+= -I$(GPTL_DIR)/include
+  LINKS+= -L$(GPTL_DIR)/lib -lgptl
+endif
+
+COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(CPPDEFS)"
 EXE       = $(EXE_DIR)/marbl.exe
 
 OBJS = marbl_init_namelist_drv.o       \
@@ -36,10 +48,10 @@ all: gnu
 $(EXE): clean_exe                        \
         $(LIB_DIR)/$(LIB_NAME)           \
         $(addprefix $(OBJ_DIR)/,$(OBJS))
-	$(FC) -o $(EXE) $(OBJ_DIR)/*.o -L$(LIB_DIR) $(LFLAG)
+	$(FC) -o $(EXE) $(OBJ_DIR)/*.o $(LINKS)
 
 $(OBJ_DIR)/%.o: $(DRV_DIR)/%.F90
-	$(FC) $(FCFLAGS) $(INC2) -I$(INC_LOC) -c $< -o $@
+	$(FC) $(FCFLAGS) $(INC2) $(INCLUDES) -c $< -o $@
 
 $(LIB_DIR)/%.a: $(SRC_DIR)/*.F90
 	cd $(SRC_DIR) ; make FC=$(FC) FCFLAGS="$(FCFLAGS) $(INC)" USE_DEPS=TRUE $(COMP_ARGS) $@
