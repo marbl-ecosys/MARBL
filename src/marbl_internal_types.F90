@@ -26,9 +26,11 @@ module marbl_internal_types
   end type zooplankton_config_type
 
   type, public :: zooplankton_parms_type
-     real    (KIND=r8)       :: z_mort_0   ! zoo linear mort rate (1/sec)
-     real    (KIND=r8)       :: z_mort2_0  ! zoo quad mort rate (1/sec/((mmol C/m3))
-     real    (KIND=r8)       :: loss_thres ! zoo conc. where losses go to zero
+     real    (KIND=r8)       :: z_mort_0_per_day   ! zoo linear mort rate (1/day)
+     real    (KIND=r8)       :: z_mort_0           ! zoo linear mort rate (1/sec) (derived from z_mort_0_per_day)
+     real    (KIND=r8)       :: z_mort2_0_per_day  ! zoo quad mort rate (1/day/((mmol C/m3))
+     real    (KIND=r8)       :: z_mort2_0          ! zoo quad mort rate (1/sec/((mmol C/m3)) (derived from z_mort2_0_per_day)
+     real    (KIND=r8)       :: loss_thres         ! zoo conc. where losses go to zero
   end type zooplankton_parms_type
 
   !****************************************************************************
@@ -47,12 +49,17 @@ module marbl_internal_types
      real    (KIND=r8)       :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3 ! nutrient uptake half-sat constants
      real    (KIND=r8)       :: Qp                                 ! P/C ratio
      real    (KIND=r8)       :: gQfe_0, gQfe_min                   ! initial and minimum fe/C ratio
+     real    (KIND=r8)       :: alphaPI_per_day                    ! init slope of P_I curve (GD98) (mmol C m^2/(mg Chl W day))
      real    (KIND=r8)       :: alphaPI                            ! init slope of P_I curve (GD98) (mmol C m^2/(mg Chl W sec))
-     real    (KIND=r8)       :: PCref                              ! max C-spec. grth rate at tref (1/sec)
+                                                                   !    (derived from alphaPI_per_day)
+     real    (KIND=r8)       :: PCref_per_day                      ! max C-spec. grth rate at tref (1/day)
+     real    (KIND=r8)       :: PCref                              ! max C-spec. grth rate at tref (1/sec) (derived from PCref_per_day)
      real    (KIND=r8)       :: thetaN_max                         ! max thetaN (Chl/N) (mg Chl/mmol N)
      real    (KIND=r8)       :: loss_thres, loss_thres2            ! conc. where losses go to zero
      real    (KIND=r8)       :: temp_thres                         ! Temp. where concentration threshold and photosynth. rate drops
+     real    (KIND=r8)       :: mort_per_day, mort2_per_day        ! linear and quadratic mortality rates (1/day), (1/day/((mmol C/m3))
      real    (KIND=r8)       :: mort, mort2                        ! linear and quadratic mortality rates (1/sec), (1/sec/((mmol C/m3))
+                                                                   !    (derived from mort_per_day and mort2_per_day)
      real    (KIND=r8)       :: agg_rate_max, agg_rate_min         ! max and min agg. rate (1/d)
      real    (KIND=r8)       :: loss_poc                           ! routing of loss term
   end type autotroph_parms_type
@@ -69,7 +76,8 @@ module marbl_internal_types
 
   type, public :: grazing_parms_type
     integer (KIND=int_kind) :: grazing_function ! functional form of grazing parameterization
-    real    (KIND=r8)       :: z_umax_0         ! max zoo growth rate at tref (1/sec)
+    real    (KIND=r8)       :: z_umax_0_per_day ! max zoo growth rate at tref (1/day)
+    real    (KIND=r8)       :: z_umax_0         ! max zoo growth rate at tref (1/sec) (derived from z_umax_0_per_day)
     real    (KIND=r8)       :: z_grz            ! grazing coef. (mmol C/m^3)^2
     real    (KIND=r8)       :: graze_zoo        ! routing of grazed term, remainder goes to dic
     real    (KIND=r8)       :: graze_poc        ! routing of grazed term, remainder goes to dic
@@ -201,6 +209,7 @@ module marbl_internal_types
 
   type, public :: marbl_particulate_share_type
      type(column_sinking_particle_type) :: POC      ! base units = nmol C
+     type(column_sinking_particle_type) :: POP      ! base units = nmol P
      type(column_sinking_particle_type) :: P_CaCO3  ! base units = nmol CaCO3
      type(column_sinking_particle_type) :: P_SiO2   ! base units = nmol SiO2
      type(column_sinking_particle_type) :: dust     ! base units = g
@@ -247,6 +256,8 @@ module marbl_internal_types
   type, public :: autotroph_secondary_species_type
      real (r8) :: thetaC          ! local Chl/C ratio (mg Chl/mmol C)
      real (r8) :: QCaCO3          ! CaCO3/C ratio (mmol CaCO3/mmol C)
+     real (r8) :: Qp              ! init p/C ratio (mmolP/mmolC)
+     real (r8) :: gQp             ! P/C for growth
      real (r8) :: Qfe             ! init fe/C ratio (mmolFe/mmolC)
      real (r8) :: gQfe            ! fe/C for growth
      real (r8) :: Qsi             ! initial Si/C ratio (mmol Si/mmol C)
@@ -284,8 +295,9 @@ module marbl_internal_types
      real (r8) :: CaCO3_PROD      ! prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
      real (r8) :: Nfix            ! total Nitrogen fixation (mmol N/m^3/sec)
      real (r8) :: Nexcrete        ! fixed N excretion
-     real (r8) :: remaining_P_dop ! remaining_P from mort routed to DOP pool
-     real (r8) :: remaining_P_dip ! remaining_P from mort routed to remin
+     real (r8) :: remaining_P_dop ! remaining_P from grazing routed to DOP pool
+     real (r8) :: remaining_P_pop ! remaining_P from grazing routed to POP pool
+     real (r8) :: remaining_P_dip ! remaining_P from grazing routed to remin
   end type autotroph_secondary_species_type
 
   !*****************************************************************************
@@ -339,6 +351,7 @@ module marbl_internal_types
   type, private :: marbl_living_tracer_index_type
      integer (KIND=int_kind) :: Chl_ind     = 0  ! tracer indices for Chl content
      integer (KIND=int_kind) :: C_ind       = 0  ! tracer indices for C content
+     integer (KIND=int_kind) :: P_ind       = 0  ! tracer indices for P content
      integer (KIND=int_kind) :: Fe_ind      = 0  ! tracer indices for Fe content
      integer (KIND=int_kind) :: Si_ind      = 0  ! tracer indices for Si  content
      integer (KIND=int_kind) :: CaCO3_ind   = 0  ! tracer indices for CaCO3 content
@@ -492,6 +505,7 @@ contains
 
     ! Now allocate memory for the column_sinking_particles_type components
     call this%POC%construct     (num_levels)
+    call this%POP%construct     (num_levels)
     call this%P_CaCO3%construct (num_levels)
     call this%P_SiO2%construct  (num_levels)
     call this%P_iron%construct  (num_levels)
@@ -516,6 +530,7 @@ contains
 
      ! Now allocate memory for the column_sinking_particles_type components
      call this%POC%destruct()
+     call this%POP%destruct()
      call this%P_CaCO3%destruct()
      call this%P_SiO2%destruct()
      call this%P_iron%destruct()
@@ -687,6 +702,9 @@ contains
 
         tracer_cnt    = tracer_cnt + 1
         this%auto_inds(n)%C_ind = tracer_cnt
+
+        tracer_cnt    = tracer_cnt + 1
+        this%auto_inds(n)%P_ind = tracer_cnt
 
         tracer_cnt    = tracer_cnt + 1
         this%auto_inds(n)%Fe_ind = tracer_cnt

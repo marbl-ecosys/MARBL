@@ -56,7 +56,8 @@ module marbl_parms
        parm_Fe_bioavail,           & ! fraction of Fe flux that is bioavailable
        parm_o2_min,                & ! min O2 needed for prod & consump. (nmol/cm^3)
        parm_o2_min_delta,          & ! width of min O2 range (nmol/cm^3)
-       parm_kappa_nitrif,          & ! nitrification inverse time constant (1/sec)
+       parm_kappa_nitrif_per_day,  & ! nitrification inverse time constant (1/day)
+       parm_kappa_nitrif,          & ! nitrification inverse time constant (1/sec) (derived from parm_kappa_nitrif_per_day)
        parm_nitrif_par_lim,        & ! PAR limit for nitrif. (W/m^2)
        parm_labile_ratio,          & ! fraction of loss to DOC that routed directly to DIC (non-dimensional)
        parm_init_POC_bury_coeff,   & ! initial scale factor for burial of POC, PON
@@ -69,10 +70,11 @@ module marbl_parms
        parm_FeLig_scavenge_rate0,  & ! scavenging base rate for bound iron
        parm_Lig_degrade_rate0,     & ! Fe-binding ligand bacterial degradation base rate coefficient
        parm_Fe_desorption_rate0,   & ! desorption rate for scavenged Fe from particles
-       parm_f_prod_sp_CaCO3,       & !fraction of sp prod. as CaCO3 prod.
+       parm_f_prod_sp_CaCO3,       & ! fraction of sp prod. as CaCO3 prod.
        parm_POC_diss,              & ! base POC diss len scale
        parm_SiO2_diss,             & ! base SiO2 diss len scale
        parm_CaCO3_diss,            & ! base CaCO3 diss len scale
+       parm_sed_denitrif_coeff,    & ! global scaling factor for sed_denitrif
        bury_coeff_rmean_timescale_years
 
   real(kind=r8), dimension(4), target :: &
@@ -144,8 +146,8 @@ module marbl_parms
       caco3_poc_min         = 0.40_r8,  & ! minimum proportionality between
                                           !   QCaCO3 and grazing losses to POC
                                           !   (mmol C/mmol CaCO3)
-      spc_poc_fac           = 0.10_r8,  & ! small phyto grazing factor (1/mmolC)
-      f_graze_sp_poc_lim    = 0.40_r8,  &
+      spc_poc_fac           = 0.13_r8,  & ! small phyto grazing factor (1/mmolC)
+      f_graze_sp_poc_lim    = 0.36_r8,  &
       f_photosp_CaCO3       = 0.40_r8,  & ! proportionality between small phyto
                                           !    production and CaCO3 production
       f_graze_CaCO3_remin   = 0.33_r8,  & ! fraction of spCaCO3 grazing which is remin
@@ -160,13 +162,13 @@ module marbl_parms
   ! assumes C/N/P of 117/16/1 based on Anderson and Sarmiento, 1994
   ! for diazotrophs a N/P of 45 is assumed based on Letelier & Karl, 1998
   real(kind=r8), parameter :: &
-      Q             = 0.137_r8,  & !N/C ratio (mmol/mmol) of phyto & zoo
-      Qp_zoo_pom    = 0.00855_r8,& !P/C ratio (mmol/mmol) zoo & pom
-      Qfe_zoo       = 3.0e-6_r8, & !zooplankton fe/C ratio
-      gQsi_0        = 0.137_r8,  & !initial Si/C ratio
-      gQsi_max      = 0.685_r8,  & !max Si/C ratio
-      gQsi_min      = 0.0457_r8, & !min Si/C ratio
-      QCaCO3_max    = 0.4_r8,    & !max QCaCO3
+      Q             = 16.0_r8 / 117.0_r8, & !N/C ratio (mmol/mmol) of phyto & zoo
+      Qp_zoo        = c1 / 117.0_r8,      & !P/C ratio (mmol/mmol) zoo
+      Qfe_zoo       = 3.0e-6_r8,          & !zooplankton fe/C ratio
+      gQsi_0        = 0.137_r8,           & !initial Si/C ratio
+      gQsi_max      = 0.685_r8,           & !max Si/C ratio
+      gQsi_min      = 0.0457_r8,          & !min Si/C ratio
+      QCaCO3_max    = 0.4_r8,             & !max QCaCO3
       ! carbon:nitrogen ratio for denitrification
       denitrif_C_N  = parm_Red_D_C_P/136.0_r8
 
@@ -265,7 +267,7 @@ contains
     parm_Fe_bioavail           = 1.0_r8
     parm_o2_min                = 5.0_r8
     parm_o2_min_delta          = 5.0_r8
-    parm_kappa_nitrif          = 0.06_r8 * dps  ! (= 1/( days))
+    parm_kappa_nitrif_per_day  = 0.06_r8
     parm_nitrif_par_lim        = 1.0_r8
     parm_labile_ratio          = 0.94_r8
     parm_init_POC_bury_coeff   = 1.1_r8         ! x1 default
@@ -278,101 +280,102 @@ contains
     parm_FeLig_scavenge_rate0  = 1.0_r8
     parm_Lig_degrade_rate0     = 0.000095_r8
     parm_Fe_desorption_rate0   = 1.0e-6_r8
-    parm_f_prod_sp_CaCO3       = 0.065_r8       ! x1 default
+    parm_f_prod_sp_CaCO3       = 0.070_r8       ! x1 default
     parm_POC_diss              = 90.0e2_r8
-    parm_SiO2_diss             = 600.0e2_r8
+    parm_SiO2_diss             = 660.0e2_r8
     parm_CaCO3_diss            = 450.0e2_r8
+    parm_sed_denitrif_coeff    = 1.0_r8         ! x1 default
     bury_coeff_rmean_timescale_years = 10.0_r8
     parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8,  750.0e2_r8 /)
-    parm_scalelen_vals = (/     1.0_r8,     3.3_r8,     4.6_r8,      5.0_r8 /) ! x1 default
+    parm_scalelen_vals = (/     1.0_r8,     3.3_r8,     4.2_r8,      4.5_r8 /) ! x1 default
 
     ! Autotrophs
     do n=1,autotroph_cnt
       select case (trim(autotrophs_config(n)%sname))
         case ('sp')
-          autotrophs(n)%kFe           = 0.03e-3_r8
-          autotrophs(n)%kPO4          = 0.01_r8
-          autotrophs(n)%kDOP          = 0.2_r8
-          autotrophs(n)%kNO3          = 0.25_r8
-          autotrophs(n)%kNH4          = 0.0125_r8
-          autotrophs(n)%kSiO3         = 0.0_r8
-          autotrophs(n)%Qp            = 0.00855_r8
-          autotrophs(n)%gQfe_0        = 30.0e-6_r8
-          autotrophs(n)%gQfe_min      = 3.0e-6_r8
-          autotrophs(n)%alphaPI       = 0.39_r8 * dps
-          autotrophs(n)%PCref         = 5.5_r8 * dps
-          autotrophs(n)%thetaN_max    = 2.5_r8
-          autotrophs(n)%loss_thres    = 0.02_r8
-          autotrophs(n)%loss_thres2   = 0.0_r8
-          autotrophs(n)%temp_thres    = -10.0_r8
-          autotrophs(n)%mort          = 0.1_r8 * dps
-          autotrophs(n)%mort2         = 0.01_r8 * dps
-          autotrophs(n)%agg_rate_max  = 0.5_r8
-          autotrophs(n)%agg_rate_min  = 0.01_r8
-          autotrophs(n)%loss_poc      = 0.0_r8
+          autotrophs(n)%kFe             = 0.025e-3_r8
+          autotrophs(n)%kPO4            = 0.005_r8
+          autotrophs(n)%kDOP            = 0.025_r8
+          autotrophs(n)%kNO3            = 0.15_r8
+          autotrophs(n)%kNH4            = 0.005_r8
+          autotrophs(n)%kSiO3           = 0.0_r8
+          autotrophs(n)%Qp              = Qp_zoo
+          autotrophs(n)%gQfe_0          = 30.0e-6_r8
+          autotrophs(n)%gQfe_min        = 3.0e-6_r8
+          autotrophs(n)%alphaPI_per_day = 0.39_r8
+          autotrophs(n)%PCref_per_day   = 5.0_r8
+          autotrophs(n)%thetaN_max      = 2.5_r8
+          autotrophs(n)%loss_thres      = 0.02_r8
+          autotrophs(n)%loss_thres2     = 0.0_r8
+          autotrophs(n)%temp_thres      = -10.0_r8
+          autotrophs(n)%mort_per_day    = 0.1_r8
+          autotrophs(n)%mort2_per_day   = 0.01_r8
+          autotrophs(n)%agg_rate_max    = 0.5_r8
+          autotrophs(n)%agg_rate_min    = 0.01_r8
+          autotrophs(n)%loss_poc        = 0.0_r8
         case ('diat')
-          autotrophs(n)%kFe           = 0.07e-3_r8
-          autotrophs(n)%kPO4          = 0.05_r8
-          autotrophs(n)%kDOP          = 0.5_r8
-          autotrophs(n)%kNO3          = 1.0_r8
-          autotrophs(n)%kNH4          = 0.05_r8
-          autotrophs(n)%kSiO3         = 0.8_r8
-          autotrophs(n)%Qp            = 0.00855_r8
-          autotrophs(n)%gQfe_0        = 30.0e-6_r8
-          autotrophs(n)%gQfe_min      = 3.0e-6_r8
-          autotrophs(n)%alphaPI       = 0.29_r8 * dps
-          autotrophs(n)%PCref         = 5.5_r8 * dps
-          autotrophs(n)%thetaN_max    = 4.0_r8
-          autotrophs(n)%loss_thres    = 0.02_r8
-          autotrophs(n)%loss_thres2   = 0.0_r8
-          autotrophs(n)%temp_thres    = -10.0_r8
-          autotrophs(n)%mort          = 0.1_r8 * dps
-          autotrophs(n)%mort2         = 0.01_r8 * dps
-          autotrophs(n)%agg_rate_max  = 0.5_r8
-          autotrophs(n)%agg_rate_min  = 0.02_r8
-          autotrophs(n)%loss_poc      = 0.0_r8
+          autotrophs(n)%kFe             = 0.05e-3_r8
+          autotrophs(n)%kPO4            = 0.05_r8
+          autotrophs(n)%kDOP            = 0.1_r8
+          autotrophs(n)%kNO3            = 0.45_r8
+          autotrophs(n)%kNH4            = 0.05_r8
+          autotrophs(n)%kSiO3           = 0.7_r8
+          autotrophs(n)%Qp              = Qp_zoo
+          autotrophs(n)%gQfe_0          = 30.0e-6_r8
+          autotrophs(n)%gQfe_min        = 3.0e-6_r8
+          autotrophs(n)%alphaPI_per_day = 0.29_r8
+          autotrophs(n)%PCref_per_day   = 5.0_r8
+          autotrophs(n)%thetaN_max      = 4.0_r8
+          autotrophs(n)%loss_thres      = 0.02_r8
+          autotrophs(n)%loss_thres2     = 0.0_r8
+          autotrophs(n)%temp_thres      = -10.0_r8
+          autotrophs(n)%mort_per_day    = 0.1_r8
+          autotrophs(n)%mort2_per_day   = 0.01_r8
+          autotrophs(n)%agg_rate_max    = 0.5_r8
+          autotrophs(n)%agg_rate_min    = 0.02_r8
+          autotrophs(n)%loss_poc        = 0.0_r8
         case ('diaz')
-          autotrophs(n)%kFe           = 0.03e-3_r8
-          autotrophs(n)%kPO4          = 0.0125_r8
-          autotrophs(n)%kDOP          = 0.05_r8
-          autotrophs(n)%kNO3          = 4.0_r8
-          autotrophs(n)%kNH4          = 0.4_r8
-          autotrophs(n)%kSiO3         = 0.0_r8
-          autotrophs(n)%Qp            = 0.002735_r8
-          autotrophs(n)%gQfe_0        = 60.0e-6_r8
-          autotrophs(n)%gQfe_min      = 6.0e-6_r8
-          autotrophs(n)%alphaPI       = 0.39_r8 * dps
-          autotrophs(n)%PCref         = 1.55_r8 * dps
-          autotrophs(n)%thetaN_max    = 2.5_r8
-          autotrophs(n)%loss_thres    = 0.02_r8
-          autotrophs(n)%loss_thres2   = 0.001_r8
-          autotrophs(n)%temp_thres    = 15.0_r8
-          autotrophs(n)%mort          = 0.1_r8 * dps
-          autotrophs(n)%mort2         = 0.01_r8 * dps
-          autotrophs(n)%agg_rate_max  = 0.5_r8
-          autotrophs(n)%agg_rate_min  = 0.01_r8
-          autotrophs(n)%loss_poc      = 0.0_r8
+          autotrophs(n)%kFe             = 0.025e-3_r8
+          autotrophs(n)%kPO4            = 0.02_r8
+          autotrophs(n)%kDOP            = 0.02_r8
+          autotrophs(n)%kNO3            = 3.0_r8
+          autotrophs(n)%kNH4            = 0.3_r8
+          autotrophs(n)%kSiO3           = 0.0_r8
+          autotrophs(n)%Qp              = 0.32_r8 * Qp_zoo
+          autotrophs(n)%gQfe_0          = 60.0e-6_r8
+          autotrophs(n)%gQfe_min        = 6.0e-6_r8
+          autotrophs(n)%alphaPI_per_day = 0.39_r8
+          autotrophs(n)%PCref_per_day   = 2.2_r8
+          autotrophs(n)%thetaN_max      = 2.5_r8
+          autotrophs(n)%loss_thres      = 0.02_r8
+          autotrophs(n)%loss_thres2     = 0.001_r8
+          autotrophs(n)%temp_thres      = 15.0_r8
+          autotrophs(n)%mort_per_day    = 0.1_r8
+          autotrophs(n)%mort2_per_day   = 0.01_r8
+          autotrophs(n)%agg_rate_max    = 0.5_r8
+          autotrophs(n)%agg_rate_min    = 0.01_r8
+          autotrophs(n)%loss_poc        = 0.0_r8
         case DEFAULT
-          autotrophs(n)%kFe           = c0
-          autotrophs(n)%kPO4          = c0
-          autotrophs(n)%kDOP          = c0
-          autotrophs(n)%kNO3          = c0
-          autotrophs(n)%kNH4          = c0
-          autotrophs(n)%kSiO3         = c0
-          autotrophs(n)%Qp            = c0
-          autotrophs(n)%gQfe_0        = c0
-          autotrophs(n)%gQfe_min      = c0
-          autotrophs(n)%alphaPI       = c0
-          autotrophs(n)%PCref         = c0
-          autotrophs(n)%thetaN_max    = c0
-          autotrophs(n)%loss_thres    = c0
-          autotrophs(n)%loss_thres2   = c0
-          autotrophs(n)%temp_thres    = c0
-          autotrophs(n)%mort          = c0
-          autotrophs(n)%mort2         = c0
-          autotrophs(n)%agg_rate_max  = c0
-          autotrophs(n)%agg_rate_min  = c0
-          autotrophs(n)%loss_poc      = c0
+          autotrophs(n)%kFe             = c0
+          autotrophs(n)%kPO4            = c0
+          autotrophs(n)%kDOP            = c0
+          autotrophs(n)%kNO3            = c0
+          autotrophs(n)%kNH4            = c0
+          autotrophs(n)%kSiO3           = c0
+          autotrophs(n)%Qp              = c0
+          autotrophs(n)%gQfe_0          = c0
+          autotrophs(n)%gQfe_min        = c0
+          autotrophs(n)%alphaPI_per_day = c0
+          autotrophs(n)%PCref_per_day   = c0
+          autotrophs(n)%thetaN_max      = c0
+          autotrophs(n)%loss_thres      = c0
+          autotrophs(n)%loss_thres2     = c0
+          autotrophs(n)%temp_thres      = c0
+          autotrophs(n)%mort_per_day    = c0
+          autotrophs(n)%mort2_per_day   = c0
+          autotrophs(n)%agg_rate_max    = c0
+          autotrophs(n)%agg_rate_min    = c0
+          autotrophs(n)%loss_poc        = c0
       end select
     end do
 
@@ -381,13 +384,13 @@ contains
     do n=1,zooplankton_cnt
       select case (trim(zooplankton_config(n)%sname))
         case ('zoo')
-          zooplankton(n)%z_mort_0   = 0.1_r8 * dps
-          zooplankton(n)%z_mort2_0  = 0.4_r8 * dps
-          zooplankton(n)%loss_thres = 0.075_r8
+          zooplankton(n)%z_mort_0_per_day   = 0.1_r8
+          zooplankton(n)%z_mort2_0_per_day  = 0.4_r8
+          zooplankton(n)%loss_thres         = 0.075_r8
         case DEFAULT
-          zooplankton(n)%z_mort_0   = c0
-          zooplankton(n)%z_mort2_0  = c0
-          zooplankton(n)%loss_thres = c0
+          zooplankton(n)%z_mort_0_per_day   = c0
+          zooplankton(n)%z_mort2_0_per_day  = c0
+          zooplankton(n)%loss_thres         = c0
       end select
     end do
 
@@ -403,33 +406,33 @@ contains
         ! Properties that depend on m & n
         if ((trim(zooplankton_config(n)%sname).eq.'zoo').and.                 &
             (trim(autotrophs_config(m)%sname).eq.'sp')) then
-          grazing(m,n)%z_umax_0         = 3.25_r8 * dps
-          grazing(m,n)%z_grz            = 1.15_r8
+          grazing(m,n)%z_umax_0_per_day = 3.3_r8
+          grazing(m,n)%z_grz            = 1.2_r8
           grazing(m,n)%graze_zoo        = 0.3_r8
           grazing(m,n)%graze_poc        = 0.0_r8
           grazing(m,n)%graze_doc        = 0.06_r8
-          grazing(m,n)%f_zoo_detr       = 0.1_r8
+          grazing(m,n)%f_zoo_detr       = 0.12_r8
           grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
         elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
                 (trim(autotrophs_config(m)%sname).eq.'diat')) then
-          grazing(m,n)%z_umax_0         = 2.9_r8 * dps
-          grazing(m,n)%z_grz            = 1.15_r8
-          grazing(m,n)%graze_zoo        = 0.3_r8
-          grazing(m,n)%graze_poc        = 0.4_r8
+          grazing(m,n)%z_umax_0_per_day = 3.05_r8
+          grazing(m,n)%z_grz            = 1.2_r8
+          grazing(m,n)%graze_zoo        = 0.25_r8
+          grazing(m,n)%graze_poc        = 0.39_r8
           grazing(m,n)%graze_doc        = 0.06_r8
-          grazing(m,n)%f_zoo_detr       = 0.2_r8
+          grazing(m,n)%f_zoo_detr       = 0.24_r8
           grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
         elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
                 (trim(autotrophs_config(m)%sname).eq.'diaz')) then
-          grazing(m,n)%z_umax_0         = 1.85_r8 * dps
-          grazing(m,n)%z_grz            = 1.15_r8
+          grazing(m,n)%z_umax_0_per_day = 3.05_r8
+          grazing(m,n)%z_grz            = 1.2_r8
           grazing(m,n)%graze_zoo        = 0.3_r8
-          grazing(m,n)%graze_poc        = 0.08_r8
+          grazing(m,n)%graze_poc        = 0.1_r8
           grazing(m,n)%graze_doc        = 0.06_r8
-          grazing(m,n)%f_zoo_detr       = 0.1_r8
+          grazing(m,n)%f_zoo_detr       = 0.12_r8
           grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
         else
-          grazing(m,n)%z_umax_0         = c0
+          grazing(m,n)%z_umax_0_per_day = c0
           grazing(m,n)%z_grz            = c0
           grazing(m,n)%graze_zoo        = c0
           grazing(m,n)%graze_poc        = c0
@@ -489,7 +492,7 @@ contains
          parm_Fe_bioavail, &
          parm_o2_min, &
          parm_o2_min_delta, &
-         parm_kappa_nitrif, &
+         parm_kappa_nitrif_per_day, &
          parm_nitrif_par_lim, &
          parm_labile_ratio, &
          parm_init_POC_bury_coeff, &
@@ -506,6 +509,7 @@ contains
          parm_POC_diss, &
          parm_SiO2_diss, &
          parm_CaCO3_diss, &
+         parm_sed_denitrif_coeff, &
          iron_frac_in_dust, &
          iron_frac_in_bc, &
          caco3_bury_thres_opt, &
@@ -618,12 +622,12 @@ contains
       return
     end if
 
-    sname     = 'parm_kappa_nitrif'
+    sname     = 'parm_kappa_nitrif_per_day'
     lname     = 'Nitrification inverse time constant'
-    units     = '1/s'
+    units     = '1/day'
     datatype  = 'real'
     group     = 'marbl_parms_nml'
-    rptr      => parm_kappa_nitrif
+    rptr      => parm_kappa_nitrif_per_day
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
@@ -839,6 +843,19 @@ contains
       return
     end if
 
+    sname     = 'parm_sed_denitrif_coeff'
+    lname     = 'global scaling factor for sed_denitrif'
+    units     = '1'
+    datatype  = 'real'
+    group     = 'marbl_parms_nml'
+    rptr      => parm_sed_denitrif_coeff
+    call this%add_var(sname, lname, units, datatype, group,                 &
+                        marbl_status_log, rptr=rptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
     sname     = 'bury_coeff_rmean_timescale_years'
     lname     = 'Timescale for bury coefficient running means'
     units     = 'yr'
@@ -996,12 +1013,12 @@ contains
         return
       end if
 
-      write(sname, "(2A)") trim(prefix), 'alphaPi'
+      write(sname, "(2A)") trim(prefix), 'alphaPi_per_day'
       lname    = 'Initial slope of P_I curve (GD98)'
-      units    = 'mmol C m^2 / (mg Chl W s)'
+      units    = 'mmol C m^2 / (mg Chl W day)'
       datatype = 'real'
       group    = 'marbl_parms_nml'
-      rptr     => autotrophs(n)%alphaPi
+      rptr     => autotrophs(n)%alphaPi_per_day
       call this%add_var(sname, lname, units, datatype, group,               &
                         marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
@@ -1009,12 +1026,12 @@ contains
         return
       end if
 
-      write(sname, "(2A)") trim(prefix), 'PCref'
+      write(sname, "(2A)") trim(prefix), 'PCref_per_day'
       lname    = 'max C-spec growth rate at Tref'
-      units    = '1/s'
+      units    = '1/day'
       datatype = 'real'
       group    = 'marbl_parms_nml'
-      rptr     => autotrophs(n)%PCref
+      rptr     => autotrophs(n)%PCref_per_day
       call this%add_var(sname, lname, units, datatype, group,               &
                         marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
@@ -1074,12 +1091,12 @@ contains
         return
       end if
 
-      write(sname, "(2A)") trim(prefix), 'mort'
+      write(sname, "(2A)") trim(prefix), 'mort_per_day'
       lname    = 'linear mortality rate'
-      units    = '1/s'
+      units    = '1/day'
       datatype = 'real'
       group    = 'marbl_parms_nml'
-      rptr     => autotrophs(n)%mort
+      rptr     => autotrophs(n)%mort_per_day
       call this%add_var(sname, lname, units, datatype, group,               &
                         marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
@@ -1087,12 +1104,12 @@ contains
         return
       end if
 
-      write(sname, "(2A)") trim(prefix), 'mort2'
+      write(sname, "(2A)") trim(prefix), 'mort2_per_day'
       lname    = 'quadratic mortality rate'
-      units    = '1/s/(mmol C/m^3)'
+      units    = '1/day/(mmol C/m^3)'
       datatype = 'real'
       group    = 'marbl_parms_nml'
-      rptr     => autotrophs(n)%mort2
+      rptr     => autotrophs(n)%mort2_per_day
       call this%add_var(sname, lname, units, datatype, group,               &
                         marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
@@ -1147,12 +1164,12 @@ contains
       write(comment, "(2A)") 'zooplankton short name = ',                     &
                              trim(zooplankton_config(n)%sname)
 
-      write(sname, "(2A)") trim(prefix), 'z_mort_0'
+      write(sname, "(2A)") trim(prefix), 'z_mort_0_per_day'
       lname    = 'Linear mortality rate'
-      units    = '1/s'
+      units    = '1/day'
       datatype = 'real'
       group    = 'marbl_parms_nml'
-      rptr     => zooplankton(n)%z_mort_0
+      rptr     => zooplankton(n)%z_mort_0_per_day
       call this%add_var(sname, lname, units, datatype, group,               &
                         marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
@@ -1173,12 +1190,12 @@ contains
         return
       end if
 
-      write(sname, "(2A)") trim(prefix), 'z_mort2_0'
+      write(sname, "(2A)") trim(prefix), 'z_mort2_0_per_day'
       lname    = 'Quadratic mortality rate'
-      units    = '1/s/(mmol C / m^3)'
+      units    = '1/day/(mmol C / m^3)'
       datatype = 'real'
       group    = 'marbl_parms_nml'
-      rptr     => zooplankton(n)%z_mort2_0
+      rptr     => zooplankton(n)%z_mort2_0_per_day
       call this%add_var(sname, lname, units, datatype, group,               &
                         marbl_status_log, rptr=rptr, add_newline=.true.,      &
                         comment=comment)
@@ -1206,12 +1223,12 @@ contains
           return
         end if
 
-        write(sname, "(2A)") trim(prefix), 'z_umax_0'
+        write(sname, "(2A)") trim(prefix), 'z_umax_0_per_day'
         lname    = 'max zoo growth rate at Tref'
-        units    = '1/s'
+        units    = '1/day'
         datatype = 'real'
         group    = 'marbl_parms_nml'
-        rptr     => grazing(m,n)%z_umax_0
+        rptr     => grazing(m,n)%z_umax_0_per_day
         call this%add_var(sname, lname, units, datatype, group,               &
                           marbl_status_log, rptr=rptr)
         if (marbl_status_log%labort_marbl) then
@@ -1469,8 +1486,14 @@ contains
 
     type(marbl_log_type), intent(inout) :: marbl_status_log
 
+    !---------------------------------------------------------------------------
+    !   local variables
+    !---------------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_parms:set_derived_parms'
     character(len=char_len) :: log_message
+
+    character(len=char_len) :: sname
+    integer :: m, n
 
     select case (caco3_bury_thres_opt)
     case ('fixed_depth')
@@ -1482,6 +1505,55 @@ contains
        call marbl_status_log%log_error(log_message, subname)
        return
     end select
+
+    call marbl_status_log%log_noerror('setting derived parms', subname)
+
+    parm_kappa_nitrif = dps * parm_kappa_nitrif_per_day
+    write(log_message, "(A,E24.16)") 'setting parm_kappa_nitrif = ', parm_kappa_nitrif
+    call marbl_status_log%log_noerror(log_message, subname)
+
+    do n = 1, autotroph_cnt
+       autotrophs(n)%alphaPI = dps * autotrophs(n)%alphaPI_per_day
+       write(log_message, "(A,I0,A,E24.16)") &
+            'setting autotrophs(', n, ')%alphaPI = ', autotrophs(n)%alphaPI
+       call marbl_status_log%log_noerror(log_message, subname)
+
+       autotrophs(n)%PCref = dps * autotrophs(n)%PCref_per_day
+       write(log_message, "(A,I0,A,E24.16)") &
+            'setting autotrophs(', n, ')%PCref = ', autotrophs(n)%PCref
+       call marbl_status_log%log_noerror(log_message, subname)
+
+       autotrophs(n)%mort = dps * autotrophs(n)%mort_per_day
+       write(log_message, "(A,I0,A,E24.16)") &
+            'setting autotrophs(', n, ')%mort = ', autotrophs(n)%mort
+       call marbl_status_log%log_noerror(log_message, subname)
+
+       autotrophs(n)%mort2 = dps * autotrophs(n)%mort2_per_day
+       write(log_message, "(A,I0,A,E24.16)") &
+            'setting autotrophs(', n, ')%mort2 = ', autotrophs(n)%mort2
+       call marbl_status_log%log_noerror(log_message, subname)
+    end do
+
+    do n = 1, zooplankton_cnt
+       zooplankton(n)%z_mort_0 = dps * zooplankton(n)%z_mort_0_per_day
+       write(log_message, "(A,I0,A,E24.16)") &
+            'setting zooplankton(', n, ')%z_mort_0 = ', zooplankton(n)%z_mort_0
+       call marbl_status_log%log_noerror(log_message, subname)
+
+       zooplankton(n)%z_mort2_0 = dps * zooplankton(n)%z_mort2_0_per_day
+       write(log_message, "(A,I0,A,E24.16)") &
+            'setting zooplankton(', n, ')%z_mort2_0 = ', zooplankton(n)%z_mort2_0
+       call marbl_status_log%log_noerror(log_message, subname)
+    end do
+
+    do n = 1, zooplankton_cnt
+       do m = 1, grazer_prey_cnt
+          grazing(m,n)%z_umax_0 = dps * grazing(m,n)%z_umax_0_per_day
+          write(log_message, "(A,I0,A,I0,A,E24.16)") &
+               'setting grazing(', m, ',', n, ')%z_umax_0 = ', grazing(m,n)%z_umax_0
+          call marbl_status_log%log_noerror(log_message, subname)
+       end do
+    end do
 
   end subroutine set_derived_parms
 
