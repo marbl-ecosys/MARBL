@@ -3,6 +3,7 @@
 extension = .F90
 
 COMP_NAME=NONE
+GPTL_DIR=NONE
 
 OBJ_ROOT = $(realpath ../obj)
 OBJ_DIR = $(OBJ_ROOT)/$(COMP_NAME)/driver
@@ -21,12 +22,11 @@ else
   LIB_NAME = libmarbl-$(COMP_NAME).a
   LFLAG = -lmarbl-$(COMP_NAME)
 endif
-USE_GPTL = FALSE
 CPPDEFS=-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
 INCLUDES=-I$(INC_LOC)
 LINKS=-L$(LIB_DIR) $(LFLAG)
 
-ifeq ($(USE_GPTL),TRUE)
+ifneq ($(GPTL_DIR),NONE)
   override FC=mpif90
   CPPDEFS+= -DUSE_GPTL
   INCLUDES+= -I$(GPTL_DIR)/include

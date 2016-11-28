@@ -127,7 +127,10 @@ class MARBL_testcase(object):
     if self._machine != 'local-gnu':
       machs.load_module(self._machine, loc_compiler)
 
-    sh_command('cd %s; make %s' % (src_dir, loc_compiler))
+    makecmd = 'make %s' % loc_compiler
+    if self._GPTLroot is not None:
+      makecmd = '%s GPTL_DIR=%s' % (makecmd, self._GPTLroot)
+    sh_command('cd %s; %s' % (src_dir, makecmd))
 
   # -----------------------------------------------
 
@@ -144,7 +147,7 @@ class MARBL_testcase(object):
 
     makecmd = 'make %s' % loc_compiler
     if self._GPTLroot is not None:
-      makecmd = '%s USE_GPTL=TRUE GPTL_DIR=%s' % (makecmd, self._GPTLroot)
+      makecmd = '%s GPTL_DIR=%s' % (makecmd, self._GPTLroot)
     sh_command('cd %s; %s' % (drv_dir, makecmd))
 
   # -----------------------------------------------
