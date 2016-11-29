@@ -1472,7 +1472,7 @@ contains
     group     = 'marbl_parms_nml'
     rptr      => rest_z1
     call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, rptr=rptr, add_newline=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -1492,8 +1492,13 @@ contains
     character(len=*), parameter :: subname = 'marbl_parms:set_derived_parms'
     character(len=char_len) :: log_message
 
-    character(len=char_len) :: sname
+    character(len=char_len) :: sname_in, sname_out
     integer :: m, n
+
+    call marbl_status_log%log_noerror('---------------------', subname)
+    call marbl_status_log%log_noerror('Setting derived parms', subname)
+    call marbl_status_log%log_noerror('---------------------', subname)
+    call marbl_status_log%log_noerror('', subname)
 
     select case (caco3_bury_thres_opt)
     case ('fixed_depth')
@@ -1506,57 +1511,85 @@ contains
        return
     end select
 
-    call marbl_status_log%log_noerror('setting derived parms', subname)
-
     parm_kappa_nitrif = dps * parm_kappa_nitrif_per_day
-    write(log_message, "(A,E24.16)") 'setting parm_kappa_nitrif = ', parm_kappa_nitrif
-    call marbl_status_log%log_noerror(log_message, subname)
+    call print_single_derived_parm('parm_kappa_nitrif_per_day', 'parm_kappa_nitrif', &
+         parm_kappa_nitrif, subname, marbl_status_log)
 
     do n = 1, autotroph_cnt
        autotrophs(n)%alphaPI = dps * autotrophs(n)%alphaPI_per_day
-       write(log_message, "(A,I0,A,E24.16)") &
-            'setting autotrophs(', n, ')%alphaPI = ', autotrophs(n)%alphaPI
-       call marbl_status_log%log_noerror(log_message, subname)
+       write(sname_in,  "(A,I0,A)") 'autotrophs(', n, ')%alphaPI_per_day'
+       write(sname_out, "(A,I0,A)") 'autotrophs(', n, ')%alphaPI'
+       call print_single_derived_parm(sname_in, sname_out, &
+            autotrophs(n)%alphaPI, subname, marbl_status_log)
 
        autotrophs(n)%PCref = dps * autotrophs(n)%PCref_per_day
-       write(log_message, "(A,I0,A,E24.16)") &
-            'setting autotrophs(', n, ')%PCref = ', autotrophs(n)%PCref
-       call marbl_status_log%log_noerror(log_message, subname)
+       write(sname_in,  "(A,I0,A)") 'autotrophs(', n, ')%PCref_per_day'
+       write(sname_out, "(A,I0,A)") 'autotrophs(', n, ')%PCref'
+       call print_single_derived_parm(sname_in, sname_out, &
+            autotrophs(n)%PCref, subname, marbl_status_log)
 
        autotrophs(n)%mort = dps * autotrophs(n)%mort_per_day
-       write(log_message, "(A,I0,A,E24.16)") &
-            'setting autotrophs(', n, ')%mort = ', autotrophs(n)%mort
-       call marbl_status_log%log_noerror(log_message, subname)
+       write(sname_in,  "(A,I0,A)") 'autotrophs(', n, ')%mort_per_day'
+       write(sname_out, "(A,I0,A)") 'autotrophs(', n, ')%mort'
+       call print_single_derived_parm(sname_in, sname_out, &
+            autotrophs(n)%mort, subname, marbl_status_log)
 
        autotrophs(n)%mort2 = dps * autotrophs(n)%mort2_per_day
-       write(log_message, "(A,I0,A,E24.16)") &
-            'setting autotrophs(', n, ')%mort2 = ', autotrophs(n)%mort2
-       call marbl_status_log%log_noerror(log_message, subname)
+       write(sname_in,  "(A,I0,A)") 'autotrophs(', n, ')%mort2_per_day'
+       write(sname_out, "(A,I0,A)") 'autotrophs(', n, ')%mort2'
+       call print_single_derived_parm(sname_in, sname_out, &
+            autotrophs(n)%mort2, subname, marbl_status_log)
     end do
 
     do n = 1, zooplankton_cnt
        zooplankton(n)%z_mort_0 = dps * zooplankton(n)%z_mort_0_per_day
-       write(log_message, "(A,I0,A,E24.16)") &
-            'setting zooplankton(', n, ')%z_mort_0 = ', zooplankton(n)%z_mort_0
-       call marbl_status_log%log_noerror(log_message, subname)
+       write(sname_in,  "(A,I0,A)") 'zooplankton(', n, ')%z_mort_0_per_day'
+       write(sname_out, "(A,I0,A)") 'zooplankton(', n, ')%z_mort_0'
+       call print_single_derived_parm(sname_in, sname_out, &
+            zooplankton(n)%z_mort_0, subname, marbl_status_log)
 
        zooplankton(n)%z_mort2_0 = dps * zooplankton(n)%z_mort2_0_per_day
-       write(log_message, "(A,I0,A,E24.16)") &
-            'setting zooplankton(', n, ')%z_mort2_0 = ', zooplankton(n)%z_mort2_0
-       call marbl_status_log%log_noerror(log_message, subname)
+       write(sname_in,  "(A,I0,A)") 'zooplankton(', n, ')%z_mort2_0_per_day'
+       write(sname_out, "(A,I0,A)") 'zooplankton(', n, ')%z_mort2_0'
+       call print_single_derived_parm(sname_in, sname_out, &
+            zooplankton(n)%z_mort2_0, subname, marbl_status_log)
     end do
 
     do n = 1, zooplankton_cnt
        do m = 1, grazer_prey_cnt
           grazing(m,n)%z_umax_0 = dps * grazing(m,n)%z_umax_0_per_day
-          write(log_message, "(A,I0,A,I0,A,E24.16)") &
-               'setting grazing(', m, ',', n, ')%z_umax_0 = ', grazing(m,n)%z_umax_0
-          call marbl_status_log%log_noerror(log_message, subname)
+          write(sname_in,  "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%z_umax_0_per_day'
+          write(sname_out, "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%z_umax_0'
+          call print_single_derived_parm(sname_in, sname_out, &
+               grazing(m,n)%z_umax_0, subname, marbl_status_log)
        end do
     end do
+
+    call marbl_status_log%log_noerror('', subname)
 
   end subroutine set_derived_parms
 
   !*****************************************************************************
-  
+
+  subroutine print_single_derived_parm(sname_in, sname_out, val_out, subname, marbl_status_log)
+
+    character(len=*), intent(in) :: sname_in
+    character(len=*), intent(in) :: sname_out
+    real(kind=r8),    intent(in) :: val_out
+    character(len=*), intent(in) :: subname
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+
+    !---------------------------------------------------------------------------
+    !   local variables
+    !---------------------------------------------------------------------------
+    character(len=char_len) :: log_message
+
+    write(log_message, "(2A,E24.16,3A)") &
+         trim(sname_out), ' = ', val_out, ' (from ', trim(sname_in), ')'
+    call marbl_status_log%log_noerror(log_message, subname)
+
+  end subroutine print_single_derived_parm
+
+  !*****************************************************************************
+
 end module marbl_parms

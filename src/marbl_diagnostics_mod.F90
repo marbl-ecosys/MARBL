@@ -2520,7 +2520,6 @@ contains
           end if
        end if
 
-       ! Particulate 3D diags
        if (count_only) then
           num_interior_diags = num_interior_diags + 1
        else
@@ -4593,7 +4592,6 @@ contains
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_carbonate'
     integer(int_kind) :: k
-    real(r8) :: zsat_calcite, zsat_aragonite
     !-----------------------------------------------------------------------
     
     associate(                                               &
@@ -5269,7 +5267,6 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer(int_kind) :: n
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
 
@@ -5357,7 +5354,6 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer(int_kind) :: n
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
 
@@ -5794,6 +5790,8 @@ contains
     end if
 
   end subroutine compute_vertical_integrals
+
+  !*****************************************************************************
 
   subroutine log_add_diagnostics_error(marbl_status_log, sname, subname)
 

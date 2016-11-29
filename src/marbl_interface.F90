@@ -516,13 +516,6 @@ contains
     character(*), parameter :: subname = 'marbl_interface:complete_config_and_init'
     character(len=char_len) :: log_message
 
-    ! Update values of any parameters that depend on namelist / put statements
-    call set_derived_parms(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('set_derived_parms', subname)
-      return
-    end if
-
     call marbl_init_bury_coeff(this%particulate_share, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
@@ -534,6 +527,13 @@ contains
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('parmeters%finalize_list', &
            subname)
+      return
+    end if
+
+    ! Update values of any parameters that depend on namelist / put statements
+    call set_derived_parms(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('set_derived_parms', subname)
       return
     end if
 

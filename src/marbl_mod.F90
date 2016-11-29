@@ -855,14 +855,6 @@ contains
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_set_interior_forcing'
 
-    integer (int_kind) :: auto_ind  ! autotroph functional group index
-    integer (int_kind) :: auto_ind2 ! autotroph functional group index
-    integer (int_kind) :: zoo_ind   ! zooplankton functional group index
-    integer (int_kind) :: zoo_ind2  ! zooplankton functional group index
-    integer (int_kind) :: prey_ind  ! grazee group index
-    integer (int_kind) :: pred_ind  ! grazer group index
-    integer (int_kind) :: kk        ! index for looping over k levels
-    integer (int_kind) :: d         ! diag index index
     integer (int_kind) :: n         ! tracer index
     integer (int_kind) :: k         ! vertical level index
 
@@ -1217,10 +1209,6 @@ contains
     real (r8)                          , intent(inout) :: QA_dust_def(:)  ! incoming deficit in the QA(dust) POC flux (km)
 
     !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-
-    !-----------------------------------------------------------------------
     !  parameters, from Armstrong et al. 2000
     !
     !  July 2002, length scale for excess POC and bSI modified by temperature
@@ -1452,7 +1440,7 @@ contains
          subname = 'marbl_mod:marbl_compute_particulate_terms'
     character(len=char_len) :: log_message
 
-    real (r8) :: TfuncS  ! temperature scaling from soft POM remin
+!   real (r8) :: TfuncS  ! temperature scaling from soft POM remin, not currently being applied
 
     real (r8) :: &
          DECAY_Hard,         & ! scaling factor for dissolution of Hard Ballast
@@ -1464,7 +1452,6 @@ contains
          decay_CaCO3,        & ! scaling factor for dissolution of CaCO3
          decay_dust,         & ! scaling factor for dissolution of dust
          POC_PROD_avail,     & ! POC production available for excess POC flux
-         POP_PROD_avail,     & ! POP production available for excess POP flux
          new_QA_dust_def,    & ! outgoing deficit in the QA(dust) POC flux
          scalelength,        & ! used to scale dissolution length scales as function of depth
          o2_scalefactor,     & ! used to scale dissolution length scales as function of o2
@@ -1536,8 +1523,9 @@ contains
 
     !----------------------------------------------------------------------
     !   Tref = 30.0 reference temperature (deg. C)
+    !   not currently being applied
     !-----------------------------------------------------------------------
-    TfuncS = 1.5_r8**(((temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
+!   TfuncS = 1.5_r8**(((temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
 
     poc_error = .false.
     dz_loc = delta_z(k)
@@ -1752,8 +1740,6 @@ contains
 !  compute POP remin and flux out, following code for iron
 !------------------------------------------------------------------------
 
-       if (POC%prod(k) <= c0) POP%prod(k) = c0
-
        POP%remin(k) = c0
        if (POC%sflux_in(k) + POC%hflux_in(k) > c0) then
           POP%remin(k) = POC%remin(k) * &
@@ -1949,10 +1935,10 @@ contains
                + ((Q * flux - PON_sed_loss) * dzr_loc)
        endif
 
-       flux_POP = POP%sflux_out(k) + POP%hflux_out(k)
+       flux = POP%sflux_out(k) + POP%hflux_out(k)
        if (flux > c0) then
           POP%remin(k) = POP%remin(k) &
-               + ((flux_POP - POP%sed_loss(k)) * dzr_loc)
+               + ((flux - POP%sed_loss(k)) * dzr_loc)
        endif
 
        !-----------------------------------------------------------------------
@@ -4282,7 +4268,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer  :: auto_ind, subcol_ind
+    integer  :: subcol_ind
     real(r8) :: work
     real(r8) :: DOC_reminR        ! remineralization rate (1/sec)
     real(r8) :: DON_reminR        ! remineralization rate (1/sec)
@@ -4652,6 +4638,8 @@ contains
     !-----------------------------------------------------------------------
 
     POP%prod(k) = Qp_zoo * sum(zoo_loss_poc(:)) + sum(remaining_P_pop(:))
+
+    if (POC%prod(k) <= c0) POP%prod(k) = c0
 
     !-----------------------------------------------------------------------
     !  large detrital CaCO3
