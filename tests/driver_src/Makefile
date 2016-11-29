@@ -27,7 +27,6 @@ INCLUDES=-I$(INC_LOC)
 LINKS=-L$(LIB_DIR) $(LFLAG)
 
 ifneq ($(GPTL_DIR),NONE)
-  override FC=mpif90
   CPPDEFS+= -DUSE_GPTL
   INCLUDES+= -I$(GPTL_DIR)/include
   LINKS+= -L$(GPTL_DIR)/lib -lgptl

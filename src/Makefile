@@ -41,7 +41,6 @@ endif
 ifneq ($(GPTL_DIR),NONE)
   CPPDEFS+= -DUSE_GPTL
   INCLUDES+= -I$(GPTL_DIR)/include
-  override FC=mpif90
 endif
 
 ### TARGETS ###
