@@ -1,10 +1,29 @@
 .SUFFIXES: .F90 .o
 extension = .F90
 
-SRC_DIR=.
-OBJ_DIR=../tests/obj
-LIB_DIR=../lib
-INC_DIR=../include
+# DEFINE VARIOUS DIRECTORIES NEEDED FOR BUILD
+OBJ_DIR=$(realpath ../tests/obj)
+INC_DIR=$(realpath ../include)
+LIB_DIR=$(realpath ../lib)
+SRC_DIR=$(realpath .)
+
+# ERROR CHECKING: MAKE SURE ALL DIRECTORIES EXIST
+ifeq ($(realpath $(OBJ_DIR)),)
+  $(error Can not find $$OBJ_DIR)
+endif
+
+ifeq ($(realpath $(INC_DIR)),)
+  $(error Can not find $$INC_DIR)
+endif
+
+ifeq ($(realpath $(LIB_DIR)),)
+  $(error Can not find $$LIB_DIR)
+endif
+
+ifeq ($(realpath $(SRC_DIR)),)
+  $(error Can not find $$SRC_DIR)
+endif
+
 FC = NONE
 
 # Dependency Generation
@@ -77,7 +96,7 @@ $(DEP_FILE): $(MAKE_DEP) $(SRC_DIR)/*.F90
 	@$(MAKE_DEP) $(DEP_FILE) $(OBJ_DIR) $(SRC_DIR); echo "Generated dependency file $(DEP_FILE)"
 
 clean:
-	/bin/rm -f $(OBJ_DIR)/*/*.* $(LIB_DIR)/* $(INC_DIR)/*/*
+	/bin/rm -f $(OBJ_DIR)/*/*.{o,mod,d} $(LIB_DIR)/*.a $(INC_DIR)/*/*.mod
 
 # Actual library build
 

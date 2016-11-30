@@ -1,6 +1,4 @@
-
 .SUFFIXES: .F90 .o
-
 extension = .F90
 
 COMP_NAME=NONE
