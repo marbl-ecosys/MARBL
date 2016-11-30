@@ -1,22 +1,61 @@
+
 .SUFFIXES: .F90 .o
 
 extension = .F90
 
 COMP_NAME=NONE
 
+# DEFINE VARIOUS DIRECTORIES NEEDED FOR BUILD
 OBJ_ROOT = $(realpath ../obj)
-OBJ_DIR = $(OBJ_ROOT)/$(COMP_NAME)/driver
 INC_DIR = $(realpath ../../include)
 LIB_DIR = $(realpath ../../lib)
 EXE_DIR = $(realpath ../driver_exe)
 SRC_DIR = $(realpath ../../src)
 DRV_DIR = $(realpath .)
 
-OBJ_LOC = $(realpath $(OBJ_ROOT)/$(COMP_NAME))
-INC_LOC = $(realpath $(INC_DIR)/$(COMP_NAME))
+# ERROR CHECKING: MAKE SURE ALL DIRECTORIES EXIST
+ifeq ($(realpath $(OBJ_ROOT)),)
+  $(error Can not find $$OBJ_ROOT)
+endif
+
+ifeq ($(realpath $(INC_DIR)),)
+  $(error Can not find $$INC_DIR)
+endif
+
+ifeq ($(realpath $(LIB_DIR)),)
+  $(error Can not find $$LIB_DIR)
+endif
+
+ifeq ($(realpath $(EXE_DIR)),)
+  $(error Can not find $$EXE_DIR)
+endif
+
+ifeq ($(realpath $(SRC_DIR)),)
+  $(error Can not find $$SRC_DIR)
+endif
+
+ifeq ($(realpath $(DRV_DIR)),)
+  $(error Can not find $$DRV_DIR)
+endif
+
 ifeq ($(COMP_NAME),NONE)
   LIB_NAME = libmarbl.a
 else
+  INC_LOC = $(realpath $(INC_DIR)/$(COMP_NAME))
+  ifeq ($(realpath $(INC_LOC)),)
+    $(error Can not find $$INC_LOC)
+  endif
+
+  OBJ_LOC = $(realpath $(OBJ_ROOT)/$(COMP_NAME))
+  ifeq ($(realpath $(OBJ_LOC)),)
+    $(error Can not find $$OBJ_LOC)
+  endif
+
+  OBJ_DIR = $(realpath $(OBJ_LOC)/driver)
+  ifeq ($(realpath $(OBJ_DIR)),)
+    $(error Can not find $$OBJ_DIR)
+  endif
+
   LIB_NAME = libmarbl-$(COMP_NAME).a
 endif
 LFLAG = -lmarbl-$(COMP_NAME)
@@ -63,4 +102,4 @@ clean_exe:
 	rm -f $(EXE)
 
 clean: clean_exe
-	rm -f $(OBJ_ROOT)/*/*.* $(OBJ_ROOT)/*/*/* $(LIB_DIR)/* $(INC_DIR)/*/*
+	rm -f $(OBJ_ROOT)/*/*.{o,mod,d} $(OBJ_ROOT)/*/driver/*.{o,mod,d} $(LIB_DIR)/*.a $(INC_DIR)/*/*.mod
