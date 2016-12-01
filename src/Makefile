@@ -28,7 +28,7 @@ FC = NONE
 
 # Dependency Generation
 MAKE_DEP = $(SRC_DIR)/makedep.py
-DEP_FILE = $(OBJ_DIR)/shared_deps.d
+DEP_FILE = $(OBJ_DIR)/marbl_internal_deps.d
 
 ifneq ($(INC_DIR),$(OBJ_DIR))
   DIFF_INC = TRUE
@@ -96,7 +96,7 @@ $(DEP_FILE): $(MAKE_DEP) $(SRC_DIR)/*.F90
 	@$(MAKE_DEP) $(DEP_FILE) $(OBJ_DIR) $(SRC_DIR); echo "Generated dependency file $(DEP_FILE)"
 
 clean:
-	/bin/rm -f $(OBJ_DIR)/*/*.{o,mod,d} $(LIB_DIR)/*.a $(INC_DIR)/*/*.mod
+	/bin/rm -f $(OBJ_DIR)/{gnu,intel,nag,pgi,cray}/marbl_*.{o,mod,d} $(INC_DIR)/{gnu,intel,nag,pgi,cray}/marbl_*.mod $(LIB_DIR)/libmarbl*.a
 
 # Actual library build
 

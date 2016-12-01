@@ -100,4 +100,4 @@ clean_exe:
 	rm -f $(EXE)
 
 clean: clean_exe
-	rm -f $(OBJ_ROOT)/*/*.{o,mod,d} $(OBJ_ROOT)/*/driver/*.{o,mod,d} $(LIB_DIR)/*.a $(INC_DIR)/*/*.mod
+	rm -f $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}/marbl_*.{o,mod,d} $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}/driver/marbl_*.{o,mod,d} $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}/driver/marbl.{o,mod,d} $(INC_DIR)/{gnu,intel,nag,pgi,cray}/marbl_*.mod $(LIB_DIR)/libmarbl*.a
