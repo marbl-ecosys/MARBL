@@ -191,11 +191,11 @@ module marbl_mod
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
   use marbl_internal_types  , only : marbl_tracer_index_type
   use marbl_internal_types  , only : marbl_surface_forcing_indexing_type
+  use marbl_internal_types  , only : marbl_interior_forcing_indexing_type
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
   use marbl_interface_types , only : marbl_saved_state_type
-  use marbl_interface_types , only : marbl_interior_forcing_input_type
   use marbl_interface_types , only : marbl_surface_forcing_output_type
   use marbl_interface_types , only : marbl_forcing_fields_metadata_type
   use marbl_interface_types , only : marbl_diagnostics_type
@@ -214,6 +214,7 @@ module marbl_mod
   !-----------------------------------------------------------------------
 
   public  :: marbl_init_surface_forcing_fields
+  public  :: marbl_init_interior_forcing_fields
   public  :: marbl_init_tracer_metadata
   public  :: marbl_init_bury_coeff
   public  :: marbl_set_glo_vars_cnt
@@ -290,6 +291,8 @@ contains
        surface_forcing_metadata, &
        marbl_status_log)
 
+    use marbl_sizes, only : num_surface_forcing_fields
+
     !  Initialize the surface forcing_fields datatype with information from the
     !  namelist read
     !
@@ -305,15 +308,15 @@ contains
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_init_surface_forcing_fields'
     character(len=char_len) :: log_message
-    integer                 :: id, max_size
+    integer                 :: id
     logical                 :: found
     !-----------------------------------------------------------------------
 
     associate(ind => surface_forcing_indices)
 
-    max_size = size(surface_forcing_metadata)
     surface_forcing_metadata(:)%varname = ''
-    do id=1,max_size
+    surface_forcing_metadata(:)%array_ind = 0
+    do id=1,num_surface_forcing_fields
       found = .false.
 
       ! Surface Mask
@@ -499,6 +502,134 @@ contains
     !            If so, check to make sure those indices are not zero here.
 
   end subroutine marbl_init_surface_forcing_fields
+
+  !*****************************************************************************
+
+  subroutine marbl_init_interior_forcing_fields(&
+       interior_forcing_indices, &
+       interior_forcing_metadata, &
+       marbl_status_log)
+
+    use marbl_sizes, only : num_interior_forcing_fields_0d
+    use marbl_sizes, only : num_interior_forcing_fields_1d
+
+    !  Initialize the interior forcing_fields datatype with information from the
+    !  namelist read
+    !
+
+    implicit none
+
+    type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_indices
+    type(marbl_forcing_fields_metadata_type)  , intent(inout) :: interior_forcing_metadata(:)
+    type(marbl_log_type)                      , intent(inout) :: marbl_status_log
+
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    character(*), parameter :: subname = 'marbl_mod:marbl_init_interior_forcing_fields'
+    character(len=char_len) :: log_message
+    integer                 :: id, id2, n
+    logical                 :: found
+    !-----------------------------------------------------------------------
+
+    associate(ind => interior_forcing_indices)
+
+    interior_forcing_metadata(:)%varname = ''
+    interior_forcing_metadata(:)%array_ind = 0
+
+    ! Surface fluxes that influece interior forcing
+    do id=1,num_interior_forcing_fields_0d
+      found = .false.
+      ! Dust Flux
+      if (id.eq.ind%dustflux_id) then
+        found = .true.
+        interior_forcing_metadata(id)%varname     = 'Dust Flux'
+        interior_forcing_metadata(id)%field_units = 'need_units'
+      end if
+
+      ! PAR Column Fraction and Shortwave Radiation
+      do n=1,size(ind%PAR_col_frac_id)
+        if (id.eq.ind%PAR_col_frac_id(n)) then
+          found = .true.
+          interior_forcing_metadata(id)%varname     = 'PAR Column Fraction'
+          interior_forcing_metadata(id)%field_units = 'unitless'
+          interior_forcing_metadata(id)%array_ind   = n
+        end if
+
+        if (id.eq.ind%surf_shortwave_id(n)) then
+          found = .true.
+          interior_forcing_metadata(id)%varname     = 'Surface Shortwave'
+          interior_forcing_metadata(id)%field_units = 'need_units' ! W/m^2?
+          interior_forcing_metadata(id)%array_ind   = n
+        end if
+      end do
+
+      if (.not.found) then
+        write(log_message, "(A,I0,A)") "Index number ", id, &
+             " is not associated with a forcing field!"
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+
+    end do
+
+    ! Surface fluxes that influece interior forcing
+    do id=1,num_interior_forcing_fields_1d
+      found = .false.
+      id2 = id + num_interior_forcing_fields_0d
+
+      ! Temperature
+      if (id.eq.ind%temperature_id) then
+        found = .true.
+        interior_forcing_metadata(id2)%varname     = 'Temperature'
+        interior_forcing_metadata(id2)%field_units = 'Degrees C'
+      end if
+
+      ! Salinity
+      if (id.eq.ind%salinity_id) then
+        found = .true.
+        interior_forcing_metadata(id2)%varname     = 'Salinity'
+        interior_forcing_metadata(id2)%field_units = 'need_units'
+      end if
+
+      ! Pressure
+      if (id.eq.ind%pressure_id) then
+        found = .true.
+        interior_forcing_metadata(id2)%varname     = 'Pressure'
+        interior_forcing_metadata(id2)%field_units = 'need_units'
+      end if
+
+      ! Iron Sediment Flux
+      if (id.eq.ind%fesedflux_id) then
+        found = .true.
+        interior_forcing_metadata(id2)%varname     = 'Iron Sediment Flux'
+        interior_forcing_metadata(id2)%field_units = 'need_units'
+      end if
+
+      ! Interior Tracer Restoring (still to do)
+!      do n=1,size(ind%tracer_restore_id)
+!        if (id.eq.ind%tracer_restore_id(n)) then
+!          found = .true.
+!          interior_forcing_metadata(id2)%varname     = 'Tracer Restoring'
+!          interior_forcing_metadata(id2)%field_units = 'unitless'
+!          interior_forcing_metadata(id2)%array_ind   = n
+!        end if
+!      end do
+
+      if (.not.found) then
+        write(log_message, "(A,I0,A)") "Index number ", id, &
+             " is not associated with a forcing field!"
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+    end do
+
+    end associate
+
+    ! FIXME #26: do we have any forcing fields that are required to be set?
+    !            If so, check to make sure those indices are not zero here.
+
+  end subroutine marbl_init_interior_forcing_fields
 
   !*****************************************************************************
 
@@ -807,12 +938,14 @@ contains
 
   subroutine marbl_set_interior_forcing( &
        domain,                           &
-       interior_forcing_input,           &
+       interior_forcings_0d,             &
+       interior_forcings_1d,             &
        saved_state,                      &
        saved_state_ind,                  &
        interior_restore,                 &
        tracers,                          &
        surface_forcing_indices,          &
+       interior_forcing_indices,         &
        dtracers,                         &
        marbl_tracer_indices,             &
        marbl_PAR,                        &
@@ -834,10 +967,12 @@ contains
     implicit none 
 
     type    (marbl_domain_type)                 , intent(in)    :: domain                                
-    type    (marbl_interior_forcing_input_type) , intent(in)    :: interior_forcing_input
+    real    (r8)                                , intent(in)    :: interior_forcings_0d(:,:) ! (num_elements, num_interior_forcing_fields_0d)
+    real    (r8)                                , intent(in)    :: interior_forcings_1d(:,:,:) ! (num_elements, km, num_interior_forcing_fields_1d)
     real    (r8)                                , intent(in)    :: interior_restore(:,:) ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec) 
     real    (r8)                                , intent(in)    :: tracers(:,: )         ! (marbl_total_tracer_cnt, km) tracer values 
     type(marbl_surface_forcing_indexing_type)   , intent(in)    :: surface_forcing_indices
+    type(marbl_interior_forcing_indexing_type)  , intent(in)    :: interior_forcing_indices
     type    (marbl_PAR_type)                    , intent(inout) :: marbl_PAR
     type    (marbl_saved_state_type)            , intent(inout) :: saved_state
     type    (marbl_interior_saved_state_indexing_type), intent(in) :: saved_state_ind
@@ -930,9 +1065,12 @@ contains
          ph_prev_col         => saved_state%state(saved_state_ind%ph_col)%field_3d(:,1), &
          ph_prev_alt_co2_col => saved_state%state(saved_state_ind%ph_alt_co2_col)%field_3d(:,1), &
 
-         dust_flux_in        => interior_forcing_input%dust_flux,   &
-         temperature         => interior_forcing_input%temperature, &
-         fesedflux           => interior_forcing_input%fesedflux,   &
+         ! Hard-coding in that there is only 1 column passed in at a time!
+         dust_flux_in        => interior_forcings_0d(1,interior_forcing_indices%dustflux_id),   &
+         temperature         => interior_forcings_1d(1,:,interior_forcing_indices%temperature_id),   &
+         pressure            => interior_forcings_1d(1,:,interior_forcing_indices%pressure_id),   &
+         salinity            => interior_forcings_1d(1,:,interior_forcing_indices%salinity_id),   &
+         fesedflux           => interior_forcings_1d(1,:,interior_forcing_indices%fesedflux_id),   &
 
          po4_ind           => marbl_tracer_indices%po4_ind,         &
          no3_ind           => marbl_tracer_indices%no3_ind,         &
@@ -972,8 +1110,8 @@ contains
 
     !FIXME #27: new marbl timers need to be implemented to turn
     !           on timers here around this subroutine call
-    call marbl_compute_carbonate_chemistry(domain, interior_forcing_input,    &
-         tracer_local(:, :), marbl_tracer_indices, carbonate(:),              &
+    call marbl_compute_carbonate_chemistry(domain, temperature, pressure,     &
+         salinity, tracer_local(:, :), marbl_tracer_indices, carbonate(:),    &
          ph_prev_col(:), ph_prev_alt_co2_col(:), zsat_calcite(:),             &
          zsat_aragonite(:), marbl_status_log)
 
@@ -986,7 +1124,9 @@ contains
     call marbl_consistency_check_autotrophs(autotroph_cnt, kmt, marbl_tracer_indices, &
          autotroph_local(:,1:kmt))
 
-    call marbl_compute_PAR(domain, interior_forcing_input, autotroph_cnt, autotroph_local, PAR)
+    call marbl_compute_PAR(domain, interior_forcings_0d(1,:),       &
+                           interior_forcing_indices, autotroph_cnt, &
+                           autotroph_local, PAR)
 
     do k = 1, km
 
@@ -1114,7 +1254,8 @@ contains
     ! Compute interior diagnostics
     call marbl_diagnostics_set_interior_forcing(            &
          domain,                                            &
-         interior_forcing_input,                            &
+         interior_forcing_indices,                          &
+         interior_forcings_1d,                              &
          dtracers,                                          &
          marbl_tracer_indices,                              &
          carbonate,                                         &
@@ -1145,11 +1286,11 @@ contains
     if (ciso_on) then
        call marbl_ciso_set_interior_forcing(                        &
             marbl_domain                 = domain,                  &
-            marbl_interior_forcing_input = interior_forcing_input,  &
             marbl_interior_share         = marbl_interior_share,    &
             marbl_zooplankton_share      = marbl_zooplankton_share, &
             marbl_autotroph_share        = marbl_autotroph_share,   &
             marbl_particulate_share      = marbl_particulate_share, &
+            temperature                  = temperature,             &
             column_tracer                = tracers,                 &
             column_dtracer               = dtracers,                &
             marbl_tracer_indices         = marbl_tracer_indices,    &
@@ -3055,7 +3196,8 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_PAR(domain, interior_forcing_input, auto_cnt, autotroph_local, PAR)
+  subroutine marbl_compute_PAR(domain, interior_forcings_0d, interior_forcing_ind, &
+                               auto_cnt, autotroph_local, PAR)
 
     !-----------------------------------------------------------------------
     !  compute PAR related quantities
@@ -3065,11 +3207,12 @@ contains
 
     ! PAR is intent(inout) because it components, while entirely set here, are allocated elsewhere
 
-    integer(int_kind)                       , intent(in)    :: auto_cnt
-    type(marbl_domain_type)                 , intent(in)    :: domain  
-    type(marbl_interior_forcing_input_type) , intent(in)    :: interior_forcing_input
-    type(autotroph_local_type)              , intent(in)    :: autotroph_local(auto_cnt, domain%km)
-    type(marbl_PAR_type)                    , intent(inout) :: PAR
+    integer(int_kind)                         , intent(in)    :: auto_cnt
+    type(marbl_domain_type)                   , intent(in)    :: domain  
+    real(r8)                                  , intent(in)    :: interior_forcings_0d(:) ! (num_elements, num_interior_forcing_fields_0d)
+    type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_ind
+    type(autotroph_local_type)                , intent(in)    :: autotroph_local(auto_cnt, domain%km)
+    type(marbl_PAR_type)                      , intent(inout) :: PAR
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -3090,10 +3233,11 @@ contains
     ! ignore provided shortwave where col_frac == 0
     !-----------------------------------------------------------------------
 
-    PAR%col_frac(:) = interior_forcing_input%PAR_col_frac(:)
+    PAR%col_frac(:) = interior_forcings_0d(interior_forcing_ind%PAR_col_frac_id(:))
 
     where (PAR%col_frac(:) > c0)
-       PAR%interface(0,:) = f_qsw_par * interior_forcing_input%surf_shortwave(:)
+       PAR%interface(0,:) = f_qsw_par *                                       &
+              interior_forcings_0d(interior_forcing_ind%surf_shortwave_id(:))
     elsewhere
        PAR%interface(0,:) = c0
     endwhere
@@ -3170,16 +3314,18 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_carbonate_chemistry(domain, interior_forcing_input, &
-       tracer_local, marbl_tracer_indices, carbonate, ph_prev_col,             &
+  subroutine marbl_compute_carbonate_chemistry(domain, temperature, press_bar, &
+       salinity, tracer_local, marbl_tracer_indices, carbonate, ph_prev_col,   &
        ph_prev_alt_co2_col, zsat_calcite, zsat_aragonite, marbl_status_log)
 
-    use marbl_co2calc_mod, only : marbl_comp_co3terms         
-    use marbl_co2calc_mod, only : marbl_comp_co3_sat_vals     
+    use marbl_co2calc_mod, only : marbl_comp_co3terms
+    use marbl_co2calc_mod, only : marbl_comp_co3_sat_vals
     use marbl_co2calc_mod, only : thermodynamic_coefficients_type
 
     type(marbl_domain_type)                 , intent(in)    :: domain
-    type(marbl_interior_forcing_input_type) , intent(in)    :: interior_forcing_input
+    real (r8)                               , intent(in)    :: temperature(:)
+    real (r8)                               , intent(in)    :: press_bar(:)
+    real (r8)                               , intent(in)    :: salinity(:)
     real (r8)                               , intent(in)    :: tracer_local(ecosys_base_tracer_cnt,domain%km) ! local copies of model tracer concentrations
     type(marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
     type(carbonate_type)                    , intent(out)   :: carbonate(domain%km)
@@ -3199,7 +3345,6 @@ contains
     logical(log_kind) , dimension(domain%km) :: pressure_correct
     real(r8)          , dimension(domain%km) :: ph_lower_bound
     real(r8)          , dimension(domain%km) :: ph_upper_bound
-    real(r8)          , dimension(domain%km) :: press_bar ! pressure at level (bars)
     real(r8)          , dimension(domain%km) :: dic_loc
     real(r8)          , dimension(domain%km) :: dic_alt_co2_loc
     real(r8)          , dimension(domain%km) :: alk_loc
@@ -3228,10 +3373,7 @@ contains
          co3_alt_co2       => carbonate(:)%CO3_ALT_CO2,           &
          hco3_alt_co2      => carbonate(:)%HCO3_ALT_CO2,          &
          h2co3_alt_co2     => carbonate(:)%H2CO3_ALT_CO2,         &
-         ph_alt_co2        => carbonate(:)%pH_ALT_CO2,            &
-         temperature       => interior_forcing_input%temperature, &
-         press_bar         => interior_forcing_input%pressure,    &
-         salinity          => interior_forcing_input%salinity     &
+         ph_alt_co2        => carbonate(:)%pH_ALT_CO2             &
          )
 
     pressure_correct = .TRUE.

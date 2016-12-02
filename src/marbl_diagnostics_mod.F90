@@ -37,7 +37,6 @@ module marbl_diagnostics_mod
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
   use marbl_interface_types , only : marbl_saved_state_type
-  use marbl_interface_types , only : marbl_interior_forcing_input_type
   use marbl_interface_types , only : marbl_diagnostics_type
 
   use marbl_logging,          only : marbl_log_type
@@ -4076,7 +4075,8 @@ contains
 
   subroutine marbl_diagnostics_set_interior_forcing ( &
        domain,                                        &
-       interior_forcing_input,                        &
+       interior_forcing_ind,                          &
+       interior_input_forcings_1d,                    &
        dtracers,                                      &
        marbl_tracer_indices,                          &
        carbonate,                                     &
@@ -4093,11 +4093,16 @@ contains
        marbl_interior_forcing_diags,                  &
        marbl_status_log)
        
+    use marbl_internal_types , only : marbl_interior_forcing_indexing_type
+
     implicit none
 
     type (marbl_domain_type)                  , intent(in) :: domain                                
-    type (marbl_interior_forcing_input_type)  , intent(in) :: interior_forcing_input
-    real (r8)                                 , intent(in) :: dtracers(:,:) ! (marbl_total_tracer_cnt, km) computed source/sink terms
+    type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
+
+    real(r8), intent(in) :: interior_input_forcings_1d(:,:,:)
+    real(r8), intent(in) :: dtracers(:,:) ! (marbl_total_tracer_cnt, km) computed source/sink terms
+
     type(marbl_tracer_index_type)             , intent(in) :: marbl_tracer_indices
     type (carbonate_type)                     , intent(in) :: carbonate(domain%km)
     type (autotroph_secondary_species_type)   , intent(in) :: autotroph_secondary_species(autotroph_cnt, domain%km)
@@ -4125,13 +4130,14 @@ contains
 
     !-----------------------------------------------------------------
 
-    associate(                                                            &
-         POC             => marbl_particulate_share%POC,                  &
-         P_CaCO3         => marbl_particulate_share%P_CaCO3,              &
-         P_SiO2          => marbl_particulate_share%P_SiO2,               &
-         dust            => marbl_particulate_share%dust,                 &
-         P_iron          => marbl_particulate_share%P_iron,               &
-         PAR             => marbl_PAR                                     &
+    associate(                                                                &
+         POC              => marbl_particulate_share%POC,                     &
+         P_CaCO3          => marbl_particulate_share%P_CaCO3,                 &
+         P_SiO2           => marbl_particulate_share%P_SiO2,                  &
+         dust             => marbl_particulate_share%dust,                    &
+         P_iron           => marbl_particulate_share%P_iron,                  &
+         PAR              => marbl_PAR,                                       &
+         input_forcing_1d => interior_input_forcings_1d(1,:,:)                &
          )
 
     call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)
@@ -4170,7 +4176,8 @@ contains
          nitrif, denitrif, marbl_interior_forcing_diags)
 
     call store_diagnostics_oxygen(domain, &
-         interior_forcing_input, &
+         input_forcing_1d(:,interior_forcing_ind%temperature_id), &
+         input_forcing_1d(:,interior_forcing_ind%salinity_id), &
          column_o2, o2_production, o2_consumption, marbl_interior_forcing_diags)
 
     call store_diagnostics_PAR(domain, &
@@ -4190,8 +4197,8 @@ contains
          marbl_tracer_indices, marbl_interior_forcing_diags)
 
     call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
-         interior_forcing_input%fesedflux, dtracers, marbl_tracer_indices,    &
-         marbl_interior_forcing_diags)
+                input_forcing_1d(:,interior_forcing_ind%fesedflux_id),        &
+                dtracers, marbl_tracer_indices, marbl_interior_forcing_diags)
          
 
     end associate
@@ -4771,13 +4778,14 @@ contains
 
    !***********************************************************************
 
-  subroutine store_diagnostics_oxygen(marbl_domain, marbl_interior_forcing_input, &
+  subroutine store_diagnostics_oxygen(marbl_domain, temperature, salinity, &
        column_o2, o2_production, o2_consumption, marbl_interior_diags)
 
     use marbl_oxygen, only : o2sat_scalar
 
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain
-    type(marbl_interior_forcing_input_type) , intent(in)    :: marbl_interior_forcing_input
+    real(r8)                                , intent(in)    :: temperature(:)
+    real(r8)                                , intent(in)    :: salinity(:)
     real(r8)                                , intent(in)    :: column_o2(:)
     real(r8)                                , intent(in)    :: o2_production(:)
     real(r8)                                , intent(in)    :: o2_consumption(:)
@@ -4791,9 +4799,6 @@ contains
 
     ! Find min_o2 and depth_min_o2
     associate(                                                    &
-         temperature => marbl_interior_forcing_input%temperature, &
-         salinity    => marbl_interior_forcing_input%salinity,    &
-
          kmt         => marbl_domain%kmt,                         &
          zt          => marbl_domain%zt,                          &
          diags       => marbl_interior_diags%diags,               &

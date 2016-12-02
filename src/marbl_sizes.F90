@@ -26,9 +26,11 @@ module marbl_sizes
   integer (KIND=int_kind), parameter :: max_prey_class_size = 9
 
   !-----------------------------------------------------------------------------
-  ! number of surface forcing fields
+  ! number of forcing fields
   !-----------------------------------------------------------------------------
 
   integer :: num_surface_forcing_fields
+  integer :: num_interior_forcing_fields_0d
+  integer :: num_interior_forcing_fields_1d
 
 end module marbl_sizes

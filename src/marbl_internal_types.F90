@@ -424,6 +424,24 @@ module marbl_internal_types
      procedure, public :: construct => surface_forcing_index_constructor
   end type marbl_surface_forcing_indexing_type
 
+  !****************************************************************************
+
+  type, public :: marbl_interior_forcing_indexing_type
+     ! Surface forcing fields that affect interior forcings
+     integer(int_kind) :: dustflux_id    = 0
+     integer(int_kind), allocatable :: PAR_col_frac_id(:)
+     integer(int_kind), allocatable :: surf_shortwave_id(:)
+
+     ! Column fields
+     integer(int_kind) :: temperature_id = 0
+     integer(int_kind) :: salinity_id    = 0
+     integer(int_kind) :: pressure_id    = 0
+     integer(int_kind) :: fesedflux_id   = 0
+     integer(int_kind), allocatable :: tracer_restore_id(:)
+   contains
+     procedure, public :: construct => interior_forcing_index_constructor
+  end type marbl_interior_forcing_indexing_type
+
   !*****************************************************************************
 
   type, public :: marbl_surface_saved_state_indexing_type
@@ -886,6 +904,85 @@ contains
     end associate
 
   end subroutine surface_forcing_index_constructor
+
+  !*****************************************************************************
+
+  subroutine interior_forcing_index_constructor(this, PAR_nsubcols)
+
+    ! This subroutine sets the interior forcing indexes, which are used to
+    ! determine what forcing fields are required from the driver.
+
+    use marbl_sizes, only : num_interior_forcing_fields_0d
+    use marbl_sizes, only : num_interior_forcing_fields_1d
+    use marbl_sizes, only : marbl_total_tracer_cnt
+
+    class(marbl_interior_forcing_indexing_type), intent(inout) :: this
+    integer,                                     intent(in)    :: PAR_nsubcols
+
+    integer :: n
+
+    associate(                                                  &
+              forcing_cnt_0d => num_interior_forcing_fields_0d, &
+              forcing_cnt_1d => num_interior_forcing_fields_1d  &
+             )
+
+      forcing_cnt_0d = 0
+      forcing_cnt_1d = 0
+
+      allocate(this%PAR_col_frac_id(PAR_nsubcols))
+      allocate(this%surf_shortwave_id(PAR_nsubcols))
+      allocate(this%tracer_restore_id(marbl_total_tracer_cnt))
+
+      ! -------------------------------
+      ! | Always request these fields |
+      ! -------------------------------
+
+      ! Dust Flux
+      forcing_cnt_0d = forcing_cnt_0d + 1
+      this%dustflux_id = forcing_cnt_0d
+
+      ! PAR column fraction
+      do n=1,PAR_nsubcols
+        forcing_cnt_0d = forcing_cnt_0d + 1
+        this%PAR_col_frac_id(n) = forcing_cnt_0d
+      end do
+
+      ! PAR column shortwave
+      do n=1,PAR_nsubcols
+        forcing_cnt_0d = forcing_cnt_0d + 1
+        this%surf_shortwave_id(n) = forcing_cnt_0d
+      end do
+
+      ! Temperature
+      forcing_cnt_1d = forcing_cnt_1d + 1
+      this%temperature_id = forcing_cnt_1d
+
+      ! Salinity
+      forcing_cnt_1d = forcing_cnt_1d + 1
+      this%salinity_id = forcing_cnt_1d
+
+      ! Pressure
+      forcing_cnt_1d = forcing_cnt_1d + 1
+      this%pressure_id = forcing_cnt_1d
+
+      ! Iron Sediment Flux
+      forcing_cnt_1d = forcing_cnt_1d + 1
+      this%fesedflux_id = forcing_cnt_1d
+
+      ! Tracer retoring
+      do n=1,marbl_total_tracer_cnt
+        ! FIXME #25: move tracer restore info into interior_forcing type
+        if (.false.) then
+          forcing_cnt_1d = forcing_cnt_1d + 1
+          this%tracer_restore_id(n) = forcing_cnt_1d
+        else
+          this%tracer_restore_id(n) = 0
+        end if
+      end do
+
+    end associate
+
+  end subroutine interior_forcing_index_constructor
 
   !*****************************************************************************
 
