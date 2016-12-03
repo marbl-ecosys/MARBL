@@ -566,11 +566,6 @@ contains
 
     end associate
 
-    ! Set up tracer restore info in interior forcing
-!    call this%interior_forcing_input%set_restore(this%domain%km,              &
-!                                   tracer_restore_vars(1:tracer_restore_cnt))
-
-
     !--------------------------------------------------------------------
     ! Report what forcings are required from the driver
     !--------------------------------------------------------------------
