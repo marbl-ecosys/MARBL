@@ -508,20 +508,30 @@ contains
     end if
 
     associate(&
-         ecosys_base_ind_beg   => this%tracer_indices%ecosys_base_ind_beg,     &
-         ecosys_base_ind_end   => this%tracer_indices%ecosys_base_ind_end,     &
-         num_surface_elements  => this%domain%num_elements_surface_forcing,    &
-         num_interior_elements => this%domain%num_elements_interior_forcing,   &
-         num_PAR_subcols       => this%domain%num_PAR_subcols,                 &
-         num_levels            => this%domain%km                               &
+         num_surface_elements  => this%domain%num_elements_surface_forcing,   &
+         num_interior_elements => this%domain%num_elements_interior_forcing,  &
+         num_PAR_subcols       => this%domain%num_PAR_subcols,                &
+         num_levels            => this%domain%km                              &
          )
+
+    !-----------------------------------------------------------------------
+    !  Set up tracer restoring metadata
+    !-----------------------------------------------------------------------
+
+    call this%restoring%init(this%domain, this%tracer_metadata, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("this%restoring%init()", subname)
+      return
+    end if
 
     !-----------------------------------------------------------------------
     !  Initialize surface and interior forcing (including tracer restoring)
     !-----------------------------------------------------------------------
 
     call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2)
-    call this%interior_forcing_ind%construct(num_PAR_subcols)
+    call this%interior_forcing_ind%construct(num_PAR_subcols,                 &
+                                  this%tracer_metadata%short_name,            &
+                                   tracer_restore_vars(1:tracer_restore_cnt))
 
     call this%surface_forcing_share%construct(num_surface_elements)
     call this%surface_forcing_internal%construct(num_surface_elements)
@@ -541,6 +551,7 @@ contains
                                             num_interior_forcing_fields_1d))
     call marbl_init_interior_forcing_fields(                                  &
          interior_forcing_indices  = this%interior_forcing_ind,               &
+         tracer_names              = this%tracer_metadata%short_name,         &
          interior_forcing_metadata = this%interior_forcing_metadata,          &
          marbl_status_log         = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -553,14 +564,6 @@ contains
     allocate(this%interior_input_forcings_1d(num_interior_elements, num_levels, &
                                              num_interior_forcing_fields_1d))
 
-    call this%restoring%init(                                                   &
-         domain          = this%domain,                                         &
-         tracer_metadata = this%tracer_metadata(ecosys_base_ind_beg:ecosys_base_ind_end), &
-        marbl_status_log = this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%restoring%init()", subname)
-      return
-    end if
     end associate
 
     ! Set up tracer restore info in interior forcing

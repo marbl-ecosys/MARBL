@@ -507,6 +507,7 @@ contains
 
   subroutine marbl_init_interior_forcing_fields(&
        interior_forcing_indices, &
+       tracer_names, &
        interior_forcing_metadata, &
        marbl_status_log)
 
@@ -520,6 +521,7 @@ contains
     implicit none
 
     type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_indices
+    character(len=char_len), dimension(:),      intent(in)    :: tracer_names
     type(marbl_forcing_fields_metadata_type)  , intent(inout) :: interior_forcing_metadata(:)
     type(marbl_log_type)                      , intent(inout) :: marbl_status_log
 
@@ -537,7 +539,7 @@ contains
     interior_forcing_metadata(:)%varname = ''
     interior_forcing_metadata(:)%array_ind = 0
 
-    ! Surface fluxes that influece interior forcing
+    ! Surface fluxes that influence interior forcing
     do id=1,num_interior_forcing_fields_0d
       found = .false.
       ! Dust Flux
@@ -573,7 +575,7 @@ contains
 
     end do
 
-    ! Surface fluxes that influece interior forcing
+    ! Interior forcings
     do id=1,num_interior_forcing_fields_1d
       found = .false.
       id2 = id + num_interior_forcing_fields_0d
@@ -607,14 +609,15 @@ contains
       end if
 
       ! Interior Tracer Restoring (still to do)
-!      do n=1,size(ind%tracer_restore_id)
-!        if (id.eq.ind%tracer_restore_id(n)) then
-!          found = .true.
-!          interior_forcing_metadata(id2)%varname     = 'Tracer Restoring'
-!          interior_forcing_metadata(id2)%field_units = 'unitless'
-!          interior_forcing_metadata(id2)%array_ind   = n
-!        end if
-!      end do
+      do n=1,size(ind%tracer_restore_id)
+        if (id.eq.ind%tracer_restore_id(n)) then
+          found = .true.
+          write(interior_forcing_metadata(id2)%varname,"(A,1X,A)")            &
+                trim(tracer_names(n)), 'Restoring'
+          interior_forcing_metadata(id2)%field_units = 'unitless'
+          interior_forcing_metadata(id2)%array_ind   = n
+        end if
+      end do
 
       if (.not.found) then
         write(log_message, "(A,I0,A)") "Index number ", id, &

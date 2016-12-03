@@ -907,7 +907,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine interior_forcing_index_constructor(this, PAR_nsubcols)
+  subroutine interior_forcing_index_constructor(this, PAR_nsubcols,           &
+                                    tracer_names, tracer_restore_vars)
 
     ! This subroutine sets the interior forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
@@ -918,8 +919,10 @@ contains
 
     class(marbl_interior_forcing_indexing_type), intent(inout) :: this
     integer,                                     intent(in)    :: PAR_nsubcols
+    character(len=char_len), dimension(:),       intent(in)    :: tracer_names
+    character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
 
-    integer :: n
+    integer :: m, n
 
     associate(                                                  &
               forcing_cnt_0d => num_interior_forcing_fields_0d, &
@@ -971,13 +974,14 @@ contains
 
       ! Tracer retoring
       do n=1,marbl_total_tracer_cnt
-        ! FIXME #25: move tracer restore info into interior_forcing type
-        if (.false.) then
-          forcing_cnt_1d = forcing_cnt_1d + 1
-          this%tracer_restore_id(n) = forcing_cnt_1d
-        else
-          this%tracer_restore_id(n) = 0
-        end if
+        this%tracer_restore_id(n) = 0
+        do m=1,size(tracer_restore_vars)
+          if (trim(tracer_restore_vars(m)).eq.trim(tracer_names(n))) then
+            forcing_cnt_1d = forcing_cnt_1d + 1
+            this%tracer_restore_id(n) = forcing_cnt_1d
+            exit
+          end if
+        end do
       end do
 
     end associate
