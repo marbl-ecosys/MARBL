@@ -130,29 +130,41 @@ Program marbl
       lprint_marbl_log = .false.
       lprint_driver_log = .true.
       call marbl_init_namelist_test(marbl_instance, nl_buffer)
-      ! Log requested forcing fields
+
+      ! Log requested surface forcing fields
       call driver_status_log%log_noerror('', subname)
-      call driver_status_log%log_noerror('Requested forcing fields', subname)
+      call driver_status_log%log_noerror('Requested surface forcing fields', subname)
       call driver_status_log%log_noerror('---', subname)
       do n=1,size(marbl_instance%surface_forcing_metadata)
         write(log_message, "(I0, 2A)") n, '. ',                               &
           trim(marbl_instance%surface_forcing_metadata(n)%varname)
         call driver_status_log%log_noerror(log_message, subname)
       end do
+
+      ! Log requested interior forcing fields
+      call driver_status_log%log_noerror('', subname)
+      call driver_status_log%log_noerror('Requested interior forcing fields', subname)
+      call driver_status_log%log_noerror('---', subname)
+      do n=1,size(marbl_instance%interior_forcing_metadata)
+        write(log_message, "(I0, 2A)") n, '. ',                               &
+          trim(marbl_instance%interior_forcing_metadata(n)%varname)
+        call driver_status_log%log_noerror(log_message, subname)
+      end do
     case ('request_restoring')
       lprint_marbl_log = .false.
       lprint_driver_log = .true.
       call marbl_init_namelist_test(marbl_instance, nl_buffer, nt)
-      restore_nt = size(marbl_instance%interior_forcing_input%tracer_names)
+      !restore_nt = size(marbl_instance%interior_forcing_input%tracer_names)
+      restore_nt = 0
       ! Log tracers requested for restoring
       call driver_status_log%log_noerror('', subname)
       call driver_status_log%log_noerror('Requested tracers to restore', subname)
       call driver_status_log%log_noerror('---', subname)
-      do n=1,restore_nt
-        write(log_message, "(I0, 2A)") n, '. ',                               &
-          trim(marbl_instance%interior_forcing_input%tracer_names(n))
-        call driver_status_log%log_noerror(log_message, subname)
-      end do
+!      do n=1,restore_nt
+!        write(log_message, "(I0, 2A)") n, '. ',                               &
+!          trim(marbl_instance%interior_forcing_input%tracer_names(n))
+!        call driver_status_log%log_noerror(log_message, subname)
+!      end do
       if (restore_nt.eq.0) then
         call driver_status_log%log_noerror('No tracers to restore!', subname)
       end if
