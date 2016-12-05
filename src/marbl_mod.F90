@@ -815,7 +815,7 @@ contains
        surface_forcing_indices,          &
        dtracers,                         &
        marbl_tracer_indices,             &
-       marbl_PAR,                        &
+       PAR,                              &
        marbl_interior_share,             &
        marbl_zooplankton_share,          &
        marbl_autotroph_share,            &
@@ -838,7 +838,7 @@ contains
     real    (r8)                                , intent(in)    :: interior_restore(:,:) ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec) 
     real    (r8)                                , intent(in)    :: tracers(:,: )         ! (marbl_total_tracer_cnt, km) tracer values 
     type(marbl_surface_forcing_indexing_type)   , intent(in)    :: surface_forcing_indices
-    type    (marbl_PAR_type)                    , intent(inout) :: marbl_PAR
+    type    (marbl_PAR_type)                    , intent(inout) :: PAR
     type    (marbl_saved_state_type)            , intent(inout) :: saved_state
     type    (marbl_interior_saved_state_indexing_type), intent(in) :: saved_state_ind
     real    (r8)                                , intent(out)   :: dtracers(:,:)          ! (marbl_total_tracer_cnt, km) computed source/sink terms
@@ -948,9 +948,7 @@ contains
          dop_ind           => marbl_tracer_indices%dop_ind,         &
          dopr_ind          => marbl_tracer_indices%dopr_ind,        &
          donr_ind          => marbl_tracer_indices%donr_ind,        &
-         docr_ind          => marbl_tracer_indices%docr_ind,        &
-
-         PAR                 => marbl_PAR                           &
+         docr_ind          => marbl_tracer_indices%docr_ind         &
          )
 
     !-----------------------------------------------------------------------
@@ -1122,7 +1120,7 @@ contains
          zooplankton_secondary_species,                     &
          dissolved_organic_matter,                          &
          marbl_particulate_share,                           &
-         marbl_PAR,                                         &
+         PAR,                                               &
          PON_remin, PON_sed_loss,                           &
          POP_remin,  POP_sed_loss,                          &
          sed_denitrif, other_remin, nitrif, denitrif,       &
@@ -3074,6 +3072,11 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+
+    ! PAR below this threshold is changed to 0.0
+    ! tendencies from PAR below this threshold are small enough to not affect tracer values
+    real (r8), parameter :: PAR_threshold = 1.0e-19_r8
+
     real (r8) :: WORK1(domain%kmt)
     integer(int_kind) :: k, subcol_ind
     !-----------------------------------------------------------------------
@@ -3148,6 +3151,10 @@ contains
           ! this look will probably not vectorize
           do k = 1, column_kmt
              PAR%interface(k,subcol_ind) = PAR%interface(k-1,subcol_ind) * WORK1(k)
+             if (PAR%interface(k,subcol_ind) < PAR_threshold) then
+                PAR%interface(k:column_kmt,subcol_ind) = c0
+                exit
+             end if
           enddo
           PAR%interface(column_kmt+1:dkm,subcol_ind) = c0
 

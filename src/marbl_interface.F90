@@ -633,7 +633,7 @@ contains
          surface_forcing_indices = this%surface_forcing_ind,     &
          dtracers                = this%column_dtracers,         &
          marbl_tracer_indices    = this%tracer_indices,          &
-         marbl_PAR               = this%PAR,                     &
+         PAR                     = this%PAR,                     &
          marbl_interior_share    = this%interior_share,          &
          marbl_zooplankton_share = this%zooplankton_share,       &
          marbl_autotroph_share   = this%autotroph_share,         &
