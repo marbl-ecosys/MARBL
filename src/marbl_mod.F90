@@ -624,7 +624,7 @@ contains
       if (marbl_status_log%labort_marbl) then
         write(log_message, "(2A)") trim(interior_forcings(id)%metadata%varname), &
                                    ' set_rank()'
-        call marbl_status_log%log_error_trace(subname, log_message)
+        call marbl_status_log%log_error_trace(log_message, subname)
         return
       end if
 

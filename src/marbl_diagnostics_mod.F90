@@ -4528,10 +4528,10 @@ contains
     real(kind=r8) :: m_inv
 
     if ((y(1).gt.c0).and.(y(2).gt.c0)) then
-       call marbl_status_log%log_error(subname, "can not find root, both y-values are positive!")
+       call marbl_status_log%log_error("can not find root, both y-values are positive!", subname)
        return
     else if ((y(1).lt.c0).and.(y(2).lt.c0)) then
-       call marbl_status_log%log_error(subname, "can not find root, both y-values are negative!")
+       call marbl_status_log%log_error("can not find root, both y-values are negative!", subname)
        return
     end if
 

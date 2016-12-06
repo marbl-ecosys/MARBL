@@ -633,14 +633,14 @@ contains
       case (0)
       case (1)
         if (.not.present(dim1)) then
-          call marbl_status_log%log_error(subname, 'dim1 is required when rank=1')
+          call marbl_status_log%log_error('dim1 is required when rank=1', subname)
           return
         end if
         allocate(this%extent(1))
         this%extent(1) = dim1
       case DEFAULT
         write(log_message,"(I0,A)") rank, ' is not a valid rank for a forcing field'
-        call marbl_status_log%log_error(subname, log_message)
+        call marbl_status_log%log_error(log_message, subname)
         return
     end select
 
