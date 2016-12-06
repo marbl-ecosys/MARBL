@@ -30,7 +30,6 @@ module marbl_sizes
   !-----------------------------------------------------------------------------
 
   integer :: num_surface_forcing_fields
-  integer :: num_interior_forcing_fields_0d
-  integer :: num_interior_forcing_fields_1d
+  integer :: num_interior_forcing_fields
 
 end module marbl_sizes

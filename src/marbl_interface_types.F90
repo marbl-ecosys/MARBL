@@ -149,17 +149,27 @@ module marbl_interface_types
 
   !*****************************************************************************
 
-  type, public :: marbl_forcing_fields_metadata_type
-     ! Contains variable names and units for required forcing fields; actual
-     ! forcing data is in marbl_instance%surface_input_forcing(:,:)
-     ! Note that surface_input_forcing_data(:,n) contains the data for forcing
-     ! field n (i.e. varname(n) with units field_units(n)]
-     ! Some foricng fields are elements of an array, that element index is
-     ! stored in array_ind (if array_ind is 0 then field is a scalar)
-     character(char_len) :: varname
-     character(char_len) :: field_units
-     integer             :: array_ind
+  type :: marbl_forcing_fields_metadata_type
+     ! Contains variable names and units for required forcing fields as well as
+     ! dimensional information; actual forcing data is in array of
+     ! marbl_forcing_fields_type
+     character(char_len)   :: varname
+     character(char_len)   :: field_units
+     integer               :: rank            ! 0d or 1d
+     integer,  allocatable :: extent(:)       ! length = rank
+   contains
+     procedure, public :: set_rank => marbl_forcing_fields_metadata_set_rank
   end type marbl_forcing_fields_metadata_type
+
+  !*****************************************************************************
+
+  type, public :: marbl_forcing_fields_type
+     type(marbl_forcing_fields_metadata_type) :: metadata
+     real(r8), allocatable :: field_0d(:)     ! num_elements
+     real(r8), allocatable :: field_1d(:,:)   ! num_elements x extent(1)
+   contains
+     procedure, public :: allocate_memory => marbl_forcing_fields_allocate
+  end type marbl_forcing_fields_type
 
   !*****************************************************************************
 
@@ -605,6 +615,52 @@ contains
     deallocate(this%diags)
 
   end subroutine marbl_diagnostics_deconstructor
+
+  !*****************************************************************************
+
+  subroutine marbl_forcing_fields_metadata_set_rank(this, rank, marbl_status_log, dim1)
+
+    class(marbl_forcing_fields_metadata_type), intent(inout) :: this
+    integer,                                   intent(in)    :: rank
+    type(marbl_log_type),                      intent(inout) :: marbl_status_log
+    integer, optional,                         intent(in)    :: dim1
+
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_forcing_fields_metadata_set_rank'
+    character(len=char_len) :: log_message
+
+    this%rank = rank
+    select case (this%rank)
+      case (0)
+      case (1)
+        if (.not.present(dim1)) then
+          call marbl_status_log%log_error(subname, 'dim1 is required when rank=1')
+          return
+        end if
+        allocate(this%extent(1))
+        this%extent(1) = dim1
+      case DEFAULT
+        write(log_message,"(I0,A)") rank, ' is not a valid rank for a forcing field'
+        call marbl_status_log%log_error(subname, log_message)
+        return
+    end select
+
+  end subroutine marbl_forcing_fields_metadata_set_rank
+
+  !*****************************************************************************
+
+  subroutine marbl_forcing_fields_allocate(this, num_elements)
+
+    class(marbl_forcing_fields_type), intent(inout) :: this
+    integer,                          intent(in)    :: num_elements
+
+    select case (this%metadata%rank)
+      case (0)
+        allocate(this%field_0d(num_elements))
+      case (1)
+        allocate(this%field_1d(num_elements, this%metadata%extent(1)))
+    end select
+
+  end subroutine marbl_forcing_fields_allocate
 
   !*****************************************************************************
 

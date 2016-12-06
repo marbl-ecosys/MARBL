@@ -135,9 +135,9 @@ Program marbl
       call driver_status_log%log_noerror('', subname)
       call driver_status_log%log_noerror('Requested surface forcing fields', subname)
       call driver_status_log%log_noerror('---', subname)
-      do n=1,size(marbl_instance%surface_forcing_metadata)
-        write(log_message, "(I0, 2A)") n, '. ',                               &
-          trim(marbl_instance%surface_forcing_metadata(n)%varname)
+      do n=1,size(marbl_instance%surface_input_forcings)
+        write(log_message, "(I0, 2A)") n, '. ', &
+              trim(marbl_instance%surface_input_forcings(n)%metadata%varname)
         call driver_status_log%log_noerror(log_message, subname)
       end do
 
@@ -145,9 +145,9 @@ Program marbl
       call driver_status_log%log_noerror('', subname)
       call driver_status_log%log_noerror('Requested interior forcing fields', subname)
       call driver_status_log%log_noerror('---', subname)
-      do n=1,size(marbl_instance%interior_forcing_metadata)
+      do n=1,size(marbl_instance%interior_input_forcings)
         write(log_message, "(I0, 2A)") n, '. ',                               &
-          trim(marbl_instance%interior_forcing_metadata(n)%varname)
+             trim(marbl_instance%interior_input_forcings(n)%metadata%varname)
         call driver_status_log%log_noerror(log_message, subname)
       end do
     case ('request_restoring')

@@ -197,7 +197,7 @@ module marbl_mod
   use marbl_interface_types , only : marbl_tracer_metadata_type
   use marbl_interface_types , only : marbl_saved_state_type
   use marbl_interface_types , only : marbl_surface_forcing_output_type
-  use marbl_interface_types , only : marbl_forcing_fields_metadata_type
+  use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_diagnostics_type
   use marbl_interface_types , only : marbl_running_mean_0d_type
 
@@ -286,10 +286,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_init_surface_forcing_fields(&
-       surface_forcing_indices, &
-       surface_forcing_metadata, &
-       marbl_status_log)
+  subroutine marbl_init_surface_forcing_fields(num_elements, surface_forcing_indices, &
+                                        surface_forcings, marbl_status_log)
 
     use marbl_sizes, only : num_surface_forcing_fields
 
@@ -299,9 +297,10 @@ contains
 
     implicit none
 
-    type(marbl_surface_forcing_indexing_type) , intent(in)   :: surface_forcing_indices
-    type(marbl_forcing_fields_metadata_type)  , intent(inout)   :: surface_forcing_metadata(:)
-    type(marbl_log_type)                      , intent(inout) :: marbl_status_log
+    integer,                                   intent(in)    :: num_elements
+    type(marbl_surface_forcing_indexing_type), intent(in)    :: surface_forcing_indices
+    type(marbl_forcing_fields_type),           intent(inout) :: surface_forcings(:)
+    type(marbl_log_type),                      intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -314,177 +313,176 @@ contains
 
     associate(ind => surface_forcing_indices)
 
-    surface_forcing_metadata(:)%varname = ''
-    surface_forcing_metadata(:)%array_ind = 0
+    surface_forcings(:)%metadata%varname = ''
     do id=1,num_surface_forcing_fields
       found = .false.
 
       ! Surface Mask
       if (id.eq.ind%surface_mask_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'surface_mask'
-        surface_forcing_metadata(id)%field_units   = 'unitless'
+        surface_forcings(id)%metadata%varname       = 'surface_mask'
+        surface_forcings(id)%metadata%field_units   = 'unitless'
       end if
 
       ! Square of 10m wind
       if (id.eq.ind%u10_sqr_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'u10_sqr'
-        surface_forcing_metadata(id)%field_units   = 'cm^2/s^2'
+        surface_forcings(id)%metadata%varname       = 'u10_sqr'
+        surface_forcings(id)%metadata%field_units   = 'cm^2/s^2'
       end if
 
       ! Sea-surface salinity
       if (id.eq.ind%sss_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'sss'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'sss'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! Sea-surface temperature
       if (id.eq.ind%sst_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'sst'
-        surface_forcing_metadata(id)%field_units   = 'degrees C'
+        surface_forcings(id)%metadata%varname       = 'sst'
+        surface_forcings(id)%metadata%field_units   = 'degrees C'
       end if
 
       ! Ice Fraction
       if (id.eq.ind%ifrac_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'Ice Fraction'
-        surface_forcing_metadata(id)%field_units   = 'unitless'
+        surface_forcings(id)%metadata%varname       = 'Ice Fraction'
+        surface_forcings(id)%metadata%field_units   = 'unitless'
       end if
 
       ! Dust Flux
       if (id.eq.ind%dust_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'Dust Flux'
-        surface_forcing_metadata(id)%field_units   = 'g/cm^2/s'
+        surface_forcings(id)%metadata%varname       = 'Dust Flux'
+        surface_forcings(id)%metadata%field_units   = 'g/cm^2/s'
       end if
 
       ! Iron Flux
       if (id.eq.ind%iron_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'Iron Flux'
-        surface_forcing_metadata(id)%field_units   = 'nmol/cm^2/s'
+        surface_forcings(id)%metadata%varname       = 'Iron Flux'
+        surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
       end if
 
       ! NOx Flux
       if (id.eq.ind%nox_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'NOx Flux'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'NOx Flux'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! NHy Flux
       if (id.eq.ind%nhy_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'NHy Flux'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'NHy Flux'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DIN River Flux
       if (id.eq.ind%din_riv_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'DIN River Flux'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'DIN River Flux'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DIP River Flux
       if (id.eq.ind%dip_riv_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'DIP River Flux'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'DIP River Flux'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DON River Flux
       if (id.eq.ind%don_riv_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'DON River Flux'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'DON River Flux'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DOP River Flux
       if (id.eq.ind%dop_riv_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'DOP River Flux'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'DOP River Flux'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DSi River Flux
       if (id.eq.ind%dsi_riv_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'DSi River Flux'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'DSi River Flux'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DFe River Flux
       if (id.eq.ind%dfe_riv_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'DFe River Flux'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'DFe River Flux'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DIC River Flux
       if (id.eq.ind%dic_riv_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'DIC River Flux'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'DIC River Flux'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! ALK River Flux
       if (id.eq.ind%alk_riv_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'ALK River Flux'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'ALK River Flux'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DOC River Flux
       if (id.eq.ind%doc_riv_flux_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'DOC River Flux'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'DOC River Flux'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! atm pressure
       if (id.eq.ind%atm_pressure_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'Atmospheric Pressure'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'Atmospheric Pressure'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! xco2
       if (id.eq.ind%xco2_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'xco2'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'xco2'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! xco2_alt_co2
       if (id.eq.ind%xco2_alt_co2_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'xco2_alt_co2'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'xco2_alt_co2'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! d13c
       if (id.eq.ind%d13c_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'd13c'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'd13c'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! d14c
       if (id.eq.ind%d14c_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'd14c'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'd14c'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! d14c_gloavg
       if (id.eq.ind%d14c_glo_avg_id) then
         found = .true.
-        surface_forcing_metadata(id)%varname       = 'd14c_gloavg'
-        surface_forcing_metadata(id)%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'd14c_gloavg'
+        surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       if (.not.found) then
@@ -493,6 +491,8 @@ contains
         call marbl_status_log%log_error(log_message, subname)
         return
       end if
+
+      call surface_forcings(id)%allocate_memory(num_elements)
 
     end do
 
@@ -506,13 +506,15 @@ contains
   !*****************************************************************************
 
   subroutine marbl_init_interior_forcing_fields(&
+       num_elements, &
        interior_forcing_indices, &
        tracer_names, &
-       interior_forcing_metadata, &
+       num_PAR_subcols, &
+       num_levels, &
+       interior_forcings, &
        marbl_status_log)
 
-    use marbl_sizes, only : num_interior_forcing_fields_0d
-    use marbl_sizes, only : num_interior_forcing_fields_1d
+    use marbl_sizes, only : num_interior_forcing_fields
 
     !  Initialize the interior forcing_fields datatype with information from the
     !  namelist read
@@ -520,111 +522,122 @@ contains
 
     implicit none
 
+    integer,                                    intent(in)    :: num_elements
     type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_indices
     character(len=char_len), dimension(:),      intent(in)    :: tracer_names
-    type(marbl_forcing_fields_metadata_type)  , intent(inout) :: interior_forcing_metadata(:)
-    type(marbl_log_type)                      , intent(inout) :: marbl_status_log
+    integer,                                    intent(in)    :: num_PAR_subcols
+    integer,                                    intent(in)    :: num_levels
+    type(marbl_forcing_fields_type),            intent(inout) :: interior_forcings(:)
+    type(marbl_log_type),                       intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_init_interior_forcing_fields'
     character(len=char_len) :: log_message
-    integer                 :: id, id2, n
+    integer                 :: id, n
     logical                 :: found
     !-----------------------------------------------------------------------
 
     associate(ind => interior_forcing_indices)
 
-    interior_forcing_metadata(:)%varname = ''
-    interior_forcing_metadata(:)%array_ind = 0
+    interior_forcings(:)%metadata%varname = ''
 
     ! Surface fluxes that influence interior forcing
-    do id=1,num_interior_forcing_fields_0d
+    do id=1,num_interior_forcing_fields
       found = .false.
       ! Dust Flux
       if (id.eq.ind%dustflux_id) then
         found = .true.
-        interior_forcing_metadata(id)%varname     = 'Dust Flux'
-        interior_forcing_metadata(id)%field_units = 'need_units'
+        interior_forcings(id)%metadata%varname     = 'Dust Flux'
+        interior_forcings(id)%metadata%field_units = 'need_units'
+        call interior_forcings(id)%metadata%set_rank(0, marbl_status_log)
       end if
 
       ! PAR Column Fraction and Shortwave Radiation
-      do n=1,size(ind%PAR_col_frac_id)
-        if (id.eq.ind%PAR_col_frac_id(n)) then
-          found = .true.
-          interior_forcing_metadata(id)%varname     = 'PAR Column Fraction'
-          interior_forcing_metadata(id)%field_units = 'unitless'
-          interior_forcing_metadata(id)%array_ind   = n
-        end if
-
-        if (id.eq.ind%surf_shortwave_id(n)) then
-          found = .true.
-          interior_forcing_metadata(id)%varname     = 'Surface Shortwave'
-          interior_forcing_metadata(id)%field_units = 'need_units' ! W/m^2?
-          interior_forcing_metadata(id)%array_ind   = n
-        end if
-      end do
-
-      if (.not.found) then
-        write(log_message, "(A,I0,A)") "Index number ", id, &
-             " is not associated with a forcing field!"
-        call marbl_status_log%log_error(log_message, subname)
-        return
+      if (id.eq.ind%PAR_col_frac_id) then
+        found = .true.
+        interior_forcings(id)%metadata%varname     = 'PAR Column Fraction'
+        interior_forcings(id)%metadata%field_units = 'unitless'
+        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+                                                     dim1 = num_PAR_subcols)
       end if
 
-    end do
+      if (id.eq.ind%surf_shortwave_id) then
+        found = .true.
+        interior_forcings(id)%metadata%varname     = 'Surface Shortwave'
+        interior_forcings(id)%metadata%field_units = 'need_units' ! W/m^2?
+        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+                                                     dim1 = num_PAR_subcols)
+      end if
 
-    ! Interior forcings
-    do id=1,num_interior_forcing_fields_1d
-      found = .false.
-      id2 = id + num_interior_forcing_fields_0d
 
       ! Temperature
       if (id.eq.ind%temperature_id) then
         found = .true.
-        interior_forcing_metadata(id2)%varname     = 'Temperature'
-        interior_forcing_metadata(id2)%field_units = 'Degrees C'
+        interior_forcings(id)%metadata%varname     = 'Temperature'
+        interior_forcings(id)%metadata%field_units = 'Degrees C'
+        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+                                                     dim1 = num_levels)
       end if
 
       ! Salinity
       if (id.eq.ind%salinity_id) then
         found = .true.
-        interior_forcing_metadata(id2)%varname     = 'Salinity'
-        interior_forcing_metadata(id2)%field_units = 'need_units'
+        interior_forcings(id)%metadata%varname     = 'Salinity'
+        interior_forcings(id)%metadata%field_units = 'need_units'
+        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+                                                     dim1 = num_levels)
       end if
 
       ! Pressure
       if (id.eq.ind%pressure_id) then
         found = .true.
-        interior_forcing_metadata(id2)%varname     = 'Pressure'
-        interior_forcing_metadata(id2)%field_units = 'need_units'
+        interior_forcings(id)%metadata%varname     = 'Pressure'
+        interior_forcings(id)%metadata%field_units = 'need_units'
+        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+                                                     dim1 = num_levels)
       end if
 
       ! Iron Sediment Flux
       if (id.eq.ind%fesedflux_id) then
         found = .true.
-        interior_forcing_metadata(id2)%varname     = 'Iron Sediment Flux'
-        interior_forcing_metadata(id2)%field_units = 'need_units'
+        interior_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
+        interior_forcings(id)%metadata%field_units = 'need_units'
+        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+                                                     dim1 = num_levels)
       end if
 
-      ! Interior Tracer Restoring (still to do)
+      ! Interior Tracer Restoring
       do n=1,size(ind%tracer_restore_id)
         if (id.eq.ind%tracer_restore_id(n)) then
           found = .true.
-          write(interior_forcing_metadata(id2)%varname,"(A,1X,A)")            &
+          write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
                 trim(tracer_names(n)), 'Restoring'
-          interior_forcing_metadata(id2)%field_units = 'unitless'
-          interior_forcing_metadata(id2)%array_ind   = n
+          interior_forcings(id)%metadata%field_units = 'unitless'
+          call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,   &
+                                                       dim1 = num_levels)
         end if
       end do
 
+      ! Check to see if %set_rank() returned an error
+      if (marbl_status_log%labort_marbl) then
+        write(log_message, "(2A)"), trim(interior_forcings(id)%metadata%varname), &
+                                    ' set_rank()'
+        call marbl_status_log%log_error_trace(subname, log_message)
+        return
+      end if
+
+      ! Abort if there was no match between id and the restoring indices
       if (.not.found) then
         write(log_message, "(A,I0,A)") "Index number ", id, &
              " is not associated with a forcing field!"
         call marbl_status_log%log_error(log_message, subname)
         return
       end if
+
+      call interior_forcings(id)%allocate_memory(num_elements)
+
     end do
 
     end associate
@@ -941,8 +954,7 @@ contains
 
   subroutine marbl_set_interior_forcing( &
        domain,                           &
-       interior_forcings_0d,             &
-       interior_forcings_1d,             &
+       interior_forcings,                &
        saved_state,                      &
        saved_state_ind,                  &
        interior_restore,                 &
@@ -960,20 +972,19 @@ contains
        interior_restore_diags,           &
        glo_avg_fields_interior,          &
        marbl_status_log)
-    
+
     !  Compute time derivatives for ecosystem state variables
 
     use marbl_ciso_mod      , only : marbl_ciso_set_interior_forcing
     use marbl_sizes         , only : marbl_total_tracer_cnt
     use marbl_internal_types, only : marbl_interior_saved_state_indexing_type
 
-    implicit none 
+    implicit none
 
-    type    (marbl_domain_type)                 , intent(in)    :: domain                                
-    real    (r8)                                , intent(in)    :: interior_forcings_0d(:,:) ! (num_elements, num_interior_forcing_fields_0d)
-    real    (r8)                                , intent(in)    :: interior_forcings_1d(:,:,:) ! (num_elements, km, num_interior_forcing_fields_1d)
-    real    (r8)                                , intent(in)    :: interior_restore(:,:) ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec) 
-    real    (r8)                                , intent(in)    :: tracers(:,: )         ! (marbl_total_tracer_cnt, km) tracer values 
+    type    (marbl_domain_type)                 , intent(in)    :: domain
+    type(marbl_forcing_fields_type)             , intent(in)    :: interior_forcings(:)
+    real    (r8)                                , intent(in)    :: interior_restore(:,:) ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
+    real    (r8)                                , intent(in)    :: tracers(:,: )         ! (marbl_total_tracer_cnt, km) tracer values
     type(marbl_surface_forcing_indexing_type)   , intent(in)    :: surface_forcing_indices
     type(marbl_interior_forcing_indexing_type)  , intent(in)    :: interior_forcing_indices
     type    (marbl_PAR_type)                    , intent(inout) :: marbl_PAR
@@ -1056,8 +1067,8 @@ contains
     associate(                                                      &
          km                  => domain%km,                          &
          kmt                 => domain%kmt,                         &
-         num_PAR_subcols     => domain%num_PAR_subcols,             & 
-         delta_z1            => domain%delta_z(1),                  &           
+         num_PAR_subcols     => domain%num_PAR_subcols,             &
+         delta_z1            => domain%delta_z(1),                  &
 
          POC                 => marbl_particulate_share%POC,        &
          P_CaCO3             => marbl_particulate_share%P_CaCO3,    &
@@ -1069,11 +1080,11 @@ contains
          ph_prev_alt_co2_col => saved_state%state(saved_state_ind%ph_alt_co2_col)%field_3d(:,1), &
 
          ! Hard-coding in that there is only 1 column passed in at a time!
-         dust_flux_in        => interior_forcings_0d(1,interior_forcing_indices%dustflux_id),   &
-         temperature         => interior_forcings_1d(1,:,interior_forcing_indices%temperature_id),   &
-         pressure            => interior_forcings_1d(1,:,interior_forcing_indices%pressure_id),   &
-         salinity            => interior_forcings_1d(1,:,interior_forcing_indices%salinity_id),   &
-         fesedflux           => interior_forcings_1d(1,:,interior_forcing_indices%fesedflux_id),   &
+         dust_flux_in        => interior_forcings(interior_forcing_indices%dustflux_id)%field_0d(1),   &
+         temperature         => interior_forcings(interior_forcing_indices%temperature_id)%field_1d(1,:),   &
+         pressure            => interior_forcings(interior_forcing_indices%pressure_id)%field_1d(1,:),   &
+         salinity            => interior_forcings(interior_forcing_indices%salinity_id)%field_1d(1,:),   &
+         fesedflux           => interior_forcings(interior_forcing_indices%fesedflux_id)%field_1d(1,:),   &
 
          po4_ind           => marbl_tracer_indices%po4_ind,         &
          no3_ind           => marbl_tracer_indices%no3_ind,         &
@@ -1127,9 +1138,8 @@ contains
     call marbl_consistency_check_autotrophs(autotroph_cnt, kmt, marbl_tracer_indices, &
          autotroph_local(:,1:kmt))
 
-    call marbl_compute_PAR(domain, interior_forcings_0d(1,:),       &
-                           interior_forcing_indices, autotroph_cnt, &
-                           autotroph_local, PAR)
+    call marbl_compute_PAR(domain, interior_forcings, interior_forcing_indices, &
+                           autotroph_cnt, autotroph_local, PAR)
 
     do k = 1, km
 
@@ -1258,11 +1268,11 @@ contains
     call marbl_diagnostics_set_interior_forcing(            &
          domain,                                            &
          interior_forcing_indices,                          &
-         interior_forcings_1d,                              &
+         interior_forcings,                                 &
          dtracers,                                          &
          marbl_tracer_indices,                              &
          carbonate,                                         &
-         autotroph_secondary_species,                       &         
+         autotroph_secondary_species,                       &
          zooplankton_secondary_species,                     &
          dissolved_organic_matter,                          &
          marbl_particulate_share,                           &
@@ -2174,11 +2184,11 @@ contains
        glo_avg_fields_surface,          &
        marbl_status_log)
 
-    !  Compute surface forcing fluxes 
+    !  Compute surface forcing fluxes
 
     use marbl_interface_types    , only : sfo_ind
     use marbl_internal_types     , only : marbl_surface_saved_state_indexing_type
-    use marbl_schmidt_number_mod , only : schmidt_co2_surf  
+    use marbl_schmidt_number_mod , only : schmidt_co2_surf
     use marbl_oxygen             , only : schmidt_o2_surf
     use marbl_co2calc_mod        , only : marbl_co2calc_surf
     use marbl_co2calc_mod        , only : thermodynamic_coefficients_type
@@ -2196,7 +2206,7 @@ contains
 
     integer (int_kind)                        , intent(in)    :: num_elements
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
-    real(r8)                                  , intent(in)    :: surface_input_forcings(:,:)
+    type(marbl_forcing_fields_type)           , intent(in)    :: surface_input_forcings(:)
     real (r8)                                 , intent(in)    :: surface_vals(:,:)
     real (r8)                                 , intent(out)   :: surface_tracer_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
@@ -2229,45 +2239,45 @@ contains
     associate(                                                                                      &
          ind                  => surface_forcing_ind,                                               &
 
-         surface_mask         => surface_input_forcings(:,surface_forcing_ind%surface_mask_id),     &
-         ifrac                => surface_input_forcings(:,surface_forcing_ind%ifrac_id),            &
-         sst                  => surface_input_forcings(:,surface_forcing_ind%sst_id),              &
-         sss                  => surface_input_forcings(:,surface_forcing_ind%sss_id),              &
-         xco2                 => surface_input_forcings(:,surface_forcing_ind%xco2_id),             &
-         xco2_alt_co2         => surface_input_forcings(:,surface_forcing_ind%xco2_alt_co2_id),     &
-         ap_used              => surface_input_forcings(:,surface_forcing_ind%atm_pressure_id),     &
-         u10_sqr              => surface_input_forcings(:,surface_forcing_ind%u10_sqr_id),          &
-         dust_flux_in         => surface_input_forcings(:,surface_forcing_ind%dust_flux_id),        &
-         iron_flux_in         => surface_input_forcings(:,surface_forcing_ind%iron_flux_id),        &
-         nox_flux             => surface_input_forcings(:,surface_forcing_ind%nox_flux_id),         &
-         nhy_flux             => surface_input_forcings(:,surface_forcing_ind%nhy_flux_id),         &
-         din_riv_flux         => surface_input_forcings(:,surface_forcing_ind%din_riv_flux_id),     &
-         dip_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dip_riv_flux_id),     &
-         don_riv_flux         => surface_input_forcings(:,surface_forcing_ind%don_riv_flux_id),     &
-         dop_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dop_riv_flux_id),     &
-         dsi_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dsi_riv_flux_id),     &
-         dfe_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dfe_riv_flux_id),     &
-         dic_riv_flux         => surface_input_forcings(:,surface_forcing_ind%dic_riv_flux_id),     &
-         doc_riv_flux         => surface_input_forcings(:,surface_forcing_ind%doc_riv_flux_id),     &
-         alk_riv_flux         => surface_input_forcings(:,surface_forcing_ind%alk_riv_flux_id),     &
+         surface_mask => surface_input_forcings(surface_forcing_ind%surface_mask_id)%field_0d,     &
+         ifrac        => surface_input_forcings(surface_forcing_ind%ifrac_id)%field_0d,            &
+         sst          => surface_input_forcings(surface_forcing_ind%sst_id)%field_0d,              &
+         sss          => surface_input_forcings(surface_forcing_ind%sss_id)%field_0d,              &
+         xco2         => surface_input_forcings(surface_forcing_ind%xco2_id)%field_0d,             &
+         xco2_alt_co2 => surface_input_forcings(surface_forcing_ind%xco2_alt_co2_id)%field_0d,     &
+         ap_used      => surface_input_forcings(surface_forcing_ind%atm_pressure_id)%field_0d,     &
+         u10_sqr      => surface_input_forcings(surface_forcing_ind%u10_sqr_id)%field_0d,          &
+         dust_flux_in => surface_input_forcings(surface_forcing_ind%dust_flux_id)%field_0d,        &
+         iron_flux_in => surface_input_forcings(surface_forcing_ind%iron_flux_id)%field_0d,        &
+         nox_flux     => surface_input_forcings(surface_forcing_ind%nox_flux_id)%field_0d,         &
+         nhy_flux     => surface_input_forcings(surface_forcing_ind%nhy_flux_id)%field_0d,         &
+         din_riv_flux => surface_input_forcings(surface_forcing_ind%din_riv_flux_id)%field_0d,     &
+         dip_riv_flux => surface_input_forcings(surface_forcing_ind%dip_riv_flux_id)%field_0d,     &
+         don_riv_flux => surface_input_forcings(surface_forcing_ind%don_riv_flux_id)%field_0d,     &
+         dop_riv_flux => surface_input_forcings(surface_forcing_ind%dop_riv_flux_id)%field_0d,     &
+         dsi_riv_flux => surface_input_forcings(surface_forcing_ind%dsi_riv_flux_id)%field_0d,     &
+         dfe_riv_flux => surface_input_forcings(surface_forcing_ind%dfe_riv_flux_id)%field_0d,     &
+         dic_riv_flux => surface_input_forcings(surface_forcing_ind%dic_riv_flux_id)%field_0d,     &
+         doc_riv_flux => surface_input_forcings(surface_forcing_ind%doc_riv_flux_id)%field_0d,     &
+         alk_riv_flux => surface_input_forcings(surface_forcing_ind%alk_riv_flux_id)%field_0d,     &
 
          piston_velocity      => surface_forcing_internal%piston_velocity(:),                       &
          flux_co2             => surface_forcing_internal%flux_co2(:),                              &
-         co2star              => surface_forcing_internal%co2star(:),                               & 
-         dco2star             => surface_forcing_internal%dco2star(:),                              & 
-         pco2surf             => surface_forcing_internal%pco2surf(:),                              & 
-         dpco2                => surface_forcing_internal%dpco2(:),                                 & 
-         co3                  => surface_forcing_internal%co3(:),                                   & 
-         co2star_alt          => surface_forcing_internal%co2star_alt(:),                           & 
-         dco2star_alt         => surface_forcing_internal%dco2star_alt(:),                          & 
-         pco2surf_alt         => surface_forcing_internal%pco2surf_alt(:),                          & 
-         dpco2_alt            => surface_forcing_internal%dpco2_alt(:),                             & 
-         schmidt_co2          => surface_forcing_internal%schmidt_co2(:),                           & 
-         schmidt_o2           => surface_forcing_internal%schmidt_o2(:),                            & 
-         pv_o2                => surface_forcing_internal%pv_o2(:),                                 & 
-         pv_co2               => surface_forcing_internal%pv_co2(:),                                & 
-         o2sat                => surface_forcing_internal%o2sat(:),                                 & 
-         flux_alt_co2         => surface_forcing_internal%flux_alt_co2(:),                          & 
+         co2star              => surface_forcing_internal%co2star(:),                               &
+         dco2star             => surface_forcing_internal%dco2star(:),                              &
+         pco2surf             => surface_forcing_internal%pco2surf(:),                              &
+         dpco2                => surface_forcing_internal%dpco2(:),                                 &
+         co3                  => surface_forcing_internal%co3(:),                                   &
+         co2star_alt          => surface_forcing_internal%co2star_alt(:),                           &
+         dco2star_alt         => surface_forcing_internal%dco2star_alt(:),                          &
+         pco2surf_alt         => surface_forcing_internal%pco2surf_alt(:),                          &
+         dpco2_alt            => surface_forcing_internal%dpco2_alt(:),                             &
+         schmidt_co2          => surface_forcing_internal%schmidt_co2(:),                           &
+         schmidt_o2           => surface_forcing_internal%schmidt_o2(:),                            &
+         pv_o2                => surface_forcing_internal%pv_o2(:),                                 &
+         pv_co2               => surface_forcing_internal%pv_co2(:),                                &
+         o2sat                => surface_forcing_internal%o2sat(:),                                 &
+         flux_alt_co2         => surface_forcing_internal%flux_alt_co2(:),                          &
          nhx_surface_emis     => surface_forcing_internal%nhx_surface_emis(:),                      &
 
          stf                  => surface_tracer_fluxes(:,:),                                        &
@@ -2326,7 +2336,7 @@ contains
     !-----------------------------------------------------------------------
     !  compute CO2 flux, computing disequilibrium one row at a time
     !-----------------------------------------------------------------------
-       
+
     if (lflux_gas_o2 .or. lflux_gas_co2) then
 
        !-----------------------------------------------------------------------
@@ -2365,14 +2375,14 @@ contains
        endif  ! lflux_gas_o2
 
        !-----------------------------------------------------------------------
-       !  compute CO2 flux, computing disequilibrium 
+       !  compute CO2 flux, computing disequilibrium
        !-----------------------------------------------------------------------
 
        if (lflux_gas_co2) then
 
           schmidt_co2(:) = schmidt_co2_surf(num_elements, sst, surface_mask)
 
-          where (surface_mask(:) /= c0) 
+          where (surface_mask(:) /= c0)
              pv_co2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_co2(:))
           elsewhere
              pv_co2(:) = c0
@@ -2390,7 +2400,7 @@ contains
              phhi(:) = phhi_surf_init
           end where
 
-          where (surface_mask(:) /= c0) 
+          where (surface_mask(:) /= c0)
              mask(:) = .true.
           elsewhere
              mask(:) = .false.
@@ -2402,14 +2412,14 @@ contains
                num_elements     = num_elements,                            &
                lcomp_co3_coeffs = .true.,                                  &
                mask       = mask,                                          &
-               dic_in     = surface_vals(:,dic_ind),                       & 
-               xco2_in    = surface_input_forcings(:,ind%xco2_id),         &
-               ta_in      = surface_vals(:,alk_ind),                       & 
-               pt_in      = surface_vals(:,po4_ind),                       & 
+               dic_in     = surface_vals(:,dic_ind),                       &
+               xco2_in    = surface_input_forcings(ind%xco2_id)%field_0d,  &
+               ta_in      = surface_vals(:,alk_ind),                       &
+               pt_in      = surface_vals(:,po4_ind),                       &
                sit_in     = surface_vals(:,sio3_ind),                      &
-               temp       = surface_input_forcings(:,ind%sst_id),          &
-               salt       = surface_input_forcings(:,ind%sss_id),          &
-               atmpres    = surface_input_forcings(:,ind%atm_pressure_id), &
+               temp       = surface_input_forcings(ind%sst_id)%field_0d,   &
+               salt       = surface_input_forcings(ind%sss_id)%field_0d,   &
+               atmpres    = surface_input_forcings(ind%atm_pressure_id)%field_0d, &
                co3_coeffs = co3_coeffs,                                    &
                co3        = co3,                                           &
                co2star    = co2star,                                       &
@@ -2463,13 +2473,13 @@ contains
                lcomp_co3_coeffs = .false.,                                 &
                mask       = mask,                                          &
                dic_in     = surface_vals(:,dic_alt_co2_ind),               &
-               xco2_in    = surface_input_forcings(:,ind%xco2_alt_co2_id), &
-               ta_in      = surface_vals(:,alk_ind),                       & 
-               pt_in      = surface_vals(:,po4_ind),                       & 
+               xco2_in    = surface_input_forcings(ind%xco2_alt_co2_id)%field_0d, &
+               ta_in      = surface_vals(:,alk_ind),                       &
+               pt_in      = surface_vals(:,po4_ind),                       &
                sit_in     = surface_vals(:,sio3_ind),                      &
-               temp       = surface_input_forcings(:,ind%sst_id),          &
-               salt       = surface_input_forcings(:,ind%sss_id),          &
-               atmpres    = surface_input_forcings(:,ind%atm_pressure_id), &
+               temp       = surface_input_forcings(ind%sst_id)%field_0d,   &
+               salt       = surface_input_forcings(ind%sss_id)%field_0d,   &
+               atmpres    = surface_input_forcings(ind%atm_pressure_id)%field_0d, &
                co3_coeffs = co3_coeffs,                                    &
                co3        = co3,                                           &
                co2star    = co2star_alt,                                   &
@@ -2644,11 +2654,11 @@ contains
        ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
        call marbl_ciso_set_surface_forcing(                                              &
             num_elements                = num_elements,                                  &
-            surface_mask                = surface_input_forcings(:,ind%surface_mask_id), &
-            sst                         = surface_input_forcings(:,ind%sst_id),          &
-            d13c                        = surface_input_forcings(:,ind%d13c_id),         &
-            d14c                        = surface_input_forcings(:,ind%d14c_id),         &
-            d14c_glo_avg                = surface_input_forcings(:,ind%d14c_glo_avg_id), &
+            surface_mask                = surface_input_forcings(ind%surface_mask_id)%field_0d, &
+            sst                         = surface_input_forcings(ind%sst_id)%field_0d,   &
+            d13c                        = surface_input_forcings(ind%d13c_id)%field_0d,  &
+            d14c                        = surface_input_forcings(ind%d14c_id)%field_0d,  &
+            d14c_glo_avg                = surface_input_forcings(ind%d14c_glo_avg_id)%field_0d, &
             surface_vals                = surface_vals,                                  &
             stf                         = surface_tracer_fluxes,                         &
             marbl_tracer_indices        = marbl_tracer_indices,                          &
@@ -3199,7 +3209,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_PAR(domain, interior_forcings_0d, interior_forcing_ind, &
+  subroutine marbl_compute_PAR(domain, interior_forcings, interior_forcing_ind, &
                                auto_cnt, autotroph_local, PAR)
 
     !-----------------------------------------------------------------------
@@ -3211,8 +3221,8 @@ contains
     ! PAR is intent(inout) because it components, while entirely set here, are allocated elsewhere
 
     integer(int_kind)                         , intent(in)    :: auto_cnt
-    type(marbl_domain_type)                   , intent(in)    :: domain  
-    real(r8)                                  , intent(in)    :: interior_forcings_0d(:) ! (num_elements, num_interior_forcing_fields_0d)
+    type(marbl_domain_type)                   , intent(in)    :: domain
+    type(marbl_forcing_fields_type)           , intent(in)    :: interior_forcings(:) ! (num_elements, num_interior_forcing_fields_0d)
     type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_ind
     type(autotroph_local_type)                , intent(in)    :: autotroph_local(auto_cnt, domain%km)
     type(marbl_PAR_type)                      , intent(inout) :: PAR
@@ -3236,11 +3246,11 @@ contains
     ! ignore provided shortwave where col_frac == 0
     !-----------------------------------------------------------------------
 
-    PAR%col_frac(:) = interior_forcings_0d(interior_forcing_ind%PAR_col_frac_id(:))
+    PAR%col_frac(:) = interior_forcings(interior_forcing_ind%PAR_col_frac_id)%field_1d(1,:)
 
     where (PAR%col_frac(:) > c0)
        PAR%interface(0,:) = f_qsw_par *                                       &
-              interior_forcings_0d(interior_forcing_ind%surf_shortwave_id(:))
+              interior_forcings(interior_forcing_ind%surf_shortwave_id)%field_1d(1,:)
     elsewhere
        PAR%interface(0,:) = c0
     endwhere

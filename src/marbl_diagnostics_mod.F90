@@ -36,6 +36,7 @@ module marbl_diagnostics_mod
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
+  use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_saved_state_type
   use marbl_interface_types , only : marbl_diagnostics_type
 
@@ -4076,7 +4077,7 @@ contains
   subroutine marbl_diagnostics_set_interior_forcing ( &
        domain,                                        &
        interior_forcing_ind,                          &
-       interior_input_forcings_1d,                    &
+       interior_forcings,                             &
        dtracers,                                      &
        marbl_tracer_indices,                          &
        carbonate,                                     &
@@ -4092,15 +4093,15 @@ contains
        fe_scavenge, fe_scavenge_rate,                 &
        marbl_interior_forcing_diags,                  &
        marbl_status_log)
-       
+
     use marbl_internal_types , only : marbl_interior_forcing_indexing_type
 
     implicit none
 
-    type (marbl_domain_type)                  , intent(in) :: domain                                
+    type (marbl_domain_type)                  , intent(in) :: domain
     type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
 
-    real(r8), intent(in) :: interior_input_forcings_1d(:,:,:)
+    type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
     real(r8), intent(in) :: dtracers(:,:) ! (marbl_total_tracer_cnt, km) computed source/sink terms
 
     type(marbl_tracer_index_type)             , intent(in) :: marbl_tracer_indices
@@ -4136,8 +4137,7 @@ contains
          P_SiO2           => marbl_particulate_share%P_SiO2,                  &
          dust             => marbl_particulate_share%dust,                    &
          P_iron           => marbl_particulate_share%P_iron,                  &
-         PAR              => marbl_PAR,                                       &
-         input_forcing_1d => interior_input_forcings_1d(1,:,:)                &
+         PAR              => marbl_PAR                                        &
          )
 
     call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)
@@ -4176,8 +4176,8 @@ contains
          nitrif, denitrif, marbl_interior_forcing_diags)
 
     call store_diagnostics_oxygen(domain, &
-         input_forcing_1d(:,interior_forcing_ind%temperature_id), &
-         input_forcing_1d(:,interior_forcing_ind%salinity_id), &
+         interior_forcings(interior_forcing_ind%temperature_id)%field_1d(1,:), &
+         interior_forcings(interior_forcing_ind%salinity_id)%field_1d(1,:), &
          column_o2, o2_production, o2_consumption, marbl_interior_forcing_diags)
 
     call store_diagnostics_PAR(domain, &
@@ -4196,10 +4196,9 @@ contains
     call store_diagnostics_silicon_fluxes(domain, P_SiO2, dtracers,           &
          marbl_tracer_indices, marbl_interior_forcing_diags)
 
-    call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
-                input_forcing_1d(:,interior_forcing_ind%fesedflux_id),        &
+    call store_diagnostics_iron_fluxes(domain, P_iron, dust,                        &
+                interior_forcings(interior_forcing_ind%fesedflux_id)%field_1d(1,:), &
                 dtracers, marbl_tracer_indices, marbl_interior_forcing_diags)
-         
 
     end associate
 
@@ -4229,7 +4228,7 @@ contains
     implicit none
 
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
-    real(r8)                                  , intent(in)    :: surface_input_forcings(:,:)
+    type(marbl_forcing_fields_type)           , intent(in)    :: surface_input_forcings(:)
     real(r8)                                  , intent(in)    :: surface_tracer_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(in)    :: saved_state
@@ -4252,13 +4251,13 @@ contains
          ind_forc          => surface_forcing_ind,                                              &
 
          diags             => surface_forcing_diags%diags(:),                                   &
-         u10_sqr           => surface_input_forcings(:,surface_forcing_ind%u10_sqr_id),         &
-         xco2              => surface_input_forcings(:,surface_forcing_ind%xco2_id),            &
-         xco2_alt_co2      => surface_input_forcings(:,surface_forcing_ind%xco2_alt_co2_id),    &
-         ap_used           => surface_input_forcings(:,surface_forcing_ind%atm_pressure_id),    &
-         ifrac             => surface_input_forcings(:,surface_forcing_ind%ifrac_id),           &
-         dust_flux_in      => surface_input_forcings(:,surface_forcing_ind%dust_flux_id),       &
-         iron_flux_in      => surface_input_forcings(:,surface_forcing_ind%iron_flux_id),       &
+         u10_sqr           => surface_input_forcings(surface_forcing_ind%u10_sqr_id)%field_0d,         &
+         xco2              => surface_input_forcings(surface_forcing_ind%xco2_id)%field_0d,            &
+         xco2_alt_co2      => surface_input_forcings(surface_forcing_ind%xco2_alt_co2_id)%field_0d,    &
+         ap_used           => surface_input_forcings(surface_forcing_ind%atm_pressure_id)%field_0d,    &
+         ifrac             => surface_input_forcings(surface_forcing_ind%ifrac_id)%field_0d,           &
+         dust_flux_in      => surface_input_forcings(surface_forcing_ind%dust_flux_id)%field_0d,       &
+         iron_flux_in      => surface_input_forcings(surface_forcing_ind%iron_flux_id)%field_0d,       &
 
          piston_velocity   => surface_forcing_internal%piston_velocity,                         &
          flux_co2          => surface_forcing_internal%flux_co2,                                &
@@ -4360,10 +4359,10 @@ contains
     !-----------------------------------------------------------------------
 
     if (ind_forc%nox_flux_id.ne.0) then
-       diags(ind_diag%NOx_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%nox_flux_id)
+       diags(ind_diag%NOx_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%nox_flux_id)%field_0d
     endif
     if (ind_forc%nox_flux_id.ne.0) then
-       diags(ind_diag%NHy_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%nhy_flux_id)
+       diags(ind_diag%NHy_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%nhy_flux_id)%field_0d
     endif
 
     diags(ind_diag%NHx_SURFACE_EMIS)%field_2d(:) = nhx_surface_emis(:)
@@ -4373,19 +4372,19 @@ contains
     !-----------------------------------------------------------------------
 
     if (ind_forc%din_riv_flux_id.ne.0) then
-       diags(ind_diag%DIN_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%din_riv_flux_id)
+       diags(ind_diag%DIN_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%din_riv_flux_id)%field_0d
     endif
     if (ind_forc%dsi_riv_flux_id.ne.0) then
-       diags(ind_diag%DSI_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dsi_riv_flux_id)
+       diags(ind_diag%DSI_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%dsi_riv_flux_id)%field_0d
     endif
     if (ind_forc%dfe_riv_flux_id.ne.0) then
-       diags(ind_diag%DFE_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dfe_riv_flux_id)
+       diags(ind_diag%DFE_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%dfe_riv_flux_id)%field_0d
     endif
     if (ind_forc%dic_riv_flux_id.ne.0) then
-       diags(ind_diag%DIC_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dic_riv_flux_id)
+       diags(ind_diag%DIC_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%dic_riv_flux_id)%field_0d
     endif
     if (ind_forc%alk_riv_flux_id.ne.0) then
-       diags(ind_diag%ALK_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%alk_riv_flux_id)
+       diags(ind_diag%ALK_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%alk_riv_flux_id)%field_0d
     endif
     diags(ind_diag%O2_GAS_FLUX)%field_2d(:)   = stf(:, o2_ind)
     diags(ind_diag%DIP_RIV_FLUX)%field_2d(:)  = stf(:, po4_ind)

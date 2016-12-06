@@ -428,15 +428,17 @@ module marbl_internal_types
 
   type, public :: marbl_interior_forcing_indexing_type
      ! Surface forcing fields that affect interior forcings
-     integer(int_kind) :: dustflux_id    = 0
-     integer(int_kind), allocatable :: PAR_col_frac_id(:)
-     integer(int_kind), allocatable :: surf_shortwave_id(:)
+     integer(int_kind) :: dustflux_id        = 0
+     integer(int_kind) :: PAR_col_frac_id    = 0
+     integer(int_kind) :: surf_shortwave_id  = 0
 
      ! Column fields
      integer(int_kind) :: temperature_id = 0
      integer(int_kind) :: salinity_id    = 0
      integer(int_kind) :: pressure_id    = 0
      integer(int_kind) :: fesedflux_id   = 0
+
+     ! Tracer restoring
      integer(int_kind), allocatable :: tracer_restore_id(:)
    contains
      procedure, public :: construct => interior_forcing_index_constructor
@@ -907,78 +909,64 @@ contains
 
   !*****************************************************************************
 
-  subroutine interior_forcing_index_constructor(this, PAR_nsubcols,           &
-                                    tracer_names, tracer_restore_vars)
+  subroutine interior_forcing_index_constructor(this, tracer_names, tracer_restore_vars)
 
     ! This subroutine sets the interior forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
 
-    use marbl_sizes, only : num_interior_forcing_fields_0d
-    use marbl_sizes, only : num_interior_forcing_fields_1d
+    use marbl_sizes, only : num_interior_forcing_fields
     use marbl_sizes, only : marbl_total_tracer_cnt
 
     class(marbl_interior_forcing_indexing_type), intent(inout) :: this
-    integer,                                     intent(in)    :: PAR_nsubcols
     character(len=char_len), dimension(:),       intent(in)    :: tracer_names
     character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
 
     integer :: m, n
 
-    associate(                                                  &
-              forcing_cnt_0d => num_interior_forcing_fields_0d, &
-              forcing_cnt_1d => num_interior_forcing_fields_1d  &
-             )
+    associate(forcing_cnt => num_interior_forcing_fields)
 
-      forcing_cnt_0d = 0
-      forcing_cnt_1d = 0
-
-      allocate(this%PAR_col_frac_id(PAR_nsubcols))
-      allocate(this%surf_shortwave_id(PAR_nsubcols))
+      forcing_cnt = 0
       allocate(this%tracer_restore_id(marbl_total_tracer_cnt))
+      this%tracer_restore_id = 0
 
       ! -------------------------------
       ! | Always request these fields |
       ! -------------------------------
 
       ! Dust Flux
-      forcing_cnt_0d = forcing_cnt_0d + 1
-      this%dustflux_id = forcing_cnt_0d
+      forcing_cnt = forcing_cnt + 1
+      this%dustflux_id = forcing_cnt
 
       ! PAR column fraction
-      do n=1,PAR_nsubcols
-        forcing_cnt_0d = forcing_cnt_0d + 1
-        this%PAR_col_frac_id(n) = forcing_cnt_0d
-      end do
+      forcing_cnt = forcing_cnt + 1
+      this%PAR_col_frac_id = forcing_cnt
 
       ! PAR column shortwave
-      do n=1,PAR_nsubcols
-        forcing_cnt_0d = forcing_cnt_0d + 1
-        this%surf_shortwave_id(n) = forcing_cnt_0d
-      end do
+      forcing_cnt = forcing_cnt + 1
+      this%surf_shortwave_id = forcing_cnt
 
       ! Temperature
-      forcing_cnt_1d = forcing_cnt_1d + 1
-      this%temperature_id = forcing_cnt_1d
+      forcing_cnt = forcing_cnt + 1
+      this%temperature_id = forcing_cnt
 
       ! Salinity
-      forcing_cnt_1d = forcing_cnt_1d + 1
-      this%salinity_id = forcing_cnt_1d
+      forcing_cnt = forcing_cnt + 1
+      this%salinity_id = forcing_cnt
 
       ! Pressure
-      forcing_cnt_1d = forcing_cnt_1d + 1
-      this%pressure_id = forcing_cnt_1d
+      forcing_cnt = forcing_cnt + 1
+      this%pressure_id = forcing_cnt
 
       ! Iron Sediment Flux
-      forcing_cnt_1d = forcing_cnt_1d + 1
-      this%fesedflux_id = forcing_cnt_1d
+      forcing_cnt = forcing_cnt + 1
+      this%fesedflux_id = forcing_cnt
 
-      ! Tracer retoring
+      ! Tracer restoring
       do n=1,marbl_total_tracer_cnt
-        this%tracer_restore_id(n) = 0
         do m=1,size(tracer_restore_vars)
           if (trim(tracer_restore_vars(m)).eq.trim(tracer_names(n))) then
-            forcing_cnt_1d = forcing_cnt_1d + 1
-            this%tracer_restore_id(n) = forcing_cnt_1d
+            forcing_cnt = forcing_cnt + 1
+            this%tracer_restore_id(n) = forcing_cnt
             exit
           end if
         end do
