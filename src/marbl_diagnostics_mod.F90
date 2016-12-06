@@ -4085,7 +4085,7 @@ contains
        zooplankton_secondary_species,                 &
        dissolved_organic_matter,                      &
        marbl_particulate_share,                       &
-       marbl_PAR,                                     &
+       PAR,                                           &
        PON_remin, PON_sed_loss,                       &
        POP_remin,  POP_sed_loss,                      &
        sed_denitrif, other_remin, nitrif, denitrif,   &
@@ -4110,7 +4110,7 @@ contains
     type (zooplankton_secondary_species_type) , intent(in) :: zooplankton_secondary_species(zooplankton_cnt, domain%km)
     type (dissolved_organic_matter_type)      , intent(in) :: dissolved_organic_matter(domain%km)
     type (marbl_particulate_share_type)       , intent(in) :: marbl_particulate_share
-    type (marbl_PAR_type)                     , intent(in) :: marbl_PAR
+    type (marbl_PAR_type)                     , intent(in) :: PAR
     real (r8)                                 , intent(in) :: PON_remin(domain%km)        ! remin of PON
     real (r8)                                 , intent(in) :: PON_sed_loss(domain%km)     ! loss of PON to sediments
     real (r8)                                 , intent(in) :: POP_remin(domain%km)        ! remin of POP
@@ -4136,8 +4136,7 @@ contains
          P_CaCO3          => marbl_particulate_share%P_CaCO3,                 &
          P_SiO2           => marbl_particulate_share%P_SiO2,                  &
          dust             => marbl_particulate_share%dust,                    &
-         P_iron           => marbl_particulate_share%P_iron,                  &
-         PAR              => marbl_PAR                                        &
+         P_iron           => marbl_particulate_share%P_iron                   &
          )
 
     call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)

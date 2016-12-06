@@ -647,7 +647,6 @@ contains
          this%domain%km,                 &
          this%column_restore)
 
-     
     call marbl_set_interior_forcing(                                          &
          domain                   = this%domain,                              &
          interior_forcings        = this%interior_input_forcings,             &
@@ -659,7 +658,7 @@ contains
          interior_forcing_indices = this%interior_forcing_ind,                &
          dtracers                 = this%column_dtracers,                     &
          marbl_tracer_indices     = this%tracer_indices,                      &
-         marbl_PAR                = this%PAR,                                 &
+         PAR                      = this%PAR,                                 &
          marbl_interior_share     = this%interior_share,                      &
          marbl_zooplankton_share  = this%zooplankton_share,                   &
          marbl_autotroph_share    = this%autotroph_share,                     &
