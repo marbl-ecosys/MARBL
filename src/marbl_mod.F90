@@ -492,6 +492,9 @@ contains
         return
       end if
 
+      ! All surface forcing fields are rank 0; if that changes, make this
+      ! call from inside each "if (id.eq.*)" block
+      call surface_forcings(id)%metadata%set_rank(0, marbl_status_log)
       call surface_forcings(id)%allocate_memory(num_elements)
 
     end do
