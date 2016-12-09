@@ -964,10 +964,12 @@ contains
       ! Tracer restoring
       do n=1,marbl_total_tracer_cnt
         do m=1,size(tracer_restore_vars)
-          if (trim(tracer_restore_vars(m)).eq.trim(tracer_names(n))) then
-            forcing_cnt = forcing_cnt + 1
-            this%tracer_restore_id(n) = forcing_cnt
-            exit
+          if (len_trim(tracer_restore_vars(m)).ne.0) then
+            if (trim(tracer_restore_vars(m)).eq.trim(tracer_names(n))) then
+              forcing_cnt = forcing_cnt + 1
+              this%tracer_restore_id(n) = forcing_cnt
+              exit
+            end if
           end if
         end do
       end do

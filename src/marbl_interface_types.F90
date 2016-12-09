@@ -165,8 +165,10 @@ module marbl_interface_types
 
   type, public :: marbl_forcing_fields_type
      type(marbl_forcing_fields_metadata_type) :: metadata
-     real(r8), allocatable :: field_0d(:)     ! num_elements
-     real(r8), allocatable :: field_1d(:,:)   ! num_elements x extent(1)
+     ! use pointers instead of allocatable because restoring needs to point
+     ! into part of the field_1d array
+     real(r8), pointer :: field_0d(:)     ! num_elements
+     real(r8), pointer :: field_1d(:,:)   ! num_elements x extent(1)
    contains
      procedure, public :: allocate_memory => marbl_forcing_fields_allocate
   end type marbl_forcing_fields_type
