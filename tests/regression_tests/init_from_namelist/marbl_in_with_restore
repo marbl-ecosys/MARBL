@@ -4,7 +4,5 @@ testname="init_from_namelist"
 &marbl_config_nml
 /
 &marbl_parms_nml
- rest_time_inv_surf = 2.3e-6
- rest_time_inv_deep = 2.3e-6
  tracer_restore_vars = 'SiO3', 'NO3', 'PO4'
 /

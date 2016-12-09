@@ -621,6 +621,14 @@ contains
           call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,   &
                                                        dim1 = num_levels)
         end if
+        if (id.eq.ind%inv_tau_id(n)) then
+          found = .true.
+          write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
+                trim(tracer_names(n)), 'Inverse Timescale'
+          interior_forcings(id)%metadata%field_units = '1/s'
+          call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,   &
+                                                       dim1 = num_levels)
+        end if
       end do
 
       ! Check to see if %set_rank() returned an error

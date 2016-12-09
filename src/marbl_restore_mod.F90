@@ -13,11 +13,12 @@ module marbl_restore_mod
   save
 
   type :: marbl_single_restoring_field_type
-    real(kind=r8), dimension(:), allocatable :: inv_tau ! 1/time_scale (s^-1)
-    ! For the data (the field we restore to), we point into the interior forcing
-    ! datatype, where the field is stored as a 1 x km array (1 => num_elements)
-    real(kind=r8), dimension(:,:), pointer   :: data
-    integer                                  :: restore_var_ind = 0
+    ! Both the inverse timescale and the values to restore towards are provided
+    ! to MARBL by the GCM (using the interior forcing data type; in that data
+    ! type the fields are stored as 1 x km arrays (1 => num_elements)
+    real(kind=r8), dimension(:,:), pointer :: inv_tau ! 1/time_scale (s^-1)
+    real(kind=r8), dimension(:,:), pointer :: data
+    integer                                :: restore_var_ind = 0
   end type marbl_single_restoring_field_type
 
   type, public :: marbl_restore_type
@@ -34,7 +35,7 @@ contains
 !*****************************************************************************
 
 subroutine init(this, domain, tracer_metadata, interior_forcings,             &
-                restoring_inds, marbl_status_log)
+                restoring_inds, inv_tau_inds, marbl_status_log)
 
   ! initialize marbl_restore instance to default values, then read
   ! namelist and setup tracers that need to be restored
@@ -44,11 +45,6 @@ subroutine init(this, domain, tracer_metadata, interior_forcings,             &
   use marbl_interface_types, only : marbl_tracer_metadata_type
   use marbl_interface_types, only : marbl_forcing_fields_type
   use marbl_parms       , only : tracer_restore_vars
-  use marbl_parms       , only : rest_time_inv_surf
-  use marbl_parms       , only : rest_time_inv_deep
-  use marbl_parms       , only : rest_z0
-  use marbl_parms       , only : rest_z1
-  use marbl_parms       , only : inv_tau
 
   implicit none
 
@@ -67,6 +63,7 @@ subroutine init(this, domain, tracer_metadata, interior_forcings,             &
   type(marbl_tracer_metadata_type), intent(in) :: tracer_metadata(:)
   type(marbl_forcing_fields_type),  intent(in) :: interior_forcings(:)
   integer,                          intent(in) :: restoring_inds(:)
+  integer,                          intent(in) :: inv_tau_inds(:)
 
   !-----------------------------------------------------------------------
   !  local variables
@@ -100,23 +97,6 @@ subroutine init(this, domain, tracer_metadata, interior_forcings,             &
     end if
   end do
 
-  ! Set up inverse tau based on namelist values
-  if (rest_z1 == rest_z0) then
-    inv_tau(:) = rest_time_inv_surf + p5 * (rest_time_inv_deep - rest_time_inv_surf)
-  else
-    do k = 1, size(domain%zt)
-      if (domain%zt(k) < rest_z0) then
-        inv_tau(k) = rest_time_inv_surf
-      else if (domain%zt(k) > rest_z1) then
-        inv_tau(k) = rest_time_inv_deep
-      else
-        inv_tau(k) = rest_time_inv_surf +                             &
-                     (domain%zt(k) - rest_z0) / (rest_z1 - rest_z0) * &
-                     (rest_time_inv_deep - rest_time_inv_surf)
-      endif
-    end do
-  endif
-
   if (tracer_restore_cnt.gt.0) then
     call marbl_status_log%log_noerror('', subname)
     log_message = "Restoring the following tracers to data:"
@@ -124,13 +104,13 @@ subroutine init(this, domain, tracer_metadata, interior_forcings,             &
   end if
   do m=1, tracer_restore_cnt
     nullify(this%tracer_restore(m)%data)
+    nullify(this%tracer_restore(m)%inv_tau)
     do n=1,size(tracer_metadata)
       if (trim(tracer_restore_vars(m)).eq.trim(tracer_metadata(n)%short_name)) exit
     end do
     if (n.le.size(tracer_metadata)) then
-      allocate(this%tracer_restore(m)%inv_tau(domain%km))
-      this%tracer_restore(m)%inv_tau(:) = inv_tau
-      this%tracer_restore(m)%data => interior_forcings(restoring_inds(n))%field_1d
+      this%tracer_restore(m)%inv_tau => interior_forcings(inv_tau_inds(n))%field_1d
+      this%tracer_restore(m)%data    => interior_forcings(restoring_inds(n))%field_1d
       this%tracer_restore(m)%restore_var_ind = n
       write(log_message, "(2A,I0,A)") trim(tracer_metadata(n)%short_name),    &
                                       " (tracer index: ", n, ')'
@@ -183,7 +163,7 @@ subroutine restore_tracers(this, interior_tracers, km, interior_restore)
     n = this%tracer_restore(m)%restore_var_ind
     associate(single_restore => this%tracer_restore(m))
     interior_restore(n,:) = (single_restore%data(1,:) - interior_tracers(n,:)) * &
-                            single_restore%inv_tau(:)
+                            single_restore%inv_tau(1,:)
     end associate
   end do
 

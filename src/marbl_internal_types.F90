@@ -438,8 +438,9 @@ module marbl_internal_types
      integer(int_kind) :: pressure_id    = 0
      integer(int_kind) :: fesedflux_id   = 0
 
-     ! Tracer restoring
+     ! Tracer restoring (field to restore and inverse timescale)
      integer(int_kind), allocatable :: tracer_restore_id(:)
+     integer(int_kind), allocatable :: inv_tau_id(:)
    contains
      procedure, public :: construct => interior_forcing_index_constructor
   end type marbl_interior_forcing_indexing_type
@@ -928,6 +929,8 @@ contains
       forcing_cnt = 0
       allocate(this%tracer_restore_id(marbl_total_tracer_cnt))
       this%tracer_restore_id = 0
+      allocate(this%inv_tau_id(marbl_total_tracer_cnt))
+      this%inv_tau_id = 0
 
       ! -------------------------------
       ! | Always request these fields |
@@ -968,6 +971,8 @@ contains
             if (trim(tracer_restore_vars(m)).eq.trim(tracer_names(n))) then
               forcing_cnt = forcing_cnt + 1
               this%tracer_restore_id(n) = forcing_cnt
+              forcing_cnt = forcing_cnt + 1
+              this%inv_tau_id(n) = forcing_cnt
               exit
             end if
           end if

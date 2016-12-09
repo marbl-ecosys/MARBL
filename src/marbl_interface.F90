@@ -555,6 +555,7 @@ contains
                              this%tracer_metadata,                            &
                              this%interior_input_forcings,                    &
                              this%interior_forcing_ind%tracer_restore_id,     &
+                             this%interior_forcing_ind%inv_tau_id,            &
                              this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("this%restoring%init()", subname)
