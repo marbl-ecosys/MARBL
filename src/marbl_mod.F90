@@ -1126,6 +1126,7 @@ contains
          sed_denitrif, other_remin, nitrif, denitrif,       &
          tracers(o2_ind, :), o2_production, o2_consumption, &
          fe_scavenge, fe_scavenge_rate,                     &
+         interior_restore,                                  &
          interior_forcing_diags, &
          marbl_status_log)
     if (marbl_status_log%labort_marbl) then
