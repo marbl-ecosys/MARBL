@@ -128,7 +128,7 @@ end subroutine Init
 
 !*****************************************************************************
 
-subroutine restore_tracers(this, interior_tracers, km, interior_restore)
+subroutine restore_tracers(this, interior_tracers, km, interior_restore, inv_tau)
   !
   !  restore a variable if required
   !
@@ -150,6 +150,7 @@ subroutine restore_tracers(this, interior_tracers, km, interior_restore)
   !-----------------------------------------------------------------------
 
   real(kind=r8), dimension(marbl_total_tracer_cnt, km), intent(out) :: interior_restore
+  real(kind=r8), dimension(marbl_total_tracer_cnt, km), intent(out) :: inv_tau
 
   !-----------------------------------------------------------------------
   !  local variables
@@ -157,13 +158,15 @@ subroutine restore_tracers(this, interior_tracers, km, interior_restore)
   integer(int_kind) :: m, n
   !-----------------------------------------------------------------------
 
-  interior_restore(:,:) = c0
+  interior_restore = c0
+  inv_tau          = c0
 
   do m=1,tracer_restore_cnt
     n = this%tracer_restore(m)%restore_var_ind
     associate(single_restore => this%tracer_restore(m))
+    inv_tau(n,:)          = single_restore%inv_tau(1,:)
     interior_restore(n,:) = (single_restore%data(1,:) - interior_tracers(n,:)) * &
-                            single_restore%inv_tau(1,:)
+                            inv_tau(n,:)
     end associate
   end do
 

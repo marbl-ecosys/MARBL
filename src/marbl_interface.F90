@@ -85,6 +85,7 @@ module marbl_interface
      real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input  *
      real (r8)                                 , public, allocatable  :: column_dtracers(:,:)    ! output *
      real (r8)                                 , public, allocatable  :: column_restore(:,:)     ! input  *
+     real (r8)                                 , public, allocatable  :: column_inv_tau(:,:)     ! input  *
      type(marbl_interior_forcing_indexing_type), public               :: interior_forcing_ind         !
      type(marbl_forcing_fields_type)           , public, allocatable  :: interior_input_forcings(:)
      type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
@@ -340,6 +341,7 @@ contains
     allocate(this%column_dtracers(marbl_total_tracer_cnt, num_levels))
 
     allocate(this%column_restore(marbl_total_tracer_cnt, num_levels))
+    allocate(this%column_inv_tau(marbl_total_tracer_cnt, num_levels))
 
     !--------------------------------------------------------------------
     ! set up saved state variables
@@ -650,7 +652,8 @@ contains
     call this%restoring%restore_tracers( &
          this%column_tracers,            &
          this%domain%km,                 &
-         this%column_restore)
+         this%column_restore,            &
+         this%column_inv_tau)
 
     call marbl_set_interior_forcing(                                          &
          domain                   = this%domain,                              &
@@ -658,6 +661,7 @@ contains
          saved_state              = this%interior_saved_state,                &
          saved_state_ind          = this%interior_state_ind,                  &
          interior_restore         = this%column_restore,                      &
+         interior_restore_inv_tau = this%column_inv_tau,                      &
          tracers                  = this%column_tracers,                      &
          surface_forcing_indices  = this%surface_forcing_ind,                 &
          interior_forcing_indices = this%interior_forcing_ind,                &
