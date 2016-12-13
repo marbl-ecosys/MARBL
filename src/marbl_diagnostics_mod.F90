@@ -4028,26 +4028,12 @@ contains
           ! Note that tmp_id is a temp variable because restoring diagnostics
           ! have same indexing as the MARBL tracers
           if (count_only) then
-             ! Each tracer provides 2 fields for restoring
-             num_restore_diags = num_restore_diags + 2
+             num_restore_diags = num_restore_diags + 1
           else
              ! Field we restore to
              lname = trim(marbl_tracer_metadata(n)%long_name) // " Restoring"
              sname = trim(marbl_tracer_metadata(n)%short_name) // "_RESTORE"
              units = 'mmol/m^3'
-             vgrid = 'layer_avg'
-             call diags%add_diagnostic(lname, sname, units, vgrid, .false.,   &
-                  tmp_id, marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_diagnostics_error(marbl_status_log, sname, subname)
-               return
-             end if
-
-             ! [Inverse] Time Scale for restoring (1/s)
-             lname = "Inverse timescale used in " //                          &
-                     trim(marbl_tracer_metadata(n)%long_name) // " Restoring"
-             sname = trim(marbl_tracer_metadata(n)%short_name) // "_INV_TAU"
-             units = '1/s'
              vgrid = 'layer_avg'
              call diags%add_diagnostic(lname, sname, units, vgrid, .false.,   &
                   tmp_id, marbl_status_log)

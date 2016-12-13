@@ -966,7 +966,6 @@ contains
        saved_state,                      &
        saved_state_ind,                  &
        interior_restore,                 &
-       interior_restore_inv_tau,         &
        tracers,                          &
        surface_forcing_indices,          &
        interior_forcing_indices,         &
@@ -993,7 +992,6 @@ contains
     type    (marbl_domain_type)                 , intent(in)    :: domain
     type(marbl_forcing_fields_type)             , intent(in)    :: interior_forcings(:)
     real    (r8)                                , intent(in)    :: interior_restore(:,:) ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
-    real    (r8)                                , intent(in)    :: interior_restore_inv_tau(:,:) ! (marbl_total_tracer_cnt, km) inverse time scale for local restoring (1/s)
     real    (r8)                                , intent(in)    :: tracers(:,: )         ! (marbl_total_tracer_cnt, km) tracer values
     type(marbl_surface_forcing_indexing_type)   , intent(in)    :: surface_forcing_indices
     type(marbl_interior_forcing_indexing_type)  , intent(in)    :: interior_forcing_indices
@@ -1299,11 +1297,10 @@ contains
     end if
 
     ! FIXME #119: Why isn't this in marbl_diagnostics? And why are we passing
-    ! this%column_restore & this%column_inv_tau instead of this%restoring?
+    ! this%column_restore instead of a local variable?
     ! Compute restore diagnostics
     do n = 1, ecosys_base_tracer_cnt
-       interior_restore_diags%diags(2*n-1)%field_3d(:,1) = interior_restore(n,:)
-       interior_restore_diags%diags(2*n)%field_3d(:,1) = interior_restore_inv_tau(n,:)
+       interior_restore_diags%diags(n)%field_3d(:,1) = interior_restore(n,:)
     end do
 
     !  Compute time derivatives for ecosystem carbon isotope state variables
