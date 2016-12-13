@@ -494,8 +494,7 @@ contains
 
       ! All surface forcing fields are rank 0; if that changes, make this
       ! call from inside each "if (id.eq.*)" block
-      call surface_forcings(id)%metadata%set_rank(0, marbl_status_log)
-      call surface_forcings(id)%allocate_memory(num_elements)
+      call surface_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
 
     end do
 
@@ -554,7 +553,7 @@ contains
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Dust Flux'
         interior_forcings(id)%metadata%field_units = 'need_units'
-        call interior_forcings(id)%metadata%set_rank(0, marbl_status_log)
+        call interior_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
       end if
 
       ! PAR Column Fraction and Shortwave Radiation
@@ -562,7 +561,7 @@ contains
         found = .true.
         interior_forcings(id)%metadata%varname     = 'PAR Column Fraction'
         interior_forcings(id)%metadata%field_units = 'unitless'
-        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+        call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                      dim1 = num_PAR_subcols)
       end if
 
@@ -570,7 +569,7 @@ contains
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Surface Shortwave'
         interior_forcings(id)%metadata%field_units = 'need_units' ! W/m^2?
-        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+        call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                      dim1 = num_PAR_subcols)
       end if
 
@@ -580,7 +579,7 @@ contains
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Temperature'
         interior_forcings(id)%metadata%field_units = 'Degrees C'
-        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+        call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                      dim1 = num_levels)
       end if
 
@@ -589,7 +588,7 @@ contains
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Salinity'
         interior_forcings(id)%metadata%field_units = 'need_units'
-        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+        call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                      dim1 = num_levels)
       end if
 
@@ -598,7 +597,7 @@ contains
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Pressure'
         interior_forcings(id)%metadata%field_units = 'need_units'
-        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+        call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                      dim1 = num_levels)
       end if
 
@@ -607,7 +606,7 @@ contains
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
         interior_forcings(id)%metadata%field_units = 'need_units'
-        call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,     &
+        call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                      dim1 = num_levels)
       end if
 
@@ -618,7 +617,7 @@ contains
           write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
                 trim(tracer_names(n)), 'Restoring'
           interior_forcings(id)%metadata%field_units = 'unitless'
-          call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,   &
+          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                        dim1 = num_levels)
         end if
         if (id.eq.ind%inv_tau_id(n)) then
@@ -626,7 +625,7 @@ contains
           write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
                 trim(tracer_names(n)), 'Inverse Timescale'
           interior_forcings(id)%metadata%field_units = '1/s'
-          call interior_forcings(id)%metadata%set_rank(1, marbl_status_log,   &
+          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                        dim1 = num_levels)
         end if
       end do
@@ -646,8 +645,6 @@ contains
         call marbl_status_log%log_error(log_message, subname)
         return
       end if
-
-      call interior_forcings(id)%allocate_memory(num_elements)
 
     end do
 

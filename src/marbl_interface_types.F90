@@ -157,8 +157,6 @@ module marbl_interface_types
      character(char_len)   :: field_units
      integer               :: rank            ! 0d or 1d
      integer,  allocatable :: extent(:)       ! length = rank
-   contains
-     procedure, public :: set_rank => marbl_forcing_fields_metadata_set_rank
   end type marbl_forcing_fields_metadata_type
 
   !*****************************************************************************
@@ -167,10 +165,10 @@ module marbl_interface_types
      type(marbl_forcing_fields_metadata_type) :: metadata
      ! use pointers instead of allocatable because restoring needs to point
      ! into part of the field_1d array
-     real(r8), pointer :: field_0d(:)     ! num_elements
-     real(r8), pointer :: field_1d(:,:)   ! num_elements x extent(1)
+     real(r8), pointer :: field_0d(:)   => NULL()  ! num_elements
+     real(r8), pointer :: field_1d(:,:) => NULL()  ! num_elements x extent(1)
    contains
-     procedure, public :: allocate_memory => marbl_forcing_fields_allocate
+     procedure, public :: set_rank => marbl_forcing_fields_set_rank
   end type marbl_forcing_fields_type
 
   !*****************************************************************************
@@ -620,49 +618,37 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_forcing_fields_metadata_set_rank(this, rank, marbl_status_log, dim1)
+  subroutine marbl_forcing_fields_set_rank(this, num_elements, rank,          &
+                                           marbl_status_log, dim1)
 
-    class(marbl_forcing_fields_metadata_type), intent(inout) :: this
-    integer,                                   intent(in)    :: rank
-    type(marbl_log_type),                      intent(inout) :: marbl_status_log
-    integer, optional,                         intent(in)    :: dim1
+    class(marbl_forcing_fields_type), intent(inout) :: this
+    integer,                          intent(in)    :: num_elements
+    integer,                          intent(in)    :: rank
+    type(marbl_log_type),             intent(inout) :: marbl_status_log
+    integer, optional,                intent(in)    :: dim1
 
-    character(*), parameter :: subname = 'marbl_interface_types:marbl_forcing_fields_metadata_set_rank'
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_forcing_fields_set_rank'
     character(len=char_len) :: log_message
 
-    this%rank = rank
-    select case (this%rank)
+    this%metadata%rank = rank
+    select case (rank)
       case (0)
+        allocate(this%field_0d(num_elements))
       case (1)
         if (.not.present(dim1)) then
           call marbl_status_log%log_error('dim1 is required when rank=1', subname)
           return
         end if
-        allocate(this%extent(1))
-        this%extent(1) = dim1
+        allocate(this%metadata%extent(1))
+        this%metadata%extent(1) = dim1
+        allocate(this%field_1d(num_elements, this%metadata%extent(1)))
       case DEFAULT
         write(log_message,"(I0,A)") rank, ' is not a valid rank for a forcing field'
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
 
-  end subroutine marbl_forcing_fields_metadata_set_rank
-
-  !*****************************************************************************
-
-  subroutine marbl_forcing_fields_allocate(this, num_elements)
-
-    class(marbl_forcing_fields_type), intent(inout) :: this
-    integer,                          intent(in)    :: num_elements
-
-    select case (this%metadata%rank)
-      case (0)
-        allocate(this%field_0d(num_elements))
-      case (1)
-        allocate(this%field_1d(num_elements, this%metadata%extent(1)))
-    end select
-
-  end subroutine marbl_forcing_fields_allocate
+  end subroutine marbl_forcing_fields_set_rank
 
   !*****************************************************************************
 
