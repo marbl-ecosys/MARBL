@@ -64,8 +64,6 @@ module marbl_interface
   !
   !-----------------------------------------------------------------------------
 
-  ! note that column_restore is currently nutrients restoring (mmol ./m^3/sec)
-
   type, public :: marbl_interface_class
 
      ! public data - general
@@ -84,7 +82,6 @@ module marbl_interface
      ! public data - interior forcing
      real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input  *
      real (r8)                                 , public, allocatable  :: column_dtracers(:,:)    ! output *
-     real (r8)                                 , public, allocatable  :: column_restore(:,:)     ! input  *
      type(marbl_interior_forcing_indexing_type), public               :: interior_forcing_ind         !
      type(marbl_forcing_fields_type)           , public, allocatable  :: interior_input_forcings(:)
      type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
@@ -338,8 +335,6 @@ contains
     allocate(this%column_tracers(marbl_total_tracer_cnt, num_levels))
 
     allocate(this%column_dtracers(marbl_total_tracer_cnt, num_levels))
-
-    allocate(this%column_restore(marbl_total_tracer_cnt, num_levels))
 
     !--------------------------------------------------------------------
     ! set up saved state variables
@@ -641,23 +636,25 @@ contains
   subroutine set_interior_forcing(this)
 
     use marbl_mod, only : marbl_set_interior_forcing
+    use marbl_sizes, only : marbl_total_tracer_cnt
 
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
     character(*), parameter :: subname = 'marbl_interface:set_interior_forcing'
+    real(r8), dimension(marbl_total_tracer_cnt, this%domain%km) :: interior_restore
 
     call this%restoring%restore_tracers( &
          this%column_tracers,            &
          this%domain%km,                 &
-         this%column_restore)
+         interior_restore)
 
     call marbl_set_interior_forcing(                                          &
          domain                   = this%domain,                              &
          interior_forcings        = this%interior_input_forcings,             &
          saved_state              = this%interior_saved_state,                &
          saved_state_ind          = this%interior_state_ind,                  &
-         interior_restore         = this%column_restore,                      &
+         interior_restore         = interior_restore,                         &
          tracers                  = this%column_tracers,                      &
          surface_forcing_indices  = this%surface_forcing_ind,                 &
          interior_forcing_indices = this%interior_forcing_ind,                &

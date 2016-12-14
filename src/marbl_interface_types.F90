@@ -165,6 +165,7 @@ module marbl_interface_types
      type(marbl_forcing_fields_metadata_type) :: metadata
      ! use pointers instead of allocatable because restoring needs to point
      ! into part of the field_1d array
+     ! Dimension in name (0d, 1d) refers to per-column dimension
      real(r8), pointer :: field_0d(:)   => NULL()  ! num_elements
      real(r8), pointer :: field_1d(:,:) => NULL()  ! num_elements x extent(1)
    contains
