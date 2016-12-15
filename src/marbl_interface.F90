@@ -48,7 +48,6 @@ module marbl_interface
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
   use marbl_internal_types  , only : marbl_tracer_index_type
 
-  use marbl_restore_mod     , only : marbl_restore_type
 
   use marbl_config_mod, only : marbl_config_and_parms_type
   use marbl_config_mod, only : ciso_on
@@ -86,7 +85,6 @@ module marbl_interface
      type(marbl_forcing_fields_type)           , public, allocatable  :: interior_input_forcings(:)
      type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
      type(marbl_diagnostics_type)              , public               :: interior_restore_diags  ! output
-     type(marbl_restore_type)                  , public               :: restoring
 
      ! public data surface forcing
      real (r8)                                 , public, allocatable  :: surface_vals(:,:)           ! input  *
@@ -461,7 +459,6 @@ contains
     use marbl_mod,         only : marbl_init_bury_coeff
     use marbl_mod,         only : marbl_init_surface_forcing_fields
     use marbl_mod,         only : marbl_init_interior_forcing_fields
-    use marbl_restore_mod, only : tracer_restore_cnt
     use marbl_config_mod,  only : lflux_gas_o2
     use marbl_config_mod,  only : lflux_gas_co2
 
@@ -511,7 +508,13 @@ contains
 
     call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2)
     call this%interior_forcing_ind%construct(this%tracer_metadata%short_name, &
-                                   tracer_restore_vars)
+                                   tracer_restore_vars, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("itnerior_forcing_ind%construct",   &
+                                          subname)
+      return
+    end if
+
 
     call this%surface_forcing_share%construct(num_surface_elements)
     call this%surface_forcing_internal%construct(num_surface_elements)
@@ -539,21 +542,6 @@ contains
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_interior_forcing_fields()", &
                                           subname)
-      return
-    end if
-
-    !-------------------------------------------------------------------------
-    !  Set up tracer restoring metadata (points back to interior forcing data)
-    !-------------------------------------------------------------------------
-
-    call this%restoring%init(this%domain,                                     &
-                             this%tracer_metadata,                            &
-                             this%interior_input_forcings,                    &
-                             this%interior_forcing_ind%tracer_restore_id,     &
-                             this%interior_forcing_ind%inv_tau_id,            &
-                             this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%restoring%init()", subname)
       return
     end if
 
@@ -636,25 +624,15 @@ contains
   subroutine set_interior_forcing(this)
 
     use marbl_mod, only : marbl_set_interior_forcing
-    use marbl_sizes, only : marbl_total_tracer_cnt
-
-    implicit none
 
     class(marbl_interface_class), intent(inout) :: this
     character(*), parameter :: subname = 'marbl_interface:set_interior_forcing'
-    real(r8), dimension(marbl_total_tracer_cnt, this%domain%km) :: interior_restore
-
-    call this%restoring%restore_tracers( &
-         this%column_tracers,            &
-         this%domain%km,                 &
-         interior_restore)
 
     call marbl_set_interior_forcing(                                          &
          domain                   = this%domain,                              &
          interior_forcings        = this%interior_input_forcings,             &
          saved_state              = this%interior_saved_state,                &
          saved_state_ind          = this%interior_state_ind,                  &
-         interior_restore         = interior_restore,                         &
          tracers                  = this%column_tracers,                      &
          surface_forcing_indices  = this%surface_forcing_ind,                 &
          interior_forcing_indices = this%interior_forcing_ind,                &

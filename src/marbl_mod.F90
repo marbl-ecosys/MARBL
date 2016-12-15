@@ -967,7 +967,6 @@ contains
        interior_forcings,                &
        saved_state,                      &
        saved_state_ind,                  &
-       interior_restore,                 &
        tracers,                          &
        surface_forcing_indices,          &
        interior_forcing_indices,         &
@@ -988,12 +987,10 @@ contains
     use marbl_ciso_mod      , only : marbl_ciso_set_interior_forcing
     use marbl_sizes         , only : marbl_total_tracer_cnt
     use marbl_internal_types, only : marbl_interior_saved_state_indexing_type
-
-    implicit none
+    use marbl_restore_mod   , only : marbl_restore_compute_interior_restore
 
     type    (marbl_domain_type)                 , intent(in)    :: domain
     type(marbl_forcing_fields_type)             , intent(in)    :: interior_forcings(:)
-    real    (r8)                                , intent(in)    :: interior_restore(:,:) ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
     real    (r8)                                , intent(in)    :: tracers(:,: )         ! (marbl_total_tracer_cnt, km) tracer values
     type(marbl_surface_forcing_indexing_type)   , intent(in)    :: surface_forcing_indices
     type(marbl_interior_forcing_indexing_type)  , intent(in)    :: interior_forcing_indices
@@ -1016,6 +1013,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_set_interior_forcing'
+    real(r8), dimension(marbl_total_tracer_cnt, domain%km) :: interior_restore
 
     integer (int_kind) :: auto_ind  ! autotroph functional group index
     integer (int_kind) :: auto_ind2 ! autotroph functional group index
@@ -1112,6 +1110,17 @@ contains
          donr_ind          => marbl_tracer_indices%donr_ind,        &
          docr_ind          => marbl_tracer_indices%docr_ind         &
          )
+
+    !-----------------------------------------------------------------------
+    !  Compute adjustment to tendencies due to tracer restoring
+    !-----------------------------------------------------------------------
+
+    call marbl_restore_compute_interior_restore(            &
+               tracers,                                     &
+               km,                                          &
+               interior_forcings,                           &
+               interior_forcing_indices,                    &
+               interior_restore)
 
     !-----------------------------------------------------------------------
     !  create local copies of model tracers
