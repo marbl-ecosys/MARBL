@@ -531,7 +531,7 @@ contains
     call marbl_init_interior_forcing_fields(                                  &
          num_elements             = num_interior_elements,                    &
          interior_forcing_indices = this%interior_forcing_ind,                &
-         tracer_names             = this%tracer_metadata%short_name,          &
+         tracer_metadata          = this%tracer_metadata,                     &
          num_PAR_subcols          = this%domain%num_PAR_subcols,              &
          num_levels               = this%domain%km,                           &
          interior_forcings        = this%interior_input_forcings,             &

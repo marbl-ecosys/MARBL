@@ -510,7 +510,7 @@ contains
   subroutine marbl_init_interior_forcing_fields(&
        num_elements, &
        interior_forcing_indices, &
-       tracer_names, &
+       tracer_metadata, &
        num_PAR_subcols, &
        num_levels, &
        interior_forcings, &
@@ -526,7 +526,7 @@ contains
 
     integer,                                    intent(in)    :: num_elements
     type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_indices
-    character(len=char_len), dimension(:),      intent(in)    :: tracer_names
+    type(marbl_tracer_metadata_type),           intent(in)    :: tracer_metadata(:)
     integer,                                    intent(in)    :: num_PAR_subcols
     integer,                                    intent(in)    :: num_levels
     type(marbl_forcing_fields_type),            intent(inout) :: interior_forcings(:)
@@ -541,7 +541,9 @@ contains
     logical                 :: found
     !-----------------------------------------------------------------------
 
-    associate(ind => interior_forcing_indices)
+    associate(ind          => interior_forcing_indices,      &
+              tracer_names => tracer_metadata(:)%short_name, &
+              tracer_units => tracer_metadata(:)%units)
 
     interior_forcings(:)%metadata%varname = ''
 
@@ -616,7 +618,7 @@ contains
           found = .true.
           write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
                 trim(tracer_names(n)), 'Restoring'
-          interior_forcings(id)%metadata%field_units = 'unitless'
+          interior_forcings(id)%metadata%field_units = tracer_units(n)
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                        dim1 = num_levels)
         end if
