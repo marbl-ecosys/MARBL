@@ -4092,7 +4092,9 @@ contains
        sed_denitrif, other_remin, nitrif, denitrif,   &
        column_o2, o2_production, o2_consumption,      &
        fe_scavenge, fe_scavenge_rate,                 &
+       interior_restore,                              &
        marbl_interior_forcing_diags,                  &
+       marbl_interior_restore_diags,                  &
        marbl_status_log)
 
     use marbl_internal_types , only : marbl_interior_forcing_indexing_type
@@ -4125,7 +4127,9 @@ contains
     real (r8)                                 , intent(in) :: o2_consumption(:)
     real (r8)                                 , intent(in) :: fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient
     real (r8)                                 , intent(in) :: fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
+    real (r8)                                 , intent(in) :: interior_restore(:,:)       ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
     type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_forcing_diags
+    type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_restore_diags
     type (marbl_log_type)                     , intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_interior_forcing'
@@ -4199,6 +4203,9 @@ contains
     call store_diagnostics_iron_fluxes(domain, P_iron, dust,                        &
                 interior_forcings(interior_forcing_ind%fesedflux_id)%field_1d(1,:), &
                 dtracers, marbl_tracer_indices, marbl_interior_forcing_diags)
+
+    call store_diagnostics_interior_restore(interior_restore,                 &
+                                            marbl_interior_restore_diags)
 
     end associate
 
@@ -5172,6 +5179,21 @@ contains
     end associate
 
   end subroutine store_diagnostics_iron_fluxes
+
+  !***********************************************************************
+
+  subroutine store_diagnostics_interior_restore(interior_restore, marbl_diags)
+
+    real(r8), dimension(:,:)           , intent(in)    :: interior_restore
+    type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
+
+    integer :: n
+
+    do n=1, marbl_total_tracer_cnt
+       marbl_diags%diags(n)%field_3d(:,1) = interior_restore(n,:)
+    end do
+
+  end subroutine store_diagnostics_interior_restore
 
   !*****************************************************************************
 

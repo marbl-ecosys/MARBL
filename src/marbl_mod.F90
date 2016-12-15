@@ -1288,20 +1288,15 @@ contains
          sed_denitrif, other_remin, nitrif, denitrif,       &
          tracers(o2_ind, :), o2_production, o2_consumption, &
          fe_scavenge, fe_scavenge_rate,                     &
+         interior_restore,                                  &
          interior_forcing_diags, &
+         interior_restore_diags, &
          marbl_status_log)
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace(&
             'marbl_diagnostics_set_interior_foricng()', subname)
        return
     end if
-
-    ! FIXME #119: Why isn't this in marbl_diagnostics? And why are we passing
-    ! this%column_restore instead of a local variable?
-    ! Compute restore diagnostics
-    do n = 1, ecosys_base_tracer_cnt
-       interior_restore_diags%diags(n)%field_3d(:,1) = interior_restore(n,:)
-    end do
 
     !  Compute time derivatives for ecosystem carbon isotope state variables
     if (ciso_on) then
