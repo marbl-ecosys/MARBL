@@ -537,13 +537,14 @@ contains
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_init_interior_forcing_fields'
     character(len=char_len) :: log_message
+    ! NAG didn't like associating to tracer_metadata(:)%*
+    character(len=char_len) :: tracer_name
+    character(len=char_len) :: tracer_units
     integer                 :: id, n
     logical                 :: found
     !-----------------------------------------------------------------------
 
-    associate(ind          => interior_forcing_indices,      &
-              tracer_names => tracer_metadata(:)%short_name, &
-              tracer_units => tracer_metadata(:)%units)
+    associate(ind => interior_forcing_indices)
 
     interior_forcings(:)%metadata%varname = ''
 
@@ -615,17 +616,19 @@ contains
       ! Interior Tracer Restoring
       do n=1,size(ind%tracer_restore_id)
         if (id.eq.ind%tracer_restore_id(n)) then
+          tracer_name = tracer_metadata(n)%short_name
+          tracer_units = tracer_metadata(n)%units
           found = .true.
           write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
-                trim(tracer_names(n)), 'Restoring'
-          interior_forcings(id)%metadata%field_units = tracer_units(n)
+                trim(tracer_name), 'Restoring'
+          interior_forcings(id)%metadata%field_units = tracer_units
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                        dim1 = num_levels)
         end if
         if (id.eq.ind%inv_tau_id(n)) then
           found = .true.
           write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
-                trim(tracer_names(n)), 'Inverse Timescale'
+                trim(tracer_name), 'Inverse Timescale'
           interior_forcings(id)%metadata%field_units = '1/s'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                        dim1 = num_levels)
