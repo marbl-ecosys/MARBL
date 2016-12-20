@@ -620,7 +620,7 @@ contains
           tracer_units = tracer_metadata(n)%units
           found = .true.
           write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
-                trim(tracer_name), 'Restoring'
+                trim(tracer_name), 'Restoring Field'
           interior_forcings(id)%metadata%field_units = tracer_units
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                        dim1 = num_levels)
@@ -628,7 +628,7 @@ contains
         if (id.eq.ind%inv_tau_id(n)) then
           found = .true.
           write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
-                trim(tracer_name), 'Inverse Timescale'
+                trim(tracer_name), 'Restoring Inverse Timescale'
           interior_forcings(id)%metadata%field_units = '1/s'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                        dim1 = num_levels)
