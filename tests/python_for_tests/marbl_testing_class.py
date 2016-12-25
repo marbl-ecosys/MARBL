@@ -15,6 +15,7 @@ class MARBL_testcase(object):
     self._machine = None
     self._namelistfile = 'marbl_in'
     self._GPTLroot = None
+    self._mpirun   = None
     self._marbl_dir = path.abspath('%s/../..' % path.dirname(__file__))
 
   # -----------------------------------------------
@@ -158,7 +159,7 @@ class MARBL_testcase(object):
     exe_dir = '%s/tests/driver_exe' % self._marbl_dir
 
     execmd = '%s/marbl.exe < %s' % (exe_dir, self._namelistfile)
-    if self._GPTLroot is not None:
+    if self._mpirun is not None:
       execmd = 'mpirun -n 1 %s' % execmd
     print "Running following command:"
     print execmd
