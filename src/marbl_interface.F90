@@ -25,18 +25,19 @@ module marbl_interface
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
   use marbl_sizes           , only : num_surface_forcing_fields
+  use marbl_sizes           , only : num_interior_forcing_fields
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
-  use marbl_interface_types , only : marbl_interior_forcing_input_type
   use marbl_interface_types , only : marbl_surface_forcing_output_type
   use marbl_interface_types , only : marbl_diagnostics_type
-  use marbl_interface_types , only : marbl_forcing_fields_metadata_type
+  use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_saved_state_type
   use marbl_interface_types , only : marbl_running_mean_0d_type
 
   use marbl_internal_types  , only : marbl_surface_forcing_indexing_type
   use marbl_internal_types  , only : marbl_surface_saved_state_indexing_type
+  use marbl_internal_types  , only : marbl_interior_forcing_indexing_type
   use marbl_internal_types  , only : marbl_interior_saved_state_indexing_type
   use marbl_internal_types  , only : marbl_PAR_type
   use marbl_internal_types  , only : marbl_interior_share_type
@@ -47,7 +48,6 @@ module marbl_interface
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
   use marbl_internal_types  , only : marbl_tracer_index_type
 
-  use marbl_restore_mod     , only : marbl_restore_type
 
   use marbl_config_mod, only : marbl_config_and_parms_type
   use marbl_config_mod, only : ciso_on
@@ -62,8 +62,6 @@ module marbl_interface
   ! driver will read/write to interact with marbl.
   !
   !-----------------------------------------------------------------------------
-
-  ! note that column_restore is currently nutrients restoring (mmol ./m^3/sec)
 
   type, public :: marbl_interface_class
 
@@ -83,19 +81,16 @@ module marbl_interface
      ! public data - interior forcing
      real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input  *
      real (r8)                                 , public, allocatable  :: column_dtracers(:,:)    ! output *
-     real (r8)                                 , public, allocatable  :: column_restore(:,:)     ! input  *
-     ! FIXME #25: update marbl_interior_forcing_input_type
-     type(marbl_interior_forcing_input_type)   , public               :: interior_forcing_input
+     type(marbl_interior_forcing_indexing_type), public               :: interior_forcing_ind         !
+     type(marbl_forcing_fields_type)           , public, allocatable  :: interior_input_forcings(:)
      type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
      type(marbl_diagnostics_type)              , public               :: interior_restore_diags  ! output
-     type(marbl_restore_type)                  , public               :: restoring
 
      ! public data surface forcing
      real (r8)                                 , public, allocatable  :: surface_vals(:,:)           ! input  *
-     real (r8)                                 , public, allocatable  :: surface_input_forcings(:,:) ! input  *
-     real (r8)                                 , public, allocatable  :: surface_tracer_fluxes(:,:)  ! output *
      type(marbl_surface_forcing_indexing_type) , public               :: surface_forcing_ind         !
-     type(marbl_forcing_fields_metadata_type)  , public, allocatable  :: surface_forcing_metadata(:)
+     type(marbl_forcing_fields_type)           , public, allocatable  :: surface_input_forcings(:) ! input  *
+     real (r8)                                 , public, allocatable  :: surface_tracer_fluxes(:,:)  ! output *
      type(marbl_surface_forcing_output_type)   , public               :: surface_forcing_output      ! output
      type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
 
@@ -235,7 +230,6 @@ contains
     use marbl_namelist_mod    , only : marbl_nl_cnt
     use marbl_namelist_mod    , only : marbl_nl_buffer_size
     use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
-    use marbl_mod             , only : marbl_init_surface_forcing_fields
     use marbl_mod             , only : marbl_init_tracer_metadata
     use marbl_mod             , only : marbl_tracer_index_consistency_check
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
@@ -243,8 +237,6 @@ contains
     use marbl_config_mod      , only : autotrophs_config
     use marbl_config_mod      , only : zooplankton_config
     use marbl_config_mod      , only : set_derived_config
-    use marbl_config_mod      , only : lflux_gas_o2
-    use marbl_config_mod      , only : lflux_gas_co2
     use marbl_parms           , only : marbl_parms_set_defaults
     use marbl_parms           , only : marbl_parms_read_namelist
     use marbl_parms           , only : marbl_define_parameters
@@ -270,25 +262,25 @@ contains
     !--------------------------------------------------------------------
 
     associate(&
-         num_levels           => gcm_num_levels,                               &
-         num_PAR_subcols      => gcm_num_PAR_subcols,                          &
-         num_surface_elements => gcm_num_elements_surface_forcing,             &
-         num_interior_forcing => gcm_num_elements_interior_forcing             &
+         num_levels            => gcm_num_levels,                              &
+         num_PAR_subcols       => gcm_num_PAR_subcols,                         &
+         num_surface_elements  => gcm_num_elements_surface_forcing,            &
+         num_interior_elements => gcm_num_elements_interior_forcing            &
          )
 
     !-----------------------------------------------------------------------
     !  Lock and log this%configuration
     !-----------------------------------------------------------------------
 
-    call set_derived_config(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('set_derived_config', subname)
-      return
-    end if
-
     call this%configuration%finalize_vars(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('configuration%finalize_vars', subname)
+      return
+    end if
+
+    call set_derived_config(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('set_derived_config', subname)
       return
     end if
 
@@ -318,12 +310,6 @@ contains
     if (present(marbl_tracer_cnt)) &
       marbl_tracer_cnt = marbl_total_tracer_cnt
 
-    !-----------------------------------------------------------------------
-    !  Set up surface forcing indices
-    !-----------------------------------------------------------------------
-
-    call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2)
-
     !--------------------------------------------------------------------
     ! call constructors and allocate memory
     !--------------------------------------------------------------------
@@ -332,26 +318,20 @@ contains
 
     call this%particulate_share%construct(num_levels)
 
-    call this%surface_forcing_share%construct(num_surface_elements)
-
-    call this%surface_forcing_internal%construct(num_surface_elements)
-
     allocate (this%interior_share(num_levels))
 
     allocate (this%zooplankton_share(zooplankton_cnt, num_levels))
 
     allocate (this%autotroph_share(autotroph_cnt, num_levels))
 
-    call this%domain%construct(                                &
-         num_levels                    = num_levels,           &
-         num_PAR_subcols               = num_PAR_subcols,      &
+    call this%domain%construct(                                 &
+         num_levels                    = num_levels,            &
+         num_PAR_subcols               = num_PAR_subcols,       &
          num_elements_surface_forcing  = num_surface_elements,  &
-         num_elements_interior_forcing = num_interior_forcing, &
-         dz                            = gcm_dz,               &
-         zw                            = gcm_zw,               &
+         num_elements_interior_forcing = num_interior_elements, &
+         dz                            = gcm_dz,                &
+         zw                            = gcm_zw,                &
          zt                            = gcm_zt)
-
-    call this%interior_forcing_input%construct(num_levels, num_PAR_subcols)
 
     allocate(this%surface_vals(num_surface_elements, marbl_total_tracer_cnt))
 
@@ -360,8 +340,6 @@ contains
     allocate(this%column_tracers(marbl_total_tracer_cnt, num_levels))
 
     allocate(this%column_dtracers(marbl_total_tracer_cnt, num_levels))
-
-    allocate(this%column_restore(marbl_total_tracer_cnt, num_levels))
 
     !--------------------------------------------------------------------
     ! set up saved state variables
@@ -373,7 +351,7 @@ contains
                                 this%interior_state_ind,                      &
                                 num_levels,                                   &
                                 num_surface_elements,                         &
-                                num_interior_forcing,                         &
+                                num_interior_elements,                        &
                                 this%StatusLog)
 
     if (this%StatusLog%labort_marbl) then
@@ -404,23 +382,6 @@ contains
     end if
 
     !--------------------------------------------------------------------
-    ! initialize marbl surface forcing fields
-    !--------------------------------------------------------------------
-
-    allocate(this%surface_forcing_metadata(num_surface_forcing_fields))
-
-    call marbl_init_surface_forcing_fields(                                   &
-         surface_forcing_indices  = this%surface_forcing_ind,                 &
-         surface_forcing_metadata = this%surface_forcing_metadata,            &
-         marbl_status_log         = this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_init_surface_forcing_fields()", subname)
-      return
-    end if
-
-    allocate(this%surface_input_forcings(num_surface_elements, num_surface_forcing_fields))
-
-    !--------------------------------------------------------------------
     ! Report what tracers are being used, abort if count is not correct
     !--------------------------------------------------------------------
 
@@ -441,19 +402,6 @@ contains
            subname)
       return
     end if
-
-    !--------------------------------------------------------------------
-    ! Report what surface forcings are required from the driver
-    !--------------------------------------------------------------------
-    call this%StatusLog%log_noerror('-----------------------------', subname)
-    call this%StatusLog%log_noerror('MARBL-Required Forcing Fields', subname)
-    call this%StatusLog%log_noerror('-----------------------------', subname)
-    call this%StatusLog%log_noerror('', subname)
-    do i=1,num_surface_forcing_fields
-      write(log_message, "(2A)") '* ', trim(this%surface_forcing_metadata(i)%varname)
-      call this%StatusLog%log_noerror(log_message, subname)
-    end do
-    call this%StatusLog%log_noerror('', subname)
 
     !--------------------------------------------------------------------
     ! Initialize marbl diagnostics
@@ -515,28 +463,22 @@ contains
 
     use marbl_parms,       only : set_derived_parms
     use marbl_parms,       only : tracer_restore_vars
-    use marbl_mod  ,       only : marbl_init_bury_coeff
-    use marbl_restore_mod, only : tracer_restore_cnt
+    use marbl_mod,         only : marbl_init_bury_coeff
+    use marbl_mod,         only : marbl_init_surface_forcing_fields
+    use marbl_mod,         only : marbl_init_interior_forcing_fields
+    use marbl_config_mod,  only : lflux_gas_o2
+    use marbl_config_mod,  only : lflux_gas_co2
 
     class(marbl_interface_class), intent(inout) :: this
 
     character(*), parameter :: subname = 'marbl_interface:complete_config_and_init'
     character(len=char_len) :: log_message
+    integer :: i
 
-    ! Update values of any parameters that depend on namelist / put statements
-    call set_derived_parms(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('set_derived_parms', subname)
-      return
-    end if
+    !-----------------------------------------------------------------------
+    !  Lock and log this%parameters
+    !-----------------------------------------------------------------------
 
-    call marbl_init_bury_coeff(this%particulate_share, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
-      return
-    end if
-
-    ! Lock this%parameters and write values to the log
     call this%parameters%finalize_vars(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('parmeters%finalize_list', &
@@ -544,25 +486,95 @@ contains
       return
     end if
 
-    associate(&
-         ecosys_base_ind_beg  => this%tracer_indices%ecosys_base_ind_beg,      &
-         ecosys_base_ind_end  => this%tracer_indices%ecosys_base_ind_end       &
-         )
-    ! Initialize tracer restoring
-    call this%restoring%init(                                                   &
-         domain          = this%domain,                                         &
-         tracer_metadata = this%tracer_metadata(ecosys_base_ind_beg:ecosys_base_ind_end), &
-        marbl_status_log = this%StatusLog)
+    call set_derived_parms(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%restoring%init()", subname)
+      call this%StatusLog%log_error_trace('set_derived_parms', subname)
       return
     end if
+
+    !-----------------------------------------------------------------------
+    !  Initialize bury coefficient
+    !-----------------------------------------------------------------------
+
+    call marbl_init_bury_coeff(this%particulate_share, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
+      return
+    end if
+
+    associate(&
+         num_surface_elements  => this%domain%num_elements_surface_forcing,   &
+         num_interior_elements => this%domain%num_elements_interior_forcing,  &
+         num_PAR_subcols       => this%domain%num_PAR_subcols,                &
+         num_levels            => this%domain%km                              &
+         )
+
+    !-----------------------------------------------------------------------
+    !  Initialize surface and interior forcing (including tracer restoring)
+    !-----------------------------------------------------------------------
+
+    call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2)
+    call this%interior_forcing_ind%construct(this%tracer_metadata%short_name, &
+                                   tracer_restore_vars, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("itnerior_forcing_ind%construct",   &
+                                          subname)
+      return
+    end if
+
+
+    call this%surface_forcing_share%construct(num_surface_elements)
+    call this%surface_forcing_internal%construct(num_surface_elements)
+
+    allocate(this%surface_input_forcings(num_surface_forcing_fields))
+    call marbl_init_surface_forcing_fields(                                   &
+         num_elements            = num_surface_elements,                      &
+         surface_forcing_indices = this%surface_forcing_ind,                  &
+         surface_forcings        = this%surface_input_forcings,               &
+         marbl_status_log        = this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_init_surface_forcing_fields()", subname)
+      return
+    end if
+
+    allocate(this%interior_input_forcings(num_interior_forcing_fields))
+    call marbl_init_interior_forcing_fields(                                  &
+         num_elements             = num_interior_elements,                    &
+         interior_forcing_indices = this%interior_forcing_ind,                &
+         tracer_metadata          = this%tracer_metadata,                     &
+         num_PAR_subcols          = this%domain%num_PAR_subcols,              &
+         num_levels               = this%domain%km,                           &
+         interior_forcings        = this%interior_input_forcings,             &
+         marbl_status_log         = this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_init_interior_forcing_fields()", &
+                                          subname)
+      return
+    end if
+
     end associate
 
-    ! Set up tracer restore info in this%interior_forcing_input
-    call this%interior_forcing_input%set_restore(this%domain%km,              &
-                                   tracer_restore_vars(1:tracer_restore_cnt))
+    !--------------------------------------------------------------------
+    ! Report what forcings are required from the driver
+    !--------------------------------------------------------------------
 
+    call this%StatusLog%log_noerror('-----------------------------', subname)
+    call this%StatusLog%log_noerror('MARBL-Required Forcing Fields', subname)
+    call this%StatusLog%log_noerror('-----------------------------', subname)
+    call this%StatusLog%log_noerror('', subname)
+    call this%StatusLog%log_noerror('Surface:', subname)
+    do i=1,num_surface_forcing_fields
+      write(log_message, "(2A)") '* ', trim(this%surface_input_forcings(i)%metadata%varname)
+      call this%StatusLog%log_noerror(log_message, subname)
+    end do
+
+    call this%StatusLog%log_noerror('', subname)
+    call this%StatusLog%log_noerror('Interior:', subname)
+    do i=1,num_interior_forcing_fields
+      write(log_message, "(2A)") '* ', trim(this%interior_input_forcings(i)%metadata%varname)
+      call this%StatusLog%log_noerror(log_message, subname)
+    end do
+    call this%StatusLog%log_noerror('', subname)
 
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
@@ -620,35 +632,28 @@ contains
 
     use marbl_mod, only : marbl_set_interior_forcing
 
-    implicit none
-
     class(marbl_interface_class), intent(inout) :: this
     character(*), parameter :: subname = 'marbl_interface:set_interior_forcing'
 
-    call this%restoring%restore_tracers( &
-         this%column_tracers,            &
-         this%domain%km,                 &
-         this%column_restore)
-
-    call marbl_set_interior_forcing(   &
-         domain                  = this%domain,                  &
-         interior_forcing_input  = this%interior_forcing_input,  &
-         saved_state             = this%interior_saved_state,    &
-         saved_state_ind         = this%interior_state_ind,      &
-         interior_restore        = this%column_restore,          &
-         tracers                 = this%column_tracers,          &
-         surface_forcing_indices = this%surface_forcing_ind,     &
-         dtracers                = this%column_dtracers,         &
-         marbl_tracer_indices    = this%tracer_indices,          &
-         marbl_PAR               = this%PAR,                     &
-         marbl_interior_share    = this%interior_share,          &
-         marbl_zooplankton_share = this%zooplankton_share,       &
-         marbl_autotroph_share   = this%autotroph_share,         &
-         marbl_particulate_share = this%particulate_share,       &
-         interior_forcing_diags  = this%interior_forcing_diags,  &
-         interior_restore_diags  = this%interior_restore_diags,  &
-         glo_avg_fields_interior = this%glo_avg_fields_interior, &
-         marbl_status_log        = this%StatusLog)
+    call marbl_set_interior_forcing(                                          &
+         domain                   = this%domain,                              &
+         interior_forcings        = this%interior_input_forcings,             &
+         saved_state              = this%interior_saved_state,                &
+         saved_state_ind          = this%interior_state_ind,                  &
+         tracers                  = this%column_tracers,                      &
+         surface_forcing_indices  = this%surface_forcing_ind,                 &
+         interior_forcing_indices = this%interior_forcing_ind,                &
+         dtracers                 = this%column_dtracers,                     &
+         marbl_tracer_indices     = this%tracer_indices,                      &
+         PAR                      = this%PAR,                                 &
+         marbl_interior_share     = this%interior_share,                      &
+         marbl_zooplankton_share  = this%zooplankton_share,                   &
+         marbl_autotroph_share    = this%autotroph_share,                     &
+         marbl_particulate_share  = this%particulate_share,                   &
+         interior_forcing_diags   = this%interior_forcing_diags,              &
+         interior_restore_diags   = this%interior_restore_diags,              &
+         glo_avg_fields_interior  = this%glo_avg_fields_interior,             &
+         marbl_status_log         = this%StatusLog)
 
     if (this%StatusLog%labort_marbl) then
        call this%StatusLog%log_error_trace("marbl_set_interior_forcing()", subname)

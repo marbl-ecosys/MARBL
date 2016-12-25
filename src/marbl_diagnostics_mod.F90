@@ -36,8 +36,8 @@ module marbl_diagnostics_mod
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
+  use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_saved_state_type
-  use marbl_interface_types , only : marbl_interior_forcing_input_type
   use marbl_interface_types , only : marbl_diagnostics_type
 
   use marbl_logging,          only : marbl_log_type
@@ -4030,6 +4030,7 @@ contains
           if (count_only) then
              num_restore_diags = num_restore_diags + 1
           else
+             ! Field we restore to
              lname = trim(marbl_tracer_metadata(n)%long_name) // " Restoring"
              sname = trim(marbl_tracer_metadata(n)%short_name) // "_RESTORE"
              units = 'mmol/m^3'
@@ -4076,7 +4077,8 @@ contains
 
   subroutine marbl_diagnostics_set_interior_forcing ( &
        domain,                                        &
-       interior_forcing_input,                        &
+       interior_forcing_ind,                          &
+       interior_forcings,                             &
        dtracers,                                      &
        marbl_tracer_indices,                          &
        carbonate,                                     &
@@ -4084,27 +4086,34 @@ contains
        zooplankton_secondary_species,                 &
        dissolved_organic_matter,                      &
        marbl_particulate_share,                       &
-       marbl_PAR,                                     &
+       PAR,                                           &
        PON_remin, PON_sed_loss,                       &
        POP_remin,  POP_sed_loss,                      &
        sed_denitrif, other_remin, nitrif, denitrif,   &
        column_o2, o2_production, o2_consumption,      &
        fe_scavenge, fe_scavenge_rate,                 &
+       interior_restore,                              &
        marbl_interior_forcing_diags,                  &
+       marbl_interior_restore_diags,                  &
        marbl_status_log)
-       
+
+    use marbl_internal_types , only : marbl_interior_forcing_indexing_type
+
     implicit none
 
-    type (marbl_domain_type)                  , intent(in) :: domain                                
-    type (marbl_interior_forcing_input_type)  , intent(in) :: interior_forcing_input
-    real (r8)                                 , intent(in) :: dtracers(:,:) ! (marbl_total_tracer_cnt, km) computed source/sink terms
+    type (marbl_domain_type)                  , intent(in) :: domain
+    type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
+
+    type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
+    real(r8), intent(in) :: dtracers(:,:) ! (marbl_total_tracer_cnt, km) computed source/sink terms
+
     type(marbl_tracer_index_type)             , intent(in) :: marbl_tracer_indices
     type (carbonate_type)                     , intent(in) :: carbonate(domain%km)
     type (autotroph_secondary_species_type)   , intent(in) :: autotroph_secondary_species(autotroph_cnt, domain%km)
     type (zooplankton_secondary_species_type) , intent(in) :: zooplankton_secondary_species(zooplankton_cnt, domain%km)
     type (dissolved_organic_matter_type)      , intent(in) :: dissolved_organic_matter(domain%km)
     type (marbl_particulate_share_type)       , intent(in) :: marbl_particulate_share
-    type (marbl_PAR_type)                     , intent(in) :: marbl_PAR
+    type (marbl_PAR_type)                     , intent(in) :: PAR
     real (r8)                                 , intent(in) :: PON_remin(domain%km)        ! remin of PON
     real (r8)                                 , intent(in) :: PON_sed_loss(domain%km)     ! loss of PON to sediments
     real (r8)                                 , intent(in) :: POP_remin(domain%km)        ! remin of POP
@@ -4118,20 +4127,21 @@ contains
     real (r8)                                 , intent(in) :: o2_consumption(:)
     real (r8)                                 , intent(in) :: fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient
     real (r8)                                 , intent(in) :: fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
+    real (r8)                                 , intent(in) :: interior_restore(:,:)       ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
     type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_forcing_diags
+    type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_restore_diags
     type (marbl_log_type)                     , intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_interior_forcing'
 
     !-----------------------------------------------------------------
 
-    associate(                                                            &
-         POC             => marbl_particulate_share%POC,                  &
-         P_CaCO3         => marbl_particulate_share%P_CaCO3,              &
-         P_SiO2          => marbl_particulate_share%P_SiO2,               &
-         dust            => marbl_particulate_share%dust,                 &
-         P_iron          => marbl_particulate_share%P_iron,               &
-         PAR             => marbl_PAR                                     &
+    associate(                                                                &
+         POC              => marbl_particulate_share%POC,                     &
+         P_CaCO3          => marbl_particulate_share%P_CaCO3,                 &
+         P_SiO2           => marbl_particulate_share%P_SiO2,                  &
+         dust             => marbl_particulate_share%dust,                    &
+         P_iron           => marbl_particulate_share%P_iron                   &
          )
 
     call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)
@@ -4170,7 +4180,8 @@ contains
          nitrif, denitrif, marbl_interior_forcing_diags)
 
     call store_diagnostics_oxygen(domain, &
-         interior_forcing_input, &
+         interior_forcings(interior_forcing_ind%temperature_id)%field_1d(1,:), &
+         interior_forcings(interior_forcing_ind%salinity_id)%field_1d(1,:), &
          column_o2, o2_production, o2_consumption, marbl_interior_forcing_diags)
 
     call store_diagnostics_PAR(domain, &
@@ -4189,10 +4200,12 @@ contains
     call store_diagnostics_silicon_fluxes(domain, P_SiO2, dtracers,           &
          marbl_tracer_indices, marbl_interior_forcing_diags)
 
-    call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
-         interior_forcing_input%fesedflux, dtracers, marbl_tracer_indices,    &
-         marbl_interior_forcing_diags)
-         
+    call store_diagnostics_iron_fluxes(domain, P_iron, dust,                        &
+                interior_forcings(interior_forcing_ind%fesedflux_id)%field_1d(1,:), &
+                dtracers, marbl_tracer_indices, marbl_interior_forcing_diags)
+
+    call store_diagnostics_interior_restore(interior_restore,                 &
+                                            marbl_interior_restore_diags)
 
     end associate
 
@@ -4222,7 +4235,7 @@ contains
     implicit none
 
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
-    real(r8)                                  , intent(in)    :: surface_input_forcings(:,:)
+    type(marbl_forcing_fields_type)           , intent(in)    :: surface_input_forcings(:)
     real(r8)                                  , intent(in)    :: surface_tracer_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(in)    :: saved_state
@@ -4245,13 +4258,13 @@ contains
          ind_forc          => surface_forcing_ind,                                              &
 
          diags             => surface_forcing_diags%diags(:),                                   &
-         u10_sqr           => surface_input_forcings(:,surface_forcing_ind%u10_sqr_id),         &
-         xco2              => surface_input_forcings(:,surface_forcing_ind%xco2_id),            &
-         xco2_alt_co2      => surface_input_forcings(:,surface_forcing_ind%xco2_alt_co2_id),    &
-         ap_used           => surface_input_forcings(:,surface_forcing_ind%atm_pressure_id),    &
-         ifrac             => surface_input_forcings(:,surface_forcing_ind%ifrac_id),           &
-         dust_flux_in      => surface_input_forcings(:,surface_forcing_ind%dust_flux_id),       &
-         iron_flux_in      => surface_input_forcings(:,surface_forcing_ind%iron_flux_id),       &
+         u10_sqr           => surface_input_forcings(surface_forcing_ind%u10_sqr_id)%field_0d,         &
+         xco2              => surface_input_forcings(surface_forcing_ind%xco2_id)%field_0d,            &
+         xco2_alt_co2      => surface_input_forcings(surface_forcing_ind%xco2_alt_co2_id)%field_0d,    &
+         ap_used           => surface_input_forcings(surface_forcing_ind%atm_pressure_id)%field_0d,    &
+         ifrac             => surface_input_forcings(surface_forcing_ind%ifrac_id)%field_0d,           &
+         dust_flux_in      => surface_input_forcings(surface_forcing_ind%dust_flux_id)%field_0d,       &
+         iron_flux_in      => surface_input_forcings(surface_forcing_ind%iron_flux_id)%field_0d,       &
 
          piston_velocity   => surface_forcing_internal%piston_velocity,                         &
          flux_co2          => surface_forcing_internal%flux_co2,                                &
@@ -4353,10 +4366,10 @@ contains
     !-----------------------------------------------------------------------
 
     if (ind_forc%nox_flux_id.ne.0) then
-       diags(ind_diag%NOx_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%nox_flux_id)
+       diags(ind_diag%NOx_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%nox_flux_id)%field_0d
     endif
     if (ind_forc%nox_flux_id.ne.0) then
-       diags(ind_diag%NHy_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%nhy_flux_id)
+       diags(ind_diag%NHy_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%nhy_flux_id)%field_0d
     endif
 
     diags(ind_diag%NHx_SURFACE_EMIS)%field_2d(:) = nhx_surface_emis(:)
@@ -4366,19 +4379,19 @@ contains
     !-----------------------------------------------------------------------
 
     if (ind_forc%din_riv_flux_id.ne.0) then
-       diags(ind_diag%DIN_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%din_riv_flux_id)
+       diags(ind_diag%DIN_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%din_riv_flux_id)%field_0d
     endif
     if (ind_forc%dsi_riv_flux_id.ne.0) then
-       diags(ind_diag%DSI_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dsi_riv_flux_id)
+       diags(ind_diag%DSI_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%dsi_riv_flux_id)%field_0d
     endif
     if (ind_forc%dfe_riv_flux_id.ne.0) then
-       diags(ind_diag%DFE_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dfe_riv_flux_id)
+       diags(ind_diag%DFE_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%dfe_riv_flux_id)%field_0d
     endif
     if (ind_forc%dic_riv_flux_id.ne.0) then
-       diags(ind_diag%DIC_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%dic_riv_flux_id)
+       diags(ind_diag%DIC_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%dic_riv_flux_id)%field_0d
     endif
     if (ind_forc%alk_riv_flux_id.ne.0) then
-       diags(ind_diag%ALK_RIV_FLUX)%field_2d(:) = surface_input_forcings(:, ind_forc%alk_riv_flux_id)
+       diags(ind_diag%ALK_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%alk_riv_flux_id)%field_0d
     endif
     diags(ind_diag%O2_GAS_FLUX)%field_2d(:)   = stf(:, o2_ind)
     diags(ind_diag%DIP_RIV_FLUX)%field_2d(:)  = stf(:, po4_ind)
@@ -4523,10 +4536,10 @@ contains
     real(kind=r8) :: m_inv
 
     if ((y(1).gt.c0).and.(y(2).gt.c0)) then
-       call marbl_status_log%log_error(subname, "can not find root, both y-values are positive!")
+       call marbl_status_log%log_error("can not find root, both y-values are positive!", subname)
        return
     else if ((y(1).lt.c0).and.(y(2).lt.c0)) then
-       call marbl_status_log%log_error(subname, "can not find root, both y-values are negative!")
+       call marbl_status_log%log_error("can not find root, both y-values are negative!", subname)
        return
     end if
 
@@ -4771,13 +4784,14 @@ contains
 
    !***********************************************************************
 
-  subroutine store_diagnostics_oxygen(marbl_domain, marbl_interior_forcing_input, &
+  subroutine store_diagnostics_oxygen(marbl_domain, temperature, salinity, &
        column_o2, o2_production, o2_consumption, marbl_interior_diags)
 
     use marbl_oxygen, only : o2sat_scalar
 
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain
-    type(marbl_interior_forcing_input_type) , intent(in)    :: marbl_interior_forcing_input
+    real(r8)                                , intent(in)    :: temperature(:)
+    real(r8)                                , intent(in)    :: salinity(:)
     real(r8)                                , intent(in)    :: column_o2(:)
     real(r8)                                , intent(in)    :: o2_production(:)
     real(r8)                                , intent(in)    :: o2_consumption(:)
@@ -4791,9 +4805,6 @@ contains
 
     ! Find min_o2 and depth_min_o2
     associate(                                                    &
-         temperature => marbl_interior_forcing_input%temperature, &
-         salinity    => marbl_interior_forcing_input%salinity,    &
-
          kmt         => marbl_domain%kmt,                         &
          zt          => marbl_domain%zt,                          &
          diags       => marbl_interior_diags%diags,               &
@@ -5168,6 +5179,21 @@ contains
     end associate
 
   end subroutine store_diagnostics_iron_fluxes
+
+  !***********************************************************************
+
+  subroutine store_diagnostics_interior_restore(interior_restore, marbl_diags)
+
+    real(r8), dimension(:,:)           , intent(in)    :: interior_restore
+    type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
+
+    integer :: n
+
+    do n=1, marbl_total_tracer_cnt
+       marbl_diags%diags(n)%field_3d(:,1) = interior_restore(n,:)
+    end do
+
+  end subroutine store_diagnostics_interior_restore
 
   !*****************************************************************************
 
