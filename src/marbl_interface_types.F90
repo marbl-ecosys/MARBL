@@ -84,23 +84,6 @@ module marbl_interface_types
 
   !*****************************************************************************
 
-  ! FIXME #25: update marbl_interior_forcing_input_type
-  type, public :: marbl_interior_forcing_input_type
-     real(r8), allocatable            :: temperature(:)       ! (km)
-     real(r8), allocatable            :: salinity(:)          ! (km)
-     real(r8), allocatable            :: pressure(:)          ! (km)
-     real(r8), allocatable            :: fesedflux(:)         ! (km)
-     real(r8), allocatable            :: PAR_col_frac(:)      ! column fraction occupied by each sub-column
-     real(r8), allocatable            :: surf_shortwave(:)    ! surface shortwave for each sub-column (W/m^2)
-     real(r8)                         :: dust_flux            ! (g/cm^2/s)
-     character(char_len), allocatable :: tracer_names(:)
-   contains
-     procedure, public :: construct   => marbl_interior_forcing_input_constructor
-     procedure, public :: set_restore => marbl_interior_forcing_input_set_restore
-  end type marbl_interior_forcing_input_type
-
-  !*****************************************************************************
-
   type, private :: marbl_single_diagnostic_type
      ! marbl_single_diagnostic :
      ! a private type, this contains both the metadata
@@ -166,14 +149,28 @@ module marbl_interface_types
 
   !*****************************************************************************
 
-  type, public :: marbl_forcing_fields_metadata_type
-     ! Contains variable names and units for required forcing fields; actual
-     ! forcing data is in marbl_instance%surface_input_forcing(:,:)
-     ! Note that surface_input_forcing_data(:,n) contains the data for forcing
-     ! field n (i.e. varname(n) with units field_units(n)]
-     character(char_len)    :: varname
-     character(char_len)    :: field_units
+  type :: marbl_forcing_fields_metadata_type
+     ! Contains variable names and units for required forcing fields as well as
+     ! dimensional information; actual forcing data is in array of
+     ! marbl_forcing_fields_type
+     character(char_len)   :: varname
+     character(char_len)   :: field_units
+     integer               :: rank            ! 0d or 1d
+     integer,  allocatable :: extent(:)       ! length = rank
   end type marbl_forcing_fields_metadata_type
+
+  !*****************************************************************************
+
+  type, public :: marbl_forcing_fields_type
+     type(marbl_forcing_fields_metadata_type) :: metadata
+     ! use pointers instead of allocatable because restoring needs to point
+     ! into part of the field_1d array
+     ! Dimension in name (0d, 1d) refers to per-column dimension
+     real(r8), pointer :: field_0d(:)   => NULL()  ! num_elements
+     real(r8), pointer :: field_1d(:,:) => NULL()  ! num_elements x extent(1)
+   contains
+     procedure, public :: set_rank => marbl_forcing_fields_set_rank
+  end type marbl_forcing_fields_type
 
   !*****************************************************************************
 
@@ -369,56 +366,6 @@ contains
     this%saved_state_cnt = id
 
   end subroutine marbl_saved_state_add
-
-  !*****************************************************************************
-
-  subroutine marbl_interior_forcing_input_constructor(this, num_levels, num_PAR_subcols)
-
-    class(marbl_interior_forcing_input_type) , intent(inout) :: this
-    integer , intent(in)    :: num_levels
-    integer , intent(in)    :: num_PAR_subcols
-
-    allocate(this%temperature      (num_levels))
-    allocate(this%salinity         (num_levels))
-    allocate(this%pressure         (num_levels))
-    allocate(this%fesedflux        (num_levels))
-    allocate(this%PAR_col_frac     (num_PAR_subcols))
-    allocate(this%surf_shortwave   (num_PAR_subcols))
-
-  end subroutine marbl_interior_forcing_input_constructor
-
-  !*****************************************************************************
-
-  subroutine marbl_interior_forcing_input_set_restore(this, num_levels,       &
-             tracer_names)
-
-    class(marbl_interior_forcing_input_type), intent(inout) :: this
-    integer,                                  intent(in)    :: num_levels
-    character(len=char_len), dimension (:),   intent(in)    :: tracer_names
-
-    integer :: n, nt, num_tracers
-    character(len=char_len), dimension(:), allocatable :: local_names
-
-    nt = size(tracer_names)
-    allocate(local_names(nt))
-
-    num_tracers = 0
-    do n=1,nt
-      if (len_trim(tracer_names(n)).gt.0) then
-        num_tracers = num_tracers + 1
-        local_names(num_tracers) = tracer_names(n)
-      end if
-    end do
-
-    allocate(this%tracer_names(num_tracers))
-
-    if (num_tracers.gt.0) then
-      do n=1,num_tracers
-        this%tracer_names(n) = local_names(n)
-      end do
-    end if
-
-  end subroutine marbl_interior_forcing_input_set_restore
 
   !*****************************************************************************
 
@@ -669,6 +616,40 @@ contains
     deallocate(this%diags)
 
   end subroutine marbl_diagnostics_deconstructor
+
+  !*****************************************************************************
+
+  subroutine marbl_forcing_fields_set_rank(this, num_elements, rank,          &
+                                           marbl_status_log, dim1)
+
+    class(marbl_forcing_fields_type), intent(inout) :: this
+    integer,                          intent(in)    :: num_elements
+    integer,                          intent(in)    :: rank
+    type(marbl_log_type),             intent(inout) :: marbl_status_log
+    integer, optional,                intent(in)    :: dim1
+
+    character(*), parameter :: subname = 'marbl_interface_types:marbl_forcing_fields_set_rank'
+    character(len=char_len) :: log_message
+
+    this%metadata%rank = rank
+    select case (rank)
+      case (0)
+        allocate(this%field_0d(num_elements))
+      case (1)
+        if (.not.present(dim1)) then
+          call marbl_status_log%log_error('dim1 is required when rank=1', subname)
+          return
+        end if
+        allocate(this%metadata%extent(1))
+        this%metadata%extent(1) = dim1
+        allocate(this%field_1d(num_elements, this%metadata%extent(1)))
+      case DEFAULT
+        write(log_message,"(I0,A)") rank, ' is not a valid rank for a forcing field'
+        call marbl_status_log%log_error(log_message, subname)
+        return
+    end select
+
+  end subroutine marbl_forcing_fields_set_rank
 
   !*****************************************************************************
 

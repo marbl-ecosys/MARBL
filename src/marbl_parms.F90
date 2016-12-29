@@ -98,7 +98,6 @@ module marbl_parms
   character(char_len), target :: ciso_fract_factors             ! option for which biological fractionation calculation to use
 
   character(len=char_len), allocatable, target, dimension(:) :: tracer_restore_vars
-  real(r8), target :: rest_time_inv_surf, rest_time_inv_deep, rest_z0, rest_z1
 
   !---------------------------------------------------------------------
   !  BGC parameters that are not part of marbl_parms_nml
@@ -219,8 +218,6 @@ module marbl_parms
   integer (int_kind)            :: caco3_bury_thres_iopt
   integer (int_kind), parameter :: caco3_bury_thres_iopt_fixed_depth = 1
   integer (int_kind), parameter :: caco3_bury_thres_iopt_omega_calc  = 2
-
-  real(r8), dimension(:), allocatable :: inv_tau
 
   ! grazing functions
   integer (kind=int_kind), parameter ::           &
@@ -451,18 +448,11 @@ contains
     ciso_fract_factors     = 'Rau'
 
     ! FIXME #69: not thread-safe!
-    if (.not.allocated(inv_tau)) &
-      allocate(inv_tau(km))
     if (.not.allocated(tracer_restore_vars)) &
       allocate(tracer_restore_vars(marbl_total_tracer_cnt))
 
     ! initialize namelist variables to default values
     tracer_restore_vars = ''
-
-    rest_time_inv_surf = c0
-    rest_time_inv_deep = c0
-    rest_z0 = c1000
-    rest_z1 = c2*c1000
 
   end subroutine marbl_parms_set_defaults
 
@@ -517,10 +507,6 @@ contains
          PON_bury_coeff, &
          ciso_fract_factors, &
          tracer_restore_vars, &
-         rest_time_inv_surf, &
-         rest_time_inv_deep, &
-         rest_z0, &
-         rest_z1, &
          bury_coeff_rmean_timescale_years, &
          parm_scalelen_z, &
          parm_scalelen_vals, &
@@ -1423,58 +1409,6 @@ contains
                                marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('add_var_1d_str', subname)
-      return
-    end if
-
-    sname     = 'rest_time_inv_surf'
-    lname     = 'Restoring time scale at rest_z0'
-    units     = '1/sec'
-    datatype  = 'real'
-    group     = 'marbl_parms_nml'
-    rptr      => rest_time_inv_surf
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'rest_time_inv_deep'
-    lname     = 'Restoring time scale at rest_z1'
-    units     = '1/sec'
-    datatype  = 'real'
-    group     = 'marbl_parms_nml'
-    rptr      => rest_time_inv_deep
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'rest_z0'
-    lname     = 'Above this depth, restoring time scale is rest_time_inv_surf'
-    units     = 'cm'
-    datatype  = 'real'
-    group     = 'marbl_parms_nml'
-    rptr      => rest_z0
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'rest_z1'
-    lname     = 'Below this depth, restoring time scale is rest_time_inv_deep'
-    units     = 'cm'
-    datatype  = 'real'
-    group     = 'marbl_parms_nml'
-    rptr      => rest_z1
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, rptr=rptr, add_newline=.true.)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
 
