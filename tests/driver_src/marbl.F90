@@ -162,7 +162,7 @@ Program marbl
       cnt = 0
       do n=1,size(marbl_instance%interior_input_forcings)
         varname = marbl_instance%interior_input_forcings(n)%metadata%varname
-        if (index(varname, 'Restoring').gt.0) then
+        if (index(varname, 'Restoring Field').gt.0) then
           cnt = cnt + 1
           varname = varname(1:scan(varname,' ')-1)
           write(log_message, "(I0, 2A)") cnt, '. ', trim(varname)
