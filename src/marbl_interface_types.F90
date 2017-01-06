@@ -174,6 +174,14 @@ module marbl_interface_types
 
   !*****************************************************************************
 
+  type, public :: marbl_timers_type
+    integer :: num_timers
+    character(char_len), allocatable :: names(:)
+    real(r8), allocatable :: cummulative_runtimes(:)
+  end type marbl_timers_type
+
+  !*****************************************************************************
+
   ! FIXME : move to marbl_internal_types.F90 when running means are moved to MARBL
 
   type, public :: marbl_running_mean_0d_type
@@ -202,9 +210,9 @@ contains
     integer (int_kind) , intent(in) :: num_PAR_subcols
     integer (int_kind) , intent(in) :: num_elements_surface_forcing
     integer (int_kind) , intent(in) :: num_elements_interior_forcing
-    real (r8)          , intent(in) :: dz(num_levels) 
-    real (r8)          , intent(in) :: zw(num_levels) 
-    real (r8)          , intent(in) :: zt(num_levels) 
+    real (r8)          , intent(in) :: dz(num_levels)
+    real (r8)          , intent(in) :: zw(num_levels)
+    real (r8)          , intent(in) :: zt(num_levels)
 
     integer :: k
 
@@ -227,7 +235,7 @@ contains
     end do
 
   end subroutine marbl_domain_constructor
-  
+
   !*****************************************************************************
 
   subroutine marbl_single_saved_state_construct(this, lname, sname, units,    &

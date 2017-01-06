@@ -33,6 +33,7 @@ module marbl_interface
   use marbl_interface_types , only : marbl_diagnostics_type
   use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_saved_state_type
+  use marbl_interface_types , only : marbl_timers_type
   use marbl_interface_types , only : marbl_running_mean_0d_type
 
   use marbl_internal_types  , only : marbl_surface_forcing_indexing_type
@@ -77,6 +78,7 @@ module marbl_interface
      type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
      type(marbl_surface_saved_state_indexing_type), public            :: surf_state_ind
      type(marbl_interior_saved_state_indexing_type), public           :: interior_state_ind
+     type(marbl_timers_type)                   , public               :: timers
 
      ! public data - interior forcing
      real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input  *
@@ -153,11 +155,15 @@ contains
        lgcm_has_global_ops,               &
        gcm_nl_buffer)
 
-    use marbl_namelist_mod    , only : marbl_nl_cnt
-    use marbl_namelist_mod    , only : marbl_nl_buffer_size
-    use marbl_config_mod      , only : marbl_config_set_defaults
-    use marbl_config_mod      , only : marbl_config_read_namelist
-    use marbl_config_mod      , only : marbl_define_config_vars
+    use marbl_namelist_mod, only : marbl_nl_cnt
+    use marbl_namelist_mod, only : marbl_nl_buffer_size
+    use marbl_config_mod  , only : marbl_config_set_defaults
+    use marbl_config_mod  , only : marbl_config_read_namelist
+    use marbl_config_mod  , only : marbl_define_config_vars
+    use marbl_timing_mod  , only : marbl_timing_init
+    use marbl_timing_mod  , only : marbl_timing_start
+    use marbl_timing_mod  , only : marbl_timing_stop
+    use marbl_timing_mod  , only : init_timer_id
 
     class(marbl_interface_class)   , intent(inout)        :: this
     character(marbl_nl_buffer_size), optional, intent(in) :: gcm_nl_buffer(:)
@@ -172,6 +178,26 @@ contains
 
     call this%StatusLog%construct()
     call this%StatusLog%log_noerror('', subname)
+
+    !-----------------------------------------------------------------------
+    !  Set up timers
+    !-----------------------------------------------------------------------
+
+    call marbl_timing_init(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_timing_init()", subname)
+      return
+    end if
+
+    call marbl_timing_start(init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_timing_start()", subname)
+      return
+    end if
+
+    !-----------------------------------------------------------------------
+    !  Check to see if global ops are allowed
+    !-----------------------------------------------------------------------
 
     if (present(lgcm_has_global_ops)) then
       this%lallow_glo_ops = lgcm_has_global_ops
@@ -212,6 +238,12 @@ contains
       return
     end if
 
+    call marbl_timing_stop(init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_timing_stop()", subname)
+      return
+    end if
+
   end subroutine config
 
   !***********************************************************************
@@ -241,7 +273,9 @@ contains
     use marbl_parms           , only : marbl_parms_read_namelist
     use marbl_parms           , only : marbl_define_parameters
     use marbl_saved_state_mod , only : marbl_saved_state_init
-    use marbl_timing_mod, only : marbl_timing_init
+    use marbl_timing_mod      , only : marbl_timing_start
+    use marbl_timing_mod      , only : marbl_timing_stop
+    use marbl_timing_mod      , only : init_timer_id
 
     implicit none
 
@@ -260,6 +294,12 @@ contains
     character(len=char_len) :: log_message
     integer :: i
     !--------------------------------------------------------------------
+
+    call marbl_timing_start(init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_timing_start()", subname)
+      return
+    end if
 
     associate(&
          num_levels            => gcm_num_levels,                              &
@@ -294,12 +334,6 @@ contains
       call this%StatusLog%log_error(log_message, subname)
       return
     end if
-
-    !-----------------------------------------------------------------------
-    !  Set up timers
-    !-----------------------------------------------------------------------
-
-    call marbl_timing_init()
 
     !-----------------------------------------------------------------------
     !  Set up tracer indices
@@ -455,6 +489,12 @@ contains
       return
     end if
 
+    call marbl_timing_stop(init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_timing_stop()", subname)
+      return
+    end if
+
   end subroutine init
 
   !***********************************************************************
@@ -468,12 +508,21 @@ contains
     use marbl_mod,         only : marbl_init_interior_forcing_fields
     use marbl_config_mod,  only : lflux_gas_o2
     use marbl_config_mod,  only : lflux_gas_co2
+    use marbl_timing_mod,  only : marbl_timing_start
+    use marbl_timing_mod,  only : marbl_timing_stop
+    use marbl_timing_mod,  only : init_timer_id
 
     class(marbl_interface_class), intent(inout) :: this
 
     character(*), parameter :: subname = 'marbl_interface:complete_config_and_init'
     character(len=char_len) :: log_message
     integer :: i
+
+    call marbl_timing_start(init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_timing_start()", subname)
+      return
+    end if
 
     !-----------------------------------------------------------------------
     !  Lock and log this%parameters
@@ -521,7 +570,6 @@ contains
                                           subname)
       return
     end if
-
 
     call this%surface_forcing_share%construct(num_surface_elements)
     call this%surface_forcing_internal%construct(num_surface_elements)
@@ -578,6 +626,12 @@ contains
 
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
+
+    call marbl_timing_stop(init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_timing_stop()", subname)
+      return
+    end if
 
   end subroutine complete_config_and_init
 
@@ -717,11 +771,21 @@ contains
 
   subroutine shutdown(this)
 
+    use marbl_timing_mod, only : marbl_timing_shutdown
+
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
 
+    character(*), parameter :: subname = 'marbl_interface:shutdown'
+
     ! free dynamically allocated memory, etc
+
+    call marbl_timing_shutdown(this%timers, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('marbl_timing_shutdown', subname)
+      return
+    end if
 
   end subroutine shutdown
 

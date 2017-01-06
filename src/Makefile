@@ -1,6 +1,9 @@
 .SUFFIXES: .F90 .o
 extension = .F90
 
+GPTL_DIR=NONE
+USEMPI=FALSE
+
 SRC_DIR=.
 OBJ_DIR=../tests/obj
 LIB_DIR=../lib
@@ -41,6 +44,10 @@ endif
 ifneq ($(GPTL_DIR),NONE)
   CPPDEFS+= -DUSE_GPTL
   INCLUDES+= -I$(GPTL_DIR)/include
+endif
+ifeq ($(USEMPI),TRUE)
+  CPPDEFS+= -DHAVE_MPI
+  override FC = mpif90
 endif
 
 ### TARGETS ###

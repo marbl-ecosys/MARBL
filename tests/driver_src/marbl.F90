@@ -61,6 +61,7 @@ Program marbl
   ! rank when building with MPI (my_task = 0 for serial build)
   integer :: my_task
   integer :: err_code
+  logical :: marbl_err
 
   namelist /marbl_driver_nml/testname
 
@@ -114,7 +115,7 @@ Program marbl
   tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_driver_nml',               &
                                  driver_status_log)
   if (driver_status_log%labort_marbl) then
-    call print_marbl_log(marbl_instance%StatusLog, my_task, err_code)
+    call print_marbl_log(marbl_instance%StatusLog, my_task, marbl_err)
   end if
 
   read(tmp_nl_buffer, nml=marbl_driver_nml, iostat=ioerr)
@@ -134,8 +135,7 @@ Program marbl
       lprint_marbl_log = .false.
       lprint_driver_log = .true.
       call marbl_init_no_namelist_test(marbl_instance)
-      write(log_message, "(A)") 'At this point there are no timers to inspect'
-      call driver_status_log%log_noerror(log_message, subname)
+      call summarize_timers(marbl_instance)
     case ('get_put')
       lprint_marbl_log = .false.
       lprint_driver_log = .true.
@@ -207,19 +207,19 @@ Program marbl
   ! (4) Print log(s)
   ! (4a) If MARBL returns an error, print MARBL log
   if (marbl_instance%StatusLog%labort_marbl) &
-      call print_marbl_log(marbl_instance%StatusLog, my_task, err_code)
+      call print_marbl_log(marbl_instance%StatusLog, my_task, marbl_err)
 
   ! (4b) If requested, print MARBL log
-  if (lprint_marbl_log.and.(err_code.eq.0)) then
-    call print_marbl_log(marbl_instance%StatusLog, my_task, err_code)
+  if (lprint_marbl_log.and.(.not.marbl_err)) then
+    call print_marbl_log(marbl_instance%StatusLog, my_task, marbl_err)
   end if
 
   ! (4c) If requested, print driver log
-  if (lprint_driver_log.and.(err_code.eq.0)) then
-    call print_marbl_log(driver_status_log, my_task, err_code)
+  if (lprint_driver_log.and.(.not.marbl_err)) then
+    call print_marbl_log(driver_status_log, my_task, marbl_err)
   end if
 
-  if (err_code.ne.0) then
+  if (marbl_err) then
 #if HAVE_MPI
     call MPI_Abort(MPI_COMM_WORLD, err_code)
 #else
@@ -233,40 +233,71 @@ Program marbl
 
 Contains
 
-  subroutine print_marbl_log(log_to_print, my_task, err_code)
+  subroutine print_marbl_log(log_to_print, my_task, marbl_err)
 
     use marbl_logging, only : marbl_status_log_entry_type
 
     class(marbl_log_type), intent(inout) :: log_to_print
     integer,               intent(in)    :: my_task
-    integer,               intent(out)   :: err_code
+    logical,               intent(out)   ::marbl_err
     type(marbl_status_log_entry_type), pointer :: tmp
 
-    err_code = 0
+#if HAVE_MPI
+    logical, parameter :: have_mpi = .true.
+#else
+    logical, parameter :: have_mpi = .false.
+#endif
+    marbl_err = log_to_print%labort_marbl
 
-    ! Output log from master task
-    if (my_task.eq.0) then
-      tmp => log_to_print%FullLog
-      do while (associated(tmp))
-        write(*,"(A)") trim(tmp%LogMessage)
-        tmp => tmp%next
-      end do
-    end if
+100 format(A)
+101 format(I0, ': ', A)
 
-    if (log_to_print%labort_marbl) then
-      if (my_task.ne.0) then
-        ! Output log from non-master task in case of error
-        tmp => log_to_print%FullLog
-        do while (associated(tmp))
-          write(*,"(I0,2A)") my_task, ': ', trim(tmp%LogMessage)
-          tmp => tmp%next
-        end do
+    tmp => log_to_print%FullLog
+    do while (associated(tmp))
+      if (have_mpi.and.(marbl_err.or.tmp%lall_tasks)) then
+        ! Output log from task(s) reporting errors, prefix task #
+        write(*,101) my_task, trim(tmp%LogMessage)
+      elseif (my_task.eq.0) then
+        write(*,100) trim(tmp%LogMessage)
       end if
-      err_code = 1
-    end if
+      tmp => tmp%next
+    end do
 
     call log_to_print%erase()
 
   end subroutine print_marbl_log
+
+  subroutine summarize_timers(marbl_instance)
+
+      use marbl_kinds_mod, only : r8
+
+      type(marbl_interface_class), intent(in) :: marbl_instance
+
+      real(r8) :: tot_runtime
+      integer :: ierr
+
+      associate(timers =>marbl_instance%timers)
+        write(log_message, "(A, I0, A)") 'There are ', timers%num_timers,     &
+                                         ' timers being returned'
+        call driver_status_log%log_noerror(log_message, subname)
+        call driver_status_log%log_noerror('----', subname)
+        do n=1, timers%num_timers
+          tot_runtime = timers%cummulative_runtimes(n)
+100       format(A, ': ', F11.3, ' seconds')
+101       format(A, ': ', F11.3, ' seconds (total)')
+#if HAVE_MPI
+          write(log_message, 100) trim(timers%names(n)), timers%cummulative_runtimes(n)
+          call driver_status_log%log_noerror(log_message, subname, lall_tasks=.true.)
+          call MPI_Reduce(timers%cummulative_runtimes(n), tot_runtime, 1,     &
+                          MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+          write(log_message, 101) trim(timers%names(n)), tot_runtime
+#else
+          write(log_message, 100) trim(timers%names(n)), tot_runtime
+#endif
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+      end associate
+
+  end subroutine summarize_timers
 
 End Program marbl
