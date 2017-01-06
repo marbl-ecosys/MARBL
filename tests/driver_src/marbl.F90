@@ -130,6 +130,12 @@ Program marbl
       call marbl_init_namelist_test(marbl_instance, nl_buffer)
     case ('init_without_namelist')
       call marbl_init_no_namelist_test(marbl_instance)
+    case ('init_timers')
+      lprint_marbl_log = .false.
+      lprint_driver_log = .true.
+      call marbl_init_no_namelist_test(marbl_instance)
+      write(log_message, "(A)") 'At this point there are no timers to inspect'
+      call driver_status_log%log_noerror(log_message, subname)
     case ('get_put')
       lprint_marbl_log = .false.
       lprint_driver_log = .true.
