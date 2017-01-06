@@ -15,7 +15,7 @@ class MARBL_testcase(object):
     self._machine = None
     self._namelistfile = 'marbl_in'
     self._GPTLroot = None
-    self._mpirun   = None
+    self._mpitasks = 0
     self._marbl_dir = path.abspath('%s/../..' % path.dirname(__file__))
 
   # -----------------------------------------------
@@ -24,7 +24,7 @@ class MARBL_testcase(object):
   # Some tests will let you specify a compiler and / or namelist
   # Some tests will require you to specify a machine
   def parse_args(self, desc, HaveCompiler=True, HaveNamelist=True,
-                 CleanLibOnly=False, UseGPTL=False):
+                 CleanLibOnly=False):
 
     import argparse
 
@@ -49,6 +49,9 @@ class MARBL_testcase(object):
 
     parser.add_argument('--gptl_loc', action='store', dest='gptl',
                         default=None, help='location of GPTL library')
+
+    parser.add_argument('--mpitasks', action='store', dest='mpitasks',
+                        default=0, help='Number of MPI tasks (default: 0 => no MPI)')
 
     args = parser.parse_args()
 
@@ -101,6 +104,8 @@ class MARBL_testcase(object):
     if args.gptl is not None:
       self._GPTLroot = args.gptl
       print "Loading GPTL library from %s" % self._GPTLroot
+
+    self._mpitasks = int(args.mpitasks)
     print '----'
     sys.stdout.flush()
 
@@ -110,10 +115,6 @@ class MARBL_testcase(object):
         print("%s is not supported on %s, please use one of following:" % (self._compiler, self._machine))
         print self.supported_compilers
         sys.exit(1)
-
-    if (UseGPTL) and (args.gptl is None):
-      print "ERROR: GPTL is required for this test. Run with --gptl_loc option."
-      sys.exit(1)
 
   # -----------------------------------------------
 
@@ -130,7 +131,9 @@ class MARBL_testcase(object):
 
     makecmd = 'make %s' % loc_compiler
     if self._GPTLroot is not None:
-      makecmd = '%s GPTL_DIR=%s' % (makecmd, self._GPTLroot)
+      makecmd += ' GPTL_DIR=%s' % self._GPTLroot
+    if self._mpitasks > 0:
+      makecmd += ' USEMPI=TRUE'
     sh_command('cd %s; %s' % (src_dir, makecmd))
 
   # -----------------------------------------------
@@ -148,7 +151,9 @@ class MARBL_testcase(object):
 
     makecmd = 'make %s' % loc_compiler
     if self._GPTLroot is not None:
-      makecmd = '%s GPTL_DIR=%s' % (makecmd, self._GPTLroot)
+      makecmd += ' GPTL_DIR=%s' % self._GPTLroot
+    if self._mpitasks > 0:
+      makecmd += ' USEMPI=TRUE'
     sh_command('cd %s; %s' % (drv_dir, makecmd))
 
   # -----------------------------------------------
@@ -159,11 +164,12 @@ class MARBL_testcase(object):
     exe_dir = '%s/tests/driver_exe' % self._marbl_dir
 
     execmd = '%s/marbl.exe < %s' % (exe_dir, self._namelistfile)
-    if self._mpirun is not None:
-      execmd = 'mpirun -n 1 %s' % execmd
+    if self._mpitasks > 0:
+      execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
     print "Running following command:"
     print execmd
     print ''
+    sys.stdout.flush()
     sh_command(execmd)
 
   # -----------------------------------------------

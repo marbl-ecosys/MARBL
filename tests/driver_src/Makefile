@@ -4,6 +4,7 @@ extension = .F90
 
 COMP_NAME=NONE
 GPTL_DIR=NONE
+USEMPI=FALSE
 
 OBJ_ROOT = $(realpath ../obj)
 OBJ_DIR = $(OBJ_ROOT)/$(COMP_NAME)/driver
@@ -23,13 +24,20 @@ else
   LFLAG = -lmarbl-$(COMP_NAME)
 endif
 CPPDEFS=-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
+EXECPPDEFS=
 INCLUDES=-I$(INC_LOC)
 LINKS=-L$(LIB_DIR) $(LFLAG)
 
 ifneq ($(GPTL_DIR),NONE)
   CPPDEFS+= -DUSE_GPTL
+  EXECPPDEFS+= -DUSE_GPTL
   INCLUDES+= -I$(GPTL_DIR)/include
   LINKS+= -L$(GPTL_DIR)/lib -lgptl
+endif
+ifeq ($(USEMPI),TRUE)
+  CPPDEFS+= -DHAVE_MPI
+  EXECPPDEFS+= -DHAVE_MPI
+  override FC = mpif90
 endif
 
 COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(CPPDEFS)"
@@ -50,7 +58,7 @@ $(EXE): clean_exe                        \
 	$(FC) -o $(EXE) $(OBJ_DIR)/*.o $(LINKS)
 
 $(OBJ_DIR)/%.o: $(DRV_DIR)/%.F90
-	$(FC) $(FCFLAGS) $(INC2) $(INCLUDES) -c $< -o $@
+	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(INC2) $(INCLUDES) -c $< -o $@
 
 $(LIB_DIR)/%.a: $(SRC_DIR)/*.F90
 	cd $(SRC_DIR) ; make FC=$(FC) FCFLAGS="$(FCFLAGS) $(INC)" USE_DEPS=TRUE $(COMP_ARGS) $@

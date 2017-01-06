@@ -14,7 +14,15 @@ Contains
 
   subroutine marbl_timing_init()
 
-    print*, "Entering timing init!"
+#if USE_GPTL
+    print*, "GPTL Timers"
+#else
+#if HAVE_MPI
+    print*, "MPI_Wtime() timers"
+#else
+    print*, "cpu_time() timers"
+#endif
+#endif
 
   end subroutine marbl_timing_init
 

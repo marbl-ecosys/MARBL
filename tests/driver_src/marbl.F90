@@ -42,6 +42,10 @@ Program marbl
 
   Implicit None
 
+#if HAVE_MPI
+  include 'mpif.h'
+#endif
+
   character(len=256), parameter :: subname = 'Program Marbl'
   type(marbl_interface_class) :: marbl_instance
   type(marbl_log_type)        :: driver_status_log
@@ -54,14 +58,27 @@ Program marbl
   logical                             :: lprint_marbl_log
   logical                             :: lprint_driver_log
 
+  ! rank when building with MPI (my_task = 0 for serial build)
+  integer :: my_task
+  integer :: err_code
+
   namelist /marbl_driver_nml/testname
 
-  ! (0) Set up local variables
-  !     * Empty strings used to pass namelist file contents to MARBL
+  ! (0) Initialization
+  !     MPI?
+#ifdef HAVE_MPI
+  call MPI_Init(err_code)
+  call MPI_Comm_rank(MPI_COMM_WORLD, my_task, err_code)
+#else
+  my_task = 0
+#endif
+
+  !     Set up local variables
+  !       * Empty strings used to pass namelist file contents to MARBL
   nl_buffer(:) = ''
   nl_str       = ''
-  !     * Some tests use a different status log than marbl_instance%StatusLog
-  !       (default is to use marbl_instance%StatusLog)
+  !       * Some tests use a different status log than marbl_instance%StatusLog
+  !         (default is to use marbl_instance%StatusLog)
   lprint_marbl_log = .true.
   lprint_driver_log = .false.
 
@@ -69,31 +86,35 @@ Program marbl
   testname     = ''
 
   ! Read namelist
-  n = 0
-  m = 0
-  do while(ioerr.eq.0)
-    n = n+m+1
-    read(*, fmt="(A)", iostat=ioerr) tmp_str
-    m = len(trim(tmp_str))
-    nl_str(n:n+m-1) = trim(tmp_str)
-    if (ioerr.eq.0) nl_str(n+m:n+m) = achar(10)
-  end do
-  if (.not.is_iostat_end(ioerr)) then
-    print*, ioerr
-    write(*,"(A)") "ERROR encountered when reading MARBL namelist from stdin"
-    stop 1
+  if (my_task.eq.0) then
+    n = 0
+    m = 0
+    do while(ioerr.eq.0)
+      n = n+m+1
+      read(*, fmt="(A)", iostat=ioerr) tmp_str
+      m = len(trim(tmp_str))
+      nl_str(n:n+m-1) = trim(tmp_str)
+      if (ioerr.eq.0) nl_str(n+m:n+m) = achar(10)
+    end do
+    if (.not.is_iostat_end(ioerr)) then
+      write(*,"(A,I0)") "ioerr = ", ioerr
+      write(*,"(A)") "ERROR encountered when reading MARBL namelist from stdin"
+      stop 1
+    end if
+    write(*,"(A,I0,A)") "MARBL namelist file contained ", len_trim(nl_str),     &
+                        " characters"
   end if
-  write(*,"(A,I0,A)") "MARBL namelist file contained ", len_trim(nl_str),     &
-                      " characters"
+#if HAVE_MPI
+  call MPI_Bcast(nl_str,marbl_nl_in_size,MPI_CHARACTER,0, MPI_COMM_WORLD, err_code)
+#endif
   call marbl_nl_split_string(nl_str, nl_buffer)
-
 
   ! (2) Read driver namelist to know what test to run
   call driver_status_log%construct()
   tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_driver_nml',               &
                                  driver_status_log)
   if (driver_status_log%labort_marbl) then
-    call print_marbl_log(marbl_instance%StatusLog)
+    call print_marbl_log(marbl_instance%StatusLog, my_task, err_code)
   end if
 
   read(tmp_nl_buffer, nml=marbl_driver_nml, iostat=ioerr)
@@ -103,7 +124,7 @@ Program marbl
   end if
 
   ! (3) Run proper test
-  write(*,"(3A)") "Beginning ", trim(testname), " test..."
+  if (my_task.eq.0) write(*,"(3A)") "Beginning ", trim(testname), " test..."
   select case (trim(testname))
     case ('init_from_namelist')
       call marbl_init_namelist_test(marbl_instance, nl_buffer)
@@ -180,38 +201,65 @@ Program marbl
   ! (4) Print log(s)
   ! (4a) If MARBL returns an error, print MARBL log
   if (marbl_instance%StatusLog%labort_marbl) &
-      call print_marbl_log(marbl_instance%StatusLog)
+      call print_marbl_log(marbl_instance%StatusLog, my_task, err_code)
 
   ! (4b) If requested, print MARBL log
-  if (lprint_marbl_log) then
-    call print_marbl_log(marbl_instance%StatusLog)
+  if (lprint_marbl_log.and.(err_code.eq.0)) then
+    call print_marbl_log(marbl_instance%StatusLog, my_task, err_code)
   end if
 
   ! (4c) If requested, print driver log
-  if (lprint_driver_log) then
-    call print_marbl_log(driver_status_log)
+  if (lprint_driver_log.and.(err_code.eq.0)) then
+    call print_marbl_log(driver_status_log, my_task, err_code)
   end if
+
+  if (err_code.ne.0) then
+#if HAVE_MPI
+    call MPI_Abort(MPI_COMM_WORLD, err_code)
+#else
+    stop 1
+#endif
+  end if
+
+#if HAVE_MPI
+  call MPI_Finalize(err_code)
+#endif
 
 Contains
 
-  subroutine print_marbl_log(log_to_print)
+  subroutine print_marbl_log(log_to_print, my_task, err_code)
 
-    use marbl_logging,      only : marbl_status_log_entry_type
+    use marbl_logging, only : marbl_status_log_entry_type
 
     class(marbl_log_type), intent(inout) :: log_to_print
+    integer,               intent(in)    :: my_task
+    integer,               intent(out)   :: err_code
     type(marbl_status_log_entry_type), pointer :: tmp
 
-    tmp => log_to_print%FullLog
-    do while (associated(tmp))
-      write(*,"(A)") trim(tmp%LogMessage)
-      tmp => tmp%next
-    end do
+    err_code = 0
 
-    call log_to_print%erase()
+    ! Output log from master task
+    if (my_task.eq.0) then
+      tmp => log_to_print%FullLog
+      do while (associated(tmp))
+        write(*,"(A)") trim(tmp%LogMessage)
+        tmp => tmp%next
+      end do
+    end if
 
     if (log_to_print%labort_marbl) then
-      stop 1
+      if (my_task.ne.0) then
+        ! Output log from non-master task in case of error
+        tmp => log_to_print%FullLog
+        do while (associated(tmp))
+          write(*,"(I0,2A)") my_task, ': ', trim(tmp%LogMessage)
+          tmp => tmp%next
+        end do
+      end if
+      err_code = 1
     end if
+
+    call log_to_print%erase()
 
   end subroutine print_marbl_log
 

@@ -7,7 +7,8 @@ from marbl_testing_class import MARBL_testcase
 
 mt = MARBL_testcase()
 
-mt.parse_args(desc='Run full MARBL setup (config, init, and complete), turning on GPTL timers (requires GPTL library to be installed)', HaveNamelist=False, UseGPTL=True)
+# FIXME: how will this test actually differ from init_without_namelist?
+mt.parse_args(desc='Run full MARBL setup (config, init, and complete), with test timer turned on', HaveNamelist=False)
 
 mt.build_exe()
 
