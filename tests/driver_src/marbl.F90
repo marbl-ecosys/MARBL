@@ -41,17 +41,9 @@ Program marbl
   use marbl_init_namelist_drv,    only : marbl_init_namelist_test    => test
   use marbl_init_no_namelist_drv, only : marbl_init_no_namelist_test => test
   use marbl_get_put_drv,          only : marbl_get_put_test          => test
+  use marbl_mpi_mod ! No only because we want all of mpif.h?
 
   Implicit None
-
-#if HAVE_MPI
-  include 'mpif.h'
-  logical, parameter :: have_mpi = .true.
-  integer :: num_tasks
-  integer :: status(MPI_STATUS_SIZE)
-#else
-  logical, parameter :: have_mpi = .false.
-#endif
 
   character(len=256), parameter :: subname = 'Program Marbl'
   type(marbl_interface_class) :: marbl_instance
@@ -65,24 +57,13 @@ Program marbl
   logical                             :: lprint_marbl_log
   logical                             :: lprint_driver_log
 
-  ! rank when building with MPI (my_task = 0 for serial build)
-  integer :: my_task
-  integer :: err_code
-  logical :: marbl_err
-
   namelist /marbl_driver_nml/testname
 
   !****************************************************************************
 
   ! (0) Initialization
   !     MPI?
-#ifdef HAVE_MPI
-  call MPI_Init(err_code)
-  call MPI_Comm_rank(MPI_COMM_WORLD, my_task, err_code)
-  call MPI_Comm_size(MPI_COMM_WORLD, num_tasks, err_code)
-#else
-  my_task = 0
-#endif
+  call marbl_mpi_init()
 
   !     Set up local variables
   !       * Empty strings used to pass namelist file contents to MARBL
@@ -115,9 +96,7 @@ Program marbl
     write(*,"(A,I0,A)") "MARBL namelist file contained ", len_trim(nl_str),     &
                         " characters"
   end if
-#if HAVE_MPI
-  call MPI_Bcast(nl_str,marbl_nl_in_size,MPI_CHARACTER,0, MPI_COMM_WORLD, err_code)
-#endif
+  call marbl_mpi_bcast(nl_str, 0)
   call marbl_nl_split_string(nl_str, nl_buffer)
 
   ! (2) Read driver namelist to know what test to run
@@ -220,26 +199,16 @@ Program marbl
       call print_marbl_log(marbl_instance%StatusLog)
 
   ! (4b) If requested, print MARBL log
-  if (lprint_marbl_log.and.(.not.marbl_err)) then
+  if (lprint_marbl_log) then
     call print_marbl_log(marbl_instance%StatusLog)
   end if
 
   ! (4c) If requested, print driver log
-  if (lprint_driver_log.and.(.not.marbl_err)) then
+  if (lprint_driver_log) then
     call print_marbl_log(driver_status_log)
   end if
 
-  if (marbl_err) then
-#if HAVE_MPI
-    call MPI_Abort(MPI_COMM_WORLD, err_code)
-#else
-    stop 1
-#endif
-  end if
-
-#if HAVE_MPI
-  call MPI_Finalize(err_code)
-#endif
+  call marbl_mpi_finalize()
 
   !****************************************************************************
 
@@ -253,6 +222,7 @@ Contains
 
     class(marbl_log_type), intent(inout) :: log_to_print
     type(marbl_status_log_entry_type), pointer :: tmp
+    logical :: marbl_err
 
     marbl_err = log_to_print%labort_marbl
 
@@ -261,7 +231,7 @@ Contains
 
     tmp => log_to_print%FullLog
     do while (associated(tmp))
-      if (have_mpi.and.(marbl_err.or.tmp%lall_tasks)) then
+      if (mpi_on.and.(marbl_err.or.tmp%lall_tasks)) then
         ! Output log from task(s) reporting errors, prefix task #
         write(*,101) my_task, trim(tmp%LogMessage)
       elseif (my_task.eq.0) then
@@ -272,6 +242,8 @@ Contains
 
     call log_to_print%erase()
 
+    if (marbl_err) call marbl_mpi_abort()
+
   end subroutine print_marbl_log
 
   !****************************************************************************
@@ -280,10 +252,10 @@ Contains
 
       use marbl_kinds_mod, only : r8
 
-      real(r8) :: tot_runtime
-#if HAVE_MPI
-      real(r8) :: ind_runtime, max_runtime
-#endif
+      real(r8) :: ind_runtime, max_runtime, tot_runtime
+      character(len=10) :: int_to_str
+
+100   format(2A, ': ', F11.3, ' seconds')
 
       associate(timers =>marbl_instance%timers)
         write(log_message, "(A, I0, A)") 'There are ', timers%num_timers,     &
@@ -291,40 +263,37 @@ Contains
         call driver_status_log%log_noerror(log_message, subname)
         call driver_status_log%log_noerror('----', subname)
         do n=1, timers%num_timers
-          tot_runtime = timers%cummulative_runtimes(n)
-100       format(A, ': ', F11.3, ' seconds')
-#if HAVE_MPI
-101       format('(', I0, ') ', A, ': ', F11.3, ' seconds')
-102       format(2A, ': ', F11.3, ' seconds')
-          if (my_task.eq.0) then
-            do m=0, num_tasks-1
-              if (m.gt.0) then
-                call MPI_Recv(ind_runtime, 1, MPI_DOUBLE_PRECISION, m,        &
-                              MPI_ANY_TAG, MPI_COMM_WORLD, status, err_code)
-                tot_runtime = tot_runtime + ind_runtime
-                max_runtime = max(max_runtime, ind_runtime)
-              else
-                ind_runtime = tot_runtime
-                max_runtime = tot_runtime
-              end if
-              write(log_message, 101) m, trim(timers%names(n)), ind_runtime
+          ind_runtime = timers%cummulative_runtimes(n)
+          if (mpi_on) then
+            if (my_task.eq.0) then
+              max_runtime = ind_runtime
+              tot_runtime = ind_runtime
+              write(log_message, 100) '(0) ', trim(timers%names(n)), ind_runtime
               call driver_status_log%log_noerror(log_message, subname)
-            end do
-          else
-            call MPI_Send(tot_runtime, 1, MPI_DOUBLE_PRECISION, 0, 2001, MPI_COMM_WORLD, err_code)
+              do m=1, num_tasks-1
+                call marbl_mpi_recv(ind_runtime, m)
+                max_runtime = max(max_runtime, ind_runtime)
+                tot_runtime = tot_runtime + ind_runtime
+                write(int_to_str, "('(',I0,')')") m
+                write(log_message, 100) int_to_str(1:len_trim(int_to_str)+1), &
+                                        trim(timers%names(n)), ind_runtime
+                call driver_status_log%log_noerror(log_message, subname)
+              end do
+            else
+              call marbl_mpi_send(ind_runtime, 0)
+            end if
+            if (my_task.eq.0) then
+              write(log_message, 100) '(avg) ', trim(timers%names(n)), tot_runtime/real(num_tasks,r8)
+              call driver_status_log%log_noerror(log_message, subname)
+              write(log_message, 100) '(max) ', trim(timers%names(n)), max_runtime
+              call driver_status_log%log_noerror(log_message, subname)
+              write(log_message, 100) '(tot) ', trim(timers%names(n)), tot_runtime
+              call driver_status_log%log_noerror(log_message, subname)
+            end if
+          else ! no MPI
+            write(log_message, 100) '', trim(timers%names(n)), ind_runtime
+            call driver_status_log%log_noerror(log_message, subname)
           end if
-          if (my_task.eq.0) then
-            write(log_message, 102) '(avg) ', trim(timers%names(n)), tot_runtime/real(num_tasks,r8)
-            call driver_status_log%log_noerror(log_message, subname)
-            write(log_message, 102) '(max) ', trim(timers%names(n)), max_runtime
-            call driver_status_log%log_noerror(log_message, subname)
-            write(log_message, 102) '(tot) ', trim(timers%names(n)), tot_runtime
-            call driver_status_log%log_noerror(log_message, subname)
-          end if
-#else
-          write(log_message, 100) trim(timers%names(n)), tot_runtime
-          call driver_status_log%log_noerror(log_message, subname)
-#endif
         end do
       end associate
 

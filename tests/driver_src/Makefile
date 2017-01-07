@@ -47,7 +47,10 @@ EXE       = $(EXE_DIR)/marbl.exe
 OBJS = marbl_init_namelist_drv.o       \
        marbl_init_no_namelist_drv.o    \
        marbl_get_put_drv.o             \
+       marbl_mpi_mod.o                 \
        marbl.o
+
+MODS = marbl_mpi_mod.mod
 
 .PHONY: intel pgi gnu nag cray clean clean_exe
 
