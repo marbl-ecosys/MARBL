@@ -280,7 +280,10 @@ Contains
 
       use marbl_kinds_mod, only : r8
 
-      real(r8) :: tot_runtime, ind_runtime
+      real(r8) :: tot_runtime
+#if HAVE_MPI
+      real(r8) :: ind_runtime, max_runtime
+#endif
 
       associate(timers =>marbl_instance%timers)
         write(log_message, "(A, I0, A)") 'There are ', timers%num_timers,     &
@@ -288,18 +291,21 @@ Contains
         call driver_status_log%log_noerror(log_message, subname)
         call driver_status_log%log_noerror('----', subname)
         do n=1, timers%num_timers
-          ind_runtime = timers%cummulative_runtimes(n)
-          tot_runtime = ind_runtime
+          tot_runtime = timers%cummulative_runtimes(n)
 100       format(A, ': ', F11.3, ' seconds')
 #if HAVE_MPI
 101       format('(', I0, ') ', A, ': ', F11.3, ' seconds')
-102       format('(tot) ', A, ': ', F11.3, ' seconds')
+102       format(2A, ': ', F11.3, ' seconds')
           if (my_task.eq.0) then
             do m=0, num_tasks-1
               if (m.gt.0) then
                 call MPI_Recv(ind_runtime, 1, MPI_DOUBLE_PRECISION, m,        &
                               MPI_ANY_TAG, MPI_COMM_WORLD, status, err_code)
                 tot_runtime = tot_runtime + ind_runtime
+                max_runtime = max(max_runtime, ind_runtime)
+              else
+                ind_runtime = tot_runtime
+                max_runtime = tot_runtime
               end if
               write(log_message, 101) m, trim(timers%names(n)), ind_runtime
               call driver_status_log%log_noerror(log_message, subname)
@@ -308,12 +314,17 @@ Contains
             call MPI_Send(tot_runtime, 1, MPI_DOUBLE_PRECISION, 0, 2001, MPI_COMM_WORLD, err_code)
           end if
           if (my_task.eq.0) then
-            write(log_message, 102) trim(timers%names(n)), tot_runtime
+            write(log_message, 102) '(avg) ', trim(timers%names(n)), tot_runtime/real(num_tasks,r8)
+            call driver_status_log%log_noerror(log_message, subname)
+            write(log_message, 102) '(max) ', trim(timers%names(n)), max_runtime
+            call driver_status_log%log_noerror(log_message, subname)
+            write(log_message, 102) '(tot) ', trim(timers%names(n)), tot_runtime
+            call driver_status_log%log_noerror(log_message, subname)
           end if
 #else
           write(log_message, 100) trim(timers%names(n)), tot_runtime
-#endif
           call driver_status_log%log_noerror(log_message, subname)
+#endif
         end do
       end associate
 
