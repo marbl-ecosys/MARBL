@@ -37,6 +37,7 @@ endif
 ifeq ($(USEMPI),TRUE)
   CPPDEFS+= -DHAVE_MPI
   EXECPPDEFS+= -DHAVE_MPI
+  MPISUF=-mpi
   override FC = mpif90
 endif
 
@@ -70,7 +71,7 @@ pgi:
 	$(MAKE) $(EXE) COMP_NAME=pgi FC=pgf90 FCFLAGS="-O2 -Mfree" INC="-module $(OBJ_ROOT)/pgi" INC2="-module $(OBJ_ROOT)/pgi/driver"
 
 gnu:
-	$(MAKE) $(EXE) COMP_NAME=gnu FC=gfortran FCFLAGS="-O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu" INC2="-J $(OBJ_ROOT)/gnu/driver"
+	$(MAKE) $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
 
 nag:
 	$(MAKE) $(EXE) COMP_NAME=nag FC=nagfor FCFLAGS="-O2 -free -kind=byte" INC="-mdir $(OBJ_ROOT)/nag -I$(OBJ_ROOT)/nag" INC2="-mdir $(OBJ_ROOT)/nag/driver -I$(OBJ_ROOT)/nag/driver"

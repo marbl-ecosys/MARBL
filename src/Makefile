@@ -12,10 +12,6 @@ FC = NONE
 GPTL_DIR = NONE
 INCLUDES=
 
-# Dependency Generation
-MAKE_DEP = $(SRC_DIR)/makedep.py
-DEP_FILE = $(OBJ_DIR)/shared_deps.d
-
 ifneq ($(INC_DIR),$(OBJ_DIR))
   DIFF_INC = TRUE
  endif
@@ -37,17 +33,23 @@ OBJS = $(addprefix $(OBJ_DIR)/,${MODULES:.F90=.o})
 
 CPPDEFS=-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
 
-ifeq ($(USE_DEPS),TRUE)
-  include $(DEP_FILE)
-endif
-
 ifneq ($(GPTL_DIR),NONE)
   CPPDEFS+= -DUSE_GPTL
   INCLUDES+= -I$(GPTL_DIR)/include
 endif
+
 ifeq ($(USEMPI),TRUE)
   CPPDEFS+= -DHAVE_MPI
+  MPISUF=-mpi
   override FC = mpif90
+endif
+
+# Dependency Generation
+MAKE_DEP = $(SRC_DIR)/makedep.py
+DEP_FILE = $(OBJ_DIR)/shared_deps.d
+
+ifeq ($(USE_DEPS),TRUE)
+  include $(DEP_FILE)
 endif
 
 ### TARGETS ###
@@ -57,7 +59,7 @@ all : gnu
 
 # Shorthand for specific compilers
 gnu:
-	$(MAKE) $(LIB_DIR)/libmarbl-gnu.a USE_DEPS=TRUE FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR)/gnu -cpp" OBJ_DIR=$(OBJ_DIR)/gnu INC_DIR=$(INC_DIR)/gnu
+	$(MAKE) $(LIB_DIR)/libmarbl-gnu$(MPISUF).a USE_DEPS=TRUE FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR)/gnu$(MPISUF) -cpp" OBJ_DIR=$(OBJ_DIR)/gnu$(MPISUF) INC_DIR=$(INC_DIR)/gnu$(MPISUF)
 
 intel:
 	$(MAKE) $(LIB_DIR)/libmarbl-intel.a USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel INC_DIR=$(INC_DIR)/intel
