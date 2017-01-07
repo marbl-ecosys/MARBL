@@ -74,7 +74,7 @@ gnu:
 	$(MAKE) $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
 
 nag:
-	$(MAKE) $(EXE) COMP_NAME=nag FC=nagfor FCFLAGS="-O2 -free -kind=byte" INC="-mdir $(OBJ_ROOT)/nag -I$(OBJ_ROOT)/nag" INC2="-mdir $(OBJ_ROOT)/nag/driver -I$(OBJ_ROOT)/nag/driver"
+	$(MAKE) $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-O2 -free -kind=byte" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
 
 cray:
 	$(MAKE) $(EXE) COMP_NAME=cray FC=ftn FCFLAGS="-O2 -f free -e mf" INC="-J $(OBJ_ROOT)/cray" INC2="-J $(OBJ_ROOT)/cray/driver"

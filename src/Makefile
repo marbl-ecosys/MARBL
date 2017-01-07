@@ -68,7 +68,7 @@ pgi:
 	$(MAKE) $(LIB_DIR)/libmarbl-pgi.a USE_DEPS=TRUE FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi OBJ_DIR=$(OBJ_DIR)/pgi" INC_DIR=$(INC_DIR)/pgi
 
 nag:
-	$(MAKE) $(LIB_DIR)/libmarbl-nag.a USE_DEPS=TRUE FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR)/nag -mdir $(OBJ_DIR)/nag -kind=byte" OBJ_DIR=$(OBJ_DIR)/nag INC_DIR=$(INC_DIR)/nag
+	$(MAKE) $(LIB_DIR)/libmarbl-nag$(MPISUF).a USE_DEPS=TRUE FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR)/nag$(MPISUF) -mdir $(OBJ_DIR)/nag$(MPISUF) -kind=byte" OBJ_DIR=$(OBJ_DIR)/nag$(MPISUF) INC_DIR=$(INC_DIR)/nag$(MPISUF)
 
 cray:
 	$(MAKE) $(LIB_DIR)/libmarbl-cray.a USE_DEPS=TRUE FC=ftn FCFLAGS="-O2 -f free -e mf -J $(OBJ_DIR)/cray" OBJ_DIR=$(OBJ_DIR)/cray INC_DIR=$(INC_DIR)/cray
