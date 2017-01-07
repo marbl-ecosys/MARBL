@@ -1,5 +1,6 @@
 Program marbl
 
+! *****************************************************************************
 ! The driver for MARBL's stand-alone testing. When built, the executable will
 ! run one of several tests based on the value of testname in &marbl_driver_nml
 !
@@ -25,6 +26,7 @@ Program marbl
 !                                that MARBL expects the GCM to provide
 !    v)   requested_restoring/ -- Print out the list of tracers MARBL will be
 !                                 restoring to some given data field
+! *****************************************************************************
 
   ! Use from libmarbl.a
   use marbl_interface,    only : marbl_interface_class
@@ -44,6 +46,11 @@ Program marbl
 
 #if HAVE_MPI
   include 'mpif.h'
+  logical, parameter :: have_mpi = .true.
+  integer :: num_tasks
+  integer :: status(MPI_STATUS_SIZE)
+#else
+  logical, parameter :: have_mpi = .false.
 #endif
 
   character(len=256), parameter :: subname = 'Program Marbl'
@@ -65,11 +72,14 @@ Program marbl
 
   namelist /marbl_driver_nml/testname
 
+  !****************************************************************************
+
   ! (0) Initialization
   !     MPI?
 #ifdef HAVE_MPI
   call MPI_Init(err_code)
   call MPI_Comm_rank(MPI_COMM_WORLD, my_task, err_code)
+  call MPI_Comm_size(MPI_COMM_WORLD, num_tasks, err_code)
 #else
   my_task = 0
 #endif
@@ -115,7 +125,7 @@ Program marbl
   tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_driver_nml',               &
                                  driver_status_log)
   if (driver_status_log%labort_marbl) then
-    call print_marbl_log(marbl_instance%StatusLog, my_task, marbl_err)
+    call print_marbl_log(marbl_instance%StatusLog)
   end if
 
   read(tmp_nl_buffer, nml=marbl_driver_nml, iostat=ioerr)
@@ -135,7 +145,7 @@ Program marbl
       lprint_marbl_log = .false.
       lprint_driver_log = .true.
       call marbl_init_no_namelist_test(marbl_instance)
-      call summarize_timers(marbl_instance)
+      call summarize_timers()
     case ('get_put')
       lprint_marbl_log = .false.
       lprint_driver_log = .true.
@@ -207,16 +217,16 @@ Program marbl
   ! (4) Print log(s)
   ! (4a) If MARBL returns an error, print MARBL log
   if (marbl_instance%StatusLog%labort_marbl) &
-      call print_marbl_log(marbl_instance%StatusLog, my_task, marbl_err)
+      call print_marbl_log(marbl_instance%StatusLog)
 
   ! (4b) If requested, print MARBL log
   if (lprint_marbl_log.and.(.not.marbl_err)) then
-    call print_marbl_log(marbl_instance%StatusLog, my_task, marbl_err)
+    call print_marbl_log(marbl_instance%StatusLog)
   end if
 
   ! (4c) If requested, print driver log
   if (lprint_driver_log.and.(.not.marbl_err)) then
-    call print_marbl_log(driver_status_log, my_task, marbl_err)
+    call print_marbl_log(driver_status_log)
   end if
 
   if (marbl_err) then
@@ -231,22 +241,19 @@ Program marbl
   call MPI_Finalize(err_code)
 #endif
 
+  !****************************************************************************
+
 Contains
 
-  subroutine print_marbl_log(log_to_print, my_task, marbl_err)
+  !****************************************************************************
+
+  subroutine print_marbl_log(log_to_print)
 
     use marbl_logging, only : marbl_status_log_entry_type
 
     class(marbl_log_type), intent(inout) :: log_to_print
-    integer,               intent(in)    :: my_task
-    logical,               intent(out)   ::marbl_err
     type(marbl_status_log_entry_type), pointer :: tmp
 
-#if HAVE_MPI
-    logical, parameter :: have_mpi = .true.
-#else
-    logical, parameter :: have_mpi = .false.
-#endif
     marbl_err = log_to_print%labort_marbl
 
 100 format(A)
@@ -267,14 +274,13 @@ Contains
 
   end subroutine print_marbl_log
 
-  subroutine summarize_timers(marbl_instance)
+  !****************************************************************************
+
+  subroutine summarize_timers()
 
       use marbl_kinds_mod, only : r8
 
-      type(marbl_interface_class), intent(in) :: marbl_instance
-
-      real(r8) :: tot_runtime
-      integer :: ierr
+      real(r8) :: tot_runtime, ind_runtime
 
       associate(timers =>marbl_instance%timers)
         write(log_message, "(A, I0, A)") 'There are ', timers%num_timers,     &
@@ -282,15 +288,28 @@ Contains
         call driver_status_log%log_noerror(log_message, subname)
         call driver_status_log%log_noerror('----', subname)
         do n=1, timers%num_timers
-          tot_runtime = timers%cummulative_runtimes(n)
+          ind_runtime = timers%cummulative_runtimes(n)
+          tot_runtime = ind_runtime
 100       format(A, ': ', F11.3, ' seconds')
-101       format(A, ': ', F11.3, ' seconds (total)')
 #if HAVE_MPI
-          write(log_message, 100) trim(timers%names(n)), timers%cummulative_runtimes(n)
-          call driver_status_log%log_noerror(log_message, subname, lall_tasks=.true.)
-          call MPI_Reduce(timers%cummulative_runtimes(n), tot_runtime, 1,     &
-                          MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-          write(log_message, 101) trim(timers%names(n)), tot_runtime
+101       format('(', I0, ') ', A, ': ', F11.3, ' seconds')
+102       format('(tot) ', A, ': ', F11.3, ' seconds')
+          if (my_task.eq.0) then
+            do m=0, num_tasks-1
+              if (m.gt.0) then
+                call MPI_Recv(ind_runtime, 1, MPI_DOUBLE_PRECISION, m,        &
+                              MPI_ANY_TAG, MPI_COMM_WORLD, status, err_code)
+                tot_runtime = tot_runtime + ind_runtime
+              end if
+              write(log_message, 101) m, trim(timers%names(n)), ind_runtime
+              call driver_status_log%log_noerror(log_message, subname)
+            end do
+          else
+            call MPI_Send(tot_runtime, 1, MPI_DOUBLE_PRECISION, 0, 2001, MPI_COMM_WORLD, err_code)
+          end if
+          if (my_task.eq.0) then
+            write(log_message, 102) trim(timers%names(n)), tot_runtime
+          end if
 #else
           write(log_message, 100) trim(timers%names(n)), tot_runtime
 #endif
@@ -299,5 +318,7 @@ Contains
       end associate
 
   end subroutine summarize_timers
+
+  !****************************************************************************
 
 End Program marbl
