@@ -250,52 +250,52 @@ Contains
 
   subroutine summarize_timers()
 
-      use marbl_kinds_mod, only : r8
+    use marbl_kinds_mod, only : r8
 
-      real(r8) :: ind_runtime, max_runtime, tot_runtime
-      character(len=10) :: int_to_str
+    real(r8) :: ind_runtime, max_runtime, tot_runtime
+    character(len=15) :: int_to_str
 
-100   format(2A, ': ', F11.3, ' seconds')
+100 format(A, ': ', F11.3, ' seconds',A)
 
-      associate(timers =>marbl_instance%timers)
-        write(log_message, "(A, I0, A)") 'There are ', timers%num_timers,     &
-                                         ' timers being returned'
-        call driver_status_log%log_noerror(log_message, subname)
-        call driver_status_log%log_noerror('----', subname)
-        do n=1, timers%num_timers
-          ind_runtime = timers%cummulative_runtimes(n)
-          if (mpi_on) then
-            if (my_task.eq.0) then
-              max_runtime = ind_runtime
-              tot_runtime = ind_runtime
-              write(log_message, 100) '(0) ', trim(timers%names(n)), ind_runtime
+    associate(timers =>marbl_instance%timers)
+      write(log_message, "(A, I0, A)") 'There are ', timers%num_timers,       &
+                                       ' timers being returned'
+      call driver_status_log%log_noerror(log_message, subname)
+      call driver_status_log%log_noerror('----', subname)
+      do n=1, timers%num_timers
+        ind_runtime = timers%cummulative_runtimes(n)
+        if (mpi_on) then
+          if (my_task.eq.0) then
+            max_runtime = ind_runtime
+            tot_runtime = ind_runtime
+            write(log_message, 100) trim(timers%names(n)), ind_runtime, ' (Task 0)'
+            call driver_status_log%log_noerror(log_message, subname)
+            do m=1, num_tasks-1
+              call marbl_mpi_recv(ind_runtime, m)
+              max_runtime = max(max_runtime, ind_runtime)
+              tot_runtime = tot_runtime + ind_runtime
+              write(int_to_str, "(' (Task ',I0,')')") m
+              write(log_message, 100) trim(timers%names(n)), ind_runtime,     &
+                                      trim(int_to_str)
               call driver_status_log%log_noerror(log_message, subname)
-              do m=1, num_tasks-1
-                call marbl_mpi_recv(ind_runtime, m)
-                max_runtime = max(max_runtime, ind_runtime)
-                tot_runtime = tot_runtime + ind_runtime
-                write(int_to_str, "('(',I0,')')") m
-                write(log_message, 100) int_to_str(1:len_trim(int_to_str)+1), &
-                                        trim(timers%names(n)), ind_runtime
-                call driver_status_log%log_noerror(log_message, subname)
-              end do
-            else
-              call marbl_mpi_send(ind_runtime, 0)
-            end if
-            if (my_task.eq.0) then
-              write(log_message, 100) '(avg) ', trim(timers%names(n)), tot_runtime/real(num_tasks,r8)
-              call driver_status_log%log_noerror(log_message, subname)
-              write(log_message, 100) '(max) ', trim(timers%names(n)), max_runtime
-              call driver_status_log%log_noerror(log_message, subname)
-              write(log_message, 100) '(tot) ', trim(timers%names(n)), tot_runtime
-              call driver_status_log%log_noerror(log_message, subname)
-            end if
-          else ! no MPI
-            write(log_message, 100) '', trim(timers%names(n)), ind_runtime
+            end do
+          else
+            call marbl_mpi_send(ind_runtime, 0)
+          end if
+          if (my_task.eq.0) then
+            write(log_message, 100) trim(timers%names(n)), tot_runtime/real(num_tasks,r8), ' (avg)'
+            call driver_status_log%log_noerror(log_message, subname)
+            write(log_message, 100) trim(timers%names(n)), max_runtime, ' (max)'
+            call driver_status_log%log_noerror(log_message, subname)
+            write(log_message, 100) trim(timers%names(n)), tot_runtime, ' (tot)'
             call driver_status_log%log_noerror(log_message, subname)
           end if
-        end do
-      end associate
+        else ! no MPI
+          write(log_message, 100) trim(timers%names(n)), ind_runtime, ''
+          call driver_status_log%log_noerror(log_message, subname)
+        end if
+      end do
+    end associate
 
   end subroutine summarize_timers
 
