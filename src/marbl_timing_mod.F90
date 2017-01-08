@@ -17,21 +17,16 @@ module marbl_timing_mod
 
   type :: marbl_single_timer_type
     character(char_len) :: name
-    logical             :: initialized = .false.
     logical             :: is_running
     real(r8)            :: cur_start
     real(r8)            :: cummulative_runtime
   contains
+    procedure :: init => init_single_timer
   end type marbl_single_timer_type
 
   type :: marbl_timer_type
-    logical :: is_locked = .false.
     integer :: num_timers
     type(marbl_single_timer_type), allocatable :: individual_timers(:)
-  contains
-    procedure :: construct => marbl_timer_type_constructor
-    procedure :: add_timer
-    procedure :: lock => marbl_timer_type_lock
   end type marbl_timer_type
 
   !*****************************************************************************
@@ -39,10 +34,7 @@ module marbl_timing_mod
   ! Private module variable to track all the timers being use
   type(marbl_timer_type) :: all_timers
 
-  ! IDs for the different timers, needs to be accessible elsewhere in MARBL
-  integer, public :: init_timer_id
-
-  public :: marbl_timing_init
+  public :: marbl_timing_add
   public :: marbl_timing_start
   public :: marbl_timing_stop
   public :: marbl_timing_shutdown
@@ -53,17 +45,42 @@ Contains
 
   !*****************************************************************************
 
-  subroutine marbl_timing_init(marbl_status_log)
+  subroutine marbl_timing_add(name, id, marbl_status_log)
 
+    character(len=*),     intent(in)    :: name
+    integer,              intent(out)   :: id
     type(marbl_log_type), intent(inout) :: marbl_status_log
 
-    call all_timers%construct(marbl_status_log)
+    character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_add'
+    character(len=char_len) :: log_message
+    type(marbl_single_timer_type), allocatable :: tmp(:)
+    integer :: n
 
-    call all_timers%add_timer('Initialization', init_timer_id, marbl_status_log)
+    if (.not.allocated(all_timers%individual_timers)) then
+      allocate(all_timers%individual_timers(0))
+    end if
 
-    call all_timers%lock(marbl_status_log)
+    ! Error check: is this name already in use?
+    do n=1,all_timers%num_timers
+      if (trim(name).eq.trim(all_timers%individual_timers(n)%name)) then
+        write(log_message, "(2A,I0)") trim(name), ' is already in use for timer ', &
+                                      n
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+    end do
 
-  end subroutine marbl_timing_init
+    allocate(tmp(all_timers%num_timers))
+    call copy_timers(all_timers%individual_timers, tmp, all_timers%num_timers)
+    deallocate(all_timers%individual_timers)
+
+    all_timers%num_timers = all_timers%num_timers + 1
+    allocate(all_timers%individual_timers(all_timers%num_timers))
+    call copy_timers(tmp, all_timers%individual_timers, all_timers%num_timers-1)
+    id = all_timers%num_timers
+    call all_timers%individual_timers(id)%init(name)
+
+  end subroutine marbl_timing_add
 
   !*****************************************************************************
 
@@ -117,13 +134,6 @@ Contains
     end if
 
     associate(timer => all_timers%individual_timers(id))
-      ! Error checking
-      if (.not.timer%initialized) then
-        write(log_message, "(A,I0,A)") 'Timer ', id, ' has not been initialized!'
-        call marbl_status_log%log_error(log_message, subname)
-        return
-      end if
-
       if (timer%is_running) then
         log_message = 'Timer has already been started!'
         call marbl_status_log%log_error(log_message, subname)
@@ -161,12 +171,6 @@ Contains
 
     associate(timer => all_timers%individual_timers(id))
       ! Error checking
-      if (.not.timer%initialized) then
-        log_message = 'Timer has not been initialized!'
-        call marbl_status_log%log_error(log_message, subname)
-        return
-      end if
-
       if (.not.timer%is_running) then
         log_message = 'Timer has not been started!'
         call marbl_status_log%log_error(log_message, subname)
@@ -191,86 +195,37 @@ Contains
 
   !*****************************************************************************
 
+  subroutine copy_timers(src, dest, num_timers)
+
+    type(marbl_single_timer_type), intent(in)    :: src(:)
+    type(marbl_single_timer_type), intent(inout) :: dest(:)
+    integer,                       intent(in)    :: num_timers
+
+    integer :: n
+
+    do n=1, num_timers
+      dest(n)%name                = src(n)%name
+      dest(n)%is_running          = src(n)%is_running
+      dest(n)%cur_start           = src(n)%cur_start
+      dest(n)%cummulative_runtime = src(n)%cummulative_runtime
+    end do
+
+  end subroutine copy_timers
+
+  !*****************************************************************************
+
   ! FIXME #124: using self instead of this!
-  subroutine marbl_timer_type_constructor(self, marbl_status_log)
+  subroutine init_single_timer(self, name)
 
-    class(marbl_timer_type), intent(inout) :: self
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
+    class(marbl_single_timer_type), intent(inout) :: self
+    character(len=*),               intent(in)    :: name
 
-    character(*), parameter :: subname = 'marbl_timing_mod:timer_type_constructor'
+    self%name = name
+    self%is_running = .false.
+    self%cur_start = c0
+    self%cummulative_runtime = c0
 
-    ! Check to see if constructed
-    if (allocated(self%individual_timers)) then
-      call marbl_status_log%log_error('Timers already constructed', subname)
-      return
-    end if
-
-    self%num_timers = 0
-    allocate(self%individual_timers(self%num_timers))
-
-  end subroutine marbl_timer_type_constructor
-
-  !*****************************************************************************
-
-  subroutine marbl_timer_type_lock(self, marbl_status_log)
-
-    class(marbl_timer_type), intent(inout) :: self
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_timing_mod:timer_type_lock'
-    integer :: n
-
-    ! Error check: are timers already locked?
-    if (self%is_locked) then
-      call marbl_status_log%log_error('Timers are already locked', subname)
-      return
-    end if
-
-    do n=1,self%num_timers
-      self%individual_timers(n)%is_running = .false.
-      self%individual_timers(n)%cur_start  = c0
-      self%individual_timers(n)%cummulative_runtime = c0
-      self%individual_timers(n)%initialized = .true.
-    end do
-    self%is_locked = .true.
-
-  end subroutine marbl_timer_type_lock
-
-  !*****************************************************************************
-
-  subroutine add_timer(self, name, id, marbl_status_log)
-
-    class(marbl_timer_type), intent(inout) :: self
-    character(len=*),        intent(in)    :: name
-    integer,                 intent(out)   :: id
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_timing_mod:add_timer'
-    type(marbl_single_timer_type), allocatable :: tmp(:)
-    integer :: n
-
-    ! Error check: are timers locked?
-    if (self%is_locked) then
-      call marbl_status_log%log_error('Can not add new timer, timers are locked', &
-                                      subname)
-      return
-    end if
-
-    allocate(tmp(self%num_timers))
-    do n = 1,self%num_timers
-      tmp(n)%name = self%individual_timers(n)%name
-    end do
-    deallocate(self%individual_timers)
-
-    self%num_timers = self%num_timers + 1
-    allocate(self%individual_timers(self%num_timers))
-    do n = 1,self%num_timers-1
-      self%individual_timers(n)%name = tmp(n)%name
-    end do
-    id = self%num_timers
-    self%individual_timers(id)%name = trim(name)
-
-  end subroutine add_timer
+  end subroutine init_single_timer
 
   !*****************************************************************************
 

@@ -122,6 +122,7 @@ module marbl_interface
      type(marbl_surface_forcing_share_type)    , private              :: surface_forcing_share
      type(marbl_surface_forcing_internal_type) , private              :: surface_forcing_internal
      logical                                   , private              :: lallow_glo_ops
+     integer                                   , private              :: init_timer_id
 
    contains
 
@@ -160,10 +161,9 @@ contains
     use marbl_config_mod  , only : marbl_config_set_defaults
     use marbl_config_mod  , only : marbl_config_read_namelist
     use marbl_config_mod  , only : marbl_define_config_vars
-    use marbl_timing_mod  , only : marbl_timing_init
+    use marbl_timing_mod  , only : marbl_timing_add
     use marbl_timing_mod  , only : marbl_timing_start
     use marbl_timing_mod  , only : marbl_timing_stop
-    use marbl_timing_mod  , only : init_timer_id
 
     class(marbl_interface_class)   , intent(inout)        :: this
     character(marbl_nl_buffer_size), optional, intent(in) :: gcm_nl_buffer(:)
@@ -183,13 +183,13 @@ contains
     !  Set up timers
     !-----------------------------------------------------------------------
 
-    call marbl_timing_init(this%StatusLog)
+    call marbl_timing_add('Initialize', this%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_timing_init()", subname)
+      call this%StatusLog%log_error_trace("marbl_timing_add()", subname)
       return
     end if
 
-    call marbl_timing_start(init_timer_id, this%StatusLog)
+    call marbl_timing_start(this%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_timing_start()", subname)
       return
@@ -238,7 +238,7 @@ contains
       return
     end if
 
-    call marbl_timing_stop(init_timer_id, this%StatusLog)
+    call marbl_timing_stop(this%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_timing_stop()", subname)
       return
@@ -275,7 +275,6 @@ contains
     use marbl_saved_state_mod , only : marbl_saved_state_init
     use marbl_timing_mod      , only : marbl_timing_start
     use marbl_timing_mod      , only : marbl_timing_stop
-    use marbl_timing_mod      , only : init_timer_id
 
     implicit none
 
@@ -295,7 +294,7 @@ contains
     integer :: i
     !--------------------------------------------------------------------
 
-    call marbl_timing_start(init_timer_id, this%StatusLog)
+    call marbl_timing_start(this%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_timing_start()", subname)
       return
@@ -489,7 +488,7 @@ contains
       return
     end if
 
-    call marbl_timing_stop(init_timer_id, this%StatusLog)
+    call marbl_timing_stop(this%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_timing_stop()", subname)
       return
@@ -510,7 +509,6 @@ contains
     use marbl_config_mod,  only : lflux_gas_co2
     use marbl_timing_mod,  only : marbl_timing_start
     use marbl_timing_mod,  only : marbl_timing_stop
-    use marbl_timing_mod,  only : init_timer_id
 
     class(marbl_interface_class), intent(inout) :: this
 
@@ -518,7 +516,7 @@ contains
     character(len=char_len) :: log_message
     integer :: i
 
-    call marbl_timing_start(init_timer_id, this%StatusLog)
+    call marbl_timing_start(this%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_timing_start()", subname)
       return
@@ -627,7 +625,7 @@ contains
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
 
-    call marbl_timing_stop(init_timer_id, this%StatusLog)
+    call marbl_timing_stop(this%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_timing_stop()", subname)
       return
