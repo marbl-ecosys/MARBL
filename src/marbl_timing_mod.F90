@@ -7,9 +7,9 @@ module marbl_timing_mod
   implicit none
   private
 
-#if USE_GPTL
+#ifdef MARBL_WITH_GPTL
 #include "gptl.inc"
-#elif HAVE_MPI
+#elif  defined(MARBL_WITH_MPI)
 #include "mpif.h"
 #endif
 
@@ -37,14 +37,14 @@ module marbl_timing_mod
   !*****************************************************************************
 
   public :: marbl_timing_shutdown
- 
+
   !*****************************************************************************
 
 Contains
 
   !*****************************************************************************
 
-  subroutine marbl_timing_shutdown(interface_timers, internal_timers,  marbl_status_log)
+  subroutine marbl_timing_shutdown(interface_timers, internal_timers, marbl_status_log)
 
     use marbl_interface_types, only : marbl_timers_type
 
@@ -56,24 +56,29 @@ Contains
     character(len=char_len) :: log_message
     integer :: n
 
-    associate(num_timers => internal_timers%num_timers)
-      interface_timers%num_timers = num_timers
-      allocate(interface_timers%names(num_timers))
-      allocate(interface_timers%cummulative_runtimes(num_timers))
-      interface_timers%names(:) = ''
-    end associate
-
-    do n=1,internal_timers%num_timers
-      associate(ind_timer => internal_timers%individual_timers(n))
-        if (ind_timer%is_running) then
-          write(log_message, "(A,I0,A)") "Timer ", n, " is still running."
-          call marbl_status_log%log_error(log_message,subname)
-          return
-        end if
-        interface_timers%names(n) = ind_timer%name
-        interface_timers%cummulative_runtimes(n) = ind_timer%cummulative_runtime
+    if (allocated(internal_timers%individual_timers)) then
+      associate(num_timers => internal_timers%num_timers)
+        interface_timers%num_timers = num_timers
+        allocate(interface_timers%names(num_timers))
+        allocate(interface_timers%cummulative_runtimes(num_timers))
+        interface_timers%names(:) = ''
       end associate
-    end do
+
+      do n=1,internal_timers%num_timers
+        associate(ind_timer => internal_timers%individual_timers(n))
+          if (ind_timer%is_running) then
+            write(log_message, "(A,I0,A)") "Timer ", n, " is still running."
+            call marbl_status_log%log_error(log_message,subname)
+            return
+          end if
+          interface_timers%names(n) = ind_timer%name
+          interface_timers%cummulative_runtimes(n) = ind_timer%cummulative_runtime
+        end associate
+      end do
+    else
+      allocate(interface_timers%names(0))
+      allocate(interface_timers%cummulative_runtimes(0))
+    end if
 
   end subroutine marbl_timing_shutdown
 
@@ -129,6 +134,10 @@ Contains
     character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_start'
     character(len=char_len) :: log_message
 
+#ifdef MARBL_WITH_GPTL
+    integer gptl_retval
+#endif
+
     ! Error checking
     if (id.gt.self%num_timers) then
       write(log_message, "(A,I0)") id, ' is not a valid timer ID'
@@ -144,7 +153,11 @@ Contains
       end if
 
       timer%is_running = .true.
+#ifdef MARBL_WITH_GPTL
+      gptl_retval = gptlstart(trim(self%individual_timers(id)%name))
+#else
       timer%cur_start = get_time()
+#endif
      end associate
 
   end subroutine start_timer
@@ -160,6 +173,10 @@ Contains
     character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_stop'
     character(len=char_len) :: log_message
     real(r8) :: runtime
+
+#ifdef MARBL_WITH_GPTL
+    integer gptl_retval
+#endif
 
     ! Error checking
     if (id.gt.self%num_timers) then
@@ -177,9 +194,13 @@ Contains
       end if
 
       timer%is_running = .false.
+#ifdef MARBL_WITH_GPTL
+      gptl_retval = gptlstop(trim(self%individual_timers(id)%name))
+#else
       runtime = get_time() - timer%cur_start
       timer%cur_start = c0
       timer%cummulative_runtime = timer%cummulative_runtime + runtime
+#endif
     end associate
 
   end subroutine stop_timer
@@ -204,9 +225,9 @@ Contains
 
     real(r8) :: cur_time
 
-#ifdef USE_GPTL
+#ifdef MARBL_WITH_GPTL
     cur_time = 0._r8
-#elif defined(HAVE_MPI)
+#elif defined(MARBL_WITH_MPI)
     cur_time = MPI_Wtime()
 #else
     call cpu_time(cur_time)

@@ -45,6 +45,10 @@ Program marbl
 
   Implicit None
 
+#ifdef MARBL_WITH_GPTL
+  include 'gptl.inc'
+#endif
+
   character(len=256), parameter :: subname = 'Program Marbl'
   type(marbl_interface_class) :: marbl_instance
   type(marbl_log_type)        :: driver_status_log
@@ -56,14 +60,19 @@ Program marbl
   character(len=256)                  :: testname, varname, log_message
   logical                             :: lprint_marbl_log
   logical                             :: lprint_driver_log
+  logical                             :: lwrite_gptl_file
 
-  namelist /marbl_driver_nml/testname
+  namelist /marbl_driver_nml/testname, lwrite_gptl_file
 
   !****************************************************************************
 
   ! (0) Initialization
   !     MPI?
   call marbl_mpi_init()
+  !     GPTL?
+#ifdef MARBL_WITH_GPTL
+  n = gptlinitialize()
+#endif
 
   !     Set up local variables
   !       * Empty strings used to pass namelist file contents to MARBL
@@ -76,6 +85,7 @@ Program marbl
 
   ! (1) Set marbl_driver_nml defaults
   testname     = ''
+  lwrite_gptl_file = .false.
 
   ! Read namelist
   if (my_task.eq.0) then
@@ -255,6 +265,20 @@ Contains
     real(r8) :: ind_runtime, max_runtime, tot_runtime
     character(len=15) :: int_to_str
 
+#ifdef MARBL_WITH_GPTL
+    integer :: gptl_ret
+
+    if (lwrite_gptl_file) then
+#ifdef MARBL_WITH_MPI
+      gptl_ret = gptlpr_summary_file(MPI_COMM_WORLD, 'timing.txt')
+#else
+      gptl_ret = gptlpr(0)
+#endif
+    end if
+    gptl_ret = gptlfinalize()
+
+#else
+
 100 format(A, ': ', F11.3, ' seconds',A)
 
     associate(timers =>marbl_instance%timer_summary)
@@ -296,6 +320,8 @@ Contains
         end if
       end do
     end associate
+
+#endif
 
   end subroutine summarize_timers
 
