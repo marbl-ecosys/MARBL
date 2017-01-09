@@ -68,7 +68,7 @@ $(LIB_DIR)/%.a: $(SRC_DIR)/*.F90
 	cd $(SRC_DIR) ; make FC=$(FC) FCFLAGS="$(FCFLAGS) $(INC)" USE_DEPS=TRUE $(COMP_ARGS) $@
 
 intel:
-	$(MAKE) $(EXE) COMP_NAME=intel FC=ifort FCFLAGS="-O2 -free -cpp -nogen-interface -fp-model source" INC="-module $(OBJ_ROOT)/intel" INC2="-module $(OBJ_ROOT)/intel/driver" 
+	$(MAKE) $(EXE) COMP_NAME=intel$(MPISUF) FC=ifort FCFLAGS="-O2 -free -cpp -nogen-interface -fp-model source" INC="-module $(OBJ_ROOT)/intel$(MPISUF)" INC2="-module $(OBJ_ROOT)/intel$(MPISUF)/driver" 
 
 pgi:
 	$(MAKE) $(EXE) COMP_NAME=pgi FC=pgf90 FCFLAGS="-O2 -Mfree" INC="-module $(OBJ_ROOT)/pgi" INC2="-module $(OBJ_ROOT)/pgi/driver"

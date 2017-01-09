@@ -165,7 +165,10 @@ class MARBL_testcase(object):
 
     execmd = '%s/marbl.exe < %s' % (exe_dir, self._namelistfile)
     if self._mpitasks > 0:
-      execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
+      if self._machine == 'yellowstone':
+        execmd = 'mpirun.lsf %s' % execmd
+      else:
+        execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
     print "Running following command:"
     print execmd
     print ''

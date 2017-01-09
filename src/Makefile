@@ -62,7 +62,7 @@ gnu:
 	$(MAKE) $(LIB_DIR)/libmarbl-gnu$(MPISUF).a USE_DEPS=TRUE FC=gfortran FCFLAGS="-O2 -ffree-form -J $(OBJ_DIR)/gnu$(MPISUF) -cpp" OBJ_DIR=$(OBJ_DIR)/gnu$(MPISUF) INC_DIR=$(INC_DIR)/gnu$(MPISUF)
 
 intel:
-	$(MAKE) $(LIB_DIR)/libmarbl-intel.a USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel INC_DIR=$(INC_DIR)/intel
+	$(MAKE) $(LIB_DIR)/libmarbl-intel$(MPISUF).a USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel$(MPISUF) -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel$(MPISUF) INC_DIR=$(INC_DIR)/intel$(MPISUF)
 
 pgi:
 	$(MAKE) $(LIB_DIR)/libmarbl-pgi.a USE_DEPS=TRUE FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi OBJ_DIR=$(OBJ_DIR)/pgi" INC_DIR=$(INC_DIR)/pgi
