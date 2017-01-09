@@ -257,7 +257,7 @@ Contains
 
 100 format(A, ': ', F11.3, ' seconds',A)
 
-    associate(timers =>marbl_instance%timers)
+    associate(timers =>marbl_instance%timer_summary)
       write(log_message, "(A, I0, A)") 'There are ', timers%num_timers,       &
                                        ' timers being returned'
       call driver_status_log%log_noerror(log_message, subname)

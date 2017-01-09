@@ -13,6 +13,8 @@ module marbl_internal_types
 
   use marbl_logging, only : marbl_log_type
 
+  use marbl_timing_mod, only : marbl_internal_timers_type
+
   implicit none
 
   private
@@ -90,7 +92,7 @@ module marbl_internal_types
   !****************************************************************************
 
   ! derived type for PAR computation
-  type, public :: marbl_PAR_type 
+  type, public :: marbl_PAR_type
      real(r8), allocatable :: col_frac(:)    ! column fraction occupied by each sub-column, dimension is (PAR_nsubcols)
      real(r8), allocatable :: interface(:,:) ! PAR at layer interfaces, dimensions are (0:km,PAR_nsubcols)
      real(r8), allocatable :: avg(:,:)       ! PAR averaged over layer, dimensions are (km,PAR_nsubcols)
@@ -466,6 +468,9 @@ module marbl_internal_types
   end type marbl_interior_saved_state_indexing_type
 
   !***********************************************************************
+
+  ! marbl interface should use marbl_internal_timers_type from here
+  public :: marbl_internal_timers_type
 
 contains
 
