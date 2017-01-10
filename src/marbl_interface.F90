@@ -49,6 +49,7 @@ module marbl_interface
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
   use marbl_internal_types  , only : marbl_tracer_index_type
   use marbl_internal_types  , only : marbl_internal_timers_type
+  use marbl_internal_types  , only : marbl_timer_indices_type
 
 
   use marbl_config_mod, only : marbl_config_and_parms_type
@@ -123,8 +124,8 @@ module marbl_interface
      type(marbl_surface_forcing_share_type)    , private              :: surface_forcing_share
      type(marbl_surface_forcing_internal_type) , private              :: surface_forcing_internal
      logical                                   , private              :: lallow_glo_ops
-     integer                                   , private              :: init_timer_id
      type(marbl_internal_timers_type)          , private              :: timers
+     type(marbl_timer_indices_type)            , private              :: timer_ids
 
    contains
 
@@ -179,16 +180,17 @@ contains
     call this%StatusLog%log_noerror('', subname)
 
     !-----------------------------------------------------------------------
-    !  Set up timers
+    !  Set up timer for Initialization
     !-----------------------------------------------------------------------
 
-    call this%timers%add('MARBL Init', this%init_timer_id, this%StatusLog)
+    call this%timers%add('MARBL Init', this%timer_ids%init_timer_id,          &
+                         this%StatusLog, threaded=.false.)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%add()", subname)
       return
     end if
 
-    call this%timers%start(this%init_timer_id, this%StatusLog)
+    call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%start()", subname)
       return
@@ -237,7 +239,7 @@ contains
       return
     end if
 
-    call this%timers%stop(this%init_timer_id, this%StatusLog)
+    call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("this%timers%stop()", subname)
       return
@@ -291,7 +293,7 @@ contains
     integer :: i
     !--------------------------------------------------------------------
 
-    call this%timers%start(this%init_timer_id, this%StatusLog)
+    call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("this%timers%start()", subname)
       return
@@ -485,7 +487,7 @@ contains
       return
     end if
 
-    call this%timers%stop(this%init_timer_id, this%StatusLog)
+    call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("this%timers%stop()", subname)
       return
@@ -511,7 +513,7 @@ contains
     character(len=char_len) :: log_message
     integer :: i
 
-    call this%timers%start(this%init_timer_id, this%StatusLog)
+    call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("this%timers%start()", subname)
       return
@@ -620,7 +622,26 @@ contains
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
 
-    call this%timers%stop(this%init_timer_id, this%StatusLog)
+    !-----------------------------------------------------------------------
+    !  Set up timers for inside time loops
+    !-----------------------------------------------------------------------
+
+    call this%timers%add('MARBL set_sflux', this%timer_ids%surface_forcing_id, &
+                         this%StatusLog, threaded=.false.)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%add()", subname)
+      return
+    end if
+
+    call this%timers%add('MARBL set_interior', this%timer_ids%interior_forcing_id, &
+                         this%StatusLog, threaded=.true.)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%add()", subname)
+      return
+    end if
+
+    ! End of initialization
+    call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("this%timers%stop()", subname)
       return
@@ -682,6 +703,12 @@ contains
     class(marbl_interface_class), intent(inout) :: this
     character(*), parameter :: subname = 'marbl_interface:set_interior_forcing'
 
+    call this%timers%start(this%timer_ids%interior_forcing_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%start()", subname)
+      return
+    end if
+
     call marbl_set_interior_forcing(                                          &
          domain                   = this%domain,                              &
          interior_forcings        = this%interior_input_forcings,             &
@@ -707,6 +734,12 @@ contains
        return
     end if
 
+    call this%timers%stop(this%timer_ids%interior_forcing_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%stop()", subname)
+      return
+    end if
+
   end subroutine set_interior_forcing
 
   !***********************************************************************
@@ -718,6 +751,14 @@ contains
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
+
+    character(*), parameter :: subname = 'marbl_interface:set_surface_forcing'
+
+    call this%timers%start(this%timer_ids%surface_forcing_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%start()", subname)
+      return
+    end if
 
     call marbl_set_surface_forcing(                                           &
          num_elements             = this%domain%num_elements_surface_forcing, &
@@ -733,7 +774,18 @@ contains
          surface_forcing_share    = this%surface_forcing_share,               &
          surface_forcing_diags    = this%surface_forcing_diags,               &
          glo_avg_fields_surface   = this%glo_avg_fields_surface,              &
-         marbl_status_log         = this%statuslog)
+         marbl_status_log         = this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+       call this%StatusLog%log_error_trace("marbl_set_surface_forcing()", subname)
+       return
+    end if
+
+
+    call this%timers%stop(this%timer_ids%surface_forcing_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%stop()", subname)
+      return
+    end if
 
   end subroutine set_surface_forcing
 

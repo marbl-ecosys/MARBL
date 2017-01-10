@@ -469,6 +469,12 @@ module marbl_internal_types
 
   !***********************************************************************
 
+  type, public :: marbl_timer_indices_type
+     integer :: init_timer_id
+     integer :: surface_forcing_id
+     integer :: interior_forcing_id
+  end type marbl_timer_indices_type
+
   ! marbl interface should use marbl_internal_timers_type from here
   public :: marbl_internal_timers_type
 
