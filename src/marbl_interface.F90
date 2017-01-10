@@ -182,7 +182,7 @@ contains
     !  Set up timers
     !-----------------------------------------------------------------------
 
-    call this%timers%add('Initialize', this%init_timer_id, this%StatusLog)
+    call this%timers%add('MARBL Init', this%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%add()", subname)
       return

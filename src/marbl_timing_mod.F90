@@ -3,12 +3,19 @@ module marbl_timing_mod
   use marbl_kinds_mod, only : char_len, r8
   use marbl_constants_mod, only : c0
   use marbl_logging, only : marbl_log_type
+#ifdef CCSMCOUPLED
+  ! It looks like MARBL can't tie directly in to GPTL, need to use POP wrappers?
+  use timers, only : get_timer, timer_start, timer_stop
+  use domain, only : nblocks_clinic, distrb_clinic
+#endif
 
   implicit none
   private
 
 #ifdef MARBL_WITH_GPTL
+#ifndef CCSMCOUPLED
 #include "gptl.inc"
+#endif
 #elif  defined(MARBL_WITH_MPI)
 #include "mpif.h"
 #endif
@@ -21,6 +28,10 @@ module marbl_timing_mod
     logical             :: is_running
     real(r8)            :: cur_start
     real(r8)            :: cummulative_runtime
+#ifdef CCSMCOUPLED
+    integer             :: CESM_timer_id
+    integer             :: lCESM_threaded_timer
+#endif
   contains
     procedure :: init => init_single_timer
   end type marbl_single_timer_type
@@ -85,12 +96,14 @@ Contains
   !*****************************************************************************
 
   ! FIXME #124: using self instead of this!
-  subroutine add_new_timer(self, name, id, marbl_status_log)
+  subroutine add_new_timer(self, name, id, marbl_status_log, threaded)
 
     class(marbl_internal_timers_type), intent(inout) :: self
     character(len=*),                  intent(in)    :: name
     integer,                           intent(out)   :: id
     type(marbl_log_type),              intent(inout) :: marbl_status_log
+    ! threaded is only used by CESM timers
+    logical, optional,                 intent(in)    :: threaded
 
     character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_add'
     character(len=char_len) :: log_message
@@ -119,7 +132,23 @@ Contains
     allocate(self%individual_timers(self%num_timers))
     call copy_timers(tmp, self%individual_timers, self%num_timers-1)
     id = self%num_timers
-    call self%individual_timers(id)%init(name)
+    associate(new_timer => self%individual_timers(id))
+      call new_timer%init(name)
+#ifdef CCSMCOUPLED
+      if (present(threaded)) then
+        new_timer%lCESM_threaded_timer = threaded
+      else
+        new_timer%lCESM_threaded_timer = .false.
+      endif
+      if (new_timer%lCESM_threaded_timer) then
+        n = nblocks_clinic
+      else
+        n = 1
+      end if
+      call get_timer(new_timer%CESM_timer_id, trim(new_timer%name), n,        &
+                     distrb_clinic%nprocs)
+#endif
+    end associate
 
   end subroutine add_new_timer
 
@@ -155,6 +184,8 @@ Contains
       timer%is_running = .true.
 #ifdef MARBL_WITH_GPTL
       gptl_retval = gptlstart(trim(self%individual_timers(id)%name))
+#elif defined(CCSMCOUPLED)
+      call timer_start(timer%CESM_timer_id)
 #else
       timer%cur_start = get_time()
 #endif
@@ -196,6 +227,8 @@ Contains
       timer%is_running = .false.
 #ifdef MARBL_WITH_GPTL
       gptl_retval = gptlstop(trim(self%individual_timers(id)%name))
+#elif defined(CCSMCOUPLED)
+      call timer_stop(timer%CESM_timer_id)
 #else
       runtime = get_time() - timer%cur_start
       timer%cur_start = c0
@@ -225,7 +258,7 @@ Contains
 
     real(r8) :: cur_time
 
-#ifdef MARBL_WITH_GPTL
+#if defined(MARBL_WITH_GPTL) || defined(CCSMCOUPLED)
     cur_time = 0._r8
 #elif defined(MARBL_WITH_MPI)
     cur_time = MPI_Wtime()
