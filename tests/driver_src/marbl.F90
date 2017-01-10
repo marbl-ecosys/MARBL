@@ -277,7 +277,7 @@ Contains
     end if
     gptl_ret = gptlfinalize()
 
-#else
+#endif
 
 100 format(A, ': ', F11.3, ' seconds',A)
 
@@ -320,8 +320,6 @@ Contains
         end if
       end do
     end associate
-
-#endif
 
   end subroutine summarize_timers
 

@@ -7,6 +7,7 @@ module marbl_timing_mod
   ! It looks like MARBL can't tie directly in to GPTL, need to use POP wrappers?
   use timers, only : get_timer, timer_start, timer_stop
   use domain, only : nblocks_clinic, distrb_clinic
+  use perf_mod, only : t_stampf
 #endif
 
   implicit none
@@ -187,9 +188,8 @@ Contains
       gptl_retval = gptlstart(trim(self%individual_timers(id)%name))
 #elif defined(CCSMCOUPLED)
       call timer_start(timer%CESM_timer_id)
-#else
-      timer%cur_start = get_time()
 #endif
+      timer%cur_start = get_time()
      end associate
 
   end subroutine start_timer
@@ -230,11 +230,10 @@ Contains
       gptl_retval = gptlstop(trim(self%individual_timers(id)%name))
 #elif defined(CCSMCOUPLED)
       call timer_stop(timer%CESM_timer_id)
-#else
+#endif
       runtime = get_time() - timer%cur_start
       timer%cur_start = c0
       timer%cummulative_runtime = timer%cummulative_runtime + runtime
-#endif
     end associate
 
   end subroutine stop_timer
@@ -257,10 +256,20 @@ Contains
 
   function get_time() result(cur_time)
 
+#if defined(MARBL_WITH_GPTL) || defined(CCSMCOUPLED)
+    real(r8) :: wall, usr, sys
+#endif
+#ifdef MARBL_WITH_GPTL
+    integer :: gptl_retval
+#endif
     real(r8) :: cur_time
 
-#if defined(MARBL_WITH_GPTL) || defined(CCSMCOUPLED)
-    cur_time = 0._r8
+#ifdef MARBL_WITH_GPTL
+    gptl_retval = gptlstamp(wall, usr, sys)
+    cur_time = wall
+#elif defined(CCSMCOUPLED)
+    call t_stampf(wall, usr, sys)
+    cur_time = wall
 #elif defined(MARBL_WITH_MPI)
     cur_time = MPI_Wtime()
 #else
