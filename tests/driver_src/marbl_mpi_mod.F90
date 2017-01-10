@@ -67,7 +67,7 @@ contains
 
     use marbl_kinds_mod, only : r8
 
-    real(r8), intent(out) :: dbl_var
+    real(r8), intent(in) :: dbl_var
     integer,  intent(in)  :: receiver
 
 #if MARBL_WITH_MPI
@@ -93,6 +93,8 @@ contains
 
     call MPI_Recv(dbl_var, 1, MPI_DOUBLE_PRECISION, sender, 2017,             &
                   MPI_COMM_WORLD, status, ierr)
+#else
+    dbl_var = 0._r8
 #endif
 
   end subroutine marbl_mpi_recv_dbl
