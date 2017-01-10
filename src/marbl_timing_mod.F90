@@ -112,6 +112,7 @@ Contains
 
     if (.not.allocated(self%individual_timers)) then
       allocate(self%individual_timers(0))
+      self%num_timers = 0
     end if
 
     ! Error check: is this name already in use?
@@ -283,6 +284,10 @@ Contains
       dest(n)%is_running          = src(n)%is_running
       dest(n)%cur_start           = src(n)%cur_start
       dest(n)%cummulative_runtime = src(n)%cummulative_runtime
+#ifdef CCSMCOUPLED
+      dest(n)%CESM_timer_id        = src(n)%CESM_timer_id
+      dest(n)%lCESM_threaded_timer = src(n)%lCESM_threaded_timer
+#endif
     end do
 
   end subroutine copy_timers
