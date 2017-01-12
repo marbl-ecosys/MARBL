@@ -184,7 +184,7 @@ contains
     !-----------------------------------------------------------------------
 
     call this%timers%add('MARBL Init', this%timer_ids%init_timer_id,          &
-                         this%StatusLog, threaded=.false.)
+                         this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%add()", subname)
       return
@@ -627,14 +627,14 @@ contains
     !-----------------------------------------------------------------------
 
     call this%timers%add('MARBL set_sflux', this%timer_ids%surface_forcing_id, &
-                         this%StatusLog, threaded=.false.)
+                         this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%add()", subname)
       return
     end if
 
     call this%timers%add('MARBL set_interior', this%timer_ids%interior_forcing_id, &
-                         this%StatusLog, threaded=.true.)
+                         this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%add()", subname)
       return

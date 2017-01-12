@@ -177,7 +177,7 @@ module marbl_interface_types
   type, public :: marbl_timers_type
     integer :: num_timers
     character(char_len), allocatable :: names(:)
-    real(r8), allocatable :: cummulative_runtimes(:)
+    real(r8), allocatable :: cumulative_runtimes(:)
   end type marbl_timers_type
 
   !*****************************************************************************

@@ -287,7 +287,7 @@ Contains
       call driver_status_log%log_noerror(log_message, subname)
       call driver_status_log%log_noerror('----', subname)
       do n=1, timers%num_timers
-        ind_runtime = timers%cummulative_runtimes(n)
+        ind_runtime = timers%cumulative_runtimes(n)
         if (mpi_on) then
           if (my_task.eq.0) then
             max_runtime = ind_runtime
