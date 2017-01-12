@@ -1,7 +1,7 @@
 module marbl_timing_mod
 
   ! For mutually-exclusive options for timers:
-  ! -DMARBL_TIMING_OPT=CIME    => use perf_mod (FIXME: no POP usage)
+  ! -DMARBL_TIMING_OPT=CIME    => use perf_mod
 #define CIME 3
   ! -DMARBL_TIMING_OPT=GPTL    => use GPTL library (FIXME: remove this option!)
 #define GPTL 2
@@ -13,10 +13,8 @@ module marbl_timing_mod
   use marbl_constants_mod, only : c0
   use marbl_logging, only : marbl_log_type
 #if MARBL_TIMING_OPT == CIME
-  ! It looks like MARBL can't tie directly in to GPTL, need to use POP wrappers?
-  use timers, only : get_timer, timer_start, timer_stop
-  use domain, only : nblocks_clinic, distrb_clinic
-  use perf_mod, only : t_stampf
+  ! cime/share/timing/perf_mod.F90 wrappers to GPTL
+  use perf_mod, only : t_startf, t_stopf, t_stampf
 #endif
 
   implicit none
@@ -37,11 +35,7 @@ module marbl_timing_mod
     character(char_len) :: name
     logical             :: is_running
     real(r8)            :: cur_start
-    ! FIXME cumulative?
     real(r8)            :: cumulative_runtime
-#if MARBL_TIMING_OPT == CIME
-    integer             :: CESM_timer_id
-#endif
   contains
     procedure :: init => init_single_timer
   end type marbl_single_timer_type
@@ -142,10 +136,6 @@ Contains
     id = self%num_timers
     associate(new_timer => self%individual_timers(id))
       call new_timer%init(name)
-#if MARBL_TIMING_OPT == CIME
-      call get_timer(new_timer%CESM_timer_id, trim(new_timer%name), nblocks_clinic, &
-                     distrb_clinic%nprocs)
-#endif
     end associate
 
   end subroutine add_new_timer
@@ -181,7 +171,7 @@ Contains
 
       timer%is_running = .true.
 #if MARBL_TIMING_OPT == CIME
-      call timer_start(timer%CESM_timer_id)
+      call t_startf(trim(self%individual_timers(id)%name))
 #elif MARBL_TIMING_OPT == GPTL
       gptl_retval = gptlstart(trim(self%individual_timers(id)%name))
 #endif
@@ -223,7 +213,7 @@ Contains
 
       timer%is_running = .false.
 #if MARBL_TIMING_OPT == CIME
-      call timer_stop(timer%CESM_timer_id)
+      call t_stopf(trim(self%individual_timers(id)%name))
 #elif  MARBL_TIMING_OPT == GPTL
       gptl_retval = gptlstop(trim(self%individual_timers(id)%name))
 #endif
@@ -289,9 +279,6 @@ Contains
       dest(n)%is_running          = src(n)%is_running
       dest(n)%cur_start           = src(n)%cur_start
       dest(n)%cumulative_runtime = src(n)%cumulative_runtime
-#if MARBL_TIMING_OPT == CIME
-      dest(n)%CESM_timer_id        = src(n)%CESM_timer_id
-#endif
     end do
 
   end subroutine copy_timers
