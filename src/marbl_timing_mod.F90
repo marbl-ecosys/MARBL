@@ -33,6 +33,7 @@ module marbl_timing_mod
 
   type :: marbl_single_timer_type
     character(char_len) :: name
+    logical             :: been_run
     logical             :: is_running
     real(r8)            :: cur_start
     real(r8)            :: cumulative_runtime
@@ -75,6 +76,7 @@ Contains
       associate(num_timers => internal_timers%num_timers)
         interface_timers%num_timers = num_timers
         allocate(interface_timers%names(num_timers))
+        allocate(interface_timers%was_run(num_timers))
         allocate(interface_timers%cumulative_runtimes(num_timers))
         interface_timers%names(:) = ''
       end associate
@@ -87,11 +89,13 @@ Contains
             return
           end if
           interface_timers%names(n) = ind_timer%name
+          interface_timers%was_run(n) = ind_timer%been_run
           interface_timers%cumulative_runtimes(n) = ind_timer%cumulative_runtime
         end associate
       end do
     else
       allocate(interface_timers%names(0))
+      allocate(interface_timers%was_run(0))
       allocate(interface_timers%cumulative_runtimes(0))
     end if
 
@@ -211,6 +215,7 @@ Contains
         return
       end if
 
+      timer%been_run   = .true.
       timer%is_running = .false.
 #if MARBL_TIMING_OPT == CIME
       call t_stopf(trim(self%individual_timers(id)%name))
@@ -232,6 +237,7 @@ Contains
     character(len=*),               intent(in)    :: name
 
     self%name = name
+    self%been_run   = .false.
     self%is_running = .false.
     self%cur_start = c0
     self%cumulative_runtime = c0
@@ -276,6 +282,7 @@ Contains
 
     do n=1, num_timers
       dest(n)%name                = src(n)%name
+      dest(n)%been_run            = src(n)%been_run
       dest(n)%is_running          = src(n)%is_running
       dest(n)%cur_start           = src(n)%cur_start
       dest(n)%cumulative_runtime = src(n)%cumulative_runtime
