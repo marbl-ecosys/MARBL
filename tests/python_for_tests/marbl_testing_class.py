@@ -138,7 +138,7 @@ class MARBL_testcase(object):
 
   # -----------------------------------------------
 
-  # Build marbl.exe
+  # Build marbl executable
   def build_exe(self, loc_compiler=None):
 
     if loc_compiler == None:
@@ -163,12 +163,14 @@ class MARBL_testcase(object):
 
     exe_dir = '%s/tests/driver_exe' % self._marbl_dir
 
-    execmd = '%s/marbl.exe < %s' % (exe_dir, self._namelistfile)
     if self._mpitasks > 0:
+      execmd = '%s/marbl-mpi.exe < %s' % (exe_dir, self._namelistfile)
       if self._machine == 'yellowstone':
         execmd = 'mpirun.lsf %s' % execmd
       else:
         execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
+    else:
+      execmd = '%s/marbl.exe < %s' % (exe_dir, self._namelistfile)
     print "Running following command:"
     print execmd
     print ''

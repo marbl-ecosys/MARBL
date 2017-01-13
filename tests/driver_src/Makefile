@@ -34,6 +34,7 @@ ifneq ($(GPTL_DIR),NONE)
   INCLUDES+= -I$(GPTL_DIR)/include
   LINKS+= -L$(GPTL_DIR)/lib -lgptl
 endif
+EXE = $(EXE_DIR)/marbl.exe
 ifeq ($(USEMPI),TRUE)
   ifeq ($(GPTL_DIR),NONE)
     LIBCPPDEFS+= -DMARBL_TIMING_OPT=MPI
@@ -41,10 +42,10 @@ ifeq ($(USEMPI),TRUE)
   EXECPPDEFS+= -DMARBL_WITH_MPI
   MPISUF=-mpi
   override FC = mpif90
+  EXE = $(EXE_DIR)/marbl-mpi.exe
 endif
 
 COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(LIBCPPDEFS)"
-EXE       = $(EXE_DIR)/marbl.exe
 
 OBJS = marbl_init_namelist_drv.o       \
        marbl_init_no_namelist_drv.o    \
