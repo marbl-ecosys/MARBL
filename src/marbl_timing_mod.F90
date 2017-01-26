@@ -33,8 +33,8 @@ module marbl_timing_mod
 
   type :: marbl_single_timer_type
     character(char_len) :: name
-    logical             :: been_run
     logical             :: is_running
+    logical             :: is_threaded
     real(r8)            :: cur_start
     real(r8)            :: cumulative_runtime
   contains
@@ -70,34 +70,31 @@ Contains
 
     character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_shutdown'
     character(len=char_len) :: log_message
-    integer :: n
+    integer :: n, num_timers
 
     if (allocated(internal_timers%individual_timers)) then
-      associate(num_timers => internal_timers%num_timers)
-        interface_timers%num_timers = num_timers
-        allocate(interface_timers%names(num_timers))
-        allocate(interface_timers%was_run(num_timers))
-        allocate(interface_timers%cumulative_runtimes(num_timers))
-        interface_timers%names(:) = ''
-      end associate
-
-      do n=1,internal_timers%num_timers
-        associate(ind_timer => internal_timers%individual_timers(n))
-          if (ind_timer%is_running) then
-            write(log_message, "(A,I0,A)") "Timer ", n, " is still running."
-            call marbl_status_log%log_error(log_message,subname)
-            return
-          end if
-          interface_timers%names(n) = ind_timer%name
-          interface_timers%was_run(n) = ind_timer%been_run
-          interface_timers%cumulative_runtimes(n) = ind_timer%cumulative_runtime
-        end associate
-      end do
+      num_timers = internal_timers%num_timers
     else
-      allocate(interface_timers%names(0))
-      allocate(interface_timers%was_run(0))
-      allocate(interface_timers%cumulative_runtimes(0))
+      num_timers = 0
     end if
+    interface_timers%num_timers = num_timers
+    allocate(interface_timers%names(num_timers))
+    allocate(interface_timers%is_threaded(num_timers))
+    allocate(interface_timers%cumulative_runtimes(num_timers))
+    if (num_timers .gt. 0) &
+      interface_timers%names(:) = ''
+
+    do n=1,num_timers
+      associate(ind_timer => internal_timers%individual_timers(n))
+        if (ind_timer%is_running) then
+          write(log_message, "(A,I0,A)") "Timer ", n, " is still running."
+          call marbl_status_log%log_error(log_message,subname)
+          return
+        end if
+        interface_timers%names(n) = ind_timer%name
+        interface_timers%cumulative_runtimes(n) = ind_timer%cumulative_runtime
+      end associate
+    end do
 
   end subroutine marbl_timing_shutdown
 
@@ -174,6 +171,9 @@ Contains
       end if
 
       timer%is_running = .true.
+#ifdef _OPENMP
+      timer%is_threaded = omp_get_num_threads() .gt. 1
+#endif
 #if MARBL_TIMING_OPT == CIME
       call t_startf(trim(self%individual_timers(id)%name))
 #elif MARBL_TIMING_OPT == GPTL
@@ -215,8 +215,7 @@ Contains
         return
       end if
 
-      timer%been_run   = .true.
-      timer%is_running = .false.
+      timer%is_running  = .false.
 #if MARBL_TIMING_OPT == CIME
       call t_stopf(trim(self%individual_timers(id)%name))
 #elif  MARBL_TIMING_OPT == GPTL
@@ -237,8 +236,8 @@ Contains
     character(len=*),               intent(in)    :: name
 
     self%name = name
-    self%been_run   = .false.
-    self%is_running = .false.
+    self%is_running  = .false.
+    self%is_threaded = .false.
     self%cur_start = c0
     self%cumulative_runtime = c0
 
@@ -282,8 +281,8 @@ Contains
 
     do n=1, num_timers
       dest(n)%name                = src(n)%name
-      dest(n)%been_run            = src(n)%been_run
       dest(n)%is_running          = src(n)%is_running
+      dest(n)%is_threaded         = src(n)%is_threaded
       dest(n)%cur_start           = src(n)%cur_start
       dest(n)%cumulative_runtime = src(n)%cumulative_runtime
     end do
