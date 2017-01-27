@@ -92,6 +92,7 @@ Contains
           return
         end if
         interface_timers%names(n) = ind_timer%name
+        interface_timers%is_threaded(n) = ind_timer%is_threaded
         interface_timers%cumulative_runtimes(n) = ind_timer%cumulative_runtime
       end associate
     end do
