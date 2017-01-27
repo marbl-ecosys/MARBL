@@ -152,6 +152,10 @@ Contains
     character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_start'
     character(len=char_len) :: log_message
 
+#ifdef _OPENMP
+    integer omp_get_num_threads
+#endif
+
 #if MARBL_TIMING_OPT == GPTL
     integer gptl_retval
 #endif
