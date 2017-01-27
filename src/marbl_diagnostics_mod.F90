@@ -269,6 +269,9 @@ module marbl_diagnostics_mod
      integer (int_kind) :: pocToSed_13C                                       ! poc burial flux to sediments
      integer (int_kind) :: pocToSed_14C                                       ! poc burial flux to sediments
 
+     ! restoring 3D diags
+     integer(int_kind), dimension(:), allocatable :: restore_tend
+
   end type marbl_interior_diagnostics_indexing_type
   type(marbl_interior_diagnostics_indexing_type), public :: marbl_interior_diag_ind
 
@@ -351,7 +354,6 @@ contains
        marbl_tracer_metadata,        &
        marbl_tracer_indices,         &
        marbl_interior_forcing_diags, &
-       marbl_interior_restore_diags, &
        marbl_surface_forcing_diags,  &
        marbl_status_log)
 
@@ -361,7 +363,6 @@ contains
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_forcing_diags
-    type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_restore_diags
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_surface_forcing_diags
     type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
@@ -373,7 +374,6 @@ contains
     integer :: imode      ! imode = 1, count_only is true, otherwise count_only is false
     logical :: truncate
     integer :: num_interior_diags
-    integer :: num_restore_diags
     integer :: num_forcing_diags
     character(len=char_len) :: lname, sname, units, vgrid
 
@@ -386,7 +386,6 @@ contains
 
     num_forcing_diags  = 0
     num_interior_diags = 0
-    num_restore_diags  = 0
 
     do imode = 1,2
 
@@ -401,7 +400,6 @@ contains
                )
           call marbl_surface_forcing_diags%construct (num_forcing_diags , num_elements_forcing , num_levels)
           call marbl_interior_forcing_diags%construct(num_interior_diags, num_elements_interior, num_levels)
-          call marbl_interior_restore_diags%construct(num_restore_diags , num_elements_interior, num_levels)
           end associate
        end if
 
@@ -4184,36 +4182,39 @@ contains
 
        end if  ! end of if ciso_on
 
-       end associate
-
        !-----------------------------------------------------------------
        ! Restoring diagnostics
        !-----------------------------------------------------------------
-       
-       associate(                        &
-            diags => marbl_interior_restore_diags &
-            )
-       
+
+       if (count_only) then
+          ! only allocate this component of ind once
+          ! within a single task, it is shared across different instances of MARBL
+          ! FIXME #60: this approach is not thread-safe
+          !    i.e. if this is called from 2 threads simulatneously, a race condition
+          !    on the allocation status check and allocation is introduced
+          if (.not. allocated(ind%restore_tend)) then
+             allocate(ind%restore_tend(marbl_total_tracer_cnt))
+          end if
+       end if
+
        do n = 1,marbl_total_tracer_cnt
-          ! Note that tmp_id is a temp variable because restoring diagnostics
-          ! have same indexing as the MARBL tracers
           if (count_only) then
-             num_restore_diags = num_restore_diags + 1
+             num_interior_diags = num_interior_diags + 1
           else
-             ! Field we restore to
-             lname = trim(marbl_tracer_metadata(n)%long_name) // " Restoring"
+             ! restoring tendency
+             lname = trim(marbl_tracer_metadata(n)%long_name) // " Restoring Tendency"
              sname = trim(marbl_tracer_metadata(n)%short_name) // "_RESTORE"
-             units = 'mmol/m^3'
+             units = trim(marbl_tracer_metadata(n)%tend_units)
              vgrid = 'layer_avg'
              call diags%add_diagnostic(lname, sname, units, vgrid, .false.,   &
-                  tmp_id, marbl_status_log)
+                  ind%restore_tend(n), marbl_status_log)
              if (marbl_status_log%labort_marbl) then
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
           end if
        end do
-       
+
        end associate
 
     end do  ! end of imode loop
@@ -4226,12 +4227,6 @@ contains
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace(&
            'marbl_interior_forcing_diags%set_to_zero', subname)
-      return
-    end if
-    call marbl_interior_restore_diags%set_to_zero(marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace(&
-           'marbl_interior_restore_diags%set_to_zero', subname)
       return
     end if
     call marbl_surface_forcing_diags%set_to_zero(marbl_status_log)
@@ -4265,7 +4260,6 @@ contains
        Lig_photochem, Lig_deg,                        &
        interior_restore,                              &
        marbl_interior_forcing_diags,                  &
-       marbl_interior_restore_diags,                  &
        marbl_status_log)
 
     use marbl_internal_types , only : marbl_interior_forcing_indexing_type
@@ -4304,7 +4298,6 @@ contains
     real (r8)                                 , intent(in) :: Lig_deg(domain%km)
     real (r8)                                 , intent(in) :: interior_restore(:,:)       ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
     type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_forcing_diags
-    type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_restore_diags
     type (marbl_log_type)                     , intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_interior_forcing'
@@ -4385,7 +4378,7 @@ contains
          dtracers, marbl_tracer_indices, marbl_interior_forcing_diags)
 
     call store_diagnostics_interior_restore(interior_restore,                 &
-                                            marbl_interior_restore_diags)
+                                            marbl_interior_forcing_diags)
 
     end associate
 
@@ -5400,9 +5393,16 @@ contains
 
     integer :: n
 
+    associate(                               &
+         diags   => marbl_diags%diags,       &
+         ind     => marbl_interior_diag_ind  &
+         )
+
     do n=1, marbl_total_tracer_cnt
-       marbl_diags%diags(n)%field_3d(:,1) = interior_restore(n,:)
+       diags(ind%restore_tend(n))%field_3d(:,1) = interior_restore(n,:)
     end do
+
+    end associate
 
   end subroutine store_diagnostics_interior_restore
 

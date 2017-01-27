@@ -978,7 +978,6 @@ contains
        marbl_autotroph_share,            &
        marbl_particulate_share,          &
        interior_forcing_diags,           &
-       interior_restore_diags,           &
        glo_avg_fields_interior,          &
        marbl_status_log)
 
@@ -1005,7 +1004,6 @@ contains
     type    (marbl_autotroph_share_type)        , intent(inout) :: marbl_autotroph_share(autotroph_cnt, domain%km)
     type    (marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
     type    (marbl_diagnostics_type)            , intent(inout) :: interior_forcing_diags
-    type    (marbl_diagnostics_type)            , intent(inout) :: interior_restore_diags
     real    (r8)                                , intent(out)   :: glo_avg_fields_interior(:)
     type(marbl_log_type)                        , intent(inout) :: marbl_status_log
 
@@ -1317,7 +1315,6 @@ contains
          Lig_photochem, Lig_deg,                            &
          interior_restore,                                  &
          interior_forcing_diags, &
-         interior_restore_diags, &
          marbl_status_log)
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace(&

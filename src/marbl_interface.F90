@@ -84,7 +84,6 @@ module marbl_interface
      type(marbl_interior_forcing_indexing_type), public               :: interior_forcing_ind         !
      type(marbl_forcing_fields_type)           , public, allocatable  :: interior_input_forcings(:)
      type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
-     type(marbl_diagnostics_type)              , public               :: interior_restore_diags  ! output
 
      ! public data surface forcing
      real (r8)                                 , public, allocatable  :: surface_vals(:,:)           ! input  *
@@ -405,7 +404,6 @@ contains
          marbl_tracer_metadata        = this%tracer_metadata,                 &
          marbl_tracer_indices         = this%tracer_indices,                  &
          marbl_interior_forcing_diags = this%interior_forcing_diags,          &
-         marbl_interior_restore_diags = this%interior_restore_diags,          &
          marbl_surface_forcing_diags  = this%surface_forcing_diags,           &
          marbl_status_log             = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -644,7 +642,6 @@ contains
          marbl_autotroph_share    = this%autotroph_share,                     &
          marbl_particulate_share  = this%particulate_share,                   &
          interior_forcing_diags   = this%interior_forcing_diags,              &
-         interior_restore_diags   = this%interior_restore_diags,              &
          glo_avg_fields_interior  = this%glo_avg_fields_interior,             &
          marbl_status_log         = this%StatusLog)
 
