@@ -179,6 +179,9 @@ module marbl_interface_types
     character(char_len), allocatable :: names(:)
     real(r8),            allocatable :: cumulative_runtimes(:)
     logical,             allocatable :: is_threaded(:)
+  contains
+    procedure, public :: construct => marbl_timers_constructor
+    procedure, public :: deconstruct => marbl_timers_deconstructor
   end type marbl_timers_type
 
   !*****************************************************************************
@@ -659,6 +662,41 @@ contains
     end select
 
   end subroutine marbl_forcing_fields_set_rank
+
+  !*****************************************************************************
+
+  subroutine marbl_timers_constructor(this, num_timers)
+
+    class(marbl_timers_type), intent(inout) :: this
+    integer,                  intent(in)    :: num_timers
+
+    this%num_timers = num_timers
+    allocate(this%names(num_timers))
+    allocate(this%is_threaded(num_timers))
+    allocate(this%cumulative_runtimes(num_timers))
+
+    if (num_timers.gt.0) then
+      this%names = ''
+      this%is_threaded = .false.
+      this%cumulative_runtimes = c0
+    end if
+
+  end subroutine marbl_timers_constructor
+
+  !*****************************************************************************
+
+  subroutine marbl_timers_deconstructor(this)
+
+    class(marbl_timers_type), intent(inout) :: this
+
+    if (allocated(this%names)) &
+      deallocate(this%names)
+    if (allocated(this%is_threaded)) &
+      deallocate(this%is_threaded)
+    if (allocated(this%cumulative_runtimes)) &
+      deallocate(this%cumulative_runtimes)
+
+  end subroutine marbl_timers_deconstructor
 
   !*****************************************************************************
 

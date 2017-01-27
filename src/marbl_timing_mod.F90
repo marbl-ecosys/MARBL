@@ -52,6 +52,7 @@ module marbl_timing_mod
 
   !*****************************************************************************
 
+  public :: marbl_timing_copy_timing_data
   public :: marbl_timing_shutdown
 
   !*****************************************************************************
@@ -60,7 +61,8 @@ Contains
 
   !*****************************************************************************
 
-  subroutine marbl_timing_shutdown(interface_timers, internal_timers, marbl_status_log)
+  subroutine marbl_timing_copy_timing_data(interface_timers, internal_timers, &
+                                           marbl_status_log)
 
     use marbl_interface_types, only : marbl_timers_type
 
@@ -68,7 +70,7 @@ Contains
     type(marbl_internal_timers_type), intent(in)    :: internal_timers
     type(marbl_log_type),             intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_shutdown'
+    character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_copy_timing_data'
     character(len=char_len) :: log_message
     integer :: n, num_timers
 
@@ -77,12 +79,9 @@ Contains
     else
       num_timers = 0
     end if
-    interface_timers%num_timers = num_timers
-    allocate(interface_timers%names(num_timers))
-    allocate(interface_timers%is_threaded(num_timers))
-    allocate(interface_timers%cumulative_runtimes(num_timers))
-    if (num_timers .gt. 0) &
-      interface_timers%names(:) = ''
+
+    call interface_timers%deconstruct()
+    call interface_timers%construct(num_timers)
 
     do n=1,num_timers
       associate(ind_timer => internal_timers%individual_timers(n))
@@ -96,6 +95,32 @@ Contains
         interface_timers%cumulative_runtimes(n) = ind_timer%cumulative_runtime
       end associate
     end do
+
+  end subroutine marbl_timing_copy_timing_data
+
+  !*****************************************************************************
+
+  subroutine marbl_timing_shutdown(interface_timers, internal_timers, marbl_status_log)
+
+    use marbl_interface_types, only : marbl_timers_type
+
+    type(marbl_timers_type),          intent(inout) :: interface_timers
+    type(marbl_internal_timers_type), intent(inout) :: internal_timers
+    type(marbl_log_type),             intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_shutdown'
+
+    call marbl_timing_copy_timing_data(interface_timers, internal_timers,     &
+                                       marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('marbl_timing_copy_timing_data',  &
+                                            subname)
+      return
+    end if
+
+    internal_timers%num_timers = 0
+    if (allocated(internal_timers%individual_timers)) &
+      deallocate(internal_timers%individual_timers)
 
   end subroutine marbl_timing_shutdown
 

@@ -132,6 +132,9 @@ module marbl_interface
      procedure, public  :: config
      procedure, public  :: init
      procedure, public  :: complete_config_and_init
+     ! TODO: better name for update_timers? This routine copies timing data from
+     !       MARBL internal datatype to datatype accessible via interface
+     procedure, public  :: update_timers
      procedure, private :: glo_vars_init
      procedure, public  :: get_tracer_index
      procedure, public  :: set_interior_forcing
@@ -144,6 +147,7 @@ module marbl_interface
   private :: config
   private :: init
   private :: complete_config_and_init
+  private :: update_timers
   private :: glo_vars_init
   private :: set_interior_forcing
   private :: set_surface_forcing
@@ -648,6 +652,26 @@ contains
     end if
 
   end subroutine complete_config_and_init
+
+  !***********************************************************************
+
+  subroutine update_timers(this)
+
+    use marbl_timing_mod, only : marbl_timing_copy_timing_data
+
+    class (marbl_interface_class), intent(inout) :: this
+
+    character(*), parameter :: subname = 'marbl_interface:update_timers'
+
+    call marbl_timing_copy_timing_data(this%timer_summary, this%timers,       &
+                                       this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('marbl_timing_copy_timing_data',    &
+                                          subname)
+      return
+    end if
+
+  end subroutine update_timers
 
   !***********************************************************************
 
