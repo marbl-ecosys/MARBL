@@ -3432,6 +3432,7 @@ contains
 
     enddo
 
+    ! FIXME #27: add timer for calls to marbl_comp_CO3terms
     call marbl_comp_CO3terms(&
          dkm, mask, pressure_correct, .true., co3_coeffs, temperature, &
          salinity, press_bar, dic_loc, alk_loc, po4_loc, sio3_loc, &
@@ -3458,6 +3459,7 @@ contains
 
     enddo
 
+    ! FIXME #27: add timer for calls to marbl_comp_CO3terms
     call marbl_comp_CO3terms(&
          dkm, mask, pressure_correct, .false., co3_coeffs, temperature,    &
          salinity, press_bar, dic_alt_co2_loc, alk_loc, po4_loc, sio3_loc, &
