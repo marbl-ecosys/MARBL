@@ -158,7 +158,7 @@ Contains
 
     ! Error checking
     if (id.gt.self%num_timers) then
-      write(log_message, "(A,I0)") id, ' is not a valid timer ID'
+      write(log_message, "(I0,A)") id, ' is not a valid timer ID'
       call marbl_status_log%log_error(log_message, subname)
       return
     end if
