@@ -19,6 +19,7 @@ def load_module(mach, compiler):
     module('purge')
     module('load', compiler)
     module('load', 'ncarcompilers')
+    module('load', 'ncarbinlibs')
 
   if mach == 'hobart':
     sys.path.insert(0,'/usr/share/Modules/init')

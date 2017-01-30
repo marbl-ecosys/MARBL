@@ -13,6 +13,7 @@ class MARBL_testcase(object):
     # all other variables are private
     self._compiler = None
     self._machine = None
+    self._hostname = None
     self._namelistfile = 'marbl_in'
     self._mpitasks = 0
     self._marbl_dir = path.abspath('%s/../..' % path.dirname(__file__))
@@ -62,17 +63,17 @@ class MARBL_testcase(object):
     if args.mach == None:
       # If --mach is not specified, guess at machine name from hostname
       from socket import gethostname
-      hostname = gethostname()
+      self._hostname = gethostname()
       found = True
-      if any(host in hostname for host in ['geyser', 'caldera', 'prong', 'yslogin']):
+      if any(host in self._hostname for host in ['geyser', 'caldera', 'prong', 'yslogin']):
         self._machine = 'yellowstone'
-      elif 'hobart' in hostname:
+      elif 'hobart' in self._hostname:
         self._machine = 'hobart'
-      elif 'edison' in hostname:
+      elif 'edison' in self._hostname:
         self._machine = 'edison'
       else:
         found = False
-        print 'No machine specified and %s is not recognized' % hostname
+        print 'No machine specified and %s is not recognized' % self._hostname
         print 'This test will assume you are not running on a supported cluster'
         self._machine = 'local-gnu'
 
@@ -155,6 +156,9 @@ class MARBL_testcase(object):
       execmd = '%s/marbl-mpi.exe < %s' % (exe_dir, self._namelistfile)
       if self._machine == 'yellowstone':
         execmd = 'mpirun.lsf %s' % execmd
+        if 'yslogin' in self._hostname:
+          # on login node => request caldera node!
+          execmd = 'execca %s' % execmd
       else:
         execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
     else:
