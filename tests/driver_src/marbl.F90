@@ -45,10 +45,6 @@ Program marbl
 
   Implicit None
 
-#ifdef MARBL_WITH_GPTL
-  include 'gptl.inc'
-#endif
-
   character(len=256), parameter :: subname = 'Program Marbl'
   type(marbl_interface_class) :: marbl_instance
   type(marbl_log_type)        :: driver_status_log
@@ -69,10 +65,6 @@ Program marbl
   ! (0) Initialization
   !     MPI?
   call marbl_mpi_init()
-  !     GPTL?
-#ifdef MARBL_WITH_GPTL
-  n = gptlinitialize()
-#endif
 
   !     Set up local variables
   !       * Empty strings used to pass namelist file contents to MARBL
@@ -264,20 +256,6 @@ Contains
 
     real(r8) :: min_runtime, ind_runtime, max_runtime, tot_runtime
     character(len=15) :: int_to_str
-
-#ifdef MARBL_WITH_GPTL
-    integer :: gptl_ret
-
-    if (lwrite_gptl_file) then
-#ifdef MARBL_WITH_MPI
-      gptl_ret = gptlpr_summary_file(MPI_COMM_WORLD, 'timing.txt')
-#else
-      gptl_ret = gptlpr(0)
-#endif
-    end if
-    gptl_ret = gptlfinalize()
-
-#endif
 
 100 format(A, ': ', F11.3, ' seconds',A)
 

@@ -1,12 +1,17 @@
 module marbl_mpi_mod
 
   ! This module contains wrappers for all MPI calls so that marbl.F90
-  ! does not need to have #if MARBL_WITH_MPI macros scattered throughout
+  ! does not need to have #ifdef macros scattered throughout
 
   Implicit None
   public
 
-#if MARBL_WITH_MPI
+#define MPI 1
+#if MARBL_TIMING_OPT == MPI
+#define MARBL_WITH_MPI
+#endif
+
+#ifdef MARBL_WITH_MPI
   include 'mpif.h'
   logical, parameter :: mpi_on = .true.
 #else
@@ -70,7 +75,7 @@ contains
     real(r8), intent(in) :: dbl_var
     integer,  intent(in)  :: receiver
 
-#if MARBL_WITH_MPI
+#ifdef MARBL_WITH_MPI
     integer :: ierr
 
     call MPI_Send(dbl_var, 1, MPI_DOUBLE_PRECISION, 0, 2017, MPI_COMM_WORLD, ierr)
@@ -87,7 +92,7 @@ contains
     real(r8), intent(out) :: dbl_var
     integer,  intent(in)  :: sender
 
-#if MARBL_WITH_MPI
+#ifdef MARBL_WITH_MPI
     integer :: status(MPI_STATUS_SIZE)
     integer :: ierr
 
@@ -108,7 +113,7 @@ contains
 
     integer :: ierr
 
-#if MARBL_WITH_MPI
+#ifdef MARBL_WITH_MPI
     call MPI_Bcast(str_to_bcast, len(str_to_bcast), MPI_CHARACTER, root_task, &
                    MPI_COMM_WORLD, ierr)
 #else
@@ -122,7 +127,7 @@ contains
 
   subroutine marbl_mpi_abort()
 
-#if MARBL_WITH_MPI
+#ifdef MARBL_WITH_MPI
     integer :: ierr
 
     call MPI_Abort(MPI_COMM_WORLD, ierr)

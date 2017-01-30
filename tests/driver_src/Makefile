@@ -29,6 +29,7 @@ LINKS=-L$(LIB_DIR) $(LFLAG)
 
 EXE = $(EXE_DIR)/marbl.exe
 ifeq ($(USEMPI),TRUE)
+  EXECPPDEFS+= -DMARBL_TIMING_OPT=MPI
   LIBCPPDEFS+= -DMARBL_TIMING_OPT=MPI
   MPISUF=-mpi
   override FC = mpif90
