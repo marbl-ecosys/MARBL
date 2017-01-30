@@ -3,7 +3,6 @@
 extension = .F90
 
 COMP_NAME=NONE
-GPTL_DIR=NONE
 USEMPI=FALSE
 
 OBJ_ROOT = $(realpath ../obj)
@@ -28,18 +27,9 @@ EXECPPDEFS=
 INCLUDES=-I$(INC_LOC)
 LINKS=-L$(LIB_DIR) $(LFLAG)
 
-ifneq ($(GPTL_DIR),NONE)
-  LIBCPPDEFS+= -DMARBL_TIMING_OPT=GPTL
-  EXECPPDEFS+= -DMARBL_WITH_GPTL
-  INCLUDES+= -I$(GPTL_DIR)/include
-  LINKS+= -L$(GPTL_DIR)/lib -lgptl
-endif
 EXE = $(EXE_DIR)/marbl.exe
 ifeq ($(USEMPI),TRUE)
-  ifeq ($(GPTL_DIR),NONE)
-    LIBCPPDEFS+= -DMARBL_TIMING_OPT=MPI
-  endif
-  EXECPPDEFS+= -DMARBL_WITH_MPI
+  LIBCPPDEFS+= -DMARBL_TIMING_OPT=MPI
   MPISUF=-mpi
   override FC = mpif90
   EXE = $(EXE_DIR)/marbl-mpi.exe

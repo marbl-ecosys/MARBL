@@ -1,7 +1,6 @@
 .SUFFIXES: .F90 .o
 extension = .F90
 
-GPTL_DIR=NONE
 USEMPI=FALSE
 
 SRC_DIR=.
@@ -9,7 +8,6 @@ OBJ_DIR=../tests/obj
 LIB_DIR=../lib
 INC_DIR=../include
 FC = NONE
-GPTL_DIR = NONE
 INCLUDES=
 
 ifneq ($(INC_DIR),$(OBJ_DIR))
@@ -33,15 +31,8 @@ OBJS = $(addprefix $(OBJ_DIR)/,${MODULES:.F90=.o})
 
 CPPDEFS=-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
 
-ifneq ($(GPTL_DIR),NONE)
-  CPPDEFS+= -DMARBL_TIMING_OPT=GPTL
-  INCLUDES+= -I$(GPTL_DIR)/include
-endif
-
 ifeq ($(USEMPI),TRUE)
-  ifeq ($(GPTL_DIR),NONE)
-    CPPDEFS+= -DMARBL_TIMING_OPT=MPI
-  endif
+  CPPDEFS+= -DMARBL_TIMING_OPT=MPI
   MPISUF=-mpi
   override FC = mpif90
 endif
@@ -67,7 +58,7 @@ intel:
 	$(MAKE) $(LIB_DIR)/libmarbl-intel$(MPISUF).a USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel$(MPISUF) -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel$(MPISUF) INC_DIR=$(INC_DIR)/intel$(MPISUF)
 
 pgi:
-	$(MAKE) $(LIB_DIR)/libmarbl-pgi.a USE_DEPS=TRUE FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi OBJ_DIR=$(OBJ_DIR)/pgi" INC_DIR=$(INC_DIR)/pgi
+	$(MAKE) $(LIB_DIR)/libmarbl-pgi$(MPISUF).a USE_DEPS=TRUE FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi$(MPISUF) OBJ_DIR=$(OBJ_DIR)/pgi$(MPISUF)" INC_DIR=$(INC_DIR)/pgi$(MPISUF)
 
 nag:
 	$(MAKE) $(LIB_DIR)/libmarbl-nag$(MPISUF).a USE_DEPS=TRUE FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR)/nag$(MPISUF) -mdir $(OBJ_DIR)/nag$(MPISUF) -kind=byte" OBJ_DIR=$(OBJ_DIR)/nag$(MPISUF) INC_DIR=$(INC_DIR)/nag$(MPISUF)

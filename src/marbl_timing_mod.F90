@@ -2,9 +2,7 @@ module marbl_timing_mod
 
   ! For mutually-exclusive options for timers:
   ! -DMARBL_TIMING_OPT=CIME    => use perf_mod
-#define CIME 3
-  ! -DMARBL_TIMING_OPT=GPTL    => use GPTL library (FIXME: remove this option!)
-#define GPTL 2
+#define CIME 2
   ! -DMARBL_TIMING_OPT=MPI     => use MPI_Wtime()
 #define MPI 1
   ! MARBL_TIMING_OPT undefined => use cpu_time()
@@ -19,10 +17,6 @@ module marbl_timing_mod
 
   implicit none
   private
-
-#if MARBL_TIMING_OPT == GPTL
-#include "gptl.inc"
-#endif
 
 #if MARBL_TIMING_OPT == MPI
 #include "mpif.h"
@@ -182,10 +176,6 @@ Contains
     integer omp_get_num_threads
 #endif
 
-#if MARBL_TIMING_OPT == GPTL
-    integer gptl_retval
-#endif
-
     ! Error checking
     if (id.gt.self%num_timers) then
       write(log_message, "(I0,A)") id, ' is not a valid timer ID'
@@ -206,8 +196,6 @@ Contains
 #endif
 #if MARBL_TIMING_OPT == CIME
       call t_startf(trim(self%individual_timers(id)%name))
-#elif MARBL_TIMING_OPT == GPTL
-      gptl_retval = gptlstart(trim(self%individual_timers(id)%name))
 #endif
       timer%cur_start = get_time()
      end associate
@@ -225,10 +213,6 @@ Contains
     character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_stop'
     character(len=char_len) :: log_message
     real(r8) :: runtime
-
-#if MARBL_TIMING_OPT == GPTL
-    integer gptl_retval
-#endif
 
     ! Error checking
     if (id.gt.self%num_timers) then
@@ -248,8 +232,6 @@ Contains
       timer%is_running  = .false.
 #if MARBL_TIMING_OPT == CIME
       call t_stopf(trim(self%individual_timers(id)%name))
-#elif  MARBL_TIMING_OPT == GPTL
-      gptl_retval = gptlstop(trim(self%individual_timers(id)%name))
 #endif
       runtime = get_time() - timer%cur_start
       timer%cur_start = c0
@@ -277,19 +259,13 @@ Contains
 
   function get_time() result(cur_time)
 
-#if (MARBL_TIMING_OPT == CIME) || (MARBL_TIMING_OPT == GPTL)
+#if MARBL_TIMING_OPT == CIME
     real(r8) :: wall, usr, sys
-#endif
-#if MARBL_TIMING_OPT == GPTL
-    integer :: gptl_retval
 #endif
     real(r8) :: cur_time
 
 #if MARBL_TIMING_OPT == CIME
     call t_stampf(wall, usr, sys)
-    cur_time = wall
-#elif MARBL_TIMING_OPT == GPTL
-    gptl_retval = gptlstamp(wall, usr, sys)
     cur_time = wall
 #elif MARBL_TIMING_OPT == MPI
     cur_time = MPI_Wtime()
