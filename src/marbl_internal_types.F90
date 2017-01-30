@@ -473,6 +473,8 @@ module marbl_internal_types
      integer :: init_timer_id
      integer :: surface_forcing_id
      integer :: interior_forcing_id
+     integer :: carbonate_chem_id
+     integer :: comp_CO3terms_id
   end type marbl_timer_indices_type
 
   ! marbl interface should use marbl_internal_timers_type from here

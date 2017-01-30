@@ -644,6 +644,20 @@ contains
       return
     end if
 
+    call this%timers%add('MARBL carbonate chemistry', this%timer_ids%carbonate_chem_id, &
+                         this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%add()", subname)
+      return
+    end if
+
+    call this%timers%add('MARBL comp_CO3terms', this%timer_ids%comp_CO3terms_id, &
+                         this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%add()", subname)
+      return
+    end if
+
     ! End of initialization
     call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -743,6 +757,8 @@ contains
          interior_forcing_indices = this%interior_forcing_ind,                &
          dtracers                 = this%column_dtracers,                     &
          marbl_tracer_indices     = this%tracer_indices,                      &
+         marbl_timers             = this%timers,                              &
+         marbl_timer_indices      = this%timer_ids,                           &
          PAR                      = this%PAR,                                 &
          marbl_interior_share     = this%interior_share,                      &
          marbl_zooplankton_share  = this%zooplankton_share,                   &

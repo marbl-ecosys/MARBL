@@ -975,6 +975,8 @@ contains
        interior_forcing_indices,         &
        dtracers,                         &
        marbl_tracer_indices,             &
+       marbl_timers,                     &
+       marbl_timer_indices,              &
        PAR,                              &
        marbl_interior_share,             &
        marbl_zooplankton_share,          &
@@ -989,6 +991,8 @@ contains
 
     use marbl_ciso_mod      , only : marbl_ciso_set_interior_forcing
     use marbl_sizes         , only : marbl_total_tracer_cnt
+    use marbl_internal_types, only : marbl_internal_timers_type
+    use marbl_internal_types, only : marbl_timer_indices_type
     use marbl_internal_types, only : marbl_interior_saved_state_indexing_type
     use marbl_restore_mod   , only : marbl_restore_compute_interior_restore
 
@@ -1002,6 +1006,8 @@ contains
     type    (marbl_interior_saved_state_indexing_type), intent(in) :: saved_state_ind
     real    (r8)                                , intent(out)   :: dtracers(:,:)          ! (marbl_total_tracer_cnt, km) computed source/sink terms
     type    (marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
+    type    (marbl_internal_timers_type)        , intent(inout) :: marbl_timers
+    type    (marbl_timer_indices_type)          , intent(in)    :: marbl_timer_indices
     ! FIXME #17: intent is inout due to DIC_Loc
     type    (marbl_interior_share_type)         , intent(inout) :: marbl_interior_share(domain%km)
     type    (marbl_zooplankton_share_type)      , intent(inout) :: marbl_zooplankton_share(zooplankton_cnt, domain%km)
@@ -1142,12 +1148,15 @@ contains
     call marbl_init_particulate_terms(1, surface_forcing_indices, &
          POC, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
 
-    !FIXME #27: new marbl timers need to be implemented to turn
-    !           on timers here around this subroutine call
+    call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
+                            marbl_status_log)
     call marbl_compute_carbonate_chemistry(domain, temperature, pressure,     &
-         salinity, tracer_local(:, :), marbl_tracer_indices, carbonate(:),    &
+         salinity, tracer_local(:, :), marbl_tracer_indices,                  &
+         marbl_timers, marbl_timer_indices, carbonate(:),                     &
          ph_prev_col(:), ph_prev_alt_co2_col(:), zsat_calcite(:),             &
          zsat_aragonite(:), marbl_status_log)
+    call marbl_timers%stop(marbl_timer_indices%carbonate_chem_id,             &
+                            marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace(&
@@ -3354,12 +3363,15 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_carbonate_chemistry(domain, temperature, press_bar, &
-       salinity, tracer_local, marbl_tracer_indices, carbonate, ph_prev_col,   &
-       ph_prev_alt_co2_col, zsat_calcite, zsat_aragonite, marbl_status_log)
+       salinity, tracer_local, marbl_tracer_indices, marbl_timers,             &
+       marbl_timer_indices, carbonate, ph_prev_col, ph_prev_alt_co2_col,       &
+       zsat_calcite, zsat_aragonite, marbl_status_log)
 
     use marbl_co2calc_mod, only : marbl_comp_co3terms
     use marbl_co2calc_mod, only : marbl_comp_co3_sat_vals
     use marbl_co2calc_mod, only : thermodynamic_coefficients_type
+    use marbl_internal_types, only : marbl_internal_timers_type
+    use marbl_internal_types, only : marbl_timer_indices_type
 
     type(marbl_domain_type)                 , intent(in)    :: domain
     real (r8)                               , intent(in)    :: temperature(:)
@@ -3367,6 +3379,8 @@ contains
     real (r8)                               , intent(in)    :: salinity(:)
     real (r8)                               , intent(in)    :: tracer_local(ecosys_base_tracer_cnt,domain%km) ! local copies of model tracer concentrations
     type(marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
+    type(marbl_internal_timers_type)        , intent(inout) :: marbl_timers
+    type(marbl_timer_indices_type)          , intent(in)    :: marbl_timer_indices
     type(carbonate_type)                    , intent(out)   :: carbonate(domain%km)
     real(r8)                                , intent(inout) :: ph_prev_col(domain%km)
     real(r8)                                , intent(inout) :: ph_prev_alt_co2_col(domain%km)
@@ -3432,12 +3446,15 @@ contains
 
     enddo
 
-    ! FIXME #27: add timer for calls to marbl_comp_CO3terms
+    call marbl_timers%start(marbl_timer_indices%comp_CO3terms_id,             &
+                            marbl_status_log)
     call marbl_comp_CO3terms(&
          dkm, mask, pressure_correct, .true., co3_coeffs, temperature, &
          salinity, press_bar, dic_loc, alk_loc, po4_loc, sio3_loc, &
          ph_lower_bound, ph_upper_bound, ph, h2co3, hco3, co3,     &
          marbl_status_log)
+    call marbl_timers%stop(marbl_timer_indices%comp_CO3terms_id,              &
+                            marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('marbl_comp_CO3terms()', subname)
@@ -3459,12 +3476,15 @@ contains
 
     enddo
 
-    ! FIXME #27: add timer for calls to marbl_comp_CO3terms
+    call marbl_timers%start(marbl_timer_indices%comp_CO3terms_id,             &
+                            marbl_status_log)
     call marbl_comp_CO3terms(&
          dkm, mask, pressure_correct, .false., co3_coeffs, temperature,    &
          salinity, press_bar, dic_alt_co2_loc, alk_loc, po4_loc, sio3_loc, &
          ph_lower_bound, ph_upper_bound, ph_alt_co2, h2co3_alt_co2,        &
          hco3_alt_co2, co3_alt_co2, marbl_status_log)
+    call marbl_timers%stop(marbl_timer_indices%comp_CO3terms_id,              &
+                            marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('marbl_comp_CO3terms()', subname)
