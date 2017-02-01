@@ -173,7 +173,7 @@ Contains
     character(len=char_len) :: log_message
 
 #ifdef _OPENMP
-    integer omp_get_num_threads
+    integer, external :: omp_get_num_threads
 #endif
 
     ! Error checking
@@ -195,7 +195,7 @@ Contains
       timer%is_threaded = omp_get_num_threads() .gt. 1
 #endif
 #if MARBL_TIMING_OPT == CIME
-      call t_startf(trim(self%individual_timers(id)%name))
+      call t_startf(trim(timer%name))
 #endif
       timer%cur_start = get_time()
      end associate
