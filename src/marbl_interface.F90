@@ -20,7 +20,6 @@ module marbl_interface
   use marbl_kinds_mod       , only : r8, log_kind, int_kind, log_kind, char_len
   use marbl_logging         , only : marbl_log_type
 
-  use marbl_sizes           , only : ecosys_base_tracer_cnt
   use marbl_sizes           , only : marbl_total_tracer_cnt
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
@@ -51,6 +50,7 @@ module marbl_interface
 
   use marbl_config_mod, only : marbl_config_and_parms_type
   use marbl_config_mod, only : ciso_on
+  use marbl_config_mod, only : lvariable_PtoC
 
   implicit none
 
@@ -297,7 +297,7 @@ contains
     !  Set up tracer indices
     !-----------------------------------------------------------------------
 
-    call this%tracer_indices%construct(ciso_on, autotrophs_config,            &
+    call this%tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs_config, &
          zooplankton_config)
     if (present(marbl_tracer_cnt)) &
       marbl_tracer_cnt = marbl_total_tracer_cnt

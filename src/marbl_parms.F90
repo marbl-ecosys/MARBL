@@ -34,7 +34,6 @@ module marbl_parms
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
   use marbl_sizes, only : grazer_prey_cnt
-  use marbl_sizes, only : ecosys_base_tracer_cnt
 
   use marbl_logging, only: marbl_log_type
 
@@ -163,10 +162,10 @@ module marbl_parms
   real(kind=r8), parameter :: &
       Q             = 16.0_r8 / 117.0_r8, & !N/C ratio (mmol/mmol) of phyto & zoo
       Qp_zoo        = c1 / 117.0_r8,      & !P/C ratio (mmol/mmol) zoo
-      Qfe_zoo       = 3.0e-6_r8,          & !zooplankton fe/C ratio
-      gQsi_0        = 0.137_r8,           & !initial Si/C ratio
-      gQsi_max      = 0.685_r8,           & !max Si/C ratio
-      gQsi_min      = 0.0457_r8,          & !min Si/C ratio
+      Qfe_zoo       = 3.0e-6_r8,          & !zooplankton Fe/C ratio
+      gQsi_0        = 0.137_r8,           & !initial Si/C ratio for growth
+      gQsi_max      = 0.685_r8,           & !max Si/C ratio for growth
+      gQsi_min      = 0.0457_r8,          & !min Si/C ratio for growth
       QCaCO3_max    = 0.4_r8,             & !max QCaCO3
       ! carbon:nitrogen ratio for denitrification
       denitrif_C_N  = parm_Red_D_C_P/136.0_r8
@@ -296,7 +295,7 @@ contains
           autotrophs(n)%kNO3            = 0.15_r8
           autotrophs(n)%kNH4            = 0.005_r8
           autotrophs(n)%kSiO3           = 0.0_r8
-          autotrophs(n)%Qp              = Qp_zoo
+          autotrophs(n)%Qp_fixed        = Qp_zoo
           autotrophs(n)%gQfe_0          = 30.0e-6_r8
           autotrophs(n)%gQfe_min        = 3.0e-6_r8
           autotrophs(n)%alphaPI_per_day = 0.39_r8
@@ -317,7 +316,7 @@ contains
           autotrophs(n)%kNO3            = 0.45_r8
           autotrophs(n)%kNH4            = 0.05_r8
           autotrophs(n)%kSiO3           = 0.7_r8
-          autotrophs(n)%Qp              = Qp_zoo
+          autotrophs(n)%Qp_fixed        = Qp_zoo
           autotrophs(n)%gQfe_0          = 30.0e-6_r8
           autotrophs(n)%gQfe_min        = 3.0e-6_r8
           autotrophs(n)%alphaPI_per_day = 0.29_r8
@@ -338,7 +337,7 @@ contains
           autotrophs(n)%kNO3            = 3.0_r8
           autotrophs(n)%kNH4            = 0.3_r8
           autotrophs(n)%kSiO3           = 0.0_r8
-          autotrophs(n)%Qp              = 0.32_r8 * Qp_zoo
+          autotrophs(n)%Qp_fixed        = 0.32_r8 * Qp_zoo
           autotrophs(n)%gQfe_0          = 60.0e-6_r8
           autotrophs(n)%gQfe_min        = 6.0e-6_r8
           autotrophs(n)%alphaPI_per_day = 0.39_r8
@@ -359,7 +358,7 @@ contains
           autotrophs(n)%kNO3            = c0
           autotrophs(n)%kNH4            = c0
           autotrophs(n)%kSiO3           = c0
-          autotrophs(n)%Qp              = c0
+          autotrophs(n)%Qp_fixed        = c0
           autotrophs(n)%gQfe_0          = c0
           autotrophs(n)%gQfe_min        = c0
           autotrophs(n)%alphaPI_per_day = c0
@@ -960,12 +959,12 @@ contains
         return
       end if
 
-      write(sname, "(2A)") trim(prefix), 'Qp'
-      lname    = 'P/C ratio'
+      write(sname, "(2A)") trim(prefix), 'Qp_fixed'
+      lname    = 'P/C ratio when using fixed P/C ratios'
       units    = 'unitless'
       datatype = 'real'
       group    = 'marbl_parms_nml'
-      rptr     => autotrophs(n)%Qp
+      rptr     => autotrophs(n)%Qp_fixed
       call this%add_var(sname, lname, units, datatype, group,               &
                         marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
@@ -974,7 +973,7 @@ contains
       end if
 
       write(sname, "(2A)") trim(prefix), 'gQfe_0'
-      lname    = 'initial Fe/C ratio'
+      lname    = 'initial Fe/C ratio for growth'
       units    = 'unitless'
       datatype = 'real'
       group    = 'marbl_parms_nml'
@@ -987,7 +986,7 @@ contains
       end if
 
       write(sname, "(2A)") trim(prefix), 'gQfe_min'
-      lname    = 'minimum Fe/C ratio'
+      lname    = 'minimum Fe/C ratio for growth'
       units    = 'unitless'
       datatype = 'real'
       group    = 'marbl_parms_nml'

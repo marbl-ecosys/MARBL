@@ -224,8 +224,6 @@ module marbl_mod
   private :: marbl_update_particulate_terms_from_prior_level
   private :: marbl_update_sinking_particle_from_prior_level
   private :: marbl_setup_local_tracers
-  private :: marbl_setup_local_zooplankton
-  private :: marbl_setup_local_autotrophs
   private :: marbl_consistency_check_autotrophs
   private :: marbl_compute_particulate_terms
   private :: marbl_compute_autotroph_elemental_ratios
@@ -712,7 +710,9 @@ contains
        marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
-       marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
+       if (n > 0) then
+          marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
+       endif
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
        marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
@@ -1122,15 +1122,8 @@ contains
     !  create local copies of model tracers
     !-----------------------------------------------------------------------
 
-    do k = 1, km
-       call marbl_setup_local_tracers(k, kmt, tracers(:, k), tracer_local(:, k))
-
-       call marbl_setup_local_zooplankton(k, kmt, tracers(:, k),              &
-            marbl_tracer_indices, zooplankton_local(:, k))
-
-       call marbl_setup_local_autotrophs(k, kmt, tracers(:, k),               &
-            marbl_tracer_indices, autotroph_local(:, k))
-    enddo
+    call marbl_setup_local_tracers(kmt, marbl_tracer_indices, autotrophs, &
+         tracers(:,:), tracer_local(:,:), zooplankton_local(:,:), autotroph_local(:,:))
 
     call marbl_init_particulate_terms(1, surface_forcing_indices, &
          POC, POP, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
@@ -2940,11 +2933,13 @@ contains
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'P'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Phosphorus'
-       marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-       marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-       marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
+       if (n.gt.0) then
+          marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'P'
+          marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Phosphorus'
+          marbl_tracer_metadata(n)%units      = 'mmol/m^3'
+          marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
+          marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
+       endif
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
        marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Fe'
@@ -2976,129 +2971,82 @@ contains
   
   !***********************************************************************
 
-  subroutine marbl_setup_local_tracers(k, column_kmt, tracers, tracer_local)
+  subroutine marbl_setup_local_tracers(column_kmt, marbl_tracer_indices, autotroph_parms, &
+             tracers, tracer_local, zooplankton_local, autotroph_local)
 
     !-----------------------------------------------------------------------
     !  create local copies of model tracers
-    !  treat negative values as zero,  apply mask to local copies
+    !  treat negative values as zero, apply mask to local copies
     !-----------------------------------------------------------------------
 
     implicit none
 
-    integer(int_kind) , intent(in)  :: k
-    integer(int_kind) , intent(in)  :: column_kmt
-    real (r8)         , intent(in)  :: tracers(ecosys_base_tracer_cnt)      ! tracer values
-    real (r8)         , intent(out) :: tracer_local(ecosys_base_tracer_cnt) ! local copies of model tracer concentrations
+    integer(int_kind)            , intent(in)  :: column_kmt
+    type(marbl_tracer_index_type), intent(in)  :: marbl_tracer_indices
+    type(autotroph_parms_type)   , intent(in)  :: autotroph_parms(:)
+    real (r8)                    , intent(in)  :: tracers(:,:)
+    real (r8)                    , intent(out) :: tracer_local(:,:)
+    type(zooplankton_local_type) , intent(out) :: zooplankton_local(:,:)
+    type(autotroph_local_type)   , intent(out) :: autotroph_local(:,:)
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer (int_kind) :: n ! tracer index
+    integer (int_kind) :: k                    ! vertical loop index
+    integer (int_kind) :: zoo_ind, auto_ind, n ! tracer indices
     !-----------------------------------------------------------------------
 
-    ! FIXME #30: only need to loop over non-living-biomass-ecosys-tracer-cnt. 
-
-    do n = 1, ecosys_base_tracer_cnt
-       if ( k > column_kmt) then
-          tracer_local(n) = c0
-       else
-          tracer_local(n) = max(c0, tracers(n))
-       end if
+    do k = 1, column_kmt
+       tracer_local(1:ecosys_base_tracer_cnt,k) = max(c0, tracers(1:ecosys_base_tracer_cnt,k))
     end do
 
-  end subroutine marbl_setup_local_tracers
-
-  !***********************************************************************
-
-  subroutine marbl_setup_local_zooplankton(k, column_kmt, tracers,            &
-             marbl_tracer_indices, zooplankton_local)
+    do k = column_kmt+1, size(tracers,2)
+       tracer_local(1:ecosys_base_tracer_cnt,k) = c0
+    end do
 
     !-----------------------------------------------------------------------
-    !  create local copies of model tracers, treat negative values as zero
-    !-----------------------------------------------------------------------
-
-    implicit none
-
-    integer (int_kind)           , intent(in)  :: k
-    integer(int_kind)            , intent(in)  :: column_kmt
-    real (r8)                    , intent(in)  :: tracers(:) ! tracer values
-    type(marbl_tracer_index_type), intent(in)  :: marbl_tracer_indices
-    type(zooplankton_local_type) , intent(out) :: zooplankton_local(:)
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer (int_kind) :: zoo_ind, n ! tracer index
+    ! populate zooplankton specific arrays from tracer_local
     !-----------------------------------------------------------------------
 
     do zoo_ind = 1, zooplankton_cnt
-       if (k > column_kmt) then
-          zooplankton_local(zoo_ind)%C = c0
-       else
-          n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
-          zooplankton_local(zoo_ind)%C = max(c0, tracers(n))
-       end if
+       n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
+       zooplankton_local(zoo_ind,:)%C = tracer_local(n,:)
     end do
 
-  end subroutine marbl_setup_local_zooplankton
-
-  !***********************************************************************
-
-  subroutine marbl_setup_local_autotrophs(k, column_kmt, tracers,             &
-             marbl_tracer_indices, autotroph_local)
-
-    !----------------------------------------------------------------------- 
-    !  create local copies of model tracers, treat negative values as zero
     !-----------------------------------------------------------------------
-
-    implicit none
-
-    integer (int_kind)         , intent(in)  :: k
-    integer(int_kind)          , intent(in)  :: column_kmt
-    real (r8)                  , intent(in)  :: tracers(:)           ! tracer values
-    type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
-    type(autotroph_local_type) , intent(out) :: autotroph_local(:)
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer (int_kind) :: auto_ind, tracer_ind ! tracer index
+    ! populate autotroph specific arrays from tracer_local
     !-----------------------------------------------------------------------
 
     do auto_ind = 1, autotroph_cnt
-       if (k > column_kmt) then
-          autotroph_local(auto_ind)%Chl = c0
-          autotroph_local(auto_ind)%C = c0
-          autotroph_local(auto_ind)%P = c0
-          autotroph_local(auto_ind)%Fe = c0
-          autotroph_local(auto_ind)%Si = c0
-          autotroph_local(auto_ind)%CaCO3 = c0
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
+       autotroph_local(auto_ind,:)%Chl = tracer_local(n,:)
+
+       n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
+       autotroph_local(auto_ind,:)%C = tracer_local(n,:)
+
+       n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
+       if (n > 0) then
+          autotroph_local(auto_ind,:)%P = tracer_local(n,:)
        else
-          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
-          autotroph_local(auto_ind)%Chl = max(c0, tracers(tracer_ind))
+          autotroph_local(auto_ind,:)%P = &
+               autotroph_parms(auto_ind)%Qp_fixed * autotroph_local(auto_ind,:)%C
+       endif
 
-          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
-          autotroph_local(auto_ind)%C = max(c0, tracers(tracer_ind))
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
+       autotroph_local(auto_ind,:)%Fe = tracer_local(n,:)
 
-          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
-          autotroph_local(auto_ind)%P = max(c0, tracers(tracer_ind))
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
+       if (n > 0) then
+          autotroph_local(auto_ind,:)%Si = tracer_local(n,:)
+       endif
 
-          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
-          autotroph_local(auto_ind)%Fe = max(c0, tracers(tracer_ind))
-
-          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
-          if (tracer_ind > 0) then
-             autotroph_local(auto_ind)%Si = max(c0, tracers(tracer_ind))
-          endif
-
-          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
-          if (tracer_ind > 0) then
-             autotroph_local(auto_ind)%CaCO3 = max(c0, tracers(tracer_ind))
-          endif
-       end if
+       n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
+       if (n > 0) then
+          autotroph_local(auto_ind,:)%CaCO3 = tracer_local(n,:)
+       endif
     end do
 
-  end subroutine marbl_setup_local_autotrophs
+  end subroutine marbl_setup_local_tracers
 
   !***********************************************************************
 
@@ -3192,11 +3140,12 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_autotroph_elemental_ratios(auto_cnt, auto_meta,    &
-             autotroph_local, tracer_local, marbl_tracer_indices,             &
+  subroutine marbl_compute_autotroph_elemental_ratios(auto_cnt, autotroph_parms, &
+             autotroph_local, tracer_local, marbl_tracer_indices,                &
              autotroph_secondary_species)
 
     use marbl_constants_mod, only : epsC
+    use marbl_config_mod   , only : lvariable_PtoC
     use marbl_parms        , only : gQsi_0
     use marbl_parms        , only : gQsi_max
     use marbl_parms        , only : gQsi_min
@@ -3204,7 +3153,7 @@ contains
     implicit none
 
     integer (int_kind)         , intent(in) :: auto_cnt
-    type(autotroph_parms_type) , intent(in) :: auto_meta(auto_cnt)             ! autotrophs
+    type(autotroph_parms_type) , intent(in) :: autotroph_parms(auto_cnt)             ! autotrophs
     type(autotroph_local_type) , intent(in) :: autotroph_local(auto_cnt)
     real (r8)                  , intent(in) :: tracer_local(ecosys_base_tracer_cnt) ! local copies of model tracer concentrations
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
@@ -3228,13 +3177,13 @@ contains
          auto_Fe    => autotroph_local(:)%Fe,                  &
          auto_Si    => autotroph_local(:)%Si,                  &
          auto_CaCO3 => autotroph_local(:)%CaCO3,               &
-         thetaC     => autotroph_secondary_species(:)%thetaC , & ! local Chl/C ratio (mg Chl/mmol C)
-         QCaCO3     => autotroph_secondary_species(:)%QCaCO3 , & ! CaCO3/C ratio (mmol CaCO3/mmol C)
-         Qp         => autotroph_secondary_species(:)%Qp,      & ! init p/C ratio (mmolp/mmolC)
+         thetaC     => autotroph_secondary_species(:)%thetaC , & ! current Chl/C ratio (mg Chl/mmol C)
+         QCaCO3     => autotroph_secondary_species(:)%QCaCO3 , & ! currenc CaCO3/C ratio (mmol CaCO3/mmol C)
+         Qp         => autotroph_secondary_species(:)%Qp,      & ! current P/C ratio (mmol P/mmol C)
          gQp        => autotroph_secondary_species(:)%gQp,     & ! P/C for growth
-         Qfe        => autotroph_secondary_species(:)%Qfe,     & ! init fe/C ratio (mmolFe/mmolC)
-         gQfe       => autotroph_secondary_species(:)%gQfe,    & ! fe/C for growth
-         Qsi        => autotroph_secondary_species(:)%Qsi,     & ! initial Si/C ratio (mmol Si/mmol C)
+         Qfe        => autotroph_secondary_species(:)%Qfe,     & ! current Fe/C ratio (mmol Fe/mmol C)
+         gQfe       => autotroph_secondary_species(:)%gQfe,    & ! Fe/C for growth
+         Qsi        => autotroph_secondary_species(:)%Qsi,     & ! current Si/C ratio (mmol Si/mmol C)
          gQsi       => autotroph_secondary_species(:)%gQsi     & ! diatom Si/C ratio for growth (new biomass)
          )
 
@@ -3244,7 +3193,11 @@ contains
 
     do auto_ind = 1, autotroph_cnt
        thetaC(auto_ind) = auto_Chl(auto_ind) / (auto_C(auto_ind) + epsC)
-       Qp(auto_ind) = auto_P(auto_ind) / (auto_C(auto_ind) + epsC)
+       if (lvariable_PtoC) then
+          Qp(auto_ind) = auto_P(auto_ind) / (auto_C(auto_ind) + epsC)
+       else
+          Qp(auto_ind) = autotroph_parms(auto_ind)%Qp_fixed
+       endif
        Qfe(auto_ind) = auto_Fe(auto_ind) / (auto_C(auto_ind) + epsC)
        if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
           Qsi(auto_ind) = min(auto_Si(auto_ind) / (auto_C(auto_ind) + epsC), gQsi_max)
@@ -3261,20 +3214,20 @@ contains
     cksi = 5._r8
 
     do auto_ind = 1, autotroph_cnt
-       !-----------------------------------------------------------------------
-       !-- Calculate Qp for new growth based on Galbraith and Martiny (2015), with min. N/P
-       ! - 14= 0.00976801, 15= 0.00911677 15.5=0.00882272 16= 0.00854701
-       ! - std intercept 6.0 = 166.66maxCP, 5.26=190, 4.0 = 250, 3.0 = 333.33
-       !-----------------------------------------------------------------------
-
-       gQp(auto_ind) = min((((7.0_r8 * PO4_loc) + 5.47_r8) * 0.001_r8), 0.00911677_r8)
-
-       ! Uncomment this line to use group-specific P quotas, rather than dynamic P model
-       ! gQp(auto_ind) = autotrophs(auto_ind)%Qp
+       if (lvariable_PtoC) then
+          !-----------------------------------------------------------------------
+          !-- Calculate Qp for new growth based on Galbraith and Martiny (2015), with min. N/P
+          ! - 14= 0.00976801, 15= 0.00911677 15.5=0.00882272 16= 0.00854701
+          ! - std intercept 6.0 = 166.66maxCP, 5.26=190, 4.0 = 250, 3.0 = 333.33
+          !-----------------------------------------------------------------------
+          gQp(auto_ind) = min((((7.0_r8 * PO4_loc) + 5.47_r8) * 0.001_r8), 0.00911677_r8)
+       else
+          ! group-specific fixed P:C ratios
+          gQp(auto_ind) = autotrophs(auto_ind)%Qp_fixed
+       end if
 
        !  Uncomment this line to use modified, fixed Redfield (C/N/P 117/16/1) stoichiomdetry
        !      gQp(auto_ind) = 0.00854701_r8      ! fixed Redfield C/N/P
-
 
        gQfe(auto_ind) = autotrophs(auto_ind)%gQfe_0
        if (Fe_loc < cks * autotrophs(auto_ind)%kFe) then
@@ -3819,7 +3772,7 @@ contains
     do auto_ind = 1, auto_cnt
 
        associate(                                                         &
-            ! local Chl/C ratio (mg Chl / mmol C)
+            ! current Chl/C ratio (mg Chl / mmol C)
             thetaC    => autotroph_secondary_species(auto_ind)%thetaC,    &
             f_nut     => autotroph_secondary_species(auto_ind)%f_nut,     &
             VNtot     => autotroph_secondary_species(auto_ind)%VNtot,     &
@@ -5077,11 +5030,11 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                            &
-         thetaC          => autotroph_secondary_species(:)%thetaC          , & ! local Chl/C ratio (mg Chl/mmol C)
-         QCaCO3          => autotroph_secondary_species(:)%QCaCO3          , & ! CaCO3/C ratio (mmol CaCO3/mmol C)
-         Qp              => autotroph_secondary_species(:)%Qp              , & ! init p/C ratio (mmolFe/mmolC)
-         Qfe             => autotroph_secondary_species(:)%Qfe             , & ! init fe/C ratio (mmolFe/mmolC)
-         Qsi             => autotroph_secondary_species(:)%Qsi             , & ! initial Si/C ratio (mmol Si/mmol C)
+         thetaC          => autotroph_secondary_species(:)%thetaC          , & ! current Chl/C ratio (mg Chl/mmol C)
+         QCaCO3          => autotroph_secondary_species(:)%QCaCO3          , & ! current CaCO3/C ratio (mmol CaCO3/mmol C)
+         Qp              => autotroph_secondary_species(:)%Qp              , & ! current P/C ratio (mmol P/mmol C)
+         Qfe             => autotroph_secondary_species(:)%Qfe             , & ! current Fe/C ratio (mmol Fe/mmol C)
+         Qsi             => autotroph_secondary_species(:)%Qsi             , & ! current Si/C ratio (mmol Si/mmol C)
          NO3_V           => autotroph_secondary_species(:)%NO3_V           , & ! nitrate uptake (mmol NO3/m^3/sec)
          NH4_V           => autotroph_secondary_species(:)%NH4_V           , & ! ammonium uptake (mmol NH4/m^3/sec)
          PO4_V           => autotroph_secondary_species(:)%PO4_V           , & ! PO4 uptake (mmol PO4/m^3/sec)
@@ -5224,7 +5177,9 @@ contains
        dtracers(n) = photoC(auto_ind) - auto_sum
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
-       dtracers(n) = PO4_V(auto_ind) + DOP_V(auto_ind) - Qp(auto_ind) * auto_sum
+       if (n > 0) then
+          dtracers(n) = PO4_V(auto_ind) + DOP_V(auto_ind) - Qp(auto_ind) * auto_sum
+       endif
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
        dtracers(n) = photoacc(auto_ind) - thetaC(auto_ind) * auto_sum

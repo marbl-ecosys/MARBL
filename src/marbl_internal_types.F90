@@ -47,8 +47,8 @@ module marbl_internal_types
 
   type, public :: autotroph_parms_type
      real    (KIND=r8)       :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3 ! nutrient uptake half-sat constants
-     real    (KIND=r8)       :: Qp                                 ! P/C ratio
-     real    (KIND=r8)       :: gQfe_0, gQfe_min                   ! initial and minimum fe/C ratio
+     real    (KIND=r8)       :: Qp_fixed                           ! P/C ratio for fixed P/C ratios
+     real    (KIND=r8)       :: gQfe_0, gQfe_min                   ! initial and minimum Fe/C ratio for growth
      real    (KIND=r8)       :: alphaPI_per_day                    ! init slope of P_I curve (GD98) (mmol C m^2/(mg Chl W day))
      real    (KIND=r8)       :: alphaPI                            ! init slope of P_I curve (GD98) (mmol C m^2/(mg Chl W sec))
                                                                    !    (derived from alphaPI_per_day)
@@ -254,13 +254,13 @@ module marbl_internal_types
   !*****************************************************************************
 
   type, public :: autotroph_secondary_species_type
-     real (r8) :: thetaC          ! local Chl/C ratio (mg Chl/mmol C)
-     real (r8) :: QCaCO3          ! CaCO3/C ratio (mmol CaCO3/mmol C)
-     real (r8) :: Qp              ! init p/C ratio (mmolP/mmolC)
+     real (r8) :: thetaC          ! current Chl/C ratio (mg Chl/mmol C)
+     real (r8) :: QCaCO3          ! current CaCO3/C ratio (mmol CaCO3/mmol C)
+     real (r8) :: Qp              ! current P/C ratio (mmol P/mmol C)
      real (r8) :: gQp             ! P/C for growth
-     real (r8) :: Qfe             ! init fe/C ratio (mmolFe/mmolC)
+     real (r8) :: Qfe             ! current Fe/C ratio (mmol Fe/mmol C)
      real (r8) :: gQfe            ! fe/C for growth
-     real (r8) :: Qsi             ! initial Si/C ratio (mmol Si/mmol C)
+     real (r8) :: Qsi             ! current Si/C ratio (mmol Si/mmol C)
      real (r8) :: gQsi            ! diatom Si/C ratio for growth (new biomass)
      real (r8) :: VNO3            ! NH4 uptake rate (non-dim)
      real (r8) :: VNH4            ! NO3 uptake rate (non-dim)
@@ -642,7 +642,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine tracer_index_constructor(this, ciso_on, autotrophs_config,       &
+  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs_config, &
              zooplankton_config)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
@@ -651,11 +651,11 @@ contains
     ! accurate count whether the carbon isotope tracers are included or not.
 
     use marbl_sizes,         only : marbl_total_tracer_cnt
-    use marbl_sizes,         only : ciso_tracer_cnt
     use marbl_constants_mod, only : c0
 
     class(marbl_tracer_index_type), intent(inout) :: this
     logical,                        intent(in)    :: ciso_on
+    logical,                        intent(in)    :: lvariable_PtoC
     type(autotroph_config_type),    intent(in)    :: autotrophs_config(:)
     type(zooplankton_config_type),  intent(in)    :: zooplankton_config(:)
 
@@ -724,26 +724,28 @@ contains
       end do
 
       do n=1,autotroph_cnt
-        tracer_cnt    = tracer_cnt + 1
+        tracer_cnt                = tracer_cnt + 1
         this%auto_inds(n)%Chl_ind = tracer_cnt
 
-        tracer_cnt    = tracer_cnt + 1
+        tracer_cnt              = tracer_cnt + 1
         this%auto_inds(n)%C_ind = tracer_cnt
 
-        tracer_cnt    = tracer_cnt + 1
-        this%auto_inds(n)%P_ind = tracer_cnt
+        if (lvariable_PtoC) then
+          tracer_cnt              = tracer_cnt + 1
+          this%auto_inds(n)%P_ind = tracer_cnt
+        end if
 
-        tracer_cnt    = tracer_cnt + 1
+        tracer_cnt               = tracer_cnt + 1
         this%auto_inds(n)%Fe_ind = tracer_cnt
 
         if (autotrophs_config(n)%silicifier) then
-          tracer_cnt    = tracer_cnt + 1
+          tracer_cnt               = tracer_cnt + 1
           this%auto_inds(n)%Si_ind = tracer_cnt
         end if
 
         if (autotrophs_config(n)%imp_calcifier.or.                            &
             autotrophs_config(n)%exp_calcifier) then
-          tracer_cnt    = tracer_cnt + 1
+          tracer_cnt                  = tracer_cnt + 1
           this%auto_inds(n)%CaCO3_ind = tracer_cnt
         end if
       end do
@@ -772,18 +774,18 @@ contains
         this%zoo14C_ind = tracer_cnt
 
         do n=1,autotroph_cnt
-          tracer_cnt    = tracer_cnt + 1
+          tracer_cnt                = tracer_cnt + 1
           this%auto_inds(n)%C13_ind = tracer_cnt
 
-          tracer_cnt    = tracer_cnt + 1
+          tracer_cnt                = tracer_cnt + 1
           this%auto_inds(n)%C14_ind = tracer_cnt
 
-          if (autotrophs_config(n)%imp_calcifier.or.                          &
+          if (autotrophs_config(n)%imp_calcifier .or. &
               autotrophs_config(n)%exp_calcifier) then
-            tracer_cnt    = tracer_cnt + 1
+            tracer_cnt                    = tracer_cnt + 1
             this%auto_inds(n)%Ca13CO3_ind = tracer_cnt
 
-            tracer_cnt    = tracer_cnt + 1
+            tracer_cnt                    = tracer_cnt + 1
             this%auto_inds(n)%Ca14CO3_ind = tracer_cnt
           end if
 

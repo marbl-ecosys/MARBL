@@ -5280,7 +5280,8 @@ contains
        autotroph_secondary_species, dtracers, interior_restore, &
        marbl_tracer_indices, marbl_diags)
 
-    use marbl_parms,  only : Qp_zoo
+    use marbl_parms     , only : Qp_zoo
+    use marbl_config_mod, only : lvariable_PtoC
 
     type(marbl_domain_type)                , intent(in)    :: marbl_domain
     type(column_sinking_particle_type)     , intent(in)    :: POP
@@ -5293,6 +5294,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+    integer(int_kind) :: n
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
 
@@ -5308,13 +5310,27 @@ contains
 
     ! vertical integrals
     work = dtracers(po4_ind,:) + dtracers(dop_ind,:) + dtracers(dopr_ind,:) + &
-         sum(dtracers(marbl_tracer_indices%auto_inds(:)%P_ind,:),dim=1) + &
          Qp_zoo * sum(dtracers(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1)
+
+    if (lvariable_PtoC) then
+       work = work + sum(dtracers(marbl_tracer_indices%auto_inds(:)%P_ind,:),dim=1)
+    else
+       do n = 1, autotroph_cnt
+          work = work + autotroph_secondary_species(n,:)%Qp * dtracers(marbl_tracer_indices%auto_inds(n)%C_ind,:)
+       end do
+    endif
 
     ! subtract restoring terms
     work = work - (interior_restore(po4_ind,:) + interior_restore(dop_ind,:) + interior_restore(dopr_ind,:) + &
-                   sum(interior_restore(marbl_tracer_indices%auto_inds(:)%P_ind,:),dim=1) + &
                    Qp_zoo * sum(interior_restore(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1))
+
+    if (lvariable_PtoC) then
+       work = work - sum(interior_restore(marbl_tracer_indices%auto_inds(:)%P_ind,:),dim=1)
+    else
+       do n = 1, autotroph_cnt
+          work = work - autotroph_secondary_species(n,:)%Qp * interior_restore(marbl_tracer_indices%auto_inds(n)%C_ind,:)
+       end do
+    endif
 
     call compute_vertical_integrals(work, delta_z, kmt,                       &
          full_depth_integral=diags(ind%Jint_Ptot)%field_2d(1),                &
