@@ -46,7 +46,17 @@ module marbl_timing_mod
 
   !*****************************************************************************
 
+  type, public :: marbl_timer_indices_type
+     integer :: init_timer_id
+     integer :: surface_forcing_id
+     integer :: interior_forcing_id
+     integer :: carbonate_chem_id
+  end type marbl_timer_indices_type
+
+  !*****************************************************************************
+
   public :: marbl_timing_copy_timing_data
+  public :: marbl_timing_setup_timers
   public :: marbl_timing_shutdown
 
   !*****************************************************************************
@@ -91,6 +101,43 @@ Contains
     end do
 
   end subroutine marbl_timing_copy_timing_data
+
+  !*****************************************************************************
+
+  subroutine marbl_timing_setup_timers(internal_timers, timer_ids, marbl_status_log)
+
+    type(marbl_internal_timers_type), intent(inout) :: internal_timers
+    type(marbl_timer_indices_type),   intent(inout) :: timer_ids
+    type(marbl_log_type),             intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_setup_timers'
+
+    !-----------------------------------------------------------------------
+    !  Set up timers for inside time loops
+    !-----------------------------------------------------------------------
+
+    call internal_timers%add('MARBL set_sflux', timer_ids%surface_forcing_id, &
+                         marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("timers%add()", subname)
+      return
+    end if
+
+    call internal_timers%add('MARBL set_interior', timer_ids%interior_forcing_id, &
+                         marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("timers%add()", subname)
+      return
+    end if
+
+    call internal_timers%add('MARBL carbonate chemistry', timer_ids%carbonate_chem_id, &
+                         marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("timers%add()", subname)
+      return
+    end if
+
+  end subroutine marbl_timing_setup_timers
 
   !*****************************************************************************
 

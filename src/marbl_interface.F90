@@ -510,6 +510,7 @@ contains
     use marbl_mod,         only : marbl_init_interior_forcing_fields
     use marbl_config_mod,  only : lflux_gas_o2
     use marbl_config_mod,  only : lflux_gas_co2
+    use marbl_timing_mod,  only : marbl_timing_setup_timers
 
     class(marbl_interface_class), intent(inout) :: this
 
@@ -626,28 +627,10 @@ contains
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
 
-    !-----------------------------------------------------------------------
-    !  Set up timers for inside time loops
-    !-----------------------------------------------------------------------
-
-    call this%timers%add('MARBL set_sflux', this%timer_ids%surface_forcing_id, &
-                         this%StatusLog)
+    ! Set up timers for inside time loops
+    call marbl_timing_setup_timers(this%timers, this%timer_ids, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("timers%add()", subname)
-      return
-    end if
-
-    call this%timers%add('MARBL set_interior', this%timer_ids%interior_forcing_id, &
-                         this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("timers%add()", subname)
-      return
-    end if
-
-    call this%timers%add('MARBL carbonate chemistry', this%timer_ids%carbonate_chem_id, &
-                         this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("timers%add()", subname)
+      call this%StatusLog%log_error_trace("marbl_timing_setup_timers()", subname)
       return
     end if
 

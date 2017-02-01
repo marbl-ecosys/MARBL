@@ -14,6 +14,7 @@ module marbl_internal_types
   use marbl_logging, only : marbl_log_type
 
   use marbl_timing_mod, only : marbl_internal_timers_type
+  use marbl_timing_mod, only : marbl_timer_indices_type
 
   implicit none
 
@@ -469,15 +470,10 @@ module marbl_internal_types
 
   !***********************************************************************
 
-  type, public :: marbl_timer_indices_type
-     integer :: init_timer_id
-     integer :: surface_forcing_id
-     integer :: interior_forcing_id
-     integer :: carbonate_chem_id
-  end type marbl_timer_indices_type
-
-  ! marbl interface should use marbl_internal_timers_type from here
+  ! marbl interface should use marbl_internal_timers_type and
+  ! marbl_timer_indices_type from here
   public :: marbl_internal_timers_type
+  public :: marbl_timer_indices_type
 
 contains
 
