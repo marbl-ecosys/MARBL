@@ -37,11 +37,20 @@ Program marbl
   use marbl_namelist_mod, only : marbl_nl_split_string
   use marbl_namelist_mod, only : marbl_namelist
 
-  ! Use from drivers/
+  ! Driver modules for individual tests
   use marbl_init_namelist_drv,    only : marbl_init_namelist_test    => test
   use marbl_init_no_namelist_drv, only : marbl_init_no_namelist_test => test
   use marbl_get_put_drv,          only : marbl_get_put_test          => test
-  use marbl_mpi_mod ! No only because we want all of mpif.h?
+
+  ! MPI wrappers (will build without MPI as well)
+  use marbl_mpi_mod, only : marbl_mpi_init
+  use marbl_mpi_mod, only : marbl_mpi_finalize
+  use marbl_mpi_mod, only : marbl_mpi_abort
+  use marbl_mpi_mod, only : marbl_mpi_bcast
+  use marbl_mpi_mod, only : marbl_mpi_send
+  use marbl_mpi_mod, only : marbl_mpi_recv
+  ! MPI-related variables (if .not.mpi_on, my_task = 0 and num_tasks = 1)
+  use marbl_mpi_mod, only : mpi_on, my_task, num_tasks
 
   Implicit None
 
