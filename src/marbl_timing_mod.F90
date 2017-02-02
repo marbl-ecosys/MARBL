@@ -1,11 +1,37 @@
 module marbl_timing_mod
 
-  ! For mutually-exclusive options for timers:
-  ! -DMARBL_TIMING_OPT=CIME    => use perf_mod
-#define CIME 2
-  ! -DMARBL_TIMING_OPT=MPI     => use MPI_Wtime()
+! This module adds support for internal timers to MARBL. There are three options
+! for the source of timing data, controlled by the MARBL_TIMING_OPT macro:
+! (1) By default, MARBL will use the FORTRAN intrinsic cpu_time() to determine
+!     wall time
+! (2) If you build MARBL with -DMARBL_TIMING_OPT=MPI, MARBL will use MPI_Wtime()
+!     to determine walltime
 #define MPI 1
-  ! MARBL_TIMING_OPT undefined => use cpu_time()
+! (3) If you build MARBL with -DMARBL_TIMING_OPT=CIME, MARBL will use the GPTL
+!     timing wrappers found in $CIME/share/timing/perf_mod.F90
+#define CIME 2
+
+! Module Usage
+! ------------
+!
+! To add a new timer, you must add an index for it to marbl_timing_indexing_type
+! [which is in this module] and update marbl_timing_setup_timers() [also in this
+! module] to define the timer. The timers themselves are part of the MARBL
+! interface, so pass this%timers and this%timer_ids from marbl_interface.F90 to
+! the routine you want to time, and wrap the desired code in
+! call timers%start(timer_ids%your_new_index, marbl_status_log)
+! ... [code to time]
+! call timers%stop(timer_ids%your_new_index, marbl_status_log)
+!
+! The GCM accesses timing data by calling marbl_interface%update_timers() and then
+! pulling data from marbl_interface%timer_summary:
+! timer_summary%num_timers is the number of timers provided from MARBL
+! timer_summary%names(:) is an array of the names associated with each timer
+!                        [set in marbl_timing_setup_timers()]
+! timer_summary%cumulative_runtimes(:) is an array of the amount of time MARBL
+!                                      spent in each block of code
+! timer_summary%is_threaded(:) is an array of logicals - .true. => code was executed
+!                              in an OpenMP threaded region
 
   use marbl_kinds_mod, only : char_len, r8
   use marbl_constants_mod, only : c0
