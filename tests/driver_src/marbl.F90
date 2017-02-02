@@ -65,9 +65,8 @@ Program marbl
   character(len=256)                  :: testname, varname, log_message
   logical                             :: lprint_marbl_log
   logical                             :: lprint_driver_log
-  logical                             :: lwrite_gptl_file
 
-  namelist /marbl_driver_nml/testname, lwrite_gptl_file
+  namelist /marbl_driver_nml/testname
 
   !****************************************************************************
 
@@ -86,7 +85,6 @@ Program marbl
 
   ! (1) Set marbl_driver_nml defaults
   testname     = ''
-  lwrite_gptl_file = .false.
 
   ! Read namelist
   if (my_task.eq.0) then
