@@ -65,7 +65,7 @@ intel:
 	$(MAKE) $(EXE) COMP_NAME=intel$(MPISUF) FC=ifort FCFLAGS="-O2 -free -cpp -nogen-interface -fp-model source" INC="-module $(OBJ_ROOT)/intel$(MPISUF)" INC2="-module $(OBJ_ROOT)/intel$(MPISUF)/driver" 
 
 pgi:
-	$(MAKE) $(EXE) COMP_NAME=pgi FC=pgf90 FCFLAGS="-O2 -Mfree" INC="-module $(OBJ_ROOT)/pgi" INC2="-module $(OBJ_ROOT)/pgi/driver"
+	$(MAKE) $(EXE) COMP_NAME=pgi$(MPISUF) FC=pgf90 FCFLAGS="-O2 -Mfree" INC="-module $(OBJ_ROOT)/pgi$(MPISUF)" INC2="-module $(OBJ_ROOT)/pgi$(MPISUF)/driver"
 
 gnu:
 	$(MAKE) $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
