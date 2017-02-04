@@ -8,3 +8,4 @@ MARBL scientific documentation
    :maxdepth: 1
    :caption: Contents:
 
+   phytoplankton-growth.rst

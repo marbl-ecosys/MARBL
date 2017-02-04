@@ -8,10 +8,12 @@ This document provides technical documentation of the MARBL code.
 
 .. sidebar:: Contributing to MARBL
 	     
-   * :ref:`Guidelines for contributing <developer-agreement>`
+   * :ref:`Guidelines for participation <developer-agreement>`
      
    
    * :ref:`Developing code <workflow>`
+
+   * :ref:`Working on the documentation <working-on-docs>`
 
      
 

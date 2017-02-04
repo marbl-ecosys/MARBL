@@ -20,12 +20,11 @@ Table of contents
 
 .. toctree::
    :maxdepth: 1
-   :numbered:
 
    dev-guide/index.rst
    sci-guide/index.rst
-   usr-guide/index.rst   
-
+   usr-guide/index.rst
+   dev-guide/repo-access/index.rst
 
 ..
   Indices and tables
