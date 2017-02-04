@@ -6,19 +6,30 @@
 Welcome to MARBL's documentation!
 =================================
 
+This document has three major sections.
+
+The :ref:`developer's guide <dev-guide>` provides techincal documentation of the MARBL code.
+
+The :ref:`scientific guide <sci-guide>` aims to communicate the scientific underpinnings of the formulations encoded in MARBL.  
+
+The :ref:`user's guide <usr-guide>` is designed to support configuring and running MARBL.
+
+
+Table of contents
+-----------------
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :numbered:
 
    dev-guide/index.rst
    sci-guide/index.rst
-   usr-guide/index.rst
+   usr-guide/index.rst   
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+..
+  Indices and tables
+  ==================
+  * :ref:`genindex`
+  * :ref:`modindex`
+  * :ref:`search`

@@ -1,13 +1,25 @@
-.. _dev_guide:
+.. _dev-guide:
 
 ***********************
 MARBL developer's guide
 ***********************
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+This document provides technical documentation of the MARBL code.
 
-   developer-agreement.rst
+.. sidebar:: Contributing to MARBL
+	     
+   * :ref:`Guidelines for contributing <developer-agreement>`
+     
+   
+   * :ref:`Developing code <workflow>`
+
+     
+
+.. toctree::
+   :maxdepth: 2
+
    introduction.rst
+   coding-conventions.rst
    marbl-interface.rst
+
+

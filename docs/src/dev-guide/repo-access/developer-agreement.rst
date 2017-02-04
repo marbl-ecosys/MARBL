@@ -1,6 +1,6 @@
-.. _dev-guide:
+.. _developer-agreement:
 	       
-MARBL repository developer's agreement
+Developer's agreement
 ======================================
 
 This document provides guidance for individuals contributing to the MARBL development repository, which is located here: https://github.com/NCAR/MARBL.
@@ -10,6 +10,7 @@ This document provides guidance for individuals contributing to the MARBL develo
 
 Distribution policy
 -------------------
+
 The MARBL development code should not be distributed outside of a research group.
 Released versions of the MARBL code will be made publicly available on an open-source Github site.
 

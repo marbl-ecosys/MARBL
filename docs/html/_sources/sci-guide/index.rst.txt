@@ -1,4 +1,4 @@
-.. _sci_guide:
+.. _sci-guide:
 
 ******************************
 MARBL scientific documentation
