@@ -20,6 +20,10 @@ Table of contents
 
 .. toctree::
    :maxdepth: 1
+<<<<<<< HEAD
+=======
+   :caption: Contents:
+>>>>>>> master
 
    dev-guide/index.rst
    sci-guide/index.rst
