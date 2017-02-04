@@ -1,4 +1,4 @@
-.. _usr_guide:
+.. _usr-guide:
 
 ****************
 MARBL user guide

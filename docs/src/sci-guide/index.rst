@@ -1,4 +1,4 @@
-.. _sci_guide:
+.. _sci-guide:
 
 ******************************
 MARBL scientific documentation
@@ -8,3 +8,4 @@ MARBL scientific documentation
    :maxdepth: 1
    :caption: Contents:
 
+   phytoplankton-growth.rst

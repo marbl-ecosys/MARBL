@@ -1,0 +1,6 @@
+.. _workflow:
+
+Github workflow
+===============
+
+
