@@ -7,7 +7,7 @@ Welcome to MARBL's documentation!
 =================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    dev-guide/index.rst
