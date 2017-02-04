@@ -1,0 +1,243 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction to MARBL framework &#8212; MARBL 0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="MARBL interface" href="marbl-interface.html" />
+    <link rel="prev" title="MARBL repository developer’s agreement" href="developer-agreement.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="marbl-interface.html" title="MARBL interface"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="developer-agreement.html" title="MARBL repository developer’s agreement"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">MARBL 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">MARBL developer&#8217;s guide</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction to MARBL framework</a><ul>
+<li><a class="reference internal" href="#tracer-equation-view-of-biogeochemistry">Tracer equation view of biogeochemistry</a></li>
+<li><a class="reference internal" href="#implementation-overview">Implementation overview</a></li>
+<li><a class="reference internal" href="#coding-conventions">Coding conventions</a><ul>
+<li><a class="reference internal" href="#associate-construct">Associate construct</a></li>
+<li><a class="reference internal" href="#object-oriented-programming-features">Object-oriented programming features</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="developer-agreement.html"
+                        title="previous chapter">MARBL repository developer&#8217;s agreement</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="marbl-interface.html"
+                        title="next chapter">MARBL interface</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dev-guide/introduction.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="introduction-to-marbl-framework">
+<span id="intro"></span><h1>Introduction to MARBL framework<a class="headerlink" href="#introduction-to-marbl-framework" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="tracer-equation-view-of-biogeochemistry">
+<h2>Tracer equation view of biogeochemistry<a class="headerlink" href="#tracer-equation-view-of-biogeochemistry" title="Permalink to this headline">¶</a></h2>
+<p>MARBL is designed to be a modular implementation of ocean biogoechemistry suitable for coupling to ocean general circulation models (OGCM).
+In the OGCM context, the prognostic equation governing the evolution of an arbitrary tracer <span class="math">\(\chi\)</span> in the ocean is</p>
+<div class="math" id="equation-tracer">
+<span class="eqno">(1)<a class="headerlink" href="#equation-tracer" title="Permalink to this equation">¶</a></span>\[\begin{equation}
+   \frac{\partial \chi}{\partial t}
+   + \nabla\cdot(\mathbf{u}\chi)
+   - \nabla\cdot\left(K\cdot \nabla\chi\right) = B_\chi(\mathbf{x})
+\end{equation}\]</div>
+<p>where and <span class="math">\(B_\chi(\mathbf{x})\)</span> is the sum of sources minus sinks for <span class="math">\(\chi\)</span>, computed as a function of the model state vector, <span class="math">\(\mathbf{x}\)</span>.</p>
+<p>The OGCM computes the lefthand-side of <a class="reference internal" href="#equation-tracer">(1)</a> (time tendency, advection, diffusion); MARBL&#8217;s role is to compute the righthand-side (<span class="math">\(B_\chi(\mathbf{x})\)</span>).
+MARBL returns this tendency to the OGCM, which steps <a class="reference internal" href="#equation-tracer">(1)</a> forward in time.
+MARBL also computes air-sea fluxes for constituents like CO<sub>2</sub>; the OGCM is responsible for handling these in a manner consistent with its numerics.
+MARBL also returns diagnostic output, including intermediate terms used in the computation of <span class="math">\(B_\chi(\mathbf{x})\)</span>, such as net primary productivity or grazing of phytoplankton.
+The OGCM must compute diagnostics relating to the total tracer concentration and terms from the righthand-side of <a class="reference internal" href="#equation-tracer">(1)</a>.</p>
+</div>
+<div class="section" id="implementation-overview">
+<h2>Implementation overview<a class="headerlink" href="#implementation-overview" title="Permalink to this headline">¶</a></h2>
+<p>MARBL is compiled as a standalone library with no explicit dependencies on aspects of the OGCM code.
+The OGCM includes a <em>MARBL driver</em>, which is responsible for all communication with MARBL making use of MARBL&#8217;s interface layer.</p>
+<p>MARBL is configured to operate on vertical columns.  The OGCM passes data into MARBL on these columns, including information describing the domain (i.e., <cite>dz</cite> or the vertical layer thickness, which may vary in time).</p>
+<p>MARBL returns data on columns, which must then be remapped back to the OGCM&#8217;s data format.</p>
+<img alt="../_images/modular-design.png" class="align-center" src="../_images/modular-design.png" />
+</div>
+<div class="section" id="coding-conventions">
+<h2>Coding conventions<a class="headerlink" href="#coding-conventions" title="Permalink to this headline">¶</a></h2>
+<p>MARBL is written in Fortran.
+A few constructs commonly used in MARBL may be unfamiliar to scientific programmers.</p>
+<div class="section" id="associate-construct">
+<h3>Associate construct<a class="headerlink" href="#associate-construct" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal"><span class="pre">associate</span></code> construct allows complex variables or expression to be denoted by a simple name or &#8220;alias.&#8221;
+The association between the name and the underlying variable is terminated at the end of the associate block.</p>
+<p>For example:</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span> <span class="k">do </span><span class="n">m</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">tracer_restore_cnt</span>
+  <span class="n">n</span> <span class="o">=</span> <span class="n">interior_forcing_ind</span><span class="p">%</span><span class="n">tracer_id</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+  <span class="k">associate</span><span class="p">(</span><span class="n">restore_field</span> <span class="o">=&gt;</span> <span class="n">interior_forcings</span><span class="p">(</span><span class="n">restoring_inds</span><span class="p">(</span><span class="n">n</span><span class="p">))%</span><span class="n">field_1d</span><span class="p">,</span> <span class="p">&amp;</span>
+            <span class="n">inv_tau</span>       <span class="o">=&gt;</span>  <span class="n">interior_forcings</span><span class="p">(</span><span class="n">inv_tau_inds</span><span class="p">(</span><span class="n">n</span><span class="p">))%</span><span class="n">field_1d</span><span class="p">)</span>
+    <span class="n">interior_restore</span><span class="p">(</span><span class="n">n</span><span class="p">,:)</span> <span class="o">=</span> <span class="p">(</span><span class="n">restore_field</span><span class="p">(</span><span class="mi">1</span><span class="p">,:)</span> <span class="o">-</span> <span class="n">interior_tracers</span><span class="p">(</span><span class="n">n</span><span class="p">,:))</span> <span class="o">*</span> <span class="n">inv_tau</span><span class="p">(</span><span class="mi">1</span><span class="p">,:)</span>
+  <span class="k">end associate</span>
+<span class="k">end do</span>
+</pre></div>
+</div>
+<p>In this case, <code class="docutils literal"><span class="pre">inv_tau</span></code> points to the more complicated expression <code class="docutils literal"><span class="pre">interior_forcings(inv_tau_inds(n))%field_1d)</span></code>, and similarly for <code class="docutils literal"><span class="pre">restore_field</span></code>.
+The assocation is terminated at <code class="docutils literal"><span class="pre">end</span> <span class="pre">associate</span></code>.</p>
+</div>
+<div class="section" id="object-oriented-programming-features">
+<h3>Object-oriented programming features<a class="headerlink" href="#object-oriented-programming-features" title="Permalink to this headline">¶</a></h3>
+<p>Object-oriented programming constructs permit the definition of classes that both contain data and methods which can perform operations on that data.</p>
+<p>Here&#8217;s a relatively simple example, the declaration of the <code class="docutils literal"><span class="pre">marbl_domain_type</span></code>, which is a class used to bundle information about the OGCM domain.</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="k">type</span><span class="p">,</span> <span class="k">public</span> <span class="kd">::</span> <span class="n">marbl_domain_type</span>
+   <span class="kt">integer</span><span class="p">(</span><span class="n">int_kind</span><span class="p">)</span>     <span class="kd">::</span> <span class="n">num_PAR_subcols</span>               <span class="c">! number of PAR subcols</span>
+   <span class="kt">integer</span><span class="p">(</span><span class="n">int_kind</span><span class="p">)</span>     <span class="kd">::</span> <span class="n">num_elements_surface_forcing</span>  <span class="c">! number of surface forcing columns</span>
+   <span class="kt">integer</span><span class="p">(</span><span class="n">int_kind</span><span class="p">)</span>     <span class="kd">::</span> <span class="n">num_elements_interior_forcing</span> <span class="c">! number of interior forcing columns</span>
+   <span class="kt">integer</span><span class="p">(</span><span class="n">int_kind</span><span class="p">)</span>     <span class="kd">::</span> <span class="n">km</span>                            <span class="c">! number of vertical grid cells</span>
+   <span class="kt">integer</span><span class="p">(</span><span class="n">int_kind</span><span class="p">)</span>     <span class="kd">::</span> <span class="n">kmt</span>                           <span class="c">! index of ocean floor</span>
+   <span class="kt">real</span><span class="p">(</span><span class="n">r8</span><span class="p">),</span> <span class="k">allocatable</span> <span class="kd">::</span> <span class="n">zt</span><span class="p">(:)</span>                         <span class="c">! (km) vert dist from sfc to midpoint of layer</span>
+   <span class="kt">real</span><span class="p">(</span><span class="n">r8</span><span class="p">),</span> <span class="k">allocatable</span> <span class="kd">::</span> <span class="n">zw</span><span class="p">(:)</span>                         <span class="c">! (km) vert dist from sfc to bottom of layer</span>
+   <span class="kt">real</span><span class="p">(</span><span class="n">r8</span><span class="p">),</span> <span class="k">allocatable</span> <span class="kd">::</span> <span class="n">delta_z</span><span class="p">(:)</span>                    <span class="c">! (km) delta z - different values for partial bottom cells</span>
+   <span class="kt">real</span><span class="p">(</span><span class="n">r8</span><span class="p">),</span> <span class="k">allocatable</span> <span class="kd">::</span> <span class="n">dz</span><span class="p">(:)</span>                         <span class="c">! (km) delta z - same values for partial bottom cells</span>
+ <span class="k">contains</span>
+<span class="k">   procedure</span><span class="p">,</span> <span class="k">public</span> <span class="kd">::</span> <span class="n">construct</span> <span class="o">=&gt;</span> <span class="n">marbl_domain_constructor</span>
+<span class="k">end type </span><span class="n">marbl_domain_type</span>
+</pre></div>
+</div>
+<p>This type includes a constructor <cite>method</cite>, referenced to the subroutine <code class="docutils literal"><span class="pre">marbl_domain_constructor</span></code>.</p>
+<p>The subroutine looks like this:</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span> <span class="k">subroutine </span><span class="n">marbl_domain_constructor</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="p">&amp;</span>
+     <span class="n">num_levels</span><span class="p">,</span> <span class="n">num_PAR_subcols</span><span class="p">,</span> <span class="p">&amp;</span>
+     <span class="n">num_elements_surface_forcing</span><span class="p">,</span> <span class="n">num_elements_interior_forcing</span><span class="p">,</span> <span class="p">&amp;</span>
+     <span class="n">dz</span><span class="p">,</span> <span class="n">zw</span><span class="p">,</span> <span class="n">zt</span><span class="p">)</span>
+
+  <span class="k">class</span><span class="p">(</span><span class="n">marbl_domain_type</span><span class="p">),</span> <span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span> <span class="kd">::</span> <span class="n">this</span>
+  <span class="kt">integer</span> <span class="p">(</span><span class="n">int_kind</span><span class="p">)</span> <span class="p">,</span> <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">num_levels</span>
+  <span class="kt">integer</span> <span class="p">(</span><span class="n">int_kind</span><span class="p">)</span> <span class="p">,</span> <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">num_PAR_subcols</span>
+  <span class="kt">integer</span> <span class="p">(</span><span class="n">int_kind</span><span class="p">)</span> <span class="p">,</span> <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">num_elements_surface_forcing</span>
+  <span class="kt">integer</span> <span class="p">(</span><span class="n">int_kind</span><span class="p">)</span> <span class="p">,</span> <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">num_elements_interior_forcing</span>
+  <span class="kt">real</span> <span class="p">(</span><span class="n">r8</span><span class="p">)</span>          <span class="p">,</span> <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">dz</span><span class="p">(</span><span class="n">num_levels</span><span class="p">)</span>
+  <span class="kt">real</span> <span class="p">(</span><span class="n">r8</span><span class="p">)</span>          <span class="p">,</span> <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">zw</span><span class="p">(</span><span class="n">num_levels</span><span class="p">)</span>
+  <span class="kt">real</span> <span class="p">(</span><span class="n">r8</span><span class="p">)</span>          <span class="p">,</span> <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">zt</span><span class="p">(</span><span class="n">num_levels</span><span class="p">)</span>
+
+  <span class="kt">integer</span> <span class="kd">::</span> <span class="n">k</span>
+
+  <span class="c">! FIXME #24: remove dz from data type, use delta_z for all vertical depths</span>
+  <span class="k">allocate</span><span class="p">(</span><span class="n">this</span><span class="p">%</span><span class="n">dz</span><span class="p">(</span><span class="n">num_levels</span><span class="p">))</span>
+  <span class="k">allocate</span><span class="p">(</span><span class="n">this</span><span class="p">%</span><span class="n">delta_z</span><span class="p">(</span><span class="n">num_levels</span><span class="p">))</span>
+  <span class="k">allocate</span><span class="p">(</span><span class="n">this</span><span class="p">%</span><span class="n">zw</span><span class="p">(</span><span class="n">num_levels</span><span class="p">))</span>
+  <span class="k">allocate</span><span class="p">(</span><span class="n">this</span><span class="p">%</span><span class="n">zt</span><span class="p">(</span><span class="n">num_levels</span><span class="p">))</span>
+
+  <span class="n">this</span><span class="p">%</span><span class="n">km</span> <span class="o">=</span> <span class="n">num_levels</span>
+  <span class="n">this</span><span class="p">%</span><span class="n">num_PAR_subcols</span> <span class="o">=</span> <span class="n">num_PAR_subcols</span>
+  <span class="n">this</span><span class="p">%</span><span class="n">num_elements_surface_forcing</span> <span class="o">=</span> <span class="n">num_elements_surface_forcing</span>
+  <span class="n">this</span><span class="p">%</span><span class="n">num_elements_interior_forcing</span> <span class="o">=</span> <span class="n">num_elements_interior_forcing</span>
+
+  <span class="k">do </span><span class="n">k</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num_levels</span>
+     <span class="n">this</span><span class="p">%</span><span class="n">delta_z</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">=</span> <span class="n">dz</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+     <span class="n">this</span><span class="p">%</span><span class="n">dz</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>      <span class="o">=</span> <span class="n">dz</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+     <span class="n">this</span><span class="p">%</span><span class="n">zw</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>      <span class="o">=</span> <span class="n">zw</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+     <span class="n">this</span><span class="p">%</span><span class="n">zt</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>      <span class="o">=</span> <span class="n">zt</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+  <span class="k">end do</span>
+
+<span class="k">end subroutine </span><span class="n">marbl_domain_constructor</span>
+</pre></div>
+</div>
+<p>One key thing to note here is the use of <code class="docutils literal"><span class="pre">this</span></code>, the first argument to the subroutine.
+In this case, <code class="docutils literal"><span class="pre">this</span></code> stands for the particular instance of an object of type <code class="docutils literal"><span class="pre">marbl_domain_type</span></code>.
+The subroutine is actually part of this object, which is essentially constructing itself.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="marbl-interface.html" title="MARBL interface"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="developer-agreement.html" title="MARBL repository developer’s agreement"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">MARBL 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >MARBL developer&#8217;s guide</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, MARBL developers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+    </div>
+  </body>
+</html>
