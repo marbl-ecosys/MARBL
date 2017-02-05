@@ -7,16 +7,35 @@ Here are guidelines for installing and using Sphinx to develop documentation.
 
 Local environment
 -----------------
-The MARBL documentation is built in Sphinx from content written in reStructuredText.
+The MARBL documentation is built in `Sphinx
+<http://www.sphinx-doc.org>`_
+from content written in reStructuredText.
+
+The following extensions are required.
+
+* `sphinxcontrib-bibtex <https://sphinxcontrib-bibtex.readthedocs.io>`_
 
 
-Sphinx can be obtained here:
-http://www.sphinx-doc.org
-
-This is a Python package, so Python must be available locally.
+Python must be available locally.
 
 Miniconda is a nice tool for maintaining Python:
 https://conda.io/miniconda.html
+
+It's helpful to setup an environment. See `here
+<https://conda.io/docs/using/envs.html>`_
+for more on conda environments.
+
+With conda installed, do the following ::
+  
+  $ conda create --name marbl-docs sphinx sphinx_rtd_theme
+  $ source activate marbl-docs
+  $ pip install sphinxcontrib-bibtex
+
+This creates an environment call "marbl-docs" and installs the required extensions.
+
+To deactivate the "marbl-docs" environment ::
+
+  $ source deactivate marbl-docs
 
 Documentation workflow
 ----------------------

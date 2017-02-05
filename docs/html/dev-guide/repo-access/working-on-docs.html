@@ -99,12 +99,28 @@
 <p>Here are guidelines for installing and using Sphinx to develop documentation.</p>
 <div class="section" id="local-environment">
 <h2>Local environment<a class="headerlink" href="#local-environment" title="Permalink to this headline">¶</a></h2>
-<p>The MARBL documentation is built in Sphinx from content written in reStructuredText.</p>
-<p>Sphinx can be obtained here:
-<a class="reference external" href="http://www.sphinx-doc.org">http://www.sphinx-doc.org</a></p>
-<p>This is a Python package, so Python must be available locally.</p>
+<p>The MARBL documentation is built in <a class="reference external" href="http://www.sphinx-doc.org">Sphinx</a>
+from content written in reStructuredText.</p>
+<p>The following extensions are required.</p>
+<ul class="simple">
+<li><a class="reference external" href="https://sphinxcontrib-bibtex.readthedocs.io">sphinxcontrib-bibtex</a></li>
+</ul>
+<p>Python must be available locally.</p>
 <p>Miniconda is a nice tool for maintaining Python:
 <a class="reference external" href="https://conda.io/miniconda.html">https://conda.io/miniconda.html</a></p>
+<p>It&#8217;s helpful to setup an environment. See <a class="reference external" href="https://conda.io/docs/using/envs.html">here</a>
+for more on conda environments.</p>
+<p>With conda installed, do the following</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ conda create --name marbl-docs sphinx sphinx_rtd_theme
+$ source activate marbl-docs
+$ pip install sphinxcontrib-bibtex
+</pre></div>
+</div>
+<p>This creates an environment call &#8220;marbl-docs&#8221; and installs the required extensions.</p>
+<p>To deactivate the &#8220;marbl-docs&#8221; environment</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ source deactivate marbl-docs
+</pre></div>
+</div>
 </div>
 <div class="section" id="documentation-workflow">
 <h2>Documentation workflow<a class="headerlink" href="#documentation-workflow" title="Permalink to this headline">¶</a></h2>
