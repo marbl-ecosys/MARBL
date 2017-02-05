@@ -4,3 +4,5 @@ ChangeLog
 *ChangeLog
 **/*.swp
 .DS_Store
+.#*
+\#*
