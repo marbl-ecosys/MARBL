@@ -9,3 +9,4 @@ MARBL scientific documentation
    :caption: Contents:
 
    phytoplankton-growth.rst
+   light-attenuation.rst
