@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>1.1. Introduction to MARBL framework &#8212; MARBL 0 documentation</title>
+    <title>Introduction to MARBL framework &#8212; MARBL 0 documentation</title>
     
     <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -29,8 +29,8 @@
     <script type="text/javascript" src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="1.2. Coding conventions in MARBL" href="coding-conventions.html" />
-    <link rel="prev" title="1. MARBL developer’s guide" href="index.html" />
+    <link rel="next" title="Coding conventions in MARBL" href="coding-conventions.html" />
+    <link rel="prev" title="MARBL developer’s guide" href="index.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!--[if lt IE 9]>
     <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
@@ -44,32 +44,32 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="coding-conventions.html" title="1.2. Coding conventions in MARBL"
+          <a href="coding-conventions.html" title="Coding conventions in MARBL"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="1. MARBL developer’s guide"
+          <a href="index.html" title="MARBL developer’s guide"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">MARBL 0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">1. MARBL developer&#8217;s guide</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">MARBL developer&#8217;s guide</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">1.1. Introduction to MARBL framework</a><ul>
-<li><a class="reference internal" href="#tracer-equation-view-of-biogeochemistry">1.1.1. Tracer equation view of biogeochemistry</a></li>
-<li><a class="reference internal" href="#implementation-overview">1.1.2. Implementation overview</a></li>
+<li><a class="reference internal" href="#">Introduction to MARBL framework</a><ul>
+<li><a class="reference internal" href="#tracer-equation-view-of-biogeochemistry">Tracer equation view of biogeochemistry</a></li>
+<li><a class="reference internal" href="#implementation-overview">Implementation overview</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="index.html"
-                        title="previous chapter">1. MARBL developer&#8217;s guide</a></p>
+                        title="previous chapter">MARBL developer&#8217;s guide</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="coding-conventions.html"
-                        title="next chapter">1.2. Coding conventions in MARBL</a></p>
+                        title="next chapter">Coding conventions in MARBL</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -96,9 +96,9 @@
           <div class="body" role="main">
             
   <div class="section" id="introduction-to-marbl-framework">
-<span id="intro"></span><h1>1.1. Introduction to MARBL framework<a class="headerlink" href="#introduction-to-marbl-framework" title="Permalink to this headline">¶</a></h1>
+<span id="intro"></span><h1>Introduction to MARBL framework<a class="headerlink" href="#introduction-to-marbl-framework" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="tracer-equation-view-of-biogeochemistry">
-<h2>1.1.1. Tracer equation view of biogeochemistry<a class="headerlink" href="#tracer-equation-view-of-biogeochemistry" title="Permalink to this headline">¶</a></h2>
+<h2>Tracer equation view of biogeochemistry<a class="headerlink" href="#tracer-equation-view-of-biogeochemistry" title="Permalink to this headline">¶</a></h2>
 <p>MARBL is designed to be a modular implementation of ocean biogoechemistry suitable for coupling to ocean general circulation models (OGCM).
 In the OGCM context, the prognostic equation governing the evolution of an arbitrary tracer <span class="math">\(\chi\)</span> in the ocean is</p>
 <div class="math" id="equation-tracer">
@@ -115,7 +115,7 @@ MARBL also returns diagnostic output, including intermediate terms used in the c
 The OGCM must compute diagnostics relating to the total tracer concentration and terms from the righthand-side of <a class="reference internal" href="#equation-tracer">(1)</a>.</p>
 </div>
 <div class="section" id="implementation-overview">
-<h2>1.1.2. Implementation overview<a class="headerlink" href="#implementation-overview" title="Permalink to this headline">¶</a></h2>
+<h2>Implementation overview<a class="headerlink" href="#implementation-overview" title="Permalink to this headline">¶</a></h2>
 <p>MARBL is compiled as a standalone library with no explicit dependencies on aspects of the OGCM code.
 The OGCM includes a <em>MARBL driver</em>, which is responsible for all communication with MARBL making use of MARBL&#8217;s interface layer.</p>
 <p>MARBL is configured to operate on vertical columns.  The OGCM passes data into MARBL on these columns, including information describing the domain (i.e., <cite>dz</cite> or the vertical layer thickness, which may vary in time).</p>
@@ -137,13 +137,13 @@ The OGCM includes a <em>MARBL driver</em>, which is responsible for all communic
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="coding-conventions.html" title="1.2. Coding conventions in MARBL"
+          <a href="coding-conventions.html" title="Coding conventions in MARBL"
              >next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="1. MARBL developer’s guide"
+          <a href="index.html" title="MARBL developer’s guide"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">MARBL 0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" >1. MARBL developer&#8217;s guide</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="index.html" >MARBL developer&#8217;s guide</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

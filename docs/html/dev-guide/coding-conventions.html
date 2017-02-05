@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>1.2. Coding conventions in MARBL &#8212; MARBL 0 documentation</title>
+    <title>Coding conventions in MARBL &#8212; MARBL 0 documentation</title>
     
     <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -29,8 +29,8 @@
     <script type="text/javascript" src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="1.3. MARBL interface" href="marbl-interface.html" />
-    <link rel="prev" title="1.1. Introduction to MARBL framework" href="introduction.html" />
+    <link rel="next" title="MARBL interface" href="marbl-interface.html" />
+    <link rel="prev" title="Introduction to MARBL framework" href="introduction.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!--[if lt IE 9]>
     <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
@@ -44,32 +44,32 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="marbl-interface.html" title="1.3. MARBL interface"
+          <a href="marbl-interface.html" title="MARBL interface"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="introduction.html" title="1.1. Introduction to MARBL framework"
+          <a href="introduction.html" title="Introduction to MARBL framework"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">MARBL 0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">1. MARBL developer&#8217;s guide</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">MARBL developer&#8217;s guide</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">1.2. Coding conventions in MARBL</a><ul>
-<li><a class="reference internal" href="#associate-construct">1.2.1. Associate construct</a></li>
-<li><a class="reference internal" href="#object-oriented-programming-features">1.2.2. Object-oriented programming features</a></li>
+<li><a class="reference internal" href="#">Coding conventions in MARBL</a><ul>
+<li><a class="reference internal" href="#associate-construct">Associate construct</a></li>
+<li><a class="reference internal" href="#object-oriented-programming-features">Object-oriented programming features</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="introduction.html"
-                        title="previous chapter">1.1. Introduction to MARBL framework</a></p>
+                        title="previous chapter">Introduction to MARBL framework</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="marbl-interface.html"
-                        title="next chapter">1.3. MARBL interface</a></p>
+                        title="next chapter">MARBL interface</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -96,11 +96,11 @@
           <div class="body" role="main">
             
   <div class="section" id="coding-conventions-in-marbl">
-<span id="coding-conventions"></span><h1>1.2. Coding conventions in MARBL<a class="headerlink" href="#coding-conventions-in-marbl" title="Permalink to this headline">¶</a></h1>
+<span id="coding-conventions"></span><h1>Coding conventions in MARBL<a class="headerlink" href="#coding-conventions-in-marbl" title="Permalink to this headline">¶</a></h1>
 <p>MARBL is written in Fortran.
 A few constructs commonly used in MARBL may be unfamiliar to scientific programmers.</p>
 <div class="section" id="associate-construct">
-<h2>1.2.1. Associate construct<a class="headerlink" href="#associate-construct" title="Permalink to this headline">¶</a></h2>
+<h2>Associate construct<a class="headerlink" href="#associate-construct" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal"><span class="pre">associate</span></code> construct allows complex variables or expression to be denoted by a simple name or &#8220;alias.&#8221;
 The association between the name and the underlying variable is terminated at the end of the associate block.</p>
 <p>For example:</p>
@@ -117,7 +117,7 @@ The association between the name and the underlying variable is terminated at th
 The assocation is terminated at <code class="docutils literal"><span class="pre">end</span> <span class="pre">associate</span></code>.</p>
 </div>
 <div class="section" id="object-oriented-programming-features">
-<h2>1.2.2. Object-oriented programming features<a class="headerlink" href="#object-oriented-programming-features" title="Permalink to this headline">¶</a></h2>
+<h2>Object-oriented programming features<a class="headerlink" href="#object-oriented-programming-features" title="Permalink to this headline">¶</a></h2>
 <p>Object-oriented programming constructs permit the definition of classes that both contain data and methods which can perform operations on that data.</p>
 <p>Here&#8217;s a relatively simple example, the declaration of the <code class="docutils literal"><span class="pre">marbl_domain_type</span></code>, which is a class used to bundle information about the OGCM domain.</p>
 <div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="k">type</span><span class="p">,</span> <span class="k">public</span> <span class="kd">::</span> <span class="n">marbl_domain_type</span>
@@ -193,13 +193,13 @@ The subroutine is actually part of this object, which is essentially constructin
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="marbl-interface.html" title="1.3. MARBL interface"
+          <a href="marbl-interface.html" title="MARBL interface"
              >next</a> |</li>
         <li class="right" >
-          <a href="introduction.html" title="1.1. Introduction to MARBL framework"
+          <a href="introduction.html" title="Introduction to MARBL framework"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">MARBL 0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" >1. MARBL developer&#8217;s guide</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="index.html" >MARBL developer&#8217;s guide</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
