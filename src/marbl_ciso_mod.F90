@@ -163,13 +163,13 @@ contains
        marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Carbon-14'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
-       if (n.gt.0) then
+       if (n .gt. 0) then
           marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Ca13CO3'
           marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Ca13CO3'
         end if
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
-       if (n.gt.0) then
+       if (n .gt. 0) then
           marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Ca14CO3'
           marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Ca14CO3'
        endif
@@ -1286,7 +1286,7 @@ contains
     !  Set incoming fluxes (put into outgoing flux for first level usage).
     !  Set dissolution length, production fraction and mass terms.
     !---------------------------------------------------------------------
-    
+
     implicit none
 
     integer(int_kind)                 , intent(in)    :: k

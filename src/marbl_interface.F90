@@ -49,7 +49,7 @@ module marbl_interface
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
   use marbl_internal_types  , only : marbl_tracer_index_type
   use marbl_internal_types  , only : marbl_internal_timers_type
-  use marbl_internal_types  , only : marbl_timer_indices_type
+  use marbl_internal_types  , only : marbl_timer_indexing_type
 
 
   use marbl_config_mod, only : marbl_config_and_parms_type
@@ -125,16 +125,14 @@ module marbl_interface
      type(marbl_surface_forcing_internal_type) , private              :: surface_forcing_internal
      logical                                   , private              :: lallow_glo_ops
      type(marbl_internal_timers_type)          , private              :: timers
-     type(marbl_timer_indices_type)            , private              :: timer_ids
+     type(marbl_timer_indexing_type)           , private              :: timer_ids
 
    contains
 
      procedure, public  :: config
      procedure, public  :: init
      procedure, public  :: complete_config_and_init
-     ! TODO: better name for update_timers? This routine copies timing data from
-     !       MARBL internal datatype to datatype accessible via interface
-     procedure, public  :: update_timers
+     procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
      procedure, public  :: get_tracer_index
      procedure, public  :: set_interior_forcing
@@ -147,7 +145,7 @@ module marbl_interface
   private :: config
   private :: init
   private :: complete_config_and_init
-  private :: update_timers
+  private :: extract_timing
   private :: glo_vars_init
   private :: set_interior_forcing
   private :: set_surface_forcing
@@ -168,6 +166,7 @@ contains
     use marbl_config_mod  , only : marbl_config_set_defaults
     use marbl_config_mod  , only : marbl_config_read_namelist
     use marbl_config_mod  , only : marbl_define_config_vars
+    use marbl_timing_mod  , only : marbl_timing_setup_timers
 
     class(marbl_interface_class)   , intent(inout)        :: this
     character(marbl_nl_buffer_size), optional, intent(in) :: gcm_nl_buffer(:)
@@ -184,16 +183,16 @@ contains
     call this%StatusLog%log_noerror('', subname)
 
     !-----------------------------------------------------------------------
-    !  Set up timer for Initialization
+    !  Set up timers
     !-----------------------------------------------------------------------
 
-    call this%timers%add('MARBL Init', this%timer_ids%init_timer_id,          &
-                         this%StatusLog)
+    call marbl_timing_setup_timers(this%timers, this%timer_ids, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("timers%add()", subname)
+      call this%StatusLog%log_error_trace("marbl_timing_setup_timers()", subname)
       return
     end if
 
+    ! Start initialization timer
     call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%start()", subname)
@@ -510,7 +509,6 @@ contains
     use marbl_mod,         only : marbl_init_interior_forcing_fields
     use marbl_config_mod,  only : lflux_gas_o2
     use marbl_config_mod,  only : lflux_gas_co2
-    use marbl_timing_mod,  only : marbl_timing_setup_timers
 
     class(marbl_interface_class), intent(inout) :: this
 
@@ -627,13 +625,6 @@ contains
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
 
-    ! Set up timers for inside time loops
-    call marbl_timing_setup_timers(this%timers, this%timer_ids, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_timing_setup_timers()", subname)
-      return
-    end if
-
     ! End of initialization
     call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -645,13 +636,13 @@ contains
 
   !***********************************************************************
 
-  subroutine update_timers(this)
+  subroutine extract_timing(this)
 
     use marbl_timing_mod, only : marbl_timing_copy_timing_data
 
     class (marbl_interface_class), intent(inout) :: this
 
-    character(*), parameter :: subname = 'marbl_interface:update_timers'
+    character(*), parameter :: subname = 'marbl_interface:extract_timing'
 
     call marbl_timing_copy_timing_data(this%timer_summary, this%timers,       &
                                        this%StatusLog)
@@ -661,7 +652,7 @@ contains
       return
     end if
 
-  end subroutine update_timers
+  end subroutine extract_timing
 
   !***********************************************************************
 

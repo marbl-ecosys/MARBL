@@ -738,7 +738,7 @@ contains
 
     do n=1,size(r8array)
       if (present(add_newline)) then
-        space = add_newline.and.(n.eq.size(r8array))
+        space = add_newline.and.(n .eq. size(r8array))
       else
         space = .false.
       end if
@@ -776,7 +776,7 @@ contains
 
     do n=1,size(intarray)
       if (present(add_newline)) then
-        space = add_newline.and.(n.eq.size(intarray))
+        space = add_newline.and.(n .eq. size(intarray))
       else
         space = .false.
       end if
@@ -812,7 +812,7 @@ contains
     logical :: islast
 
     do n=1,size(strarray)
-      islast = (n.eq.size(strarray))
+      islast = (n .eq. size(strarray))
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       sptr => strarray(n)
       call this%add_var(sname_loc, lname, units, 'string', group,           &
@@ -1006,13 +1006,13 @@ contains
     if (present(lval)) cnt = cnt + 1
     if (present(sval)) cnt = cnt + 1
 
-    if (cnt.eq.0) then
+    if (cnt .eq. 0) then
       write(log_message, "(A)") 'Must provide rval, ival, lval, or sval to var_get()'
       call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
-    if (cnt.gt.1) then
+    if (cnt .gt. 1) then
       write(log_message, "(A)") 'Must provide just one of rval, ival, lval, or sval to var_get()'
       call marbl_status_log%log_error(log_message, subname)
       return
@@ -1208,7 +1208,7 @@ contains
     character(*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_metadata'
     character(len=char_len) :: log_message
 
-    if ((ind.lt.1).or.(ind.gt.this%cnt)) then
+    if ((ind .lt. 1).or.(ind .gt. this%cnt)) then
       write(log_message,'(I0,2A,I0)') ind, ' is not a valid index: must be ', &
                                       'between 1 and ', this%cnt
       call marbl_status_log%log_error(log_message, subname)

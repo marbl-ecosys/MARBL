@@ -45,10 +45,6 @@ module marbl_interface_types
     integer :: num_elements
     integer :: num_levels
     type(marbl_single_saved_state_type), dimension(:), pointer :: state => NULL()
-!     real (r8), allocatable :: ph_prev_col(:)          ! (km)
-!     real (r8), allocatable :: ph_prev_alt_co2_col(:)  ! (km)
-!     real (r8), allocatable :: ph_prev_surf(:)         ! (num_elements)
-!     real (r8), allocatable :: ph_prev_alt_co2_surf(:) ! (num_elements)
    contains
      procedure, public :: construct => marbl_saved_state_constructor
      procedure, public :: add_state => marbl_saved_state_add
@@ -524,7 +520,7 @@ contains
     end if
 
     ! 4) deallocate / nullify this%sfo
-    if (old_size.gt.0) then
+    if (old_size .gt. 0) then
       deallocate(this%sfo)
       nullify(this%sfo)
     end if
@@ -595,7 +591,7 @@ contains
 
     this%diag_cnt = this%diag_cnt + 1
     id = this%diag_cnt
-    if (id.gt.size(this%diags)) then
+    if (id .gt. size(this%diags)) then
       log_message = "not enough memory allocated for this number of diagnostics!"
       call marbl_status_log%log_error(log_message, subname)
       return
@@ -675,7 +671,7 @@ contains
     allocate(this%is_threaded(num_timers))
     allocate(this%cumulative_runtimes(num_timers))
 
-    if (num_timers.gt.0) then
+    if (num_timers .gt. 0) then
       this%names = ''
       this%is_threaded = .false.
       this%cumulative_runtimes = c0

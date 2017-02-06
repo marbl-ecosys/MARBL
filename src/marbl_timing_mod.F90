@@ -1,7 +1,8 @@
 module marbl_timing_mod
 
-! This module adds support for internal timers to MARBL. There are three options
-! for the source of timing data, controlled by the MARBL_TIMING_OPT macro:
+! This module provides support for internal timers in MARBL. There are three
+! options for the source of timing data, controlled by the MARBL_TIMING_OPT
+! macro:
 ! (1) By default, MARBL will use the FORTRAN intrinsic cpu_time() to determine
 !     wall time
 ! (2) If you build MARBL with -DMARBL_TIMING_OPT=MPI, MARBL will use MPI_Wtime()
@@ -23,8 +24,8 @@ module marbl_timing_mod
 ! ... [code to time]
 ! call timers%stop(timer_ids%your_new_index, marbl_status_log)
 !
-! The GCM accesses timing data by calling marbl_interface%update_timers() and then
-! pulling data from marbl_interface%timer_summary:
+! The GCM accesses timing data by calling marbl_interface%extract_timing() and
+! then pulling data from marbl_interface%timer_summary:
 ! timer_summary%num_timers is the number of timers provided from MARBL
 ! timer_summary%names(:) is an array of the names associated with each timer
 !                        [set in marbl_timing_setup_timers()]
@@ -72,12 +73,12 @@ module marbl_timing_mod
 
   !*****************************************************************************
 
-  type, public :: marbl_timer_indices_type
+  type, public :: marbl_timer_indexing_type
      integer :: init_timer_id
      integer :: surface_forcing_id
      integer :: interior_forcing_id
      integer :: carbonate_chem_id
-  end type marbl_timer_indices_type
+  end type marbl_timer_indexing_type
 
   !*****************************************************************************
 
@@ -133,7 +134,7 @@ Contains
   subroutine marbl_timing_setup_timers(internal_timers, timer_ids, marbl_status_log)
 
     type(marbl_internal_timers_type), intent(inout) :: internal_timers
-    type(marbl_timer_indices_type),   intent(inout) :: timer_ids
+    type(marbl_timer_indexing_type),  intent(inout) :: timer_ids
     type(marbl_log_type),             intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_setup_timers'
@@ -141,6 +142,13 @@ Contains
     !-----------------------------------------------------------------------
     !  Set up timers for inside time loops
     !-----------------------------------------------------------------------
+
+    call internal_timers%add('MARBL Init', timer_ids%init_timer_id,           &
+                         marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("timers%add()", subname)
+      return
+    end if
 
     call internal_timers%add('MARBL set_sflux', timer_ids%surface_forcing_id, &
                          marbl_status_log)
@@ -250,7 +258,7 @@ Contains
 #endif
 
     ! Error checking
-    if (id.gt.self%num_timers) then
+    if (id .gt. self%num_timers) then
       write(log_message, "(I0,A)") id, ' is not a valid timer ID'
       call marbl_status_log%log_error(log_message, subname)
       return
@@ -288,7 +296,7 @@ Contains
     real(r8) :: runtime
 
     ! Error checking
-    if (id.gt.self%num_timers) then
+    if (id .gt. self%num_timers) then
       write(log_message, "(A,I0)") id, ' is not a valid timer ID'
       call marbl_status_log%log_error(log_message, subname)
       return

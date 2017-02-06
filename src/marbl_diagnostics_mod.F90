@@ -4974,7 +4974,7 @@ contains
          sum(dtracers(marbl_tracer_indices%auto_inds(:)%C_ind,:),dim=1)
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
-       if (n.gt.0) then
+       if (n .gt. 0) then
           work = work + dtracers(n,:)
        end if
     end do
