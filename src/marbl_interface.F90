@@ -166,7 +166,6 @@ contains
     use marbl_config_mod  , only : marbl_config_set_defaults
     use marbl_config_mod  , only : marbl_config_read_namelist
     use marbl_config_mod  , only : marbl_define_config_vars
-    use marbl_timing_mod  , only : marbl_timing_setup_timers
 
     class(marbl_interface_class)   , intent(inout)        :: this
     character(marbl_nl_buffer_size), optional, intent(in) :: gcm_nl_buffer(:)
@@ -186,9 +185,9 @@ contains
     !  Set up timers
     !-----------------------------------------------------------------------
 
-    call marbl_timing_setup_timers(this%timers, this%timer_ids, this%StatusLog)
+    call this%timers%setup(this%timer_ids, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_timing_setup_timers()", subname)
+      call this%StatusLog%log_error_trace("setup_timers()", subname)
       return
     end if
 
@@ -638,17 +637,13 @@ contains
 
   subroutine extract_timing(this)
 
-    use marbl_timing_mod, only : marbl_timing_copy_timing_data
-
     class (marbl_interface_class), intent(inout) :: this
 
     character(*), parameter :: subname = 'marbl_interface:extract_timing'
 
-    call marbl_timing_copy_timing_data(this%timer_summary, this%timers,       &
-                                       this%StatusLog)
+    call this%timers%extract(this%timer_summary, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_timing_copy_timing_data',    &
-                                          subname)
+      call this%StatusLog%log_error_trace('extract_timer_data', subname)
       return
     end if
 
@@ -823,8 +818,6 @@ contains
 
   subroutine shutdown(this)
 
-    use marbl_timing_mod, only : marbl_timing_shutdown
-
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
@@ -833,9 +826,9 @@ contains
 
     ! free dynamically allocated memory, etc
 
-    call marbl_timing_shutdown(this%timer_summary, this%timers, this%StatusLog)
+    call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_timing_shutdown', subname)
+      call this%StatusLog%log_error_trace('shutdown_timers', subname)
       return
     end if
 

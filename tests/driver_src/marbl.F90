@@ -100,7 +100,7 @@ Program marbl
     if (.not.is_iostat_end(ioerr)) then
       write(*,"(A,I0)") "ioerr = ", ioerr
       write(*,"(A)") "ERROR encountered when reading MARBL namelist from stdin"
-      stop 1
+      call marbl_mpi_abort()
     end if
     write(*,"(A,I0,A)") "MARBL namelist file contained ", len_trim(nl_str),     &
                         " characters"
@@ -119,7 +119,7 @@ Program marbl
   read(tmp_nl_buffer, nml=marbl_driver_nml, iostat=ioerr)
   if (ioerr.ne.0) then
     write(*,*) "ERROR reading &marbl_driver_nml"
-    stop 1
+    call marbl_mpi_abort()
   end if
 
   ! (3) Run proper test
@@ -199,7 +199,7 @@ Program marbl
       end if
     case DEFAULT
       write(*,*) "ERROR: testname = ", trim(testname), " is not a valid option"
-      stop 1
+      call marbl_mpi_abort()
   end select
 
   ! (4) Print log(s)

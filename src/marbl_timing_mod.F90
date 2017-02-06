@@ -69,135 +69,25 @@ module marbl_timing_mod
     procedure :: add => add_new_timer
     procedure :: start => start_timer
     procedure :: stop => stop_timer
+    procedure :: extract => extract_timer_data
+    procedure :: setup => setup_timers
+    procedure :: shutdown => shutdown_timers
   end type marbl_internal_timers_type
 
   !*****************************************************************************
 
   type, public :: marbl_timer_indexing_type
-     integer :: init_timer_id
-     integer :: surface_forcing_id
-     integer :: interior_forcing_id
-     integer :: carbonate_chem_id
+    integer :: init_timer_id
+    integer :: surface_forcing_id
+    integer :: interior_forcing_id
+    integer :: carbonate_chem_id
+  contains
+    procedure :: set_to_zero => timer_indexing_zero
   end type marbl_timer_indexing_type
 
   !*****************************************************************************
 
-  public :: marbl_timing_copy_timing_data
-  public :: marbl_timing_setup_timers
-  public :: marbl_timing_shutdown
-
-  !*****************************************************************************
-
 Contains
-
-  !*****************************************************************************
-
-  subroutine marbl_timing_copy_timing_data(interface_timers, internal_timers, &
-                                           marbl_status_log)
-
-    use marbl_interface_types, only : marbl_timers_type
-
-    type(marbl_timers_type),          intent(inout) :: interface_timers
-    type(marbl_internal_timers_type), intent(in)    :: internal_timers
-    type(marbl_log_type),             intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_copy_timing_data'
-    character(len=char_len) :: log_message
-    integer :: n, num_timers
-
-    if (allocated(internal_timers%individual_timers)) then
-      num_timers = internal_timers%num_timers
-    else
-      num_timers = 0
-    end if
-
-    call interface_timers%deconstruct()
-    call interface_timers%construct(num_timers)
-
-    do n=1,num_timers
-      associate(ind_timer => internal_timers%individual_timers(n))
-        if (ind_timer%is_running) then
-          write(log_message, "(A,I0,A)") "Timer ", n, " is still running."
-          call marbl_status_log%log_error(log_message,subname)
-          return
-        end if
-        interface_timers%names(n) = ind_timer%name
-        interface_timers%is_threaded(n) = ind_timer%is_threaded
-        interface_timers%cumulative_runtimes(n) = ind_timer%cumulative_runtime
-      end associate
-    end do
-
-  end subroutine marbl_timing_copy_timing_data
-
-  !*****************************************************************************
-
-  subroutine marbl_timing_setup_timers(internal_timers, timer_ids, marbl_status_log)
-
-    type(marbl_internal_timers_type), intent(inout) :: internal_timers
-    type(marbl_timer_indexing_type),  intent(inout) :: timer_ids
-    type(marbl_log_type),             intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_setup_timers'
-
-    !-----------------------------------------------------------------------
-    !  Set up timers for inside time loops
-    !-----------------------------------------------------------------------
-
-    call internal_timers%add('MARBL Init', timer_ids%init_timer_id,           &
-                         marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("timers%add()", subname)
-      return
-    end if
-
-    call internal_timers%add('MARBL set_sflux', timer_ids%surface_forcing_id, &
-                         marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("timers%add()", subname)
-      return
-    end if
-
-    call internal_timers%add('MARBL set_interior', timer_ids%interior_forcing_id, &
-                         marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("timers%add()", subname)
-      return
-    end if
-
-    call internal_timers%add('MARBL carbonate chemistry', timer_ids%carbonate_chem_id, &
-                         marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("timers%add()", subname)
-      return
-    end if
-
-  end subroutine marbl_timing_setup_timers
-
-  !*****************************************************************************
-
-  subroutine marbl_timing_shutdown(interface_timers, internal_timers, marbl_status_log)
-
-    use marbl_interface_types, only : marbl_timers_type
-
-    type(marbl_timers_type),          intent(inout) :: interface_timers
-    type(marbl_internal_timers_type), intent(inout) :: internal_timers
-    type(marbl_log_type),             intent(inout) :: marbl_status_log
-
-    character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_shutdown'
-
-    call marbl_timing_copy_timing_data(interface_timers, internal_timers,     &
-                                       marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('marbl_timing_copy_timing_data',  &
-                                            subname)
-      return
-    end if
-
-    internal_timers%num_timers = 0
-    if (allocated(internal_timers%individual_timers)) &
-      deallocate(internal_timers%individual_timers)
-
-  end subroutine marbl_timing_shutdown
 
   !*****************************************************************************
 
@@ -229,12 +119,12 @@ Contains
     end do
 
     allocate(tmp(self%num_timers))
-    call copy_timers(self%individual_timers, tmp, self%num_timers)
+    tmp = self%individual_timers
     deallocate(self%individual_timers)
 
+    allocate(self%individual_timers(self%num_timers+1))
+    self%individual_timers(1:self%num_timers) = tmp
     self%num_timers = self%num_timers + 1
-    allocate(self%individual_timers(self%num_timers))
-    call copy_timers(tmp, self%individual_timers, self%num_timers-1)
     id = self%num_timers
     associate(new_timer => self%individual_timers(id))
       call new_timer%init(name)
@@ -323,6 +213,117 @@ Contains
 
   !*****************************************************************************
 
+  subroutine extract_timer_data(self, interface_timers, marbl_status_log)
+
+    use marbl_interface_types, only : marbl_timers_type
+
+    class(marbl_internal_timers_type), intent(in)    :: self
+    type(marbl_timers_type),           intent(inout) :: interface_timers
+    type(marbl_log_type),              intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_timing_mod:extract_timer_data'
+    character(len=char_len) :: log_message
+    integer :: n, num_timers
+
+    if (allocated(self%individual_timers)) then
+      num_timers = self%num_timers
+    else
+      num_timers = 0
+    end if
+
+    call interface_timers%deconstruct()
+    call interface_timers%construct(num_timers)
+
+    do n=1,num_timers
+      associate(ind_timer => self%individual_timers(n))
+        if (ind_timer%is_running) then
+          write(log_message, "(A,I0,A)") "Timer ", n, " is still running."
+          call marbl_status_log%log_error(log_message,subname)
+          return
+        end if
+        interface_timers%names(n) = ind_timer%name
+        interface_timers%is_threaded(n) = ind_timer%is_threaded
+        interface_timers%cumulative_runtimes(n) = ind_timer%cumulative_runtime
+      end associate
+    end do
+
+  end subroutine extract_timer_data
+
+  !*****************************************************************************
+
+  subroutine setup_timers(self, timer_ids, marbl_status_log)
+
+    class(marbl_internal_timers_type), intent(inout) :: self
+    type(marbl_timer_indexing_type),   intent(inout) :: timer_ids
+    type(marbl_log_type),              intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_timing_mod:setup_timers'
+
+    !-----------------------------------------------------------------------
+    !  Set up timers for inside time loops
+    !-----------------------------------------------------------------------
+
+    call timer_ids%set_to_zero()
+
+    call self%add('MARBL Init', timer_ids%init_timer_id, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("timers%add()", subname)
+      return
+    end if
+
+    call self%add('MARBL set_sflux', timer_ids%surface_forcing_id,            &
+                         marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("timers%add()", subname)
+      return
+    end if
+
+    call self%add('MARBL set_interior', timer_ids%interior_forcing_id,        &
+                         marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("timers%add()", subname)
+      return
+    end if
+
+    call self%add('MARBL carbonate chemistry', timer_ids%carbonate_chem_id,   &
+                         marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("timers%add()", subname)
+      return
+    end if
+
+  end subroutine setup_timers
+
+  !*****************************************************************************
+
+  subroutine shutdown_timers(self, timer_ids, interface_timers, marbl_status_log)
+
+    use marbl_interface_types, only : marbl_timers_type
+
+    class(marbl_internal_timers_type), intent(inout) :: self
+    type(marbl_timer_indexing_type),   intent(inout) :: timer_ids
+    type(marbl_timers_type),           intent(inout) :: interface_timers
+    type(marbl_log_type),              intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_timing_mod:shutdown_timers'
+
+    call timer_ids%set_to_zero()
+
+    call self%extract(interface_timers, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('marbl_timing_copy_timing_data',  &
+                                            subname)
+      return
+    end if
+
+    self%num_timers = 0
+    if (allocated(self%individual_timers)) &
+      deallocate(self%individual_timers)
+
+  end subroutine shutdown_timers
+
+  !*****************************************************************************
+
   subroutine init_single_timer(self, name)
 
     class(marbl_single_timer_type), intent(inout) :: self
@@ -335,6 +336,19 @@ Contains
     self%cumulative_runtime = c0
 
   end subroutine init_single_timer
+
+  !*****************************************************************************
+
+  subroutine timer_indexing_zero(self)
+
+    class(marbl_timer_indexing_type), intent(inout) :: self
+
+    self%init_timer_id = 0
+    self%surface_forcing_id = 0
+    self%interior_forcing_id = 0
+    self%carbonate_chem_id = 0
+
+  end subroutine timer_indexing_zero
 
   !*****************************************************************************
 
@@ -355,26 +369,6 @@ Contains
 #endif
 
   end function get_time
-
-  !*****************************************************************************
-
-  subroutine copy_timers(src, dest, num_timers)
-
-    type(marbl_single_timer_type), intent(in)    :: src(:)
-    type(marbl_single_timer_type), intent(inout) :: dest(:)
-    integer,                       intent(in)    :: num_timers
-
-    integer :: n
-
-    do n=1, num_timers
-      dest(n)%name                = src(n)%name
-      dest(n)%is_running          = src(n)%is_running
-      dest(n)%is_threaded         = src(n)%is_threaded
-      dest(n)%cur_start           = src(n)%cur_start
-      dest(n)%cumulative_runtime = src(n)%cumulative_runtime
-    end do
-
-  end subroutine copy_timers
 
   !*****************************************************************************
 
