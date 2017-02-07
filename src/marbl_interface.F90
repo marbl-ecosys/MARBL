@@ -132,6 +132,7 @@ module marbl_interface
      procedure, public  :: config
      procedure, public  :: init
      procedure, public  :: complete_config_and_init
+     procedure, public  :: reset_timers
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
      procedure, public  :: get_tracer_index
@@ -145,6 +146,7 @@ module marbl_interface
   private :: config
   private :: init
   private :: complete_config_and_init
+  private :: reset_timers
   private :: extract_timing
   private :: glo_vars_init
   private :: set_interior_forcing
@@ -632,6 +634,22 @@ contains
     end if
 
   end subroutine complete_config_and_init
+
+  !***********************************************************************
+
+  subroutine reset_timers(this)
+
+    class (marbl_interface_class), intent(inout) :: this
+
+    character(*), parameter :: subname = 'marbl_interface:reset_timers'
+
+    call this%timers%reset(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('reset_timers', subname)
+      return
+    end if
+
+  end subroutine reset_timers
 
   !***********************************************************************
 

@@ -71,6 +71,7 @@ module marbl_timing_mod
     procedure :: stop => stop_timer
     procedure :: extract => extract_timer_data
     procedure :: setup => setup_timers
+    procedure :: reset => reset_timers
     procedure :: shutdown => shutdown_timers
   end type marbl_internal_timers_type
 
@@ -296,6 +297,31 @@ Contains
 
   !*****************************************************************************
 
+  subroutine reset_timers(self, marbl_status_log)
+
+    class(marbl_internal_timers_type), intent(inout) :: self
+    type(marbl_log_type),              intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname = 'marbl_timing_mod:reset_timers'
+    character(len=char_len) :: log_message
+    integer :: n
+
+    do n = 1,size(self%individual_timers)
+        associate(timer => self%individual_timers(n))
+        if (timer%is_running) then
+          write(log_message, "(3A)") "Can not reset timers, the ",            &
+                                   trim(timer%name), " timer is still running"
+          call marbl_status_log%log_error(log_message, subname)
+          return
+        end if
+        call timer%init()
+      end associate
+    end do
+
+  end subroutine reset_timers
+
+  !*****************************************************************************
+
   subroutine shutdown_timers(self, timer_ids, interface_timers, marbl_status_log)
 
     use marbl_interface_types, only : marbl_timers_type
@@ -327,9 +353,11 @@ Contains
   subroutine init_single_timer(self, name)
 
     class(marbl_single_timer_type), intent(inout) :: self
-    character(len=*),               intent(in)    :: name
+    character(len=*), optional,     intent(in)    :: name
 
-    self%name = name
+    ! No need to provide name from reset_timers()
+    if (present(name)) self%name = name
+
     self%is_running  = .false.
     self%is_threaded = .false.
     self%cur_start = c0
