@@ -64,7 +64,6 @@ Program marbl
   integer                             :: m, n, nt, cnt
   character(len=256)                  :: testname, varname, log_message
   logical                             :: lprint_marbl_log
-  logical                             :: lprint_driver_log
 
   namelist /marbl_driver_nml/testname
 
@@ -81,7 +80,6 @@ Program marbl
   !       * Some tests use a different status log than marbl_instance%StatusLog
   !         (default is to use marbl_instance%StatusLog)
   lprint_marbl_log = .true.
-  lprint_driver_log = .false.
 
   ! (1) Set marbl_driver_nml defaults
   testname     = ''
@@ -129,18 +127,11 @@ Program marbl
       call marbl_init_namelist_test(marbl_instance, nl_buffer)
     case ('init_without_namelist')
       call marbl_init_no_namelist_test(marbl_instance)
-    case ('init_timers')
-      lprint_marbl_log = .false.
-      lprint_driver_log = .true.
-      call marbl_init_no_namelist_test(marbl_instance)
-      call summarize_timers()
     case ('get_put')
       lprint_marbl_log = .false.
-      lprint_driver_log = .true.
       call marbl_get_put_test(marbl_instance, driver_status_log)
     case ('request_tracers')
       lprint_marbl_log = .false.
-      lprint_driver_log = .true.
       call marbl_init_namelist_test(marbl_instance, nl_buffer, nt)
       ! Log tracers requested for initialization
       call driver_status_log%log_noerror('', subname)
@@ -153,7 +144,6 @@ Program marbl
       end do
     case ('request_forcings')
       lprint_marbl_log = .false.
-      lprint_driver_log = .true.
       call marbl_init_namelist_test(marbl_instance, nl_buffer)
 
       ! Log requested surface forcing fields
@@ -177,7 +167,6 @@ Program marbl
       end do
     case ('request_restoring')
       lprint_marbl_log = .false.
-      lprint_driver_log = .true.
       call marbl_init_namelist_test(marbl_instance, nl_buffer, nt)
 
       ! Log tracers requested for restoring
@@ -212,10 +201,10 @@ Program marbl
     call print_marbl_log(marbl_instance%StatusLog)
   end if
 
-  ! (4c) If requested, print driver log
-  if (lprint_driver_log) then
-    call print_marbl_log(driver_status_log)
-  end if
+  ! (5) Print timer results (and any other driver-logged output)
+  call summarize_timers()
+  call print_marbl_log(driver_status_log)
+
 
   call marbl_mpi_finalize()
 
@@ -244,7 +233,9 @@ Contains
         ! Output log from task(s) reporting errors, prefix task #
         write(*,101) my_task, trim(tmp%LogMessage)
       elseif (my_task.eq.0) then
-        write(*,100) trim(tmp%LogMessage)
+        if (associated(tmp%next) .or. len_trim(tmp%LogMessage) .gt. 0) then
+          write(*,100) trim(tmp%LogMessage)
+        end if
       end if
       tmp => tmp%next
     end do
@@ -267,6 +258,11 @@ Contains
 100 format(A, ': ', F11.3, ' seconds',A)
 
     associate(timers =>marbl_instance%timer_summary)
+      call driver_status_log%log_noerror('', subname)
+      call driver_status_log%log_noerror("=============", subname)
+      call driver_status_log%log_noerror("Timer summary", subname)
+      call driver_status_log%log_noerror("=============", subname)
+      call driver_status_log%log_noerror('', subname)
       write(log_message, "(A, I0, A)") 'There are ', timers%num_timers,       &
                                        ' timers being returned'
       call driver_status_log%log_noerror(log_message, subname)
