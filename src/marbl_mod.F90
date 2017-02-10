@@ -310,168 +310,168 @@ contains
       found = .false.
 
       ! Surface Mask
-      if (id.eq.ind%surface_mask_id) then
+      if (id .eq. ind%surface_mask_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'surface_mask'
         surface_forcings(id)%metadata%field_units   = 'unitless'
       end if
 
       ! Square of 10m wind
-      if (id.eq.ind%u10_sqr_id) then
+      if (id .eq. ind%u10_sqr_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'u10_sqr'
         surface_forcings(id)%metadata%field_units   = 'cm^2/s^2'
       end if
 
       ! Sea-surface salinity
-      if (id.eq.ind%sss_id) then
+      if (id .eq. ind%sss_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'sss'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! Sea-surface temperature
-      if (id.eq.ind%sst_id) then
+      if (id .eq. ind%sst_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'sst'
         surface_forcings(id)%metadata%field_units   = 'degrees C'
       end if
 
       ! Ice Fraction
-      if (id.eq.ind%ifrac_id) then
+      if (id .eq. ind%ifrac_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'Ice Fraction'
         surface_forcings(id)%metadata%field_units   = 'unitless'
       end if
 
       ! Dust Flux
-      if (id.eq.ind%dust_flux_id) then
+      if (id .eq. ind%dust_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'Dust Flux'
         surface_forcings(id)%metadata%field_units   = 'g/cm^2/s'
       end if
 
       ! Iron Flux
-      if (id.eq.ind%iron_flux_id) then
+      if (id .eq. ind%iron_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'Iron Flux'
         surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
       end if
 
       ! NOx Flux
-      if (id.eq.ind%nox_flux_id) then
+      if (id .eq. ind%nox_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'NOx Flux'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! NHy Flux
-      if (id.eq.ind%nhy_flux_id) then
+      if (id .eq. ind%nhy_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'NHy Flux'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DIN River Flux
-      if (id.eq.ind%din_riv_flux_id) then
+      if (id .eq. ind%din_riv_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'DIN River Flux'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DIP River Flux
-      if (id.eq.ind%dip_riv_flux_id) then
+      if (id .eq. ind%dip_riv_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'DIP River Flux'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DON River Flux
-      if (id.eq.ind%don_riv_flux_id) then
+      if (id .eq. ind%don_riv_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'DON River Flux'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DOP River Flux
-      if (id.eq.ind%dop_riv_flux_id) then
+      if (id .eq. ind%dop_riv_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'DOP River Flux'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DSi River Flux
-      if (id.eq.ind%dsi_riv_flux_id) then
+      if (id .eq. ind%dsi_riv_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'DSi River Flux'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DFe River Flux
-      if (id.eq.ind%dfe_riv_flux_id) then
+      if (id .eq. ind%dfe_riv_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'DFe River Flux'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DIC River Flux
-      if (id.eq.ind%dic_riv_flux_id) then
+      if (id .eq. ind%dic_riv_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'DIC River Flux'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! ALK River Flux
-      if (id.eq.ind%alk_riv_flux_id) then
+      if (id .eq. ind%alk_riv_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'ALK River Flux'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! DOC River Flux
-      if (id.eq.ind%doc_riv_flux_id) then
+      if (id .eq. ind%doc_riv_flux_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'DOC River Flux'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! atm pressure
-      if (id.eq.ind%atm_pressure_id) then
+      if (id .eq. ind%atm_pressure_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'Atmospheric Pressure'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! xco2
-      if (id.eq.ind%xco2_id) then
+      if (id .eq. ind%xco2_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'xco2'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! xco2_alt_co2
-      if (id.eq.ind%xco2_alt_co2_id) then
+      if (id .eq. ind%xco2_alt_co2_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'xco2_alt_co2'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! d13c
-      if (id.eq.ind%d13c_id) then
+      if (id .eq. ind%d13c_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'd13c'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! d14c
-      if (id.eq.ind%d14c_id) then
+      if (id .eq. ind%d14c_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'd14c'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
       ! d14c_gloavg
-      if (id.eq.ind%d14c_glo_avg_id) then
+      if (id .eq. ind%d14c_glo_avg_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'd14c_gloavg'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
@@ -485,7 +485,7 @@ contains
       end if
 
       ! All surface forcing fields are rank 0; if that changes, make this
-      ! call from inside each "if (id.eq.*)" block
+      ! call from inside each "if (id .eq. *)" block
       call surface_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
 
     end do
@@ -544,7 +544,7 @@ contains
     do id=1,num_interior_forcing_fields
       found = .false.
       ! Dust Flux
-      if (id.eq.ind%dustflux_id) then
+      if (id .eq. ind%dustflux_id) then
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Dust Flux'
         interior_forcings(id)%metadata%field_units = 'need_units'
@@ -552,7 +552,7 @@ contains
       end if
 
       ! PAR Column Fraction and Shortwave Radiation
-      if (id.eq.ind%PAR_col_frac_id) then
+      if (id .eq. ind%PAR_col_frac_id) then
         found = .true.
         interior_forcings(id)%metadata%varname     = 'PAR Column Fraction'
         interior_forcings(id)%metadata%field_units = 'unitless'
@@ -560,7 +560,7 @@ contains
                                                      dim1 = num_PAR_subcols)
       end if
 
-      if (id.eq.ind%surf_shortwave_id) then
+      if (id .eq. ind%surf_shortwave_id) then
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Surface Shortwave'
         interior_forcings(id)%metadata%field_units = 'need_units' ! W/m^2?
@@ -570,7 +570,7 @@ contains
 
 
       ! Temperature
-      if (id.eq.ind%temperature_id) then
+      if (id .eq. ind%temperature_id) then
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Temperature'
         interior_forcings(id)%metadata%field_units = 'Degrees C'
@@ -579,7 +579,7 @@ contains
       end if
 
       ! Salinity
-      if (id.eq.ind%salinity_id) then
+      if (id .eq. ind%salinity_id) then
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Salinity'
         interior_forcings(id)%metadata%field_units = 'need_units'
@@ -588,7 +588,7 @@ contains
       end if
 
       ! Pressure
-      if (id.eq.ind%pressure_id) then
+      if (id .eq. ind%pressure_id) then
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Pressure'
         interior_forcings(id)%metadata%field_units = 'need_units'
@@ -597,7 +597,7 @@ contains
       end if
 
       ! Iron Sediment Flux
-      if (id.eq.ind%fesedflux_id) then
+      if (id .eq. ind%fesedflux_id) then
         found = .true.
         interior_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
         interior_forcings(id)%metadata%field_units = 'need_units'
@@ -607,7 +607,7 @@ contains
 
       ! Interior Tracer Restoring
       do n=1,size(ind%tracer_restore_id)
-        if (id.eq.ind%tracer_restore_id(n)) then
+        if (id .eq. ind%tracer_restore_id(n)) then
           tracer_name = tracer_metadata(n)%short_name
           tracer_units = tracer_metadata(n)%units
           found = .true.
@@ -617,7 +617,7 @@ contains
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                        dim1 = num_levels)
         end if
-        if (id.eq.ind%inv_tau_id(n)) then
+        if (id .eq. ind%inv_tau_id(n)) then
           found = .true.
           write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
                 trim(tracer_name), 'Restoring Inverse Timescale'
@@ -972,6 +972,8 @@ contains
        interior_forcing_indices,         &
        dtracers,                         &
        marbl_tracer_indices,             &
+       marbl_timers,                     &
+       marbl_timer_indices,              &
        PAR,                              &
        marbl_interior_share,             &
        marbl_zooplankton_share,          &
@@ -985,6 +987,8 @@ contains
 
     use marbl_ciso_mod      , only : marbl_ciso_set_interior_forcing
     use marbl_sizes         , only : marbl_total_tracer_cnt
+    use marbl_internal_types, only : marbl_internal_timers_type
+    use marbl_internal_types, only : marbl_timer_indexing_type
     use marbl_internal_types, only : marbl_interior_saved_state_indexing_type
     use marbl_restore_mod   , only : marbl_restore_compute_interior_restore
 
@@ -998,6 +1002,8 @@ contains
     type    (marbl_interior_saved_state_indexing_type), intent(in) :: saved_state_ind
     real    (r8)                                , intent(out)   :: dtracers(:,:)          ! (marbl_total_tracer_cnt, km) computed source/sink terms
     type    (marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
+    type    (marbl_internal_timers_type)        , intent(inout) :: marbl_timers
+    type    (marbl_timer_indexing_type)         , intent(in)    :: marbl_timer_indices
     ! FIXME #17: intent is inout due to DIC_Loc
     type    (marbl_interior_share_type)         , intent(inout) :: marbl_interior_share(domain%km)
     type    (marbl_zooplankton_share_type)      , intent(inout) :: marbl_zooplankton_share(zooplankton_cnt, domain%km)
@@ -1128,12 +1134,14 @@ contains
     call marbl_init_particulate_terms(1, surface_forcing_indices, &
          POC, POP, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
 
-    !FIXME #27: new marbl timers need to be implemented to turn
-    !           on timers here around this subroutine call
+    call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
+                            marbl_status_log)
     call marbl_compute_carbonate_chemistry(domain, temperature, pressure,     &
          salinity, tracer_local(:, :), marbl_tracer_indices, carbonate(:),    &
          ph_prev_col(:), ph_prev_alt_co2_col(:), zsat_calcite(:),             &
          zsat_aragonite(:), marbl_status_log)
+    call marbl_timers%stop(marbl_timer_indices%carbonate_chem_id,             &
+                            marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace(&
@@ -2949,7 +2957,7 @@ contains
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
-       if (n.gt.0) then
+       if (n .gt. 0) then
           marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Si'
           marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Silicon'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
@@ -2958,7 +2966,7 @@ contains
        endif
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
-       if (n.gt.0) then
+       if (n .gt. 0) then
           marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'CaCO3'
           marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' CaCO3'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'

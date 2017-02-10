@@ -60,10 +60,17 @@ Contains
 
     ! Optional: call marbl_instance%parameters%put()
 
-    call marbl_instance%complete_config_and_init
+    call marbl_instance%complete_config_and_init()
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace(                          &
            'marbl%complete_config_and_init', subname)
+      return
+    end if
+
+    ! Shutdown
+    call marbl_instance%shutdown()
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error_trace('marbl%shutdown', subname)
       return
     end if
 

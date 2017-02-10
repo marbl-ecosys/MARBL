@@ -369,7 +369,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer :: n, tmp_id
+    integer :: n
     logical :: count_only ! true => count the diagnostics, false => add the diagnostics
     integer :: imode      ! imode = 1, count_only is true, otherwise count_only is false
     logical :: truncate
@@ -5193,7 +5193,7 @@ contains
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
-       if (n.gt.0) then
+       if (n .gt. 0) then
           work = work + dtracers(n,:)
           work = work - interior_restore(n,:)
        end if

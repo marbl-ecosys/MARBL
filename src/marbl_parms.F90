@@ -1287,7 +1287,7 @@ contains
         end if
 
         cnt = grazing_config(m,n)%auto_ind_cnt
-        if (cnt.gt.0) then
+        if (cnt .gt. 0) then
           write(sname, "(2A)") trim(prefix), 'auto_ind'
           lname     = 'Indices of autotrophs in class'
           units     = 'unitless'
@@ -1303,7 +1303,7 @@ contains
         end if
 
         cnt = grazing_config(m,n)%zoo_ind_cnt
-        if (cnt.gt.0) then
+        if (cnt .gt. 0) then
           write(sname, "(2A)") trim(prefix), 'zoo_ind'
           lname     = 'Indices of autotrophs in class'
           units     = 'unitless'

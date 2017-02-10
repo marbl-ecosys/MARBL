@@ -32,6 +32,7 @@ module marbl_interface
   use marbl_interface_types , only : marbl_diagnostics_type
   use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_saved_state_type
+  use marbl_interface_types , only : marbl_timers_type
   use marbl_interface_types , only : marbl_running_mean_0d_type
 
   use marbl_internal_types  , only : marbl_surface_forcing_indexing_type
@@ -46,6 +47,8 @@ module marbl_interface
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
   use marbl_internal_types  , only : marbl_tracer_index_type
+  use marbl_internal_types  , only : marbl_internal_timers_type
+  use marbl_internal_types  , only : marbl_timer_indexing_type
 
 
   use marbl_config_mod, only : marbl_config_and_parms_type
@@ -77,6 +80,7 @@ module marbl_interface
      type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
      type(marbl_surface_saved_state_indexing_type), public            :: surf_state_ind
      type(marbl_interior_saved_state_indexing_type), public           :: interior_state_ind
+     type(marbl_timers_type)                   , public               :: timer_summary
 
      ! public data - interior forcing
      real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input  *
@@ -119,12 +123,16 @@ module marbl_interface
      type(marbl_surface_forcing_share_type)    , private              :: surface_forcing_share
      type(marbl_surface_forcing_internal_type) , private              :: surface_forcing_internal
      logical                                   , private              :: lallow_glo_ops
+     type(marbl_internal_timers_type)          , private              :: timers
+     type(marbl_timer_indexing_type)           , private              :: timer_ids
 
    contains
 
      procedure, public  :: config
      procedure, public  :: init
      procedure, public  :: complete_config_and_init
+     procedure, public  :: reset_timers
+     procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
      procedure, public  :: get_tracer_index
      procedure, public  :: set_interior_forcing
@@ -137,6 +145,8 @@ module marbl_interface
   private :: config
   private :: init
   private :: complete_config_and_init
+  private :: reset_timers
+  private :: extract_timing
   private :: glo_vars_init
   private :: set_interior_forcing
   private :: set_surface_forcing
@@ -152,11 +162,11 @@ contains
        lgcm_has_global_ops,               &
        gcm_nl_buffer)
 
-    use marbl_namelist_mod    , only : marbl_nl_cnt
-    use marbl_namelist_mod    , only : marbl_nl_buffer_size
-    use marbl_config_mod      , only : marbl_config_set_defaults
-    use marbl_config_mod      , only : marbl_config_read_namelist
-    use marbl_config_mod      , only : marbl_define_config_vars
+    use marbl_namelist_mod, only : marbl_nl_cnt
+    use marbl_namelist_mod, only : marbl_nl_buffer_size
+    use marbl_config_mod  , only : marbl_config_set_defaults
+    use marbl_config_mod  , only : marbl_config_read_namelist
+    use marbl_config_mod  , only : marbl_define_config_vars
 
     class(marbl_interface_class)   , intent(inout)        :: this
     character(marbl_nl_buffer_size), optional, intent(in) :: gcm_nl_buffer(:)
@@ -171,6 +181,27 @@ contains
 
     call this%StatusLog%construct()
     call this%StatusLog%log_noerror('', subname)
+
+    !-----------------------------------------------------------------------
+    !  Set up timers
+    !-----------------------------------------------------------------------
+
+    call this%timers%setup(this%timer_ids, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("setup_timers()", subname)
+      return
+    end if
+
+    ! Start initialization timer
+    call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%start()", subname)
+      return
+    end if
+
+    !-----------------------------------------------------------------------
+    !  Check to see if global ops are allowed
+    !-----------------------------------------------------------------------
 
     if (present(lgcm_has_global_ops)) then
       this%lallow_glo_ops = lgcm_has_global_ops
@@ -208,6 +239,12 @@ contains
     call marbl_define_config_vars(this%configuration, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_define_config_vars()", subname)
+      return
+    end if
+
+    call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("this%timers%stop()", subname)
       return
     end if
 
@@ -258,6 +295,12 @@ contains
     character(len=char_len) :: log_message
     integer :: i
     !--------------------------------------------------------------------
+
+    call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("this%timers%start()", subname)
+      return
+    end if
 
     associate(&
          num_levels            => gcm_num_levels,                              &
@@ -446,6 +489,12 @@ contains
       return
     end if
 
+    call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("this%timers%stop()", subname)
+      return
+    end if
+
   end subroutine init
 
   !***********************************************************************
@@ -465,6 +514,12 @@ contains
     character(*), parameter :: subname = 'marbl_interface:complete_config_and_init'
     character(len=char_len) :: log_message
     integer :: i
+
+    call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("this%timers%start()", subname)
+      return
+    end if
 
     !-----------------------------------------------------------------------
     !  Lock and log this%parameters
@@ -512,7 +567,6 @@ contains
                                           subname)
       return
     end if
-
 
     call this%surface_forcing_share%construct(num_surface_elements)
     call this%surface_forcing_internal%construct(num_surface_elements)
@@ -570,7 +624,46 @@ contains
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
 
+    ! End of initialization
+    call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("this%timers%stop()", subname)
+      return
+    end if
+
   end subroutine complete_config_and_init
+
+  !***********************************************************************
+
+  subroutine reset_timers(this)
+
+    class (marbl_interface_class), intent(inout) :: this
+
+    character(*), parameter :: subname = 'marbl_interface:reset_timers'
+
+    call this%timers%reset(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('reset_timers', subname)
+      return
+    end if
+
+  end subroutine reset_timers
+
+  !***********************************************************************
+
+  subroutine extract_timing(this)
+
+    class (marbl_interface_class), intent(inout) :: this
+
+    character(*), parameter :: subname = 'marbl_interface:extract_timing'
+
+    call this%timers%extract(this%timer_summary, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('extract_timer_data', subname)
+      return
+    end if
+
+  end subroutine extract_timing
 
   !***********************************************************************
 
@@ -626,6 +719,12 @@ contains
     class(marbl_interface_class), intent(inout) :: this
     character(*), parameter :: subname = 'marbl_interface:set_interior_forcing'
 
+    call this%timers%start(this%timer_ids%interior_forcing_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%start()", subname)
+      return
+    end if
+
     call marbl_set_interior_forcing(                                          &
          domain                   = this%domain,                              &
          interior_forcings        = this%interior_input_forcings,             &
@@ -636,6 +735,8 @@ contains
          interior_forcing_indices = this%interior_forcing_ind,                &
          dtracers                 = this%column_dtracers,                     &
          marbl_tracer_indices     = this%tracer_indices,                      &
+         marbl_timers             = this%timers,                              &
+         marbl_timer_indices      = this%timer_ids,                           &
          PAR                      = this%PAR,                                 &
          marbl_interior_share     = this%interior_share,                      &
          marbl_zooplankton_share  = this%zooplankton_share,                   &
@@ -650,6 +751,12 @@ contains
        return
     end if
 
+    call this%timers%stop(this%timer_ids%interior_forcing_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%stop()", subname)
+      return
+    end if
+
   end subroutine set_interior_forcing
 
   !***********************************************************************
@@ -661,6 +768,14 @@ contains
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
+
+    character(*), parameter :: subname = 'marbl_interface:set_surface_forcing'
+
+    call this%timers%start(this%timer_ids%surface_forcing_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%start()", subname)
+      return
+    end if
 
     call marbl_set_surface_forcing(                                           &
          num_elements             = this%domain%num_elements_surface_forcing, &
@@ -676,7 +791,18 @@ contains
          surface_forcing_share    = this%surface_forcing_share,               &
          surface_forcing_diags    = this%surface_forcing_diags,               &
          glo_avg_fields_surface   = this%glo_avg_fields_surface,              &
-         marbl_status_log         = this%statuslog)
+         marbl_status_log         = this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+       call this%StatusLog%log_error_trace("marbl_set_surface_forcing()", subname)
+       return
+    end if
+
+
+    call this%timers%stop(this%timer_ids%surface_forcing_id, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("timers%stop()", subname)
+      return
+    end if
 
   end subroutine set_surface_forcing
 
@@ -711,7 +837,15 @@ contains
 
     class(marbl_interface_class), intent(inout) :: this
 
+    character(*), parameter :: subname = 'marbl_interface:shutdown'
+
     ! free dynamically allocated memory, etc
+
+    call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('shutdown_timers', subname)
+      return
+    end if
 
   end subroutine shutdown
 

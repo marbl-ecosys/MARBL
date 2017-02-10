@@ -45,10 +45,6 @@ module marbl_interface_types
     integer :: num_elements
     integer :: num_levels
     type(marbl_single_saved_state_type), dimension(:), pointer :: state => NULL()
-!     real (r8), allocatable :: ph_prev_col(:)          ! (km)
-!     real (r8), allocatable :: ph_prev_alt_co2_col(:)  ! (km)
-!     real (r8), allocatable :: ph_prev_surf(:)         ! (num_elements)
-!     real (r8), allocatable :: ph_prev_alt_co2_surf(:) ! (num_elements)
    contains
      procedure, public :: construct => marbl_saved_state_constructor
      procedure, public :: add_state => marbl_saved_state_add
@@ -174,6 +170,18 @@ module marbl_interface_types
 
   !*****************************************************************************
 
+  type, public :: marbl_timers_type
+    integer :: num_timers
+    character(char_len), allocatable :: names(:)
+    real(r8),            allocatable :: cumulative_runtimes(:)
+    logical,             allocatable :: is_threaded(:)
+  contains
+    procedure, public :: construct => marbl_timers_constructor
+    procedure, public :: deconstruct => marbl_timers_deconstructor
+  end type marbl_timers_type
+
+  !*****************************************************************************
+
   ! FIXME : move to marbl_internal_types.F90 when running means are moved to MARBL
 
   type, public :: marbl_running_mean_0d_type
@@ -202,9 +210,9 @@ contains
     integer (int_kind) , intent(in) :: num_PAR_subcols
     integer (int_kind) , intent(in) :: num_elements_surface_forcing
     integer (int_kind) , intent(in) :: num_elements_interior_forcing
-    real (r8)          , intent(in) :: dz(num_levels) 
-    real (r8)          , intent(in) :: zw(num_levels) 
-    real (r8)          , intent(in) :: zt(num_levels) 
+    real (r8)          , intent(in) :: dz(num_levels)
+    real (r8)          , intent(in) :: zw(num_levels)
+    real (r8)          , intent(in) :: zt(num_levels)
 
     integer :: k
 
@@ -227,7 +235,7 @@ contains
     end do
 
   end subroutine marbl_domain_constructor
-  
+
   !*****************************************************************************
 
   subroutine marbl_single_saved_state_construct(this, lname, sname, units,    &
@@ -512,7 +520,7 @@ contains
     end if
 
     ! 4) deallocate / nullify this%sfo
-    if (old_size.gt.0) then
+    if (old_size .gt. 0) then
       deallocate(this%sfo)
       nullify(this%sfo)
     end if
@@ -583,7 +591,7 @@ contains
 
     this%diag_cnt = this%diag_cnt + 1
     id = this%diag_cnt
-    if (id.gt.size(this%diags)) then
+    if (id .gt. size(this%diags)) then
       log_message = "not enough memory allocated for this number of diagnostics!"
       call marbl_status_log%log_error(log_message, subname)
       return
@@ -650,6 +658,41 @@ contains
     end select
 
   end subroutine marbl_forcing_fields_set_rank
+
+  !*****************************************************************************
+
+  subroutine marbl_timers_constructor(this, num_timers)
+
+    class(marbl_timers_type), intent(inout) :: this
+    integer,                  intent(in)    :: num_timers
+
+    this%num_timers = num_timers
+    allocate(this%names(num_timers))
+    allocate(this%is_threaded(num_timers))
+    allocate(this%cumulative_runtimes(num_timers))
+
+    if (num_timers .gt. 0) then
+      this%names = ''
+      this%is_threaded = .false.
+      this%cumulative_runtimes = c0
+    end if
+
+  end subroutine marbl_timers_constructor
+
+  !*****************************************************************************
+
+  subroutine marbl_timers_deconstructor(this)
+
+    class(marbl_timers_type), intent(inout) :: this
+
+    if (allocated(this%names)) &
+      deallocate(this%names)
+    if (allocated(this%is_threaded)) &
+      deallocate(this%is_threaded)
+    if (allocated(this%cumulative_runtimes)) &
+      deallocate(this%cumulative_runtimes)
+
+  end subroutine marbl_timers_deconstructor
 
   !*****************************************************************************
 

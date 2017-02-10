@@ -13,6 +13,9 @@ module marbl_internal_types
 
   use marbl_logging, only : marbl_log_type
 
+  use marbl_timing_mod, only : marbl_internal_timers_type
+  use marbl_timing_mod, only : marbl_timer_indexing_type
+
   implicit none
 
   private
@@ -98,7 +101,7 @@ module marbl_internal_types
   !****************************************************************************
 
   ! derived type for PAR computation
-  type, public :: marbl_PAR_type 
+  type, public :: marbl_PAR_type
      real(r8), allocatable :: col_frac(:)    ! column fraction occupied by each sub-column, dimension is (PAR_nsubcols)
      real(r8), allocatable :: interface(:,:) ! PAR at layer interfaces, dimensions are (0:km,PAR_nsubcols)
      real(r8), allocatable :: avg(:,:)       ! PAR averaged over layer, dimensions are (km,PAR_nsubcols)
@@ -480,6 +483,11 @@ module marbl_internal_types
   end type marbl_interior_saved_state_indexing_type
 
   !***********************************************************************
+
+  ! marbl interface should use marbl_internal_timers_type and
+  ! marbl_timer_indexing_type from here
+  public :: marbl_internal_timers_type
+  public :: marbl_timer_indexing_type
 
 contains
 
@@ -1011,7 +1019,7 @@ contains
       ! (3) writes all tracer restore fields to log
 
       tracer_restore_cnt = count((len_trim(tracer_restore_vars).gt.0))
-      if (tracer_restore_cnt.gt.0) then
+      if (tracer_restore_cnt .gt. 0) then
         log_message = "Restoring the following tracers to data:"
         call marbl_status_log%log_noerror(log_message, subname)
       end if
@@ -1026,7 +1034,7 @@ contains
         end if
 
         ! Check for duplicate tracers in tracer_restore_vars
-        if (m.lt.marbl_total_tracer_cnt) then
+        if (m .lt. marbl_total_tracer_cnt) then
           if (any(tracer_restore_vars(m).eq.tracer_restore_vars(m+1:))) then
             write(log_message,"(A,1X,A)") trim(tracer_restore_vars(m)),           &
                                   "appears in tracer_restore_vars more than once"
@@ -1060,7 +1068,7 @@ contains
         end if
       end do
 
-      if (tracer_restore_cnt.gt.0) call marbl_status_log%log_noerror('', subname)
+      if (tracer_restore_cnt .gt. 0) call marbl_status_log%log_noerror('', subname)
 
     end associate
 

@@ -66,6 +66,13 @@ Contains
       return
     end if
 
+    ! Shutdown
+    call marbl_instance%shutdown()
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error_trace('marbl%shutdown', subname)
+      return
+    end if
+
   end subroutine test
 
 end module marbl_init_namelist_drv

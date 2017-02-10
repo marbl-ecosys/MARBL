@@ -3,6 +3,7 @@
 extension = .F90
 
 COMP_NAME=NONE
+USEMPI=FALSE
 
 OBJ_ROOT = $(realpath ../obj)
 OBJ_DIR = $(OBJ_ROOT)/$(COMP_NAME)/driver
@@ -16,18 +17,34 @@ OBJ_LOC = $(realpath $(OBJ_ROOT)/$(COMP_NAME))
 INC_LOC = $(realpath $(INC_DIR)/$(COMP_NAME))
 ifeq ($(COMP_NAME),NONE)
   LIB_NAME = libmarbl.a
+  LFLAG = -lmarbl
 else
   LIB_NAME = libmarbl-$(COMP_NAME).a
+  LFLAG = -lmarbl-$(COMP_NAME)
 endif
-LFLAG = -lmarbl-$(COMP_NAME)
+LIBCPPDEFS=-DECOSYS_NT=31 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
+EXECPPDEFS=
+INCLUDES=-I$(INC_LOC)
+LINKS=-L$(LIB_DIR) $(LFLAG)
 
-COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="-DECOSYS_BASE_NT=31 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3"
-EXE       = $(EXE_DIR)/marbl.exe
+EXE = $(EXE_DIR)/marbl.exe
+ifeq ($(USEMPI),TRUE)
+  EXECPPDEFS+= -DMARBL_TIMING_OPT=MPI
+  LIBCPPDEFS+= -DMARBL_TIMING_OPT=MPI
+  MPISUF=-mpi
+  override FC = mpif90
+  EXE = $(EXE_DIR)/marbl-mpi.exe
+endif
+
+COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(LIBCPPDEFS)"
 
 OBJS = marbl_init_namelist_drv.o       \
        marbl_init_no_namelist_drv.o    \
        marbl_get_put_drv.o             \
+       marbl_mpi_mod.o                 \
        marbl.o
+
+MODS = marbl_mpi_mod.mod
 
 .PHONY: intel pgi gnu nag cray clean clean_exe
 
@@ -36,25 +53,25 @@ all: gnu
 $(EXE): clean_exe                        \
         $(LIB_DIR)/$(LIB_NAME)           \
         $(addprefix $(OBJ_DIR)/,$(OBJS))
-	$(FC) -o $(EXE) $(OBJ_DIR)/*.o -L$(LIB_DIR) $(LFLAG)
+	$(FC) -o $(EXE) $(OBJ_DIR)/*.o $(LINKS)
 
 $(OBJ_DIR)/%.o: $(DRV_DIR)/%.F90
-	$(FC) $(FCFLAGS) $(INC2) -I$(INC_LOC) -c $< -o $@
+	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(INC2) $(INCLUDES) -c $< -o $@
 
 $(LIB_DIR)/%.a: $(SRC_DIR)/*.F90
 	cd $(SRC_DIR) ; make FC=$(FC) FCFLAGS="$(FCFLAGS) $(INC)" USE_DEPS=TRUE $(COMP_ARGS) $@
 
 intel:
-	$(MAKE) $(EXE) COMP_NAME=intel FC=ifort FCFLAGS="-O2 -free -cpp -nogen-interface -fp-model source" INC="-module $(OBJ_ROOT)/intel" INC2="-module $(OBJ_ROOT)/intel/driver" 
+	$(MAKE) $(EXE) COMP_NAME=intel$(MPISUF) FC=ifort FCFLAGS="-O2 -free -cpp -nogen-interface -fp-model source" INC="-module $(OBJ_ROOT)/intel$(MPISUF)" INC2="-module $(OBJ_ROOT)/intel$(MPISUF)/driver" 
 
 pgi:
-	$(MAKE) $(EXE) COMP_NAME=pgi FC=pgf90 FCFLAGS="-O2 -Mfree" INC="-module $(OBJ_ROOT)/pgi" INC2="-module $(OBJ_ROOT)/pgi/driver"
+	$(MAKE) $(EXE) COMP_NAME=pgi$(MPISUF) FC=pgf90 FCFLAGS="-O2 -Mfree" INC="-module $(OBJ_ROOT)/pgi$(MPISUF)" INC2="-module $(OBJ_ROOT)/pgi$(MPISUF)/driver"
 
 gnu:
-	$(MAKE) $(EXE) COMP_NAME=gnu FC=gfortran FCFLAGS="-O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu" INC2="-J $(OBJ_ROOT)/gnu/driver"
+	$(MAKE) $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
 
 nag:
-	$(MAKE) $(EXE) COMP_NAME=nag FC=nagfor FCFLAGS="-O2 -free -kind=byte" INC="-mdir $(OBJ_ROOT)/nag -I$(OBJ_ROOT)/nag" INC2="-mdir $(OBJ_ROOT)/nag/driver -I$(OBJ_ROOT)/nag/driver"
+	$(MAKE) $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-O2 -free -kind=byte" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
 
 cray:
 	$(MAKE) $(EXE) COMP_NAME=cray FC=ftn FCFLAGS="-O2 -f free -e mf" INC="-J $(OBJ_ROOT)/cray" INC2="-J $(OBJ_ROOT)/cray/driver"
