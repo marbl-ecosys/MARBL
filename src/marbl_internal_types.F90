@@ -342,8 +342,6 @@ module marbl_internal_types
      real(r8), allocatable :: CO2STAR_SURF_fields  (:) ! CO2STAR from solver
      real(r8), allocatable :: DCO2STAR_SURF_fields (:) ! DCO2STAR from solver
      real(r8), allocatable :: CO3_SURF_fields      (:) ! Surface carbonate ion
-     real(r8), allocatable :: dic_riv_flux_fields  (:) ! River input of DIC in ecosystem (from file)
-     real(r8), allocatable :: doc_riv_flux_fields  (:) ! River input of DOC in ecosystem (from file)
    contains
      procedure, public :: construct => marbl_surface_forcing_share_constructor
      procedure, public :: destruct => marbl_surface_forcing_share_destructor
@@ -425,18 +423,11 @@ module marbl_internal_types
      integer(int_kind) :: iron_flux_id         = 0
      integer(int_kind) :: nox_flux_id          = 0
      integer(int_kind) :: nhy_flux_id          = 0
-     integer(int_kind) :: din_riv_flux_id      = 0
-     integer(int_kind) :: dip_riv_flux_id      = 0
-     integer(int_kind) :: don_riv_flux_id      = 0
-     integer(int_kind) :: dop_riv_flux_id      = 0
-     integer(int_kind) :: dsi_riv_flux_id      = 0
-     integer(int_kind) :: dfe_riv_flux_id      = 0
-     integer(int_kind) :: dic_riv_flux_id      = 0
-     integer(int_kind) :: alk_riv_flux_id      = 0
-     integer(int_kind) :: doc_riv_flux_id      = 0
+     integer(int_kind) :: ext_C_flux_id        = 0
+     integer(int_kind) :: ext_P_flux_id        = 0
+     integer(int_kind) :: ext_Si_flux_id       = 0
      integer(int_kind) :: d13c_id              = 0
      integer(int_kind) :: d14c_id              = 0
-     integer(int_kind) :: d14c_glo_avg_id      = 0
    contains
      procedure, public :: construct => surface_forcing_index_constructor
   end type marbl_surface_forcing_indexing_type
@@ -583,8 +574,6 @@ contains
      allocate(this%CO2STAR_SURF_fields  (num_elements)) ! CO2STAR from solver
      allocate(this%DCO2STAR_SURF_fields (num_elements)) ! DCO2STAR from solver
      allocate(this%CO3_SURF_fields      (num_elements)) ! Surface carbonate ion
-     allocate(this%dic_riv_flux_fields  (num_elements)) ! River input of DIC in ecosystem (from file)
-     allocate(this%doc_riv_flux_fields  (num_elements)) ! River input of DOC in ecosystem (from file)
    end subroutine marbl_surface_forcing_share_constructor
 
    subroutine marbl_surface_forcing_share_destructor(this, num_elements)
@@ -596,8 +585,6 @@ contains
      deallocate(this%CO2STAR_SURF_fields ) ! CO2STAR from solver
      deallocate(this%DCO2STAR_SURF_fields) ! DCO2STAR from solver
      deallocate(this%CO3_SURF_fields     ) ! Surface carbonate ion
-     deallocate(this%dic_riv_flux_fields ) ! River input of DIC in ecosystem (from file)
-     deallocate(this%doc_riv_flux_fields ) ! River input of DOC in ecosystem (from file)
    end subroutine marbl_surface_forcing_share_destructor
 
   !*****************************************************************************
@@ -810,7 +797,7 @@ contains
   !*****************************************************************************
 
   subroutine surface_forcing_index_constructor(this, ciso_on, lflux_gas_o2,   &
-             lflux_gas_co2)
+             lflux_gas_co2, ladjust_bury_coeff)
 
     ! This subroutine sets the surface forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
@@ -821,6 +808,7 @@ contains
     logical,                                    intent(in)    :: ciso_on
     logical,                                    intent(in)    :: lflux_gas_o2
     logical,                                    intent(in)    :: lflux_gas_co2
+    logical,                                    intent(in)    :: ladjust_bury_coeff
 
     associate(forcing_cnt => num_surface_forcing_fields)
 
@@ -866,41 +854,23 @@ contains
       forcing_cnt = forcing_cnt + 1
       this%nhy_flux_id = forcing_cnt
 
-      ! DIN River Flux
-      forcing_cnt = forcing_cnt + 1
-      this%din_riv_flux_id = forcing_cnt
+      ! ---------------------------------------------------------
+      ! | Request these if bury coefficients are being adjusted |
+      ! ---------------------------------------------------------
 
-      ! DIP River Flux
-      forcing_cnt = forcing_cnt + 1
-      this%dip_riv_flux_id = forcing_cnt
+      if (ladjust_bury_coeff) then
+        ! external C Flux
+        forcing_cnt = forcing_cnt + 1
+        this%ext_C_flux_id = forcing_cnt
 
-      ! DON River Flux
-      forcing_cnt = forcing_cnt + 1
-      this%don_riv_flux_id = forcing_cnt
+        ! external P Flux
+        forcing_cnt = forcing_cnt + 1
+        this%ext_P_flux_id = forcing_cnt
 
-      ! DOP River Flux
-      forcing_cnt = forcing_cnt + 1
-      this%dop_riv_flux_id = forcing_cnt
-
-      ! DSi River Flux
-      forcing_cnt = forcing_cnt + 1
-      this%dsi_riv_flux_id = forcing_cnt
-
-      ! DFe River Flux
-      forcing_cnt = forcing_cnt + 1
-      this%dfe_riv_flux_id = forcing_cnt
-
-      ! DIC River Flux
-      forcing_cnt = forcing_cnt + 1
-      this%dic_riv_flux_id = forcing_cnt
-
-      ! ALK River Flux
-      forcing_cnt = forcing_cnt + 1
-      this%alk_riv_flux_id = forcing_cnt
-
-      ! DOC River Flux
-      forcing_cnt = forcing_cnt + 1
-      this%doc_riv_flux_id = forcing_cnt
+        ! external Si Flux
+        forcing_cnt = forcing_cnt + 1
+        this%ext_Si_flux_id = forcing_cnt
+      end if
 
       ! ------------------------------------------
       ! | Request these if gas fluxes are needed |
@@ -935,10 +905,6 @@ contains
         ! d14c
         forcing_cnt = forcing_cnt + 1
         this%d14c_id = forcing_cnt
-
-        ! d14c_gloavg
-        forcing_cnt = forcing_cnt + 1
-        this%d14c_glo_avg_id = forcing_cnt
 
       end if
 

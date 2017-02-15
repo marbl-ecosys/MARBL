@@ -508,6 +508,7 @@ contains
     use marbl_mod,         only : marbl_init_interior_forcing_fields
     use marbl_config_mod,  only : lflux_gas_o2
     use marbl_config_mod,  only : lflux_gas_co2
+    use marbl_config_mod,  only : ladjust_bury_coeff
 
     class(marbl_interface_class), intent(inout) :: this
 
@@ -559,7 +560,7 @@ contains
     !  Initialize surface and interior forcing (including tracer restoring)
     !-----------------------------------------------------------------------
 
-    call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2)
+    call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2, ladjust_bury_coeff)
     call this%interior_forcing_ind%construct(this%tracer_metadata%short_name, &
                                    tracer_restore_vars, this%StatusLog)
     if (this%StatusLog%labort_marbl) then

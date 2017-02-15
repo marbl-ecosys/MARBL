@@ -133,9 +133,6 @@ module marbl_mod
   use marbl_parms, only : POCremin_refract
   use marbl_parms, only : PONremin_refract
   use marbl_parms, only : POPremin_refract
-  use marbl_parms, only : DOCriv_refract
-  use marbl_parms, only : DONriv_refract
-  use marbl_parms, only : DOPriv_refract
   use marbl_parms, only : f_toDON
   use marbl_parms, only : f_graze_CaCO3_REMIN
   use marbl_parms, only : f_graze_si_remin
@@ -372,67 +369,25 @@ contains
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
-      ! DIN River Flux
-      if (id .eq. ind%din_riv_flux_id) then
+      ! external C Flux
+      if (id .eq. ind%ext_C_flux_id) then
         found = .true.
-        surface_forcings(id)%metadata%varname       = 'DIN River Flux'
-        surface_forcings(id)%metadata%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'external C Flux'
+        surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
       end if
 
-      ! DIP River Flux
-      if (id .eq. ind%dip_riv_flux_id) then
+      ! external P Flux
+      if (id .eq. ind%ext_P_flux_id) then
         found = .true.
-        surface_forcings(id)%metadata%varname       = 'DIP River Flux'
-        surface_forcings(id)%metadata%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'external P Flux'
+        surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
       end if
 
-      ! DON River Flux
-      if (id .eq. ind%don_riv_flux_id) then
+      ! external Si Flux
+      if (id .eq. ind%ext_Si_flux_id) then
         found = .true.
-        surface_forcings(id)%metadata%varname       = 'DON River Flux'
-        surface_forcings(id)%metadata%field_units   = 'unknown units'
-      end if
-
-      ! DOP River Flux
-      if (id .eq. ind%dop_riv_flux_id) then
-        found = .true.
-        surface_forcings(id)%metadata%varname       = 'DOP River Flux'
-        surface_forcings(id)%metadata%field_units   = 'unknown units'
-      end if
-
-      ! DSi River Flux
-      if (id .eq. ind%dsi_riv_flux_id) then
-        found = .true.
-        surface_forcings(id)%metadata%varname       = 'DSi River Flux'
-        surface_forcings(id)%metadata%field_units   = 'unknown units'
-      end if
-
-      ! DFe River Flux
-      if (id .eq. ind%dfe_riv_flux_id) then
-        found = .true.
-        surface_forcings(id)%metadata%varname       = 'DFe River Flux'
-        surface_forcings(id)%metadata%field_units   = 'unknown units'
-      end if
-
-      ! DIC River Flux
-      if (id .eq. ind%dic_riv_flux_id) then
-        found = .true.
-        surface_forcings(id)%metadata%varname       = 'DIC River Flux'
-        surface_forcings(id)%metadata%field_units   = 'unknown units'
-      end if
-
-      ! ALK River Flux
-      if (id .eq. ind%alk_riv_flux_id) then
-        found = .true.
-        surface_forcings(id)%metadata%varname       = 'ALK River Flux'
-        surface_forcings(id)%metadata%field_units   = 'unknown units'
-      end if
-
-      ! DOC River Flux
-      if (id .eq. ind%doc_riv_flux_id) then
-        found = .true.
-        surface_forcings(id)%metadata%varname       = 'DOC River Flux'
-        surface_forcings(id)%metadata%field_units   = 'unknown units'
+        surface_forcings(id)%metadata%varname       = 'external Si Flux'
+        surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
       end if
 
       ! atm pressure
@@ -467,13 +422,6 @@ contains
       if (id .eq. ind%d14c_id) then
         found = .true.
         surface_forcings(id)%metadata%varname       = 'd14c'
-        surface_forcings(id)%metadata%field_units   = 'unknown units'
-      end if
-
-      ! d14c_gloavg
-      if (id .eq. ind%d14c_glo_avg_id) then
-        found = .true.
-        surface_forcings(id)%metadata%varname       = 'd14c_gloavg'
         surface_forcings(id)%metadata%field_units   = 'unknown units'
       end if
 
@@ -2323,15 +2271,6 @@ contains
          iron_flux_in => surface_input_forcings(surface_forcing_ind%iron_flux_id)%field_0d,        &
          nox_flux     => surface_input_forcings(surface_forcing_ind%nox_flux_id)%field_0d,         &
          nhy_flux     => surface_input_forcings(surface_forcing_ind%nhy_flux_id)%field_0d,         &
-         din_riv_flux => surface_input_forcings(surface_forcing_ind%din_riv_flux_id)%field_0d,     &
-         dip_riv_flux => surface_input_forcings(surface_forcing_ind%dip_riv_flux_id)%field_0d,     &
-         don_riv_flux => surface_input_forcings(surface_forcing_ind%don_riv_flux_id)%field_0d,     &
-         dop_riv_flux => surface_input_forcings(surface_forcing_ind%dop_riv_flux_id)%field_0d,     &
-         dsi_riv_flux => surface_input_forcings(surface_forcing_ind%dsi_riv_flux_id)%field_0d,     &
-         dfe_riv_flux => surface_input_forcings(surface_forcing_ind%dfe_riv_flux_id)%field_0d,     &
-         dic_riv_flux => surface_input_forcings(surface_forcing_ind%dic_riv_flux_id)%field_0d,     &
-         doc_riv_flux => surface_input_forcings(surface_forcing_ind%doc_riv_flux_id)%field_0d,     &
-         alk_riv_flux => surface_input_forcings(surface_forcing_ind%alk_riv_flux_id)%field_0d,     &
 
          piston_velocity      => surface_forcing_internal%piston_velocity(:),                       &
          flux_co2             => surface_forcing_internal%flux_co2(:),                              &
@@ -2366,20 +2305,12 @@ contains
          dic_ind           => marbl_tracer_indices%dic_ind,                                     &
          dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind,                             &
          alk_ind           => marbl_tracer_indices%alk_ind,                                     &
-         doc_ind           => marbl_tracer_indices%doc_ind,                                     &
-         don_ind           => marbl_tracer_indices%don_ind,                                     &
-         dop_ind           => marbl_tracer_indices%dop_ind,                                     &
-         dopr_ind          => marbl_tracer_indices%dopr_ind,                                    &
-         donr_ind          => marbl_tracer_indices%donr_ind,                                    &
-         docr_ind          => marbl_tracer_indices%docr_ind ,                                   &
 
          pv_surf_fields       => surface_forcing_share%pv_surf_fields(:),                           & ! out
          dic_surf_fields      => surface_forcing_share%dic_surf_fields(:),                          & ! out
          co2star_surf_fields  => surface_forcing_share%co2star_surf_fields(:),                      & ! out
          dco2star_surf_fields => surface_forcing_share%dco2star_surf_fields(:),                     & ! out
-         co3_surf_fields      => surface_forcing_share%co3_surf_fields(:),                          & ! out
-         dic_riv_flux_fields  => surface_forcing_share%dic_riv_flux_fields(:),                      & ! out
-         doc_riv_flux_fields  => surface_forcing_share%doc_riv_flux_fields(:)                       & ! out
+         co3_surf_fields      => surface_forcing_share%co3_surf_fields(:)                           & ! out
          )
 
     !-----------------------------------------------------------------------
@@ -2646,59 +2577,6 @@ contains
     endif
 
     !-----------------------------------------------------------------------
-    !  calculate river bgc fluxes if necessary
-    !-----------------------------------------------------------------------
-
-    if (surface_forcing_ind%din_riv_flux_id.ne.0) then
-       stf(:, no3_ind) = stf(:, no3_ind) + din_riv_flux(:)
-    endif
-
-    if (surface_forcing_ind%dip_riv_flux_id.ne.0) then
-       stf(:, po4_ind) = stf(:, po4_ind) + dip_riv_flux(:)
-    endif
-
-    if (surface_forcing_ind%don_riv_flux_id.ne.0) then
-       stf(:, don_ind)  = stf(:, don_ind)  +  don_riv_flux(:) * (c1 - DONriv_refract)
-       stf(:, donr_ind) = stf(:, donr_ind) +  don_riv_flux(:) * DONriv_refract
-    endif
-
-    if (surface_forcing_ind%dop_riv_flux_id.ne.0) then
-       stf(:, dop_ind)  = stf(:, dop_ind)  + dop_riv_flux(:) * (c1 - DOPriv_refract)
-       stf(:, dopr_ind) = stf(:, dopr_ind) + dop_riv_flux(:) * DOPriv_refract
-    endif
-
-    if (surface_forcing_ind%dsi_riv_flux_id.ne.0) then
-       stf(:, sio3_ind) = stf(:, sio3_ind) + dsi_riv_flux(:)
-    endif
-
-    if (surface_forcing_ind%dfe_riv_flux_id.ne.0) then
-       stf(:, fe_ind) = stf(:, fe_ind) + dfe_riv_flux(:)
-    endif
-
-    if (surface_forcing_ind%dic_riv_flux_id.ne.0) then
-       stf(:, dic_ind)         = stf(:, dic_ind)         + dic_riv_flux(:)
-       stf(:, dic_alt_co2_ind) = stf(:, dic_alt_co2_ind) + dic_riv_flux(:)
-       if (ciso_on) then
-          dic_riv_flux_fields = dic_riv_flux(:)
-       end if
-    endif
-
-    if (surface_forcing_ind%alk_riv_flux_id.ne.0) then
-       stf(:, alk_ind) = stf(:, alk_ind) + alk_riv_flux(:)
-    endif
-
-    if (surface_forcing_ind%doc_riv_flux_id.ne.0) then
-       stf(:, doc_ind)  = stf(:, doc_ind)  + doc_riv_flux(:) * (c1 - DOCriv_refract)
-       stf(:, docr_ind) = stf(:, docr_ind) + doc_riv_flux(:) * DOCriv_refract
-
-       ! FIXME #29: sending total doc river input to ciso
-       !            for now, need to separate doc and docr
-       if (ciso_on) then
-          doc_riv_flux_fields = doc_riv_flux(:)
-       end if
-    endif
-
-    !-----------------------------------------------------------------------
     !  Apply NO & NH fluxes to alkalinity
     !-----------------------------------------------------------------------
 
@@ -2730,7 +2608,6 @@ contains
             sst                         = surface_input_forcings(ind%sst_id)%field_0d,   &
             d13c                        = surface_input_forcings(ind%d13c_id)%field_0d,  &
             d14c                        = surface_input_forcings(ind%d14c_id)%field_0d,  &
-            d14c_glo_avg                = surface_input_forcings(ind%d14c_glo_avg_id)%field_0d, &
             surface_vals                = surface_vals,                                  &
             stf                         = surface_tracer_fluxes,                         &
             marbl_tracer_indices        = marbl_tracer_indices,                          &
@@ -2740,18 +2617,35 @@ contains
 
     !-----------------------------------------------------------------------
 
-    if (ladjust_bury_coeff) then
-       glo_avg_fields_surface(:,glo_avg_field_ind_surface_C_input) = &
-          stf(:,dic_ind) - flux_co2(:) + stf(:,doc_ind) + stf(:,docr_ind)
-
-       glo_avg_fields_surface(:,glo_avg_field_ind_surface_P_input) = &
-          stf(:,po4_ind) + stf(:,dop_ind) + stf(:,dopr_ind)
-
-       glo_avg_fields_surface(:,glo_avg_field_ind_surface_Si_input) = &
-          stf(:,sio3_ind)
-    end if
-
     end associate
+
+    if (ladjust_bury_coeff) then
+       associate(                                                                              &
+          stf          => surface_tracer_fluxes(:,:),                                          &
+          flux_co2     => surface_forcing_internal%flux_co2(:),                                &
+          ext_C_flux   => surface_input_forcings(surface_forcing_ind%ext_C_flux_id)%field_0d,  &
+          ext_P_flux   => surface_input_forcings(surface_forcing_ind%ext_P_flux_id)%field_0d,  &
+          ext_Si_flux  => surface_input_forcings(surface_forcing_ind%ext_Si_flux_id)%field_0d, &
+
+          dic_ind      => marbl_tracer_indices%dic_ind,                                        &
+          doc_ind      => marbl_tracer_indices%doc_ind,                                        &
+          docr_ind     => marbl_tracer_indices%docr_ind,                                       &
+          po4_ind      => marbl_tracer_indices%po4_ind,                                        &
+          dop_ind      => marbl_tracer_indices%dop_ind,                                        &
+          dopr_ind     => marbl_tracer_indices%dopr_ind,                                       &
+          sio3_ind     => marbl_tracer_indices%sio3_ind                                        &
+          )
+
+          glo_avg_fields_surface(:,glo_avg_field_ind_surface_C_input) = &
+             ext_C_flux(:) + stf(:,dic_ind) - flux_co2(:) + stf(:,doc_ind) + stf(:,docr_ind)
+
+          glo_avg_fields_surface(:,glo_avg_field_ind_surface_P_input) = &
+             ext_P_flux(:) + stf(:,po4_ind) + stf(:,dop_ind) + stf(:,dopr_ind)
+
+          glo_avg_fields_surface(:,glo_avg_field_ind_surface_Si_input) = &
+             ext_Si_flux(:) + stf(:,sio3_ind)
+       end associate
+    end if
 
   end subroutine marbl_set_surface_forcing
 

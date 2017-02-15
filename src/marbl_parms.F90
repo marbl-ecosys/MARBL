@@ -205,10 +205,7 @@ module marbl_parms
        DOPprod_refract  = 0.003_r8,                  & ! fraction of DOPprod to refractory pool
        POCremin_refract = DOCprod_refract * 0.06_r8, & ! fraction of POCremin to refractory pool
        PONremin_refract = DONprod_refract * 0.03_r8, & ! fraction of POCremin to refractory pool
-       POPremin_refract = DOPprod_refract * 0.06_r8, & ! fraction of POCremin to refractory pool
-       DOCriv_refract   = 0.2_r8,                    & ! fraction of DOC river input to refractory pool
-       DONriv_refract   = 0.1_r8,                    & ! fraction of DON river input to refractory pool
-       DOPriv_refract   = 0.025_r8                     ! fraction of DOP river input to refractory pool
+       POPremin_refract = DOPprod_refract * 0.06_r8    ! fraction of POCremin to refractory pool
 
   !---------------------------------------------------------------------
   !  Auxiliary variables (str -> int conversions, indices, etc)

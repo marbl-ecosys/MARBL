@@ -306,19 +306,7 @@ module marbl_diagnostics_mod
      integer(int_kind) :: NOx_FLUX
      integer(int_kind) :: NHy_FLUX
      integer(int_kind) :: NHx_SURFACE_EMIS
-     integer(int_kind) :: DIN_RIV_FLUX
-     integer(int_kind) :: DIP_RIV_FLUX
-     integer(int_kind) :: DON_RIV_FLUX
-     integer(int_kind) :: DONr_RIV_FLUX
-     integer(int_kind) :: DOP_RIV_FLUX
-     integer(int_kind) :: DOPr_RIV_FLUX
-     integer(int_kind) :: DSI_RIV_FLUX
-     integer(int_kind) :: DFE_RIV_FLUX
-     integer(int_kind) :: DIC_RIV_FLUX
-     integer(int_kind) :: ALK_RIV_FLUX
-     integer(int_kind) :: DOC_RIV_FLUX
-     integer(int_kind) :: DOCr_RIV_FLUX
-     
+
      integer(int_kind) :: CISO_DI13C_GAS_FLUX       ! di13c flux
      integer(int_kind) :: CISO_DI14C_GAS_FLUX       ! di14c flux
      integer(int_kind) :: CISO_DI13C_AS_GAS_FLUX    ! air-sea di13c flux
@@ -333,13 +321,8 @@ module marbl_diagnostics_mod
      integer(int_kind) :: CISO_R14C_atm             ! atmospheric ratio of 14C/12C
      integer(int_kind) :: CISO_D13C_atm             ! atmospheric delta13C in permil
      integer(int_kind) :: CISO_D14C_atm             ! atmospheric delta14C in permil
-     integer(int_kind) :: CISO_DI13C_RIV_FLUX       ! river input of DI13C
-     integer(int_kind) :: CISO_DI14C_RIV_FLUX       ! river input of DI14C
-     integer(int_kind) :: CISO_DO13C_RIV_FLUX       ! river input of DO13C
-     integer(int_kind) :: CISO_DO14C_RIV_FLUX       ! river input of DO14C
      integer(int_kind) :: CISO_eps_aq_g_surf        ! tavg id for eps_aq_g_surf
      integer(int_kind) :: CISO_eps_dic_g_surf       ! tavg id for eps_dic_g_surf
-     integer(int_kind) :: CISO_GLOBAL_D14C          ! tavg id for the global averaged atmos. D14C (debugging)
   end type marbl_surface_forcing_diagnostics_indexing_type
   type(marbl_surface_forcing_diagnostics_indexing_type), public :: marbl_surface_forcing_diag_ind
 
@@ -856,198 +839,6 @@ contains
           end if
        end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of DIN from rivers'
-          sname    = 'DIN_RIV_FLUX'
-          units    = 'nmol/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%DIN_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of DIP from rivers'
-          sname    = 'DIP_RIV_FLUX'
-          units    = 'nmol/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%DIP_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of DON from rivers'
-          sname    = 'DON_RIV_FLUX'
-          units    = 'nmol/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%DON_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of DONr from rivers'
-          sname    = 'DONr_RIV_FLUX'
-          units    = 'nmol/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%DONr_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of DOP from rivers'
-          sname    = 'DOP_RIV_FLUX'
-          units    = 'nmol/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%DOP_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of DOPr from rivers'
-          sname    = 'DOPr_RIV_FLUX'
-          units    = 'nmol/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%DOPr_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of DSI from rivers'
-          sname    = 'DSI_RIV_FLUX'
-          units    = 'nmol/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%DSI_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of DFE from rivers'
-          sname    = 'DFE_RIV_FLUX'
-          units    = 'nmol/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%DFE_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of DIC from rivers'
-          sname    = 'DIC_RIV_FLUX'
-          units    = 'nmol/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%DIC_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of ALK from rivers'
-          sname    = 'ALK_RIV_FLUX'
-          units    = 'alk/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%ALK_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of DOC from rivers'
-          sname    = 'DOC_RIV_FLUX'
-          units    = 'nmol/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%DOC_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
-          lname    = 'Flux of DOCr from rivers'
-          sname    = 'DOCr_RIV_FLUX'
-          units    = 'nmol/cm^2/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-               ind%DOCr_RIV_FLUX, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-       end if
-
        !-----------------------------------------------------------------------
        !  2D fields related to C13/C14 surface fluxes
        !-----------------------------------------------------------------------
@@ -1160,38 +951,6 @@ contains
              truncate = .false.
              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                   ind%CISO_R13C_atm, marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_diagnostics_error(marbl_status_log, sname, subname)
-               return
-             end if
-          end if
-
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
-             lname    = 'Flux of DI13C from rivers'
-             sname    = 'CISO_DI13C_RIV_FLUX'
-             units    = 'nmol/cm^2/s'
-             vgrid    = 'none'
-             truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-                  ind%CISO_DI13C_RIV_FLUX, marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_diagnostics_error(marbl_status_log, sname, subname)
-               return
-             end if
-          end if
-
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
-             lname    = 'Flux of DO13C from rivers'
-             sname    = 'CISO_DO13C_RIV_FLUX'
-             units    = 'nmol/cm^2/s'
-             vgrid    = 'none'
-             truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-                  ind%CISO_DO13C_RIV_FLUX, marbl_status_log)
              if (marbl_status_log%labort_marbl) then
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
@@ -1340,54 +1099,6 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
             end if
-          end if
-
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
-             lname    = 'Flux of DI14C from rivers'
-             sname    = 'CISO_DI14C_RIV_FLUX'
-             units    = 'nmol/cm^2/s'
-             vgrid    = 'none'
-             truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-                  ind%CISO_DI14C_RIV_FLUX, marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_diagnostics_error(marbl_status_log, sname, subname)
-               return
-             end if
-          end if
-
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
-             lname    = 'Flux of DO14C from rivers'
-             sname    = 'CISO_DO14C_RIV_FLUX'
-             units    = 'nmol/cm^2/s'
-             vgrid    = 'none'
-             truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-                  ind%CISO_DO14C_RIV_FLUX, marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_diagnostics_error(marbl_status_log, sname, subname)
-               return
-             end if
-          end if
-
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
-             lname    = 'GLOBAL_D14C'
-             sname    = 'CISO_GLOBAL_D14C'
-             units    = 'permil'
-             vgrid    = 'none'
-             truncate = .false.
-             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-                  ind%CISO_GLOBAL_D14C, marbl_status_log)
-             if (marbl_status_log%labort_marbl) then
-               call log_add_diagnostics_error(marbl_status_log, sname, subname)
-               return
-             end if
           end if
        end if
 
@@ -4548,33 +4259,7 @@ contains
 
     diags(ind_diag%NHx_SURFACE_EMIS)%field_2d(:) = nhx_surface_emis(:)
 
-    !-----------------------------------------------------------------------
-    !  calculate river bgc fluxes if necessary
-    !-----------------------------------------------------------------------
-
-    if (ind_forc%din_riv_flux_id.ne.0) then
-       diags(ind_diag%DIN_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%din_riv_flux_id)%field_0d
-    endif
-    if (ind_forc%dsi_riv_flux_id.ne.0) then
-       diags(ind_diag%DSI_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%dsi_riv_flux_id)%field_0d
-    endif
-    if (ind_forc%dfe_riv_flux_id.ne.0) then
-       diags(ind_diag%DFE_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%dfe_riv_flux_id)%field_0d
-    endif
-    if (ind_forc%dic_riv_flux_id.ne.0) then
-       diags(ind_diag%DIC_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%dic_riv_flux_id)%field_0d
-    endif
-    if (ind_forc%alk_riv_flux_id.ne.0) then
-       diags(ind_diag%ALK_RIV_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%alk_riv_flux_id)%field_0d
-    endif
     diags(ind_diag%O2_GAS_FLUX)%field_2d(:)   = stf(:, o2_ind)
-    diags(ind_diag%DIP_RIV_FLUX)%field_2d(:)  = stf(:, po4_ind)
-    diags(ind_diag%DON_RIV_FLUX)%field_2d(:)  = stf(:, don_ind)
-    diags(ind_diag%DONr_RIV_FLUX)%field_2d(:) = stf(:, donr_ind)
-    diags(ind_diag%DOP_RIV_FLUX)%field_2d(:)  = stf(:, dop_ind)
-    diags(ind_diag%DOPr_RIV_FLUX)%field_2d(:) = stf(:, dopr_ind)
-    diags(ind_diag%DOC_RIV_FLUX)%field_2d(:)  = stf(:, doc_ind)
-    diags(ind_diag%DOCr_RIV_FLUX)%field_2d(:) = stf(:, docr_ind)
 
     ! FIXME #63 : reported units of DUST_FLUX are g/cm^2/s, so this comment doesn't make sense
     ! multiply DUST flux by mpercm (.01) to convert from model units (cm/s)(mmol/m^3) to mmol/s/m^2
@@ -5696,7 +5381,6 @@ contains
        num_elements,   &
        D13C,           &
        D14C,           &
-       D14C_glo_avg,   &
        FLUX,           &
        FLUX13,         &
        FLUX14,         &
@@ -5710,10 +5394,6 @@ contains
        R14C_DIC,       &
        R13C_atm,       &
        R14C_atm,       &
-       di13c_riv_flux, &
-       do13c_riv_flux, &
-       di14c_riv_flux, &
-       do14c_riv_flux, &
        eps_aq_g_surf,  &
        eps_dic_g_surf, &
        marbl_surface_forcing_diags)
@@ -5728,7 +5408,6 @@ contains
     integer (int_kind)                 , intent(in)    :: num_elements
     real (r8), dimension(num_elements) , intent(in)    :: D13C           ! atm 13co2 value
     real (r8), dimension(num_elements) , intent(in)    :: D14C           ! atm 14co2 value
-    real (r8), dimension(num_elements) , intent(in)    :: D14C_glo_avg
     real (r8), dimension(num_elements) , intent(in)    :: FLUX           ! gas flux of CO2 (nmol/cm^2/s)
     real (r8), dimension(num_elements) , intent(in)    :: FLUX13         ! gas flux of 13CO2 (nmol/cm^2/s)
     real (r8), dimension(num_elements) , intent(in)    :: FLUX14         ! gas flux of 14CO2 (nmol/cm^2/s)
@@ -5742,10 +5421,6 @@ contains
     real (r8), dimension(num_elements) , intent(in)    :: R14C_DIC       ! 14C/12C ratio in total DIC
     real (r8), dimension(num_elements) , intent(in)    :: R13C_atm       ! 13C/12C ratio in atmospheric CO2
     real (r8), dimension(num_elements) , intent(in)    :: R14C_atm       ! 14C/12C ratio in atmospheric CO2
-    real (r8), dimension(num_elements) , intent(in)    :: di13c_riv_flux ! River input of DI13C
-    real (r8), dimension(num_elements) , intent(in)    :: do13c_riv_flux ! River input of DO13C
-    real (r8), dimension(num_elements) , intent(in)    :: di14c_riv_flux ! River input of DI14C
-    real (r8), dimension(num_elements) , intent(in)    :: do14c_riv_flux ! River input of DO14C
     real (r8), dimension(num_elements) , intent(in)    :: eps_aq_g_surf  ! equilibrium fractionation (CO2_gaseous <-> CO2_aq)
     real (r8), dimension(num_elements) , intent(in)    :: eps_dic_g_surf ! equilibrium fractionation between total DIC and gaseous CO2
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_surface_forcing_diags
@@ -5793,28 +5468,6 @@ contains
 
     diags(ind%CISO_eps_aq_g_surf)%field_2d(:)  = eps_aq_g_surf(:)
     diags(ind%CISO_eps_dic_g_surf)%field_2d(:) = eps_dic_g_surf(:)
-
-    !-------------------------------------------------------------------------
-    ! River input of isotopic DIC and DOC.
-    ! River input of BGC tracers in marbl_mod is currently constant and from file
-    ! So the isotopic carbon input is also done very simplified with one value
-    ! globally, even though data shows it should vary from river to river.
-    !
-    ! Using constant delta values of
-    ! D13C=-10 permil for DIC (Mook 1986, Raymond et al 2004)
-    ! D13C=-27.6 permil for DOC (Raymond et al 2004)
-    ! D14C=-50 permil for DOC (Raymond et al 2004), Gruber et al
-    ! D14C= atmos_D14C - 50 permil for DIC (based on very few data points and 
-    !       discussion with N. Gruber)
-    !-------------------------------------------------------------------------
-    
-    diags(ind%CISO_DI13C_RIV_FLUX)%field_2d(:) = di13c_riv_flux(:)
-    diags(ind%CISO_DO13C_RIV_FLUX)%field_2d(:) = do13c_riv_flux(:)
-
-    diags(ind%CISO_DI14C_RIV_FLUX)%field_2d(:) = di14c_riv_flux(:)
-    diags(ind%CISO_DO14C_RIV_FLUX)%field_2d(:) = do14c_riv_flux(:)
-
-    diags(ind%CISO_GLOBAL_D14C)%field_2d(:)    = D14C_glo_avg(:) ! all the values are identical
 
     end associate
 
