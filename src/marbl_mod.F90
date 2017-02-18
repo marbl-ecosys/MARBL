@@ -3627,7 +3627,7 @@ contains
        endif
 
        f_nut = min(VNtot, VFe)
-       f_nut = min(f_nut, VPO4)
+       f_nut = min(f_nut, VPtot)
        if (silicifier) then
           f_nut = min(f_nut, VSiO3)
        endif
