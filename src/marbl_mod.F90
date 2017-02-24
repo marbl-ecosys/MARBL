@@ -1136,6 +1136,7 @@ contains
     !-----------------------------------------------------------------------
 
     do k = 1, km
+#if (defined Z_COORD)
        call marbl_setup_local_tracers(k, kmt, tracers(:, k), tracer_local(:, k))
 
        call marbl_setup_local_zooplankton(k, kmt, tracers(:, k),              &
@@ -1143,10 +1144,24 @@ contains
 
        call marbl_setup_local_autotrophs(k, kmt, tracers(:, k),               &
             marbl_tracer_indices, autotroph_local(:, k))
+#elif (defined SIGMA_COORD)
+       call marbl_setup_local_tracers(k, tracers(:, k), tracer_local(:, k))
+
+       call marbl_setup_local_zooplankton(k, tracers(:, k),              &
+            marbl_tracer_indices, zooplankton_local(:, k))
+
+       call marbl_setup_local_autotrophs(k, tracers(:, k),               &
+            marbl_tracer_indices, autotroph_local(:, k))
+#endif
     enddo
 
+#if (defined Z_COORD)
     call marbl_init_particulate_terms(1, surface_forcing_indices, &
          POC, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
+#elif (defined SIGMA_COORD)
+    call marbl_init_particulate_terms(km, surface_forcing_indices, &
+         POC, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
+#endif
 
     call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
                             marbl_status_log)
@@ -1163,13 +1178,22 @@ contains
        return
     end if
 
+#if (defined Z_COORD)
     call marbl_consistency_check_autotrophs(autotroph_cnt, kmt, marbl_tracer_indices, &
          autotroph_local(:,1:kmt))
+#elif (defined SIGMA_COORD)
+    call marbl_consistency_check_autotrophs(autotroph_cnt, km, marbl_tracer_indices, &
+         autotroph_local(:,1:km))
+#endif
 
     call marbl_compute_PAR(domain, interior_forcings, interior_forcing_indices, &
                            autotroph_cnt, autotroph_local, PAR)
 
+#if (defined Z_COORD)
     do k = 1, km
+#elif (defined SIGMA_COORD)
+    do k = km, 1, -1
+#endif
 
        call marbl_compute_autotroph_elemental_ratios( autotroph_cnt,    &
             autotrophs, autotroph_local(:, k), tracer_local(:, k),      &
@@ -1242,9 +1266,15 @@ contains
           return
        end if
 
+#if (defined Z_COORD)
        call marbl_compute_nitrif(k, num_PAR_subcols, kmt, &
             PAR%col_frac(:), PAR%interface(k-1,:), PAR%interface(k,:),  &
             PAR%KPARdz(k), tracer_local(nh4_ind, k), nitrif(k))
+#elif (defined SIGMA_COORD)
+       call marbl_compute_nitrif(k, num_PAR_subcols, km, &
+            PAR%col_frac(:), PAR%interface(k-1,:), PAR%interface(k,:),  &
+            PAR%KPARdz(k), tracer_local(nh4_ind, k), nitrif(k))
+#endif
 
        call marbl_compute_denitrif(tracer_local(o2_ind, k), tracer_local(no3_ind, k), &
             dissolved_organic_matter(k)%DOC_remin, &
@@ -1285,9 +1315,15 @@ contains
                marbl_autotroph_share(:, k))
        end if
 
+#if (defined Z_COORD)
        if  (k < km) then
           call marbl_update_particulate_terms_from_prior_level(k+1, POC, P_CaCO3, &
                P_SiO2, dust, P_iron, QA_dust_def(:))
+#elif (defined SIGMA_COORD)
+       if  (k > 1) then
+          call marbl_update_particulate_terms_from_prior_level(k-1, km, POC, P_CaCO3, &
+               P_SiO2, dust, P_iron, QA_dust_def(:))
+#endif
        endif
 
     end do ! k
@@ -1452,15 +1488,25 @@ contains
   !***********************************************************************
 
   subroutine marbl_update_particulate_terms_from_prior_level(k, &
+#if (defined SIGMA_COORD)
+       km,                                                      &
+#endif
        POC, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def)
 
     integer (int_kind)                 , intent(in)    :: k ! vertical model level
+#if (defined SIGMA_COORD)
+    integer (int_kind)                 , intent(in)    :: km ! index of surface level
+#endif
     type(column_sinking_particle_type) , intent(inout) :: POC, P_CaCO3, P_SiO2, dust, P_iron
     real(r8)                           , intent(inout) :: QA_dust_def(:) !(km)
 
-    ! NOTE(bja, 2015-04) assume that k == 1 condition was handled by
+    ! NOTE(bja, 2015-04) assume that surface condition was handled by
     ! call to init_particulate_terms()
+#if (defined Z_COORD)
     if (k > 1) then
+#elif (defined SIGMA_COORD)
+    if (k < km) then
+#endif
        !-----------------------------------------------------------------------
        ! NOTE: incoming fluxes are outgoing fluxes from previous level
        !
@@ -1476,7 +1522,11 @@ contains
 
        call marbl_update_sinking_particle_from_prior_level(k, P_iron)
 
+#if (defined Z_COORD)
        QA_dust_def(k) = QA_dust_def(k-1)
+#elif (defined SIGMA_COORD)
+       QA_dust_def(k) = QA_dust_def(k+1)
+#endif
     end if
 
   end subroutine marbl_update_particulate_terms_from_prior_level
@@ -1488,11 +1538,19 @@ contains
     integer (int_kind), intent(in) :: k
     type(column_sinking_particle_type), intent(inout) :: sinking_particle
 
+#if (defined Z_COORD)
     ! NOTE(bja, 201504) level k influx is equal to the level k-1 outflux.
     sinking_particle%sflux_out(k) = sinking_particle%sflux_out(k-1)
     sinking_particle%hflux_out(k) = sinking_particle%hflux_out(k-1)
     sinking_particle%sflux_in(k)  = sinking_particle%sflux_out(k-1)
     sinking_particle%hflux_in(k)  = sinking_particle%hflux_out(k-1)
+#elif (defined SIGMA_COORD)
+    ! NOTE: level k influx is equal to the level k+1 outflux.
+    sinking_particle%sflux_out(k) = sinking_particle%sflux_out(k+1)
+    sinking_particle%hflux_out(k) = sinking_particle%hflux_out(k+1)
+    sinking_particle%sflux_in(k)  = sinking_particle%sflux_out(k+1)
+    sinking_particle%hflux_in(k)  = sinking_particle%hflux_out(k+1)
+#endif
 
   end subroutine marbl_update_sinking_particle_from_prior_level
 
@@ -1678,7 +1736,9 @@ contains
     poc_error = .false.
     dz_loc = delta_z(k)
 
+#if (defined Z_COORD)
     if (k <= column_kmt) then
+#endif
 
        dzr_loc    = c1 / dz_loc
        poc_diss   = POC%diss
@@ -1890,7 +1950,8 @@ contains
 
        P_iron%hflux_out(k) = P_iron%hflux_in(k)
 
-    else
+#if (defined Z_COORD)
+    else  ! k <= column_kmt
 
        P_CaCO3%sflux_out(k) = c0
        P_CaCO3%hflux_out(k) = c0
@@ -1916,7 +1977,8 @@ contains
        P_iron%hflux_out(k) = c0
        P_iron%remin(k) = c0
 
-    endif
+    endif  ! k <= column_kmt
+#endif
 
     ! Save some fields for use by other modules before setting outgoing fluxes to 0.0 in bottom cell below
     if (ciso_on) then
@@ -1958,7 +2020,7 @@ contains
 
     POP_sed_loss        = c0
 
-    if ((k == column_kmt)) then
+    if (k == column_kmt) then
 
        flux = POC%sflux_out(k) + POC%hflux_out(k)
 
@@ -2006,7 +2068,7 @@ contains
                   (flux - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N))
           endif
 
-       endif
+       endif ! flux > c0
 
        flux = P_SiO2%sflux_out(k) + P_SiO2%hflux_out(k)
        flux_alt = flux*mpercm*spd ! convert to mmol/m^2/day
@@ -2082,7 +2144,8 @@ contains
        !   Set all outgoing fluxes to 0.0
        !-----------------------------------------------------------------------
 
-       if (k == column_kmt) then
+       ! unnecessary if: the same condition is checked by the outer if
+       !if (k == column_kmt) then
           P_CaCO3%sflux_out(k) = c0
           P_CaCO3%hflux_out(k) = c0
 
@@ -2097,9 +2160,13 @@ contains
 
           P_iron%sflux_out(k) = c0
           P_iron%hflux_out(k) = c0
-       endif
+       !endif
 
-    endif
+#if (defined Z_COORD)
+    endif  ! k == column_kmt
+#elif (defined SIGMA_COORD)
+    endif  ! k == 1
+#endif
 
     if (poc_error) then
       write(log_message, "(A)") "mass ratio of ballast production exceeds POC production"
@@ -2918,7 +2985,11 @@ contains
   
   !***********************************************************************
 
-  subroutine marbl_setup_local_tracers(k, column_kmt, tracers, tracer_local)
+  subroutine marbl_setup_local_tracers(k,  &
+#if (defined Z_COORD)
+             column_kmt,                   &
+#endif
+             tracers, tracer_local)
 
     !-----------------------------------------------------------------------
     !  create local copies of model tracers
@@ -2928,7 +2999,9 @@ contains
     implicit none
 
     integer(int_kind) , intent(in)  :: k
+#if (defined Z_COORD)
     integer(int_kind) , intent(in)  :: column_kmt
+#endif
     real (r8)         , intent(in)  :: tracers(ecosys_base_tracer_cnt)      ! tracer values
     real (r8)         , intent(out) :: tracer_local(ecosys_base_tracer_cnt) ! local copies of model tracer concentrations
 
@@ -2941,19 +3014,26 @@ contains
     ! FIXME #30: only need to loop over non-living-biomass-ecosys-tracer-cnt. 
 
     do n = 1, ecosys_base_tracer_cnt
+#if (defined Z_COORD)
        if ( k > column_kmt) then
           tracer_local(n) = c0
        else
           tracer_local(n) = max(c0, tracers(n))
        end if
+#elif (defined SIGMA_COORD)
+       tracer_local(n) = max(c0, tracers(n))
+#endif
     end do
 
   end subroutine marbl_setup_local_tracers
 
   !***********************************************************************
 
-  subroutine marbl_setup_local_zooplankton(k, column_kmt, tracers,            &
-             marbl_tracer_indices, zooplankton_local)
+  subroutine marbl_setup_local_zooplankton(k,  &
+#if (defined Z_COORD)
+             column_kmt,                       &
+#endif
+             tracers, marbl_tracer_indices, zooplankton_local)
 
     !-----------------------------------------------------------------------
     !  create local copies of model tracers, treat negative values as zero
@@ -2962,7 +3042,9 @@ contains
     implicit none
 
     integer (int_kind)           , intent(in)  :: k
+#if (defined Z_COORD)
     integer(int_kind)            , intent(in)  :: column_kmt
+#endif
     real (r8)                    , intent(in)  :: tracers(:) ! tracer values
     type(marbl_tracer_index_type), intent(in)  :: marbl_tracer_indices
     type(zooplankton_local_type) , intent(out) :: zooplankton_local(:)
@@ -2974,20 +3056,28 @@ contains
     !-----------------------------------------------------------------------
 
     do zoo_ind = 1, zooplankton_cnt
+#if (defined Z_COORD)
        if (k > column_kmt) then
           zooplankton_local(zoo_ind)%C = c0
        else
           n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
           zooplankton_local(zoo_ind)%C = max(c0, tracers(n))
        end if
+#elif (defined SIGMA_COORD)
+       n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
+       zooplankton_local(zoo_ind)%C = max(c0, tracers(n))
+#endif
     end do
 
   end subroutine marbl_setup_local_zooplankton
 
   !***********************************************************************
 
-  subroutine marbl_setup_local_autotrophs(k, column_kmt, tracers,             &
-             marbl_tracer_indices, autotroph_local)
+  subroutine marbl_setup_local_autotrophs(k,  &
+#if (defined Z_COORD)
+             column_kmt,                      &
+#endif
+             tracers, marbl_tracer_indices, autotroph_local)
 
     !----------------------------------------------------------------------- 
     !  create local copies of model tracers, treat negative values as zero
@@ -2996,7 +3086,9 @@ contains
     implicit none
 
     integer (int_kind)         , intent(in)  :: k
+#if (defined Z_COORD)
     integer(int_kind)          , intent(in)  :: column_kmt
+#endif
     real (r8)                  , intent(in)  :: tracers(:)           ! tracer values
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
     type(autotroph_local_type) , intent(out) :: autotroph_local(:)
@@ -3008,6 +3100,7 @@ contains
     !-----------------------------------------------------------------------
 
     do auto_ind = 1, autotroph_cnt
+#if (defined Z_COORD)
        if (k > column_kmt) then
           autotroph_local(auto_ind)%Chl = c0
           autotroph_local(auto_ind)%C = c0
@@ -3015,6 +3108,7 @@ contains
           autotroph_local(auto_ind)%Si = c0
           autotroph_local(auto_ind)%CaCO3 = c0
        else
+#endif
           tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
           autotroph_local(auto_ind)%Chl = max(c0, tracers(tracer_ind))
 
@@ -3033,7 +3127,9 @@ contains
           if (tracer_ind > 0) then
              autotroph_local(auto_ind)%CaCO3 = max(c0, tracers(tracer_ind))
           endif
+#if (defined Z_COORD)
        end if
+#endif
     end do
 
   end subroutine marbl_setup_local_autotrophs
@@ -3261,7 +3357,7 @@ contains
     real (r8), parameter :: PAR_threshold = 1.0e-19_r8
 
     real (r8) :: WORK1(domain%kmt)
-    integer(int_kind) :: k, subcol_ind
+    integer(int_kind) :: k, subcol_ind, surf_ind
     !-----------------------------------------------------------------------
 
     associate(                                        &
@@ -3271,6 +3367,14 @@ contains
          PAR_nsubcols     => domain%num_PAR_subcols   &
          )
 
+    ! Index of surface interface: the interfaces are always numbered from 
+    ! 0..domain%km
+#if (defined Z_COORD)
+    surf_ind = 0
+#elif (defined SIGMA_COORD)
+    surf_ind = dkm
+#endif
+
     !-----------------------------------------------------------------------
     ! set depth independent quantities, sub-column fractions and PAR at surface
     ! ignore provided shortwave where col_frac == 0
@@ -3279,10 +3383,10 @@ contains
     PAR%col_frac(:) = interior_forcings(interior_forcing_ind%PAR_col_frac_id)%field_1d(1,:)
 
     where (PAR%col_frac(:) > c0)
-       PAR%interface(0,:) = f_qsw_par *                                       &
+       PAR%interface(surf_ind,:) = f_qsw_par *                                       &
               interior_forcings(interior_forcing_ind%surf_shortwave_id)%field_1d(1,:)
     elsewhere
-       PAR%interface(0,:) = c0
+       PAR%interface(surf_ind,:) = c0
     endwhere
 
     !-----------------------------------------------------------------------
@@ -3290,7 +3394,7 @@ contains
     ! treat forcing as a single dark value, by setting col_frac(1) to 1
     !-----------------------------------------------------------------------
 
-    if (all(PAR%interface(0,:) == c0)) then
+    if (all(PAR%interface(surf_ind,:) == c0)) then
        PAR%col_frac(:)    = c0
        PAR%col_frac(1)    = c1
        PAR%interface(:,:) = c0
@@ -3306,9 +3410,17 @@ contains
     ! FIXME #31: move calculation outside and just pass in this
     !            work array as autotroph_Chl instead of passing
     !            in all of autotroph_local?
+#if (defined Z_COORD)
     WORK1(:) = max(sum(autotroph_local(:,1:column_kmt)%Chl, dim=1), 0.02_r8)
+#elif (defined SIGMA_COORD)
+    WORK1(:) = max(sum(autotroph_local(:,1:dkm)%Chl, dim=1), 0.02_r8)
+#endif
 
+#if (defined Z_COORD)
     do k = 1, column_kmt
+#elif (defined SIGMA_COORD)
+    do k = 1, dkm
+#endif
 
        if (WORK1(k) < 0.13224_r8) then
           PAR%KPARdz(k) = 0.000919_r8*(WORK1(k)**0.3536_r8)
@@ -3320,19 +3432,26 @@ contains
 
     enddo
 
+#if (defined Z_COORD)
     PAR%KPARdz(column_kmt+1:dkm) = c0
+#endif
 
     !-----------------------------------------------------------------------
     ! propagate PAR values through column, only on subcolumns with PAR>0
     ! note that if col_frac is 0, then so is PAR
     !-----------------------------------------------------------------------
 
+#if (defined Z_COORD)
     WORK1(:) = exp(-PAR%KPARdz(1:column_kmt))
+#elif (defined SIGMA_COORD)
+    WORK1(:) = exp(-PAR%KPARdz(1:dkm))
+#endif
 
     do subcol_ind = 1, PAR_nsubcols
-       if (PAR%interface(0,subcol_ind) > c0) then
+       if (PAR%interface(surf_ind,subcol_ind) > c0) then
 
           ! this look will probably not vectorize
+#if (defined Z_COORD)
           do k = 1, column_kmt
              PAR%interface(k,subcol_ind) = PAR%interface(k-1,subcol_ind) * WORK1(k)
              if (PAR%interface(k,subcol_ind) < PAR_threshold) then
@@ -3346,6 +3465,19 @@ contains
              PAR%avg(k,subcol_ind) = PAR%interface(k-1,subcol_ind) * (c1 - WORK1(k)) / PAR%KPARdz(k)
           enddo
           PAR%avg(column_kmt+1:dkm,subcol_ind) = c0
+#elif (defined SIGMA_COORD)
+          do k = dkm, 1, -1
+             PAR%interface(k,subcol_ind) = PAR%interface(k+1,subcol_ind) * WORK1(k)
+             if (PAR%interface(k,subcol_ind) < PAR_threshold) then
+                PAR%interface(1:k,subcol_ind) = c0
+                exit
+             end if
+          enddo
+
+          do k = dkm, 1, -1
+             PAR%avg(k,subcol_ind) = PAR%interface(k+1,subcol_ind) * (c1 - WORK1(k)) / PAR%KPARdz(k)
+          enddo
+#endif
 
        else
 
@@ -3425,9 +3557,14 @@ contains
 
     pressure_correct = .TRUE.
     pressure_correct(1) = .FALSE.
+#if (defined SIGMA_COORD)
+    mask = .true.
+#endif
     do k=1,dkm
 
+#if (defined Z_COORD)
       mask(k) = (k <= column_kmt)
+#endif
 
        ! -------------------
        if (ph_prev_col(k)  /= c0) then
@@ -4311,7 +4448,11 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_dissolved_organic_matter (k, auto_cnt, zoo_cnt,    &
+  subroutine marbl_compute_dissolved_organic_matter (k,                       &
+#if (defined SIGMA_COORD)
+             dkm,                                                             &
+#endif
+             auto_cnt, zoo_cnt,                                               &
              PAR_nsubcols, auto_meta, zooplankton_secondary_species,          &
              autotroph_secondary_species, PAR_col_frac, PAR_in, PAR_avg,      &
              dz1, tracer_local, marbl_tracer_indices, dissolved_organic_matter)
@@ -4333,6 +4474,9 @@ contains
     use marbl_parms     , only : DOMr_reminR_photo
 
     integer(int_kind)                       , intent(in)  :: k
+#if (defined SIGMA_COORD)
+    integer(int_kind)                       , intent(in)  :: dkm
+#endif
     integer                                 , intent(in)  :: auto_cnt
     integer                                 , intent(in)  :: zoo_cnt
     integer(int_kind)                       , intent(in)  :: PAR_nsubcols
@@ -4429,7 +4573,11 @@ contains
       DONr_reminR = DONr_reminR0
       DOPr_reminR = DOPr_reminR0
 
+#if (defined Z_COORD)
       if (k == 1) then
+#elif (defined SIGMA_COORD)
+      if (k == dkm) then
+#endif
          do subcol_ind = 1, PAR_nsubcols
             if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR_in(subcol_ind) > 1.0_r8)) then
                work = PAR_col_frac(subcol_ind) * (log(PAR_in(subcol_ind))*0.4373_r8) * (10.0e2/dz1)
