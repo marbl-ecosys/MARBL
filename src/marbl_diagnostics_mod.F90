@@ -359,12 +359,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     integer :: n, tmp_id
-    logical :: count_only ! true => count the diagnostics, false => add the diagnostics
-    integer :: imode      ! imode = 1, count_only is true, otherwise count_only is false
     logical :: truncate
-    integer :: num_interior_diags
-    integer :: num_restore_diags
-    integer :: num_forcing_diags
     character(len=char_len) :: lname, sname, units, vgrid
 
     character(*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_init'
@@ -374,35 +369,21 @@ contains
     ! Surface forcing diagnostics
     !-----------------------------------------------------------------
 
-    num_forcing_diags  = 0
-    num_interior_diags = 0
-    num_restore_diags  = 0
-
-    do imode = 1,2
-
-       if (imode == 1) then
-          count_only = .true.
-       else
-          count_only = .false.
           associate(                                                                &
                num_elements_interior => marbl_domain%num_elements_interior_forcing, &
                num_elements_forcing  => marbl_domain%num_elements_surface_forcing,  &
                num_levels            => marbl_domain%km                             &
                )
-          call marbl_surface_forcing_diags%construct (num_forcing_diags , num_elements_forcing , num_levels)
-          call marbl_interior_forcing_diags%construct(num_interior_diags, num_elements_interior, num_levels)
-          call marbl_interior_restore_diags%construct(num_restore_diags , num_elements_interior, num_levels)
+          call marbl_surface_forcing_diags%construct (num_elements_forcing , num_levels)
+          call marbl_interior_forcing_diags%construct(num_elements_interior, num_levels)
+          call marbl_interior_restore_diags%construct(num_elements_interior, num_levels)
           end associate
-       end if
 
        associate(                                  &
             ind => marbl_surface_forcing_diag_ind, &
             diags => marbl_surface_forcing_diags   &
             )
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Ice Fraction for ecosys fluxes'
           sname    = 'ECOSYS_IFRAC'
           units    = 'fraction'
@@ -414,11 +395,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'XKW for ecosys fluxes'
           sname    = 'ECOSYS_XKW'
           units    = 'cm/s'
@@ -430,11 +407,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Atmospheric Pressure for ecosys fluxes'
           sname    = 'ECOSYS_ATM_PRESS'
           units    = 'atmospheres'
@@ -446,11 +419,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'PV_O2'
           sname    = 'PV_O2'
           units    = 'cm/s'
@@ -462,11 +431,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'O2 Schmidt Number'
           sname    = 'SCHMIDT_O2'
           units    = 'none'
@@ -478,11 +443,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'O2 Saturation'
           sname    = 'O2SAT'
           units    = 'mmol/m^3'      ! = nmol/cm^3
@@ -494,11 +455,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Dissolved Oxygen Surface Flux'
           sname    = 'STF_O2'
           units    = 'mmol/m^3 cm/s'
@@ -510,11 +467,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'CO2 Star'
           sname    = 'CO2STAR'
           units    = 'mmol/m^3'
@@ -526,11 +479,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'D CO2 Star'
           sname    = 'DCO2STAR'
           units    = 'mmol/m^3'
@@ -542,11 +491,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'surface pCO2'
           sname    = 'pCO2SURF'
           units    = 'ppmv'
@@ -558,11 +503,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'D pCO2'
           sname    = 'DpCO2'
           units    = 'ppmv'
@@ -574,11 +515,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'CO2 Piston Velocity'
           sname    = 'PV_CO2'
           units    = 'cm/s'
@@ -590,11 +527,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'CO2 Schmidt Number'
           sname    = 'SCHMIDT_CO2'
           units    = 'none'
@@ -606,11 +539,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'DIC Surface Gas Flux'
           sname    = 'FG_CO2'
           units    = 'mmol/m^3 cm/s'
@@ -622,11 +551,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Surface pH'
           sname    = 'PH'
           units    = 'none'
@@ -638,11 +563,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Atmospheric CO2'
           sname    = 'ATM_CO2'
           units    = 'ppmv'
@@ -654,11 +575,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'CO2 Star, Alternative CO2'
           sname    = 'CO2STAR_ALT_CO2'
           units    = 'mmol/m^3'
@@ -670,11 +587,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'D CO2 Star, Alternative CO2'
           sname    = 'DCO2STAR_ALT_CO2'
           units    = 'mmol/m^3'
@@ -686,11 +599,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'surface pCO2, Alternative CO2'
           sname    = 'pCO2SURF_ALT_CO2'
           units    = 'ppmv'
@@ -702,11 +611,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'D pCO2, Alternative CO2'
           sname    = 'DpCO2_ALT_CO2'
           units    = 'ppmv'
@@ -718,11 +623,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'DIC Surface Gas Flux, Alternative CO2'
           sname    = 'FG_ALT_CO2'
           units    = 'mmol/m^3 cm/s'
@@ -734,11 +635,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Surface pH, Alternative CO2'
           sname    = 'PH_ALT_CO2'
           units    = 'none'
@@ -750,11 +647,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Atmospheric Alternative CO2'
           sname    = 'ATM_ALT_CO2'
           units    = 'ppmv'
@@ -766,11 +659,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Atmospheric Iron Flux'
           sname    = 'IRON_FLUX'
           units    = 'mmol/m^2/s'
@@ -782,11 +671,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Dust Flux'
           sname    = 'DUST_FLUX'
           units    = 'g/cm^2/s'
@@ -798,11 +683,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of NOx from Atmosphere'
           sname    = 'NOx_FLUX'
           units    = 'nmol/cm^2/s'
@@ -814,11 +695,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of NHy from Atmosphere'
           sname    = 'NHy_FLUX'
           units    = 'nmol/cm^2/s'
@@ -830,11 +707,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Emission of NHx to Atmosphere'
           sname    = 'NHx_SURFACE_EMIS'
           units    = 'nmol/cm^2/s'
@@ -846,11 +719,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of DIN from rivers'
           sname    = 'DIN_RIV_FLUX'
           units    = 'nmol/cm^2/s'
@@ -862,11 +731,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of DIP from rivers'
           sname    = 'DIP_RIV_FLUX'
           units    = 'nmol/cm^2/s'
@@ -878,11 +743,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of DON from rivers'
           sname    = 'DON_RIV_FLUX'
           units    = 'nmol/cm^2/s'
@@ -894,11 +755,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of DONr from rivers'
           sname    = 'DONr_RIV_FLUX'
           units    = 'nmol/cm^2/s'
@@ -910,11 +767,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of DOP from rivers'
           sname    = 'DOP_RIV_FLUX'
           units    = 'nmol/cm^2/s'
@@ -926,11 +779,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of DOPr from rivers'
           sname    = 'DOPr_RIV_FLUX'
           units    = 'nmol/cm^2/s'
@@ -942,11 +791,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of DSI from rivers'
           sname    = 'DSI_RIV_FLUX'
           units    = 'nmol/cm^2/s'
@@ -958,11 +803,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of DFE from rivers'
           sname    = 'DFE_RIV_FLUX'
           units    = 'nmol/cm^2/s'
@@ -974,11 +815,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of DIC from rivers'
           sname    = 'DIC_RIV_FLUX'
           units    = 'nmol/cm^2/s'
@@ -990,11 +827,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of ALK from rivers'
           sname    = 'ALK_RIV_FLUX'
           units    = 'alk/cm^2/s'
@@ -1006,11 +839,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of DOC from rivers'
           sname    = 'DOC_RIV_FLUX'
           units    = 'nmol/cm^2/s'
@@ -1022,11 +851,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_forcing_diags = num_forcing_diags + 1
-       else
           lname    = 'Flux of DOCr from rivers'
           sname    = 'DOCr_RIV_FLUX'
           units    = 'nmol/cm^2/s'
@@ -1038,7 +863,6 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
        !-----------------------------------------------------------------------
        !  2D fields related to C13/C14 surface fluxes
@@ -1046,9 +870,6 @@ contains
        
        if (ciso_on) then
           
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'DI13C Surface Gas Flux'
              sname    = 'CISO_FG_13CO2'
              units    = 'mmol/m^3 cm/s'
@@ -1060,11 +881,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'DI13C Surface Air-Sea Gas Flux'
              sname    = 'CISO_FG_as_13CO2'
              units    = 'mmol/m^3 cm/s'
@@ -1076,11 +893,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'DI13C Surface Sea-Air Gas Flux'
              sname    = 'CISO_FG_sa_13CO2'
              units    = 'mmol/m^3 cm/s'
@@ -1092,11 +905,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'D13C Surface GAS FLUX'
              sname    = 'CISO_FG_d13C'
              units    = 'permil'
@@ -1108,11 +917,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'Atmospheric Delta 13C in permil'
              sname    = 'CISO_D13C_atm'
              units    = 'permil'
@@ -1124,11 +929,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = '13C/12C ratio in total DIC'
              sname    = 'CISO_R13C_DIC_surf'
              units    = 'permil'
@@ -1140,11 +941,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = '13C/12C ratio in atmosphere'
              sname    = 'CISO_R13C_atm'
              units    = 'permil'
@@ -1156,11 +953,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'Flux of DI13C from rivers'
              sname    = 'CISO_DI13C_RIV_FLUX'
              units    = 'nmol/cm^2/s'
@@ -1172,11 +965,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'Flux of DO13C from rivers'
              sname    = 'CISO_DO13C_RIV_FLUX'
              units    = 'nmol/cm^2/s'
@@ -1188,11 +977,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'Surface equilibrium fractionation (CO2_gaseous <-> CO2_aq)'
              sname    = 'CISO_eps_aq_g_surf'
              units    = 'permil'
@@ -1204,11 +989,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'Surface equilibrium fractionation between total DIC and gaseous CO2'
              sname    = 'CISO_eps_dic_g_surf'
              units    = 'permil'
@@ -1220,11 +1001,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'DI14C Surface Gas Flux'
              sname    = 'CISO_FG_14CO2'
              units    = 'mmol/m^3 cm/s'
@@ -1236,11 +1013,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'DI14C Surface Air-Sea Gas Flux'
              sname    = 'CISO_FG_as_14CO2'
              units    = 'mmol/m^3 cm/s'
@@ -1252,11 +1025,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'DI14C Surface Sea-Air Gas Flux'
              sname    = 'CISO_FG_sa_14CO2'
              units    = 'mmol/m^3 cm/s'
@@ -1268,11 +1037,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'D14C Surface GAS FLUX'
              sname    = 'CISO_FG_d14C'
              units    = 'permil'
@@ -1284,11 +1049,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'Atmospheric Delta 14C in permil'
              sname    = 'CISO_D14C_atm'
              units    = 'permil'
@@ -1300,11 +1061,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = '14C/12C ratio in total DIC'
              sname    = 'CISO_R14C_DIC_surf'
              units    = 'permil'
@@ -1316,11 +1073,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = '14C/12C ratio in atmosphere'
              sname    = 'CISO_R14C_atm'
              units    = 'permil'
@@ -1332,11 +1085,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
             end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'Flux of DI14C from rivers'
              sname    = 'CISO_DI14C_RIV_FLUX'
              units    = 'nmol/cm^2/s'
@@ -1348,11 +1097,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'Flux of DO14C from rivers'
              sname    = 'CISO_DO14C_RIV_FLUX'
              units    = 'nmol/cm^2/s'
@@ -1364,11 +1109,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_forcing_diags = num_forcing_diags + 1
-          else
              lname    = 'GLOBAL_D14C'
              sname    = 'CISO_GLOBAL_D14C'
              units    = 'permil'
@@ -1380,7 +1121,6 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
        end if
 
        end associate
@@ -1388,16 +1128,13 @@ contains
        !-----------------------------------------------------------------
        ! Interior diagnostics
        !-----------------------------------------------------------------
-       
+
        associate(                                 &
             ind => marbl_interior_diag_ind,       &
             diags => marbl_interior_forcing_diags &
             )
 
        ! General 2D diags
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Calcite Saturation Depth'
           sname = 'zsatcalc'
           units = 'cm'
@@ -1409,11 +1146,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Aragonite Saturation Depth'
           sname = 'zsatarag'
           units = 'cm'
@@ -1425,11 +1158,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Vertical Minimum of O2'
           sname = 'O2_ZMIN'
           units = 'mmol/m^3'
@@ -1441,11 +1170,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Depth of Vertical Minimum of O2'
           sname = 'O2_ZMIN_DEPTH'
           units = 'cm'
@@ -1457,11 +1182,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Total C Fixation Vertical Integral'
           sname = 'photoC_TOT_zint'
           units = 'mmol/m^3 cm/s'
@@ -1473,11 +1194,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Total C Fixation from NO3 Vertical Integral'
           sname = 'photoC_NO3_TOT_zint'
           units = 'mmol/m^3 cm/s'
@@ -1489,11 +1206,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ctot'
           sname = 'Jint_Ctot'
           units = 'mmol/m^3 cm/s'
@@ -1505,11 +1218,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ctot, 0-100m'
           sname = 'Jint_100m_Ctot'
           units = 'mmol/m^3 cm/s'
@@ -1521,11 +1230,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ntot'
           sname = 'Jint_Ntot'
           units = 'mmol/m^3 cm/s'
@@ -1537,11 +1242,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ntot, 0-100m'
           sname = 'Jint_100m_Ntot'
           units = 'mmol/m^3 cm/s'
@@ -1553,11 +1254,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ptot'
           sname = 'Jint_Ptot'
           units = 'mmol/m^3 cm/s'
@@ -1569,11 +1266,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ptot, 0-100m'
           sname = 'Jint_100m_Ptot'
           units = 'mmol/m^3 cm/s'
@@ -1585,11 +1278,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Sitot'
           sname = 'Jint_Sitot'
           units = 'mmol/m^3 cm/s'
@@ -1601,11 +1290,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Sitot, 0-100m'
           sname = 'Jint_100m_Sitot'
           units = 'mmol/m^3 cm/s'
@@ -1617,11 +1302,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Fetot'
           sname = 'Jint_Fetot'
           units = 'mmol/m^3 cm/s'
@@ -1633,11 +1314,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Fetot, 0-100m'
           sname = 'Jint_100m_Fetot'
           units = 'mmol/m^3 cm/s'
@@ -1649,12 +1326,8 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
        ! Particulate 2D diags
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'CaCO3 Flux to Sediments'
           sname = 'calcToSed'
           units = 'nmolC/cm^2/s'
@@ -1666,11 +1339,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'POC Flux to Sediments'
           sname = 'pocToSed'
           units = 'nmolC/cm^2/s'
@@ -1682,11 +1351,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'nitrogen burial Flux to Sediments'
           sname = 'ponToSed'
           units = 'nmolN/cm^2/s'
@@ -1698,11 +1363,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'nitrogen loss in Sediments'
           sname = 'SedDenitrif'
           units = 'nmolN/cm^2/s'
@@ -1714,11 +1375,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'non-oxic,non-dentr remin in Sediments'
           sname = 'OtherRemin'
           units = 'nmolC/cm^2/s'
@@ -1730,11 +1387,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'phosphorus Flux to Sediments'
           sname = 'popToSed'
           units = 'nmolP/cm^2/s'
@@ -1746,11 +1399,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'biogenic Si Flux to Sediments'
           sname = 'bsiToSed'
           units = 'nmolSi/cm^2/s'
@@ -1762,11 +1411,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'dust Flux to Sediments'
           sname = 'dustToSed'
           units = 'g/cm^2/s'
@@ -1778,11 +1423,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'pFe Flux to Sediments'
           sname = 'pfeToSed'
           units = 'nmolFe/cm^2/s'
@@ -1794,13 +1435,9 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
        ! Autotroph 2D diags
        do n=1,autotroph_cnt
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' C Fixation Vertical Integral'
              sname = 'photoC_' // trim(autotrophs_config(n)%sname) // '_zint'
              units = 'mmol/m^3 cm/s'
@@ -1812,11 +1449,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' C Fixation from NO3 Vertical Integral'
              sname = 'photoC_NO3_' // trim(autotrophs_config(n)%sname) // '_zint'
              units = 'mmol/m^3 cm/s'
@@ -1828,13 +1461,9 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
           if (autotrophs_config(n)%imp_calcifier .or.                         &
               autotrophs_config(n)%exp_calcifier) then
-            if (count_only) then
-              num_interior_diags = num_interior_diags + 1
-            else
               lname = trim(autotrophs_config(n)%lname) // ' CaCO3 Formation Vertical Integral'
               sname = trim(autotrophs_config(n)%sname) // '_CaCO3_form_zint'
               units = 'mmol/m^3 cm/s'
@@ -1846,15 +1475,11 @@ contains
                 call log_add_diagnostics_error(marbl_status_log, sname, subname)
                 return
               end if
-            end if
           else
             ind%CaCO3_form_zint(n) = -1
           end if
        end do
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Total CaCO3 Formation Vertical Integral'
           sname = 'CaCO3_form_zint'
           units = 'mmol/m^3 cm/s'
@@ -1866,12 +1491,8 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
        ! General 3D diags
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Carbonate Ion Concentration'
           sname = 'CO3'
           units = 'mmol/m^3'
@@ -1883,11 +1504,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Bicarbonate Ion Concentration'
           sname = 'HCO3'
           units = 'mmol/m^3'
@@ -1899,11 +1516,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Carbonic Acid Concentration'
           sname = 'H2CO3'
           units = 'mmol/m^3'
@@ -1915,11 +1528,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'pH'
           sname = 'pH_3D'
           units = 'none'
@@ -1931,11 +1540,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Carbonate Ion Concentration, Alternative CO2'
           sname = 'CO3_ALT_CO2'
           units = 'mmol/m^3'
@@ -1947,11 +1552,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Bicarbonate Ion Concentration, Alternative CO2'
           sname = 'HCO3_ALT_CO2'
           units = 'mmol/m^3'
@@ -1963,11 +1564,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Carbonic Acid Concentration, Alternative CO2'
           sname = 'H2CO3_ALT_CO2'
           units = 'mmol/m^3'
@@ -1979,11 +1576,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'pH, Alternative CO2'
           sname = 'pH_3D_ALT_CO2'
           units = 'none'
@@ -1995,11 +1588,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'CO3 concentration at calcite saturation'
           sname = 'co3_sat_calc'
           units = 'mmol/m^3'
@@ -2011,11 +1600,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'CO3 concentration at aragonite saturation'
           sname = 'co3_sat_arag'
           units = 'mmol/m^3'
@@ -2027,11 +1612,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Nitrification'
           sname = 'NITRIF'
           units = 'mmol/m^3/s'
@@ -2043,11 +1624,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Denitrification'
           sname = 'DENITRIF'
           units = 'mmol/m^3/s'
@@ -2059,11 +1636,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'O2 Production'
           sname = 'O2_PRODUCTION'
           units = 'mmol/m^3/s'
@@ -2075,11 +1648,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'O2 Consumption'
           sname = 'O2_CONSUMPTION'
           units = 'mmol/m^3/s'
@@ -2091,11 +1660,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Apparent O2 Utilization'
           sname = 'AOU'
           units = 'mmol/m^3'
@@ -2107,11 +1672,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'PAR Average over Model Cell'
           sname = 'PAR_avg'
           units = 'W/m^2'
@@ -2123,11 +1684,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Total Autotroph Grazing'
           sname = 'graze_auto_TOT'
           units = 'mmol/m^3/s'
@@ -2139,11 +1696,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Total C Fixation'
           sname = 'photoC_TOT'
           units = 'mmol/m^3/s'
@@ -2155,11 +1708,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Total C Fixation from NO3'
           sname = 'photoC_NO3_TOT'
           units = 'mmol/m^3/s'
@@ -2171,11 +1720,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'DOC Production'
           sname = 'DOC_prod'
           units = 'mmol/m^3/s'
@@ -2187,11 +1732,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'DOC Remineralization'
           sname = 'DOC_remin'
           units = 'mmol/m^3/s'
@@ -2203,11 +1744,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'DOCr Remineralization'
           sname = 'DOCr_remin'
           units = 'mmol/m^3/s'
@@ -2219,11 +1756,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'DON Production'
           sname = 'DON_prod'
           units = 'mmol/m^3/s'
@@ -2235,11 +1768,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'DON Remineralization'
           sname = 'DON_remin'
           units = 'mmol/m^3/s'
@@ -2251,11 +1780,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'DONr Remineralization'
           sname = 'DONr_remin'
           units = 'mmol/m^3/s'
@@ -2267,11 +1792,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'DOP Production'
           sname = 'DOP_prod'
           units = 'mmol/m^3/s'
@@ -2283,11 +1804,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'DOP Remineralization'
           sname = 'DOP_remin'
           units = 'mmol/m^3/s'
@@ -2299,11 +1816,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'DOPr Remineralization'
           sname = 'DOPr_remin'
           units = 'mmol/m^3/s'
@@ -2315,11 +1828,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Iron Scavenging'
           sname = 'Fe_scavenge'
           units = 'mmol/m^3/s'
@@ -2331,11 +1840,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Iron Scavenging Rate'
           sname = 'Fe_scavenge_rate'
           units = '1/y'
@@ -2347,12 +1852,8 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
        ! Particulate 3D diags
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'POC Flux into Cell'
           sname = 'POC_FLUX_IN'
           units = 'mmol/m^3 cm/s'
@@ -2364,11 +1865,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'POC Production'
           sname = 'POC_PROD'
           units = 'mmol/m^3/s'
@@ -2380,11 +1877,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'POC Remineralization'
           sname = 'POC_REMIN'
           units = 'mmol/m^3/s'
@@ -2396,11 +1889,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'POC Remineralization routed to DIC'
           sname = 'POC_REMIN_DIC'
           units = 'mmol/m^3/s'
@@ -2412,11 +1901,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'PON Remineralization routed to NH4'
           sname = 'PON_REMIN_NH4'
           units = 'mmol/m^3/s'
@@ -2428,11 +1913,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'POP Remineralization routed to PO4'
           sname = 'POP_REMIN_PO4'
           units = 'mmol/m^3/s'
@@ -2444,11 +1925,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'CaCO3 Flux into Cell'
           sname = 'CaCO3_FLUX_IN'
           units = 'mmol/m^3 cm/s'
@@ -2460,11 +1937,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'CaCO3 Production'
           sname = 'CaCO3_PROD'
           units = 'mmol/m^3/s'
@@ -2476,11 +1949,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'CaCO3 Remineralization'
           sname = 'CaCO3_REMIN'
           units = 'mmol/m^3/s'
@@ -2492,11 +1961,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'SiO2 Flux into Cell'
           sname = 'SiO2_FLUX_IN'
           units = 'mmol/m^3 cm/s'
@@ -2508,11 +1973,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'SiO2 Production'
           sname = 'SiO2_PROD'
           units = 'mmol/m^3/s'
@@ -2524,11 +1985,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'SiO2 Remineralization'
           sname = 'SiO2_REMIN'
           units = 'mmol/m^3/s'
@@ -2540,11 +1997,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Dust Flux into Cell'
           sname = 'dust_FLUX_IN'
           units = 'ng/s/m^2'
@@ -2556,11 +2009,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'Dust Remineralization'
           sname = 'dust_REMIN'
           units = 'mmol/m^3/s'
@@ -2572,11 +2021,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'P_iron Flux into Cell'
           sname = 'P_iron_FLUX_IN'
           units = 'mmol/m^3 cm/s'
@@ -2588,11 +2033,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'P_iron Production'
           sname = 'P_iron_PROD'
           units = 'mmol/m^3/s'
@@ -2604,11 +2045,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname = 'P_iron Remineralization'
           sname = 'P_iron_REMIN'
           units = 'mmol/m^3/s'
@@ -2620,14 +2057,10 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
        ! Autotroph 3D diags
        do n= 1,autotroph_cnt
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' N Limitation'
              sname = trim(autotrophs_config(n)%sname) // '_N_lim'
              units = 'none'
@@ -2639,11 +2072,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' P Limitation'
              sname = trim(autotrophs_config(n)%sname) // '_P_lim'
              units = 'none'
@@ -2655,11 +2084,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' Fe Limitation'
              sname = trim(autotrophs_config(n)%sname) // '_Fe_lim'
              units = 'none'
@@ -2671,12 +2096,8 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
           if (autotrophs_config(n)%silicifier) then
-            if (count_only) then
-              num_interior_diags = num_interior_diags + 1
-            else
               lname = trim(autotrophs_config(n)%lname) // ' SiO3 Limitation'
               sname = trim(autotrophs_config(n)%sname) // '_SiO3_lim'
               units = 'none'
@@ -2688,14 +2109,10 @@ contains
                 call log_add_diagnostics_error(marbl_status_log, sname, subname)
                 return
               end if
-            end if
           else
             ind%SiO3_lim(n) = -1
           end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' Light Limitation'
              sname = trim(autotrophs_config(n)%sname) // '_light_lim'
              units = 'none'
@@ -2707,11 +2124,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' C Fixation'
              sname = 'photoC_' // trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
@@ -2723,11 +2136,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' C Fixation from NO3'
              sname = 'photoC_NO3_' // trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
@@ -2739,11 +2148,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' Fe Uptake'
              sname = 'photoFe_' // trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
@@ -2755,11 +2160,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' NO3 Uptake'
              sname = 'photoNO3_' // trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
@@ -2771,11 +2172,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' NH4 Uptake'
              sname = 'photoNH4_' // trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
@@ -2787,11 +2184,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' DOP Uptake'
              sname = 'DOP_' // trim(autotrophs_config(n)%sname) // '_uptake'
              units = 'mmol/m^3/s'
@@ -2803,11 +2196,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' PO4 Uptake'
              sname = 'PO4_' // trim(autotrophs_config(n)%sname) // '_uptake'
              units = 'mmol/m^3/s'
@@ -2819,11 +2208,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' Grazing'
              sname = 'graze_' // trim(autotrophs_config(n)%sname)
              units = 'mmol/m^3/s'
@@ -2835,11 +2220,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' Grazing to POC'
              sname = 'graze_' // trim(autotrophs_config(n)%sname) // '_poc'
              units = 'mmol/m^3/s'
@@ -2851,11 +2232,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' Grazing to DOC'
              sname = 'graze_' // trim(autotrophs_config(n)%sname) // '_doc'
              units = 'mmol/m^3/s'
@@ -2867,11 +2244,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' Grazing to ZOO'
              sname = 'graze_' // trim(autotrophs_config(n)%sname) // '_zoo'
              units = 'mmol/m^3/s'
@@ -2883,11 +2256,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' Loss'
              sname = trim(autotrophs_config(n)%sname) // '_loss'
              units = 'mmol/m^3/s'
@@ -2899,11 +2268,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' Loss to POC'
              sname = trim(autotrophs_config(n)%sname) // '_loss_poc'
              units = 'mmol/m^3/s'
@@ -2915,11 +2280,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' Loss to DOC'
              sname = trim(autotrophs_config(n)%sname) // '_loss_doc'
              units = 'mmol/m^3/s'
@@ -2931,11 +2292,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname = trim(autotrophs_config(n)%lname) // ' Aggregate'
              sname = trim(autotrophs_config(n)%sname) // '_agg'
              units = 'mmol/m^3/s'
@@ -2947,12 +2304,8 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
           if (autotrophs_config(n)%silicifier) then
-            if (count_only) then
-              num_interior_diags = num_interior_diags + 1
-            else
               lname = trim(autotrophs_config(n)%lname) // ' Si Uptake'
               ! FIXME #22 - eventually add _
               sname = trim(autotrophs_config(n)%sname) // 'bSi_form'
@@ -2966,16 +2319,12 @@ contains
                 call log_add_diagnostics_error(marbl_status_log, sname, subname)
                 return
               end if
-            end if
           else
             ind%bSi_form(n) = -1
           end if
 
           if (autotrophs_config(n)%imp_calcifier .or.                         &
               autotrophs_config(n)%exp_calcifier) then
-            if (count_only) then
-              num_interior_diags = num_interior_diags + 1
-            else
               lname = trim(autotrophs_config(n)%lname) // ' CaCO3 Formation'
               sname = trim(autotrophs_config(n)%sname) // '_CaCO3_form'
               units = 'mmol/m^3/s'
@@ -2987,15 +2336,11 @@ contains
                 call log_add_diagnostics_error(marbl_status_log, sname, subname)
                 return
               end if
-            end if
           else
             ind%CaCO3_form(n) = -1
           end if
 
           if (autotrophs_config(n)%Nfixer) then
-            if (count_only) then
-              num_interior_diags = num_interior_diags + 1
-            else
               lname = trim(autotrophs_config(n)%lname) // ' N Fixation'
               sname = trim(autotrophs_config(n)%sname) // '_Nfix'
               units = 'mmol/m^3/s'
@@ -3007,16 +2352,12 @@ contains
                 call log_add_diagnostics_error(marbl_status_log, sname, subname)
                 return
               end if
-            end if
           else
             ind%Nfix(n) = -1
           end if
 
        end do ! end do-loop for atutroph_cnt
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname    = 'Total Si Uptake'
           sname    = 'bSi_form'
           units    = 'mmol/m^3/s'
@@ -3028,11 +2369,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname    = 'Total CaCO3 Formation'
           sname    = 'CaCO3_form'
           units    = 'mmol/m^3/s'
@@ -3044,11 +2381,7 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
-       if (count_only) then
-          num_interior_diags = num_interior_diags + 1
-       else
           lname    = 'Total N Fixation'
           sname    = 'Nfix'
           units    = 'mmol/m^3/s'
@@ -3060,14 +2393,10 @@ contains
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
           end if
-       end if
 
        ! Zooplankton 3D diags
        do n = 1,zooplankton_cnt
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = trim(zooplankton_config(n)%lname) // ' Loss'
              sname    = trim(zooplankton_config(n)%sname) // '_loss'
              units    = 'mmol/m^3/s'
@@ -3079,11 +2408,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = trim(zooplankton_config(n)%lname) // ' Loss to POC'
              sname    = trim(zooplankton_config(n)%sname) // '_loss_poc'
              units    = 'mmol/m^3/s'
@@ -3095,11 +2420,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = trim(zooplankton_config(n)%lname) // ' Loss to DOC'
              sname    = trim(zooplankton_config(n)%sname) // '_loss_doc'
              units    = 'mmol/m^3/s'
@@ -3111,11 +2432,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = trim(zooplankton_config(n)%lname) // ' grazing loss'
              sname    = 'graze_' // trim(zooplankton_config(n)%sname)
              units    = 'mmol/m^3/s'
@@ -3127,11 +2444,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = trim(zooplankton_config(n)%lname) // ' grazing loss to POC'
              sname    = 'graze_' // trim(zooplankton_config(n)%sname) // '_poc'
              units    = 'mmol/m^3/s'
@@ -3143,11 +2456,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = trim(zooplankton_config(n)%lname) // ' grazing loss to DOC'
              sname    = 'graze_' // trim(zooplankton_config(n)%sname) // '_doc'
              units    = 'mmol/m^3/s'
@@ -3159,11 +2468,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = trim(zooplankton_config(n)%lname) // ' grazing loss to ZOO'
              sname    = 'graze_' // trim(zooplankton_config(n)%sname) // '_zoo'
              units    = 'mmol/m^3/s'
@@ -3175,11 +2480,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = trim(zooplankton_config(n)%lname) // ' grazing gain'
              sname    = 'x_graze_' // trim(zooplankton_config(n)%sname)
              units    = 'mmol/m^3/s'
@@ -3191,7 +2492,6 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
        end do
 
@@ -3199,9 +2499,6 @@ contains
 
           !  nonstandard 3D fields
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'PO13C Flux into Cell'
              sname    = 'CISO_PO13C_FLUX_IN'
              units    = 'mmol/m^3 cm/s'
@@ -3213,11 +2510,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'PO13C Production'
              sname    = 'CISO_PO13C_PROD'
              units    = 'mmol/m^3/s'
@@ -3229,11 +2522,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'PO13C Remineralization'
              sname    = 'CISO_PO13C_REMIN'
              units    = 'mmol/m^3/s'
@@ -3245,11 +2534,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'DO13C Production'
              sname    = 'CISO_DO13C_prod'
              units    = 'mmol/m^3/s'
@@ -3261,11 +2546,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'DO13C Remineralization'
              sname    = 'CISO_DO13C_remin'
              units    = 'mmol/m^3/s'
@@ -3277,11 +2558,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Ca13CO3 flux into cell'
              sname    = 'CISO_Ca13CO3_FLUX_IN'
              units    = 'mmol/m^3 cm/s'
@@ -3293,11 +2570,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Ca13CO3 Production'
              sname    = 'CISO_Ca13CO3_PROD'
              units    = 'mmol/m^3/s'
@@ -3309,11 +2582,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Ca13CO3 Remineralization'
              sname    = 'CISO_Ca13CO3_REMIN'
              units    = 'mmol/m^3/s'
@@ -3325,11 +2594,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Total 13C Fixation'
              sname    = 'CISO_photo13C_TOT'
              units    = 'mmol/m^3/s'
@@ -3341,11 +2606,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'd13C of DIC'
              sname    = 'CISO_DIC_d13C'
              units    = 'permil'
@@ -3357,11 +2618,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'd13C of DOC'
              sname    = 'CISO_DOC_d13C'
              units    = 'permil'
@@ -3373,11 +2630,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'd13C of zooC'
              sname    = 'CISO_zooC_d13C'
              units    = 'permil'
@@ -3389,11 +2642,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'PO14C Flux into Cell'
              sname    = 'CISO_PO14C_FLUX_IN'
              units    = 'mmol/m^3 cm/s'
@@ -3405,11 +2654,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'PO14C Production'
              sname    = 'CISO_PO14C_PROD'
              units    = 'mmol/m^3/s'
@@ -3421,11 +2666,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'PO14C Remineralization'
              sname    = 'CISO_PO14C_REMIN'
              units    = 'mmol/m^3/s'
@@ -3437,11 +2678,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'DO14C Production'
              sname    = 'CISO_DO14C_prod'
              units    = 'mmol/m^3/s'
@@ -3453,11 +2690,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'DO14C Remineralization'
              sname    = 'CISO_DO14C_remin'
              units    = 'mmol/m^3/s'
@@ -3469,11 +2702,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Ca14CO3 flux into cell'
              sname    = 'CISO_Ca14CO3_FLUX_IN'
              units    = 'mmol/m^3 cm/s'
@@ -3485,11 +2714,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Ca14CO3 Production'
              sname    = 'CISO_Ca14CO3_PROD'
              units    = 'mmol/m^3/s'
@@ -3501,11 +2726,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Ca14CO3 Remineralization'
              sname    = 'CISO_Ca14CO3_REMIN'
              units    = 'mmol/m^3/s'
@@ -3517,11 +2738,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Total 14C Fixation'
              sname    = 'CISO_photo14C_TOT'
              units    = 'mmol/m^3/s'
@@ -3533,11 +2750,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'd14C of DIC'
              sname    = 'CISO_DIC_d14C'
              units    = 'permil'
@@ -3549,11 +2762,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'd14C of DOC'
              sname    = 'CISO_DOC_d14C'
              units    = 'permil'
@@ -3565,11 +2774,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'd14C of zooC'
              sname    = 'CISO_zooC_d14C'
              units    = 'permil'
@@ -3581,13 +2786,9 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
           !  Nonstandard 2D fields
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Total 13C Fixation Vertical Integral'
              sname    = 'CISO_photo13C_TOT_zint'
              units    = 'mmol/m^3 cm/s'
@@ -3599,11 +2800,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Total 14C Fixation Vertical Integral'
              sname    = 'CISO_photo14C_TOT_zint'
              units    = 'mmol/m^3 cm/s'
@@ -3615,11 +2812,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = '13Ctot Source Sink Term Vertical Integral'
              sname    = 'CISO_Jint_13Ctot'
              units    = 'mmol/m^3 cm/s'
@@ -3631,11 +2824,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = '14Ctot Source Sink Term Vertical Integral'
              sname    = 'CISO_Jint_14Ctot'
              units    = 'mmol/m^3 cm/s'
@@ -3647,11 +2836,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = '13Ctot Source Sink Term Vertical Integral, 0-100m'
              sname    = 'CISO_Jint_100m_13Ctot'
              units    = 'mmol/m^3 cm/s'
@@ -3663,11 +2848,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = '14Ctot Source Sink Term Vertical Integral, 0-100m'
              sname    = 'CISO_Jint_100m_14Ctot'
              units    = 'mmol/m^3 cm/s'
@@ -3679,16 +2860,12 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
           !  Nonstandard autotroph 2D and 3D fields for each autotroph
 
           do n = 1, autotroph_cnt
 
              !FIXME - the comments seem to be needed below - need to fix this
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' Ca13CO3 Formation'
                 sname    = 'CISO_' // trim(autotrophs_config(n)%sname) // '_Ca13CO3_form'
                 units    = 'mmol/m^3/s'
@@ -3700,11 +2877,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' Ca13CO3 Formation Vertical Integral'
                 sname    = 'CISO_' // trim(autotrophs_config(n)%sname) // '_Ca13CO3_form_zint'
                 units    = 'mmol/m^3 cm/s'
@@ -3716,11 +2889,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' Ca14CO3 Formation'
                 sname    = 'CISO_' // trim(autotrophs_config(n)%sname) // '_Ca14CO3_form'
                 units    = 'mmol/m^3/s'
@@ -3732,11 +2901,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' Ca14CO3 Formation Vertical Integral'
                 sname    = 'CISO_' // trim(autotrophs_config(n)%sname) // '_Ca14CO3_form_zint'
                 units    = 'mmol/m^3 cm/s'
@@ -3748,11 +2913,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' d13C of CaCO3'
                 sname    = 'CISO_autotrophCaCO3_d13C_' // trim(autotrophs_config(n)%sname)
                 units    = 'mmol/m^3/s'
@@ -3764,11 +2925,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' d14C of CaCO3'
                 sname    = 'CISO_autotrophCaCO3_d14C_' // trim(autotrophs_config(n)%sname)
                 units    = 'mmol/m^3/s'
@@ -3780,11 +2937,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' 13C Fixation'
                 sname    = 'CISO_photo13C_' // trim(autotrophs_config(n)%sname)
                 units    = 'mmol/m^3/s'
@@ -3796,11 +2949,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' 14C Fixation'
                 sname    = 'CISO_photo14C_' // trim(autotrophs_config(n)%sname)
                 units    = 'mmol/m^3/s'
@@ -3812,11 +2961,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' 13C Fixation Vertical Integral'
                 sname    = 'CISO_photo13C_' // trim(autotrophs_config(n)%sname) // '_zint'
                 units    = 'mmol/m^3 cm/s'
@@ -3828,11 +2973,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' 14C Fixation Vertical Integral'
                 sname    = 'CISO_photo14C_' // trim(autotrophs_config(n)%sname) // '_zint'
                 units    = 'mmol/m^3 cm/s'
@@ -3844,11 +2985,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' discrimination factor (eps)'
                 sname    = 'CISO_eps_autotroph_' // trim(autotrophs_config(n)%sname)
                 units    = 'permil'
@@ -3860,11 +2997,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' d13C'
                 sname    = 'CISO_d13C_' // trim(autotrophs_config(n)%sname)
                 units    = 'permil'
@@ -3876,11 +3009,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' d14C'
                 sname    = 'CISO_d14C_' // trim(autotrophs_config(n)%sname)
                 units    = 'permil'
@@ -3892,11 +3021,7 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
-             if (count_only) then
-                num_interior_diags = num_interior_diags + 1
-             else
                 lname    = trim(autotrophs_config(n)%lname) // ' instanteous growth rate over [CO2*]'
                 sname    = 'CISO_mui_to_co2star_' // trim(autotrophs_config(n)%sname)
                 units    = 'm^3/mmol C/s'
@@ -3908,15 +3033,11 @@ contains
                   call log_add_diagnostics_error(marbl_status_log, sname, subname)
                   return
                 end if
-             end if
 
           end do
 
           !  More nonstandard 3D fields
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Equilibrium fractionation (CO2_gaseous <-> CO2_aq)'
              sname    = 'CISO_eps_aq_g'
              units    = 'permil'
@@ -3928,11 +3049,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Equilibrium fractionation between total DIC and gaseous CO2'
              sname    = 'CISO_eps_dic_g'
              units    = 'permil'
@@ -3944,13 +3061,9 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
           !  Vars to sum up burial in sediments (2D)
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Ca13CO3 Flux to Sediments'
              sname    = 'calcToSed_13C'
              units    = 'nmolC/cm^2/s'
@@ -3962,11 +3075,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'PO13C Flux to Sediments'
              sname    = 'pocToSed_13C'
              units    = 'nmolC/cm^2/s'
@@ -3978,11 +3087,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'Ca14CO3 Flux to Sediments'
              sname    = 'calcToSed_14C'
              units    = 'nmolC/cm^2/s'
@@ -3994,11 +3099,7 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
-          if (count_only) then
-             num_interior_diags = num_interior_diags + 1
-          else
              lname    = 'PO14C Flux to Sediments'
              sname    = 'pocToSed_14C'
              units    = 'nmolC/cm^2/s'
@@ -4010,7 +3111,6 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
 
        end if  ! end of if ciso_on
 
@@ -4019,17 +3119,14 @@ contains
        !-----------------------------------------------------------------
        ! Restoring diagnostics
        !-----------------------------------------------------------------
-       
+
        associate(                        &
             diags => marbl_interior_restore_diags &
             )
-       
+
        do n = 1,marbl_total_tracer_cnt
           ! Note that tmp_id is a temp variable because restoring diagnostics
           ! have same indexing as the MARBL tracers
-          if (count_only) then
-             num_restore_diags = num_restore_diags + 1
-          else
              ! Field we restore to
              lname = trim(marbl_tracer_metadata(n)%long_name) // " Restoring"
              sname = trim(marbl_tracer_metadata(n)%short_name) // "_RESTORE"
@@ -4041,12 +3138,9 @@ contains
                call log_add_diagnostics_error(marbl_status_log, sname, subname)
                return
              end if
-          end if
        end do
-       
-       end associate
 
-    end do  ! end of imode loop
+       end associate
 
     !-----------------------------------------------------------------
     ! Initialize all diagnostics to zero
