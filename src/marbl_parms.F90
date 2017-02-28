@@ -737,7 +737,7 @@ contains
     group     = 'marbl_parms_nml'
     rptr      => fe_max_scale2
     call this%add_var(sname, lname, units, datatype, group, category,       &
-                        marbl_status_log, rptr=rptr, add_newline=.true.)
+                        marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -750,7 +750,7 @@ contains
     group     = 'marbl_parms_nml'
     rptr      => bury_coeff_rmean_timescale_years
     call this%add_var(sname, lname, units, datatype, group, category,       &
-                        marbl_status_log, rptr=rptr, add_newline=.true.)
+                        marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
       return
@@ -761,8 +761,7 @@ contains
     units     = 'cm'
     group     = 'marbl_parms_nml'
     call this%add_var_1d_r8(sname, lname, units, group, category,             &
-                              parm_scalelen_z, marbl_status_log,              &
-                              add_newline=.true.)
+                              parm_scalelen_z, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
       return
@@ -773,8 +772,7 @@ contains
     units     = 'cm'
     group     = 'marbl_parms_nml'
     call this%add_var_1d_r8(sname, lname, units, group, category,             &
-                              parm_scalelen_vals, marbl_status_log,           &
-                              add_newline=.true.)
+                              parm_scalelen_vals, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
       return
@@ -1039,8 +1037,7 @@ contains
       group    = 'marbl_parms_nml'
       rptr     => autotrophs(n)%loss_poc
       call this%add_var(sname, lname, units, datatype, group, category,     &
-                        marbl_status_log, rptr=rptr, add_newline=.true.,      &
-                        comment=comment)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -1086,8 +1083,7 @@ contains
       group    = 'marbl_parms_nml'
       rptr     => zooplankton(n)%z_mort2_0
       call this%add_var(sname, lname, units, datatype, group, category,       &
-                        marbl_status_log, rptr=rptr, add_newline=.true.,      &
-                        comment=comment)
+                        marbl_status_log, rptr=rptr, comment=comment)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
         return
@@ -1198,8 +1194,7 @@ contains
           group     = 'marbl_parms_nml'
           call this%add_var_1d_int(sname, lname, units, group, category,      &
                             grazing(m,n)%auto_ind(1:cnt),                     &
-                            marbl_status_log,                                 &
-                            add_newline=(grazing_config(m,n)%zoo_ind_cnt.eq.0))
+                            marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call marbl_status_log%log_error_trace('add_var_1d_int', subname)
             return
@@ -1214,7 +1209,7 @@ contains
           group     = 'marbl_parms_nml'
           call this%add_var_1d_int(sname, lname, units, group, category,      &
                                    grazing(m,n)%zoo_ind(1:cnt),               &
-                                   marbl_status_log, add_newline=.true.)
+                                   marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call marbl_status_log%log_error_trace('add_var_1d_int', subname)
             return
