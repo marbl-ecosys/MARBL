@@ -35,7 +35,6 @@ module marbl_config_mod
   logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lapply_nhx_surface_emis        ! control if NHx emissions are applied to marbl NH4 tracer
-  logical(log_kind), target :: locmip_k1_k2_bug_fix
   type(autotroph_config_type), dimension(autotroph_cnt), target :: autotrophs_config
   type(zooplankton_config_type), dimension(zooplankton_cnt), target :: zooplankton_config
   type(grazing_config_type), dimension(grazer_prey_cnt, zooplankton_cnt), target :: grazing_config
@@ -135,7 +134,6 @@ contains
     lflux_gas_o2                  = .true.
     lflux_gas_co2                 = .true.
     lapply_nhx_surface_emis       = .false.
-    locmip_k1_k2_bug_fix          = .true.
     init_bury_coeff_opt           = 'nml'
     ladjust_bury_coeff            = .false.
 
@@ -223,7 +221,7 @@ contains
          ciso_on, lsource_sink, ciso_lsource_sink, lecovars_full_depth_tavg,  &
          ciso_lecovars_full_depth_tavg,                                       &
          lflux_gas_o2, lflux_gas_co2, lapply_nhx_surface_emis,                &
-         locmip_k1_k2_bug_fix, init_bury_coeff_opt, ladjust_bury_coeff,       &
+         init_bury_coeff_opt, ladjust_bury_coeff,                             &
          autotrophs_config, zooplankton_config, grazing_config
 
     !-----------------------------------------------------------------------
@@ -373,19 +371,6 @@ contains
     datatype  = 'logical'
     group     = 'marbl_config_nml'
     lptr      => lapply_nhx_surface_emis
-    call this%add_var(sname, lname, units, datatype, group,                 &
-                        marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'locmip_k1_k2_bug_fix'
-    lname     = 'Fix bug that was in code in OCMIP runs?'
-    units     = 'unitless'
-    datatype  = 'logical'
-    group     = 'marbl_config_nml'
-    lptr      => locmip_k1_k2_bug_fix
     call this%add_var(sname, lname, units, datatype, group,                 &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then

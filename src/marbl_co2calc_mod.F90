@@ -187,7 +187,7 @@ contains
 
     if (lcomp_co3_coeffs) then
        call marbl_comp_co3_coeffs(num_elements, mask, pressure_correct, &
-            temp, salt, press_bar, co3_coeffs, k1_k2_pH_tot=.true.)
+            temp, salt, press_bar, co3_coeffs)
     end if
 
     !---------------------------------------------------------------------------
@@ -357,7 +357,7 @@ contains
 
     if (lcomp_co3_coeffs) then
        call marbl_comp_co3_coeffs(num_elements, mask, pressure_correct, &
-            temp, salt, press_bar, co3_coeffs, k1_k2_pH_tot=.true.)
+            temp, salt, press_bar, co3_coeffs)
     end if
 
     !------------------------------------------------------------------------
@@ -414,7 +414,7 @@ contains
 
   subroutine marbl_comp_co3_coeffs(&
        num_elements, mask, pressure_correct, &
-       temp, salt, press_bar, co3_coeffs, k1_k2_pH_tot)
+       temp, salt, press_bar, co3_coeffs)
 
     !---------------------------------------------------------------------------
     ! FIXME #20: the computations for the individual constants need to
@@ -429,7 +429,6 @@ contains
     real(kind=r8)                         , intent(in)  :: temp(num_elements)      ! temperature (degrees c)
     real(kind=r8)                         , intent(in)  :: salt(num_elements)      ! salinity (psu)
     real(kind=r8)                         , intent(in)  :: press_bar(num_elements) ! pressure at level (bars)
-    logical(kind=log_kind)                , intent(in)  :: k1_k2_pH_tot
     type(thermodynamic_coefficients_type) , intent(out) :: co3_coeffs(num_elements)
 
     !---------------------------------------------------------------------------
@@ -534,7 +533,6 @@ contains
     !---------------------------------------------------------------------------
     !   k1 = [H][HCO3]/[H2CO3]
     !   k2 = [H][CO3]/[HCO3]
-    !   if k1_k2_pH_tot == .true., then use
     !      Lueker, Dickson, Keeling (2000) using Mehrbach et al. data on total scale
     !   otherwise, use
     !      Millero p.664 (1995) using Mehrbach et al. data on seawater scale
@@ -546,17 +544,10 @@ contains
     !      w/ typo corrections from CO2SYS
     !---------------------------------------------------------------------------
 
-    if (k1_k2_pH_tot) then
-       ! total pH scale
-       arg = 3633.86_r8 * invtk - 61.2172_r8 + &
-            9.67770_r8 * dlogtk - 0.011555_r8 * salt_lim + &
-            0.0001152_r8 * s2
-    else
-       ! seawater pH scale, see comment above
-       arg = 3670.7_r8 * invtk - 62.008_r8 + &
-            9.7944_r8 * dlogtk - 0.0118_r8 * salt_lim + &
-            0.000116_r8 * s2
-    end if
+    ! total pH scale
+    arg = 3633.86_r8 * invtk - 61.2172_r8 + &
+          9.67770_r8 * dlogtk - 0.011555_r8 * salt_lim + &
+          0.0001152_r8 * s2
     arg = -LOG(c10) * arg
     call vmath_exp(arg, k1, num_elements)
 
@@ -566,15 +557,9 @@ contains
          Kappa_coefs = (/-3.08_r8, 0.0877_r8, c0/),            &
          therm_coef = k1)
 
-    if (k1_k2_pH_tot) then
-       ! total pH scale
-       arg = 471.78_r8 * invtk + 25.9290_r8 - &
-            3.16967_r8 * dlogtk - 0.01781_r8 * salt_lim + 0.0001122_r8 * s2
-    else
-       ! seawater pH scale, see comment above
-       arg = 1394.7_r8 * invtk + 4.777_r8 - &
-            0.0184_r8 * salt_lim + 0.000118_r8 * s2
-    end if
+    ! total pH scale
+    arg = 471.78_r8 * invtk + 25.9290_r8 - &
+          3.16967_r8 * dlogtk - 0.01781_r8 * salt_lim + 0.0001122_r8 * s2
     arg = -LOG(c10) * arg
     call vmath_exp(arg, k2, num_elements)
 
