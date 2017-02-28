@@ -13,6 +13,9 @@ module marbl_internal_types
 
   use marbl_logging, only : marbl_log_type
 
+  use marbl_timing_mod, only : marbl_internal_timers_type
+  use marbl_timing_mod, only : marbl_timer_indexing_type
+
   implicit none
 
   private
@@ -90,7 +93,7 @@ module marbl_internal_types
   !****************************************************************************
 
   ! derived type for PAR computation
-  type, public :: marbl_PAR_type 
+  type, public :: marbl_PAR_type
      real(r8), allocatable :: col_frac(:)    ! column fraction occupied by each sub-column, dimension is (PAR_nsubcols)
      real(r8), allocatable :: interface(:,:) ! PAR at layer interfaces, dimensions are (0:km,PAR_nsubcols)
      real(r8), allocatable :: avg(:,:)       ! PAR averaged over layer, dimensions are (km,PAR_nsubcols)
@@ -424,6 +427,33 @@ module marbl_internal_types
      procedure, public :: construct => surface_forcing_index_constructor
   end type marbl_surface_forcing_indexing_type
 
+  !****************************************************************************
+
+  type, public :: marbl_interior_forcing_indexing_type
+     ! Surface forcing fields that affect interior forcings
+     integer(int_kind) :: dustflux_id        = 0
+     integer(int_kind) :: PAR_col_frac_id    = 0
+     integer(int_kind) :: surf_shortwave_id  = 0
+
+     ! Column fields
+     integer(int_kind) :: temperature_id = 0
+     integer(int_kind) :: salinity_id    = 0
+     integer(int_kind) :: pressure_id    = 0
+     integer(int_kind) :: fesedflux_id   = 0
+
+     ! Tracer restoring
+     ! * tracer_restore_id is the index in interior forcings that contains the
+     !   restoring data
+     ! * inv_tau_id is the index in interior forcings that contains the inverse
+     !   time scale for restoring
+     ! * tracer_id is the tracer index that the restoring is applied to
+     integer(int_kind), pointer :: tracer_restore_id(:)
+     integer(int_kind), pointer :: inv_tau_id(:)
+     integer(int_kind), pointer :: tracer_id(:)
+   contains
+     procedure, public :: construct => interior_forcing_index_constructor
+  end type marbl_interior_forcing_indexing_type
+
   !*****************************************************************************
 
   type, public :: marbl_surface_saved_state_indexing_type
@@ -439,6 +469,11 @@ module marbl_internal_types
   end type marbl_interior_saved_state_indexing_type
 
   !***********************************************************************
+
+  ! marbl interface should use marbl_internal_timers_type and
+  ! marbl_timer_indexing_type from here
+  public :: marbl_internal_timers_type
+  public :: marbl_timer_indexing_type
 
 contains
 
@@ -886,6 +921,134 @@ contains
     end associate
 
   end subroutine surface_forcing_index_constructor
+
+  !*****************************************************************************
+
+  subroutine interior_forcing_index_constructor(this,                         &
+                                                tracer_names,                 &
+                                                tracer_restore_vars,          &
+                                                marbl_status_log)
+
+    ! This subroutine sets the interior forcing indexes, which are used to
+    ! determine what forcing fields are required from the driver.
+
+    use marbl_sizes, only : num_interior_forcing_fields
+    use marbl_sizes, only : marbl_total_tracer_cnt
+    use marbl_sizes, only : tracer_restore_cnt
+
+    class(marbl_interior_forcing_indexing_type), intent(inout) :: this
+    character(len=char_len), dimension(:),       intent(in)    :: tracer_names
+    character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
+    type(marbl_log_type),                        intent(inout) :: marbl_status_log
+
+    character(*), parameter :: subname =                                      &
+                    'marbl_internal_types:interior_forcing_index_constructor'
+    character(len=char_len) :: log_message
+    integer :: m, n
+
+    associate(forcing_cnt => num_interior_forcing_fields)
+
+      forcing_cnt = 0
+      allocate(this%tracer_restore_id(marbl_total_tracer_cnt))
+      this%tracer_restore_id = 0
+      allocate(this%inv_tau_id(marbl_total_tracer_cnt))
+      this%inv_tau_id = 0
+      allocate(this%tracer_id(marbl_total_tracer_cnt))
+      this%tracer_id = 0
+
+      ! -------------------------------
+      ! | Always request these fields |
+      ! -------------------------------
+
+      ! Dust Flux
+      forcing_cnt = forcing_cnt + 1
+      this%dustflux_id = forcing_cnt
+
+      ! PAR column fraction
+      forcing_cnt = forcing_cnt + 1
+      this%PAR_col_frac_id = forcing_cnt
+
+      ! PAR column shortwave
+      forcing_cnt = forcing_cnt + 1
+      this%surf_shortwave_id = forcing_cnt
+
+      ! Temperature
+      forcing_cnt = forcing_cnt + 1
+      this%temperature_id = forcing_cnt
+
+      ! Salinity
+      forcing_cnt = forcing_cnt + 1
+      this%salinity_id = forcing_cnt
+
+      ! Pressure
+      forcing_cnt = forcing_cnt + 1
+      this%pressure_id = forcing_cnt
+
+      ! Iron Sediment Flux
+      forcing_cnt = forcing_cnt + 1
+      this%fesedflux_id = forcing_cnt
+
+      ! Tracer restoring
+      ! Note that this section
+      ! (1) sets tracer_restore_cnt
+      ! (2) includes consistency check on the tracer_restore_vars array
+      ! (3) writes all tracer restore fields to log
+
+      tracer_restore_cnt = count((len_trim(tracer_restore_vars).gt.0))
+      if (tracer_restore_cnt .gt. 0) then
+        log_message = "Restoring the following tracers to data:"
+        call marbl_status_log%log_noerror(log_message, subname)
+      end if
+
+      do m=1,tracer_restore_cnt ! loop over tracer_restore_vars
+        ! Check for empty strings in first tracer_restore_cnt elements of
+        ! tracer_restore_vars
+        if (len_trim(tracer_restore_vars(m)).eq.0) then
+          log_message = "Empty string appears in middle of tracer_restore_vars!"
+          call marbl_status_log%log_error(log_message, subname)
+          return
+        end if
+
+        ! Check for duplicate tracers in tracer_restore_vars
+        if (m .lt. marbl_total_tracer_cnt) then
+          if (any(tracer_restore_vars(m).eq.tracer_restore_vars(m+1:))) then
+            write(log_message,"(A,1X,A)") trim(tracer_restore_vars(m)),           &
+                                  "appears in tracer_restore_vars more than once"
+            call marbl_status_log%log_error(log_message, subname)
+            return
+          end if
+        end if
+
+        ! For each element
+        do n=1,marbl_total_tracer_cnt ! loop over tracer_names
+          if (trim(tracer_restore_vars(m)).eq.trim(tracer_names(n))) then
+            forcing_cnt = forcing_cnt + 1
+            this%tracer_restore_id(n) = forcing_cnt
+            forcing_cnt = forcing_cnt + 1
+            this%inv_tau_id(n) = forcing_cnt
+            exit
+          end if
+        end do
+
+        ! Check to make sure match was found
+        if (n.le.marbl_total_tracer_cnt) then
+          this%tracer_id(m) = n
+          write(log_message, "(2A,I0,A)") trim(tracer_names(n)),              &
+                                          " (tracer index: ", n, ')'
+          call marbl_status_log%log_noerror(log_message, subname)
+        else
+          write(log_message, "(2A)") "Can not find tracer named ",            &
+                trim(tracer_restore_vars(m))
+          call marbl_status_log%log_error(log_message, subname)
+          return
+        end if
+      end do
+
+      if (tracer_restore_cnt .gt. 0) call marbl_status_log%log_noerror('', subname)
+
+    end associate
+
+  end subroutine interior_forcing_index_constructor
 
   !*****************************************************************************
 

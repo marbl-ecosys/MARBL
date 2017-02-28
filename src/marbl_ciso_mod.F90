@@ -38,7 +38,6 @@ module marbl_ciso_mod
   use marbl_interface_types , only : marbl_tracer_metadata_type
   use marbl_interface_types , only : marbl_diagnostics_type
   use marbl_interface_types , only : marbl_domain_type
-  use marbl_interface_types , only : marbl_interior_forcing_input_type
 
   use marbl_internal_types  , only : autotroph_parms_type
   use marbl_internal_types  , only : column_sinking_particle_type
@@ -164,13 +163,13 @@ contains
        marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Carbon-14'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
-       if (n.gt.0) then
+       if (n .gt. 0) then
           marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Ca13CO3'
           marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Ca13CO3'
         end if
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
-       if (n.gt.0) then
+       if (n .gt. 0) then
           marbl_tracer_metadata(n)%short_name = trim(autotrophs_config(auto_ind)%sname) // 'Ca14CO3'
           marbl_tracer_metadata(n)%long_name  = trim(autotrophs_config(auto_ind)%lname) // ' Ca14CO3'
        endif
@@ -209,11 +208,11 @@ contains
 
   subroutine marbl_ciso_set_interior_forcing( &
        marbl_domain,                          &
-       marbl_interior_forcing_input,          &
        marbl_interior_share,                  &
        marbl_zooplankton_share,               &
        marbl_autotroph_share,                 &
        marbl_particulate_share,               &
+       temperature,                           &
        column_tracer,                         &
        column_dtracer,                        &
        marbl_tracer_indices,                  &
@@ -236,12 +235,12 @@ contains
     implicit none
 
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain                               
-    type(marbl_interior_forcing_input_type) , intent(in)    :: marbl_interior_forcing_input
     ! FIXME #17: intent is inout due to DIC_Loc
     type(marbl_interior_share_type)         , intent(inout) :: marbl_interior_share(marbl_domain%km)
     type(marbl_zooplankton_share_type)      , intent(in)    :: marbl_zooplankton_share(zooplankton_cnt, marbl_domain%km)
     type(marbl_autotroph_share_type)        , intent(in)    :: marbl_autotroph_share(autotroph_cnt, marbl_domain%km)
     type(marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
+    real (r8)                               , intent(in)    :: temperature(:)
     real (r8)                               , intent(in)    :: column_tracer(:,:)
     real (r8)                               , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
     type(marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
@@ -356,8 +355,6 @@ contains
          column_kmt         => marbl_domain%kmt                                , &
          column_delta_z     => marbl_domain%delta_z                            , &
          column_zw          => marbl_domain%zw                                 , &
-
-         temperature        => marbl_interior_forcing_input%temperature        , &
 
          DIC_loc            => marbl_interior_share%DIC_loc_fields             , & ! INPUT local copy of model DIC                                                       
          DOC_loc            => marbl_interior_share%DOC_loc_fields             , & ! INPUT local copy of model DOC                                                       
@@ -1289,7 +1286,7 @@ contains
     !  Set incoming fluxes (put into outgoing flux for first level usage).
     !  Set dissolution length, production fraction and mass terms.
     !---------------------------------------------------------------------
-    
+
     implicit none
 
     integer(int_kind)                 , intent(in)    :: k

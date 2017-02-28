@@ -13,6 +13,7 @@ module marbl_sizes
   integer(int_kind), parameter :: ecosys_base_tracer_cnt = ECOSYS_NT
   integer(int_kind), parameter :: ciso_tracer_cnt = 14
   integer(int_kind)            :: marbl_total_tracer_cnt = 0
+  integer(int_kind)            :: tracer_restore_cnt = 0
 
 
   !-----------------------------------------------------------------------------
@@ -26,9 +27,10 @@ module marbl_sizes
   integer (KIND=int_kind), parameter :: max_prey_class_size = 9
 
   !-----------------------------------------------------------------------------
-  ! number of surface forcing fields
+  ! number of forcing fields
   !-----------------------------------------------------------------------------
 
   integer :: num_surface_forcing_fields
+  integer :: num_interior_forcing_fields
 
 end module marbl_sizes
