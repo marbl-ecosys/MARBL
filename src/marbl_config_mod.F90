@@ -278,12 +278,13 @@ contains
     ! marbl_config_nml !
     !------------------!
 
+    category  = 'config flags'
+
     sname     = 'ciso_on'
     lname     = 'Control whether CISO tracer module is active'
     units     = 'unitless'
     datatype  = 'logical'
     group     = 'marbl_config_nml'
-    category  = 'config_flags'
     lptr      => ciso_on
     call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, lptr=lptr)
@@ -424,6 +425,7 @@ contains
 
     do n=1,autotroph_cnt
       write(prefix, "(A,I0,A)") 'autotrophs_config(', n, ')%'
+      write(category, "(A,1X,I0)") 'autotroph_conf', n
 
       write(sname, "(2A)") trim(prefix), 'sname'
       lname    = 'Short name of autotroph'
@@ -507,6 +509,7 @@ contains
 
     do n=1, zooplankton_cnt
       write(prefix, "(A,I0,A)") 'zooplankton_config(', n, ')%'
+      write(category, "(A,1X,I0)") 'zooplankton_conf', n
 
       write(sname, "(2A)") trim(prefix), 'sname'
       lname    = 'Short name of zooplankton'
@@ -538,6 +541,7 @@ contains
     do n=1,zooplankton_cnt
       do m=1,grazer_prey_cnt
         write(prefix, "(A,I0,A,I0,A)") 'grazing_config(', m, ',', n, ')%'
+        write(category, "(A,1X,I0,1X,I0)") 'grazing_conf', m, n
 
         write(sname, "(2A)") trim(prefix), 'sname'
         lname    = 'Short name of grazer'
@@ -838,57 +842,64 @@ contains
     character(len=char_len) :: log_message
     character(len=char_len) :: group
     character(len=7)        :: logic
-    integer :: i,n
+    integer :: i,n, cat_id
 
     ! (1) Lock data type (put calls will now cause MARBL to abort)
     this%locked = .true.
     group = ''
 
-    do n=1,this%cnt
-      ! (2) Log the group name if different than previous parameter
-      if (this%vars(n)%group.ne.group) then
-        group = trim(this%vars(n)%group)
-        log_message = ''
-        do i=1,len(trim(group))
-          log_message(i:i) = '-'
-        end do
-        call marbl_status_log%log_noerror(log_message, subname)
-        call marbl_status_log%log_noerror(trim(group), subname)
-        call marbl_status_log%log_noerror(log_message, subname)
+    do cat_id = 1,size(this%categories)
+      do n=1,this%cnt
+        if (this%vars(n)%category_id .eq. cat_id) then
+          ! (2) Log the group name if different than previous parameter
+          if (this%vars(n)%group.ne.group) then
+            group = trim(this%vars(n)%group)
+            log_message = ''
+            do i=1,len(trim(group))
+              log_message(i:i) = '-'
+            end do
+            call marbl_status_log%log_noerror(log_message, subname)
+            call marbl_status_log%log_noerror(trim(group), subname)
+            call marbl_status_log%log_noerror(log_message, subname)
+            call marbl_status_log%log_noerror('', subname)
+          end if
+
+        ! (3) write parameter to log_message (format depends on datatype)
+          select case(trim(this%vars(n)%datatype))
+            case ('string')
+              write(log_message, "(4A)") trim(this%vars(n)%short_name), " = '",  &
+                                         trim(this%vars(n)%sptr), "'"
+            case ('real')
+              write(log_message, "(2A,E24.16)") trim(this%vars(n)%short_name),   &
+                                                " = ", this%vars(n)%rptr
+            case ('integer')
+              write(log_message, "(2A,I0)") trim(this%vars(n)%short_name), " = ", &
+                                            this%vars(n)%iptr
+            case ('logical')
+              if (this%vars(n)%lptr) then
+                logic = '.true.'
+              else
+                logic = '.false.'
+              end if
+              write(log_message, "(3A)") trim(this%vars(n)%short_name), " = ",   &
+                                         trim(logic)
+            case DEFAULT
+              write(log_message, "(2A)") trim(this%vars(n)%datatype),            &
+                                         ' is not a valid datatype for parameter'
+              call marbl_status_log%log_error(log_message, subname)
+              return
+          end select
+
+          ! (4) Write log_message to the log
+          if (this%vars(n)%comment.ne.'') &
+            write(log_message, "(3A)") trim(log_message), ' ! ',                  &
+                                       trim(this%vars(n)%comment)
+          call marbl_status_log%log_noerror(log_message, subname)
+        end if
+      end do
+      if (cat_id .ne. size(this%categories)) then
         call marbl_status_log%log_noerror('', subname)
       end if
-
-      ! (3) write parameter to log_message (format depends on datatype)
-      select case(trim(this%vars(n)%datatype))
-        case ('string')
-          write(log_message, "(4A)") trim(this%vars(n)%short_name), " = '",  &
-                                     trim(this%vars(n)%sptr), "'"
-        case ('real')
-          write(log_message, "(2A,E24.16)") trim(this%vars(n)%short_name),   &
-                                            " = ", this%vars(n)%rptr
-        case ('integer')
-          write(log_message, "(2A,I0)") trim(this%vars(n)%short_name), " = ", &
-                                        this%vars(n)%iptr
-        case ('logical')
-          if (this%vars(n)%lptr) then
-            logic = '.true.'
-          else
-            logic = '.false.'
-          end if
-          write(log_message, "(3A)") trim(this%vars(n)%short_name), " = ",   &
-                                     trim(logic)
-        case DEFAULT
-          write(log_message, "(2A)") trim(this%vars(n)%datatype),            &
-                                     ' is not a valid datatype for parameter'
-          call marbl_status_log%log_error(log_message, subname)
-          return
-      end select
-
-      ! (4) Write log_message to the log
-      if (this%vars(n)%comment.ne.'') &
-        write(log_message, "(3A)") trim(log_message), ' ! ',                  &
-                                   trim(this%vars(n)%comment)
-      call marbl_status_log%log_noerror(log_message, subname)
     end do
 
   end subroutine marbl_vars_finalize

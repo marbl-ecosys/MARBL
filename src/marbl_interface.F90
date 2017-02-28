@@ -421,6 +421,7 @@ contains
     ! Report what tracers are being used, abort if count is not correct
     !--------------------------------------------------------------------
 
+    call this%StatusLog%log_noerror('', subname)
     call this%StatusLog%log_noerror('--------------------', subname)
     call this%StatusLog%log_noerror('MARBL Tracer indices', subname)
     call this%StatusLog%log_noerror('--------------------', subname)
@@ -605,6 +606,7 @@ contains
     ! Report what forcings are required from the driver
     !--------------------------------------------------------------------
 
+    call this%StatusLog%log_noerror('', subname)
     call this%StatusLog%log_noerror('-----------------------------', subname)
     call this%StatusLog%log_noerror('MARBL-Required Forcing Fields', subname)
     call this%StatusLog%log_noerror('-----------------------------', subname)

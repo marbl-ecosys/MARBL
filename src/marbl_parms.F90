@@ -547,12 +547,13 @@ contains
     ! marbl_parms_nml !
     !-----------------!
 
+    category  = 'general parmeters'
+
     sname     = 'parm_Fe_bioavail'
     lname     = 'Fraction of Fe flux that is bioavailable'
     units     = 'unitless'
     datatype  = 'real'
     group     = 'marbl_parms_nml'
-    category  = 'general_parms'
     rptr      => parm_Fe_bioavail
     call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, rptr=rptr)
@@ -756,6 +757,8 @@ contains
       return
     end if
 
+    category  = 'Scale lengths'
+
     sname     = 'parm_scalelen_z'
     lname     = 'Depths of prescribed scale length values'
     units     = 'cm'
@@ -780,6 +783,7 @@ contains
 
     do n=1,size(autotrophs)
       write(prefix, "(A,I0,A)") 'autotrophs(', n, ')%'
+      write(category, "(A,1X,I0)") 'autotroph', n
       write(comment, "(2A)") 'autotroph short name = ',                       &
                              trim(autotrophs_config(n)%sname)
 
@@ -1047,6 +1051,7 @@ contains
 
     do n=1,size(zooplankton)
       write(prefix, "(A,I0,A)") 'zooplankton(', n, ')%'
+      write(category, "(A,1X,I0)") 'zooplankton', n
       write(comment, "(2A)") 'zooplankton short name = ',                     &
                              trim(zooplankton_config(n)%sname)
 
@@ -1094,6 +1099,7 @@ contains
     do n=1,zooplankton_cnt
       do m=1,grazer_prey_cnt
         write(prefix, "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%'
+        write(category, "(A,1X,I0,1X,I0)") 'grazing', m, n
 
         write(sname, "(2A)") trim(prefix), 'grazing_function'
         lname    = 'functional form of grazing parmaeterization'
@@ -1219,6 +1225,8 @@ contains
       end do
     end do
 
+    category  = 'general parmeters'
+
     sname     = 'iron_frac_in_dust'
     lname     = 'Fraction by weight of iron in dust'
     units     = 'unitless (kg/kg)'
@@ -1298,6 +1306,8 @@ contains
         return
       end if
     end if
+
+    category  = 'tracer restoring'
 
     sname     = 'tracer_restore_vars'
     lname     = 'Tracer names for tracers that are restored'
