@@ -102,13 +102,12 @@ module marbl_interface_types
   !*****************************************************************************
 
   type, public :: marbl_diagnostics_type
-     ! marbl_diagnostics : 
+     ! marbl_diagnostics :
      ! used to pass diagnostic information from marbl back to
      ! the driver.
-     integer :: diag_cnt
      integer :: num_elements
      integer :: num_levels
-     type(marbl_single_diagnostic_type), dimension(:), allocatable :: diags
+     type(marbl_single_diagnostic_type), dimension(:), pointer :: diags
 
    contains
      procedure, public :: construct      => marbl_diagnostics_constructor
@@ -532,15 +531,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_diagnostics_constructor(this, num_diags, num_elements, num_levels)
+  subroutine marbl_diagnostics_constructor(this, num_elements, num_levels)
 
     class(marbl_diagnostics_type), intent(inout) :: this
-    integer (int_kind),            intent(in)    :: num_diags
     integer (int_kind),            intent(in)    :: num_elements
     integer (int_kind),            intent(in)    :: num_levels
 
-    allocate(this%diags(num_diags))
-    this%diag_cnt = 0
+    allocate(this%diags(0))
     this%num_elements = num_elements
     this%num_levels = num_levels
 
@@ -557,7 +554,7 @@ contains
     character(*), parameter :: subname = 'marbl_interface_types:marbl_diagnostics_set_to_zero'
     character(len=char_len) :: log_message
 
-    do n=1,this%diag_cnt
+    do n=1,size(this%diags)
       if (allocated(this%diags(n)%field_2d)) then
         this%diags(n)%field_2d(:) = c0
       elseif (allocated(this%diags(n)%field_3d)) then
@@ -588,20 +585,56 @@ contains
 
     character(*), parameter :: subname = 'marbl_interface_types:marbl_diagnostics_add'
     character(len=char_len) :: log_message
+    type(marbl_single_diagnostic_type), dimension(:), pointer :: new_diags
+    integer :: n, old_size
 
-    this%diag_cnt = this%diag_cnt + 1
-    id = this%diag_cnt
-    if (id .gt. size(this%diags)) then
-      log_message = "not enough memory allocated for this number of diagnostics!"
+    if (.not.associated(this%diags)) then
+      write(log_message, "(A)") "Diagnostics constructor must be run"
       call marbl_status_log%log_error(log_message, subname)
-      return
     end if
-    call this%diags(id)%initialize(lname, sname, units, vgrid, truncate,      &
+
+    old_size = size(this%diags)
+    id = old_size+1
+
+    ! 1) allocate new_diags to be size N (1 larger than this%diags)
+    allocate(new_diags(id))
+
+    ! 2) copy this%diags into first N-1 elements of new_diags
+    do n=1, old_size
+      associate(old_diag => this%diags(n))
+        new_diags(n)%long_name                  = old_diag%long_name
+        new_diags(n)%short_name                 = old_diag%short_name
+        new_diags(n)%units                      = old_diag%units
+        new_diags(n)%vertical_grid              = old_diag%vertical_grid
+        new_diags(n)%compute_now                = old_diag%compute_now
+        new_diags(n)%ltruncated_vertical_extent = old_diag%ltruncated_vertical_extent
+        if (allocated(old_diag%field_2d)) then
+          allocate(new_diags(n)%field_2d(this%num_elements))
+          new_diags(n)%field_2d = old_diag%field_2d
+          deallocate(old_diag%field_2d)
+        end if
+        if (allocated(old_diag%field_3d)) then
+          allocate(new_diags(n)%field_3d(size(old_diag%field_3d, dim=1), this%num_elements))
+          new_diags(n)%field_3d = old_diag%field_3d
+          deallocate(old_diag%field_3d)
+        end if
+      end associate
+    end do
+
+    ! 3) Add newest diagnostic
+    call new_diags(id)%initialize(lname, sname, units, vgrid, truncate,      &
          this%num_elements, this%num_levels, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('this%diags%initialize()', subname)
       return
     end if
+
+    ! 4) Deallocate / nullify this%diags
+    deallocate(this%diags)
+    nullify(this%diags)
+
+    ! 5) Point this%diags => new_diags
+    this%diags => new_diags
 
   end subroutine marbl_diagnostics_add
 
