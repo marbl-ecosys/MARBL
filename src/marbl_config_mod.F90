@@ -67,6 +67,7 @@ module marbl_config_mod
     character(len=char_len) :: group
     character(len=char_len) :: datatype
     logical                 :: add_newline ! used for formatting log output
+    integer                 :: category_id ! used for sorting output list
     character(len=char_len) :: comment   ! used to add comment in log
     ! Actual parameter data
     real(r8),                pointer :: rptr => NULL()
@@ -78,6 +79,7 @@ module marbl_config_mod
   type, public :: marbl_config_and_parms_type
     logical :: locked = .false.
     integer :: cnt = 0
+    character(len=char_len),                dimension(:), pointer :: categories
     type(marbl_single_config_or_parm_type), dimension(:), pointer :: vars => NULL()
   contains
     procedure          :: add_var          => marbl_var_add
@@ -254,7 +256,7 @@ contains
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_define_config_vars'
     character(len=char_len) :: log_message
-    character(len=char_len) :: sname, lname, units, datatype, group
+    character(len=char_len) :: sname, lname, units, datatype, group, category
     real(r8),                pointer :: rptr => NULL()
     integer(int_kind),       pointer :: iptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
@@ -271,6 +273,7 @@ contains
 
     this%cnt = 0
     allocate(this%vars(this%cnt))
+    allocate(this%categories(0))
 
     !------------------!
     ! marbl_config_nml !
@@ -281,8 +284,9 @@ contains
     units     = 'unitless'
     datatype  = 'logical'
     group     = 'marbl_config_nml'
+    category  = 'config_flags'
     lptr      => ciso_on
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -295,7 +299,7 @@ contains
     datatype  = 'logical'
     group     = 'marbl_config_nml'
     lptr      => lsource_sink
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -308,7 +312,7 @@ contains
     datatype  = 'logical'
     group     = 'marbl_config_nml'
     lptr      => lecovars_full_depth_tavg
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -321,7 +325,7 @@ contains
     datatype  = 'logical'
     group     = 'marbl_config_nml'
     lptr      => ciso_lsource_sink
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group, category,       &
                       marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -334,7 +338,7 @@ contains
     datatype  = 'logical'
     group     = 'marbl_config_nml'
     lptr      => ciso_lecovars_full_depth_tavg
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group, category,       &
                       marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -347,7 +351,7 @@ contains
     datatype  = 'logical'
     group     = 'marbl_config_nml'
     lptr      => lflux_gas_o2
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -360,7 +364,7 @@ contains
     datatype  = 'logical'
     group     = 'marbl_config_nml'
     lptr      => lflux_gas_co2
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -373,7 +377,7 @@ contains
     datatype  = 'logical'
     group     = 'marbl_config_nml'
     lptr      => lapply_nhx_surface_emis
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -386,7 +390,7 @@ contains
     datatype  = 'logical'
     group     = 'marbl_config_nml'
     lptr      => locmip_k1_k2_bug_fix
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -399,7 +403,7 @@ contains
     datatype  = 'logical'
     group     = 'marbl_config_nml'
     lptr      => ladjust_bury_coeff
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -412,7 +416,7 @@ contains
     datatype  = 'string'
     group     = 'marbl_config_nml'
     sptr      => init_bury_coeff_opt
-    call this%add_var(sname, lname, units, datatype, group,                 &
+    call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, sptr=sptr, add_newline=.true.)
     if (marbl_status_log%labort_marbl) then
       call log_add_var_error(marbl_status_log, sname, subname)
@@ -428,7 +432,7 @@ contains
       datatype = 'string'
       group    = 'marbl_config_nml'
       sptr     => autotrophs_config(n)%sname
-      call this%add_var(sname, lname, units, datatype, group,               &
+      call this%add_var(sname, lname, units, datatype, group, category,     &
                         marbl_status_log, sptr=sptr)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
@@ -441,7 +445,7 @@ contains
       datatype = 'string'
       group    = 'marbl_config_nml'
       sptr     => autotrophs_config(n)%lname
-      call this%add_var(sname, lname, units, datatype, group,               &
+      call this%add_var(sname, lname, units, datatype, group, category,     &
                         marbl_status_log, sptr=sptr)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
@@ -454,7 +458,7 @@ contains
       datatype = 'logical'
       group    = 'marbl_config_nml'
       lptr     => autotrophs_config(n)%Nfixer
-      call this%add_var(sname, lname, units, datatype, group,               &
+      call this%add_var(sname, lname, units, datatype, group, category,     &
                         marbl_status_log, lptr=lptr)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
@@ -467,7 +471,7 @@ contains
       datatype = 'logical'
       group    = 'marbl_config_nml'
       lptr     => autotrophs_config(n)%imp_calcifier
-      call this%add_var(sname, lname, units, datatype, group,               &
+      call this%add_var(sname, lname, units, datatype, group, category,     &
                         marbl_status_log, lptr=lptr)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
@@ -480,7 +484,7 @@ contains
       datatype = 'logical'
       group    = 'marbl_config_nml'
       lptr     => autotrophs_config(n)%exp_calcifier
-      call this%add_var(sname, lname, units, datatype, group,               &
+      call this%add_var(sname, lname, units, datatype, group, category,     &
                         marbl_status_log, lptr=lptr)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
@@ -493,7 +497,7 @@ contains
       datatype = 'logical'
       group    = 'marbl_config_nml'
       lptr     => autotrophs_config(n)%silicifier
-      call this%add_var(sname, lname, units, datatype, group,               &
+      call this%add_var(sname, lname, units, datatype, group, category,     &
                         marbl_status_log, lptr=lptr, add_newline=.true.)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
@@ -511,7 +515,7 @@ contains
       datatype = 'string'
       group    = 'marbl_config_nml'
       sptr     => zooplankton_config(n)%sname
-      call this%add_var(sname, lname, units, datatype, group,               &
+      call this%add_var(sname, lname, units, datatype, group, category,     &
                         marbl_status_log, sptr=sptr)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
@@ -524,7 +528,7 @@ contains
       datatype = 'string'
       group    = 'marbl_config_nml'
       sptr     => zooplankton_config(n)%lname
-      call this%add_var(sname, lname, units, datatype, group,               &
+      call this%add_var(sname, lname, units, datatype, group, category,     &
                         marbl_status_log, sptr=sptr, add_newline=.true.)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname, subname)
@@ -542,7 +546,7 @@ contains
         datatype = 'string'
         group    = 'marbl_config_nml'
         sptr     => grazing_config(m,n)%sname
-        call this%add_var(sname, lname, units, datatype, group,               &
+        call this%add_var(sname, lname, units, datatype, group, category,     &
                           marbl_status_log, sptr=sptr)
         if (marbl_status_log%labort_marbl) then
           call log_add_var_error(marbl_status_log, sname, subname)
@@ -555,7 +559,7 @@ contains
         datatype = 'string'
         group    = 'marbl_config_nml'
         sptr     => grazing_config(m,n)%lname
-        call this%add_var(sname, lname, units, datatype, group,               &
+        call this%add_var(sname, lname, units, datatype, group, category,     &
                           marbl_status_log, sptr=sptr)
         if (marbl_status_log%labort_marbl) then
           call log_add_var_error(marbl_status_log, sname, subname)
@@ -568,7 +572,7 @@ contains
         datatype = 'integer'
         group    = 'marbl_config_nml'
         iptr     => grazing_config(m,n)%auto_ind_cnt
-        call this%add_var(sname, lname, units, datatype, group,               &
+        call this%add_var(sname, lname, units, datatype, group, category,     &
                           marbl_status_log, iptr=iptr)
         if (marbl_status_log%labort_marbl) then
           call log_add_var_error(marbl_status_log, sname, subname)
@@ -581,7 +585,7 @@ contains
         datatype = 'integer'
         group    = 'marbl_config_nml'
         iptr     => grazing_config(m,n)%zoo_ind_cnt
-        call this%add_var(sname, lname, units, datatype, group,               &
+        call this%add_var(sname, lname, units, datatype, group, category,     &
                           marbl_status_log, iptr=iptr, add_newline=.true.)
         if (marbl_status_log%labort_marbl) then
           call log_add_var_error(marbl_status_log, sname, subname)
@@ -595,7 +599,8 @@ contains
   !*****************************************************************************
 
   subroutine marbl_var_add(this, sname, lname, units, datatype, group,        &
-             marbl_status_log, rptr, iptr, lptr, sptr, comment, add_newline)
+                           category, marbl_status_log,                        &
+                           rptr, iptr, lptr, sptr, comment, add_newline)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),        intent(in)    :: sname
@@ -603,6 +608,7 @@ contains
     character(len=*),        intent(in)    :: units
     character(len=*),        intent(in)    :: datatype
     character(len=*),        intent(in)    :: group
+    character(len=*),        intent(in)    :: category
     type(marbl_log_type),    intent(inout) :: marbl_status_log
     real(r8),                optional, pointer, intent(in) :: rptr
     integer,                 optional, pointer, intent(in) :: iptr
@@ -613,7 +619,8 @@ contains
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add'
     type(marbl_single_config_or_parm_type), dimension(:), pointer :: new_parms
-    integer :: old_size, id, n
+    character(len=char_len),                dimension(:), pointer :: new_categories
+    integer :: old_size, id, cat_id, n
     character(len=char_len) :: log_message
 
     if (.not.associated(this%vars)) then
@@ -628,15 +635,30 @@ contains
     ! 1) Allocate new_parms to be size N (one element larger than this%vars)
     allocate(new_parms(id))
 
-    ! 2) copy this%vars into first N-1 elements of new_parms
+    ! 2) Determine category ID
+    do cat_id = 1, size(this%categories)
+      if (trim(category) .eq. trim(this%categories(cat_id))) then
+        exit
+      end if
+    end do
+    if (cat_id .gt. size(this%categories)) then
+      allocate(new_categories(cat_id))
+      new_categories(1:size(this%categories)) = this%categories
+      new_categories(cat_id) = category
+      deallocate(this%categories)
+      this%categories => new_categories
+    end if
+
+    ! 3) copy this%vars into first N-1 elements of new_parms
     do n=1, old_size
-      new_parms(n)%long_name  = this%vars(n)%long_name
-      new_parms(n)%short_name = this%vars(n)%short_name
-      new_parms(n)%units      = this%vars(n)%units
-      new_parms(n)%datatype   = this%vars(n)%datatype
-      new_parms(n)%group      = this%vars(n)%group
+      new_parms(n)%long_name    = this%vars(n)%long_name
+      new_parms(n)%short_name   = this%vars(n)%short_name
+      new_parms(n)%units        = this%vars(n)%units
+      new_parms(n)%datatype     = this%vars(n)%datatype
+      new_parms(n)%group        = this%vars(n)%group
+      new_parms(n)%category_id  = this%vars(n)%category_id
       new_parms(n)%add_newline  = this%vars(n)%add_newline
-      new_parms(n)%comment    = this%vars(n)%comment
+      new_parms(n)%comment      = this%vars(n)%comment
       if (associated(this%vars(n)%lptr)) &
         new_parms(n)%lptr => this%vars(n)%lptr
       if (associated(this%vars(n)%iptr)) &
@@ -690,11 +712,12 @@ contains
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
-    new_parms(id)%short_name = trim(sname)
-    new_parms(id)%long_name  = trim(lname)
-    new_parms(id)%units      = trim(units)
-    new_parms(id)%datatype   = trim(datatype)
-    new_parms(id)%group      = trim(group)
+    new_parms(id)%short_name  = trim(sname)
+    new_parms(id)%long_name   = trim(lname)
+    new_parms(id)%units       = trim(units)
+    new_parms(id)%datatype    = trim(datatype)
+    new_parms(id)%group       = trim(group)
+    new_parms(id)%category_id = cat_id
     if (present(add_newline)) then
       new_parms(id)%add_newline = add_newline
     else
@@ -718,14 +741,15 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_var_add_1d_r8(this, sname, lname, units, group, r8array,  &
-                                 marbl_status_log, add_newline)
+  subroutine marbl_var_add_1d_r8(this, sname, lname, units, group, category,  &
+                                 r8array, marbl_status_log, add_newline)
 
     class(marbl_config_and_parms_type),       intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
     character(len=char_len),             intent(in)    :: group
+    character(len=char_len),             intent(in)    :: category
     real(kind=r8), dimension(:), target, intent(in)    :: r8array
     type(marbl_log_type),                intent(inout) :: marbl_status_log
     logical, optional,                   intent(in)    :: add_newline
@@ -744,7 +768,7 @@ contains
       end if
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       rptr => r8array(n)
-      call this%add_var(sname_loc, lname, units, 'real', group,             &
+      call this%add_var(sname_loc, lname, units, 'real', group, category,     &
                           marbl_status_log, rptr=rptr, add_newline=space)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname_loc, subname)
@@ -756,14 +780,15 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_var_add_1d_int(this, sname, lname, units, group, intarray, &
-                                 marbl_status_log, add_newline)
+  subroutine marbl_var_add_1d_int(this, sname, lname, units, group, category, &
+                                  intarray, marbl_status_log, add_newline)
 
     class(marbl_config_and_parms_type),       intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
     character(len=char_len),             intent(in)    :: group
+    character(len=char_len),             intent(in)    :: category
     integer, dimension(:), target,       intent(in)    :: intarray
     type(marbl_log_type),                intent(inout) :: marbl_status_log
     logical, optional,                   intent(in)    :: add_newline
@@ -782,7 +807,7 @@ contains
       end if
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       iptr => intarray(n)
-      call this%add_var(sname_loc, lname, units, 'integer', group,            &
+      call this%add_var(sname_loc, lname, units, 'integer', group, category,  &
                           marbl_status_log, iptr=iptr, add_newline=space)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname_loc, subname)
@@ -794,7 +819,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_var_add_1d_str(this, sname, lname, units, group,          &
+  subroutine marbl_var_add_1d_str(this, sname, lname, units, group, category, &
                                   strarray, marbl_status_log)
 
     class(marbl_config_and_parms_type),       intent(inout) :: this
@@ -802,6 +827,7 @@ contains
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
     character(len=char_len),             intent(in)    :: group
+    character(len=char_len),             intent(in)    :: category
     character(len=char_len),     target, intent(in)    :: strarray(:)
     type(marbl_log_type),                intent(inout) :: marbl_status_log
 
@@ -815,7 +841,7 @@ contains
       islast = (n .eq. size(strarray))
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       sptr => strarray(n)
-      call this%add_var(sname_loc, lname, units, 'string', group,           &
+      call this%add_var(sname_loc, lname, units, 'string', group, category,   &
                           marbl_status_log, sptr=sptr, add_newline=islast)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname_loc, subname)
@@ -859,7 +885,6 @@ contains
       ! (3) write parameter to log_message (format depends on datatype)
       select case(trim(this%vars(n)%datatype))
         case ('string')
-!          print*, trim(this%vars(n)%short_name), len(trim(this%vars(n)%sptr))
           write(log_message, "(4A)") trim(this%vars(n)%short_name), " = '",  &
                                      trim(this%vars(n)%sptr), "'"
         case ('real')
