@@ -230,7 +230,6 @@ contains
       write(log_message, "(2A)") '** No namelists were provided to config, ', &
            'use put() and get() to change configuration variables'
       call this%StatusLog%log_noerror(log_message, subname)
-      call this%StatusLog%log_noerror('', subname)
     end if
 
     !---------------------------------------------------------------------------
@@ -421,11 +420,7 @@ contains
     ! Report what tracers are being used, abort if count is not correct
     !--------------------------------------------------------------------
 
-    call this%StatusLog%log_noerror('', subname)
-    call this%StatusLog%log_noerror('--------------------', subname)
-    call this%StatusLog%log_noerror('MARBL Tracer indices', subname)
-    call this%StatusLog%log_noerror('--------------------', subname)
-    call this%StatusLog%log_noerror('', subname)
+    call this%StatusLog%log_header('MARBL Tracer indices', subname)
     do i=1,marbl_total_tracer_cnt
       write(log_message, "(I3,2A)") i, '. ', &
                                  trim(this%tracer_metadata(i)%short_name)
@@ -477,7 +472,6 @@ contains
       write(log_message, "(2A)") '** No namelists were provided to init, ',   &
            'use put() and get() to change parameters'
       call this%StatusLog%log_noerror(log_message, subname)
-      call this%StatusLog%log_noerror('', subname)
     end if
 
     end associate
@@ -606,11 +600,7 @@ contains
     ! Report what forcings are required from the driver
     !--------------------------------------------------------------------
 
-    call this%StatusLog%log_noerror('', subname)
-    call this%StatusLog%log_noerror('-----------------------------', subname)
-    call this%StatusLog%log_noerror('MARBL-Required Forcing Fields', subname)
-    call this%StatusLog%log_noerror('-----------------------------', subname)
-    call this%StatusLog%log_noerror('', subname)
+    call this%StatusLog%log_header('MARBL-Required Forcing Fields', subname)
     call this%StatusLog%log_noerror('Surface:', subname)
     do i=1,num_surface_forcing_fields
       write(log_message, "(2A)") '* ', trim(this%surface_input_forcings(i)%metadata%varname)

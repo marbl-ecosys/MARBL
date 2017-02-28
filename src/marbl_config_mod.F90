@@ -854,14 +854,7 @@ contains
           ! (2) Log the group name if different than previous parameter
           if (this%vars(n)%group.ne.group) then
             group = trim(this%vars(n)%group)
-            log_message = ''
-            do i=1,len(trim(group))
-              log_message(i:i) = '-'
-            end do
-            call marbl_status_log%log_noerror(log_message, subname)
-            call marbl_status_log%log_noerror(trim(group), subname)
-            call marbl_status_log%log_noerror(log_message, subname)
-            call marbl_status_log%log_noerror('', subname)
+            call marbl_status_log%log_header(trim(group), subname)
           end if
 
         ! (3) write parameter to log_message (format depends on datatype)

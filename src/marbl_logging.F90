@@ -102,6 +102,7 @@ module marbl_logging
   contains
     procedure, public :: construct => marbl_log_constructor
     procedure, public :: log_error    => marbl_log_error
+    procedure, public :: log_header   => marbl_log_header
     procedure, public :: log_noerror  => marbl_log_noerror
     procedure, public :: log_error_trace => marbl_log_error_trace
     procedure, public :: erase => marbl_log_erase
@@ -211,6 +212,30 @@ contains
     this%LastEntry => new_entry
 
   end subroutine marbl_log_error
+
+  !****************************************************************************
+
+  subroutine marbl_log_header(this, HeaderMsg, CodeLoc)
+
+    class(marbl_log_type), intent(inout) :: this
+    ! StatusMsg is the message to be printed in the log; it does not need to
+    !    contain the name of the module or subroutine producing the log message
+    ! CodeLoc is the name of the subroutine that is calling StatusLog%log_noerror
+    character(len=*),      intent(in)    :: HeaderMsg, CodeLoc
+
+    character(len=len_trim(HeaderMsg)) :: dashes
+    integer :: n
+
+    do n=1, len(dashes)
+      dashes(n:n) = '-'
+    end do
+    call this%log_noerror('', CodeLoc)
+    call this%log_noerror(dashes, CodeLoc)
+    call this%log_noerror(HeaderMsg, CodeLoc)
+    call this%log_noerror(dashes, CodeLoc)
+    call this%log_noerror('', CodeLoc)
+
+  end subroutine marbl_log_header
 
   !****************************************************************************
 
