@@ -3,12 +3,30 @@ extension = .F90
 
 USEMPI=FALSE
 
-SRC_DIR=.
-OBJ_DIR=../tests/obj
-LIB_DIR=../lib
-INC_DIR=../include
+# DEFINE VARIOUS DIRECTORIES NEEDED FOR BUILD
+OBJ_DIR=$(realpath ../tests/obj)
+INC_DIR=$(realpath ../include)
+LIB_DIR=$(realpath ../lib)
+SRC_DIR=$(realpath .)
+
+# ERROR CHECKING: MAKE SURE ALL DIRECTORIES EXIST
+ifeq ($(realpath $(OBJ_DIR)),)
+  $(error Can not find $$OBJ_DIR)
+endif
+
+ifeq ($(realpath $(INC_DIR)),)
+  $(error Can not find $$INC_DIR)
+endif
+
+ifeq ($(realpath $(LIB_DIR)),)
+  $(error Can not find $$LIB_DIR)
+endif
+
+ifeq ($(realpath $(SRC_DIR)),)
+  $(error Can not find $$SRC_DIR)
+endif
+
 FC = NONE
-INCLUDES=
 
 ifneq ($(INC_DIR),$(OBJ_DIR))
   DIFF_INC = TRUE
@@ -39,7 +57,8 @@ endif
 
 # Dependency Generation
 MAKE_DEP = $(SRC_DIR)/makedep.py
-DEP_FILE = $(OBJ_DIR)/shared_deps.d
+DEP_FILENAME = shared_deps.d
+DEP_FILE = $(OBJ_DIR)/$(DEP_FILENAME)
 
 ifeq ($(USE_DEPS),TRUE)
   include $(DEP_FILE)
@@ -86,7 +105,7 @@ $(DEP_FILE): $(MAKE_DEP) $(SRC_DIR)/*.F90
 	@$(MAKE_DEP) $(DEP_FILE) $(OBJ_DIR) $(SRC_DIR); echo "Generated dependency file $(DEP_FILE)"
 
 clean:
-	/bin/rm -f $(OBJ_DIR)/*/*.* $(LIB_DIR)/* $(INC_DIR)/*/*
+	/bin/rm -f $(OBJ_DIR)/{gnu,intel,nag,pgi,cray}{,-mpi}/$(DEP_FILENAME) $(OBJ_DIR)/{gnu,intel,nag,pgi,cray}{,-mpi}/marbl_*.{o,mod} $(INC_DIR)/{gnu,intel,nag,pgi,cray}{,-mpi}/marbl_*.mod $(LIB_DIR)/libmarbl*.a
 
 # Actual library build
 

@@ -1,24 +1,61 @@
 .SUFFIXES: .F90 .o
-
 extension = .F90
 
 COMP_NAME=NONE
 USEMPI=FALSE
 
+# DEFINE VARIOUS DIRECTORIES NEEDED FOR BUILD
 OBJ_ROOT = $(realpath ../obj)
-OBJ_DIR = $(OBJ_ROOT)/$(COMP_NAME)/driver
 INC_DIR = $(realpath ../../include)
 LIB_DIR = $(realpath ../../lib)
 EXE_DIR = $(realpath ../driver_exe)
 SRC_DIR = $(realpath ../../src)
 DRV_DIR = $(realpath .)
 
-OBJ_LOC = $(realpath $(OBJ_ROOT)/$(COMP_NAME))
-INC_LOC = $(realpath $(INC_DIR)/$(COMP_NAME))
+# ERROR CHECKING: MAKE SURE ALL DIRECTORIES EXIST
+ifeq ($(realpath $(OBJ_ROOT)),)
+  $(error Can not find $$OBJ_ROOT)
+endif
+
+ifeq ($(realpath $(INC_DIR)),)
+  $(error Can not find $$INC_DIR)
+endif
+
+ifeq ($(realpath $(LIB_DIR)),)
+  $(error Can not find $$LIB_DIR)
+endif
+
+ifeq ($(realpath $(EXE_DIR)),)
+  $(error Can not find $$EXE_DIR)
+endif
+
+ifeq ($(realpath $(SRC_DIR)),)
+  $(error Can not find $$SRC_DIR)
+endif
+
+ifeq ($(realpath $(DRV_DIR)),)
+  $(error Can not find $$DRV_DIR)
+endif
+
 ifeq ($(COMP_NAME),NONE)
   LIB_NAME = libmarbl.a
   LFLAG = -lmarbl
 else
+  INC_LOC = $(realpath $(INC_DIR)/$(COMP_NAME))
+  ifeq ($(realpath $(INC_LOC)),)
+    $(error Can not find $$INC_LOC)
+  endif
+
+  OBJ_LOC = $(realpath $(OBJ_ROOT)/$(COMP_NAME))
+  ifeq ($(realpath $(OBJ_LOC)),)
+    $(error Can not find $$OBJ_LOC)
+  endif
+
+  OBJ_DIR = $(realpath $(OBJ_LOC)/driver)
+  ifeq ($(realpath $(OBJ_DIR)),)
+    $(error Can not find $$OBJ_DIR)
+  endif
+
   LIB_NAME = libmarbl-$(COMP_NAME).a
   LFLAG = -lmarbl-$(COMP_NAME)
 endif
@@ -27,13 +64,16 @@ EXECPPDEFS=
 INCLUDES=-I$(INC_LOC)
 LINKS=-L$(LIB_DIR) $(LFLAG)
 
-EXE = $(EXE_DIR)/marbl.exe
+EXESRL = $(EXE_DIR)/marbl.exe
+EXEMPI = $(EXE_DIR)/marbl-mpi.exe
 ifeq ($(USEMPI),TRUE)
   EXECPPDEFS+= -DMARBL_TIMING_OPT=MPI
   LIBCPPDEFS+= -DMARBL_TIMING_OPT=MPI
   MPISUF=-mpi
   override FC = mpif90
-  EXE = $(EXE_DIR)/marbl-mpi.exe
+  EXE = $(EXEMPI)
+else
+  EXE = $(EXESRL)
 endif
 
 COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(LIBCPPDEFS)"
@@ -77,7 +117,8 @@ cray:
 	$(MAKE) $(EXE) COMP_NAME=cray FC=ftn FCFLAGS="-O2 -f free -e mf" INC="-J $(OBJ_ROOT)/cray" INC2="-J $(OBJ_ROOT)/cray/driver"
 
 clean_exe:
-	rm -f $(EXE)
+	rm -f $(EXESRL) $(EXEMPI)
 
 clean: clean_exe
-	rm -f $(OBJ_ROOT)/*/*.* $(OBJ_ROOT)/*/*/* $(LIB_DIR)/* $(INC_DIR)/*/*
+	rm -f $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl_*.{o,mod} $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl.{o,mod}
+	cd $(SRC_DIR) ; make clean
