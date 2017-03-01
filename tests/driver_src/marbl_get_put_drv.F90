@@ -26,15 +26,15 @@ Contains
     type(marbl_log_type),        intent(inout) :: marbl_status_log
 
     character(*), parameter      :: subname = 'marbl_get_put_drv:test'
-    real(kind=r8), dimension(km) :: dz, zw, zt
+    real(kind=r8), dimension(km) :: delta_z, zw, zt
     integer                      :: k
 
     ! Initialize levels
-    dz = c1
-    zw(1) = dz(1)
-    zt(1) = p5*dz(1)
+    delta_z = c1
+    zw(1) = delta_z(1)
+    zt(1) = p5*delta_z(1)
     do k=2,km
-      zw(k) = zw(k-1) + dz(k)
+      zw(k) = zw(k-1) + delta_z(k)
       zt(k) = p5*(zw(k-1)+zw(k))
     end do
 
@@ -72,7 +72,7 @@ Contains
                              gcm_num_PAR_subcols = 1,                         &
                              gcm_num_elements_interior_forcing = 1,           &
                              gcm_num_elements_surface_forcing = 1,            &
-                             gcm_dz = dz,                                     &
+                             gcm_delta_z = delta_z,                           &
                              gcm_zw = zw,                                     &
                              gcm_zt = zt)
     if (marbl_instance%StatusLog%labort_marbl) then

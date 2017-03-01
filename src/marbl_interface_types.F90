@@ -61,7 +61,6 @@ module marbl_interface_types
      real(r8), allocatable :: zt(:)                         ! (km) vert dist from sfc to midpoint of layer
      real(r8), allocatable :: zw(:)                         ! (km) vert dist from sfc to bottom of layer
      real(r8), allocatable :: delta_z(:)                    ! (km) delta z - different values for partial bottom cells
-     real(r8), allocatable :: dz(:)                         ! (km) delta z - same values for partial bottom cells
    contains
      procedure, public :: construct => marbl_domain_constructor
   end type marbl_domain_type
@@ -202,21 +201,19 @@ contains
   subroutine marbl_domain_constructor(this, &
        num_levels, num_PAR_subcols, &
        num_elements_surface_forcing, num_elements_interior_forcing, &
-       dz, zw, zt)
+       delta_z, zw, zt)
 
     class(marbl_domain_type), intent(inout) :: this
     integer (int_kind) , intent(in) :: num_levels
     integer (int_kind) , intent(in) :: num_PAR_subcols
     integer (int_kind) , intent(in) :: num_elements_surface_forcing
     integer (int_kind) , intent(in) :: num_elements_interior_forcing
-    real (r8)          , intent(in) :: dz(num_levels)
+    real (r8)          , intent(in) :: delta_z(num_levels)
     real (r8)          , intent(in) :: zw(num_levels)
     real (r8)          , intent(in) :: zt(num_levels)
 
     integer :: k
 
-    ! FIXME #24: remove dz from data type, use delta_z for all vertical depths
-    allocate(this%dz(num_levels))
     allocate(this%delta_z(num_levels))
     allocate(this%zw(num_levels))
     allocate(this%zt(num_levels))
@@ -227,8 +224,7 @@ contains
     this%num_elements_interior_forcing = num_elements_interior_forcing
 
     do k = 1, num_levels
-       this%delta_z(k) = dz(k)
-       this%dz(k)      = dz(k)
+       this%delta_z(k) = delta_z(k)
        this%zw(k)      = zw(k)
        this%zt(k)      = zt(k)
     end do

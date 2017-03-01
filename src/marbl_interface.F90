@@ -257,7 +257,7 @@ contains
        gcm_num_PAR_subcols,               &
        gcm_num_elements_interior_forcing, &
        gcm_num_elements_surface_forcing,  &
-       gcm_dz,                            &
+       gcm_delta_z,                       &
        gcm_zw,                            &
        gcm_zt,                            &
        gcm_nl_buffer,                     &
@@ -285,7 +285,7 @@ contains
     integer   (int_kind)                   , intent(in)    :: gcm_num_PAR_subcols
     integer   (int_kind)                   , intent(in)    :: gcm_num_elements_surface_forcing
     integer   (int_kind)                   , intent(in)    :: gcm_num_elements_interior_forcing
-    real      (r8)                         , intent(in)    :: gcm_dz(gcm_num_levels) ! thickness of layer k
+    real      (r8)                         , intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
     real      (r8)                         , intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real      (r8)                         , intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
     character(marbl_nl_buffer_size), optional, intent(in)  :: gcm_nl_buffer(:)
@@ -364,7 +364,7 @@ contains
          num_PAR_subcols               = num_PAR_subcols,       &
          num_elements_surface_forcing  = num_surface_elements,  &
          num_elements_interior_forcing = num_interior_elements, &
-         dz                            = gcm_dz,                &
+         delta_z                       = gcm_delta_z,           &
          zw                            = gcm_zw,                &
          zt                            = gcm_zt)
 
