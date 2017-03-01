@@ -64,13 +64,16 @@ EXECPPDEFS=
 INCLUDES=-I$(INC_LOC)
 LINKS=-L$(LIB_DIR) $(LFLAG)
 
-EXE = $(EXE_DIR)/marbl.exe
+EXESRL = $(EXE_DIR)/marbl.exe
+EXEMPI = $(EXE_DIR)/marbl-mpi.exe
 ifeq ($(USEMPI),TRUE)
   EXECPPDEFS+= -DMARBL_TIMING_OPT=MPI
   LIBCPPDEFS+= -DMARBL_TIMING_OPT=MPI
   MPISUF=-mpi
   override FC = mpif90
-  EXE = $(EXE_DIR)/marbl-mpi.exe
+  EXE = $(EXEMPI)
+else
+  EXE = $(EXESRL)
 endif
 
 COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(LIBCPPDEFS)"
@@ -114,7 +117,7 @@ cray:
 	$(MAKE) $(EXE) COMP_NAME=cray FC=ftn FCFLAGS="-O2 -f free -e mf" INC="-J $(OBJ_ROOT)/cray" INC2="-J $(OBJ_ROOT)/cray/driver"
 
 clean_exe:
-	rm -f $(EXE)
+	rm -f $(EXESRL) $(EXEMPI)
 
 clean: clean_exe
 	rm -f $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl_*.{o,mod} $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl.{o,mod}
