@@ -65,8 +65,8 @@ module marbl_config_mod
     character(len=char_len) :: units
     character(len=char_len) :: group
     character(len=char_len) :: datatype
-    integer                 :: category_id ! used for sorting output list
-    character(len=char_len) :: comment   ! used to add comment in log
+    integer                 :: category_ind ! used for sorting output list
+    character(len=char_len) :: comment      ! used to add comment in log
     ! Actual parameter data
     real(r8),                pointer :: rptr => NULL()
     integer(int_kind),       pointer :: iptr => NULL()
@@ -410,7 +410,7 @@ contains
 
     do n=1,autotroph_cnt
       write(prefix, "(A,I0,A)") 'autotrophs_config(', n, ')%'
-      write(category, "(A,1X,I0)") 'autotroph_conf', n
+      write(category, "(A,1X,I0)") 'autotroph config', n
 
       write(sname, "(2A)") trim(prefix), 'sname'
       lname    = 'Short name of autotroph'
@@ -494,7 +494,7 @@ contains
 
     do n=1, zooplankton_cnt
       write(prefix, "(A,I0,A)") 'zooplankton_config(', n, ')%'
-      write(category, "(A,1X,I0)") 'zooplankton_conf', n
+      write(category, "(A,1X,I0)") 'zooplankton config', n
 
       write(sname, "(2A)") trim(prefix), 'sname'
       lname    = 'Short name of zooplankton'
@@ -526,7 +526,7 @@ contains
     do n=1,zooplankton_cnt
       do m=1,grazer_prey_cnt
         write(prefix, "(A,I0,A,I0,A)") 'grazing_config(', m, ',', n, ')%'
-        write(category, "(A,1X,I0,1X,I0)") 'grazing_conf', m, n
+        write(category, "(A,1X,I0,1X,I0)") 'grazing config', m, n
 
         write(sname, "(2A)") trim(prefix), 'sname'
         lname    = 'Short name of grazer'
@@ -605,9 +605,9 @@ contains
     character(len=char_len), optional,          intent(in) :: comment
 
     character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add'
-    type(marbl_single_config_or_parm_type), dimension(:), pointer :: new_parms
+    type(marbl_single_config_or_parm_type), dimension(:), pointer :: new_vars
     character(len=char_len),                dimension(:), pointer :: new_categories
-    integer :: old_size, id, cat_id, n
+    integer :: old_size, id, cat_ind, n
     character(len=char_len) :: log_message
 
     if (.not.associated(this%vars)) then
@@ -619,47 +619,47 @@ contains
     old_size = size(this%vars)
     id = old_size+1
 
-    ! 1) Allocate new_parms to be size N (one element larger than this%vars)
-    allocate(new_parms(id))
+    ! 1) Allocate new_vars to be size N (one element larger than this%vars)
+    allocate(new_vars(id))
 
     ! 2) Determine category ID
-    do cat_id = 1, size(this%categories)
-      if (trim(category) .eq. trim(this%categories(cat_id))) then
+    do cat_ind = 1, size(this%categories)
+      if (trim(category) .eq. trim(this%categories(cat_ind))) then
         exit
       end if
     end do
-    if (cat_id .gt. size(this%categories)) then
-      allocate(new_categories(cat_id))
+    if (cat_ind .gt. size(this%categories)) then
+      allocate(new_categories(cat_ind))
       new_categories(1:size(this%categories)) = this%categories
-      new_categories(cat_id) = category
+      new_categories(cat_ind) = category
       deallocate(this%categories)
       this%categories => new_categories
     end if
 
-    ! 3) copy this%vars into first N-1 elements of new_parms
+    ! 3) copy this%vars into first N-1 elements of new_vars
     do n=1, old_size
-      new_parms(n)%long_name    = this%vars(n)%long_name
-      new_parms(n)%short_name   = this%vars(n)%short_name
-      new_parms(n)%units        = this%vars(n)%units
-      new_parms(n)%datatype     = this%vars(n)%datatype
-      new_parms(n)%group        = this%vars(n)%group
-      new_parms(n)%category_id  = this%vars(n)%category_id
-      new_parms(n)%comment      = this%vars(n)%comment
+      new_vars(n)%long_name     = this%vars(n)%long_name
+      new_vars(n)%short_name    = this%vars(n)%short_name
+      new_vars(n)%units         = this%vars(n)%units
+      new_vars(n)%datatype      = this%vars(n)%datatype
+      new_vars(n)%group         = this%vars(n)%group
+      new_vars(n)%category_ind  = this%vars(n)%category_ind
+      new_vars(n)%comment       = this%vars(n)%comment
       if (associated(this%vars(n)%lptr)) &
-        new_parms(n)%lptr => this%vars(n)%lptr
+        new_vars(n)%lptr => this%vars(n)%lptr
       if (associated(this%vars(n)%iptr)) &
-        new_parms(n)%iptr => this%vars(n)%iptr
+        new_vars(n)%iptr => this%vars(n)%iptr
       if (associated(this%vars(n)%rptr)) &
-        new_parms(n)%rptr => this%vars(n)%rptr
+        new_vars(n)%rptr => this%vars(n)%rptr
       if (associated(this%vars(n)%sptr)) &
-        new_parms(n)%sptr => this%vars(n)%sptr
+        new_vars(n)%sptr => this%vars(n)%sptr
     end do
 
     ! 3) add newest parm variable
     select case (trim(datatype))
       case ('real')
         if (present(rptr)) then
-          new_parms(id)%rptr => rptr
+          new_vars(id)%rptr => rptr
         else
           write(log_message, "(A)")                                           &
                "Defining real parameter but rptr not present!"
@@ -668,7 +668,7 @@ contains
         end if
       case ('integer')
         if (present(iptr)) then
-          new_parms(id)%iptr => iptr
+          new_vars(id)%iptr => iptr
         else
           write(log_message, "(A)")                                           &
                "Defining integer parameter but iptr not present!"
@@ -677,7 +677,7 @@ contains
         end if
       case ('logical')
         if (present(lptr)) then
-          new_parms(id)%lptr => lptr
+          new_vars(id)%lptr => lptr
         else
           write(log_message, "(A)")                                           &
                "Defining logical parameter but lptr not present!"
@@ -686,7 +686,7 @@ contains
         end if
       case ('string')
         if (present(sptr)) then
-          new_parms(id)%sptr => sptr
+          new_vars(id)%sptr => sptr
         else
           write(log_message, "(A)")                                           &
                "Defining string parameter but aptr not present!"
@@ -698,24 +698,21 @@ contains
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
-    new_parms(id)%short_name  = trim(sname)
-    new_parms(id)%long_name   = trim(lname)
-    new_parms(id)%units       = trim(units)
-    new_parms(id)%datatype    = trim(datatype)
-    new_parms(id)%group       = trim(group)
-    new_parms(id)%category_id = cat_id
+    new_vars(id)%short_name   = trim(sname)
+    new_vars(id)%long_name    = trim(lname)
+    new_vars(id)%units        = trim(units)
+    new_vars(id)%datatype     = trim(datatype)
+    new_vars(id)%group        = trim(group)
+    new_vars(id)%category_ind = cat_ind
     if (present(comment)) then
-      new_parms(id)%comment = comment
+      new_vars(id)%comment = comment
     else
-      new_parms(id)%comment = ''
+      new_vars(id)%comment = ''
     end if
 
-    ! 4) deallocate / nullify this%vars
+    ! 4) deallocate this%vars / point to new_vars (and update cnt)
     deallocate(this%vars)
-    nullify(this%vars)
-
-    ! 5) point this%vars => new_parms and update parms_cnt
-    this%vars => new_parms
+    this%vars => new_vars
     this%cnt = id
 
   end subroutine marbl_var_add
@@ -827,15 +824,15 @@ contains
     character(len=char_len) :: log_message
     character(len=char_len) :: group
     character(len=7)        :: logic
-    integer :: i,n, cat_id
+    integer :: i,n, cat_ind
 
     ! (1) Lock data type (put calls will now cause MARBL to abort)
     this%locked = .true.
     group = ''
 
-    do cat_id = 1,size(this%categories)
+    do cat_ind = 1,size(this%categories)
       do n=1,this%cnt
-        if (this%vars(n)%category_id .eq. cat_id) then
+        if (this%vars(n)%category_ind .eq. cat_ind) then
           ! (2) Log the group name if different than previous parameter
           if (this%vars(n)%group.ne.group) then
             group = trim(this%vars(n)%group)
@@ -875,7 +872,7 @@ contains
           call marbl_status_log%log_noerror(log_message, subname)
         end if
       end do
-      if (cat_id .ne. size(this%categories)) then
+      if (cat_ind .ne. size(this%categories)) then
         call marbl_status_log%log_noerror('', subname)
       end if
     end do
