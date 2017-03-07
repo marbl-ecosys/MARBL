@@ -534,12 +534,6 @@ contains
     !   k1 = [H][HCO3]/[H2CO3]
     !   k2 = [H][CO3]/[HCO3]
     !      Lueker, Dickson, Keeling (2000) using Mehrbach et al. data on total scale
-    !   otherwise, use
-    !      Millero p.664 (1995) using Mehrbach et al. data on seawater scale
-    !      this is only present to be consistent w/ OCMIP2 code
-    !      it should not be used for new runs
-    !      the only reason to use it is to be compatible with prior
-    !      long spun up runs that had used it
     !   pressure correction from Millero 1995, p. 675
     !      w/ typo corrections from CO2SYS
     !---------------------------------------------------------------------------
