@@ -1,51 +1,58 @@
 module marbl_logging
 
-! ------------
+! ============
 ! Module Usage
-! ------------
+! ============
 !
 ! Assume a variable named StatusLog (as appears in the marbl_interface_class)
 !
+! -----------------------------------------------
 ! Use the following routines to write log entries
 ! -----------------------------------------------
 !
 ! (1) StatusLog%log_noerror -- this stores a log message in StatusLog that does
 !     not contain a fatal error
-! (2) StatusLog%log_error -- this stores a log message in StatusLog that DOES
+! (2) StatusLog%log_header -- this stores a log message in StatusLog that is
+!     meant to be read as a section header; e.g. StatusLog%log_header('HEADER',...)
+!     writes the following (including blank lines)
+!
+!     ------
+!     HEADER
+!     ------
+!
+! (3) StatusLog%log_error -- this stores a log message in StatusLog that DOES
 !     contain a fatal error. It does this by setting StatusLog%labort_marbl =
 !     .true.; when a call from the GCM to MARBL returns, it is important for the
 !     GCM to check the value of StatusLog%labort_marbl and abort the run if an
 !     error has been reported.
-! (3) StatusLog%log_error_trace -- this routine helps trace the path in the code
-!     that resulted in an error being reported. If a MARBL routine logs an error
-!     message, then the routine that called the errant routine also logs an
-!     error message giving more information about where the call was made from.
+! (4) StatusLog%log_error_trace -- this stores a log message in StatusLog
+!     detailing what subroutine was just called and where it was called from. It
+!     is meant to provide more information when trying to trace the path through
+!     the code that resulted in an error.
 !
+! -----------------------------------------------
 ! Pseudo-code for writing StatusLog in the driver
 ! -----------------------------------------------
 !
-! Using '#if 0' so code below is not compiled
-#if 0
-  type(marbl_status_log_entry_type), pointer :: LogEntry
-
-  ! Set pointer to first entry of the log
-  LogEntry => StatusLog%FullLog
-
-  do while (associated(LogEntry))
-    ! If running in parallel, you may want to check if you are the master
-    ! task or if LogEntry%lalltasks = .true.
-    write(stdout,*) trim(LogEntry%LogMessage)
-    LogEntry => LogEntry%next
-  end do
-
-  ! Erase contents of log now that they have been written out
-  call StatusLog%erase()
-
-  if (StatusLog%labort_marbl) then
-    [GCM abort call: "error found in MARBL"]
-  end if
-
-#endif
+!  type(marbl_status_log_entry_type), pointer :: LogEntry
+!
+!  ! Set pointer to first entry of the log
+!  LogEntry => StatusLog%FullLog
+!
+!  do while (associated(LogEntry))
+!    ! If running in parallel, you may want to check if you are the master
+!    ! task or if LogEntry%lalltasks = .true.
+!    write(stdout,*) trim(LogEntry%LogMessage)
+!    LogEntry => LogEntry%next
+!  end do
+!
+!  ! Erase contents of log now that they have been written out
+!  call StatusLog%erase()
+!
+!  if (StatusLog%labort_marbl) then
+!    [GCM abort call: "error found in MARBL"]
+!  end if
+!
 
   use marbl_kinds_mod, only : char_len
 
