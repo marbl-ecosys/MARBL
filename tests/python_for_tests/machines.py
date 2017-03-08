@@ -25,7 +25,10 @@ def load_module(mach, compiler):
     sys.path.insert(0,'/usr/share/Modules/init')
     from python import module
     module('purge')
-    module(['load', 'compiler/%s' % compiler])
+    if compiler == 'pgi':
+      module(['load', 'compiler/%s/17.01' % compiler])
+    else:
+      module(['load', 'compiler/%s' % compiler])
 
   if mach == 'edison':
     sys.path.insert(0,'/opt/modules/default/init')
@@ -60,6 +63,7 @@ def machine_specific(mach, supported_compilers):
     supported_compilers.append('nag')
     supported_compilers.append('intel')
     supported_compilers.append('gnu')
+    supported_compilers.append('pgi')
     return
 
   if mach == 'edison':

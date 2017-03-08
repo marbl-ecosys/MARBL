@@ -77,7 +77,7 @@ intel:
 	$(MAKE) $(LIB_DIR)/libmarbl-intel$(MPISUF).a USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel$(MPISUF) -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel$(MPISUF) INC_DIR=$(INC_DIR)/intel$(MPISUF)
 
 pgi:
-	$(MAKE) $(LIB_DIR)/libmarbl-pgi$(MPISUF).a USE_DEPS=TRUE FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi$(MPISUF) OBJ_DIR=$(OBJ_DIR)/pgi$(MPISUF)" INC_DIR=$(INC_DIR)/pgi$(MPISUF)
+	$(MAKE) $(LIB_DIR)/libmarbl-pgi$(MPISUF).a USE_DEPS=TRUE FC=pgf90 FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/pgi$(MPISUF)" OBJ_DIR=$(OBJ_DIR)/pgi$(MPISUF) INC_DIR=$(INC_DIR)/pgi$(MPISUF)
 
 nag:
 	$(MAKE) $(LIB_DIR)/libmarbl-nag$(MPISUF).a USE_DEPS=TRUE FC=nagfor FCFLAGS="-O2 -free -I $(OBJ_DIR)/nag$(MPISUF) -mdir $(OBJ_DIR)/nag$(MPISUF) -kind=byte" OBJ_DIR=$(OBJ_DIR)/nag$(MPISUF) INC_DIR=$(INC_DIR)/nag$(MPISUF)
