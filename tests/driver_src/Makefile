@@ -1,18 +1,39 @@
 .SUFFIXES: .F90 .o
 extension = .F90
 
-COMP_NAME=NONE
-USEMPI=FALSE
-
 # DEFINE VARIOUS DIRECTORIES NEEDED FOR BUILD
-OBJ_ROOT = $(realpath ../obj)
-INC_DIR = $(realpath ../../include)
-LIB_DIR = $(realpath ../../lib)
-EXE_DIR = $(realpath ../driver_exe)
-SRC_DIR = $(realpath ../../src)
-DRV_DIR = $(realpath .)
 
-# ERROR CHECKING: MAKE SURE ALL DIRECTORIES EXIST
+# (1) The default directories are all defined relative to the location of this
+#     Makefile
+
+# Not all versions of gmake use MAKEFILE_LIST; if it exists then we determine
+# the directory that contains the Makefile otherwise we assume Makefile is in
+# the current working directory
+
+# $(word n,VAR) looks for the nth word in $(VAR)
+# so ThisMakefile is the first word in $(MAKEFILE_LIST) (which might be empty)
+#override ThisMakefile=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+override ThisMakefile=$(word 1,$(MAKEFILE_LIST))
+
+# if there are any / in $(ThisMakefile), strip everything after the last /
+ifeq (/,$(findstring /,$(ThisMakefile)))
+  override MAKE_DIR=$(realpath $(shell ThisMakefile=$(ThisMakefile) && echo $${ThisMakefile%/*}))
+else
+  override MAKE_DIR=$(realpath .)
+endif
+
+# (2) Default directories (can be changed by invoking "make LIB_SRC_DIR=...", etc)
+OBJ_ROOT = $(realpath $(MAKE_DIR)/../obj)
+INC_DIR = $(realpath $(MAKE_DIR)/../../include)
+LIB_DIR = $(realpath $(MAKE_DIR)/../../lib)
+EXE_DIR = $(realpath $(MAKE_DIR)/../driver_exe)
+LIB_SRC_DIR = $(realpath $(MAKE_DIR)/../../src)
+EXE_SRC_DIR = $(realpath $(MAKE_DIR)/.)
+
+###################################################
+# ERROR CHECKING: MAKE SURE ALL DIRECTORIES EXIST #
+###################################################
+
 ifeq ($(realpath $(OBJ_ROOT)),)
   $(error Can not find $$OBJ_ROOT)
 endif
@@ -29,13 +50,20 @@ ifeq ($(realpath $(EXE_DIR)),)
   $(error Can not find $$EXE_DIR)
 endif
 
-ifeq ($(realpath $(SRC_DIR)),)
-  $(error Can not find $$SRC_DIR)
+ifeq ($(realpath $(LIB_SRC_DIR)),)
+  $(error Can not find $$LIB_SRC_DIR)
 endif
 
-ifeq ($(realpath $(DRV_DIR)),)
-  $(error Can not find $$DRV_DIR)
+ifeq ($(realpath $(EXE_SRC_DIR)),)
+  $(error Can not find $$EXE_SRC_DIR)
 endif
+
+##############################################
+# DEFAULT VALUES FOR INTERNAL MAKE VARIABLES #
+##############################################
+
+COMP_NAME=NONE
+USEMPI=FALSE
 
 ifeq ($(COMP_NAME),NONE)
   LIB_NAME = libmarbl.a
@@ -59,6 +87,7 @@ else
   LIB_NAME = libmarbl-$(COMP_NAME).a
   LFLAG = -lmarbl-$(COMP_NAME)
 endif
+
 LIBCPPDEFS=-DECOSYS_NT=27 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
 EXECPPDEFS=
 INCLUDES=-I$(INC_LOC)
@@ -86,39 +115,55 @@ OBJS = marbl_init_namelist_drv.o       \
 
 MODS = marbl_mpi_mod.mod
 
-.PHONY: intel pgi gnu nag cray clean clean_exe
+###########
+# TARGETS #
+###########
 
+.PHONY: intel pgi gnu nag cray clean clean_exe
+# default is to build with gnu
+.PHONY: all
 all: gnu
 
+.PHONY: gnu
+gnu:
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
+
+.PHONY: intel
+intel:
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=intel$(MPISUF) FC=ifort FCFLAGS="-O2 -free -cpp -nogen-interface -fp-model source" INC="-module $(OBJ_ROOT)/intel$(MPISUF)" INC2="-module $(OBJ_ROOT)/intel$(MPISUF)/driver" 
+
+.PHONY: pgi
+pgi:
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=pgi$(MPISUF) FC=pgf90 FCFLAGS="-O2 -Mfree" INC="-module $(OBJ_ROOT)/pgi$(MPISUF)" INC2="-module $(OBJ_ROOT)/pgi$(MPISUF)/driver"
+
+.PHONY: nag
+nag:
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-O2 -free -kind=byte" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
+
+.PHONY: cray
+cray:
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=cray FC=ftn FCFLAGS="-O2 -f free -e mf" INC="-J $(OBJ_ROOT)/cray" INC2="-J $(OBJ_ROOT)/cray/driver"
+
+# Build the library
+$(LIB_DIR)/%.a: $(LIB_SRC_DIR)/*.F90
+	make -f $(LIB_SRC_DIR)/Makefile FC=$(FC) FCFLAGS="$(FCFLAGS) $(INC)" USE_DEPS=TRUE $(COMP_ARGS) $@
+
+# Driver object files
+$(OBJ_DIR)/%.o: $(EXE_SRC_DIR)/%.F90
+	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(INC2) $(INCLUDES) -c $< -o $@
+
+# Executable
 $(EXE): clean_exe                        \
         $(LIB_DIR)/$(LIB_NAME)           \
         $(addprefix $(OBJ_DIR)/,$(OBJS))
 	$(FC) -o $(EXE) $(OBJ_DIR)/*.o $(LINKS)
 
-$(OBJ_DIR)/%.o: $(DRV_DIR)/%.F90
-	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(INC2) $(INCLUDES) -c $< -o $@
-
-$(LIB_DIR)/%.a: $(SRC_DIR)/*.F90
-	cd $(SRC_DIR) ; make FC=$(FC) FCFLAGS="$(FCFLAGS) $(INC)" USE_DEPS=TRUE $(COMP_ARGS) $@
-
-intel:
-	$(MAKE) $(EXE) COMP_NAME=intel$(MPISUF) FC=ifort FCFLAGS="-O2 -free -cpp -nogen-interface -fp-model source" INC="-module $(OBJ_ROOT)/intel$(MPISUF)" INC2="-module $(OBJ_ROOT)/intel$(MPISUF)/driver" 
-
-pgi:
-	$(MAKE) $(EXE) COMP_NAME=pgi$(MPISUF) FC=pgf90 FCFLAGS="-O2 -Mfree" INC="-module $(OBJ_ROOT)/pgi$(MPISUF)" INC2="-module $(OBJ_ROOT)/pgi$(MPISUF)/driver"
-
-gnu:
-	$(MAKE) $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
-
-nag:
-	$(MAKE) $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-O2 -free -kind=byte" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
-
-cray:
-	$(MAKE) $(EXE) COMP_NAME=cray FC=ftn FCFLAGS="-O2 -f free -e mf" INC="-J $(OBJ_ROOT)/cray" INC2="-J $(OBJ_ROOT)/cray/driver"
-
+# Clean up previous builds
+.PHONY: clean_exe
 clean_exe:
 	rm -f $(EXESRL) $(EXEMPI)
 
+.PHONY: clean
 clean: clean_exe
 	rm -f $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl_*.{o,mod} $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl.{o,mod}
-	cd $(SRC_DIR) ; make clean
+	make -f $(LIB_SRC_DIR)/Makefile clean
