@@ -67,6 +67,8 @@ class MARBL_testcase(object):
       found = True
       if any(host in self._hostname for host in ['geyser', 'caldera', 'prong', 'yslogin']):
         self._machine = 'yellowstone'
+      elif 'cheyenne' in self._hostname:
+        self._machine = 'cheyenne'
       elif 'hobart' in self._hostname:
         self._machine = 'hobart'
       elif 'edison' in self._hostname:
