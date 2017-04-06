@@ -229,7 +229,7 @@ Contains
 
     tmp => log_to_print%FullLog
     do while (associated(tmp))
-      if (mpi_on.and.(marbl_err.or.tmp%lall_tasks)) then
+      if (mpi_on .and. (marbl_err .or. (.not. tmp%lonly_master_writes))) then
         ! Output log from task(s) reporting errors, prefix task #
         write(*,101) my_task, trim(tmp%LogMessage)
       elseif (my_task.eq.0) then
