@@ -907,8 +907,9 @@ contains
     character(*), parameter :: subname = 'marbl_co2calc_mod:drtsafe'
     character(len=char_len) :: log_message
     logical(kind=log_kind)                          :: leave_bracket, dx_decrease
+    logical(kind=log_kind)                          :: abort = .false.
     logical(kind=log_kind), dimension(num_elements) :: mask
-    integer(kind=int_kind)                          ::  c, it
+    integer(kind=int_kind)                          :: c, it
     real(kind=r8)                                   :: temp
     real(kind=r8), dimension(num_elements) :: xlo, xhi, flo, fhi, f, df, dxold, dx
     !---------------------------------------------------------------------------
@@ -950,17 +951,18 @@ contains
                      '   x2,f = ', x2(c), fhi(c)
                 call marbl_status_log%log_noerror(log_message, subname, c, .true.)
              end if
+
+             if (it > max_bracket_grow_it) then
+                if (present(marbl_status_log)) then
+                   ! FIXME #21 (see above)
+                   log_message = "bounding bracket for pH solution not found"
+                   call marbl_status_log%log_error(log_message, subname, c)
+                end if
+                abort = .true.
+             end if
           end if
        end do
-
-       if (it > max_bracket_grow_it) then
-          if (present(marbl_status_log)) then
-             ! FIXME #21 (see above)
-             log_message = "bounding bracket for pH solution not found"
-             call marbl_status_log%log_error(log_message, subname, c)
-          end if
-          return
-       end if
+       if (abort) return
 
        where ( mask )
           dx = sqrt(x2 / x1)
