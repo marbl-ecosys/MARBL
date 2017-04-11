@@ -944,16 +944,16 @@ contains
                 !            since abio_dic_dic14_mod is calling this routine but has
                 !            not itself been MARBLized yet
                 WRITE(log_message,"(3A,1X,A,I0,1X,I0)") '(', subname, ')', &
-                     'c, it = ', c, it
+                     'c,it = ', c, it
                 call marbl_status_log%log_noerror(log_message, subname, c, &
                                 lonly_master_writes=.false.)
                 WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')', &
                      'x1,f = ', x1(c), flo(c)
-                call marbl_status_log%log_noerror(log_message, subname,    &
+                call marbl_status_log%log_noerror(log_message, subname, c, &
                                 lonly_master_writes=.false.)
                 WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')', &
                      'x2,f = ', x2(c), fhi(c)
-                call marbl_status_log%log_noerror(log_message, subname,    &
+                call marbl_status_log%log_noerror(log_message, subname, c, &
                                 lonly_master_writes=.false.)
              end if
 
@@ -962,7 +962,7 @@ contains
                 if (present(marbl_status_log)) then
                    ! FIXME #21 (see above)
                    log_message = "bounding bracket for pH solution not found"
-                   call marbl_status_log%log_error(log_message, subname)
+                   call marbl_status_log%log_error(log_message, subname, c)
                 end if
                 abort = .true.
              end if
