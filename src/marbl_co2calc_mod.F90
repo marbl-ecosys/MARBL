@@ -937,26 +937,32 @@ contains
 
        do c = 1,num_elements
           if (mask(c)) then
+             ! Log a warning message if bounding box end points have same sign
+             ! (no guarantee that there is a root on the interval)
              if (present(marbl_status_log)) then
                 ! FIXME #21: make marbl_status_log required - this is currently needed
                 !            since abio_dic_dic14_mod is calling this routine but has
                 !            not itself been MARBLized yet
-                WRITE(log_message,"(4A,I0,A,I0,A,I0)") '(', subname, ') ', &
-                     ', c = ', c, ', it = ', it
-                call marbl_status_log%log_noerror(log_message, subname, c, .true.)
-                WRITE(log_message,"(4A,2E15.7e3)") '(', subname, ') ', &
-                     '   x1,f = ', x1(c), flo(c)
-                call marbl_status_log%log_noerror(log_message, subname, c, .true.)
-                WRITE(log_message,"(4A,2E15.7e3)") '(', subname, ') ', &
-                     '   x2,f = ', x2(c), fhi(c)
-                call marbl_status_log%log_noerror(log_message, subname, c, .true.)
+                WRITE(log_message,"(3A,1X,A,I0,1X,I0)") '(', subname, ')', &
+                     'c, it = ', c, it
+                call marbl_status_log%log_noerror(log_message, subname, c, &
+                                lonly_master_writes=.false.)
+                WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')', &
+                     'x1,f = ', x1(c), flo(c)
+                call marbl_status_log%log_noerror(log_message, subname,    &
+                                lonly_master_writes=.false.)
+                WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')', &
+                     'x2,f = ', x2(c), fhi(c)
+                call marbl_status_log%log_noerror(log_message, subname,    &
+                                lonly_master_writes=.false.)
              end if
 
+             ! Error if iteration count exceeds max_bracket_grow_it
              if (it > max_bracket_grow_it) then
                 if (present(marbl_status_log)) then
                    ! FIXME #21 (see above)
                    log_message = "bounding bracket for pH solution not found"
-                   call marbl_status_log%log_error(log_message, subname, c)
+                   call marbl_status_log%log_error(log_message, subname)
                 end if
                 abort = .true.
              end if
