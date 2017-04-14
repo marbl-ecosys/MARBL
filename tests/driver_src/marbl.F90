@@ -220,29 +220,23 @@ Contains
 
     class(marbl_log_type), intent(inout) :: log_to_print
     type(marbl_status_log_entry_type), pointer :: tmp
-    logical :: marbl_err
-
-    marbl_err = log_to_print%labort_marbl
-
-100 format(A)
-101 format(I0, ': ', A)
 
     tmp => log_to_print%FullLog
     do while (associated(tmp))
-      if (mpi_on .and. (marbl_err .or. (.not. tmp%lonly_master_writes))) then
-        ! Output log from task(s) reporting errors, prefix task #
-        write(*,101) my_task, trim(tmp%LogMessage)
+      if (mpi_on .and. (.not. tmp%lonly_master_writes)) then
+        ! If running in parallel and all tasks are writing to the log, prefix
+        ! the task # to log message
+        write(*,"(I0,': ',A)") my_task, trim(tmp%LogMessage)
       elseif (my_task.eq.0) then
-        if (associated(tmp%next) .or. len_trim(tmp%LogMessage) .gt. 0) then
-          write(*,100) trim(tmp%LogMessage)
-        end if
+        ! Otherwise only task 0 writes to the log and no prefix is necessary
+        write(*,"(A)") trim(tmp%LogMessage)
       end if
       tmp => tmp%next
     end do
 
     call log_to_print%erase()
 
-    if (marbl_err) call marbl_mpi_abort()
+    if (log_to_print%labort_marbl) call marbl_mpi_abort()
 
   end subroutine print_marbl_log
 

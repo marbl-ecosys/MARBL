@@ -907,7 +907,7 @@ contains
     character(*), parameter :: subname = 'marbl_co2calc_mod:drtsafe'
     character(len=char_len) :: log_message
     logical(kind=log_kind)                          :: leave_bracket, dx_decrease
-    logical(kind=log_kind)                          :: abort = .false.
+    logical(kind=log_kind)                          :: abort
     logical(kind=log_kind), dimension(num_elements) :: mask
     integer(kind=int_kind)                          :: c, it
     real(kind=r8)                                   :: temp
@@ -919,6 +919,7 @@ contains
     !---------------------------------------------------------------------------
 
     mask = mask_in
+    abort = .false.
 
     it = 0
 
@@ -943,8 +944,7 @@ contains
                 ! FIXME #21: make marbl_status_log required - this is currently needed
                 !            since abio_dic_dic14_mod is calling this routine but has
                 !            not itself been MARBLized yet
-                WRITE(log_message,"(3A,1X,A,I0,1X,I0)") '(', subname, ')', &
-                     'c,it = ', c, it
+                WRITE(log_message,"(3A,1X,A,I0)") '(', subname, ')', 'it = ', it
                 call marbl_status_log%log_noerror(log_message, subname, c, &
                                 lonly_master_writes=.false.)
                 WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')', &
