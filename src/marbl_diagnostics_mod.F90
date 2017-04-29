@@ -100,6 +100,7 @@ module marbl_diagnostics_mod
 
     ! Particulate 2D diags
     integer(int_kind) :: calcToSed
+    integer(int_kind) :: calcToSed_ALT_CO2
     integer(int_kind) :: pocToSed
     integer(int_kind) :: ponToSed
     integer(int_kind) :: SedDenitrif
@@ -166,6 +167,9 @@ module marbl_diagnostics_mod
     integer(int_kind) :: CaCO3_FLUX_IN
     integer(int_kind) :: CaCO3_PROD
     integer(int_kind) :: CaCO3_REMIN
+    integer(int_kind) :: CaCO3_ALT_CO2_FLUX_IN
+    integer(int_kind) :: CaCO3_ALT_CO2_PROD
+    integer(int_kind) :: CaCO3_ALT_CO2_REMIN
     integer(int_kind) :: SiO2_FLUX_IN
     integer(int_kind) :: SiO2_PROD
     integer(int_kind) :: SiO2_REMIN
@@ -1387,6 +1391,23 @@ contains
           end if
        end if
 
+       ! Particulate 2D diags
+       if (count_only) then
+          num_interior_diags = num_interior_diags + 1
+       else
+          lname = 'CaCO3 Flux to Sediments, Alternative CO2'
+          sname = 'calcToSed_ALT_CO2'
+          units = 'nmolC/cm^2/s'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%calcToSed_ALT_CO2, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+       end if
+
        if (count_only) then
           num_interior_diags = num_interior_diags + 1
        else
@@ -2351,6 +2372,54 @@ contains
           truncate = .false.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
                ind%CaCO3_REMIN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+       end if
+
+       if (count_only) then
+          num_interior_diags = num_interior_diags + 1
+       else
+          lname = 'CaCO3 Flux into Cell, Alternative CO2'
+          sname = 'CaCO3_ALT_CO2_FLUX_IN'
+          units = 'mmol/m^3 cm/s'
+          vgrid = 'layer_avg'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CaCO3_ALT_CO2_FLUX_IN, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+       end if
+
+       if (count_only) then
+          num_interior_diags = num_interior_diags + 1
+       else
+          lname = 'CaCO3 Production, Alternative CO2'
+          sname = 'CaCO3_ALT_CO2_PROD'
+          units = 'mmol/m^3/s'
+          vgrid = 'layer_avg'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CaCO3_ALT_CO2_PROD, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+       end if
+
+       if (count_only) then
+          num_interior_diags = num_interior_diags + 1
+       else
+          lname = 'CaCO3 Remineralization, Alternative CO2'
+          sname = 'CaCO3_ALT_CO2_REMIN'
+          units = 'mmol/m^3/s'
+          vgrid = 'layer_avg'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+               ind%CaCO3_ALT_CO2_REMIN, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call log_add_diagnostics_error(marbl_status_log, sname, subname)
             return
@@ -4019,6 +4088,7 @@ contains
          POC              => marbl_particulate_share%POC,                     &
          POP              => marbl_particulate_share%POP,                     &
          P_CaCO3          => marbl_particulate_share%P_CaCO3,                 &
+         P_CaCO3_ALT_CO2  => marbl_particulate_share%P_CaCO3_ALT_CO2,         &
          P_SiO2           => marbl_particulate_share%P_SiO2,                  &
          dust             => marbl_particulate_share%dust,                    &
          P_iron           => marbl_particulate_share%P_iron                   &
@@ -4592,16 +4662,17 @@ contains
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_interior_forcing_diags
     !-----------------------------------------------------------------------
 
-    associate(                                          &
-         ind     => marbl_interior_diag_ind,            &
-         diags   => marbl_interior_forcing_diags%diags, &
-         delta_z => marbl_domain%delta_z,               &
-         POC     => marbl_particulate_share%POC,        &
-         POP     => marbl_particulate_share%POP,        &
-         P_CaCO3 => marbl_particulate_share%P_CaCO3,    &
-         P_SiO2  => marbl_particulate_share%P_SiO2,     &
-         dust    => marbl_particulate_share%dust,       &
-         P_iron  => marbl_particulate_share%P_iron      &
+    associate(                                                       &
+         ind             => marbl_interior_diag_ind,                 &
+         diags           => marbl_interior_forcing_diags%diags,      &
+         delta_z         => marbl_domain%delta_z,                    &
+         POC             => marbl_particulate_share%POC,             &
+         POP             => marbl_particulate_share%POP,             &
+         P_CaCO3         => marbl_particulate_share%P_CaCO3,         &
+         P_CaCO3_ALT_CO2 => marbl_particulate_share%P_CaCO3_ALT_CO2, &
+         P_SiO2          => marbl_particulate_share%P_SiO2,          &
+         dust            => marbl_particulate_share%dust,            &
+         P_iron          => marbl_particulate_share%P_iron           &
          )
 
     diags(ind%POC_FLUX_IN)%field_3d(:, 1)    = POC%sflux_in + POC%hflux_in
@@ -4620,6 +4691,10 @@ contains
     diags(ind%CaCO3_PROD)%field_3d(:, 1)     = P_CaCO3%prod
     diags(ind%CaCO3_REMIN)%field_3d(:, 1)    = P_CaCO3%remin
 
+    diags(ind%CaCO3_ALT_CO2_FLUX_IN)%field_3d(:, 1)  = P_CaCO3_ALT_CO2%sflux_in + P_CaCO3_ALT_CO2%hflux_in
+    diags(ind%CaCO3_ALT_CO2_PROD)%field_3d(:, 1)     = P_CaCO3_ALT_CO2%prod
+    diags(ind%CaCO3_ALT_CO2_REMIN)%field_3d(:, 1)    = P_CaCO3_ALT_CO2%remin
+
     diags(ind%SiO2_FLUX_IN)%field_3d(:, 1)   = P_SiO2%sflux_in + P_SiO2%hflux_in
     diags(ind%SiO2_PROD)%field_3d(:, 1)      = P_SiO2%prod
     diags(ind%SiO2_REMIN)%field_3d(:, 1)     = P_SiO2%remin
@@ -4631,15 +4706,16 @@ contains
     diags(ind%P_iron_PROD)%field_3d(:, 1)    = P_iron%prod
     diags(ind%P_iron_REMIN)%field_3d(:, 1)   = P_iron%remin
 
-    diags(ind%calcToSed)%field_2d(1)   = sum(P_CaCO3%sed_loss)
-    diags(ind%bsiToSed)%field_2d(1)    = sum(P_SiO2%sed_loss)
-    diags(ind%pocToSed)%field_2d(1)    = sum(POC%sed_loss)
-    diags(ind%SedDenitrif)%field_2d(1) = sum(sed_denitrif * delta_z)
-    diags(ind%OtherRemin)%field_2d(1)  = sum(other_remin * delta_z)
-    diags(ind%ponToSed)%field_2d(1)    = sum(PON_sed_loss)
-    diags(ind%popToSed)%field_2d(1)    = sum(POP%sed_loss)
-    diags(ind%dustToSed)%field_2d(1)   = sum(dust%sed_loss)
-    diags(ind%pfeToSed)%field_2d(1)    = sum(P_iron%sed_loss)
+    diags(ind%calcToSed)%field_2d(1)         = sum(P_CaCO3%sed_loss)
+    diags(ind%calcToSed_ALT_CO2)%field_2d(1) = sum(P_CaCO3_ALT_CO2%sed_loss)
+    diags(ind%bsiToSed)%field_2d(1)          = sum(P_SiO2%sed_loss)
+    diags(ind%pocToSed)%field_2d(1)          = sum(POC%sed_loss)
+    diags(ind%SedDenitrif)%field_2d(1)       = sum(sed_denitrif * delta_z)
+    diags(ind%OtherRemin)%field_2d(1)        = sum(other_remin * delta_z)
+    diags(ind%ponToSed)%field_2d(1)          = sum(PON_sed_loss)
+    diags(ind%popToSed)%field_2d(1)          = sum(POP%sed_loss)
+    diags(ind%dustToSed)%field_2d(1)         = sum(dust%sed_loss)
+    diags(ind%pfeToSed)%field_2d(1)          = sum(P_iron%sed_loss)
 
     end associate
 

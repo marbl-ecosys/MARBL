@@ -211,12 +211,13 @@ module marbl_internal_types
   !***********************************************************************
 
   type, public :: marbl_particulate_share_type
-     type(column_sinking_particle_type) :: POC      ! base units = nmol C
-     type(column_sinking_particle_type) :: POP      ! base units = nmol P
-     type(column_sinking_particle_type) :: P_CaCO3  ! base units = nmol CaCO3
-     type(column_sinking_particle_type) :: P_SiO2   ! base units = nmol SiO2
-     type(column_sinking_particle_type) :: dust     ! base units = g
-     type(column_sinking_particle_type) :: P_iron   ! base units = nmol Fe
+     type(column_sinking_particle_type) :: POC              ! base units = nmol C
+     type(column_sinking_particle_type) :: POP              ! base units = nmol P
+     type(column_sinking_particle_type) :: P_CaCO3          ! base units = nmol CaCO3
+     type(column_sinking_particle_type) :: P_CaCO3_ALT_CO2  ! base units = nmol CaCO3
+     type(column_sinking_particle_type) :: P_SiO2           ! base units = nmol SiO2
+     type(column_sinking_particle_type) :: dust             ! base units = g
+     type(column_sinking_particle_type) :: P_iron           ! base units = nmol Fe
 
      real(r8), allocatable :: decay_CaCO3_fields       (:) ! scaling factor for dissolution of CaCO3
      real(r8), allocatable :: decay_POC_E_fields       (:) ! scaling factor for dissolution of excess POC
@@ -226,6 +227,9 @@ module marbl_internal_types
      real(r8), allocatable :: P_CaCO3_sflux_out_fields (:) ! P_CaCO3 sflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: P_CaCO3_hflux_out_fields (:) ! P_CaCO3_hflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: P_CaCO3_remin_fields     (:) ! P_CaCO3 remin from ecosys before it gets modified for k=KMT
+     real(r8), allocatable :: P_CaCO3_ALT_CO2_sflux_out_fields (:) ! P_CaCO3_ALT_CO2 sflux_out from ecosys before getting set to zero for k=KMT
+     real(r8), allocatable :: P_CaCO3_ALT_CO2_hflux_out_fields (:) ! P_CaCO3_ALT_CO2_hflux_out from ecosys before getting set to zero for k=KMT
+     real(r8), allocatable :: P_CaCO3_ALT_CO2_remin_fields     (:) ! P_CaCO3_ALT_CO2 remin from ecosys before it gets modified for k=KMT
      real(r8), allocatable :: POC_sflux_out_fields     (:) ! POC_sflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: POC_hflux_out_fields     (:) ! POC_hflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: POC_remin_fields         (:) ! POC remin from ecosys before it gets modified for k=KMT
@@ -382,6 +386,7 @@ module marbl_internal_types
     integer (int_kind) :: dic_ind         = 0 ! dissolved inorganic carbon
     integer (int_kind) :: dic_alt_co2_ind = 0 ! dissolved inorganic carbon with alternative CO2
     integer (int_kind) :: alk_ind         = 0 ! alkalinity
+    integer (int_kind) :: alk_alt_co2_ind = 0 ! alkalinity with alternative CO2
     integer (int_kind) :: doc_ind         = 0 ! dissolved organic carbon
     integer (int_kind) :: don_ind         = 0 ! dissolved organic nitrogen
     integer (int_kind) :: dop_ind         = 0 ! dissolved organic phosphorus
@@ -516,26 +521,30 @@ contains
     class(marbl_particulate_share_type), intent(inout) :: this
     integer (int_kind) :: num_levels
 
-    allocate(this%decay_CaCO3_fields       (num_levels)) 
-    allocate(this%decay_POC_E_fields       (num_levels)) 
-    allocate(this%decay_Hard_fields        (num_levels)) 
-    allocate(this%poc_diss_fields          (num_levels)) 
-    allocate(this%caco3_diss_fields        (num_levels)) 
-    allocate(this%P_CaCO3_sflux_out_fields (num_levels)) 
-    allocate(this%P_CaCO3_hflux_out_fields (num_levels)) 
-    allocate(this%P_CaCO3_remin_fields     (num_levels)) 
-    allocate(this%POC_sflux_out_fields     (num_levels)) 
-    allocate(this%POC_hflux_out_fields     (num_levels)) 
-    allocate(this%POC_remin_fields         (num_levels)) 
-    allocate(this%POC_prod_avail_fields    (num_levels)) 
+    allocate(this%decay_CaCO3_fields               (num_levels))
+    allocate(this%decay_POC_E_fields               (num_levels))
+    allocate(this%decay_Hard_fields                (num_levels))
+    allocate(this%poc_diss_fields                  (num_levels))
+    allocate(this%caco3_diss_fields                (num_levels))
+    allocate(this%P_CaCO3_sflux_out_fields         (num_levels))
+    allocate(this%P_CaCO3_hflux_out_fields         (num_levels))
+    allocate(this%P_CaCO3_remin_fields             (num_levels))
+    allocate(this%P_CaCO3_ALT_CO2_sflux_out_fields (num_levels))
+    allocate(this%P_CaCO3_ALT_CO2_hflux_out_fields (num_levels))
+    allocate(this%P_CaCO3_ALT_CO2_remin_fields     (num_levels))
+    allocate(this%POC_sflux_out_fields             (num_levels))
+    allocate(this%POC_hflux_out_fields             (num_levels))
+    allocate(this%POC_remin_fields                 (num_levels))
+    allocate(this%POC_prod_avail_fields            (num_levels))
 
     ! Now allocate memory for the column_sinking_particles_type components
-    call this%POC%construct     (num_levels)
-    call this%POP%construct     (num_levels)
-    call this%P_CaCO3%construct (num_levels)
-    call this%P_SiO2%construct  (num_levels)
-    call this%P_iron%construct  (num_levels)
-    call this%dust%construct    (num_levels)
+    call this%POC%construct             (num_levels)
+    call this%POP%construct             (num_levels)
+    call this%P_CaCO3%construct         (num_levels)
+    call this%P_CaCO3_ALT_CO2%construct (num_levels)
+    call this%P_SiO2%construct          (num_levels)
+    call this%P_iron%construct          (num_levels)
+    call this%dust%construct            (num_levels)
   end subroutine marbl_particulate_share_constructor
 
   subroutine marbl_particulate_share_destructor(this)
@@ -546,18 +555,22 @@ contains
     deallocate(this%decay_Hard_fields)
     deallocate(this%poc_diss_fields)
     deallocate(this%caco3_diss_fields)
-    deallocate(this%P_CaCO3_sflux_out_fields) 
-    deallocate(this%P_CaCO3_hflux_out_fields) 
-    deallocate(this%P_CaCO3_remin_fields) 
-    deallocate(this%POC_sflux_out_fields) 
-    deallocate(this%POC_hflux_out_fields) 
-    deallocate(this%POC_remin_fields) 
-    deallocate(this%POC_prod_avail_fields) 
+    deallocate(this%P_CaCO3_sflux_out_fields)
+    deallocate(this%P_CaCO3_hflux_out_fields)
+    deallocate(this%P_CaCO3_remin_fields)
+    deallocate(this%P_CaCO3_ALT_CO2_sflux_out_fields)
+    deallocate(this%P_CaCO3_ALT_CO2_hflux_out_fields)
+    deallocate(this%P_CaCO3_ALT_CO2_remin_fields)
+    deallocate(this%POC_sflux_out_fields)
+    deallocate(this%POC_hflux_out_fields)
+    deallocate(this%POC_remin_fields)
+    deallocate(this%POC_prod_avail_fields)
 
      ! Now allocate memory for the column_sinking_particles_type components
      call this%POC%destruct()
      call this%POP%destruct()
      call this%P_CaCO3%destruct()
+     call this%P_CaCO3_ALT_CO2%destruct()
      call this%P_SiO2%destruct()
      call this%P_iron%destruct()
      call this%dust%destruct()
@@ -568,7 +581,7 @@ contains
    subroutine marbl_surface_forcing_share_constructor(this, num_elements)
      class(marbl_surface_forcing_share_type), intent(inout) :: this
      integer (int_kind) , intent(in) :: num_elements
-     
+
      allocate(this%PV_SURF_fields       (num_elements)) ! piston velocity (cm/s)
      allocate(this%DIC_SURF_fields      (num_elements)) ! Surface values of DIC for solver
      allocate(this%CO2STAR_SURF_fields  (num_elements)) ! CO2STAR from solver
@@ -579,7 +592,7 @@ contains
    subroutine marbl_surface_forcing_share_destructor(this, num_elements)
      class(marbl_surface_forcing_share_type), intent(inout) :: this
      integer (int_kind) , intent(in) :: num_elements
-     
+
      deallocate(this%PV_SURF_fields      ) ! piston velocity (cm/s)
      deallocate(this%DIC_SURF_fields     ) ! Surface values of DIC for solver
      deallocate(this%CO2STAR_SURF_fields ) ! CO2STAR from solver
@@ -694,6 +707,9 @@ contains
 
       tracer_cnt   = tracer_cnt + 1
       this%alk_ind = tracer_cnt
+
+      tracer_cnt           = tracer_cnt + 1
+      this%alk_alt_co2_ind = tracer_cnt
 
       tracer_cnt   = tracer_cnt + 1
       this%doc_ind = tracer_cnt

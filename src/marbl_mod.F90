@@ -1029,6 +1029,7 @@ contains
          POC                 => marbl_particulate_share%POC,        &
          POP                 => marbl_particulate_share%POP,        &
          P_CaCO3             => marbl_particulate_share%P_CaCO3,    &
+         P_CaCO3_ALT_CO2     => marbl_particulate_share%P_CaCO3_ALT_CO2,&
          P_SiO2              => marbl_particulate_share%P_SiO2,     &
          dust                => marbl_particulate_share%dust,       &
          P_iron              => marbl_particulate_share%P_iron,     &
@@ -1052,7 +1053,6 @@ contains
          o2_ind            => marbl_tracer_indices%o2_ind,          &
          dic_ind           => marbl_tracer_indices%dic_ind,         &
          dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind, &
-         alk_ind           => marbl_tracer_indices%alk_ind,         &
          doc_ind           => marbl_tracer_indices%doc_ind,         &
          don_ind           => marbl_tracer_indices%don_ind,         &
          dop_ind           => marbl_tracer_indices%dop_ind,         &
@@ -1080,7 +1080,7 @@ contains
          tracers(:,:), tracer_local(:,:), zooplankton_local(:,:), autotroph_local(:,:))
 
     call marbl_init_particulate_terms(1, surface_forcing_indices, &
-         POC, POP, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
+         POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
 
     call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
                             marbl_status_log)
@@ -1169,16 +1169,16 @@ contains
        call marbl_compute_large_detritus_prod(k, autotroph_cnt,               &
             zooplankton_cnt, autotrophs, zooplankton_secondary_species(:, k), &
             autotroph_secondary_species(:, k), Fe_scavenge(k),                &
-            POC, POP, P_CaCO3, P_SiO2, dust, P_iron, marbl_tracer_indices)
+            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, marbl_tracer_indices)
 
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
-       call marbl_compute_particulate_terms(k, domain,                        &
-            marbl_particulate_share, POC, POP, P_CaCO3, P_SiO2, dust,         &
-            P_iron, PON_remin(k), PON_sed_loss(k),                            &
-            QA_dust_def(k), temperature(k),                  &
-            tracer_local(:, k), carbonate(k), sed_denitrif(k),                &
-            other_remin(k), fesedflux(k), marbl_tracer_indices,               &
+       call marbl_compute_particulate_terms(k, domain,                   &
+            marbl_particulate_share, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, &
+            P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),         &
+            QA_dust_def(k), temperature(k),                              &
+            tracer_local(:, k), carbonate(k), sed_denitrif(k),           &
+            other_remin(k), fesedflux(k), marbl_tracer_indices,          &
             glo_avg_fields_interior, marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
@@ -1210,8 +1210,8 @@ contains
             nitrif(k), denitrif(k), sed_denitrif(k), &
             Fe_scavenge(k), Lig_prod(k), Lig_loss(k), &
             P_iron%remin(k), POC%remin(k), POP%remin(k), &
-            P_SiO2%remin(k), P_CaCO3%remin(k), other_remin(k), &
-            PON_remin(k), &
+            P_SiO2%remin(k), P_CaCO3%remin(k), P_CaCO3_ALT_CO2%remin(k), &
+            other_remin(k), PON_remin(k), &
             interior_restore(:, k), &
             tracer_local(o2_ind, k), &
             o2_production(k), o2_consumption(k), &
@@ -1238,7 +1238,7 @@ contains
 
        if  (k < km) then
           call marbl_update_particulate_terms_from_prior_level(k+1, POC, POP, &
-               P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def(:))
+               P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:))
        endif
 
     end do ! k
@@ -1300,7 +1300,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_init_particulate_terms(k, surface_forcing_indices, &
-       POC, POP, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def, NET_DUST_IN)
+       POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def, NET_DUST_IN)
 
     !  Set incoming fluxes (put into outgoing flux for first level usage).
     !  Set dissolution length, production fraction and mass terms.
@@ -1320,6 +1320,7 @@ contains
     type(column_sinking_particle_type) , intent(inout) :: POC             ! base units = nmol C
     type(column_sinking_particle_type) , intent(inout) :: POP             ! base units = nmol P
     type(column_sinking_particle_type) , intent(inout) :: P_CaCO3         ! base units = nmol CaCO3
+    type(column_sinking_particle_type) , intent(inout) :: P_CaCO3_ALT_CO2 ! base units = nmol CaCO3
     type(column_sinking_particle_type) , intent(inout) :: P_SiO2          ! base units = nmol SiO2
     type(column_sinking_particle_type) , intent(inout) :: dust            ! base units = g
     type(column_sinking_particle_type) , intent(inout) :: P_iron          ! base units = nmol Fe
@@ -1347,6 +1348,11 @@ contains
     P_CaCO3%mass  = 100.09_r8       ! molecular weight of CaCO
     P_CaCO3%rho   = 0.05_r8 * P_CaCO3%mass / POC%mass ! QA mass ratio for CaCO3
 
+    P_CaCO3_ALT_CO2%diss  = P_CaCO3%diss
+    P_CaCO3_ALT_CO2%gamma = P_CaCO3%gamma
+    P_CaCO3_ALT_CO2%mass  = P_CaCO3%mass
+    P_CaCO3_ALT_CO2%rho   = P_CaCO3%rho
+
     P_SiO2%diss   = parm_SiO2_diss  ! diss. length (cm), modified by TEMP
     P_SiO2%gamma  = 0.10_r8         ! prod frac -> hard subclass
     P_SiO2%mass   = 60.08_r8        ! molecular weight of SiO2
@@ -1370,6 +1376,11 @@ contains
     P_CaCO3%hflux_out(k) = c0
     P_CaCO3%sflux_in(k) = P_CaCO3%sflux_out(k)
     P_CaCO3%hflux_in(k) = P_CaCO3%hflux_out(k)
+
+    P_CaCO3_ALT_CO2%sflux_out(k) = c0
+    P_CaCO3_ALT_CO2%hflux_out(k) = c0
+    P_CaCO3_ALT_CO2%sflux_in(k) = P_CaCO3_ALT_CO2%sflux_out(k)
+    P_CaCO3_ALT_CO2%hflux_in(k) = P_CaCO3_ALT_CO2%hflux_out(k)
 
     P_SiO2%sflux_out(k) = c0
     P_SiO2%hflux_out(k) = c0
@@ -1416,10 +1427,10 @@ contains
   !***********************************************************************
 
   subroutine marbl_update_particulate_terms_from_prior_level(k, &
-       POC, POP, P_CaCO3, P_SiO2, dust, P_iron, QA_dust_def)
+       POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def)
 
     integer (int_kind)                 , intent(in)    :: k ! vertical model level
-    type(column_sinking_particle_type) , intent(inout) :: POC, POP, P_CaCO3, P_SiO2, dust, P_iron
+    type(column_sinking_particle_type) , intent(inout) :: POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron
     real(r8)                           , intent(inout) :: QA_dust_def(:) !(km)
 
     ! NOTE(bja, 2015-04) assume that k == 1 condition was handled by
@@ -1431,6 +1442,8 @@ contains
        ! initialize loss to sediments = 0
        !-----------------------------------------------------------------------
        call marbl_update_sinking_particle_from_prior_level(k, P_CaCO3)
+
+       call marbl_update_sinking_particle_from_prior_level(k, P_CaCO3_ALT_CO2)
 
        call marbl_update_sinking_particle_from_prior_level(k, P_SiO2)
 
@@ -1464,11 +1477,11 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_particulate_terms(k, domain,                        &
-             marbl_particulate_share, POC, POP, P_CaCO3, P_SiO2, dust, P_iron, &
-             PON_remin, PON_sed_loss, QA_dust_def,    &
-             temperature, tracer_local, carbonate, sed_denitrif, other_remin,  &
-             fesedflux, marbl_tracer_indices, glo_avg_fields_interior,         &
+  subroutine marbl_compute_particulate_terms(k, domain,                       &
+             marbl_particulate_share, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,     &
+             P_SiO2, dust, P_iron, PON_remin, PON_sed_loss, QA_dust_def,      &
+             temperature, tracer_local, carbonate, sed_denitrif, other_remin, &
+             fesedflux, marbl_tracer_indices, glo_avg_fields_interior,        &
              marbl_status_log)
 
     !  Compute outgoing fluxes and remineralization terms. Assumes that
@@ -1534,6 +1547,7 @@ contains
     type(column_sinking_particle_type)      , intent(inout) :: POC                 ! base units = nmol C
     type(column_sinking_particle_type)      , intent(inout) :: POP                 ! base units = nmol P
     type(column_sinking_particle_type)      , intent(inout) :: P_CaCO3             ! base units = nmol CaCO3
+    type(column_sinking_particle_type)      , intent(inout) :: P_CaCO3_ALT_CO2     ! base units = nmol CaCO3
     type(column_sinking_particle_type)      , intent(inout) :: P_SiO2              ! base units = nmol SiO2
     type(column_sinking_particle_type)      , intent(inout) :: dust                ! base units = g
     type(column_sinking_particle_type)      , intent(inout) :: P_iron              ! base units = nmol Fe
@@ -1600,10 +1614,13 @@ contains
          caco3_diss_fields        => marbl_particulate_share%caco3_diss_fields,        & ! IN/OUT
          P_CaCO3_sflux_out_fields => marbl_particulate_share%P_CaCO3_sflux_out_fields, & ! IN/OUT
          P_CaCO3_hflux_out_fields => marbl_particulate_share%P_CaCO3_hflux_out_fields, & ! IN/OUT
+         P_CaCO3_ALT_CO2_sflux_out_fields => marbl_particulate_share%P_CaCO3_ALT_CO2_sflux_out_fields, & ! IN/OUT
+         P_CaCO3_ALT_CO2_hflux_out_fields => marbl_particulate_share%P_CaCO3_ALT_CO2_hflux_out_fields, & ! IN/OUT
          POC_sflux_out_fields     => marbl_particulate_share%POC_sflux_out_fields,     & ! IN/OUT
          POC_hflux_out_fields     => marbl_particulate_share%POC_hflux_out_fields,     & ! IN/OUT
          POC_remin_fields         => marbl_particulate_share%POC_remin_fields,         & ! IN/OUT
          P_CaCO3_remin_fields     => marbl_particulate_share%P_CaCO3_remin_fields,     & ! IN/OUT
+         P_CaCO3_ALT_CO2_remin_fields     => marbl_particulate_share%P_CaCO3_ALT_CO2_remin_fields,     & ! IN/OUT
          DECAY_Hard_fields        => marbl_particulate_share%DECAY_Hard_fields,        & ! IN/OUT
          POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff,           & ! IN/OUT
          POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff,           & ! IN/OUT
@@ -1700,6 +1717,13 @@ contains
 
        P_CaCO3%hflux_out(k) = P_CaCO3%hflux_in(k) * DECAY_Hard + &
             P_CaCO3%prod(k) * (P_CaCO3%gamma * dz_loc)
+
+       P_CaCO3_ALT_CO2%sflux_out(k) = P_CaCO3_ALT_CO2%sflux_in(k) * decay_CaCO3 + &
+            P_CaCO3_ALT_CO2%prod(k) * ((c1 - P_CaCO3_ALT_CO2%gamma) * (c1 - decay_CaCO3) &
+            * caco3_diss)
+
+       P_CaCO3_ALT_CO2%hflux_out(k) = P_CaCO3_ALT_CO2%hflux_in(k) * DECAY_Hard + &
+            P_CaCO3_ALT_CO2%prod(k) * (P_CaCO3_ALT_CO2%gamma * dz_loc)
 
        P_SiO2%sflux_out(k) = P_SiO2%sflux_in(k) * decay_SiO2 + &
             P_SiO2%prod(k) * ((c1 - P_SiO2%gamma) * (c1 - decay_SiO2) &
@@ -1799,6 +1823,10 @@ contains
             ((P_CaCO3%sflux_in(k) - P_CaCO3%sflux_out(k)) + &
             (P_CaCO3%hflux_in(k) - P_CaCO3%hflux_out(k))) * dzr_loc
 
+       P_CaCO3_ALT_CO2%remin(k) = P_CaCO3_ALT_CO2%prod(k) + &
+            ((P_CaCO3_ALT_CO2%sflux_in(k) - P_CaCO3_ALT_CO2%sflux_out(k)) + &
+            (P_CaCO3_ALT_CO2%hflux_in(k) - P_CaCO3_ALT_CO2%hflux_out(k))) * dzr_loc
+
        P_SiO2%remin(k) = P_SiO2%prod(k) + &
             ((P_SiO2%sflux_in(k) - P_SiO2%sflux_out(k)) + &
             (P_SiO2%hflux_in(k) - P_SiO2%hflux_out(k))) * dzr_loc
@@ -1883,6 +1911,10 @@ contains
        P_CaCO3%hflux_out(k) = c0
        P_CaCO3%remin(k) = c0
 
+       P_CaCO3_ALT_CO2%sflux_out(k) = c0
+       P_CaCO3_ALT_CO2%hflux_out(k) = c0
+       P_CaCO3_ALT_CO2%remin(k) = c0
+
        P_SiO2%sflux_out(k) = c0
        P_SiO2%hflux_out(k) = c0
        P_SiO2%remin(k) = c0
@@ -1937,12 +1969,13 @@ contains
     !     which is based on caco3_bury_thres_opt.
     !-----------------------------------------------------------------------
 
-    POC%sed_loss(k)     = c0
-    POP%sed_loss(k)     = c0
-    P_SiO2%sed_loss(k)  = c0
-    P_CaCO3%sed_loss(k) = c0
-    P_iron%sed_loss(k)  = c0
-    dust%sed_loss(k)    = c0
+    POC%sed_loss(k)             = c0
+    POP%sed_loss(k)             = c0
+    P_SiO2%sed_loss(k)          = c0
+    P_CaCO3%sed_loss(k)         = c0
+    P_CaCO3_ALT_CO2%sed_loss(k) = c0
+    P_iron%sed_loss(k)          = c0
+    dust%sed_loss(k)            = c0
 
     PON_sed_loss        = c0
 
@@ -2014,11 +2047,15 @@ contains
 
        if (caco3_bury_thres_iopt == caco3_bury_thres_iopt_fixed_depth) then
           if (zw(k) < caco3_bury_thres_depth) then
-             P_CaCO3%sed_loss(k) = P_CaCO3%sflux_out(k) + P_CaCO3%hflux_out(k)
+             P_CaCO3%sed_loss(k)         = P_CaCO3%sflux_out(k)         + P_CaCO3%hflux_out(k)
+             P_CaCO3_ALT_CO2%sed_loss(k) = P_CaCO3_ALT_CO2%sflux_out(k) + P_CaCO3_ALT_CO2%hflux_out(k)
           endif
        else ! caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
           if (carbonate%CO3 > carbonate%CO3_sat_calcite) then
              P_CaCO3%sed_loss(k) = P_CaCO3%sflux_out(k) + P_CaCO3%hflux_out(k)
+          endif
+          if (carbonate%CO3_ALT_CO2 > carbonate%CO3_sat_calcite) then
+             P_CaCO3_ALT_CO2%sed_loss(k) = P_CaCO3_ALT_CO2%sflux_out(k) + P_CaCO3_ALT_CO2%hflux_out(k)
           endif
        endif
 
@@ -2035,6 +2072,12 @@ contains
        if (flux > c0) then
           P_CaCO3%remin(k) = P_CaCO3%remin(k) &
                + ((flux - P_CaCO3%sed_loss(k)) * dzr_loc)
+       endif
+
+       flux = P_CaCO3_ALT_CO2%sflux_out(k) + P_CaCO3_ALT_CO2%hflux_out(k)
+       if (flux > c0) then
+          P_CaCO3_ALT_CO2%remin(k) = P_CaCO3_ALT_CO2%remin(k) &
+               + ((flux - P_CaCO3_ALT_CO2%sed_loss(k)) * dzr_loc)
        endif
 
        flux = P_SiO2%sflux_out(k) + P_SiO2%hflux_out(k)
@@ -2077,6 +2120,9 @@ contains
        if (k == column_kmt) then
           P_CaCO3%sflux_out(k) = c0
           P_CaCO3%hflux_out(k) = c0
+
+          P_CaCO3_ALT_CO2%sflux_out(k) = c0
+          P_CaCO3_ALT_CO2%hflux_out(k) = c0
 
           P_SiO2%sflux_out(k) = c0
           P_SiO2%hflux_out(k) = c0
@@ -2305,6 +2351,7 @@ contains
          dic_ind           => marbl_tracer_indices%dic_ind,                                     &
          dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind,                             &
          alk_ind           => marbl_tracer_indices%alk_ind,                                     &
+         alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind,                             &
 
          pv_surf_fields       => surface_forcing_share%pv_surf_fields(:),                           & ! out
          dic_surf_fields      => surface_forcing_share%dic_surf_fields(:),                          & ! out
@@ -2477,7 +2524,7 @@ contains
                mask       = mask,                                          &
                dic_in     = surface_vals(:,dic_alt_co2_ind),               &
                xco2_in    = surface_input_forcings(ind%xco2_alt_co2_id)%field_0d, &
-               ta_in      = surface_vals(:,alk_ind),                       &
+               ta_in      = surface_vals(:,alk_alt_co2_ind),               &
                pt_in      = surface_vals(:,po4_ind),                       &
                sit_in     = surface_vals(:,sio3_ind),                      &
                temp       = surface_input_forcings(ind%sst_id)%field_0d,   &
@@ -2580,7 +2627,8 @@ contains
     !  Apply NO & NH fluxes to alkalinity
     !-----------------------------------------------------------------------
 
-    stf(:, alk_ind) = stf(:, alk_ind) + stf(:, nh4_ind) - stf(:, no3_ind)
+    stf(:, alk_ind)         = stf(:, alk_ind)         + stf(:, nh4_ind) - stf(:, no3_ind)
+    stf(:, alk_alt_co2_ind) = stf(:, alk_alt_co2_ind) + stf(:, nh4_ind) - stf(:, no3_ind)
 
     !-----------------------------------------------------------------------
     ! Set surface forcing diagnostics
@@ -2678,6 +2726,7 @@ contains
          dic_ind           => marbl_tracer_indices%dic_ind,         &
          dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind, &
          alk_ind           => marbl_tracer_indices%alk_ind,         &
+         alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind, &
          doc_ind           => marbl_tracer_indices%doc_ind,         &
          don_ind           => marbl_tracer_indices%don_ind,         &
          dop_ind           => marbl_tracer_indices%dop_ind,         &
@@ -2728,6 +2777,10 @@ contains
     marbl_tracer_metadata(alk_ind)%long_name='Alkalinity'
     non_living_biomass_ecosys_tracer_cnt = non_living_biomass_ecosys_tracer_cnt + 1
 
+    marbl_tracer_metadata(alk_alt_co2_ind)%short_name='ALK_ALT_CO2'
+    marbl_tracer_metadata(alk_alt_co2_ind)%long_name='Alkalinity, Alternative CO2'
+    non_living_biomass_ecosys_tracer_cnt = non_living_biomass_ecosys_tracer_cnt + 1
+
     marbl_tracer_metadata(doc_ind)%short_name='DOC'
     marbl_tracer_metadata(doc_ind)%long_name='Dissolved Organic Carbon'
     non_living_biomass_ecosys_tracer_cnt = non_living_biomass_ecosys_tracer_cnt + 1
@@ -2753,7 +2806,7 @@ contains
     non_living_biomass_ecosys_tracer_cnt = non_living_biomass_ecosys_tracer_cnt + 1
 
     do n = 1, non_living_biomass_ecosys_tracer_cnt
-       if (n == alk_ind) then
+       if (n == alk_ind .or. n == alk_alt_co2_ind) then
           marbl_tracer_metadata(n)%units      = 'meq/m^3'
           marbl_tracer_metadata(n)%tend_units = 'meq/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'meq/m^3 cm/s'
@@ -3334,6 +3387,7 @@ contains
     real(r8)          , dimension(domain%km) :: dic_loc
     real(r8)          , dimension(domain%km) :: dic_alt_co2_loc
     real(r8)          , dimension(domain%km) :: alk_loc
+    real(r8)          , dimension(domain%km) :: alk_alt_co2_loc
     real(r8)          , dimension(domain%km) :: po4_loc
     real(r8)          , dimension(domain%km) :: sio3_loc
     !-----------------------------------------------------------------------
@@ -3344,6 +3398,7 @@ contains
     dic_loc(:)         = tracer_local(marbl_tracer_indices%dic_ind,:)
     dic_alt_co2_loc(:) = tracer_local(marbl_tracer_indices%dic_alt_co2_ind,:)
     alk_loc(:)         = tracer_local(marbl_tracer_indices%alk_ind,:)
+    alk_alt_co2_loc(:) = tracer_local(marbl_tracer_indices%alk_alt_co2_ind,:)
     po4_loc(:)         = tracer_local(marbl_tracer_indices%po4_ind,:)
     sio3_loc(:)        = tracer_local(marbl_tracer_indices%sio3_ind,:)
 
@@ -3406,9 +3461,9 @@ contains
     enddo
 
     call marbl_comp_CO3terms(&
-         dkm, mask, pressure_correct, .false., co3_coeffs, temperature,    &
-         salinity, press_bar, dic_alt_co2_loc, alk_loc, po4_loc, sio3_loc, &
-         ph_lower_bound, ph_upper_bound, ph_alt_co2, h2co3_alt_co2,        &
+         dkm, mask, pressure_correct, .false., co3_coeffs, temperature,            &
+         salinity, press_bar, dic_alt_co2_loc, alk_alt_co2_loc, po4_loc, sio3_loc, &
+         ph_lower_bound, ph_upper_bound, ph_alt_co2, h2co3_alt_co2,                &
          hco3_alt_co2, co3_alt_co2, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
@@ -4611,7 +4666,8 @@ contains
 
   subroutine marbl_compute_large_detritus_prod(k, auto_cnt, zoo_cnt,          &
        auto_meta, zooplankton_secondary_species, autotroph_secondary_species, &
-       Fe_scavenge, POC, POP, P_CaCO3, P_SiO2, dust, P_iron, marbl_tracer_indices)
+       Fe_scavenge, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, &
+       marbl_tracer_indices)
 
     use marbl_parms     , only : f_graze_CaCO3_remin
     use marbl_parms     , only : f_graze_si_remin
@@ -4632,6 +4688,7 @@ contains
     type(column_sinking_particle_type)       , intent(inout) :: POC
     type(column_sinking_particle_type)       , intent(inout) :: POP
     type(column_sinking_particle_type)       , intent(inout) :: P_CaCO3
+    type(column_sinking_particle_type)       , intent(inout) :: P_CaCO3_ALT_CO2
     type(column_sinking_particle_type)       , intent(inout) :: P_SiO2
     type(column_sinking_particle_type)       , intent(inout) :: dust
     type(column_sinking_particle_type)       , intent(inout) :: P_iron
@@ -4683,6 +4740,7 @@ contains
        if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
           P_CaCO3%prod(k) = ((c1 - f_graze_CaCO3_remin) * auto_graze(auto_ind) + &
                auto_loss(auto_ind) + auto_agg(auto_ind)) * QCaCO3(auto_ind)
+          P_CaCO3_ALT_CO2%prod(k) = P_CaCO3%prod(k)
        endif
     end do
 
@@ -4893,8 +4951,8 @@ contains
              zooplankton_secondary_species, dissolved_organic_matter,           &
              nitrif, denitrif, sed_denitrif, Fe_scavenge, Lig_prod, Lig_loss,   &
              P_iron_remin, POC_remin, POP_remin, P_SiO2_remin, P_CaCO3_remin,   &
-             other_remin, PON_remin, interior_restore, O2_loc, o2_production,   &
-             o2_consumption, dtracers, marbl_tracer_indices)
+             P_CaCO3_ALT_CO2_remin, other_remin, PON_remin, interior_restore,   &
+             O2_loc, o2_production, o2_consumption, dtracers, marbl_tracer_indices)
 
     integer                                  , intent(in)  :: auto_cnt
     integer                                  , intent(in)  :: zoo_cnt
@@ -4915,6 +4973,7 @@ contains
     real(r8)                                 , intent(in)  :: POP_remin
     real(r8)                                 , intent(in)  :: P_SiO2_remin
     real(r8)                                 , intent(in)  :: P_CaCO3_remin
+    real(r8)                                 , intent(in)  :: P_CaCO3_ALT_CO2_remin
     real(r8)                                 , intent(in)  :: other_remin
     real(r8)                                 , intent(in)  :: PON_remin
     real(r8)                                 , intent(in)  :: interior_restore(ecosys_base_tracer_cnt)
@@ -4988,6 +5047,7 @@ contains
          dic_ind           => marbl_tracer_indices%dic_ind,         &
          dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind, &
          alk_ind           => marbl_tracer_indices%alk_ind,         &
+         alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind, &
          doc_ind           => marbl_tracer_indices%doc_ind,         &
          don_ind           => marbl_tracer_indices%don_ind,         &
          dop_ind           => marbl_tracer_indices%dop_ind,         &
@@ -5134,8 +5194,7 @@ contains
        end if
     end do
 
-    dtracers(dic_alt_co2_ind) = dtracers(dic_ind)
-
+    dtracers(dic_alt_co2_ind) = dtracers(dic_ind) + (P_CaCO3_ALT_CO2_remin - P_CaCO3_remin)
 
     !-----------------------------------------------------------------------
     !  alkalinity
@@ -5149,6 +5208,8 @@ contains
                + c2 * (f_graze_CaCO3_REMIN * auto_graze(auto_ind) * QCaCO3(auto_ind) - CaCO3_PROD(auto_ind))
        end if
     end do
+
+    dtracers(alk_alt_co2_ind) = dtracers(alk_ind) + c2 * (P_CaCO3_ALT_CO2_remin - P_CaCO3_remin)
 
     !-----------------------------------------------------------------------
     !  oxygen
