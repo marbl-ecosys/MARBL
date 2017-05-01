@@ -1391,7 +1391,6 @@ contains
           end if
        end if
 
-       ! Particulate 2D diags
        if (count_only) then
           num_interior_diags = num_interior_diags + 1
        else
@@ -4088,7 +4087,6 @@ contains
          POC              => marbl_particulate_share%POC,                     &
          POP              => marbl_particulate_share%POP,                     &
          P_CaCO3          => marbl_particulate_share%P_CaCO3,                 &
-         P_CaCO3_ALT_CO2  => marbl_particulate_share%P_CaCO3_ALT_CO2,         &
          P_SiO2           => marbl_particulate_share%P_SiO2,                  &
          dust             => marbl_particulate_share%dust,                    &
          P_iron           => marbl_particulate_share%P_iron                   &

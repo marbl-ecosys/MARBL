@@ -227,9 +227,6 @@ module marbl_internal_types
      real(r8), allocatable :: P_CaCO3_sflux_out_fields (:) ! P_CaCO3 sflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: P_CaCO3_hflux_out_fields (:) ! P_CaCO3_hflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: P_CaCO3_remin_fields     (:) ! P_CaCO3 remin from ecosys before it gets modified for k=KMT
-     real(r8), allocatable :: P_CaCO3_ALT_CO2_sflux_out_fields (:) ! P_CaCO3_ALT_CO2 sflux_out from ecosys before getting set to zero for k=KMT
-     real(r8), allocatable :: P_CaCO3_ALT_CO2_hflux_out_fields (:) ! P_CaCO3_ALT_CO2_hflux_out from ecosys before getting set to zero for k=KMT
-     real(r8), allocatable :: P_CaCO3_ALT_CO2_remin_fields     (:) ! P_CaCO3_ALT_CO2 remin from ecosys before it gets modified for k=KMT
      real(r8), allocatable :: POC_sflux_out_fields     (:) ! POC_sflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: POC_hflux_out_fields     (:) ! POC_hflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: POC_remin_fields         (:) ! POC remin from ecosys before it gets modified for k=KMT
@@ -529,9 +526,6 @@ contains
     allocate(this%P_CaCO3_sflux_out_fields         (num_levels))
     allocate(this%P_CaCO3_hflux_out_fields         (num_levels))
     allocate(this%P_CaCO3_remin_fields             (num_levels))
-    allocate(this%P_CaCO3_ALT_CO2_sflux_out_fields (num_levels))
-    allocate(this%P_CaCO3_ALT_CO2_hflux_out_fields (num_levels))
-    allocate(this%P_CaCO3_ALT_CO2_remin_fields     (num_levels))
     allocate(this%POC_sflux_out_fields             (num_levels))
     allocate(this%POC_hflux_out_fields             (num_levels))
     allocate(this%POC_remin_fields                 (num_levels))
@@ -558,9 +552,6 @@ contains
     deallocate(this%P_CaCO3_sflux_out_fields)
     deallocate(this%P_CaCO3_hflux_out_fields)
     deallocate(this%P_CaCO3_remin_fields)
-    deallocate(this%P_CaCO3_ALT_CO2_sflux_out_fields)
-    deallocate(this%P_CaCO3_ALT_CO2_hflux_out_fields)
-    deallocate(this%P_CaCO3_ALT_CO2_remin_fields)
     deallocate(this%POC_sflux_out_fields)
     deallocate(this%POC_hflux_out_fields)
     deallocate(this%POC_remin_fields)

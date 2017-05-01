@@ -1614,13 +1614,10 @@ contains
          caco3_diss_fields        => marbl_particulate_share%caco3_diss_fields,        & ! IN/OUT
          P_CaCO3_sflux_out_fields => marbl_particulate_share%P_CaCO3_sflux_out_fields, & ! IN/OUT
          P_CaCO3_hflux_out_fields => marbl_particulate_share%P_CaCO3_hflux_out_fields, & ! IN/OUT
-         P_CaCO3_ALT_CO2_sflux_out_fields => marbl_particulate_share%P_CaCO3_ALT_CO2_sflux_out_fields, & ! IN/OUT
-         P_CaCO3_ALT_CO2_hflux_out_fields => marbl_particulate_share%P_CaCO3_ALT_CO2_hflux_out_fields, & ! IN/OUT
          POC_sflux_out_fields     => marbl_particulate_share%POC_sflux_out_fields,     & ! IN/OUT
          POC_hflux_out_fields     => marbl_particulate_share%POC_hflux_out_fields,     & ! IN/OUT
          POC_remin_fields         => marbl_particulate_share%POC_remin_fields,         & ! IN/OUT
          P_CaCO3_remin_fields     => marbl_particulate_share%P_CaCO3_remin_fields,     & ! IN/OUT
-         P_CaCO3_ALT_CO2_remin_fields     => marbl_particulate_share%P_CaCO3_ALT_CO2_remin_fields,     & ! IN/OUT
          DECAY_Hard_fields        => marbl_particulate_share%DECAY_Hard_fields,        & ! IN/OUT
          POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff,           & ! IN/OUT
          POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff,           & ! IN/OUT
