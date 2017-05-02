@@ -1195,7 +1195,7 @@ contains
     !   Developed by X. Giraud, ETH ZÃ¼rich, 21.07.2008
     !---------------------------------------------------------------------------
 
-    use marbl_constants_mod, only : pi
+    use marbl_constants_mod, only : pi, c4, c3
 
     implicit none
 
@@ -1239,7 +1239,7 @@ contains
     if ( cell_surf > c0 ) then
        Surf = cell_surf
     else
-       Surf = 4.0_r8 * pi * (radius_m ** 2)
+       Surf = c4 * pi * (radius_m ** 2)
     endif
 
     !---------------------------------------------------------------------
@@ -1250,7 +1250,7 @@ contains
     if ( cell_carb_cont > c0 ) then
        Qc = cell_carb_cont
     else
-       Vol = 4.0_r8 * pi * (cell_radius ** 3) / 3.0_r8
+       Vol = c4 * pi * (cell_radius ** 3) / c3
        Qc = 3.154e-14_r8 * (Vol ** (0.758_r8 ))
     endif
 
@@ -1727,7 +1727,6 @@ contains
        sst                 ,                 &
        d13c                ,                 &
        d14c                ,                 &
-       d14c_glo_avg        ,                 &
        surface_vals        ,                 &
        stf                 ,                 &
        marbl_tracer_indices,                 &
@@ -1746,7 +1745,6 @@ contains
     real(r8)                               , intent(in)    :: sst(num_elements)
     real(r8)                               , intent(in)    :: d13c(num_elements)  ! atm 13co2 value
     real(r8)                               , intent(in)    :: d14c(num_elements)  ! atm 14co2 value
-    real(r8)                               , intent(in)    :: d14c_glo_avg(num_elements)
     real(r8)                               , intent(in)    :: surface_vals(:,:)
     type(marbl_surface_forcing_share_type) , intent(in)    :: marbl_surface_forcing_share
     real(r8)                               , intent(inout) :: stf(:, :)
@@ -1794,12 +1792,6 @@ contains
          alpha_aq_g_surf_14c,             & ! for 14C, with fractionation being twice as large for 14C than for 13C
          alpha_dic_g_surf_14c               ! for 14C, with fractionation being twice as large for 14C than for 13C
 
-    real (r8), dimension(num_elements) :: &
-         di13c_riv_flux,                  & ! River input of DI13C
-         do13c_riv_flux,                  & ! River input of DO13C
-         di14c_riv_flux,                  & ! River input of DI14C
-         do14c_riv_flux                     ! River input of DO14C
-
     ! local parameters for 13C, Zhang et al, 1995, Geochim. et Cosmochim. Acta, 59 (1), 107-114
     real(r8) ::            &
          alpha_k,          & ! eps = ( alpa -1 ) * 1000
@@ -1815,8 +1807,6 @@ contains
          co2star             => marbl_surface_forcing_share%co2star_surf_fields  , & ! in/out CO2STAR from solver
          dco2star            => marbl_surface_forcing_share%dco2star_surf_fields , & ! in/out DCO2STAR from solver
          co3_surf_fields     => marbl_surface_forcing_share%co3_surf_fields      , & ! in/out
-         dic_riv_flux_fields => marbl_surface_forcing_share%dic_riv_flux_fields  , & ! in/out
-         doc_riv_flux_fields => marbl_surface_forcing_share%doc_riv_flux_fields  , & ! in/out
 
          di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
          do13c_ind          => marbl_tracer_indices%do13c_ind                  , &
@@ -1935,22 +1925,6 @@ contains
     stf(:,di13c_ind) = stf(:,di13c_ind) + flux13(:)
     stf(:,di14c_ind) = stf(:,di14c_ind) + flux14(:)
 
-    !-----------------------------------------------------------------------
-    !     Adding 13C FLux to total DI13C
-    !-----------------------------------------------------------------------
-
-    di13c_riv_flux(:) = dic_riv_flux_fields(:) * (-10.0_r8/c1000 +c1) * R13C_std
-    di14c_riv_flux(:) = dic_riv_flux_fields(:) * ((D14C_glo_avg(:) - 50.0_r8)/c1000 +c1) * R14C_std
-
-    do13c_riv_flux(:) = doc_riv_flux_fields(:) * (-27.6_r8/c1000 +c1) * R13C_std
-    do14c_riv_flux(:) = doc_riv_flux_fields(:) * (-50.0_r8/c1000 +c1) * R14C_std
-
-    stf(:,di13c_ind) = stf(:,di13c_ind) + di13c_riv_flux(:)
-    stf(:,do13c_ind) = stf(:,do13c_ind) + do13c_riv_flux(:)
-
-    stf(:,di14c_ind) = stf(:,di14c_ind) + di14c_riv_flux(:)
-    stf(:,do14c_ind) = stf(:,do14c_ind) + do14c_riv_flux(:)
-
     end associate
 
     ! update carbon isotope diagnostics 
@@ -1960,7 +1934,6 @@ contains
          num_elements,   &
          d13c,           &
          d14c,           &
-         d14c_glo_avg,   &
          flux,           &
          flux13,         &
          flux14,         &
@@ -1974,10 +1947,6 @@ contains
          R14C_dic,       &
          R13C_atm,       &
          R14C_atm,       &
-         di13c_riv_flux, &
-         do13c_riv_flux, &
-         di14c_riv_flux, &
-         do14c_riv_flux, &
          eps_aq_g_surf,  &
          eps_dic_g_surf, &
          marbl_surface_forcing_diags)

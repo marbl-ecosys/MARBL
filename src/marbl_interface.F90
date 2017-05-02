@@ -20,7 +20,6 @@ module marbl_interface
   use marbl_kinds_mod       , only : r8, log_kind, int_kind, log_kind, char_len
   use marbl_logging         , only : marbl_log_type
 
-  use marbl_sizes           , only : ecosys_base_tracer_cnt
   use marbl_sizes           , only : marbl_total_tracer_cnt
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
@@ -54,6 +53,7 @@ module marbl_interface
 
   use marbl_config_mod, only : marbl_config_and_parms_type
   use marbl_config_mod, only : ciso_on
+  use marbl_config_mod, only : lvariable_PtoC
 
   implicit none
 
@@ -88,7 +88,6 @@ module marbl_interface
      type(marbl_interior_forcing_indexing_type), public               :: interior_forcing_ind         !
      type(marbl_forcing_fields_type)           , public, allocatable  :: interior_input_forcings(:)
      type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
-     type(marbl_diagnostics_type)              , public               :: interior_restore_diags  ! output
 
      ! public data surface forcing
      real (r8)                                 , public, allocatable  :: surface_vals(:,:)           ! input  *
@@ -340,7 +339,7 @@ contains
     !  Set up tracer indices
     !-----------------------------------------------------------------------
 
-    call this%tracer_indices%construct(ciso_on, autotrophs_config,            &
+    call this%tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs_config, &
          zooplankton_config)
     if (present(marbl_tracer_cnt)) &
       marbl_tracer_cnt = marbl_total_tracer_cnt
@@ -444,7 +443,6 @@ contains
          marbl_tracer_metadata        = this%tracer_metadata,                 &
          marbl_tracer_indices         = this%tracer_indices,                  &
          marbl_interior_forcing_diags = this%interior_forcing_diags,          &
-         marbl_interior_restore_diags = this%interior_restore_diags,          &
          marbl_surface_forcing_diags  = this%surface_forcing_diags,           &
          marbl_status_log             = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -505,6 +503,7 @@ contains
     use marbl_mod,         only : marbl_init_interior_forcing_fields
     use marbl_config_mod,  only : lflux_gas_o2
     use marbl_config_mod,  only : lflux_gas_co2
+    use marbl_config_mod,  only : ladjust_bury_coeff
 
     class(marbl_interface_class), intent(inout) :: this
 
@@ -556,7 +555,7 @@ contains
     !  Initialize surface and interior forcing (including tracer restoring)
     !-----------------------------------------------------------------------
 
-    call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2)
+    call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2, ladjust_bury_coeff)
     call this%interior_forcing_ind%construct(this%tracer_metadata%short_name, &
                                    tracer_restore_vars, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -737,7 +736,6 @@ contains
          marbl_autotroph_share    = this%autotroph_share,                     &
          marbl_particulate_share  = this%particulate_share,                   &
          interior_forcing_diags   = this%interior_forcing_diags,              &
-         interior_restore_diags   = this%interior_restore_diags,              &
          glo_avg_fields_interior  = this%glo_avg_fields_interior,             &
          marbl_status_log         = this%StatusLog)
 

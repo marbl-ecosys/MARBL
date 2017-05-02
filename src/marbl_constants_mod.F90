@@ -25,6 +25,7 @@ module marbl_constants_mod
       c1     =    1.0_r8                   , &
       c2     =    2.0_r8                   , &
       c3     =    3.0_r8                   , &
+      c4     =    4.0_r8                   , &
       c10    =   10.0_r8                   , &
       c1000  = 1000.0_r8                   , &
       p001   =    0.001_r8                 , &
@@ -36,14 +37,16 @@ module marbl_constants_mod
   !---------------------------------------------------------------------
 
   real(kind=r8), parameter, public :: &
-      sphr      = 3600.0_r8,           & ! number of seconds in an hour
-      spd       = 86400.0_r8,          & ! number of seconds in a day
-      spy       = 365.0_r8*spd,        & ! number of seconds in a year
-      hrps      = c1 / sphr,           & ! number of hours in a second
-      dps       = c1 / spd,            & ! number of days in a second
-      yps       = c1 / (365.0_r8*spd), & ! number of years in a second
-      cmperm    = 100.0_r8,            & ! cm per meter
-      mpercm    = .01_r8                 ! meters per cm
+      sphr      = 3600.0_r8,    & ! number of seconds in an hour
+      spd       = 86400.0_r8,   & ! number of seconds in a day
+      dpy       = 365.0_r8,     & ! number of days in a year
+      spy       = dpy*spd,      & ! number of seconds in a year
+      hrps      = c1 / sphr,    & ! number of hours in a second
+      dps       = c1 / spd,     & ! number of days in a second
+      ypd       = c1 / dpy,     & ! number of years in a day
+      yps       = c1 / spy,     & ! number of years in a second
+      cmperm    = 100.0_r8,     & ! cm per meter
+      mpercm    = .01_r8          ! meters per cm
 
   !---------------------------------------------------------------------
   !  Physical Constants

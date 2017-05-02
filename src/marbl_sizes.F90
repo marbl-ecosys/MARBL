@@ -10,7 +10,7 @@ module marbl_sizes
   ! number of ecosystem tracers
   !-----------------------------------------------------------------------------
 
-  integer(int_kind), parameter :: ecosys_base_tracer_cnt = ECOSYS_NT
+  integer(int_kind), parameter :: ecosys_base_tracer_cnt = ECOSYS_BASE_NT
   integer(int_kind), parameter :: ciso_tracer_cnt = 14
   integer(int_kind)            :: marbl_total_tracer_cnt = 0
   integer(int_kind)            :: tracer_restore_cnt = 0

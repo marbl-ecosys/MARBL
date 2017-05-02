@@ -21,17 +21,21 @@ contains
 
   !*****************************************************************************
 
-  function schmidt_o2_surf(n, sst, surface_mask)
+  function schmidt_o2_surf(n, sst_in, surface_mask)
 
     ! !DESCRIPTION:
     !  Compute Schmidt number of O2 in seawater as function of SST
     !  where surface_mask is non-zero. Give zero where surface_mask is 0.
     !
-    !  ref : Keeling et al, Global Biogeochem. Cycles, Vol. 12,
-    !        No. 1, pp. 141-163, March 1998
+    !  range of validity of fit is -2:40
+    !
+    !  Ref : Wanninkhof 2014, Relationship between wind speed
+    !        and gas exchange over the ocean revisited,
+    !        Limnol. Oceanogr.: Methods, 12,
+    !        doi:10.4319/lom.2014.12.351
 
     integer(int_kind)  , intent(in) :: n
-    real (r8)          , intent(in) :: sst(n)
+    real (r8)          , intent(in) :: sst_in(n)
     real (r8)          , intent(in) :: surface_mask(n)
 
     real (r8) :: schmidt_o2_surf(n)
@@ -39,17 +43,24 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    real (r8), parameter :: a = 1638.0_r8
-    real (r8), parameter :: b = 81.83_r8
-    real (r8), parameter :: c = 1.483_r8
-    real (r8), parameter :: d = 0.008004_r8
+    integer(int_kind)    :: i
+    real (r8)            :: sst(n)
+
+    real (r8), parameter :: a = 1920.4_r8
+    real (r8), parameter :: b = -135.6_r8
+    real (r8), parameter :: c =    5.2122_r8
+    real (r8), parameter :: d =   -0.10939_r8
+    real (r8), parameter :: e =    0.00093777_r8
     !-----------------------------------------------------------------------
 
-    where (surface_mask(:) /= c0) 
-       schmidt_o2_surf = a + sst * (-b + sst * (c + sst * (-d)))
-    elsewhere
-       schmidt_o2_surf = c0
-    end where
+    do i = 1, n
+       sst(i) = max(-2.0_r8, min(40.0_r8, sst_in(i)))
+       if (surface_mask(i) /= c0) then
+          schmidt_o2_surf(i) = a + sst(i) * (b + sst(i) * (c + sst(i) * (d + sst(i) * e)))
+       else
+          schmidt_o2_surf(i) = c0
+       endif
+    end do
 
   end function schmidt_o2_surf
 
