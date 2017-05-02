@@ -4,6 +4,7 @@ from os import system as sh_command
 # Supported machines for running MARBL tests
 supported_machines = ['local-gnu', 
                       'yellowstone',
+                      'cheyenne',
                       'hobart',
                       'edison']
 
@@ -20,6 +21,13 @@ def load_module(mach, compiler):
     module('load', compiler)
     module('load', 'ncarcompilers')
     module('load', 'ncarbinlibs')
+
+  if mach == 'cheyenne':
+    sys.path.insert(0,'/glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init')
+    from env_modules_python import module
+    module('purge')
+    module('load', compiler)
+    module('load', 'ncarcompilers')
 
   if mach == 'hobart':
     sys.path.insert(0,'/usr/share/Modules/init')
@@ -53,6 +61,12 @@ def machine_specific(mach, supported_compilers):
     sys.exit(1)
 
   if mach == 'yellowstone':
+    # NCAR machine
+    supported_compilers.append('intel')
+    supported_compilers.append('gnu')
+    return
+
+  if mach == 'cheyenne':
     # NCAR machine
     supported_compilers.append('intel')
     supported_compilers.append('gnu')
