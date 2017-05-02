@@ -886,8 +886,9 @@ contains
     character(*), parameter :: subname = 'marbl_co2calc_mod:drtsafe'
     character(len=char_len) :: log_message
     logical(kind=log_kind)                          :: leave_bracket, dx_decrease
+    logical(kind=log_kind)                          :: abort
     logical(kind=log_kind), dimension(num_elements) :: mask
-    integer(kind=int_kind)                          ::  c, it
+    integer(kind=int_kind)                          :: c, it
     real(kind=r8)                                   :: temp
     real(kind=r8), dimension(num_elements) :: xlo, xhi, flo, fhi, f, df, dxold, dx
     !---------------------------------------------------------------------------
@@ -897,6 +898,7 @@ contains
     !---------------------------------------------------------------------------
 
     mask = mask_in
+    abort = .false.
 
     it = 0
 
@@ -915,31 +917,37 @@ contains
 
        do c = 1,num_elements
           if (mask(c)) then
+             ! Log a warning message if bounding box end points have same sign
+             ! (no guarantee that there is a root on the interval)
              if (present(marbl_status_log)) then
                 ! FIXME #21: make marbl_status_log required - this is currently needed
                 !            since abio_dic_dic14_mod is calling this routine but has
                 !            not itself been MARBLized yet
-                WRITE(log_message,"(4A,I0,A,I0,A,I0)") '(', subname, ') ', &
-                     ', c = ', c, ', it = ', it
-                call marbl_status_log%log_noerror(log_message, subname, c, .true.)
-                WRITE(log_message,"(4A,2E15.7e3)") '(', subname, ') ', &
-                     '   x1,f = ', x1(c), flo(c)
-                call marbl_status_log%log_noerror(log_message, subname, c, .true.)
-                WRITE(log_message,"(4A,2E15.7e3)") '(', subname, ') ', &
-                     '   x2,f = ', x2(c), fhi(c)
-                call marbl_status_log%log_noerror(log_message, subname, c, .true.)
+                WRITE(log_message,"(3A,1X,A,I0)") '(', subname, ')', 'it = ', it
+                call marbl_status_log%log_noerror(log_message, subname, c, &
+                                lonly_master_writes=.false.)
+                WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')', &
+                     'x1,f = ', x1(c), flo(c)
+                call marbl_status_log%log_noerror(log_message, subname, c, &
+                                lonly_master_writes=.false.)
+                WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')', &
+                     'x2,f = ', x2(c), fhi(c)
+                call marbl_status_log%log_noerror(log_message, subname, c, &
+                                lonly_master_writes=.false.)
+             end if
+
+             ! Error if iteration count exceeds max_bracket_grow_it
+             if (it > max_bracket_grow_it) then
+                if (present(marbl_status_log)) then
+                   ! FIXME #21 (see above)
+                   log_message = "bounding bracket for pH solution not found"
+                   call marbl_status_log%log_error(log_message, subname, c)
+                end if
+                abort = .true.
              end if
           end if
        end do
-
-       if (it > max_bracket_grow_it) then
-          if (present(marbl_status_log)) then
-             ! FIXME #21 (see above)
-             log_message = "bounding bracket for pH solution not found"
-             call marbl_status_log%log_error(log_message, subname, c)
-          end if
-          return
-       end if
+       if (abort) return
 
        where ( mask )
           dx = sqrt(x2 / x1)

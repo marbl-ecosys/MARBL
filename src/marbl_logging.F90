@@ -65,9 +65,9 @@ module marbl_logging
   !****************************************************************************
 
   type, public :: marbl_status_log_entry_type
-    integer :: ElementInd
-    logical :: lall_tasks  ! True => message should be written to stdout by
-                           !         all tasks; False => master task only
+    integer :: ElementInd = -1      ! ElementInd < 0 implies no location data
+    logical :: lonly_master_writes  ! True => message should be written to stdout
+                           !                  master task; False => all tasks
     character(len=marbl_log_len) :: LogMessage   ! Message text
     character(len=char_len)      :: CodeLocation ! Information on where log was written
 
@@ -202,12 +202,12 @@ contains
     if (present(ElemInd)) then
       new_entry%ElementInd = ElemInd
     else
-      new_entry%ElementInd = 1
+      new_entry%ElementInd = -1
     end if
     write(new_entry%LogMessage, "(4A)") "MARBL ERROR (", trim(CodeLoc), "): ", &
                                         trim(ErrorMsg)
     new_entry%CodeLocation = trim(CodeLoc)
-    new_entry%lall_tasks = .true.
+    new_entry%lonly_master_writes = .false.
 
     if (associated(this%FullLog)) then
       ! Append new entry to last entry in the log
@@ -246,7 +246,7 @@ contains
 
   !****************************************************************************
 
-  subroutine marbl_log_noerror(this, StatusMsg, CodeLoc, ElemInd, lall_tasks)
+  subroutine marbl_log_noerror(this, StatusMsg, CodeLoc, ElemInd, lonly_master_writes)
 
     class(marbl_log_type), intent(inout) :: this
     ! StatusMsg is the message to be printed in the log; it does not need to
@@ -254,10 +254,10 @@ contains
     ! CodeLoc is the name of the subroutine that is calling StatusLog%log_noerror
     character(len=*),      intent(in)    :: StatusMsg, CodeLoc
     integer, optional,     intent(in)    :: ElemInd
-    ! If lall_tasks is .true., then this is a message that should be printed out
-    ! regardless of which task produced it. By default, MARBL assumes that only
-    ! the master task needs to print a message
-    logical, optional,     intent(in)    :: lall_tasks
+    ! If lonly_master_writes is .false., then this is a message that should be
+    ! printed out regardless of which task produced it. By default, MARBL assumes
+    ! that only the master task needs to print a message
+    logical, optional,     intent(in)    :: lonly_master_writes
     type(marbl_status_log_entry_type), pointer :: new_entry
 
     ! Only allocate memory and add entry if we want to log full namelist!
@@ -270,14 +270,14 @@ contains
     if (present(ElemInd)) then
       new_entry%ElementInd = ElemInd
     else
-      new_entry%ElementInd = 1
+      new_entry%ElementInd = -1
     end if
     new_entry%LogMessage   = trim(StatusMsg)
     new_entry%CodeLocation = trim(CodeLoc)
-    if (present(lall_tasks)) then
-      new_entry%lall_tasks = lall_tasks
+    if (present(lonly_master_writes)) then
+      new_entry%lonly_master_writes = lonly_master_writes
     else
-      new_entry%lall_tasks = .false.
+      new_entry%lonly_master_writes = .true.
     end if
 
     if (associated(this%FullLog)) then
