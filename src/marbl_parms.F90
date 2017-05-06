@@ -62,8 +62,6 @@ module marbl_parms
        parm_init_POC_bury_coeff,   & ! initial scale factor for burial of POC, PON
        parm_init_POP_bury_coeff,   & ! initial scale factor for burial of POP
        parm_init_bSi_bury_coeff,   & ! initial scale factor burial of bSi
-       parm_Fe_scavenge_coeffA,    & ! coefficient used in scavenging
-       parm_Fe_scavenge_coeffB,    & ! coefficient used in scavenging
        parm_Fe_scavenge_rate0,     & ! scavenging base rate for Fe
        parm_Lig_scavenge_rate0,    & ! scavenging base rate for bound ligand
        parm_FeLig_scavenge_rate0,  & ! scavenging base rate for bound iron
@@ -150,15 +148,15 @@ module marbl_parms
                                           !    production and CaCO3 production
       f_graze_CaCO3_remin   = 0.33_r8,  & ! fraction of spCaCO3 grazing which is remin
       f_graze_si_remin      = 0.50_r8,  & ! fraction of diatom Si grazing which is remin
-      f_toDON               = 0.66_r8     ! fraction lower to DOM for DON
+      f_toDON               = 0.70_r8,  & ! fraction DON relative to DOC
+      f_toDOP               = 0.15_r8     ! fraction of remaining_P to DOP
+
 
   ! fixed ratios
   real(kind=r8), parameter :: &
        r_Nfix_photo=1.25_r8         ! N fix relative to C fix (non-dim)
 
-  ! SET FIXED RATIOS for N/C, P/C, SiO3/C, Fe/C
-  ! assumes C/N/P of 117/16/1 based on Anderson and Sarmiento, 1994
-  ! for diazotrophs a N/P of 45 is assumed based on Letelier & Karl, 1998
+  ! SET parmaeters and RATIOS for N/C, P/C, SiO3/C, Fe/C, etc...
   real(kind=r8), parameter :: &
       Q             = 16.0_r8 / 117.0_r8, & !N/C ratio (mmol/mmol) of phyto & zoo
       Qp_zoo        = c1 / 117.0_r8,      & !P/C ratio (mmol/mmol) zoo
@@ -167,6 +165,10 @@ module marbl_parms
       gQsi_max      = 0.685_r8,           & !max Si/C ratio for growth
       gQsi_min      = 0.0457_r8,          & !min Si/C ratio for growth
       QCaCO3_max    = 0.4_r8,             & !max QCaCO3
+      ! parameters in GalbraithMartiny Pquota Model^M
+      PquotaSlope     = 7.0_r8,        &
+      PquotaIntercept = 5.571_r8,      &
+      PquotaMinNP     = 0.00854701_r8, &
       ! carbon:nitrogen ratio for denitrification
       denitrif_C_N  = parm_Red_D_C_P/136.0_r8
 
@@ -241,6 +243,9 @@ contains
   subroutine marbl_parms_set_defaults(km)
     ! assign default values to all module variables
 
+    ! NOTE: defaults values below, of vars in the marbl_parms framework, may be overridden at runtime
+    !       through either a namelist read or a put call from marbl_config_and_parms_type class
+
     use marbl_sizes           , only : marbl_total_tracer_cnt
     use marbl_config_mod      , only : autotrophs_config
     use marbl_config_mod      , only : zooplankton_config
@@ -257,48 +262,46 @@ contains
     !  &marbl_parms_nml
     !-----------------------------------------------------------------------
 
-    parm_Fe_bioavail           = 1.0_r8
-    parm_o2_min                = 5.0_r8
-    parm_o2_min_delta          = 5.0_r8
-    parm_kappa_nitrif_per_day  = 0.06_r8
-    parm_nitrif_par_lim        = 1.0_r8
-    parm_labile_ratio          = 0.94_r8
-    parm_init_POC_bury_coeff   = 1.1_r8         ! x1 default
-    parm_init_POP_bury_coeff   = 1.1_r8         ! x1 default
-    parm_init_bSi_bury_coeff   = 1.0_r8         ! x1 default
-    parm_Fe_scavenge_coeffA    = 1.45_r8
-    parm_Fe_scavenge_coeffB    = 1.0_r8
-    parm_Fe_scavenge_rate0     = 25.0_r8
-    parm_Lig_scavenge_rate0    = 0.005_r8
-    parm_FeLig_scavenge_rate0  = 1.0_r8
-    parm_Lig_degrade_rate0     = 0.000095_r8
-    parm_Fe_desorption_rate0   = 1.0e-6_r8
-    parm_f_prod_sp_CaCO3       = 0.070_r8       ! x1 default
-    parm_POC_diss              = 90.0e2_r8
-    parm_SiO2_diss             = 660.0e2_r8
-    parm_CaCO3_diss            = 450.0e2_r8
-    parm_sed_denitrif_coeff    = 1.0_r8         ! x1 default
-    bury_coeff_rmean_timescale_years = 10.0_r8
-    parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8,  750.0e2_r8 /)
-    parm_scalelen_vals = (/     1.0_r8,     3.3_r8,     4.2_r8,      4.5_r8 /) ! x1 default
+    parm_Fe_bioavail           = 1.0_r8         ! in marbl_parms framework, see NOTE above
+    parm_o2_min                = 5.0_r8         ! in marbl_parms framework, see NOTE above
+    parm_o2_min_delta          = 5.0_r8         ! in marbl_parms framework, see NOTE above
+    parm_kappa_nitrif_per_day  = 0.06_r8        ! in marbl_parms framework, see NOTE above
+    parm_nitrif_par_lim        = 1.0_r8         ! in marbl_parms framework, see NOTE above
+    parm_labile_ratio          = 0.94_r8        ! in marbl_parms framework, see NOTE above
+    parm_init_POC_bury_coeff   = 1.1_r8         ! in marbl_parms framework, see NOTE above
+    parm_init_POP_bury_coeff   = 1.1_r8         ! in marbl_parms framework, see NOTE above
+    parm_init_bSi_bury_coeff   = 1.0_r8         ! in marbl_parms framework, see NOTE above
+    parm_Fe_scavenge_rate0     = 15.0_r8        ! in marbl_parms framework, see NOTE above
+    parm_Lig_scavenge_rate0    = 0.015_r8       ! in marbl_parms framework, see NOTE above
+    parm_FeLig_scavenge_rate0  = 1.3_r8         ! in marbl_parms framework, see NOTE above
+    parm_Lig_degrade_rate0     = 0.000094_r8    ! in marbl_parms framework, see NOTE above
+    parm_Fe_desorption_rate0   = 1.0e-6_r8      ! in marbl_parms framework, see NOTE above
+    parm_f_prod_sp_CaCO3       = 0.070_r8       ! in marbl_parms framework, see NOTE above
+    parm_POC_diss              = 100.0e2_r8     ! in marbl_parms framework, see NOTE above
+    parm_SiO2_diss             = 770.0e2_r8     ! in marbl_parms framework, see NOTE above
+    parm_CaCO3_diss            = 500.0e2_r8     ! in marbl_parms framework, see NOTE above
+    parm_sed_denitrif_coeff    = 1.0_r8         ! in marbl_parms framework, see NOTE above
+    bury_coeff_rmean_timescale_years = 10.0_r8  ! in marbl_parms framework, see NOTE above
+    parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8, 1000.0e2_r8 /) ! in marbl_parms framework, see NOTE above
+    parm_scalelen_vals = (/     1.0_r8,     2.2_r8,     4.0_r8,      5.0_r8 /) ! in marbl_parms framework, see NOTE above
 
     ! Autotrophs
     do n=1,autotroph_cnt
       select case (trim(autotrophs_config(n)%sname))
         case ('sp')
-          autotrophs(n)%kFe             = 0.025e-3_r8
-          autotrophs(n)%kPO4            = 0.005_r8
-          autotrophs(n)%kDOP            = 0.025_r8
-          autotrophs(n)%kNO3            = 0.15_r8
-          autotrophs(n)%kNH4            = 0.005_r8
-          autotrophs(n)%kSiO3           = 0.0_r8
-          autotrophs(n)%Qp_fixed        = Qp_zoo
-          autotrophs(n)%gQfe_0          = 30.0e-6_r8
+          autotrophs(n)%kFe             = 0.03e-3_r8         ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kPO4            = 0.005_r8           ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kDOP            = 0.3_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kNO3            = 0.25_r8            ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kNH4            = 0.01_r8            ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
+          autotrophs(n)%gQfe_0          = 35.0e-6_r8
           autotrophs(n)%gQfe_min        = 3.0e-6_r8
           autotrophs(n)%alphaPI_per_day = 0.39_r8
           autotrophs(n)%PCref_per_day   = 5.0_r8
           autotrophs(n)%thetaN_max      = 2.5_r8
-          autotrophs(n)%loss_thres      = 0.02_r8
+          autotrophs(n)%loss_thres      = 0.01_r8
           autotrophs(n)%loss_thres2     = 0.0_r8
           autotrophs(n)%temp_thres      = -10.0_r8
           autotrophs(n)%mort_per_day    = 0.1_r8
@@ -306,15 +309,16 @@ contains
           autotrophs(n)%agg_rate_max    = 0.5_r8
           autotrophs(n)%agg_rate_min    = 0.01_r8
           autotrophs(n)%loss_poc        = 0.0_r8
+
         case ('diat')
-          autotrophs(n)%kFe             = 0.05e-3_r8
-          autotrophs(n)%kPO4            = 0.05_r8
-          autotrophs(n)%kDOP            = 0.1_r8
-          autotrophs(n)%kNO3            = 0.45_r8
-          autotrophs(n)%kNH4            = 0.05_r8
-          autotrophs(n)%kSiO3           = 0.7_r8
-          autotrophs(n)%Qp_fixed        = Qp_zoo
-          autotrophs(n)%gQfe_0          = 30.0e-6_r8
+          autotrophs(n)%kFe             = 0.06e-3_r8         ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kPO4            = 0.05_r8            ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kDOP            = 0.5_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kNO3            = 0.5_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kNH4            = 0.05_r8            ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kSiO3           = 0.7_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
+          autotrophs(n)%gQfe_0          = 35.0e-6_r8
           autotrophs(n)%gQfe_min        = 3.0e-6_r8
           autotrophs(n)%alphaPI_per_day = 0.29_r8
           autotrophs(n)%PCref_per_day   = 5.0_r8
@@ -327,15 +331,16 @@ contains
           autotrophs(n)%agg_rate_max    = 0.5_r8
           autotrophs(n)%agg_rate_min    = 0.02_r8
           autotrophs(n)%loss_poc        = 0.0_r8
+
         case ('diaz')
-          autotrophs(n)%kFe             = 0.025e-3_r8
-          autotrophs(n)%kPO4            = 0.02_r8
-          autotrophs(n)%kDOP            = 0.02_r8
-          autotrophs(n)%kNO3            = 3.0_r8
-          autotrophs(n)%kNH4            = 0.3_r8
-          autotrophs(n)%kSiO3           = 0.0_r8
-          autotrophs(n)%Qp_fixed        = 0.32_r8 * Qp_zoo
-          autotrophs(n)%gQfe_0          = 60.0e-6_r8
+          autotrophs(n)%kFe             = 0.045e-3_r8        ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kPO4            = 0.015_r8           ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kDOP            = 0.075_r8           ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kNO3            = 2.0_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kNH4            = 0.2_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%Qp_fixed        = 0.32_r8 * Qp_zoo   ! only used for lvariable_PtoC=.false.
+          autotrophs(n)%gQfe_0          = 70.0e-6_r8
           autotrophs(n)%gQfe_min        = 6.0e-6_r8
           autotrophs(n)%alphaPI_per_day = 0.39_r8
           autotrophs(n)%PCref_per_day   = 2.2_r8
@@ -348,6 +353,7 @@ contains
           autotrophs(n)%agg_rate_max    = 0.5_r8
           autotrophs(n)%agg_rate_min    = 0.01_r8
           autotrophs(n)%loss_poc        = 0.0_r8
+
         case DEFAULT
           autotrophs(n)%kFe             = c0
           autotrophs(n)%kPO4            = c0
@@ -377,9 +383,9 @@ contains
     do n=1,zooplankton_cnt
       select case (trim(zooplankton_config(n)%sname))
         case ('zoo')
-          zooplankton(n)%z_mort_0_per_day   = 0.1_r8
-          zooplankton(n)%z_mort2_0_per_day  = 0.4_r8
-          zooplankton(n)%loss_thres         = 0.075_r8
+          zooplankton(n)%z_mort_0_per_day   = 0.1_r8     ! in marbl_parms framework, see NOTE above
+          zooplankton(n)%z_mort2_0_per_day  = 0.4_r8     ! in marbl_parms framework, see NOTE above
+          zooplankton(n)%loss_thres         = 0.075_r8   ! in marbl_parms framework, see NOTE above
         case DEFAULT
           zooplankton(n)%z_mort_0_per_day   = c0
           zooplankton(n)%z_mort2_0_per_day  = c0
@@ -399,31 +405,31 @@ contains
         ! Properties that depend on m & n
         if ((trim(zooplankton_config(n)%sname).eq.'zoo').and.                 &
             (trim(autotrophs_config(m)%sname).eq.'sp')) then
-          grazing(m,n)%z_umax_0_per_day = 3.3_r8
-          grazing(m,n)%z_grz            = 1.2_r8
-          grazing(m,n)%graze_zoo        = 0.3_r8
-          grazing(m,n)%graze_poc        = 0.0_r8
-          grazing(m,n)%graze_doc        = 0.06_r8
-          grazing(m,n)%f_zoo_detr       = 0.12_r8
-          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+          grazing(m,n)%z_umax_0_per_day = 3.3_r8    ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%graze_zoo        = 0.3_r8    ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%graze_poc        = 0.0_r8    ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_parms framework, see NOTE above
         elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
                 (trim(autotrophs_config(m)%sname).eq.'diat')) then
           grazing(m,n)%z_umax_0_per_day = 3.05_r8
-          grazing(m,n)%z_grz            = 1.2_r8
-          grazing(m,n)%graze_zoo        = 0.25_r8
-          grazing(m,n)%graze_poc        = 0.39_r8
-          grazing(m,n)%graze_doc        = 0.06_r8
-          grazing(m,n)%f_zoo_detr       = 0.24_r8
-          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+          grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%graze_zoo        = 0.25_r8   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%graze_poc        = 0.38_r8   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%f_zoo_detr       = 0.24_r8   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_parms framework, see NOTE above
         elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
                 (trim(autotrophs_config(m)%sname).eq.'diaz')) then
-          grazing(m,n)%z_umax_0_per_day = 3.05_r8
-          grazing(m,n)%z_grz            = 1.2_r8
-          grazing(m,n)%graze_zoo        = 0.3_r8
-          grazing(m,n)%graze_poc        = 0.1_r8
-          grazing(m,n)%graze_doc        = 0.06_r8
-          grazing(m,n)%f_zoo_detr       = 0.12_r8
-          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+          grazing(m,n)%z_umax_0_per_day = 3.1_r8    ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%graze_zoo        = 0.3_r8    ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%graze_poc        = 0.1_r8    ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_parms framework, see NOTE above
         else
           grazing(m,n)%z_umax_0_per_day = c0
           grazing(m,n)%z_grz            = c0
@@ -436,12 +442,12 @@ contains
       end do
     end do
 
-    iron_frac_in_dust      = 0.035_r8 * 0.01_r8
-    iron_frac_in_bc        = 0.06_r8
-    caco3_bury_thres_opt   = 'omega_calc'
-    caco3_bury_thres_depth = 3000.0e2
-    PON_bury_coeff         = 0.5_r8
-    ciso_fract_factors     = 'Rau'
+    iron_frac_in_dust      = 0.035_r8 * 0.01_r8    ! in marbl_parms framework, see NOTE above
+    iron_frac_in_bc        = 0.06_r8               ! in marbl_parms framework, see NOTE above
+    caco3_bury_thres_opt   = 'omega_calc'          ! in marbl_parms framework, see NOTE above
+    caco3_bury_thres_depth = 3000.0e2              ! in marbl_parms framework, see NOTE above
+    PON_bury_coeff         = 0.5_r8                ! in marbl_parms framework, see NOTE above
+    ciso_fract_factors     = 'Rau'                 ! in marbl_parms framework, see NOTE above
 
     ! FIXME #69: not thread-safe!
     if (.not.allocated(tracer_restore_vars)) &
@@ -484,8 +490,6 @@ contains
          parm_init_POC_bury_coeff, &
          parm_init_POP_bury_coeff, &
          parm_init_bSi_bury_coeff, &
-         parm_Fe_scavenge_coeffA, &
-         parm_Fe_scavenge_coeffB, &
          parm_Fe_scavenge_rate0, &
          parm_Lig_scavenge_rate0, &
          parm_FeLig_scavenge_rate0, &
@@ -678,32 +682,6 @@ contains
     datatype  = 'real'
     group     = 'marbl_parms_nml'
     rptr      => parm_init_bSi_bury_coeff
-    call this%add_var(sname, lname, units, datatype, group, category,       &
-                        marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'parm_Fe_scavenge_coeffA'
-    lname     = 'coefficient used in Fe scavenging'
-    units     = '1'
-    datatype  = 'real'
-    group     = 'marbl_parms_nml'
-    rptr      => parm_Fe_scavenge_coeffA
-    call this%add_var(sname, lname, units, datatype, group, category,       &
-                        marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-
-    sname     = 'parm_Fe_scavenge_coeffB'
-    lname     = 'coefficient used in Fe scavenging'
-    units     = 'nmol/cm^2/s g/mol'
-    datatype  = 'real'
-    group     = 'marbl_parms_nml'
-    rptr      => parm_Fe_scavenge_coeffB
     call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, rptr=rptr)
     if (marbl_status_log%labort_marbl) then

@@ -1358,8 +1358,8 @@ contains
     P_SiO2%mass   = 60.08_r8        ! molecular weight of SiO2
     P_SiO2%rho    = 0.05_r8 * P_SiO2%mass / POC%mass ! QA mass ratio for SiO2
 
-    dust%diss     = 20000.0_r8      ! diss. length (cm)
-    dust%gamma    = 0.985_r8        ! prod frac -> hard subclass
+    dust%diss     = 40000.0_r8      ! diss. length (cm)
+    dust%gamma    = 0.98_r8         ! prod frac -> hard subclass
     dust%mass     = 1.0e9_r8        ! base units are already grams
     dust%rho      = 0.05_r8 * dust%mass / POC%mass ! QA mass ratio for dust
 
@@ -1655,7 +1655,7 @@ contains
     !----------------------------------------------------------------------
     !   Tref = 30.0 reference temperature (deg. C)
     !   not currently being applied
-    !-----------------------------------------------------------------------
+    !----------------------------------------------------------------------
 !   TfuncS = 1.5_r8**(((temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
 
     poc_error = .false.
@@ -3101,6 +3101,7 @@ contains
     use marbl_parms        , only : gQsi_0
     use marbl_parms        , only : gQsi_max
     use marbl_parms        , only : gQsi_min
+    use marbl_parms        , only : PquotaSlope, PquotaIntercept, PquotaMinNP
 
     implicit none
 
@@ -3169,10 +3170,10 @@ contains
        if (lvariable_PtoC) then
           !-----------------------------------------------------------------------
           !-- Calculate Qp for new growth based on Galbraith and Martiny (2015), with min. N/P
-          ! - 14= 0.00976801, 15= 0.00911677 15.5=0.00882272 16= 0.00854701
+          ! - 14= 0.00976801, 14.5 = 0.00944239 15= 0.00911677 15.5=0.00882272 16= 0.00854701
           ! - std intercept 6.0 = 166.66maxCP, 5.26=190, 4.0 = 250, 3.0 = 333.33
           !-----------------------------------------------------------------------
-          gQp(auto_ind) = min((((7.0_r8 * PO4_loc) + 5.47_r8) * 0.001_r8), 0.00911677_r8)
+          gQp(auto_ind) = min((((PquotaSlope * PO4_loc) + PquotaIntercept) * 0.001_r8), PquotaMinNP)
        else
           ! group-specific fixed P:C ratios
           gQp(auto_ind) = autotrophs(auto_ind)%Qp_fixed
@@ -4218,6 +4219,7 @@ contains
 
     use marbl_parms     , only : Qp_zoo
     use marbl_parms     , only : parm_labile_ratio
+    use marbl_parms     , only : f_toDOP
 
     integer(int_kind)                        , intent(in)    :: auto_cnt
     integer(int_kind)                        , intent(in)    :: zoo_cnt
@@ -4304,8 +4306,13 @@ contains
           remaining_P = c0
        endif
 
-       remaining_P_dop(auto_ind) = (c1 - parm_labile_ratio) * remaining_P
-       remaining_P_dip(auto_ind) = parm_labile_ratio * remaining_P
+       !-----------------------------------------------------------------------
+       ! increase fraction routed to dop, relative to doc 0.06, 0.94
+       !    better matches DOP obs with var P quotas
+       !-----------------------------------------------------------------------
+
+       remaining_P_dop(auto_ind) = f_toDOP * remaining_P
+       remaining_P_dip(auto_ind) = (c1 - f_toDOP) * remaining_P
     end do
 
     end associate
@@ -4456,8 +4463,6 @@ contains
 
     use marbl_constants_mod, only : c1, c2, c3, c4
     use marbl_parms        , only : Lig_cnt
-    use marbl_parms        , only : parm_Fe_scavenge_coeffA
-    use marbl_parms        , only : parm_Fe_scavenge_coeffB
     use marbl_parms        , only : parm_Fe_scavenge_rate0
     use marbl_parms        , only : parm_Lig_scavenge_rate0
     use marbl_parms        , only : parm_FeLig_scavenge_rate0
@@ -4489,7 +4494,6 @@ contains
 
     real(r8) :: FeLig1               ! iron bound to ligand 1
     real(r8) :: sinking_mass         ! sinking mass flux used in calculating scavenging
-    real(r8) :: rate0_to_rate        ! scavenging term
     real(r8) :: Lig_scavenge_rate    ! scavenging rate of bound ligand (1/yr)
     real(r8) :: FeLig_scavenge_rate  ! scavenging rate of bound iron (1/yr)
 
@@ -4632,7 +4636,7 @@ contains
     !  2) scale by sinking mass flux (POM + Dust + bSi + CaCO3)
     !    POC x 12.01 x 3.0 = 36.03 > POM,
     !              remin, particle number, and TEP production all scale with POC
-    !  3) Scavenging non-linear function of sinking mass,
+    !  3) Scavenging linear function of sinking mass,
     !     1.6 ng/cm2/s = 500g/m2/yr, 1.44 450g/m2/yr,
     !
     ! scavening of FeLig2 is not implemented
@@ -4644,13 +4648,11 @@ contains
         (P_SiO2%sflux_out(k)  + P_SiO2%hflux_out(k) ) * P_SiO2%mass + &
         (dust%sflux_out(k)    + dust%hflux_out(k)   ) * dust_Fe_scavenge_scale)
 
-    rate0_to_rate = parm_Fe_scavenge_coeffA * sinking_mass / (sinking_mass + parm_Fe_scavenge_coeffB)
+    Fe_scavenge_rate = parm_Fe_scavenge_rate0 * sinking_mass
 
-    Fe_scavenge_rate = parm_Fe_scavenge_rate0 * rate0_to_rate
+    Lig_scavenge_rate = parm_Lig_scavenge_rate0 * sinking_mass
 
-    Lig_scavenge_rate = parm_Lig_scavenge_rate0 * rate0_to_rate
-
-    FeLig_scavenge_rate = parm_FeLig_scavenge_rate0 * rate0_to_rate
+    FeLig_scavenge_rate = parm_FeLig_scavenge_rate0 * sinking_mass
 
 
     Lig_scavenge = yps * FeLig1 * Lig_scavenge_rate
@@ -4834,7 +4836,7 @@ contains
     endif
 
     !----------------------------------------------------------------------
-    !  Ligand losses due to degradation (by hetrotrophic bacteria)
+    !  Ligand losses due to uptake/degradation (by hetrotrophic bacteria)
     !----------------------------------------------------------------------
 
     Lig_deg = POC_remin * parm_Lig_degrade_rate0
@@ -4843,7 +4845,7 @@ contains
     !  total ligand loss
     !----------------------------------------------------------------------
 
-    Lig_loss = Lig_scavenge + 0.24_r8*sum(photoFe(:)) + Lig_photochem + Lig_deg
+    Lig_loss = Lig_scavenge + 0.20_r8*sum(photoFe(:)) + Lig_photochem + Lig_deg
 
     !----------------------------------------------------------------------
 
