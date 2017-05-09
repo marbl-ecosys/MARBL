@@ -306,13 +306,6 @@ contains
     do id=1,num_surface_forcing_fields
       found = .false.
 
-      ! Surface Mask
-      if (id .eq. ind%surface_mask_id) then
-        found = .true.
-        surface_forcings(id)%metadata%varname       = 'surface_mask'
-        surface_forcings(id)%metadata%field_units   = 'unitless'
-      end if
-
       ! Square of 10m wind
       if (id .eq. ind%u10_sqr_id) then
         found = .true.
@@ -2302,7 +2295,6 @@ contains
     associate(                                                                                      &
          ind                  => surface_forcing_ind,                                               &
 
-         surface_mask => surface_input_forcings(surface_forcing_ind%surface_mask_id)%field_0d,     &
          ifrac        => surface_input_forcings(surface_forcing_ind%ifrac_id)%field_0d,            &
          sst          => surface_input_forcings(surface_forcing_ind%sst_id)%field_0d,              &
          sss          => surface_input_forcings(surface_forcing_ind%sss_id)%field_0d,              &
@@ -2398,20 +2390,14 @@ contains
        !-----------------------------------------------------------------------
 
        if (lflux_gas_o2) then
-          schmidt_o2(:) = schmidt_o2_surf(num_elements, sst, surface_mask)
+          schmidt_o2(:) = schmidt_o2_surf(num_elements, sst)
 
-          o2sat_1atm(:) = o2sat_surf(num_elements, sst, sss, surface_mask)
+          o2sat_1atm(:) = o2sat_surf(num_elements, sst, sss)
 
-          where (surface_mask(:) /= c0)
-             pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
-             o2sat(:) = ap_used(:) * o2sat_1atm(:)
-             flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - surface_vals(:, o2_ind))
-             stf(:, o2_ind) = stf(:, o2_ind) + flux_o2_loc(:)
-          elsewhere
-             pv_o2(:) = c0
-             o2sat(:) = c0
-             flux_o2_loc = c0
-          end where
+          pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
+          o2sat(:) = ap_used(:) * o2sat_1atm(:)
+          flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - surface_vals(:, o2_ind))
+          stf(:, o2_ind) = stf(:, o2_ind) + flux_o2_loc(:)
           if (sfo_ind%flux_o2_id.ne.0) then
             surface_forcing_output%sfo(sfo_ind%flux_o2_id)%forcing_field = flux_o2_loc
           end if
@@ -2427,13 +2413,9 @@ contains
 
        if (lflux_gas_co2) then
 
-          schmidt_co2(:) = schmidt_co2_surf(num_elements, sst, surface_mask)
+          schmidt_co2(:) = schmidt_co2_surf(num_elements, sst)
 
-          where (surface_mask(:) /= c0)
-             pv_co2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_co2(:))
-          elsewhere
-             pv_co2(:) = c0
-          end where
+          pv_co2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_co2(:))
 
           !-----------------------------------------------------------------------
           !  Set FLUX_CO2
@@ -2447,11 +2429,7 @@ contains
              phhi(:) = phhi_surf_init
           end where
 
-          where (surface_mask(:) /= c0)
-             mask(:) = .true.
-          elsewhere
-             mask(:) = .false.
-          end where
+          mask(:) = .true.
 
           ! Note the following computes a new ph_prev_surf
           ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
@@ -2567,7 +2545,6 @@ contains
 
     call marbl_comp_nhx_surface_emis(                &
          num_elements     = num_elements,            &
-         surface_mask     = surface_mask,            &
          nh4              = surface_vals(:,nh4_ind), &
          ph               = ph_prev_surf,            &
          sst              = sst,                     &
@@ -2582,9 +2559,7 @@ contains
     end if
 
     if (lapply_nhx_surface_emis) then
-       where (surface_mask(:) /= c0)
-         stf(:, nh4_ind) = stf(:, nh4_ind) - nhx_surface_emis(:)
-       end where
+      stf(:, nh4_ind) = stf(:, nh4_ind) - nhx_surface_emis(:)
     endif
 
     !-----------------------------------------------------------------------
@@ -2609,15 +2584,11 @@ contains
     !-----------------------------------------------------------------------
 
     if (surface_forcing_ind%nox_flux_id.ne.0) then
-       where (surface_mask(:) /= c0)
-         stf(:, no3_ind) = stf(:, no3_ind) + nox_flux(:)
-       end where
+      stf(:, no3_ind) = stf(:, no3_ind) + nox_flux(:)
     endif
 
     if (surface_forcing_ind%nhy_flux_id.ne.0) then
-       where (surface_mask(:) /= c0)
-         stf(:, nh4_ind) = stf(:, nh4_ind) + nhy_flux(:)
-       end where
+      stf(:, nh4_ind) = stf(:, nh4_ind) + nhy_flux(:)
     endif
 
     !-----------------------------------------------------------------------
@@ -2649,7 +2620,6 @@ contains
        ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
        call marbl_ciso_set_surface_forcing(                                              &
             num_elements                = num_elements,                                  &
-            surface_mask                = surface_input_forcings(ind%surface_mask_id)%field_0d, &
             sst                         = surface_input_forcings(ind%sst_id)%field_0d,   &
             d13c                        = surface_input_forcings(ind%d13c_id)%field_0d,  &
             d14c                        = surface_input_forcings(ind%d14c_id)%field_0d,  &

@@ -14,10 +14,9 @@ contains
 
   !*****************************************************************************
 
-  function schmidt_co2_surf(n, sst_in, surface_mask)
+  function schmidt_co2_surf(n, sst_in)
 
     !  Compute Schmidt number of CO2 in seawater as function of SST
-    !  where surface_mask is non-zero. Give zero where surface_mask is zero.
     !
     !  range of validity of fit is -2:40
     !
@@ -33,7 +32,6 @@ contains
 
     integer(int_kind)  , intent(in) :: n
     real (r8)          , intent(in) :: sst_in(n)
-    real (r8)          , intent(in) :: surface_mask(n)
 
     real (r8) :: schmidt_co2_surf(n)
 
@@ -52,22 +50,17 @@ contains
     !-----------------------------------------------------------------------
 
     do i = 1, n
-       if (surface_mask(i) /= c0) then
-          sst(i) = max(-2.0_r8, min(40.0_r8, sst_in(i)))
-          schmidt_co2_surf(i) = a + sst(i) * (b + sst(i) * (c + sst(i) * (d + sst(i) * e)))
-       else
-          schmidt_co2_surf(i) = c0
-       endif
+       sst(i) = max(-2.0_r8, min(40.0_r8, sst_in(i)))
+       schmidt_co2_surf(i) = a + sst(i) * (b + sst(i) * (c + sst(i) * (d + sst(i) * e)))
     end do
 
   end function schmidt_co2_surf
 
   !*****************************************************************************
 
-  function schmidt_nh3_surf(n, sst_in, surface_mask)
+  function schmidt_nh3_surf(n, sst_in)
 
     !  Compute Schmidt number of NH3 in seawater as function of SST
-    !  where surface_mask is non-zero. Give zero where surface_mask is zero.
     !
     !  ref : M. T. Johnson, Ocean Science, Vol. 6, pp. 913-932, 2010
     !
@@ -82,7 +75,6 @@ contains
 
     integer(int_kind)  , intent(in) :: n
     real (r8)          , intent(in) :: sst_in(n)
-    real (r8)          , intent(in) :: surface_mask(n)
 
     real (r8) :: schmidt_nh3_surf(n)
 
@@ -101,22 +93,17 @@ contains
     !-----------------------------------------------------------------------
 
     do i = 1, n
-       if (surface_mask(i) /= c0) then
-          sst(i) = max(-2.0_r8, min(40.0_r8, sst_in(i)))
-          schmidt_nh3_surf(i) = a + sst(i) * (b + sst(i) * (c + sst(i) * (d + sst(i) * e)))
-       else
-          schmidt_nh3_surf(i) = c0
-       endif
+       sst(i) = max(-2.0_r8, min(40.0_r8, sst_in(i)))
+       schmidt_nh3_surf(i) = a + sst(i) * (b + sst(i) * (c + sst(i) * (d + sst(i) * e)))
     end do
 
   end function schmidt_nh3_surf
 
   !*****************************************************************************
 
-  function schmidt_nh3_air(n, sst_in, atmpres, surface_mask)
+  function schmidt_nh3_air(n, sst_in, atmpres)
 
     !  Compute Schmidt number of NH3 in air as function of atmospheric pressure
-    !  where surface_mask is non-zero. Give zero where surface_mask is zero.
     !
     !  ref : M. T. Johnson, Ocean Science, Vol. 6, pp. 913-932, 2010
     !
@@ -134,7 +121,6 @@ contains
     integer(int_kind)  , intent(in) :: n
     real (r8)          , intent(in) :: atmpres(n)
     real (r8)          , intent(in) :: sst_in(n)
-    real (r8)          , intent(in) :: surface_mask(n)
 
     real (r8) :: schmidt_nh3_air(n)
 
@@ -153,13 +139,9 @@ contains
     !-----------------------------------------------------------------------
 
     do i = 1, n
-       if (surface_mask(i) /= c0) then
-          sst(i) = max(-2.0_r8, min(40.0_r8, sst_in(i)))
-          schmidt_nh3_air(i) = a + sst(i) * (b + sst(i) * (c + sst(i) * (d + sst(i) * e)))
-          schmidt_nh3_air(i) = atmpres(i) * atmpres(i) * schmidt_nh3_air(i)
-       else
-          schmidt_nh3_air(i) = c0
-       endif
+       sst(i) = max(-2.0_r8, min(40.0_r8, sst_in(i)))
+       schmidt_nh3_air(i) = a + sst(i) * (b + sst(i) * (c + sst(i) * (d + sst(i) * e)))
+       schmidt_nh3_air(i) = atmpres(i) * atmpres(i) * schmidt_nh3_air(i)
     end do
 
   end function schmidt_nh3_air
