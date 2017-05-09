@@ -352,10 +352,10 @@ contains
        CO3(c)   = CO3(c) * mass_to_vol
      end do ! c loop
 
-     ph(num_active_elements:num_elements)    = c0
-     H2CO3(num_active_elements:num_elements) = c0
-     HCO3(num_active_elements:num_elements)  = c0
-     CO3(num_active_elements:num_elements)   = c0
+     ph(num_active_elements+1:num_elements)    = c0
+     H2CO3(num_active_elements+1:num_elements) = c0
+     HCO3(num_active_elements+1:num_elements)  = c0
+     CO3(num_active_elements+1:num_elements)   = c0
 
     end associate
 
@@ -1196,8 +1196,8 @@ contains
 
     end do
 
-    co3_sat_calc(num_active_elements:num_elements) = c0
-    co3_sat_arag(num_active_elements:num_elements) = c0
+    co3_sat_calc(num_active_elements+1:num_elements) = c0
+    co3_sat_arag(num_active_elements+1:num_elements) = c0
 
   end subroutine marbl_comp_co3_sat_vals
 
