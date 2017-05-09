@@ -2288,7 +2288,6 @@ contains
     real (r8)               :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (mmol/m^3)
     real (r8)               :: totalChl_loc(num_elements)  ! local value of totalChl
     real (r8)               :: flux_o2_loc(num_elements)   ! local value of o2 flux
-    logical (log_kind)      :: mask(num_elements)
     type(thermodynamic_coefficients_type), dimension(num_elements) :: co3_coeffs
     !-----------------------------------------------------------------------
 
@@ -2429,14 +2428,11 @@ contains
              phhi(:) = phhi_surf_init
           end where
 
-          mask(:) = .true.
-
           ! Note the following computes a new ph_prev_surf
           ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
           call marbl_co2calc_surf(                                         &
                num_elements     = num_elements,                            &
                lcomp_co3_coeffs = .true.,                                  &
-               mask       = mask,                                          &
                dic_in     = surface_vals(:,dic_ind),                       &
                xco2_in    = surface_input_forcings(ind%xco2_id)%field_0d,  &
                ta_in      = surface_vals(:,alk_ind),                       &
@@ -2496,7 +2492,6 @@ contains
           call marbl_co2calc_surf(                                         &
                num_elements     = num_elements,                            &
                lcomp_co3_coeffs = .false.,                                 &
-               mask       = mask,                                          &
                dic_in     = surface_vals(:,dic_alt_co2_ind),               &
                xco2_in    = surface_input_forcings(ind%xco2_alt_co2_id)%field_0d, &
                ta_in      = surface_vals(:,alk_alt_co2_ind),               &
@@ -2898,7 +2893,7 @@ contains
 
     !-----------------------------------------------------------------------
     !  create local copies of model tracers
-    !  treat negative values as zero, apply mask to local copies
+    !  treat negative values as zero
     !-----------------------------------------------------------------------
 
     implicit none
@@ -3347,7 +3342,6 @@ contains
     character(*), parameter :: subname = 'marbl_mod:marbl_compute_carbonate_chemistry'
     integer :: k
     type(thermodynamic_coefficients_type), dimension(domain%km) :: co3_coeffs
-    logical(log_kind) , dimension(domain%km) :: mask
     logical(log_kind) , dimension(domain%km) :: pressure_correct
     real(r8)          , dimension(domain%km) :: ph_lower_bound
     real(r8)          , dimension(domain%km) :: ph_upper_bound
@@ -3388,9 +3382,6 @@ contains
     pressure_correct(1) = .FALSE.
     do k=1,dkm
 
-      mask(k) = (k <= column_kmt)
-
-       ! -------------------
        if (ph_prev_col(k)  /= c0) then
           ph_lower_bound(k) = ph_prev_col(k) - del_ph
           ph_upper_bound(k) = ph_prev_col(k) + del_ph
@@ -3402,7 +3393,7 @@ contains
     enddo
 
     call marbl_comp_CO3terms(&
-         dkm, mask, pressure_correct, .true., co3_coeffs, temperature, &
+         dkm, column_kmt, pressure_correct, .true., co3_coeffs, temperature, &
          salinity, press_bar, dic_loc, alk_loc, po4_loc, sio3_loc, &
          ph_lower_bound, ph_upper_bound, ph, h2co3, hco3, co3,     &
          marbl_status_log)
@@ -3428,7 +3419,7 @@ contains
     enddo
 
     call marbl_comp_CO3terms(&
-         dkm, mask, pressure_correct, .false., co3_coeffs, temperature,            &
+         dkm, column_kmt, pressure_correct, .false., co3_coeffs, temperature,            &
          salinity, press_bar, dic_alt_co2_loc, alk_alt_co2_loc, po4_loc, sio3_loc, &
          ph_lower_bound, ph_upper_bound, ph_alt_co2, h2co3_alt_co2,                &
          hco3_alt_co2, co3_alt_co2, marbl_status_log)
@@ -3441,7 +3432,7 @@ contains
     ph_prev_alt_co2_col = ph_alt_co2
 
     call marbl_comp_co3_sat_vals(&
-         dkm, mask, pressure_correct, temperature, salinity, &
+         dkm, column_kmt, pressure_correct, temperature, salinity, &
          press_bar, co3_sat_calcite, co3_sat_aragonite)
        
     end associate
