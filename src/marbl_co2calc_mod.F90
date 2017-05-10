@@ -250,7 +250,7 @@ contains
     implicit none
 
     integer(kind=int_kind)                , intent(in)    :: num_elements
-    integer(kind=log_kind)                , intent(in)    :: num_active_elements
+    integer(kind=int_kind)                , intent(in)    :: num_active_elements
     logical(kind=log_kind)                , intent(in)    :: pressure_correct(num_elements)
     logical(kind=log_kind)                , intent(in)    :: lcomp_co3_coeffs
     real(kind=r8)                         , intent(in)    :: temp(num_elements)      ! temperature (degrees C)
@@ -700,7 +700,7 @@ contains
     !---------------------------------------------------------------------------
 
     integer(kind=int_kind)                , intent(in)    :: num_elements
-    integer(kind=log_kind)                , intent(in)    :: num_active_elements
+    integer(kind=int_kind)                , intent(in)    :: num_active_elements
     real(kind=r8)                         , intent(in)    :: temp(num_elements)   ! temperature (degrees C)
     real(kind=r8)                         , intent(in)    :: dic_in(num_elements) ! total inorganic carbon (nmol/cm^3)
     real(kind=r8)                         , intent(in)    :: ta_in(num_elements)  ! total alkalinity (neq/cm^3)
@@ -809,7 +809,7 @@ contains
     implicit none
 
     integer(kind=int_kind)                , intent(in)    :: num_elements
-    integer(kind=log_kind)                , intent(in)    :: num_active_elements
+    integer(kind=int_kind)                , intent(in)    :: num_active_elements
     real(kind=r8)                         , intent(in)    :: k1(num_elements)
     real(kind=r8)                         , intent(in)    :: k2(num_elements)
     type(thermodynamic_coefficients_type) , intent(in)    :: co3_coeffs(num_elements)

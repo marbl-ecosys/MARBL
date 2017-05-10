@@ -2893,7 +2893,7 @@ contains
 
     !-----------------------------------------------------------------------
     !  create local copies of model tracers
-    !  treat negative values as zero
+    !  treat negative values as zero,  apply mask to local copies
     !-----------------------------------------------------------------------
 
     implicit none
