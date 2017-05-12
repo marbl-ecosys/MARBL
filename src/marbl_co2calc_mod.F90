@@ -1146,6 +1146,9 @@ contains
     !   Mucci, Amer. J. of Science 283:781-799, 1983 & Millero 1979
     !------------------------------------------------------------------------
 
+    ! Initialize to zero because this variable is not set where pressure_correct = .false.
+    lnKfac = c0
+
     arg = -171.9065_r8 - 0.077993_r8 * tk + 2839.319_r8 * invtk + 71.595_r8 * log10tk + &
          (-0.77712_r8 + 0.0028426_r8 * tk + 178.34_r8 * invtk) * sqrts - &
          0.07711_r8 * salt_lim + 0.0041249_r8 * s15
