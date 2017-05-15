@@ -34,7 +34,7 @@ module marbl_config_mod
   logical(log_kind), target :: ciso_lecovars_full_depth_tavg  ! should carbon isotope vars be written full depth
   logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
-  logical(log_kind), target :: lcompute_nhx_surface_emis      ! control if NHx emissions are applied to marbl NH4 tracer
+  logical(log_kind), target :: lcompute_nhx_surface_emis      ! control if NHx emissions are computed
   logical(log_kind), target :: lvariable_PtoC                 ! control if PtoC ratios in autotrophs vary
   type(autotroph_config_type), dimension(autotroph_cnt), target :: autotrophs_config
   type(zooplankton_config_type), dimension(zooplankton_cnt), target :: zooplankton_config
@@ -373,7 +373,7 @@ contains
     end if
 
     sname     = 'lcompute_nhx_surface_emis'
-    lname     = 'control if NHx emissions are computed and applied to marbl NH4 tracer'
+    lname     = 'control if NHx emissions are computed"
     units     = 'unitless'
     datatype  = 'logical'
     group     = 'marbl_config_nml'
