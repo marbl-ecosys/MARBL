@@ -2251,7 +2251,7 @@ contains
     use marbl_oxygen             , only : o2sat_surf
     use marbl_constants_mod      , only : molw_Fe
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
-    use marbl_config_mod         , only : lapply_nhx_surface_emis
+    use marbl_config_mod         , only : lcompute_nhx_surface_emis
     use marbl_parms              , only : xkw_coeff
     use marbl_parms              , only : iron_frac_in_dust
     use marbl_parms              , only : iron_frac_in_bc
@@ -2553,7 +2553,7 @@ contains
        surface_forcing_output%sfo(sfo_ind%flux_nhx_id)%forcing_field = nhx_surface_emis
     end if
 
-    if (lapply_nhx_surface_emis) then
+    if (lcompute_nhx_surface_emis) then
       stf(:, nh4_ind) = stf(:, nh4_ind) - nhx_surface_emis(:)
     endif
 
