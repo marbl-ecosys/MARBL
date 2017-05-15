@@ -373,7 +373,7 @@ contains
     end if
 
     sname     = 'lcompute_nhx_surface_emis'
-    lname     = 'control if NHx emissions are computed"
+    lname     = 'control if NHx emissions are computed'
     units     = 'unitless'
     datatype  = 'logical'
     group     = 'marbl_config_nml'
