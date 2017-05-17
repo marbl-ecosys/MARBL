@@ -82,7 +82,6 @@ contains
 
   subroutine marbl_co2calc_surf( &
        num_elements,             &
-       mask,                     &
        lcomp_co3_coeffs,         &
        dic_in,                   &
        xco2_in,                  &
@@ -111,7 +110,6 @@ contains
     implicit none
 
     integer(kind=int_kind)                , intent(in)    :: num_elements
-    logical(kind=log_kind)                , intent(in)    :: mask(num_elements)
     logical(kind=log_kind)                , intent(in)    :: lcomp_co3_coeffs
     real(kind=r8)                         , intent(in)    :: dic_in(num_elements)   ! total inorganic carbon (nmol/cm^3)
     real(kind=r8)                         , intent(in)    :: xco2_in(num_elements)  ! atmospheric mole fraction CO2 in dry air (ppmv)
@@ -156,20 +154,6 @@ contains
          )
 
     !---------------------------------------------------------------------------
-    !   check for existence of ocean points
-    !---------------------------------------------------------------------------
-
-    if (count(mask(:)) == 0) then
-       ph(:)       = c0
-       co2star(:)  = c0
-       dco2star(:) = c0
-       pCO2surf(:) = c0
-       dpCO2(:)    = c0
-       CO3(:)      = c0
-       return
-    end if
-
-    !---------------------------------------------------------------------------
     !   set unit conversion factors
     !---------------------------------------------------------------------------
 
@@ -186,7 +170,7 @@ contains
     !---------------------------------------------------------------------------
 
     if (lcomp_co3_coeffs) then
-       call marbl_comp_co3_coeffs(num_elements, mask, pressure_correct, &
+       call marbl_comp_co3_coeffs(num_elements, pressure_correct, &
             temp, salt, press_bar, co3_coeffs)
     end if
 
@@ -194,7 +178,7 @@ contains
     !   compute htotal
     !---------------------------------------------------------------------------
 
-    call comp_htotal(num_elements, mask, temp, dic_in, &
+    call comp_htotal(num_elements, num_elements, temp, dic_in, &
                      ta_in, pt_in, sit_in, co3_coeffs, &
                      phlo, phhi, htotal, marbl_status_log)
 
@@ -209,9 +193,7 @@ contains
     !   convert xco2 from uatm to atm
     !---------------------------------------------------------------------------
 
-    where (mask(:))
-       xco2(:) = xco2_in(:) * 1e-6_r8
-    end where
+    xco2(:) = xco2_in(:) * 1e-6_r8
 
     !---------------------------------------------------------------------------
     !   Calculate [CO2*] as defined in DOE Methods Handbook 1994 Ver.2,
@@ -221,46 +203,33 @@ contains
     !---------------------------------------------------------------------------
 
     do n = 1, num_elements
-       if (mask(n)) then
+       htotal2     = htotal(n) ** 2
+       denom       = c1 / (htotal2 + k1(n) * htotal(n) + k1(n) * k2(n))
+       CO3(n)      = dic(n) * k1(n) * k2(n) * denom
+       co2star(n)  = dic(n) * htotal2 / (htotal2 + k1(n) * htotal(n) + k1(n) * k2(n))
+       co2starair  = xco2(n) * ff(n) * atmpres(n)
+       dco2star(n) = co2starair - co2star(n)
+       ph(n)       = -log10(htotal(n))
 
-          htotal2     = htotal(n) ** 2
-          denom       = c1 / (htotal2 + k1(n) * htotal(n) + k1(n) * k2(n))
-          CO3(n)      = dic(n) * k1(n) * k2(n) * denom
-          co2star(n)  = dic(n) * htotal2 / (htotal2 + k1(n) * htotal(n) + k1(n) * k2(n))
-          co2starair  = xco2(n) * ff(n) * atmpres(n)
-          dco2star(n) = co2starair - co2star(n)
-          ph(n)       = -log10(htotal(n))
+       !---------------------------------------------------------------------
+       !   Add two output arguments for storing pCO2surf
+       !   Should we be using K0 or ff for the solubility here?
+       !---------------------------------------------------------------------
 
-          !---------------------------------------------------------------------
-          !   Add two output arguments for storing pCO2surf
-          !   Should we be using K0 or ff for the solubility here?
-          !---------------------------------------------------------------------
+       pCO2surf(n) = co2star(n) / ff(n)
+       dpCO2(n)    = pCO2surf(n) - xco2(n) * atmpres(n)
 
-          pCO2surf(n) = co2star(n) / ff(n)
-          dpCO2(n)    = pCO2surf(n) - xco2(n) * atmpres(n)
+       !---------------------------------------------------------------------
+       !   Convert units of output arguments
+       !   Note: pCO2surf and dpCO2 are calculated in atm above.
+       !---------------------------------------------------------------------
 
-          !---------------------------------------------------------------------
-          !   Convert units of output arguments
-          !   Note: pCO2surf and dpCO2 are calculated in atm above.
-          !---------------------------------------------------------------------
+       CO3(n)      = CO3(n)      * mass_to_vol
+       co2star(n)  = co2star(n)  * mass_to_vol
+       dco2star(n) = dco2star(n) * mass_to_vol
 
-          CO3(n)      = CO3(n)      * mass_to_vol
-          co2star(n)  = co2star(n)  * mass_to_vol
-          dco2star(n) = dco2star(n) * mass_to_vol
-
-          pCO2surf(n) = pCO2surf(n) * 1e6_r8
-          dpCO2(n)    = dpCO2(n)    * 1e6_r8
-
-       else ! if mask
-
-          ph(n)       = c0
-          co2star(n)  = c0
-          dco2star(n) = c0
-          pCO2surf(n) = c0
-          dpCO2(n)    = c0
-          CO3(n)      = c0
-
-       end if ! if mask
+       pCO2surf(n) = pCO2surf(n) * 1e6_r8
+       dpCO2(n)    = dpCO2(n)    * 1e6_r8
     end do
 
     end associate
@@ -270,7 +239,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_comp_CO3terms(&
-       num_elements, mask, pressure_correct, lcomp_co3_coeffs, co3_coeffs,  &
+       num_elements, num_active_elements, pressure_correct, lcomp_co3_coeffs, co3_coeffs,  &
        temp, salt, press_bar, dic_in, ta_in, pt_in, sit_in, phlo, phhi, ph, &
        H2CO3, HCO3, CO3, marbl_status_log)
 
@@ -281,7 +250,7 @@ contains
     implicit none
 
     integer(kind=int_kind)                , intent(in)    :: num_elements
-    logical(kind=log_kind)                , intent(in)    :: mask(num_elements)
+    integer(kind=int_kind)                , intent(in)    :: num_active_elements
     logical(kind=log_kind)                , intent(in)    :: pressure_correct(num_elements)
     logical(kind=log_kind)                , intent(in)    :: lcomp_co3_coeffs
     real(kind=r8)                         , intent(in)    :: temp(num_elements)      ! temperature (degrees C)
@@ -333,18 +302,6 @@ contains
          )
 
     !---------------------------------------------------------------------------
-    !   check for existence of ocean points
-    !---------------------------------------------------------------------------
-
-    if (count(mask) == 0) then
-       ph    = c0
-       H2CO3 = c0
-       HCO3  = c0
-       CO3   = c0
-       return
-    end if
-
-    !---------------------------------------------------------------------------
     !   set unit conversion factors
     !---------------------------------------------------------------------------
 
@@ -356,7 +313,7 @@ contains
     !------------------------------------------------------------------------
 
     if (lcomp_co3_coeffs) then
-       call marbl_comp_co3_coeffs(num_elements, mask, pressure_correct, &
+       call marbl_comp_co3_coeffs(num_elements, pressure_correct, &
             temp, salt, press_bar, co3_coeffs)
     end if
 
@@ -364,7 +321,7 @@ contains
     !   compute htotal
     !------------------------------------------------------------------------
 
-    call comp_htotal(num_elements, mask, temp, dic_in, &
+    call comp_htotal(num_elements, num_active_elements, temp, dic_in, &
          ta_in, pt_in, sit_in, co3_coeffs, &
          phlo, phhi, htotal, marbl_status_log)
 
@@ -378,33 +335,27 @@ contains
     !   ORNL/CDIAC-74, Dickson and Goyet, eds. (Ch 2 p 10, Eq A.49-51)
     !------------------------------------------------------------------------
 
-    do c = 1,num_elements
-       if (mask(c)) then
+    do c = 1,num_active_elements
+       htotal2  = htotal(c) ** 2
+       denom    = c1 / (htotal2 + k1(c) * htotal(c) + k1(c) * k2(c))
+       H2CO3(c) = dic(c) * htotal2 * denom
+       HCO3(c)  = dic(c) * k1(c) * htotal(c) * denom
+       CO3(c)   = dic(c) * k1(c) * k2(c) * denom
+       ph(c)    = -LOG10(htotal(c))
 
-          htotal2  = htotal(c) ** 2
-          denom    = c1 / (htotal2 + k1(c) * htotal(c) + k1(c) * k2(c))
-          H2CO3(c) = dic(c) * htotal2 * denom
-          HCO3(c)  = dic(c) * k1(c) * htotal(c) * denom
-          CO3(c)   = dic(c) * k1(c) * k2(c) * denom
-          ph(c)    = -LOG10(htotal(c))
+       !------------------------------------------------------------------
+       !   Convert units of output arguments
+       !------------------------------------------------------------------
 
-          !------------------------------------------------------------------
-          !   Convert units of output arguments
-          !------------------------------------------------------------------
+       H2CO3(c) = H2CO3(c) * mass_to_vol
+       HCO3(c)  = HCO3(c) * mass_to_vol
+       CO3(c)   = CO3(c) * mass_to_vol
+     end do ! c loop
 
-          H2CO3(c) = H2CO3(c) * mass_to_vol
-          HCO3(c)  = HCO3(c) * mass_to_vol
-          CO3(c)   = CO3(c) * mass_to_vol
-
-       else ! if mask
-
-          ph(c)    = c0
-          H2CO3(c) = c0
-          HCO3(c)  = c0
-          CO3(c)   = c0
-
-       end if ! if mask
-    end do ! c loop
+     ph(num_active_elements+1:num_elements)    = c0
+     H2CO3(num_active_elements+1:num_elements) = c0
+     HCO3(num_active_elements+1:num_elements)  = c0
+     CO3(num_active_elements+1:num_elements)   = c0
 
     end associate
 
@@ -413,7 +364,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_comp_co3_coeffs(&
-       num_elements, mask, pressure_correct, &
+       num_elements, pressure_correct, &
        temp, salt, press_bar, co3_coeffs)
 
     !---------------------------------------------------------------------------
@@ -424,7 +375,6 @@ contains
     implicit none
 
     integer(kind=int_kind)                , intent(in)  :: num_elements
-    logical(kind=log_kind)                , intent(in)  :: mask(num_elements)
     logical(kind=log_kind)                , intent(in)  :: pressure_correct(num_elements)
     real(kind=r8)                         , intent(in)  :: temp(num_elements)      ! temperature (degrees c)
     real(kind=r8)                         , intent(in)  :: salt(num_elements)      ! salinity (psu)
@@ -741,7 +691,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine comp_htotal(num_elements, mask, temp, dic_in, ta_in, pt_in, sit_in, &
+  subroutine comp_htotal(num_elements, num_active_elements, temp, dic_in, ta_in, pt_in, sit_in, &
                          co3_coeffs, phlo, phhi, htotal, marbl_status_log)
 
     !---------------------------------------------------------------------------
@@ -750,7 +700,7 @@ contains
     !---------------------------------------------------------------------------
 
     integer(kind=int_kind)                , intent(in)    :: num_elements
-    logical(kind=log_kind)                , intent(in)    :: mask(num_elements)
+    integer(kind=int_kind)                , intent(in)    :: num_active_elements
     real(kind=r8)                         , intent(in)    :: temp(num_elements)   ! temperature (degrees C)
     real(kind=r8)                         , intent(in)    :: dic_in(num_elements) ! total inorganic carbon (nmol/cm^3)
     real(kind=r8)                         , intent(in)    :: ta_in(num_elements)  ! total alkalinity (neq/cm^3)
@@ -791,15 +741,6 @@ contains
           pt  => co3_coeffs(:)%pt,  &
           sit => co3_coeffs(:)%sit  &
           )
-      
-    !---------------------------------------------------------------------------
-    !   check for existence of ocean points
-    !---------------------------------------------------------------------------
-
-    if (count(mask) == 0) then
-       htotal = c0
-       return
-    end if
 
     !---------------------------------------------------------------------------
     !   set unit conversion factors
@@ -812,16 +753,14 @@ contains
     !   convert tracer units to per mass
     !---------------------------------------------------------------------------
 
-    do c = 1,num_elements
-       if (mask(c)) then
-          dic(c)  = max(dic_in(c),dic_min) * vol_to_mass
-          ta(c)   = max(ta_in(c),alk_min)  * vol_to_mass
-          pt(c)   = max(pt_in(c),c0)       * vol_to_mass
-          sit(c)  = max(sit_in(c),c0)      * vol_to_mass
+    do c = 1,num_active_elements
+       dic(c)  = max(dic_in(c),dic_min) * vol_to_mass
+       ta(c)   = max(ta_in(c),alk_min)  * vol_to_mass
+       pt(c)   = max(pt_in(c),c0)       * vol_to_mass
+       sit(c)  = max(sit_in(c),c0)      * vol_to_mass
 
-          x1(c) = c10 ** (-phhi(c))
-          x2(c) = c10 ** (-phlo(c))
-       end if ! if mask
+       x1(c) = c10 ** (-phhi(c))
+       x2(c) = c10 ** (-phlo(c))
     end do ! c loop
 
     !---------------------------------------------------------------------------
@@ -839,7 +778,7 @@ contains
     !   set x1 and x2 to the previous value of the pH +/- ~0.5.
     !---------------------------------------------------------------------------
 
-    call drtsafe(num_elements, mask, k1, k2, co3_coeffs, x1, x2, xacc, htotal,&
+    call drtsafe(num_elements, num_active_elements, k1, k2, co3_coeffs, x1, x2, xacc, htotal,&
          marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
@@ -853,7 +792,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine drtsafe(num_elements, mask_in, k1, k2, co3_coeffs, x1, x2, xacc, &
+  subroutine drtsafe(num_elements, num_active_elements, k1, k2, co3_coeffs, x1, x2, xacc, &
                          soln, marbl_status_log)
 
     !---------------------------------------------------------------------------
@@ -870,7 +809,7 @@ contains
     implicit none
 
     integer(kind=int_kind)                , intent(in)    :: num_elements
-    logical(kind=log_kind)                , intent(in)    :: mask_in(num_elements)
+    integer(kind=int_kind)                , intent(in)    :: num_active_elements
     real(kind=r8)                         , intent(in)    :: k1(num_elements)
     real(kind=r8)                         , intent(in)    :: k2(num_elements)
     type(thermodynamic_coefficients_type) , intent(in)    :: co3_coeffs(num_elements)
@@ -888,6 +827,7 @@ contains
     logical(kind=log_kind)                          :: leave_bracket, dx_decrease
     logical(kind=log_kind)                          :: abort
     logical(kind=log_kind), dimension(num_elements) :: mask
+    logical(kind=log_kind), dimension(num_elements) :: active_mask
     integer(kind=int_kind)                          :: c, it
     real(kind=r8)                                   :: temp
     real(kind=r8), dimension(num_elements) :: xlo, xhi, flo, fhi, f, df, dxold, dx
@@ -897,7 +837,10 @@ contains
     !   bracket root at each location and set up first iteration
     !---------------------------------------------------------------------------
 
-    mask = mask_in
+    active_mask = .false.
+    active_mask(1:num_active_elements) = .true.
+
+    mask = active_mask
     abort = .false.
 
     it = 0
@@ -915,7 +858,7 @@ contains
 
        it = it + 1
 
-       do c = 1,num_elements
+       do c = 1,num_active_elements
           if (mask(c)) then
              ! Log a warning message if bounding box end points have same sign
              ! (no guarantee that there is a root on the interval)
@@ -956,24 +899,22 @@ contains
        end where
     end do
 
-    mask = mask_in
+    mask = active_mask
 
-    do c = 1,num_elements
-       if (mask(c)) then
-          if (flo(c) .LT. c0) then
-             xlo(c) = x1(c)
-             xhi(c) = x2(c)
-          else
-             xlo(c) = x2(c)
-             xhi(c) = x1(c)
-             temp = flo(c)
-             flo(c) = fhi(c)
-             fhi(c) = temp
-          end if
-          soln(c) = p5 * (xlo(c) + xhi(c))
-          dxold(c) = ABS(xlo(c) - xhi(c))
-          dx(c) = dxold(c)
+    do c = 1,num_active_elements
+       if (flo(c) .LT. c0) then
+          xlo(c) = x1(c)
+          xhi(c) = x2(c)
+       else
+          xlo(c) = x2(c)
+          xhi(c) = x1(c)
+          temp = flo(c)
+          flo(c) = fhi(c)
+          fhi(c) = temp
        end if
+       soln(c) = p5 * (xlo(c) + xhi(c))
+       dxold(c) = ABS(xlo(c) - xhi(c))
+       dx(c) = dxold(c)
     end do
 
     call total_alkalinity(num_elements, mask, k1, k2, soln, co3_coeffs, f, df)
@@ -983,7 +924,7 @@ contains
     !---------------------------------------------------------------------------
 
     do it = 1,maxit
-       do c = 1,num_elements
+       do c = 1,num_active_elements
           if (mask(c)) then
              leave_bracket = ((soln(c) - xhi(c)) * df(c) - f(c)) * &
                   ((soln(c) - xlo(c)) * df(c) - f(c)) .GE. 0
@@ -1146,7 +1087,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_comp_co3_sat_vals(&
-       num_elements, mask, pressure_correct, temp, salt, press_bar, &
+       num_elements, num_active_elements, pressure_correct, temp, salt, press_bar, &
        co3_sat_calc, co3_sat_arag)
 
     !---------------------------------------------------------------------------
@@ -1157,7 +1098,7 @@ contains
     implicit none
 
     integer(kind=int_kind)                           , intent(in)  :: num_elements
-    logical(kind=log_kind) , dimension(num_elements) , intent(in)  :: mask
+    integer(kind=int_kind)                           , intent(in)  :: num_active_elements
     logical(kind=log_kind) , dimension(num_elements) , intent(in)  :: pressure_correct
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: temp         ! temperature (degrees c)
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: salt         ! salinity (psu)
@@ -1180,6 +1121,8 @@ contains
          deltaV,Kappa,                        & ! pressure correction terms
          lnKfac,Kfac,                         & ! pressure correction terms
          inv_Ca                                 ! inverse of Calcium concentration (mol/kg)
+
+    integer(kind=int_kind) :: n
     !---------------------------------------------------------------------------
 
     !---------------------------------------------------------------------------
@@ -1187,16 +1130,6 @@ contains
     !---------------------------------------------------------------------------
 
     mass_to_vol = 1e6_r8 * rho_sw
-
-    !------------------------------------------------------------------------
-    !   check for existence of ocean points on this row
-    !------------------------------------------------------------------------
-    
-    if (count(mask(:)) == 0) then 
-       co3_sat_calc(:) = c0
-       co3_sat_arag(:) = c0
-       return
-    end if
 
     salt_lim = max(salt(:),salt_min)
     tk       = T0_Kelvin + temp(:)
@@ -1247,29 +1180,27 @@ contains
        K_arag = K_arag * Kfac
     endwhere
 
-    where ( mask(:) )
+    do n=1,num_active_elements
 
        !------------------------------------------------------------------
        !   Compute CO3 concentration at calcite & aragonite saturation
        !------------------------------------------------------------------
 
-       inv_Ca = (35.0_r8 / 0.01028_r8) / salt_lim
-       co3_sat_calc(:) = K_calc * inv_Ca
-       co3_sat_arag(:) = K_arag * inv_Ca
+       inv_Ca(n) = (35.0_r8 / 0.01028_r8) / salt_lim(n)
+       co3_sat_calc(n) = K_calc(n) * inv_Ca(n)
+       co3_sat_arag(n) = K_arag(n) * inv_Ca(n)
 
        !------------------------------------------------------------------
        !   Convert units of output arguments
        !------------------------------------------------------------------
 
-       co3_sat_calc(:) = co3_sat_calc(:) * mass_to_vol
-       co3_sat_arag(:) = co3_sat_arag(:) * mass_to_vol
+       co3_sat_calc(n) = co3_sat_calc(n) * mass_to_vol
+       co3_sat_arag(n) = co3_sat_arag(n) * mass_to_vol
 
-    elsewhere
+    end do
 
-       co3_sat_calc(:) = c0
-       co3_sat_arag(:) = c0
-
-    end where
+    co3_sat_calc(num_active_elements+1:num_elements) = c0
+    co3_sat_arag(num_active_elements+1:num_elements) = c0
 
   end subroutine marbl_comp_co3_sat_vals
 

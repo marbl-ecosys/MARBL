@@ -21,11 +21,10 @@ contains
 
   !*****************************************************************************
 
-  function schmidt_o2_surf(n, sst_in, surface_mask)
+  function schmidt_o2_surf(n, sst_in)
 
     ! !DESCRIPTION:
     !  Compute Schmidt number of O2 in seawater as function of SST
-    !  where surface_mask is non-zero. Give zero where surface_mask is 0.
     !
     !  range of validity of fit is -2:40
     !
@@ -36,7 +35,6 @@ contains
 
     integer(int_kind)  , intent(in) :: n
     real (r8)          , intent(in) :: sst_in(n)
-    real (r8)          , intent(in) :: surface_mask(n)
 
     real (r8) :: schmidt_o2_surf(n)
 
@@ -55,22 +53,18 @@ contains
 
     do i = 1, n
        sst(i) = max(-2.0_r8, min(40.0_r8, sst_in(i)))
-       if (surface_mask(i) /= c0) then
-          schmidt_o2_surf(i) = a + sst(i) * (b + sst(i) * (c + sst(i) * (d + sst(i) * e)))
-       else
-          schmidt_o2_surf(i) = c0
-       endif
+       schmidt_o2_surf(i) = a + sst(i) * (b + sst(i) * (c + sst(i) * (d + sst(i) * e)))
     end do
 
   end function schmidt_o2_surf
 
   !*****************************************************************************
 
-  function o2sat_surf(n, sst, sss, surface_mask)
+  function o2sat_surf(n, sst, sss)
 
     !  Computes oxygen saturation concentration at 1 atm total pressure
     !  in mmol/m^3 given the temperature (t, in deg C) and the salinity (s,
-    !  in permil) where surface_mask is non-zero. Give zero where surface_mask is 0.
+    !  in permil).
     !
     !  FROM GARCIA AND GORDON (1992), LIMNOLOGY and OCEANOGRAPHY.
     !  THE FORMULA USED IS FROM PAGE 1310, EQUATION (8).
@@ -88,7 +82,6 @@ contains
     integer(int_kind),            intent(in) :: n
     real (r8),                    intent(in) :: SST(n) ! sea surface temperature (C)
     real (r8),                    intent(in) :: SSS(n) ! sea surface salinity (psu)
-    real (r8)         , optional, intent(in) :: surface_mask(n)
 
     real (r8) :: O2SAT_surf(n)
 
@@ -112,21 +105,12 @@ contains
     !-----------------------------------------------------------------------
 
     ! set default
-    o2sat_surf(:) = c0
+    ts(:)    = log( ((t0_kelvin + 25.0_r8) - sst(:)) / (t0_kelvin + sst(:)) )
+    o2sat(:) = exp(a_0+ts(:)*(a_1+ts(:)*(a_2+ts(:)*(a_3+ts(:)*(a_4+ts(:)*a_5)))) + &
+                   sss(:)*( (b_0+ts(:)*(b_1+ts(:)*(b_2+ts(:)*b_3))) + sss(:)*c_0 ))
 
-    if (present(surface_mask)) then
-
-       where (surface_mask(:) /= c0) 
-
-          ts(:)    = log( ((t0_kelvin + 25.0_r8) - sst(:)) / (t0_kelvin + sst(:)) )
-          o2sat(:) = exp(a_0+ts(:)*(a_1+ts(:)*(a_2+ts(:)*(a_3+ts(:)*(a_4+ts(:)*a_5)))) + &
-                         sss(:)*( (b_0+ts(:)*(b_1+ts(:)*(b_2+ts(:)*b_3))) + sss(:)*c_0 ))
-
-          !  convert from ml/l to mmol/m^3
-          o2sat_surf(:) = o2sat(:) / 0.0223916_r8
-
-       end where
-    endif
+    !  convert from ml/l to mmol/m^3
+    o2sat_surf(:) = o2sat(:) / 0.0223916_r8
 
   end function O2SAT_surf
 
@@ -138,7 +122,7 @@ contains
     !
     !  Computes oxygen saturation concentration at 1 atm total pressure
     !  in mmol/m^3 given the temperature (t, in deg C) and the salinity (s,
-    !  in permil) where surface_mask is non-zero. Give zero where surface_mask is 0.
+    !  in permil).
     !
     !  FROM GARCIA AND GORDON (1992), LIMNOLOGY and OCEANOGRAPHY.
     !  THE FORMULA USED IS FROM PAGE 1310, EQUATION (8).

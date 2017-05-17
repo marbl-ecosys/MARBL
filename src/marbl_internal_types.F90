@@ -413,7 +413,6 @@ module marbl_internal_types
   !****************************************************************************
 
   type, public :: marbl_surface_forcing_indexing_type
-     integer(int_kind) :: surface_mask_id      = 0
      integer(int_kind) :: u10_sqr_id           = 0
      integer(int_kind) :: ifrac_id             = 0
      integer(int_kind) :: sst_id               = 0
@@ -824,10 +823,6 @@ contains
       ! -------------------------------
       ! | Always request these fields |
       ! -------------------------------
-
-      ! Surface Mask
-      forcing_cnt = forcing_cnt + 1
-      this%surface_mask_id = forcing_cnt
 
       ! Square of 10m wind
       forcing_cnt = forcing_cnt + 1

@@ -1723,7 +1723,6 @@ contains
 
   subroutine marbl_ciso_set_surface_forcing( &
        num_elements        ,                 &
-       surface_mask        ,                 &
        sst                 ,                 &
        d13c                ,                 &
        d14c                ,                 &
@@ -1741,7 +1740,6 @@ contains
     implicit none
 
     integer (int_kind)                     , intent(in)    :: num_elements
-    real(r8)                               , intent(in)    :: surface_mask(num_elements)
     real(r8)                               , intent(in)    :: sst(num_elements)
     real(r8)                               , intent(in)    :: d13c(num_elements)  ! atm 13co2 value
     real(r8)                               , intent(in)    :: d14c(num_elements)  ! atm 14co2 value
@@ -1871,11 +1869,7 @@ contains
     !     the measured e_dic_g_surf of Zhang et al. 1995
     !---------------------------------------------------------------------
 
-    where (surface_mask(:) /= c0) 
-       frac_co3(:) = CO3_SURF_fields(:) / dic(:)
-    elsewhere
-       frac_co3(:) = c0
-    end where
+    frac_co3(:) = CO3_SURF_fields(:) / dic(:)
 
     eps_dic_g_surf(:) = 0.014_r8 * sst(:) * frac_co3(:) - 0.105_r8 * sst(:) + 10.53_r8
 

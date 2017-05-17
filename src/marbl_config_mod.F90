@@ -34,7 +34,7 @@ module marbl_config_mod
   logical(log_kind), target :: ciso_lecovars_full_depth_tavg  ! should carbon isotope vars be written full depth
   logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
-  logical(log_kind), target :: lapply_nhx_surface_emis        ! control if NHx emissions are applied to marbl NH4 tracer
+  logical(log_kind), target :: lcompute_nhx_surface_emis      ! control if NHx emissions are computed
   logical(log_kind), target :: lvariable_PtoC                 ! control if PtoC ratios in autotrophs vary
   type(autotroph_config_type), dimension(autotroph_cnt), target :: autotrophs_config
   type(zooplankton_config_type), dimension(zooplankton_cnt), target :: zooplankton_config
@@ -135,7 +135,7 @@ contains
     ciso_lecovars_full_depth_tavg = .false.
     lflux_gas_o2                  = .true.
     lflux_gas_co2                 = .true.
-    lapply_nhx_surface_emis       = .false.
+    lcompute_nhx_surface_emis     = .true.
     lvariable_PtoC                = .true.
     init_bury_coeff_opt           = 'nml'
     ladjust_bury_coeff            = .false.
@@ -223,7 +223,7 @@ contains
     namelist /marbl_config_nml/                                               &
          ciso_on, lsource_sink, ciso_lsource_sink, lecovars_full_depth_tavg,  &
          ciso_lecovars_full_depth_tavg,                                       &
-         lflux_gas_o2, lflux_gas_co2, lapply_nhx_surface_emis,                &
+         lflux_gas_o2, lflux_gas_co2, lcompute_nhx_surface_emis,              &
          init_bury_coeff_opt, ladjust_bury_coeff,                             &
          lvariable_PtoC,                                                      &
          autotrophs_config, zooplankton_config, grazing_config
@@ -372,12 +372,12 @@ contains
       return
     end if
 
-    sname     = 'lapply_nhx_surface_emis'
-    lname     = 'control if NHx emissions are applied to marbl NH4 tracer'
+    sname     = 'lcompute_nhx_surface_emis'
+    lname     = 'control if NHx emissions are computed'
     units     = 'unitless'
     datatype  = 'logical'
     group     = 'marbl_config_nml'
-    lptr      => lapply_nhx_surface_emis
+    lptr      => lcompute_nhx_surface_emis
     call this%add_var(sname, lname, units, datatype, group, category,       &
                         marbl_status_log, lptr=lptr)
     if (marbl_status_log%labort_marbl) then
