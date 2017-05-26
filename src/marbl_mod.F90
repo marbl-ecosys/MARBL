@@ -612,7 +612,6 @@ contains
 
     character(*), parameter :: subname = 'marbl_mod:marbl_init_tracer_metadata'
 
-    integer (int_kind) :: non_living_biomass_ecosys_tracer_cnt ! number of non-autotroph ecosystem tracers
     integer (int_kind) :: n        ! index for looping over tracers
     integer (int_kind) :: zoo_ind  ! zooplankton functional group index
     integer (int_kind) :: auto_ind ! autotroph functional group index
@@ -625,7 +624,7 @@ contains
     marbl_tracer_metadata(:)%tracer_module_name = 'ecosys'
 
     call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_metadata,      &
-         marbl_tracer_indices, non_living_biomass_ecosys_tracer_cnt)
+         marbl_tracer_indices)
 
     call marbl_init_zooplankton_tracer_metadata(marbl_tracer_metadata,        &
          marbl_tracer_indices)
@@ -2662,7 +2661,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_init_non_autotroph_tracer_metadata(marbl_tracer_metadata, &
-             marbl_tracer_indices, non_living_biomass_ecosys_tracer_cnt)
+             marbl_tracer_indices)
 
     !-----------------------------------------------------------------------
     !  initialize non-autotroph tracer_d values and accumulate
@@ -2671,10 +2670,10 @@ contains
 
     implicit none
 
-    type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
-    type (marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
-    integer (int_kind)                , intent(out)   :: non_living_biomass_ecosys_tracer_cnt ! number of non-autotroph ecosystem tracers
+    type(marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
+    type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
 
+    integer(int_kind) :: non_living_biomass_ecosys_tracer_cnt ! number of non-autotroph ecosystem tracers
     integer(int_kind) :: n
 
     associate(&
