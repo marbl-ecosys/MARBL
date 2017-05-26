@@ -2018,6 +2018,16 @@ contains
                   (flux - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N))
           endif
 
+       else
+
+          if (ladjust_bury_coeff) then
+             glo_avg_fields_interior(glo_avg_field_ind_interior_POC_bury) = c0
+             glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = c0
+
+             glo_avg_fields_interior(glo_avg_field_ind_interior_POP_bury) = c0
+             glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = c0
+          endif
+
        endif
 
        flux = P_SiO2%sflux_out(k) + P_SiO2%hflux_out(k)
