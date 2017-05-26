@@ -559,7 +559,7 @@ contains
     call this%interior_forcing_ind%construct(this%tracer_metadata%short_name, &
                                    tracer_restore_vars, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("itnerior_forcing_ind%construct",   &
+      call this%StatusLog%log_error_trace("interior_forcing_ind%construct",   &
                                           subname)
       return
     end if
