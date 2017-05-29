@@ -2661,8 +2661,8 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices,   &
-             n, short_name, long_name, marbl_tracer_metadata)
+  subroutine marbl_init_non_autotroph_tracer_metadata(short_name, long_name, &
+                                                      marbl_tracer_metadata)
 
     !-----------------------------------------------------------------------
     !  initialize non-autotroph tracer_d values and accumulate
@@ -2671,30 +2671,22 @@ contains
 
     implicit none
 
-    type(marbl_tracer_index_type),    intent(in)    :: marbl_tracer_indices
-    integer(int_kind),                intent(in)    :: n
     character(len=*),                 intent(in)    :: short_name
     character(len=*),                 intent(in)    :: long_name
     type(marbl_tracer_metadata_type), intent(inout) :: marbl_tracer_metadata
 
-    associate(&
-         alk_ind           => marbl_tracer_indices%alk_ind,         &
-         alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind  &
-             )
-
-      marbl_tracer_metadata%short_name = short_name
-      marbl_tracer_metadata%long_name  = long_name
-      if (n == alk_ind .or. n == alk_alt_co2_ind) then
-         marbl_tracer_metadata%units      = 'meq/m^3'
-         marbl_tracer_metadata%tend_units = 'meq/m^3/s'
-         marbl_tracer_metadata%flux_units = 'meq/m^3 cm/s'
-      else
-         marbl_tracer_metadata%units      = 'mmol/m^3'
-         marbl_tracer_metadata%tend_units = 'mmol/m^3/s'
-         marbl_tracer_metadata%flux_units = 'mmol/m^3 cm/s'
-      endif
-
-    end associate
+    marbl_tracer_metadata%short_name = short_name
+    marbl_tracer_metadata%long_name  = long_name
+    if ((trim(short_name) == "ALK") .or. &
+        (trim(short_name) == "ALK_ALT_CO2")) then
+       marbl_tracer_metadata%units      = 'meq/m^3'
+       marbl_tracer_metadata%tend_units = 'meq/m^3/s'
+       marbl_tracer_metadata%flux_units = 'meq/m^3 cm/s'
+    else
+       marbl_tracer_metadata%units      = 'mmol/m^3'
+       marbl_tracer_metadata%tend_units = 'mmol/m^3/s'
+       marbl_tracer_metadata%flux_units = 'mmol/m^3 cm/s'
+    endif
 
   end subroutine marbl_init_non_autotroph_tracer_metadata
 
@@ -2713,63 +2705,41 @@ contains
     type(marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
     type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
 
-    associate(&
-         po4_ind           => marbl_tracer_indices%po4_ind,         &
-         no3_ind           => marbl_tracer_indices%no3_ind,         &
-         sio3_ind          => marbl_tracer_indices%sio3_ind,        &
-         nh4_ind           => marbl_tracer_indices%nh4_ind,         &
-         fe_ind            => marbl_tracer_indices%fe_ind,          &
-         lig_ind           => marbl_tracer_indices%lig_ind,         &
-         o2_ind            => marbl_tracer_indices%o2_ind,          &
-         dic_ind           => marbl_tracer_indices%dic_ind,         &
-         dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind, &
-         alk_ind           => marbl_tracer_indices%alk_ind,         &
-         alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind, &
-         doc_ind           => marbl_tracer_indices%doc_ind,         &
-         don_ind           => marbl_tracer_indices%don_ind,         &
-         dop_ind           => marbl_tracer_indices%dop_ind,         &
-         dopr_ind          => marbl_tracer_indices%dopr_ind,        &
-         donr_ind          => marbl_tracer_indices%donr_ind,        &
-         docr_ind          => marbl_tracer_indices%docr_ind         &
-             )
+    call marbl_init_non_autotroph_tracer_metadata('PO4', 'Dissolved Inorganic Phosphate', &
+               marbl_tracer_metadata(marbl_tracer_indices%po4_ind))
+    call marbl_init_non_autotroph_tracer_metadata('NO3', 'Dissolved Inorganic Nitrate',   &
+               marbl_tracer_metadata(marbl_tracer_indices%no3_ind))
+    call marbl_init_non_autotroph_tracer_metadata('SiO3', 'Dissolved Inorganic Silicate', &
+               marbl_tracer_metadata(marbl_tracer_indices%sio3_ind))
+    call marbl_init_non_autotroph_tracer_metadata('NH4', 'Dissolved Ammonia',             &
+               marbl_tracer_metadata(marbl_tracer_indices%nh4_ind))
+    call marbl_init_non_autotroph_tracer_metadata('Fe', 'Dissolved Inorganic Iron',       &
+               marbl_tracer_metadata(marbl_tracer_indices%fe_ind))
+    call marbl_init_non_autotroph_tracer_metadata('Lig', 'Iron Binding Ligand',           &
+               marbl_tracer_metadata(marbl_tracer_indices%lig_ind))
+    call marbl_init_non_autotroph_tracer_metadata('O2', 'Dissolved Oxygen',               &
+               marbl_tracer_metadata(marbl_tracer_indices%o2_ind))
+    call marbl_init_non_autotroph_tracer_metadata('DIC', 'Dissolved Inorganic Carbon',    &
+               marbl_tracer_metadata(marbl_tracer_indices%dic_ind))
+    call marbl_init_non_autotroph_tracer_metadata('ALK', 'Alkalinity',                    &
+               marbl_tracer_metadata(marbl_tracer_indices%alk_ind))
+    call marbl_init_non_autotroph_tracer_metadata('DOC', 'Dissolved Organic Carbon',      &
+               marbl_tracer_metadata(marbl_tracer_indices%doc_ind))
+    call marbl_init_non_autotroph_tracer_metadata('DON', 'Dissolved Organic Nitrogen',    &
+               marbl_tracer_metadata(marbl_tracer_indices%don_ind))
+    call marbl_init_non_autotroph_tracer_metadata('DOP', 'Dissolved Organic Phosphorus',  &
+               marbl_tracer_metadata(marbl_tracer_indices%dop_ind))
+    call marbl_init_non_autotroph_tracer_metadata('DOPr', 'Refractory DOP',               &
+               marbl_tracer_metadata(marbl_tracer_indices%dopr_ind))
+    call marbl_init_non_autotroph_tracer_metadata('DONr', 'Refractory DON',               &
+               marbl_tracer_metadata(marbl_tracer_indices%donr_ind))
+    call marbl_init_non_autotroph_tracer_metadata('DOCr', 'Refractory DOC',               &
+               marbl_tracer_metadata(marbl_tracer_indices%docr_ind))
 
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, po4_ind, 'PO4',   &
-               'Dissolved Inorganic Phosphate', marbl_tracer_metadata(po4_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, no3_ind, 'NO3',   &
-               'Dissolved Inorganic Nitrate', marbl_tracer_metadata(no3_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, sio3_ind, 'SiO3', &
-               'Dissolved Inorganic Silicate', marbl_tracer_metadata(sio3_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, nh4_ind, 'NH4',   &
-               'Dissolved Ammonia', marbl_tracer_metadata(nh4_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, fe_ind, 'Fe',     &
-               'Dissolved Inorganic Iron', marbl_tracer_metadata(fe_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, lig_ind, 'Lig',   &
-               'Iron Binding Ligand', marbl_tracer_metadata(lig_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, o2_ind, 'O2',     &
-               'Dissolved Oxygen', marbl_tracer_metadata(o2_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, dic_ind, 'DIC',   &
-               'Dissolved Inorganic Carbon', marbl_tracer_metadata(dic_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, alk_ind, 'ALK',   &
-               'Alkalinity', marbl_tracer_metadata(alk_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, doc_ind, 'DOC',   &
-               'Dissolved Organic Carbon', marbl_tracer_metadata(doc_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, don_ind, 'DON',   &
-               'Dissolved Organic Nitrogen', marbl_tracer_metadata(don_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, dop_ind, 'DOP',   &
-               'Dissolved Organic Phosphorus', marbl_tracer_metadata(dop_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, dopr_ind, 'DOPr', &
-               'Refractory DOP', marbl_tracer_metadata(dopr_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, donr_ind, 'DONr', &
-               'Refractory DON', marbl_tracer_metadata(donr_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, docr_ind, 'DOCr', &
-               'Refractory DOC', marbl_tracer_metadata(docr_ind))
-
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, dic_alt_co2_ind, 'DIC_ALT_CO2', &
-               'Dissolved Inorganic Carbon, Alternative CO2', marbl_tracer_metadata(dic_alt_co2_ind))
-    call marbl_init_non_autotroph_tracer_metadata(marbl_tracer_indices, alk_alt_co2_ind, 'ALK_ALT_CO2', &
-               'Alkalinity, Alternative CO2', marbl_tracer_metadata(alk_alt_co2_ind))
-
-    end associate
+    call marbl_init_non_autotroph_tracer_metadata('DIC_ALT_CO2', 'Dissolved Inorganic Carbon, Alternative CO2', &
+               marbl_tracer_metadata(marbl_tracer_indices%dic_alt_co2_ind))
+    call marbl_init_non_autotroph_tracer_metadata('ALK_ALT_CO2', 'Alkalinity, Alternative CO2', &
+               marbl_tracer_metadata(marbl_tracer_indices%alk_alt_co2_ind))
 
   end subroutine marbl_init_non_autotroph_tracers_metadata
 
