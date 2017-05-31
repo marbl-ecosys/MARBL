@@ -882,9 +882,16 @@ contains
           end select
 
           ! (4) Write log_message to the log
-          if (this%vars(n)%comment.ne.'') &
-            write(log_message, "(3A)") trim(log_message), ' ! ',                  &
-                                       trim(this%vars(n)%comment)
+          if (this%vars(n)%comment.ne.'') then
+            if (len_trim(log_message) + 3 + len_trim(this%vars(n)%comment) .le. len(log_message)) then
+              write(log_message, "(3A)") trim(log_message), ' ! ',                  &
+                                         trim(this%vars(n)%comment)
+            else
+              call marbl_status_log%log_noerror(&
+                   '! WARNING: omitting comment on line below because including it exceeds max length for log message', &
+                   subname)
+            end if
+          endif
           call marbl_status_log%log_noerror(log_message, subname)
         end if
       end do
