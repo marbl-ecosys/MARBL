@@ -26,9 +26,6 @@ module marbl_co2calc_mod
   private :: drtsafe
   private :: total_alkalinity
   private :: apply_pressure_correction
-  private :: vmath_sqrt
-  private :: vmath_exp
-  private :: vmath_log
 
   !-----------------------------------------------------------------------------
   !   module parameters
@@ -341,7 +338,7 @@ contains
        H2CO3(c) = dic(c) * htotal2 * denom
        HCO3(c)  = dic(c) * k1(c) * htotal(c) * denom
        CO3(c)   = dic(c) * k1(c) * k2(c) * denom
-       ph(c)    = -LOG10(htotal(c))
+       ph(c)    = -log10(htotal(c))
 
        !------------------------------------------------------------------
        !   Convert units of output arguments
@@ -448,18 +445,18 @@ contains
     tk100    = tk * 1e-2_r8
     tk1002   = tk100 * tk100
     invtk    = c1 / tk
-    call vmath_log(tk, dlogtk, num_elements)
+    dlogtk   = log(tk)
     invRtk   = (c1 / 83.1451_r8) * invtk
 
     is       = 19.924_r8 * salt_lim / (c1000 - 1.005_r8 * salt_lim)
     is2      = is * is
-    call vmath_sqrt(is, sqrtis, num_elements)
-    call vmath_sqrt(salt_lim, sqrts, num_elements)
+    sqrtis   = sqrt(is)
+    sqrts    = sqrt(salt_lim)
     s2       = salt_lim * salt_lim
     scl      = salt_lim / 1.80655_r8
 
     arg = c1 - 0.001005_r8 * salt_lim
-    call vmath_log(arg, log_1_m_1p005em3_s, num_elements)
+    log_1_m_1p005em3_s = log(arg)
 
     !---------------------------------------------------------------------------
     !   f = k0(1-pH2O)*correction term for non-ideality
@@ -468,17 +465,17 @@ contains
     !---------------------------------------------------------------------------
 
     arg = -162.8301_r8 + 218.2968_r8 / tk100 + &
-         90.9241_r8 * (dlogtk + LOG(1e-2_r8)) - 1.47696_r8 * tk1002 + &
+         90.9241_r8 * (dlogtk + log(1e-2_r8)) - 1.47696_r8 * tk1002 + &
          salt_lim * (.025695_r8 - .025225_r8 * tk100 + 0.0049867_r8 * tk1002)
-    call vmath_exp(arg, ff, num_elements)
+    ff = exp(arg)
 
     !---------------------------------------------------------------------------
     !   K0 from Weiss 1974
     !---------------------------------------------------------------------------
 
-    arg = 93.4517_r8 / tk100 - 60.2409_r8 + 23.3585_r8 * (dlogtk + LOG(1e-2_r8)) + &
+    arg = 93.4517_r8 / tk100 - 60.2409_r8 + 23.3585_r8 * (dlogtk + log(1e-2_r8)) + &
          salt_lim * (.023517_r8 - 0.023656_r8 * tk100 + 0.0047036_r8 * tk1002)
-    call vmath_exp(arg, k0, num_elements)
+    k0 = exp(arg)
 
     !---------------------------------------------------------------------------
     !   k1 = [H][HCO3]/[H2CO3]
@@ -492,8 +489,8 @@ contains
     arg = 3633.86_r8 * invtk - 61.2172_r8 + &
           9.67770_r8 * dlogtk - 0.011555_r8 * salt_lim + &
           0.0001152_r8 * s2
-    arg = -LOG(c10) * arg
-    call vmath_exp(arg, k1, num_elements)
+    arg = -log(c10) * arg
+    k1 = exp(arg)
 
     call apply_pressure_correction(num_elements, pressure_correct, temp,      &
          press_bar, invRtk,                                    &
@@ -504,8 +501,8 @@ contains
     ! total pH scale
     arg = 471.78_r8 * invtk + 25.9290_r8 - &
           3.16967_r8 * dlogtk - 0.01781_r8 * salt_lim + 0.0001122_r8 * s2
-    arg = -LOG(c10) * arg
-    call vmath_exp(arg, k2, num_elements)
+    arg = -log(c10) * arg
+    k2 = exp(arg)
 
     call apply_pressure_correction(num_elements, pressure_correct, temp,      &
          press_bar, invRtk,                                    &
@@ -527,7 +524,7 @@ contains
          (148.0248_r8 + 137.1942_r8 * sqrts + 1.62142_r8 * salt_lim) + &
          (-24.4344_r8 - 25.085_r8 * sqrts - 0.2474_r8 * salt_lim) * dlogtk + &
          0.053105_r8 * sqrts * tk
-    call vmath_exp(arg, kb(:), num_elements)
+    kb = exp(arg)
 
     call apply_pressure_correction(num_elements, pressure_correct, temp,      &
          press_bar, invRtk,                                    &
@@ -546,7 +543,7 @@ contains
          18.453_r8 * dlogtk + &
          (-106.736_r8 * invtk + 0.69171_r8) * sqrts + &
          (-0.65643_r8 * invtk - 0.01844_r8) * salt_lim
-    call vmath_exp(arg, k1p(:), num_elements)
+    k1p = exp(arg)
 
     call apply_pressure_correction(num_elements, pressure_correct, temp,      &
          press_bar, invRtk,                                    &
@@ -565,7 +562,7 @@ contains
          27.927_r8 * dlogtk + &
          (-160.340_r8 * invtk + 1.3566_r8) * sqrts + &
          (0.37335_r8 * invtk - 0.05778_r8) * salt_lim
-    call vmath_exp(arg, k2p(:), num_elements)
+    k2p = exp(arg)
 
     call apply_pressure_correction(num_elements, pressure_correct, temp,      &
          press_bar, invRtk,                                    &
@@ -583,7 +580,7 @@ contains
     arg = -3070.75_r8 * invtk - 18.141_r8 + &
          (17.27039_r8 * invtk + 2.81197_r8) * sqrts + &
          (-44.99486_r8 * invtk - 0.09984_r8) * salt_lim
-    call vmath_exp(arg, k3p(:), num_elements)
+    k3p = exp(arg)
 
     call apply_pressure_correction(num_elements, pressure_correct, temp,      &
          press_bar, invRtk,                                    &
@@ -605,7 +602,7 @@ contains
          (188.74_r8 * invtk - 1.5998_r8) * is + &
          (-12.1652_r8 * invtk + 0.07871_r8) * is2 + &
          log_1_m_1p005em3_s
-    call vmath_exp(arg, ksi(:), num_elements)
+    ksi = exp(arg)
 
     call apply_pressure_correction(num_elements, pressure_correct, temp,      &
          press_bar, invRtk,                                    &
@@ -626,7 +623,7 @@ contains
     arg = -13847.26_r8 * invtk + 148.9652_r8 - 23.6521_r8 * dlogtk + &
          (118.67_r8 * invtk - 5.977_r8 + 1.0495_r8 * dlogtk) * sqrts - &
          0.01615_r8 * salt_lim
-    call vmath_exp(arg, kw(:), num_elements)
+    kw = exp(arg)
 
     call apply_pressure_correction(num_elements, pressure_correct, temp,      &
          press_bar, invRtk,                                    &
@@ -647,7 +644,7 @@ contains
          2698.0_r8 * invtk * is * sqrtis + &
          1776.0_r8 * invtk * is2 + &
          log_1_m_1p005em3_s
-    call vmath_exp(arg, ks(:), num_elements)
+    ks  = exp(arg)
 
     call apply_pressure_correction(num_elements, pressure_correct, temp,      &
          press_bar, invRtk,                                    &
@@ -663,10 +660,10 @@ contains
     !---------------------------------------------------------------------
 
     arg = c1 + (0.1400_r8 / 96.062_r8) * (scl) / ks(:)
-    call vmath_log(arg, log_1_p_tot_sulfate_div_ks, num_elements)
+    log_1_p_tot_sulfate_div_ks = log(arg)
     arg = 1590.2_r8 * invtk - 12.641_r8 + 1.525_r8 * sqrtis + &
          log_1_m_1p005em3_s + log_1_p_tot_sulfate_div_ks
-    call vmath_exp(arg, kf(:), num_elements)
+    kf  = exp(arg)
 
     call apply_pressure_correction(num_elements, pressure_correct, temp,      &
          press_bar, invRtk,                                    &
@@ -1133,12 +1130,11 @@ contains
 
     salt_lim = max(salt(:),salt_min)
     tk       = T0_Kelvin + temp(:)
-    call vmath_log(tk, log10tk, num_elements)
-    log10tk  = log10tk/log(c10)
+    log10tk  = log10(tk)
     invtk    = c1 / tk
     invRtk   = (c1 / 83.1451_r8) * invtk
 
-    call vmath_sqrt(salt_lim, sqrts, num_elements)
+    sqrts    = sqrt(salt_lim)
     s15      = sqrts * salt_lim
 
     !------------------------------------------------------------------------
@@ -1153,14 +1149,14 @@ contains
          (-0.77712_r8 + 0.0028426_r8 * tk + 178.34_r8 * invtk) * sqrts - &
          0.07711_r8 * salt_lim + 0.0041249_r8 * s15
     arg = log(c10) * arg
-    call vmath_exp(arg, K_calc, num_elements)
+    K_calc = exp(arg)
 
     where (pressure_correct)
        deltaV = -48.76_r8 + 0.5304_r8 * temp(:)
        Kappa  = (-11.76_r8 + 0.3692_r8 * temp(:)) * p001
        lnKfac = (-deltaV + p5 * Kappa * press_bar) * press_bar * invRtk
     endwhere
-    call vmath_exp(lnKfac, Kfac, num_elements)
+    Kfac = exp(lnKfac)
     where (pressure_correct)
        K_calc = K_calc * Kfac
     endwhere
@@ -1169,13 +1165,13 @@ contains
          (-0.068393_r8 + 0.0017276_r8 * tk + 88.135_r8 * invtk) * sqrts - &
          0.10018_r8 * salt_lim + 0.0059415_r8 * s15
     arg = log(c10) * arg
-    call vmath_exp(arg, K_arag, num_elements)
+    K_arag = exp(arg)
 
     where (pressure_correct)
        deltaV = deltaV + 2.8_r8
        lnKfac = (-deltaV + p5 * Kappa * press_bar) * press_bar * invRtk
     endwhere
-    call vmath_exp(lnKfac, Kfac, num_elements)
+    Kfac = exp(lnKfac)
     where (pressure_correct)
        K_arag = K_arag * Kfac
     endwhere
@@ -1236,7 +1232,7 @@ contains
     elsewhere
        lnKfac = c0
     endwhere
-    call vmath_exp(lnKfac, Kfac, num_elements)
+    Kfac = exp(lnKfac)
     where (pressure_correct)
        therm_coef = therm_coef * Kfac
     endwhere
@@ -1244,67 +1240,5 @@ contains
   end subroutine apply_pressure_correction
 
   !*****************************************************************************
-
-  subroutine vmath_sqrt(X, Y, n)
-    integer(kind=int_kind) ,intent(in)  ::   n  ! vector length
-    real   (kind=r8)       ,intent(in)  :: X(n) ! input vector argument
-    real   (kind=r8)       ,intent(out) :: Y(n) ! output vector argument
-
-    !-------------------------------------------------------------------------------
-    ! sqrt for vector arguments, optimized on different platforms
-    !-------------------------------------------------------------------------------
-
-#ifndef NO_SHR_VMATH
-#if (defined CPRINTEL)
-    call vdsqrt(n, X, Y)
-    return
-#endif
-#endif
-    Y = sqrt(X)
-    return
-  end subroutine vmath_sqrt
-
-  !*****************************************************************************
-
-  subroutine vmath_exp(X, Y, n)
-    integer(kind=int_kind) ,intent(in)  ::   n  ! vector length
-    real   (kind=r8)       ,intent(in)  :: X(n) ! input vector argument
-    real   (kind=r8)       ,intent(out) :: Y(n) ! output vector argument
-
-    !-------------------------------------------------------------------------------
-    ! exp for vector arguments, optimized on different platforms
-    !-------------------------------------------------------------------------------
-
-#ifndef NO_SHR_VMATH
-#if (defined CPRINTEL)
-    call vdexp(n, X, Y)
-    return
-#endif
-#endif
-
-    Y = exp(X)
-    return
-  end subroutine vmath_exp
-
-  !*****************************************************************************
-
-  subroutine vmath_log(X, Y, n)
-    integer(kind=int_kind) ,intent(in)  ::   n  ! vector length
-    real   (kind=r8)       ,intent(in)  :: X(n) ! input vector argument
-    real   (kind=r8)       ,intent(out) :: Y(n) ! output vector argument
-    
-    !-------------------------------------------------------------------------------
-    ! exp for vector arguments, optimized on different platforms
-    !-------------------------------------------------------------------------------
-    
-#ifndef NO_SHR_VMATH
-#if (defined CPRINTEL)
-    call vdln(n, X, Y)
-    return
-#endif
-#endif
-    Y = log(X)
-    return
-  end subroutine vmath_log
 
 end module marbl_co2calc_mod
