@@ -26,7 +26,10 @@ def load_module(mach, compiler):
     sys.path.insert(0,'/glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init')
     from env_modules_python import module
     module('purge')
-    module('load', compiler)
+    if compiler == 'intel':
+      module('load', '%s/17.0.1' % compiler)
+    else:
+      module('load', compiler)
     module('load', 'ncarcompilers')
 
   if mach == 'hobart':
