@@ -3,6 +3,7 @@ from os import system as sh_command
 
 # Supported machines for running MARBL tests
 supported_machines = ['local-gnu', 
+                      'local-pgi',
                       'yellowstone',
                       'cheyenne',
                       'hobart',
@@ -92,6 +93,12 @@ def machine_specific(mach, supported_compilers):
     # Not a specific machine, but a flag to specify
     # "run with gnu without loading any modules"
     supported_compilers.append('gnu')
+    return
+
+  if mach == 'local-pgi':
+    # Not a specific machine, but a flag to specify
+    # "run with pgi without loading any modules"
+    supported_compilers.append('pgi')
     return
 
 # -----------------------------------------------
