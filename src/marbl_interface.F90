@@ -254,7 +254,6 @@ contains
   subroutine init(this,                   &
        gcm_num_levels,                    &
        gcm_num_PAR_subcols,               &
-       gcm_num_elements_interior_forcing, &
        gcm_num_elements_surface_forcing,  &
        gcm_delta_z,                       &
        gcm_zw,                            &
@@ -283,7 +282,6 @@ contains
     integer   (int_kind)                   , intent(in)    :: gcm_num_levels
     integer   (int_kind)                   , intent(in)    :: gcm_num_PAR_subcols
     integer   (int_kind)                   , intent(in)    :: gcm_num_elements_surface_forcing
-    integer   (int_kind)                   , intent(in)    :: gcm_num_elements_interior_forcing
     real      (r8)                         , intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
     real      (r8)                         , intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real      (r8)                         , intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
@@ -293,6 +291,7 @@ contains
     character(*), parameter :: subname = 'marbl_interface:init'
     character(len=char_len) :: log_message
     integer :: i
+    integer, parameter :: num_interior_elements = 1 ! FIXME #66: get this value from interface, let it vary
     !--------------------------------------------------------------------
 
     call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
@@ -304,8 +303,7 @@ contains
     associate(&
          num_levels            => gcm_num_levels,                              &
          num_PAR_subcols       => gcm_num_PAR_subcols,                         &
-         num_surface_elements  => gcm_num_elements_surface_forcing,            &
-         num_interior_elements => gcm_num_elements_interior_forcing            &
+         num_surface_elements  => gcm_num_elements_surface_forcing             &
          )
 
     !-----------------------------------------------------------------------
