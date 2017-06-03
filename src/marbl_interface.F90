@@ -425,7 +425,6 @@ contains
                                  trim(this%tracer_metadata(i)%short_name)
       call this%StatusLog%log_noerror(log_message, subname)
     end do
-    call this%StatusLog%log_noerror('', subname)
 
     call marbl_tracer_index_consistency_check(this%tracer_indices, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -612,7 +611,6 @@ contains
       write(log_message, "(2A)") '* ', trim(this%interior_input_forcings(i)%metadata%varname)
       call this%StatusLog%log_noerror(log_message, subname)
     end do
-    call this%StatusLog%log_noerror('', subname)
 
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
