@@ -2258,6 +2258,7 @@ contains
     use marbl_oxygen             , only : schmidt_o2_surf
     use marbl_co2calc_mod        , only : marbl_co2calc_surf
     use marbl_co2calc_mod        , only : thermodynamic_coefficients_type
+    use marbl_co2calc_mod        , only : thermodynamic_species_concentration_type
     use marbl_oxygen             , only : o2sat_surf
     use marbl_constants_mod      , only : molw_Fe
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
@@ -2299,6 +2300,7 @@ contains
     real (r8)               :: totalChl_loc(num_elements)  ! local value of totalChl
     real (r8)               :: flux_o2_loc(num_elements)   ! local value of o2 flux
     type(thermodynamic_coefficients_type), dimension(num_elements) :: co3_coeffs
+    type(thermodynamic_species_concentration_type), dimension(num_elements) :: species_concentration
     !-----------------------------------------------------------------------
 
     associate(                                                                                      &
@@ -2452,6 +2454,7 @@ contains
                salt       = surface_input_forcings(ind%sss_id)%field_0d,   &
                atmpres    = surface_input_forcings(ind%atm_pressure_id)%field_0d, &
                co3_coeffs = co3_coeffs,                                    &
+               species_concentration = species_concentration,              &
                co3        = co3,                                           &
                co2star    = co2star,                                       &
                dco2star   = dco2star,                                      &
@@ -2511,6 +2514,7 @@ contains
                salt       = surface_input_forcings(ind%sss_id)%field_0d,   &
                atmpres    = surface_input_forcings(ind%atm_pressure_id)%field_0d, &
                co3_coeffs = co3_coeffs,                                    &
+               species_concentration = species_concentration,              &
                co3        = co3,                                           &
                co2star    = co2star_alt,                                   &
                dco2star   = dco2star_alt,                                  &
@@ -3293,6 +3297,7 @@ contains
     use marbl_co2calc_mod, only : marbl_comp_co3terms
     use marbl_co2calc_mod, only : marbl_comp_co3_sat_vals
     use marbl_co2calc_mod, only : thermodynamic_coefficients_type
+    use marbl_co2calc_mod        , only : thermodynamic_species_concentration_type
 
     type(marbl_domain_type)                 , intent(in)    :: domain
     real (r8)                               , intent(in)    :: temperature(:)
@@ -3313,6 +3318,7 @@ contains
     character(*), parameter :: subname = 'marbl_mod:marbl_compute_carbonate_chemistry'
     integer :: k
     type(thermodynamic_coefficients_type), dimension(domain%km) :: co3_coeffs
+    type(thermodynamic_species_concentration_type), dimension(domain%km) :: species_concentration
     logical(log_kind) , dimension(domain%km) :: pressure_correct
     real(r8)          , dimension(domain%km) :: ph_lower_bound
     real(r8)          , dimension(domain%km) :: ph_upper_bound
@@ -3364,10 +3370,9 @@ contains
     enddo
 
     call marbl_comp_CO3terms(&
-         dkm, column_kmt, pressure_correct, .true., co3_coeffs, temperature, &
-         salinity, press_bar, dic_loc, alk_loc, po4_loc, sio3_loc, &
-         ph_lower_bound, ph_upper_bound, ph, h2co3, hco3, co3,     &
-         marbl_status_log)
+         dkm, column_kmt, pressure_correct, .true., co3_coeffs, species_concentration, &
+         temperature, salinity, press_bar, dic_loc, alk_loc, po4_loc, sio3_loc,        &
+         ph_lower_bound, ph_upper_bound, ph, h2co3, hco3, co3, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('marbl_comp_CO3terms()', subname)
@@ -3377,7 +3382,7 @@ contains
     do k=1,dkm
 
        ph_prev_col(k) = pH(k)
-       
+
        ! -------------------
        if (ph_prev_alt_co2_col(k) /= c0) then
           ph_lower_bound(k) = ph_prev_alt_co2_col(k) - del_ph
@@ -3390,22 +3395,22 @@ contains
     enddo
 
     call marbl_comp_CO3terms(&
-         dkm, column_kmt, pressure_correct, .false., co3_coeffs, temperature,            &
-         salinity, press_bar, dic_alt_co2_loc, alk_alt_co2_loc, po4_loc, sio3_loc, &
-         ph_lower_bound, ph_upper_bound, ph_alt_co2, h2co3_alt_co2,                &
+         dkm, column_kmt, pressure_correct, .false., co3_coeffs, species_concentration, &
+         temperature, salinity, press_bar, dic_alt_co2_loc, alk_alt_co2_loc, po4_loc,   &
+         sio3_loc, ph_lower_bound, ph_upper_bound, ph_alt_co2, h2co3_alt_co2,           &
          hco3_alt_co2, co3_alt_co2, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('marbl_comp_CO3terms()', subname)
       return
     end if
-       
+
     ph_prev_alt_co2_col = ph_alt_co2
 
     call marbl_comp_co3_sat_vals(&
          dkm, column_kmt, pressure_correct, temperature, salinity, &
          press_bar, co3_sat_calcite, co3_sat_aragonite)
-       
+
     end associate
 
   end subroutine marbl_compute_carbonate_chemistry

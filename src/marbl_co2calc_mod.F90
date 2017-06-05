@@ -46,7 +46,6 @@ module marbl_co2calc_mod
 
   !-----------------------------------------------------------------------------
   !   declarations for function coefficients & species concentrations
-  !   FIXME #19: move dic, ta, pt, sit into their own derived type
   !-----------------------------------------------------------------------------
 
   type, public :: thermodynamic_coefficients_type
@@ -65,11 +64,14 @@ module marbl_co2calc_mod
      real(kind=r8) :: bt
      real(kind=r8) :: st
      real(kind=r8) :: ft
+  end type thermodynamic_coefficients_type
+
+  type, public :: thermodynamic_species_concentration_type
      real(kind=r8) :: dic ! total dissolved inorganic carbon
      real(kind=r8) :: ta  ! total alkalinity
      real(kind=r8) :: pt  ! total phosphorous
      real(kind=r8) :: sit ! total silicon
-  end type thermodynamic_coefficients_type
+  end type thermodynamic_species_concentration_type
 
   !*****************************************************************************
 
@@ -89,6 +91,7 @@ contains
        salt,                     &
        atmpres,                  &
        co3_coeffs,               &
+       species_concentration,    &
        co3,                      &
        co2star,                  &
        dco2star,                 &
@@ -121,6 +124,7 @@ contains
     real(kind=r8)                         , intent(out)   :: ph(num_elements)       ! computed ph values, for initial guess on next time step
     real(kind=r8)                         , intent(out)   :: co3(num_elements)      ! Carbonate Ion Concentration
     type(thermodynamic_coefficients_type) , intent(inout) :: co3_coeffs(num_elements)
+    type(thermodynamic_species_concentration_type) , intent(inout) :: species_concentration(num_elements)
     real(kind=r8)                         , intent(out)   :: co2star(num_elements)  ! CO2*water (nmol/cm^3)
     real(kind=r8)                         , intent(out)   :: dco2star(num_elements) ! delta CO2 (nmol/cm^3)
     real(kind=r8)                         , intent(out)   :: pco2surf(num_elements) ! oceanic pCO2 (ppmv)
@@ -147,7 +151,7 @@ contains
          k1  => co3_coeffs(:)%k1,  &
          k2  => co3_coeffs(:)%k2,  &
          ff  => co3_coeffs(:)%ff,  &
-         dic => co3_coeffs(:)%dic  &
+         dic => species_concentration(:)%dic  &
          )
 
     !---------------------------------------------------------------------------
@@ -168,7 +172,7 @@ contains
 
     if (lcomp_co3_coeffs) then
        call marbl_comp_co3_coeffs(num_elements, pressure_correct, &
-            temp, salt, press_bar, co3_coeffs)
+            temp, salt, press_bar, co3_coeffs, species_concentration)
     end if
 
     !---------------------------------------------------------------------------
@@ -176,7 +180,7 @@ contains
     !---------------------------------------------------------------------------
 
     call comp_htotal(num_elements, num_elements, temp, dic_in, &
-                     ta_in, pt_in, sit_in, co3_coeffs, &
+                     ta_in, pt_in, sit_in, co3_coeffs, species_concentration, &
                      phlo, phhi, htotal, marbl_status_log)
 
     if (present (marbl_status_log)) then
@@ -237,8 +241,8 @@ contains
 
   subroutine marbl_comp_CO3terms(&
        num_elements, num_active_elements, pressure_correct, lcomp_co3_coeffs, co3_coeffs,  &
-       temp, salt, press_bar, dic_in, ta_in, pt_in, sit_in, phlo, phhi, ph, &
-       H2CO3, HCO3, CO3, marbl_status_log)
+       species_concentration, temp, salt, press_bar, dic_in, ta_in, pt_in, sit_in, phlo,   &
+       phhi, ph, H2CO3, HCO3, CO3, marbl_status_log)
 
     !---------------------------------------------------------------------------
     ! Calculate H2CO3, HCO3, CO3 from total alkalinity, total CO2, temp, salinity (s), etc.
@@ -258,6 +262,7 @@ contains
     real(kind=r8)                         , intent(in)    :: pt_in(num_elements)     ! inorganic phosphate (nmol/cm^3)
     real(kind=r8)                         , intent(in)    :: sit_in(num_elements)    ! inorganic silicate (nmol/cm^3)
     type(thermodynamic_coefficients_type) , intent(inout) :: co3_coeffs(num_elements)
+    type(thermodynamic_species_concentration_type) , intent(inout) :: species_concentration(num_elements)
     real(kind=r8)                         , intent(inout) :: phlo(num_elements)      ! lower limit of pH range
     real(kind=r8)                         , intent(inout) :: phhi(num_elements)      ! upper limit of pH range
     real(kind=r8)                         , intent(out)   :: pH(num_elements)        ! computed ph values, for initial guess on next time step
@@ -292,10 +297,10 @@ contains
          bt  => co3_coeffs(:)%bt,  &
          st  => co3_coeffs(:)%st,  &
          ft  => co3_coeffs(:)%ft,  &
-         dic => co3_coeffs(:)%dic, &
-         ta  => co3_coeffs(:)%ta,  &
-         pt  => co3_coeffs(:)%pt,  &
-         sit => co3_coeffs(:)%sit  &
+         dic => species_concentration(:)%dic, &
+         ta  => species_concentration(:)%ta,  &
+         pt  => species_concentration(:)%pt,  &
+         sit => species_concentration(:)%sit  &
          )
 
     !---------------------------------------------------------------------------
@@ -311,7 +316,7 @@ contains
 
     if (lcomp_co3_coeffs) then
        call marbl_comp_co3_coeffs(num_elements, pressure_correct, &
-            temp, salt, press_bar, co3_coeffs)
+            temp, salt, press_bar, co3_coeffs, species_concentration)
     end if
 
     !------------------------------------------------------------------------
@@ -319,7 +324,7 @@ contains
     !------------------------------------------------------------------------
 
     call comp_htotal(num_elements, num_active_elements, temp, dic_in, &
-         ta_in, pt_in, sit_in, co3_coeffs, &
+         ta_in, pt_in, sit_in, co3_coeffs, species_concentration, &
          phlo, phhi, htotal, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
@@ -360,9 +365,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_comp_co3_coeffs(&
-       num_elements, pressure_correct, &
-       temp, salt, press_bar, co3_coeffs)
+  subroutine marbl_comp_co3_coeffs(num_elements, pressure_correct, &
+       temp, salt, press_bar, co3_coeffs, species_concentration)
 
     !---------------------------------------------------------------------------
     ! FIXME #20: the computations for the individual constants need to
@@ -377,6 +381,7 @@ contains
     real(kind=r8)                         , intent(in)  :: salt(num_elements)      ! salinity (psu)
     real(kind=r8)                         , intent(in)  :: press_bar(num_elements) ! pressure at level (bars)
     type(thermodynamic_coefficients_type) , intent(out) :: co3_coeffs(num_elements)
+    type(thermodynamic_species_concentration_type) , intent(out) :: species_concentration(num_elements)
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -422,10 +427,10 @@ contains
          bt  => co3_coeffs(:)%bt,  &
          st  => co3_coeffs(:)%st,  &
          ft  => co3_coeffs(:)%ft,  &
-         dic => co3_coeffs(:)%dic, &
-         ta  => co3_coeffs(:)%ta,  &
-         pt  => co3_coeffs(:)%pt,  &
-         sit => co3_coeffs(:)%sit  &
+         dic => species_concentration(:)%dic, &
+         ta  => species_concentration(:)%ta,  &
+         pt  => species_concentration(:)%pt,  &
+         sit => species_concentration(:)%sit  &
          )
 
     !---------------------------------------------------------------------------
@@ -689,10 +694,10 @@ contains
   !*****************************************************************************
 
   subroutine comp_htotal(num_elements, num_active_elements, temp, dic_in, ta_in, pt_in, sit_in, &
-                         co3_coeffs, phlo, phhi, htotal, marbl_status_log)
+                         co3_coeffs, species_concentration, phlo, phhi, htotal, marbl_status_log)
 
     !---------------------------------------------------------------------------
-    ! Calculate htotal (free concentration of H ion) from 
+    ! Calculate htotal (free concentration of H ion) from
     ! total alkalinity, total CO2, temp, salinity (s), etc.
     !---------------------------------------------------------------------------
 
@@ -704,6 +709,7 @@ contains
     real(kind=r8)                         , intent(in)    :: pt_in(num_elements)  ! inorganic phosphate (nmol/cm^3)
     real(kind=r8)                         , intent(in)    :: sit_in(num_elements) ! inorganic silicate (nmol/cm^3)
     type(thermodynamic_coefficients_type) , intent(inout) :: co3_coeffs(num_elements)
+    type(thermodynamic_species_concentration_type) , intent(inout) :: species_concentration(num_elements)
     real(kind=r8)                         , intent(inout) :: phlo(num_elements)   ! lower limit of pH range
     real(kind=r8)                         , intent(inout) :: phhi(num_elements)   ! upper limit of pH range
     real(kind=r8)                         , intent(out)   :: htotal(num_elements) ! free concentration of H ion
@@ -733,10 +739,10 @@ contains
           bt  => co3_coeffs(:)%bt,  &
           st  => co3_coeffs(:)%st,  &
           ft  => co3_coeffs(:)%ft,  &
-          dic => co3_coeffs(:)%dic, &
-          ta  => co3_coeffs(:)%ta,  &
-          pt  => co3_coeffs(:)%pt,  &
-          sit => co3_coeffs(:)%sit  &
+          dic => species_concentration(:)%dic, &
+          ta  => species_concentration(:)%ta,  &
+          pt  => species_concentration(:)%pt,  &
+          sit => species_concentration(:)%sit  &
           )
 
     !---------------------------------------------------------------------------
@@ -775,8 +781,8 @@ contains
     !   set x1 and x2 to the previous value of the pH +/- ~0.5.
     !---------------------------------------------------------------------------
 
-    call drtsafe(num_elements, num_active_elements, k1, k2, co3_coeffs, x1, x2, xacc, htotal,&
-         marbl_status_log)
+    call drtsafe(num_elements, num_active_elements, k1, k2, co3_coeffs, species_concentration, &
+                 x1, x2, xacc, htotal, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace("drtsafe", subname)
@@ -789,8 +795,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine drtsafe(num_elements, num_active_elements, k1, k2, co3_coeffs, x1, x2, xacc, &
-                         soln, marbl_status_log)
+  subroutine drtsafe(num_elements, num_active_elements, k1, k2, co3_coeffs, species_concentration, &
+                     x1, x2, xacc, soln, marbl_status_log)
 
     !---------------------------------------------------------------------------
     !   Vectorized version of drtsafe, which was a modified version of
@@ -810,6 +816,7 @@ contains
     real(kind=r8)                         , intent(in)    :: k1(num_elements)
     real(kind=r8)                         , intent(in)    :: k2(num_elements)
     type(thermodynamic_coefficients_type) , intent(in)    :: co3_coeffs(num_elements)
+    type(thermodynamic_species_concentration_type) , intent(in)    :: species_concentration(num_elements)
     real(kind=r8)                         , intent(in)    :: xacc
     real(kind=r8)                         , intent(inout) :: x1(num_elements)
     real(kind=r8)                         , intent(inout) :: x2(num_elements)
@@ -843,8 +850,8 @@ contains
     it = 0
 
     do
-       call total_alkalinity(num_elements, mask, k1, k2, x1, co3_coeffs, flo, df)
-       call total_alkalinity(num_elements, mask, k1, k2, x2, co3_coeffs, fhi, df)
+       call total_alkalinity(num_elements, mask, k1, k2, x1, co3_coeffs, species_concentration, flo, df)
+       call total_alkalinity(num_elements, mask, k1, k2, x2, co3_coeffs, species_concentration, fhi, df)
 
        where ( mask )
           mask = (flo > c0 .AND. fhi > c0) .OR. &
@@ -914,7 +921,7 @@ contains
        dx(c) = dxold(c)
     end do
 
-    call total_alkalinity(num_elements, mask, k1, k2, soln, co3_coeffs, f, df)
+    call total_alkalinity(num_elements, mask, k1, k2, soln, co3_coeffs, species_concentration, f, df)
 
     !---------------------------------------------------------------------------
     !   perform iterations, zeroing mask when a location has converged
@@ -942,16 +949,16 @@ contains
           end if
        end do
 
-       if (.not. ANY(mask)) return 
+       if (.not. ANY(mask)) return
 
-       call total_alkalinity(num_elements, mask, k1, k2, soln, co3_coeffs, f, df)
+       call total_alkalinity(num_elements, mask, k1, k2, soln, co3_coeffs, species_concentration, f, df)
 
        do c = 1,num_elements
           if (mask(c)) then
              if (f(c) .LT. c0) then
                 xlo(c) = soln(c)
                 flo(c) = f(c)
-             else   
+             else
                 xhi(c) = soln(c)
                 fhi(c) = f(c)
              end if
@@ -968,7 +975,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine total_alkalinity(num_elements, mask, k1, k2, x, co3_coeffs, fn, df)
+  subroutine total_alkalinity(num_elements, mask, k1, k2, x, co3_coeffs, &
+             species_concentration, fn, df)
 
     !---------------------------------------------------------------------------
     !   This routine computes TA as a function of DIC, htotal and constants.
@@ -986,6 +994,7 @@ contains
     real(kind=r8)                         , intent(in)  :: k2(num_elements)
     real(kind=r8)                         , intent(in)  :: x(num_elements)
     type(thermodynamic_coefficients_type) , intent(in)  :: co3_coeffs(num_elements)
+    type(thermodynamic_species_concentration_type) , intent(in)  :: species_concentration(num_elements)
     real(kind=r8)                         , intent(out) :: fn(num_elements)
     real(kind=r8)                         , intent(out) :: df(num_elements)
 
@@ -1010,10 +1019,10 @@ contains
          bt  => co3_coeffs(:)%bt,  &
          st  => co3_coeffs(:)%st,  &
          ft  => co3_coeffs(:)%ft,  &
-         dic => co3_coeffs(:)%dic, &
-         ta  => co3_coeffs(:)%ta,  &
-         pt  => co3_coeffs(:)%pt,  &
-         sit => co3_coeffs(:)%sit  &
+         dic => species_concentration(:)%dic, &
+         ta  => species_concentration(:)%ta,  &
+         pt  => species_concentration(:)%pt,  &
+         sit => species_concentration(:)%sit  &
          )
 
     do c = 1,num_elements
