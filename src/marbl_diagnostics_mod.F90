@@ -3650,7 +3650,7 @@ contains
        endif
 
        if (ind%CaCO3_form(n).ne.-1) then
-          diags(ind%CaCO3_form(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%CaCO3_PROD
+          diags(ind%CaCO3_form(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%CaCO3_form
           diags(ind%tot_CaCO3_form)%field_3d(:, 1) = diags(ind%tot_CaCO3_form)%field_3d(:, 1) + &
                diags(ind%CaCO3_form(n))%field_3d(:, 1)
        end if
@@ -3679,7 +3679,7 @@ contains
 
        ! vertical integrals
        if (ind%CaCO3_form_zint(n).ne.-1) then
-          call compute_vertical_integrals(autotroph_secondary_species(n,:)%CaCO3_PROD, &
+          call compute_vertical_integrals(autotroph_secondary_species(n,:)%CaCO3_form, &
                delta_z, kmt, full_depth_integral=diags(ind%CaCO3_form_zint(n))%field_2d(1))
 
           diags(ind%tot_CaCO3_form_zint)%field_2d(1) = diags(ind%tot_CaCO3_form_zint)%field_2d(1) + &

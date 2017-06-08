@@ -296,12 +296,12 @@ contains
          mui_to_co2star_loc     ! local carbon autotroph instanteous growth rate over [CO2*] (m^3 /mol C /s)
 
     real (r8), dimension(marbl_domain%km) :: &
-         R13C_CaCO3_PROD,   & ! 13C/12C in CaCO3 production of small phyto
+         R13C_CaCO3_form,   & ! 13C/12C in CaCO3 production of small phyto
          R13C_CO2STAR,      & ! 13C/12C in CO2* water
          R13C_DIC,          & ! 13C/12C in total DIC
          R13C_DOC,          & ! 13C/12C in total DOC
          R13C_zooC,         & ! 13C/12C in total zooplankton
-         R14C_CaCO3_PROD,   & ! 14C/12C in CaCO3 production of small phyto
+         R14C_CaCO3_form,   & ! 14C/12C in CaCO3 production of small phyto
          R14C_CO2STAR,      & ! 14C/12C in CO2* water
          R14C_DIC,          & ! 14C/12C in total DIC
          R14C_DOC,          & ! 14C/12C in total DOC
@@ -379,7 +379,7 @@ contains
          auto_loss_dic      => marbl_autotroph_share%auto_loss_dic_fields      , & ! INPUT auto_loss routed to dic (mmol C/m^3/sec)                                      
          auto_agg           => marbl_autotroph_share%auto_agg_fields           , & ! INPUT autotroph aggregation (mmol C/m^3/sec)                                        
          photoC             => marbl_autotroph_share%photoC_fields             , & ! INPUT C-fixation (mmol C/m^3/sec)                                                   
-         CaCO3_PROD         => marbl_autotroph_share%CaCO3_PROD_fields         , & ! INPUT prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)                            
+         CaCO3_form         => marbl_autotroph_share%CaCO3_form_fields         , & ! INPUT prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)                            
          PCphoto            => marbl_autotroph_share%PCphoto_fields            , & ! INPUT C-specific rate of photosynth. (1/sec)                                        
 
          zooC_loc           => marbl_zooplankton_share%zooC_loc_fields         , & ! INPUT local copy of model zooC                                                      
@@ -670,26 +670,24 @@ contains
           ! Use R13/14C_photoC to determine small phytoplankton, Diatom, and
           ! Diaztroph 13C and 14C fixation
           !-----------------------------------------------------------------------
-          
+
           photo13C(auto_ind,k) = photoC(auto_ind,k) * R13C_photoC(auto_ind,k)
           photo14C(auto_ind,k) = photoC(auto_ind,k) * R14C_photoC(auto_ind,k)
-          
+
           !-----------------------------------------------------------------------
           ! C13 & C14 CaCO3 production
           !-----------------------------------------------------------------------
 
           if (autotrophs_config(auto_ind)%imp_calcifier) then
-             
-             R13C_CaCO3_PROD(k) = R13C_DIC(k) + R13C_std * eps_carb / c1000 
-             
-             R14C_CaCO3_PROD(k) = R14C_DIC(k) + R14C_std * eps_carb * 2.0_r8 / c1000
-             
-             Ca13CO3_PROD(auto_ind,k) = CaCO3_PROD(auto_ind,k) * R13C_CaCO3_PROD(k)
-             
-             Ca14CO3_PROD(auto_ind,k) = CaCO3_PROD(auto_ind,k) * R14C_CaCO3_PROD(k)
+
+             R13C_CaCO3_form(k) = R13C_DIC(k) + R13C_std * eps_carb / c1000
+             R14C_CaCO3_form(k) = R14C_DIC(k) + R14C_std * eps_carb * 2.0_r8 / c1000
+
+             Ca13CO3_PROD(auto_ind,k) = CaCO3_form(auto_ind,k) * R13C_CaCO3_form(k)
+             Ca14CO3_PROD(auto_ind,k) = CaCO3_form(auto_ind,k) * R14C_CaCO3_form(k)
 
           end if
-             
+
        end do ! end loop over auto_ind
 
        !-----------------------------------------------------------------------

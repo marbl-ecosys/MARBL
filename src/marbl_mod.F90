@@ -3820,21 +3820,21 @@ contains
     associate(                                                       &
          f_nut      => autotroph_secondary_species(:)%f_nut,     & ! input
          photoC     => autotroph_secondary_species(:)%photoC,    & ! input
-         CaCO3_PROD => autotroph_secondary_species(:)%CaCO3_PROD & ! output
+         CaCO3_form => autotroph_secondary_species(:)%CaCO3_form & ! output
          )
 
     do auto_ind = 1, auto_cnt
        if (auto_config(auto_ind)%imp_calcifier) then
-          CaCO3_PROD(auto_ind) = parm_f_prod_sp_CaCO3 * photoC(auto_ind)
-          CaCO3_PROD(auto_ind) = CaCO3_PROD(auto_ind) * f_nut(auto_ind) * f_nut(auto_ind)
+          CaCO3_form(auto_ind) = parm_f_prod_sp_CaCO3 * photoC(auto_ind)
+          CaCO3_form(auto_ind) = CaCO3_form(auto_ind) * f_nut(auto_ind) * f_nut(auto_ind)
 
           if (temperature < CaCO3_temp_thres1)  then
-             CaCO3_PROD(auto_ind) = CaCO3_PROD(auto_ind) * max((temperature - CaCO3_temp_thres2), c0) / &
+             CaCO3_form(auto_ind) = CaCO3_form(auto_ind) * max((temperature - CaCO3_temp_thres2), c0) / &
                   (CaCO3_temp_thres1-CaCO3_temp_thres2)
           end if
 
           if (autotroph_loc(auto_ind)%C > CaCO3_sp_thres) then
-             CaCO3_PROD(auto_ind) = min((CaCO3_PROD(auto_ind) * autotroph_loc(auto_ind)%C / CaCO3_sp_thres), &
+             CaCO3_form(auto_ind) = min((CaCO3_form(auto_ind) * autotroph_loc(auto_ind)%C / CaCO3_sp_thres), &
                   (f_photosp_CaCO3 * photoC(auto_ind)))
           end if
        end if
@@ -4942,7 +4942,7 @@ contains
          auto_graze_zoo  => autotroph_secondary_species(:)%auto_graze_zoo  , & ! auto_graze routed to zoo (mmol C/m^3/sec)
          auto_graze_dic  => autotroph_secondary_species(:)%auto_graze_dic  , & ! auto_graze routed to dic (mmol C/m^3/sec)
          auto_graze_doc  => autotroph_secondary_species(:)%auto_graze_doc  , & ! auto_graze routed to doc (mmol C/m^3/sec)
-         CaCO3_PROD      => autotroph_secondary_species(:)%CaCO3_PROD      , & ! prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
+         CaCO3_form      => autotroph_secondary_species(:)%CaCO3_form      , & ! prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
          Nfix            => autotroph_secondary_species(:)%Nfix            , & ! total Nitrogen fixation (mmol N/m^3/sec)
          Nexcrete        => autotroph_secondary_species(:)%Nexcrete        , & ! fixed N excretion
          remaining_P_dip => autotroph_secondary_species(:)%remaining_P_dip , & ! remaining_P from mort routed to remin
@@ -5086,7 +5086,7 @@ contains
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n > 0) then
-          dtracers(n) = CaCO3_PROD(auto_ind) - QCaCO3(auto_ind) * auto_sum
+          dtracers(n) = CaCO3_form(auto_ind) - QCaCO3(auto_ind) * auto_sum
        endif
     end do
 
@@ -5120,7 +5120,7 @@ contains
     do auto_ind = 1, auto_cnt
        if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
           dtracers(dic_ind) = dtracers(dic_ind) &
-               + f_graze_CaCO3_REMIN * auto_graze(auto_ind) * QCaCO3(auto_ind) - CaCO3_PROD(auto_ind)
+               + f_graze_CaCO3_REMIN * auto_graze(auto_ind) * QCaCO3(auto_ind) - CaCO3_form(auto_ind)
        end if
     end do
 
@@ -5135,7 +5135,7 @@ contains
     do auto_ind = 1, auto_cnt
        if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
           dtracers(alk_ind) = dtracers(alk_ind) &
-               + c2 * (f_graze_CaCO3_REMIN * auto_graze(auto_ind) * QCaCO3(auto_ind) - CaCO3_PROD(auto_ind))
+               + c2 * (f_graze_CaCO3_REMIN * auto_graze(auto_ind) * QCaCO3(auto_ind) - CaCO3_form(auto_ind))
        end if
     end do
 
@@ -5293,7 +5293,7 @@ contains
        share(n)%auto_loss_dic_fields  = autotroph_secondary_species(n)%auto_loss_dic
        share(n)%auto_agg_fields       = autotroph_secondary_species(n)%auto_agg
        share(n)%photoC_fields         = autotroph_secondary_species(n)%photoC
-       share(n)%CaCO3_PROD_fields     = autotroph_secondary_species(n)%CaCO3_PROD
+       share(n)%CaCO3_form_fields     = autotroph_secondary_species(n)%CaCO3_form
        share(n)%PCphoto_fields        = autotroph_secondary_species(n)%PCphoto
     end do
     end associate
