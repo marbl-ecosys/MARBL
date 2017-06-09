@@ -666,24 +666,28 @@ contains
         if (associated(rptr, this%vars(n)%rptr)) then
           write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
                                      " both point to same variable in memory."
+          call marbl_status_log%log_error(log_message, subname)
         end if
       end if
       if (present(iptr)) then
         if (associated(iptr, this%vars(n)%iptr)) then
           write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
                                      " both point to same variable in memory."
+          call marbl_status_log%log_error(log_message, subname)
         end if
       end if
       if (present(lptr)) then
         if (associated(lptr, this%vars(n)%lptr)) then
           write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
                                      " both point to same variable in memory."
+          call marbl_status_log%log_error(log_message, subname)
         end if
       end if
       if (present(sptr)) then
         if (associated(sptr, this%vars(n)%sptr)) then
           write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
                                      " both point to same variable in memory."
+          call marbl_status_log%log_error(log_message, subname)
         end if
       end if
       if (marbl_status_log%labort_marbl) return
