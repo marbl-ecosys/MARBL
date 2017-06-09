@@ -983,7 +983,7 @@ contains
     real (r8) :: Lig_photochem(domain%km)    ! loss of Fe-binding Ligand from UV radiation
     real (r8) :: Lig_deg(domain%km)          ! loss of Fe-binding Ligand from bacterial degradation
     real (r8) :: Lig_loss(domain%km)         ! loss of Fe-binding Ligand
-    real (r8) :: totalChl_local(domain%km)   ! loss of Fe-binding Ligand
+    real (r8) :: totalChl_local(domain%km)   ! local value of totalChl
     real (r8) :: tracer_local(ecosys_base_tracer_cnt, domain%km)
 
     type(zooplankton_local_type)             :: zooplankton_local(zooplankton_cnt, domain%km)
