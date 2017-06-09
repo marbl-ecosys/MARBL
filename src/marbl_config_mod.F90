@@ -654,6 +654,40 @@ contains
 
     ! 3) copy this%vars into first N-1 elements of new_vars
     do n=1, old_size
+      ! Also do some error checking
+      ! (a) Ensure sname does not match a previous variable short_name
+      if (trim(sname) .eq. trim(this%vars(n)%short_name)) then
+        write(log_message, "(A,1X,A)") trim(sname), "has been added twice"
+        call marbl_status_log%log_error(log_message, subname)
+      end if
+
+      ! (b) Ensure pointers do not point to same target as other variables
+      if (present(rptr)) then
+        if (associated(rptr, this%vars(n)%rptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
+                                     " both point to same variable in memory."
+        end if
+      end if
+      if (present(iptr)) then
+        if (associated(iptr, this%vars(n)%iptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
+                                     " both point to same variable in memory."
+        end if
+      end if
+      if (present(lptr)) then
+        if (associated(lptr, this%vars(n)%lptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
+                                     " both point to same variable in memory."
+        end if
+      end if
+      if (present(sptr)) then
+        if (associated(sptr, this%vars(n)%sptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
+                                     " both point to same variable in memory."
+        end if
+      end if
+      if (marbl_status_log%labort_marbl) return
+
       new_vars(n)%long_name     = this%vars(n)%long_name
       new_vars(n)%short_name    = this%vars(n)%short_name
       new_vars(n)%units         = this%vars(n)%units
