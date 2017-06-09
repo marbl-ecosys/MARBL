@@ -1092,9 +1092,6 @@ contains
        return
     end if
 
-    call marbl_consistency_check_autotrophs(autotroph_cnt, kmt, marbl_tracer_indices, &
-         autotroph_local(:,1:kmt))
-
     call marbl_compute_PAR(domain, interior_forcings, interior_forcing_indices, &
                            autotroph_cnt, totalChl_local, PAR)
 
@@ -2907,11 +2904,9 @@ contains
     ! populate autotroph specific arrays from tracer_local
     !-----------------------------------------------------------------------
 
-    totalChl_local = c0
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
        autotroph_local(auto_ind,:)%Chl = tracer_local(n,:)
-       totalChl_local = totalChl_local + tracer_local(n,:)
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
        autotroph_local(auto_ind,:)%C = tracer_local(n,:)
@@ -2937,6 +2932,13 @@ contains
           autotroph_local(auto_ind,:)%CaCO3 = tracer_local(n,:)
        endif
     end do
+
+    ! autotroph consistency check
+    call marbl_consistency_check_autotrophs(autotroph_cnt, column_kmt, &
+         marbl_tracer_indices, autotroph_local(:,1:column_kmt))
+
+    ! set totalChl_local
+    totalChl_local = sum(autotroph_local(:,:)%Chl, dim=1)
 
   end subroutine marbl_setup_local_tracers
 
@@ -3233,7 +3235,7 @@ contains
     ! compute attenuation coefficient over column
     !-----------------------------------------------------------------------
 
-    WORK1(:) = max(totalChl_local, 0.02_r8)
+    WORK1(:) = max(totalChl_local(1:column_kmt), 0.02_r8)
 
     do k = 1, column_kmt
 
