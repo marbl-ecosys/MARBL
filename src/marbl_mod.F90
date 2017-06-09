@@ -983,6 +983,7 @@ contains
     real (r8) :: Lig_photochem(domain%km)    ! loss of Fe-binding Ligand from UV radiation
     real (r8) :: Lig_deg(domain%km)          ! loss of Fe-binding Ligand from bacterial degradation
     real (r8) :: Lig_loss(domain%km)         ! loss of Fe-binding Ligand
+    real (r8) :: totalChl_local(domain%km)   ! loss of Fe-binding Ligand
     real (r8) :: tracer_local(ecosys_base_tracer_cnt, domain%km)
 
     type(zooplankton_local_type)             :: zooplankton_local(zooplankton_cnt, domain%km)
@@ -1070,7 +1071,8 @@ contains
     !-----------------------------------------------------------------------
 
     call marbl_setup_local_tracers(kmt, marbl_tracer_indices, autotrophs, &
-         tracers(:,:), tracer_local(:,:), zooplankton_local(:,:), autotroph_local(:,:))
+         tracers(:,:), tracer_local(:,:), zooplankton_local(:,:),         &
+         autotroph_local(:,:), totalChl_local)
 
     call marbl_init_particulate_terms(1, surface_forcing_indices, &
          POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
@@ -1094,7 +1096,7 @@ contains
          autotroph_local(:,1:kmt))
 
     call marbl_compute_PAR(domain, interior_forcings, interior_forcing_indices, &
-                           autotroph_cnt, autotroph_local, PAR)
+                           autotroph_cnt, totalChl_local, PAR)
 
     do k = 1, km
 
@@ -2859,7 +2861,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_setup_local_tracers(column_kmt, marbl_tracer_indices, autotroph_parms, &
-             tracers, tracer_local, zooplankton_local, autotroph_local)
+             tracers, tracer_local, zooplankton_local, autotroph_local, totalChl_local)
 
     !-----------------------------------------------------------------------
     !  create local copies of model tracers
@@ -2875,6 +2877,7 @@ contains
     real (r8)                    , intent(out) :: tracer_local(:,:)
     type(zooplankton_local_type) , intent(out) :: zooplankton_local(:,:)
     type(autotroph_local_type)   , intent(out) :: autotroph_local(:,:)
+    real (r8)                    , intent(out) :: totalChl_local(:)
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -2904,9 +2907,11 @@ contains
     ! populate autotroph specific arrays from tracer_local
     !-----------------------------------------------------------------------
 
+    totalChl_local = c0
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
        autotroph_local(auto_ind,:)%Chl = tracer_local(n,:)
+       totalChl_local = totalChl_local + tracer_local(n,:)
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
        autotroph_local(auto_ind,:)%C = tracer_local(n,:)
@@ -3160,7 +3165,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_PAR(domain, interior_forcings, interior_forcing_ind, &
-                               auto_cnt, autotroph_local, PAR)
+                               auto_cnt, totalChl_local, PAR)
 
     !-----------------------------------------------------------------------
     !  compute PAR related quantities
@@ -3174,7 +3179,7 @@ contains
     type(marbl_domain_type)                   , intent(in)    :: domain
     type(marbl_forcing_fields_type)           , intent(in)    :: interior_forcings(:) ! (num_elements, num_interior_forcing_fields_0d)
     type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_ind
-    type(autotroph_local_type)                , intent(in)    :: autotroph_local(auto_cnt, domain%km)
+    real(r8)                                  , intent(in)    :: totalChl_local(:)
     type(marbl_PAR_type)                      , intent(inout) :: PAR
 
     !-----------------------------------------------------------------------
@@ -3228,10 +3233,7 @@ contains
     ! compute attenuation coefficient over column
     !-----------------------------------------------------------------------
 
-    ! FIXME #31: move calculation outside and just pass in this
-    !            work array as autotroph_Chl instead of passing
-    !            in all of autotroph_local?
-    WORK1(:) = max(sum(autotroph_local(:,1:column_kmt)%Chl, dim=1), 0.02_r8)
+    WORK1(:) = max(totalChl_local, 0.02_r8)
 
     do k = 1, column_kmt
 
