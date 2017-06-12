@@ -26,6 +26,7 @@ module marbl_parms
   use marbl_constants_mod, only : c2
   use marbl_constants_mod, only : c1000
   use marbl_constants_mod, only : dps
+  use marbl_constants_mod, only : molw_Fe
 
   use marbl_internal_types, only : autotroph_parms_type
   use marbl_internal_types, only : zooplankton_parms_type
@@ -122,14 +123,11 @@ module marbl_parms
   real(kind=r8), parameter :: &
        dust_Fe_scavenge_scale  = 1.0e9         !dust scavenging scale factor
 
-  ! Compute iron remineralization and flux out.
-  ! dust remin gDust = 0.035 gFe      mol Fe     1e9 nmolFe
-  !                    --------- *  ---------- * ----------
-  !                      gDust      55.847 gFe     molFe
-  !
-  ! dust_to_Fe          conversion - dust to iron (nmol Fe/g Dust)
-  real(kind=r8), parameter :: &
-       dust_to_Fe=0.035_r8/55.847_r8*1.0e9_r8
+  ! dust_to_Fe: conversion of dust to iron (nmol Fe/g Dust)
+  ! dust remin gDust = 0.035 gFe       mol Fe     1e9 nmolFe
+  !                    --------- *  ----------- * ----------
+  !                      gDust      molw_Fe gFe      molFe
+  real(kind=r8), parameter :: dust_to_Fe = 0.035_r8 / molw_Fe * 1.0e9_r8
 
   ! parameters related to Iron binding ligands
   integer (int_kind), parameter :: Lig_cnt = 1 ! valid values are 1 or 2

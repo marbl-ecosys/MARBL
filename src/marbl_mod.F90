@@ -1857,11 +1857,8 @@ contains
        endif
 
        !-----------------------------------------------------------------------
-       !  Compute iron release from dust remin/dissolution
-       !
-       !  dust remin gDust = 0.035 / 55.847 * 1.0e9 = 626712.0 nmolFe
-       !                      gFe     molFe     nmolFe
-       !  Also add in Fe source from sediments if applicable to this cell.
+       !  Compute iron release from dust remin/dissolution and add in Fe source
+       !  from sediments
        !-----------------------------------------------------------------------
 
 
