@@ -16,11 +16,10 @@ module marbl_namelist_mod
   !            but runtime configurable?! Just not sure what the
   !            best approach is at the moment....
 
-  ! NOTES: nl_in_size is the number of characters in the entire namelist file
+  ! NOTES:
   !        nl_cnt is the number of distinct namelists in the file
   !        nl_buffer_size is the number of characters in the largest _nml
 
-  integer, public, parameter :: marbl_nl_in_size     = 262144
   integer, public, parameter :: marbl_nl_cnt = 256
   integer, public, parameter :: marbl_nl_buffer_size = 32768
 
@@ -51,7 +50,7 @@ contains
     ! FIXME #74: Strip comments out of str_in (without accidentally removing
     !            strings that happen to contain exclamation points)
 
-    character(len=marbl_nl_in_size), intent(in) :: str_in
+    character(len=*), intent(in) :: str_in
     ! array_out is intent(inout) because we initialized to '' previously
     ! (and also to save memory)
     character(len=marbl_nl_buffer_size), dimension(marbl_nl_cnt), intent(inout) :: &
