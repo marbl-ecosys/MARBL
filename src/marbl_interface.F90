@@ -162,15 +162,13 @@ contains
        lgcm_has_global_ops,               &
        gcm_nl_buffer)
 
-    use marbl_namelist_mod, only : marbl_nl_cnt
-    use marbl_namelist_mod, only : marbl_nl_buffer_size
     use marbl_config_mod  , only : marbl_config_set_defaults
     use marbl_config_mod  , only : marbl_config_read_namelist
     use marbl_config_mod  , only : marbl_define_config_vars
 
-    class(marbl_interface_class)   , intent(inout)        :: this
-    character(marbl_nl_buffer_size), optional, intent(in) :: gcm_nl_buffer(:)
-    logical,                         optional, intent(in) :: lgcm_has_global_ops
+    class(marbl_interface_class), intent(inout) :: this
+    character(len=*), optional,   intent(in)    :: gcm_nl_buffer(:)
+    logical,          optional,   intent(in)    :: lgcm_has_global_ops
 
     character(*), parameter :: subname = 'marbl_interface:config'
     character(len=char_len) :: log_message
@@ -261,8 +259,6 @@ contains
        gcm_nl_buffer,                     &
        marbl_tracer_cnt)
 
-    use marbl_namelist_mod    , only : marbl_nl_cnt
-    use marbl_namelist_mod    , only : marbl_nl_buffer_size
     use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
     use marbl_mod             , only : marbl_init_tracer_metadata
     use marbl_mod             , only : marbl_tracer_index_consistency_check
@@ -278,15 +274,15 @@ contains
 
     implicit none
 
-    class     (marbl_interface_class)      , intent(inout) :: this
-    integer   (int_kind)                   , intent(in)    :: gcm_num_levels
-    integer   (int_kind)                   , intent(in)    :: gcm_num_PAR_subcols
-    integer   (int_kind)                   , intent(in)    :: gcm_num_elements_surface_forcing
-    real      (r8)                         , intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
-    real      (r8)                         , intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
-    real      (r8)                         , intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
-    character(marbl_nl_buffer_size), optional, intent(in)  :: gcm_nl_buffer(:)
-    integer   (int_kind), optional         , intent(out)   :: marbl_tracer_cnt
+    class(marbl_interface_class), intent(inout) :: this
+    integer(int_kind),            intent(in)    :: gcm_num_levels
+    integer(int_kind),            intent(in)    :: gcm_num_PAR_subcols
+    integer(int_kind),            intent(in)    :: gcm_num_elements_surface_forcing
+    real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
+    real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
+    real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
+    character(len=*),  optional,  intent(in)    :: gcm_nl_buffer(:)
+    integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
     character(*), parameter :: subname = 'marbl_interface:init'
     character(len=char_len) :: log_message

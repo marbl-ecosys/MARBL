@@ -462,19 +462,18 @@ contains
 
   subroutine marbl_parms_read_namelist(nl_buffer, marbl_status_log)
 
-    use marbl_namelist_mod, only : marbl_nl_cnt
-    use marbl_namelist_mod, only : marbl_nl_buffer_size
     use marbl_namelist_mod, only : marbl_namelist
 
-    character(marbl_nl_buffer_size), intent(in)    :: nl_buffer(:)
-    type(marbl_log_type),            intent(inout) :: marbl_status_log
+    character(len=*),     intent(in)    :: nl_buffer(:)
+    type(marbl_log_type), intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_parms:marbl_parms_read_namelist'
     character(len=char_len) :: log_message
-    character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
+
+    character(len=len(nl_buffer)) :: tmp_nl_buffer
 
     integer (int_kind)           :: n                           ! index for looping over tracers
     integer (int_kind)           :: nml_error                   ! namelist i/o error flag

@@ -31,9 +31,6 @@ Program marbl
   ! Use from libmarbl.a
   use marbl_interface,    only : marbl_interface_class
   use marbl_logging,      only : marbl_log_type
-  use marbl_namelist_mod, only : marbl_nl_in_size
-  use marbl_namelist_mod, only : marbl_nl_cnt
-  use marbl_namelist_mod, only : marbl_nl_buffer_size
   use marbl_namelist_mod, only : marbl_nl_split_string
   use marbl_namelist_mod, only : marbl_namelist
 
@@ -55,15 +52,19 @@ Program marbl
   Implicit None
 
   character(len=256), parameter :: subname = 'Program Marbl'
-  type(marbl_interface_class) :: marbl_instance
-  type(marbl_log_type)        :: driver_status_log
-  character(len=marbl_nl_buffer_size) :: nl_buffer(marbl_nl_cnt)
-  character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
-  character(len=marbl_nl_in_size)     :: nl_str, tmp_str
-  integer                             :: ioerr=0
-  integer                             :: m, n, nt, cnt
-  character(len=256)                  :: testname, varname, log_message
-  logical                             :: lprint_marbl_log
+  integer,            parameter :: nl_buffer_size = 256
+  integer,            parameter :: nl_cnt = 4
+  integer,            parameter :: nl_in_size = 1024
+
+  type(marbl_interface_class)   :: marbl_instance
+  type(marbl_log_type)          :: driver_status_log
+  character(len=nl_buffer_size) :: nl_buffer(nl_cnt)
+  character(len=nl_buffer_size) :: tmp_nl_buffer
+  character(len=nl_in_size)     :: nl_str, tmp_str
+  integer                       :: ioerr=0
+  integer                       :: m, n, nt, cnt
+  character(len=256)            :: testname, varname, log_message
+  logical                       :: lprint_marbl_log
 
   namelist /marbl_driver_nml/testname
 

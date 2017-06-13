@@ -205,20 +205,19 @@ contains
 
   subroutine marbl_config_read_namelist(nl_buffer, marbl_status_log)
 
-    use marbl_namelist_mod, only : marbl_nl_cnt
-    use marbl_namelist_mod, only : marbl_nl_buffer_size
     use marbl_namelist_mod, only : marbl_namelist
 
-    character(marbl_nl_buffer_size), intent(in)    :: nl_buffer(:)
-    type(marbl_log_type),            intent(inout) :: marbl_status_log
+    character(len=*),     intent(in)    :: nl_buffer(:)
+    type(marbl_log_type), intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_config:marbl_config_read_namelist'
     character(len=char_len) :: log_message
-    character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
-    integer (int_kind)           :: nml_error                   ! namelist i/o error flag
+
+    character(len=len(nl_buffer)) :: tmp_nl_buffer
+    integer (int_kind)            :: nml_error                   ! namelist i/o error flag
 
     namelist /marbl_config_nml/                                               &
          ciso_on, lsource_sink, ciso_lsource_sink, lecovars_full_depth_tavg,  &
