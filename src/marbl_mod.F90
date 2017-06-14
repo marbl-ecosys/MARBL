@@ -916,7 +916,6 @@ contains
        marbl_timers,                     &
        marbl_timer_indices,              &
        PAR,                              &
-       marbl_interior_share,             &
        marbl_zooplankton_share,          &
        marbl_autotroph_share,            &
        marbl_particulate_share,          &
@@ -945,7 +944,6 @@ contains
     type    (marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
     type    (marbl_internal_timers_type)        , intent(inout) :: marbl_timers
     type    (marbl_timer_indexing_type)         , intent(in)    :: marbl_timer_indices
-    type    (marbl_interior_share_type)         , intent(inout) :: marbl_interior_share(domain%km)
     type    (marbl_zooplankton_share_type)      , intent(inout) :: marbl_zooplankton_share(zooplankton_cnt, domain%km)
     type    (marbl_autotroph_share_type)        , intent(inout) :: marbl_autotroph_share(autotroph_cnt, domain%km)
     type    (marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
@@ -958,6 +956,8 @@ contains
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_set_interior_forcing'
     real(r8), dimension(marbl_total_tracer_cnt, domain%km) :: interior_restore
+
+    type    (marbl_interior_share_type) :: marbl_interior_share(domain%km)
 
     integer (int_kind) :: n         ! tracer index
     integer (int_kind) :: k         ! vertical level index
@@ -5191,24 +5191,19 @@ contains
     real(r8)                            , intent(in)    :: QA_dust_def
     type(marbl_interior_share_type)     , intent(inout) :: marbl_interior_share
 
-    associate( &
-         share => marbl_interior_share &
-         )
-
-    share%QA_dust_def    = QA_dust_def
-    share%DIC_loc_fields = tracer_local(marbl_tracer_indices%DIC_ind)
-    share%DOC_loc_fields = tracer_local(marbl_tracer_indices%DOC_ind)
-    share%O2_loc_fields  = tracer_local(marbl_tracer_indices%O2_ind)
-    share%NO3_loc_fields = tracer_local(marbl_tracer_indices%NO3_ind)
+    marbl_interior_share%QA_dust_def    = QA_dust_def
+    marbl_interior_share%DIC_loc_fields = tracer_local(marbl_tracer_indices%DIC_ind)
+    marbl_interior_share%DOC_loc_fields = tracer_local(marbl_tracer_indices%DOC_ind)
+    marbl_interior_share%O2_loc_fields  = tracer_local(marbl_tracer_indices%O2_ind)
+    marbl_interior_share%NO3_loc_fields = tracer_local(marbl_tracer_indices%NO3_ind)
 
 
-    share%CO3_fields   = carbonate%CO3
-    share%HCO3_fields  = carbonate%HCO3
-    share%H2CO3_fields = carbonate%H2CO3
+    marbl_interior_share%CO3_fields   = carbonate%CO3
+    marbl_interior_share%HCO3_fields  = carbonate%HCO3
+    marbl_interior_share%H2CO3_fields = carbonate%H2CO3
 
-    share%DOC_remin_fields = dissolved_organic_matter%DOC_remin
+    marbl_interior_share%DOC_remin_fields = dissolved_organic_matter%DOC_remin
 
-    end associate
   end subroutine marbl_export_interior_shared_variables
 
   !-----------------------------------------------------------------------
