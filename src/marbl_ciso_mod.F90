@@ -238,7 +238,7 @@ contains
     type(marbl_interior_share_type)         , intent(in)    :: marbl_interior_share(marbl_domain%km)
     type(marbl_zooplankton_share_type)      , intent(in)    :: marbl_zooplankton_share(zooplankton_cnt, marbl_domain%km)
     type(marbl_autotroph_share_type)        , intent(in)    :: marbl_autotroph_share(autotroph_cnt, marbl_domain%km)
-    type(marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
+    type(marbl_particulate_share_type)      , intent(in)    :: marbl_particulate_share
     real (r8)                               , intent(in)    :: temperature(:)
     real (r8)                               , intent(in)    :: column_tracer(:,:)
     real (r8)                               , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
