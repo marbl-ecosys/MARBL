@@ -916,8 +916,6 @@ contains
        marbl_timers,                     &
        marbl_timer_indices,              &
        PAR,                              &
-       marbl_zooplankton_share,          &
-       marbl_autotroph_share,            &
        marbl_particulate_share,          &
        interior_forcing_diags,           &
        glo_avg_fields_interior,          &
@@ -944,8 +942,6 @@ contains
     type    (marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
     type    (marbl_internal_timers_type)        , intent(inout) :: marbl_timers
     type    (marbl_timer_indexing_type)         , intent(in)    :: marbl_timer_indices
-    type    (marbl_zooplankton_share_type)      , intent(inout) :: marbl_zooplankton_share(zooplankton_cnt, domain%km)
-    type    (marbl_autotroph_share_type)        , intent(inout) :: marbl_autotroph_share(autotroph_cnt, domain%km)
     type    (marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
     type    (marbl_diagnostics_type)            , intent(inout) :: interior_forcing_diags
     real    (r8)                                , intent(out)   :: glo_avg_fields_interior(:)
@@ -957,7 +953,9 @@ contains
     character(*), parameter :: subname = 'marbl_mod:marbl_set_interior_forcing'
     real(r8), dimension(marbl_total_tracer_cnt, domain%km) :: interior_restore
 
-    type    (marbl_interior_share_type) :: marbl_interior_share(domain%km)
+    type(marbl_interior_share_type)    :: marbl_interior_share(domain%km)
+    type(marbl_autotroph_share_type)   :: marbl_autotroph_share(autotroph_cnt, domain%km)
+    type(marbl_zooplankton_share_type) :: marbl_zooplankton_share(zooplankton_cnt, domain%km)
 
     integer (int_kind) :: n         ! tracer index
     integer (int_kind) :: k         ! vertical level index
@@ -2244,7 +2242,6 @@ contains
        saved_state_ind,                 &
        surface_forcing_output,          &
        surface_forcing_internal,        &
-       surface_forcing_share,           &
        surface_forcing_diags,           &
        glo_avg_fields_surface,          &
        marbl_status_log)
@@ -2279,7 +2276,6 @@ contains
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_forcing_internal_type) , intent(inout) :: surface_forcing_internal
     type(marbl_surface_forcing_output_type)   , intent(inout) :: surface_forcing_output
-    type(marbl_surface_forcing_share_type)    , intent(inout) :: surface_forcing_share
     type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
     real (r8)                                 , intent(out)   :: glo_avg_fields_surface(:,:)
     type(marbl_log_type)                      , intent(inout) :: marbl_status_log
@@ -2298,6 +2294,7 @@ contains
     real (r8)               :: totalChl_loc(num_elements)  ! local value of totalChl
     real (r8)               :: flux_o2_loc(num_elements)   ! local value of o2 flux
     type(thermodynamic_coefficients_type), dimension(num_elements) :: co3_coeffs
+    type(marbl_surface_forcing_share_type) :: surface_forcing_share
     !-----------------------------------------------------------------------
 
     associate(                                                                                      &

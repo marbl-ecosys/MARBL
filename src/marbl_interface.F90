@@ -40,10 +40,7 @@ module marbl_interface
   use marbl_internal_types  , only : marbl_interior_forcing_indexing_type
   use marbl_internal_types  , only : marbl_interior_saved_state_indexing_type
   use marbl_internal_types  , only : marbl_PAR_type
-  use marbl_internal_types  , only : marbl_autotroph_share_type
-  use marbl_internal_types  , only : marbl_zooplankton_share_type
   use marbl_internal_types  , only : marbl_particulate_share_type
-  use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
   use marbl_internal_types  , only : marbl_tracer_index_type
   use marbl_internal_types  , only : marbl_internal_timers_type
@@ -116,9 +113,6 @@ module marbl_interface
      ! private data
      type(marbl_PAR_type)                      , private              :: PAR
      type(marbl_particulate_share_type)        , private              :: particulate_share
-     type(marbl_zooplankton_share_type)        , private, allocatable :: zooplankton_share(:,:)
-     type(marbl_autotroph_share_type)          , private, allocatable :: autotroph_share(:,:)
-     type(marbl_surface_forcing_share_type)    , private              :: surface_forcing_share
      type(marbl_surface_forcing_internal_type) , private              :: surface_forcing_internal
      logical                                   , private              :: lallow_glo_ops
      type(marbl_internal_timers_type)          , private              :: timers
@@ -348,10 +342,6 @@ contains
 
     call this%particulate_share%construct(num_levels)
 
-    allocate (this%zooplankton_share(zooplankton_cnt, num_levels))
-
-    allocate (this%autotroph_share(autotroph_cnt, num_levels))
-
     call this%domain%construct(                                 &
          num_levels                    = num_levels,            &
          num_PAR_subcols               = num_PAR_subcols,       &
@@ -558,7 +548,6 @@ contains
       return
     end if
 
-    call this%surface_forcing_share%construct(num_surface_elements)
     call this%surface_forcing_internal%construct(num_surface_elements)
 
     allocate(this%surface_input_forcings(num_surface_forcing_fields))
@@ -725,8 +714,6 @@ contains
          marbl_timers             = this%timers,                              &
          marbl_timer_indices      = this%timer_ids,                           &
          PAR                      = this%PAR,                                 &
-         marbl_zooplankton_share  = this%zooplankton_share,                   &
-         marbl_autotroph_share    = this%autotroph_share,                     &
          marbl_particulate_share  = this%particulate_share,                   &
          interior_forcing_diags   = this%interior_forcing_diags,              &
          glo_avg_fields_interior  = this%glo_avg_fields_interior,             &
@@ -774,7 +761,6 @@ contains
          saved_state_ind          = this%surf_state_ind,                      &
          surface_forcing_output   = this%surface_forcing_output,              &
          surface_forcing_internal = this%surface_forcing_internal,            &
-         surface_forcing_share    = this%surface_forcing_share,               &
          surface_forcing_diags    = this%surface_forcing_diags,               &
          glo_avg_fields_surface   = this%glo_avg_fields_surface,              &
          marbl_status_log         = this%StatusLog)
