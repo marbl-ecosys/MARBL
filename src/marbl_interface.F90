@@ -170,8 +170,8 @@ contains
     character(len=*), optional,   intent(in)    :: gcm_nl_buffer(:)
     logical,          optional,   intent(in)    :: lgcm_has_global_ops
 
-    character(*), parameter :: subname = 'marbl_interface:config'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_interface:config'
+    character(len=char_len)     :: log_message
 
     !--------------------------------------------------------------------
     ! initialize status log
@@ -284,8 +284,9 @@ contains
     character(len=*),  optional,  intent(in)    :: gcm_nl_buffer(:)
     integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
-    character(*), parameter :: subname = 'marbl_interface:init'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_interface:init'
+    character(len=char_len)     :: log_message
+
     integer :: i
     integer, parameter :: num_interior_elements = 1 ! FIXME #66: get this value from interface, let it vary
     !--------------------------------------------------------------------
@@ -501,8 +502,9 @@ contains
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(*), parameter :: subname = 'marbl_interface:complete_config_and_init'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_interface:complete_config_and_init'
+    character(len=char_len)     :: log_message
+
     integer :: i
 
     call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
@@ -626,7 +628,7 @@ contains
 
     class (marbl_interface_class), intent(inout) :: this
 
-    character(*), parameter :: subname = 'marbl_interface:reset_timers'
+    character(len=*), parameter :: subname = 'marbl_interface:reset_timers'
 
     call this%timers%reset(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -642,7 +644,7 @@ contains
 
     class (marbl_interface_class), intent(inout) :: this
 
-    character(*), parameter :: subname = 'marbl_interface:extract_timing'
+    character(len=*), parameter :: subname = 'marbl_interface:extract_timing'
 
     call this%timers%extract(this%timer_summary, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -704,7 +706,8 @@ contains
     use marbl_mod, only : marbl_set_interior_forcing
 
     class(marbl_interface_class), intent(inout) :: this
-    character(*), parameter :: subname = 'marbl_interface:set_interior_forcing'
+
+    character(len=*), parameter :: subname = 'marbl_interface:set_interior_forcing'
 
     call this%timers%start(this%timer_ids%interior_forcing_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -756,7 +759,7 @@ contains
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(*), parameter :: subname = 'marbl_interface:set_surface_forcing'
+    character(len=*), parameter :: subname = 'marbl_interface:set_surface_forcing'
 
     call this%timers%start(this%timer_ids%surface_forcing_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -802,7 +805,7 @@ contains
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
-    character (*)               , intent(in)    :: field_source ! 'interior' or 'surface'
+    character(len=*),             intent(in)    :: field_source ! 'interior' or 'surface'
 
     if (field_source == 'interior') then
        call marbl_set_global_scalars_interior(                          &
@@ -824,7 +827,7 @@ contains
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(*), parameter :: subname = 'marbl_interface:shutdown'
+    character(len=*), parameter :: subname = 'marbl_interface:shutdown'
 
     ! free dynamically allocated memory, etc
 
@@ -841,7 +844,7 @@ contains
   function get_tracer_index(this, tracer_name)
 
     class(marbl_interface_class), intent(inout) :: this
-    character(*),                 intent(in)    :: tracer_name
+    character(len=*),             intent(in)    :: tracer_name
     integer :: get_tracer_index
 
     integer :: n

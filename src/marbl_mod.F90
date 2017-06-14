@@ -295,10 +295,11 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_mod:marbl_init_surface_forcing_fields'
-    character(len=char_len) :: log_message
-    integer                 :: id
-    logical                 :: found
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_init_surface_forcing_fields'
+    character(len=char_len)     :: log_message
+
+    integer :: id
+    logical :: found
     !-----------------------------------------------------------------------
 
     associate(ind => surface_forcing_indices)
@@ -469,8 +470,9 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_mod:marbl_init_interior_forcing_fields'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_init_interior_forcing_fields'
+    character(len=char_len)     :: log_message
+
     ! NAG didn't like associating to tracer_metadata(:)%*
     character(len=char_len) :: tracer_name
     character(len=char_len) :: tracer_units
@@ -611,7 +613,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
 
-    character(*), parameter :: subname = 'marbl_mod:marbl_init_tracer_metadata'
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_init_tracer_metadata'
 
     integer (int_kind) :: n        ! index for looping over tracers
     integer (int_kind) :: zoo_ind  ! zooplankton functional group index
@@ -957,7 +959,8 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_mod:marbl_set_interior_forcing'
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_set_interior_forcing'
+
     real(r8), dimension(marbl_total_tracer_cnt, domain%km) :: interior_restore
 
     integer (int_kind) :: n         ! tracer index
@@ -1560,9 +1563,8 @@ contains
          caco3_diss, &
          dust_diss
 
-    character(*), parameter :: &
-         subname = 'marbl_mod:marbl_compute_particulate_terms'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_compute_particulate_terms'
+    character(len=char_len)     :: log_message
 
 !   real (r8) :: TfuncS  ! temperature scaling from soft POM remin, not currently being applied
 
@@ -2288,16 +2290,17 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_mod:marbl_set_surface_forcing'
-    integer (int_kind)      :: n                        ! loop indices
-    integer (int_kind)      :: auto_ind                 ! autotroph functional group index
-    real (r8)               :: phlo(num_elements)       ! lower bound for ph in solver
-    real (r8)               :: phhi(num_elements)       ! upper bound for ph in solver
-    real (r8)               :: ph_new(num_elements)     ! computed ph from solver
-    real (r8)               :: xkw_ice(num_elements)    ! common portion of piston vel., (1-fice)*xkw (cm/s)
-    real (r8)               :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (mmol/m^3)
-    real (r8)               :: totalChl_loc(num_elements)  ! local value of totalChl
-    real (r8)               :: flux_o2_loc(num_elements)   ! local value of o2 flux
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_set_surface_forcing'
+
+    integer (int_kind) :: n                        ! loop indices
+    integer (int_kind) :: auto_ind                 ! autotroph functional group index
+    real (r8)          :: phlo(num_elements)       ! lower bound for ph in solver
+    real (r8)          :: phhi(num_elements)       ! upper bound for ph in solver
+    real (r8)          :: ph_new(num_elements)     ! computed ph from solver
+    real (r8)          :: xkw_ice(num_elements)    ! common portion of piston vel., (1-fice)*xkw (cm/s)
+    real (r8)          :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (mmol/m^3)
+    real (r8)          :: totalChl_loc(num_elements)  ! local value of totalChl
+    real (r8)          :: flux_o2_loc(num_elements)   ! local value of o2 flux
     type(thermodynamic_coefficients_type), dimension(num_elements) :: co3_coeffs
     !-----------------------------------------------------------------------
 
@@ -2944,9 +2947,10 @@ contains
     type(marbl_tracer_index_type), intent(in)    :: tracer_indices
     type(marbl_log_type),          intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_mod:marbl_tracer_index_consistency_check'
-    character(len=char_len) :: log_message
-    integer                 :: tracer_cnt
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_tracer_index_consistency_check'
+    character(len=char_len)     :: log_message
+
+    integer :: tracer_cnt
 
     tracer_cnt = tracer_indices%ecosys_base_ind_end -                         &
                  (tracer_indices%ecosys_base_ind_beg-1)
@@ -3310,7 +3314,8 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_mod:marbl_compute_carbonate_chemistry'
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_compute_carbonate_chemistry'
+
     integer :: k
     type(thermodynamic_coefficients_type), dimension(domain%km) :: co3_coeffs
     logical(log_kind) , dimension(domain%km) :: pressure_correct
@@ -4417,8 +4422,8 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
 
-    character(*), parameter :: subname = 'marbl_mod:marbl_compute_scavenging'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_compute_scavenging'
+    character(len=char_len)     :: log_message
 
     ! ligand binding strengths, original values are L/mol, model units are L/umol
     real(kind=r8), parameter :: KFeLig1 = 10.0e13_r8 * 1.0e-6_r8

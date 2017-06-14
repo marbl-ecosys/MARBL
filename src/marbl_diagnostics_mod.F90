@@ -360,7 +360,7 @@ contains
     logical :: truncate
     character(len=char_len) :: lname, sname, units, vgrid
 
-    character(*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_init'
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_init'
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------
@@ -3180,7 +3180,7 @@ contains
     type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_forcing_diags
     type (marbl_log_type)                     , intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_interior_forcing'
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_interior_forcing'
 
     !-----------------------------------------------------------------
 
@@ -3300,7 +3300,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_surface_forcing'
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_surface_forcing'
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------------
@@ -3451,7 +3451,8 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_carbonate'
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_carbonate'
+
     integer(int_kind) :: k
     !-----------------------------------------------------------------------
     
@@ -3513,7 +3514,8 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_diagnostics_mod:compute_saturation_depth'
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:compute_saturation_depth'
+
     real(r8) :: anomaly(marbl_domain%km) ! CO3 concentration above saturation at level
     integer  :: k
     !-----------------------------------------------------------------------
@@ -3559,7 +3561,8 @@ contains
     type(marbl_log_type),        intent(inout) :: marbl_status_log
     real(kind=r8) :: linear_root
 
-    character(*), parameter :: subname = 'marbl_diagnostics_mod:linear_root'
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:linear_root'
+
     real(kind=r8) :: m_inv
 
     if ((y(1).gt.c0).and.(y(2).gt.c0)) then
@@ -4603,7 +4606,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_ciso_surface_forcing'
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_ciso_surface_forcing'
     !-----------------------------------------------------------------------
 
     associate(                                          &

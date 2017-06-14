@@ -24,8 +24,8 @@ module marbl_internal_types
   ! derived types for zooplankton
 
   type, public :: zooplankton_config_type
-     character(char_len)     :: sname
-     character(char_len)     :: lname
+     character(len=char_len)     :: sname
+     character(len=char_len)     :: lname
   end type zooplankton_config_type
 
   type, public :: zooplankton_parms_type
@@ -40,12 +40,12 @@ module marbl_internal_types
   ! derived types for autotrophs
 
   type, public :: autotroph_config_type
-     character(char_len)     :: sname
-     character(char_len)     :: lname
-     logical (KIND=log_kind) :: Nfixer                             ! flag set to true if this autotroph fixes N2
-     logical (KIND=log_kind) :: imp_calcifier                      ! flag set to true if this autotroph implicitly handles calcification
-     logical (KIND=log_kind) :: exp_calcifier                      ! flag set to true if this autotroph explicitly handles calcification
-     logical (KIND=log_kind) :: silicifier                         ! flag set to true if this autotroph is a silicifier
+     character(len=char_len)     :: sname
+     character(len=char_len)     :: lname
+     logical (KIND=log_kind)     :: Nfixer                             ! flag set to true if this autotroph fixes N2
+     logical (KIND=log_kind)     :: imp_calcifier                      ! flag set to true if this autotroph implicitly handles calcification
+     logical (KIND=log_kind)     :: exp_calcifier                      ! flag set to true if this autotroph explicitly handles calcification
+     logical (KIND=log_kind)     :: silicifier                         ! flag set to true if this autotroph is a silicifier
   end type autotroph_config_type
 
   type, public :: autotroph_parms_type
@@ -71,8 +71,8 @@ module marbl_internal_types
   ! derived types for grazing
 
   type, public :: grazing_config_type
-    character(char_len)     :: sname
-    character(char_len)     :: lname
+    character(len=char_len) :: sname
+    character(len=char_len) :: lname
     integer (KIND=int_kind) :: auto_ind_cnt     ! number of autotrophs in prey-clase auto_ind
     integer (KIND=int_kind) :: zoo_ind_cnt      ! number of zooplankton in prey-clase zoo_ind
   end type grazing_config_type
@@ -933,9 +933,9 @@ contains
     character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
     type(marbl_log_type),                        intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname =                                      &
-                    'marbl_internal_types:interior_forcing_index_constructor'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_internal_types:interior_forcing_index_constructor'
+    character(len=char_len)     :: log_message
+
     integer :: m, n
 
     associate(forcing_cnt => num_interior_forcing_fields)
@@ -1052,8 +1052,8 @@ contains
     type(grazing_config_type), intent(in)    :: grazing_conf
     type(marbl_log_type),      intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_internal_types:grazing_config_constructor'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_internal_types:grazing_config_constructor'
+    character(len=char_len)     :: log_message
 
     if (allocated(this%auto_ind)) then
       log_message = 'grazing%auto_inds is already allocated!'

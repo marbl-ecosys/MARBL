@@ -53,11 +53,11 @@ module marbl_timing_mod
   ! Internal timer types
 
   type :: marbl_single_timer_type
-    character(char_len) :: name
-    logical             :: is_running
-    logical             :: is_threaded
-    real(r8)            :: cur_start
-    real(r8)            :: cumulative_runtime
+    character(len=char_len) :: name
+    logical                 :: is_running
+    logical                 :: is_threaded
+    real(r8)                :: cur_start
+    real(r8)                :: cumulative_runtime
   contains
     procedure :: init => init_single_timer
   end type marbl_single_timer_type
@@ -100,8 +100,9 @@ Contains
     integer,                           intent(out)   :: id
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_add'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_timing_mod:marbl_timing_add'
+    character(len=char_len)     :: log_message
+
     type(marbl_single_timer_type), allocatable :: tmp(:)
     integer :: n
 
@@ -141,8 +142,8 @@ Contains
     integer,                           intent(in)    :: id
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_start'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_timing_mod:marbl_timing_start'
+    character(len=char_len)     :: log_message
 
 #ifdef _OPENMP
     integer, external :: omp_get_num_threads
@@ -182,8 +183,9 @@ Contains
     integer,                           intent(in)    :: id
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_timing_mod:marbl_timing_stop'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_timing_mod:marbl_timing_stop'
+    character(len=char_len)     :: log_message
+
     real(r8) :: runtime
 
     ! Error checking
@@ -222,8 +224,9 @@ Contains
     type(marbl_timers_type),           intent(inout) :: interface_timers
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_timing_mod:extract_timer_data'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_timing_mod:extract_timer_data'
+    character(len=char_len)     :: log_message
+
     integer :: n, num_timers
 
     if (allocated(self%individual_timers)) then
@@ -258,7 +261,7 @@ Contains
     type(marbl_timer_indexing_type),   intent(inout) :: timer_ids
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_timing_mod:setup_timers'
+    character(len=*), parameter :: subname = 'marbl_timing_mod:setup_timers'
 
     !-----------------------------------------------------------------------
     !  Set up timers for inside time loops
@@ -302,8 +305,9 @@ Contains
     class(marbl_internal_timers_type), intent(inout) :: self
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_timing_mod:reset_timers'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_timing_mod:reset_timers'
+    character(len=char_len)     :: log_message
+
     integer :: n
 
     do n = 1,size(self%individual_timers)
@@ -331,7 +335,7 @@ Contains
     type(marbl_timers_type),           intent(inout) :: interface_timers
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_timing_mod:shutdown_timers'
+    character(len=*), parameter :: subname = 'marbl_timing_mod:shutdown_timers'
 
     call timer_ids%set_to_zero()
 

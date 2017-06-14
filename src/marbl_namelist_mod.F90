@@ -42,8 +42,7 @@ contains
     character(len=*), intent(in) :: str_in
     ! array_out is intent(inout) because we initialized to '' previously
     ! (and also to save memory)
-    character(len=*), dimension(:), intent(inout) :: &
-             array_out
+    character(len=*), dimension(:), intent(inout) :: array_out
 
     character(len=len(str_in)) :: str_tmp
     integer :: old_pos, nl_cnt, i, j
@@ -88,8 +87,9 @@ contains
     type(marbl_log_type), intent(inout) :: marbl_status_log
     character(len=len(nl_buffer)) :: marbl_namelist
 
-    character(*), parameter :: subname = 'marbl_namelist_mod:marbl_namelist'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_namelist_mod:marbl_namelist'
+    character(len=char_len)     :: log_message
+
     character(len=len(nl_buffer)) :: single_namelist
     integer :: j, n
 

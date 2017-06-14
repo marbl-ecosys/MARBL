@@ -68,13 +68,13 @@ module marbl_interface_types
   !*****************************************************************************
 
   type, public :: marbl_tracer_metadata_type
-     character(char_len) :: short_name
-     character(char_len) :: long_name
-     character(char_len) :: units
-     character(char_len) :: tend_units
-     character(char_len) :: flux_units
-     logical             :: lfull_depth_tavg
-     character(char_len) :: tracer_module_name
+     character(len=char_len) :: short_name
+     character(len=char_len) :: long_name
+     character(len=char_len) :: units
+     character(len=char_len) :: tend_units
+     character(len=char_len) :: flux_units
+     logical                 :: lfull_depth_tavg
+     character(len=char_len) :: tracer_module_name
   end type marbl_tracer_metadata_type
 
   !*****************************************************************************
@@ -147,10 +147,10 @@ module marbl_interface_types
      ! Contains variable names and units for required forcing fields as well as
      ! dimensional information; actual forcing data is in array of
      ! marbl_forcing_fields_type
-     character(char_len)   :: varname
-     character(char_len)   :: field_units
-     integer               :: rank            ! 0d or 1d
-     integer,  allocatable :: extent(:)       ! length = rank
+     character(len=char_len) :: varname
+     character(len=char_len) :: field_units
+     integer                 :: rank            ! 0d or 1d
+     integer,  allocatable   :: extent(:)       ! length = rank
   end type marbl_forcing_fields_metadata_type
 
   !*****************************************************************************
@@ -170,9 +170,9 @@ module marbl_interface_types
 
   type, public :: marbl_timers_type
     integer :: num_timers
-    character(char_len), allocatable :: names(:)
-    real(r8),            allocatable :: cumulative_runtimes(:)
-    logical,             allocatable :: is_threaded(:)
+    character(len=char_len), allocatable :: names(:)
+    real(r8),                allocatable :: cumulative_runtimes(:)
+    logical,                 allocatable :: is_threaded(:)
   contains
     procedure, public :: construct => marbl_timers_constructor
     procedure, public :: deconstruct => marbl_timers_deconstructor
@@ -183,13 +183,13 @@ module marbl_interface_types
   ! FIXME : move to marbl_internal_types.F90 when running means are moved to MARBL
 
   type, public :: marbl_running_mean_0d_type
-     character(char_len) :: sname
-     real(kind=r8)       :: timescale
-     real(kind=r8)       :: rmean
+     character(len=char_len) :: sname
+     real(kind=r8)           :: timescale
+     real(kind=r8)           :: rmean
 
      ! FIXME : perhaps the following get removed from the type when running means are moved to MARBL
-     logical(log_kind)   :: linit_by_val
-     real(kind=r8)       :: init_val
+     logical(log_kind)       :: linit_by_val
+     real(kind=r8)           :: init_val
   end type marbl_running_mean_0d_type
 
   !*****************************************************************************
@@ -239,17 +239,17 @@ contains
     class(marbl_single_saved_state_type), intent(inout) :: this
     type(marbl_log_type),                 intent(inout) :: marbl_status_log
 
-    character(*), intent(in) :: lname
-    character(*), intent(in) :: sname
-    character(*), intent(in) :: units
-    character(*), intent(in) :: vgrid
-    integer,      intent(in) :: rank
-    integer,      intent(in) :: num_elements
-    integer,      intent(in) :: num_levels
+    character(len=*), intent(in) :: lname
+    character(len=*), intent(in) :: sname
+    character(len=*), intent(in) :: units
+    character(len=*), intent(in) :: vgrid
+    integer,          intent(in) :: rank
+    integer,          intent(in) :: num_elements
+    integer,          intent(in) :: num_levels
 
-    character(*), parameter :: subname =                                      &
+    character(len=*), parameter :: subname =                                  &
                   'marbl_interface_types:marbl_single_saved_state_construct'
-    character(char_len)     :: log_message
+    character(len=char_len)     :: log_message
 
     select case (rank)
       case (3)
@@ -309,15 +309,16 @@ contains
     class(marbl_saved_state_type), intent(inout) :: this
     type(marbl_log_type),          intent(inout) :: marbl_status_log
 
-    character(*),      intent(in)  :: lname
-    character(*),      intent(in)  :: sname
-    character(*),      intent(in)  :: units
-    character(*),      intent(in)  :: vgrid
+    character(len=*),  intent(in)  :: lname
+    character(len=*),  intent(in)  :: sname
+    character(len=*),  intent(in)  :: units
+    character(len=*),  intent(in)  :: vgrid
     integer(int_kind), intent(in)  :: rank
     integer(int_kind), intent(out) :: id
 
-    character(*), parameter :: subname = 'marbl_interface_types:marbl_saved_state_add'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_saved_state_add'
+    character(len=char_len)     :: log_message
+
     type(marbl_single_saved_state_type), dimension(:), pointer :: new_state
     integer :: old_size,n, nlev
 
@@ -382,8 +383,8 @@ contains
     integer                 , intent(in)    :: num_levels
     type(marbl_log_type)    , intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_interface_types:marbl_single_diag_init'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_single_diag_init'
+    character(len=char_len)     :: log_message
 
     ! Allocate column memory for 3D vars or num_elements memory for 2D vars
     select case (trim(vgrid))
@@ -419,8 +420,8 @@ contains
     integer(int_kind),            intent(in)    :: id
     type(marbl_log_type),         intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_interface_types:marbl_single_sfo_constructor'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_single_sfo_constructor'
+    character(len=char_len)     :: log_message
 
     select case (trim(field_name))
       case("flux_o2")
@@ -482,9 +483,10 @@ contains
     type(marbl_log_type), intent(inout) :: marbl_status_log
     integer(int_kind),    intent(out)   :: sfo_id
 
+    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_sfo_add'
+
     type(marbl_single_sfo_type), dimension(:), pointer :: new_sfo
     integer :: n, old_size
-    character(*), parameter :: subname = 'marbl_interface_types:marbl_sfo_add'
 
     if (associated(this%sfo)) then
       old_size = size(this%sfo)
@@ -546,9 +548,10 @@ contains
     class(marbl_diagnostics_type), intent(inout) :: this
     type(marbl_log_type),          intent(inout) :: marbl_status_log
 
+    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_diagnostics_set_to_zero'
+    character(len=char_len)     :: log_message
+
     integer (int_kind) :: n
-    character(*), parameter :: subname = 'marbl_interface_types:marbl_diagnostics_set_to_zero'
-    character(len=char_len) :: log_message
 
     do n=1,size(this%diags)
       if (allocated(this%diags(n)%field_2d)) then
@@ -579,8 +582,9 @@ contains
     integer (int_kind)            , intent(out)   :: id
     type(marbl_log_type)          , intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_interface_types:marbl_diagnostics_add'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_diagnostics_add'
+    character(len=char_len)     :: log_message
+
     type(marbl_single_diagnostic_type), dimension(:), pointer :: new_diags
     integer :: n, old_size
 
@@ -665,8 +669,8 @@ contains
     type(marbl_log_type),             intent(inout) :: marbl_status_log
     integer, optional,                intent(in)    :: dim1
 
-    character(*), parameter :: subname = 'marbl_interface_types:marbl_forcing_fields_set_rank'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_forcing_fields_set_rank'
+    character(len=char_len)     :: log_message
 
     this%metadata%rank = rank
     select case (rank)
