@@ -2242,6 +2242,7 @@ contains
        saved_state_ind,                 &
        surface_forcing_output,          &
        surface_forcing_internal,        &
+       surface_forcing_share,           &
        surface_forcing_diags,           &
        glo_avg_fields_surface,          &
        marbl_status_log)
@@ -2276,6 +2277,7 @@ contains
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_forcing_internal_type) , intent(inout) :: surface_forcing_internal
     type(marbl_surface_forcing_output_type)   , intent(inout) :: surface_forcing_output
+    type(marbl_surface_forcing_share_type)    , intent(inout) :: surface_forcing_share
     type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
     real (r8)                                 , intent(out)   :: glo_avg_fields_surface(:,:)
     type(marbl_log_type)                      , intent(inout) :: marbl_status_log
@@ -2294,7 +2296,6 @@ contains
     real (r8)               :: totalChl_loc(num_elements)  ! local value of totalChl
     real (r8)               :: flux_o2_loc(num_elements)   ! local value of o2 flux
     type(thermodynamic_coefficients_type), dimension(num_elements) :: co3_coeffs
-    type(marbl_surface_forcing_share_type) :: surface_forcing_share
     !-----------------------------------------------------------------------
 
     associate(                                                                                      &

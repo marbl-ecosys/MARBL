@@ -41,6 +41,7 @@ module marbl_interface
   use marbl_internal_types  , only : marbl_interior_saved_state_indexing_type
   use marbl_internal_types  , only : marbl_PAR_type
   use marbl_internal_types  , only : marbl_particulate_share_type
+  use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
   use marbl_internal_types  , only : marbl_tracer_index_type
   use marbl_internal_types  , only : marbl_internal_timers_type
@@ -113,6 +114,7 @@ module marbl_interface
      ! private data
      type(marbl_PAR_type)                      , private              :: PAR
      type(marbl_particulate_share_type)        , private              :: particulate_share
+     type(marbl_surface_forcing_share_type)    , private              :: surface_forcing_share
      type(marbl_surface_forcing_internal_type) , private              :: surface_forcing_internal
      logical                                   , private              :: lallow_glo_ops
      type(marbl_internal_timers_type)          , private              :: timers
@@ -548,6 +550,7 @@ contains
       return
     end if
 
+    call this%surface_forcing_share%construct(num_surface_elements)
     call this%surface_forcing_internal%construct(num_surface_elements)
 
     allocate(this%surface_input_forcings(num_surface_forcing_fields))
@@ -761,6 +764,7 @@ contains
          saved_state_ind          = this%surf_state_ind,                      &
          surface_forcing_output   = this%surface_forcing_output,              &
          surface_forcing_internal = this%surface_forcing_internal,            &
+         surface_forcing_share    = this%surface_forcing_share,               &
          surface_forcing_diags    = this%surface_forcing_diags,               &
          glo_avg_fields_surface   = this%glo_avg_fields_surface,              &
          marbl_status_log         = this%StatusLog)
