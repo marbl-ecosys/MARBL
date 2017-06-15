@@ -47,8 +47,8 @@ module marbl_config_mod
   !  to preserve C, P, Si inventories on timescales exceeding bury_coeff_rmean_timescale_years
   !  this is done primarily in spinup runs
   !-----------------------------------------------------------------------
-  character(char_len), target :: init_bury_coeff_opt
-  logical (log_kind),  target :: ladjust_bury_coeff
+  character(len=char_len), target :: init_bury_coeff_opt
+  logical(log_kind),       target :: ladjust_bury_coeff
 
 
   !---------------------------------------------------------------------
@@ -205,20 +205,19 @@ contains
 
   subroutine marbl_config_read_namelist(nl_buffer, marbl_status_log)
 
-    use marbl_namelist_mod, only : marbl_nl_cnt
-    use marbl_namelist_mod, only : marbl_nl_buffer_size
     use marbl_namelist_mod, only : marbl_namelist
 
-    character(marbl_nl_buffer_size), intent(in)    :: nl_buffer(:)
-    type(marbl_log_type),            intent(inout) :: marbl_status_log
+    character(len=*),     intent(in)    :: nl_buffer(:)
+    type(marbl_log_type), intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_config:marbl_config_read_namelist'
-    character(len=char_len) :: log_message
-    character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
-    integer (int_kind)           :: nml_error                   ! namelist i/o error flag
+    character(len=*), parameter :: subname = 'marbl_config:marbl_config_read_namelist'
+    character(len=char_len)     :: log_message
+
+    character(len=len(nl_buffer)) :: tmp_nl_buffer
+    integer (int_kind)            :: nml_error                   ! namelist i/o error flag
 
     namelist /marbl_config_nml/                                               &
          ciso_on, lsource_sink, ciso_lsource_sink, lecovars_full_depth_tavg,  &
@@ -254,9 +253,10 @@ contains
     class(marbl_config_and_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_config_mod:marbl_define_config_vars'
-    character(len=char_len) :: log_message
-    character(len=char_len) :: sname, lname, units, datatype, group, category
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_define_config_vars'
+    character(len=char_len)     :: log_message
+
+    character(len=char_len)          :: sname, lname, units, datatype, group, category
     real(r8),                pointer :: rptr => NULL()
     integer(int_kind),       pointer :: iptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
@@ -620,7 +620,8 @@ contains
     character(len=char_len), optional, pointer, intent(in) :: sptr
     character(len=char_len), optional,          intent(in) :: comment
 
-    character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add'
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_add'
+
     type(marbl_single_config_or_parm_type), dimension(:), pointer :: new_vars
     character(len=char_len),                dimension(:), pointer :: new_categories
     integer :: old_size, id, cat_ind, n
@@ -747,10 +748,11 @@ contains
     real(kind=r8), dimension(:), target, intent(in)    :: r8array
     type(marbl_log_type),                intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add_1d_r8'
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_add_1d_r8'
+
     character(len=char_len) :: sname_loc
-    real(r8), pointer :: rptr => NULL()
-    integer :: n
+    real(r8), pointer       :: rptr => NULL()
+    integer                 :: n
 
     do n=1,size(r8array)
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
@@ -779,10 +781,11 @@ contains
     integer, dimension(:), target,       intent(in)    :: intarray
     type(marbl_log_type),                intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add_1d_int'
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_add_1d_int'
+
     character(len=char_len) :: sname_loc
-    integer, pointer :: iptr => NULL()
-    integer :: n
+    integer, pointer        :: iptr => NULL()
+    integer                 :: n
 
     do n=1,size(intarray)
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
@@ -811,10 +814,11 @@ contains
     character(len=char_len),     target, intent(in)    :: strarray(:)
     type(marbl_log_type),                intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_config_mod:marbl_var_add_1d_str'
-    character(len=char_len) :: sname_loc
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_add_1d_str'
+
+    character(len=char_len)          :: sname_loc
     character(len=char_len), pointer :: sptr => NULL()
-    integer :: n
+    integer                          :: n
 
     do n=1,size(strarray)
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
@@ -836,11 +840,12 @@ contains
     class(marbl_config_and_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_config_mod:marbl_vars_finalize'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_vars_finalize'
+    character(len=char_len)     :: log_message
+
     character(len=char_len) :: group
     character(len=7)        :: logic
-    integer :: i,n, cat_ind
+    integer                 :: i,n, cat_ind
 
     ! (1) Lock data type (put calls will now cause MARBL to abort)
     this%locked = .true.
@@ -940,8 +945,9 @@ contains
     character(len=*), optional,         intent(in)    :: sval
     type(marbl_log_type),               intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_config_mod%marbl_var_put_all_types'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_config_mod%marbl_var_put_all_types'
+    character(len=char_len)     :: log_message
+
     integer :: varid
 
     if (this%locked) then
@@ -1004,8 +1010,9 @@ contains
     character(len=*), optional,         intent(out)   :: sval
     type(marbl_log_type),               intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_config_mod%marbl_var_get_all_types'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_config_mod%marbl_var_get_all_types'
+    character(len=char_len)     :: log_message
+
     integer :: varid, cnt
 
     cnt = 0
@@ -1186,8 +1193,9 @@ contains
     type(marbl_log_type),               intent(inout) :: marbl_status_log
     integer                                           :: id
 
-    character(*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_id'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_id'
+    character(len=char_len)     :: log_message
+
     integer :: n
 
     id = 0
@@ -1213,8 +1221,8 @@ contains
     character(len=*), optional,         intent(out)   :: lname, sname, units
     character(len=*), optional,         intent(out)   :: group, datatype
 
-    character(*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_metadata'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_metadata'
+    character(len=char_len)     :: log_message
 
     if ((ind .lt. 1).or.(ind .gt. this%cnt)) then
       write(log_message,'(I0,2A,I0)') ind, ' is not a valid index: must be ', &

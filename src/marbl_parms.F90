@@ -82,17 +82,17 @@ module marbl_parms
   type(autotroph_parms_type),   target :: autotrophs(autotroph_cnt)
   type(grazing_parms_type),     target :: grazing(grazer_prey_cnt, zooplankton_cnt)
 
-  real(r8),            target :: iron_frac_in_dust            ! fraction by weight of iron in dust
-  real(r8),            target :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
-  character(char_len), target :: caco3_bury_thres_opt         ! option of threshold of caco3 burial ['fixed_depth', 'omega_calc']
-  real(r8),            target :: caco3_bury_thres_depth       ! threshold depth for caco3_bury_thres_opt='fixed_depth'
+  real(r8),                target :: iron_frac_in_dust            ! fraction by weight of iron in dust
+  real(r8),                target :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
+  character(len=char_len), target :: caco3_bury_thres_opt         ! option of threshold of caco3 burial ['fixed_depth', 'omega_calc']
+  real(r8),                target :: caco3_bury_thres_depth       ! threshold depth for caco3_bury_thres_opt='fixed_depth'
   ! -----------
   ! PON_sed_loss = PON_bury_coeff * Q * POC_sed_loss
   ! factor is used to avoid overburying PON like POC
   ! is when total C burial is matched to C riverine input
   ! -----------
-  real(r8),            target :: PON_bury_coeff
-  character(char_len), target :: ciso_fract_factors             ! option for which biological fractionation calculation to use
+  real(r8),                target :: PON_bury_coeff
+  character(len=char_len), target :: ciso_fract_factors           ! option for which biological fractionation calculation to use
 
   character(len=char_len), allocatable, target, dimension(:) :: tracer_restore_vars
 
@@ -462,19 +462,18 @@ contains
 
   subroutine marbl_parms_read_namelist(nl_buffer, marbl_status_log)
 
-    use marbl_namelist_mod, only : marbl_nl_cnt
-    use marbl_namelist_mod, only : marbl_nl_buffer_size
     use marbl_namelist_mod, only : marbl_namelist
 
-    character(marbl_nl_buffer_size), intent(in)    :: nl_buffer(:)
-    type(marbl_log_type),            intent(inout) :: marbl_status_log
+    character(len=*),     intent(in)    :: nl_buffer(:)
+    type(marbl_log_type), intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_parms:marbl_parms_read_namelist'
-    character(len=char_len) :: log_message
-    character(len=marbl_nl_buffer_size) :: tmp_nl_buffer
+    character(len=*), parameter :: subname = 'marbl_parms:marbl_parms_read_namelist'
+    character(len=char_len)     :: log_message
+
+    character(len=len(nl_buffer)) :: tmp_nl_buffer
 
     integer (int_kind)           :: n                           ! index for looping over tracers
     integer (int_kind)           :: nml_error                   ! namelist i/o error flag
@@ -545,8 +544,9 @@ contains
     class(marbl_config_and_parms_type), intent(inout) :: this
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_parms:marbl_define_parameters'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_parms:marbl_define_parameters'
+    character(len=char_len)     :: log_message
+
     character(len=char_len) :: sname, lname, units, datatype, group, category
     real(r8),                pointer :: rptr => NULL()
     integer(int_kind),       pointer :: iptr => NULL()

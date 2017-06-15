@@ -12,18 +12,6 @@ module marbl_namelist_mod
   implicit none
   private
 
-  ! FIXME #33: nl_buffer_size shouldn't be a hard coded constant
-  !            but runtime configurable?! Just not sure what the
-  !            best approach is at the moment....
-
-  ! NOTES: nl_in_size is the number of characters in the entire namelist file
-  !        nl_cnt is the number of distinct namelists in the file
-  !        nl_buffer_size is the number of characters in the largest _nml
-
-  integer, public, parameter :: marbl_nl_in_size     = 262144
-  integer, public, parameter :: marbl_nl_cnt = 256
-  integer, public, parameter :: marbl_nl_buffer_size = 32768
-
   ! Need to know what carriage return is on the system; use #define if we
   ! come across a machine that doesn't use achar(10)
 
@@ -51,13 +39,12 @@ contains
     ! FIXME #74: Strip comments out of str_in (without accidentally removing
     !            strings that happen to contain exclamation points)
 
-    character(len=marbl_nl_in_size), intent(in) :: str_in
+    character(len=*), intent(in) :: str_in
     ! array_out is intent(inout) because we initialized to '' previously
     ! (and also to save memory)
-    character(len=marbl_nl_buffer_size), dimension(marbl_nl_cnt), intent(inout) :: &
-             array_out
+    character(len=*), dimension(:), intent(inout) :: array_out
 
-    character(len=marbl_nl_buffer_size) :: str_tmp
+    character(len=len(str_in)) :: str_tmp
     integer :: old_pos, nl_cnt, i, j
 
     ! each namelist needs to be stored in different element of array_out
@@ -95,14 +82,15 @@ contains
     use marbl_logging,   only : marbl_log_type
     use marbl_kinds_mod, only : char_len
 
-    character(len=marbl_nl_buffer_size), intent(in) :: nl_buffer(:)
+    character(len=*), intent(in) :: nl_buffer(:)
     character(len=*), intent(in) :: nl_name
     type(marbl_log_type), intent(inout) :: marbl_status_log
-    character(len=marbl_nl_buffer_size) :: marbl_namelist
+    character(len=len(nl_buffer)) :: marbl_namelist
 
-    character(*), parameter :: subname = 'marbl_namelist_mod:marbl_namelist'
-    character(len=char_len) :: log_message
-    character(len=marbl_nl_buffer_size) :: single_namelist
+    character(len=*), parameter :: subname = 'marbl_namelist_mod:marbl_namelist'
+    character(len=char_len)     :: log_message
+
+    character(len=len(nl_buffer)) :: single_namelist
     integer :: j, n
 
     ! Will return empty string if namelist not found

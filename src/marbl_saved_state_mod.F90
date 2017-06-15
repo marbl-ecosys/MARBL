@@ -28,7 +28,8 @@ Contains
     integer,                      intent(in)    :: num_interior_forcing
     type(marbl_log_type),         intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_saved_state_mod:marbl_saved_state_init'
+    character(len=*), parameter :: subname = 'marbl_saved_state_mod:marbl_saved_state_init'
+
     character(len=char_len) :: lname, sname, units, vgrid
     integer :: rank
 

@@ -102,8 +102,8 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_init_tracer_metadata'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_init_tracer_metadata'
+    character(len=char_len)     :: log_message
 
     integer (int_kind) :: n                             ! tracer index
     integer (int_kind) :: auto_ind                      ! autotroph functional group index
@@ -250,7 +250,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_interior forcing'
+    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_interior forcing'
 
     logical (log_kind) :: zero_mask
 
@@ -922,10 +922,11 @@ contains
     type(marbl_tracer_index_type), intent(in)    :: tracer_indices
     type(marbl_log_type),          intent(inout) :: marbl_status_log
 
-    character(*), parameter :: subname = 'marbl_ciso_mod:' // &
+    character(len=*), parameter :: subname = 'marbl_ciso_mod:' // &
                   'marbl_ciso_tracer_index_consistency_check'
-    character(len=char_len) :: log_message
-    integer                 :: tracer_cnt
+    character(len=char_len)     :: log_message
+
+    integer :: tracer_cnt
 
     tracer_cnt = tracer_indices%ciso_ind_end - (tracer_indices%ciso_ind_beg-1)
     if (tracer_cnt.ne.ciso_tracer_cnt) then
@@ -948,23 +949,23 @@ contains
 
     implicit none
 
-    character(char_len) , intent(in)  :: ciso_fract_factors                  ! option for which biological fractionation calculation to use
-    real (r8)           , intent(out) :: cell_active_C_uptake(autotroph_cnt) ! ratio of active carbon uptake to carbon fixation
-    real (r8)           , intent(out) :: cell_active_C(autotroph_cnt)        ! ratio of active carbon uptake to carbon fixation
-    real (r8)           , intent(out) :: cell_surf(autotroph_cnt)            ! surface areas of cells ( m2 )
-    real (r8)           , intent(out) :: cell_carb_cont(autotroph_cnt)       ! cell carbon content ( mol C cell-1 )
-    real (r8)           , intent(out) :: cell_radius(autotroph_cnt)          ! cell radius ( um )
-    real (r8)           , intent(out) :: cell_permea(autotroph_cnt)          ! cell wall permeability to CO2(aq) (m/s)
-    real (r8)           , intent(out) :: cell_eps_fix(autotroph_cnt)         ! fractionation effect of carbon fixation
-    type(marbl_log_type), intent(inout) :: marbl_status_log
+    character(len=char_len), intent(in)  :: ciso_fract_factors                  ! option for which biological fractionation calculation to use
+    real (r8),               intent(out) :: cell_active_C_uptake(autotroph_cnt) ! ratio of active carbon uptake to carbon fixation
+    real (r8),               intent(out) :: cell_active_C(autotroph_cnt)        ! ratio of active carbon uptake to carbon fixation
+    real (r8),               intent(out) :: cell_surf(autotroph_cnt)            ! surface areas of cells ( m2 )
+    real (r8),               intent(out) :: cell_carb_cont(autotroph_cnt)       ! cell carbon content ( mol C cell-1 )
+    real (r8),               intent(out) :: cell_radius(autotroph_cnt)          ! cell radius ( um )
+    real (r8),               intent(out) :: cell_permea(autotroph_cnt)          ! cell wall permeability to CO2(aq) (m/s)
+    real (r8),               intent(out) :: cell_eps_fix(autotroph_cnt)         ! fractionation effect of carbon fixation
+    type(marbl_log_type),    intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_ciso_mod:setup_cell_attributes'
-    character(len=char_len) :: log_message
-    integer (int_kind) :: &
-         auto_ind           ! autotroph functional group index
+    character(len=*), parameter :: subname = 'marbl_ciso_mod:setup_cell_attributes'
+    character(len=char_len)     :: log_message
+
+    integer(int_kind) :: auto_ind           ! autotroph functional group index
     !-----------------------------------------------------------------------
 
     select case (ciso_fract_factors)
@@ -1405,8 +1406,8 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_ciso_mod:compute_particulate_terms'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_ciso_mod:compute_particulate_terms'
+    character(len=char_len)     :: log_message
 
     real (r8) ::              &
          dz_loc,              & ! dz at a particular i,j location
@@ -1752,8 +1753,8 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_surface_forcing'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_surface_forcing'
+    character(len=char_len)     :: log_message
 
     logical (log_kind), save :: &
          first = .true.  ! Logical for first iteration test

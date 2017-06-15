@@ -134,7 +134,8 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_co2calc_mod:marbl_co2calc_surf'
+    character(len=*), parameter :: subname = 'marbl_co2calc_mod:marbl_co2calc_surf'
+
     integer(kind=int_kind)  :: n
     integer(kind=int_kind)  :: k
     real(kind=r8)           :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
@@ -274,12 +275,13 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_co2calc_mod:marbl_comp_CO3terms'
+    character(len=*), parameter :: subname = 'marbl_co2calc_mod:marbl_comp_CO3terms'
+
     integer(kind=int_kind) :: c
-    real(kind=r8) :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
-    real(kind=r8) :: vol_to_mass          ! (mmol/m^3) -> (mol/kg)
-    real(kind=r8) :: htotal2, denom
-    real(kind=r8) :: htotal(num_elements) ! free concentration of H ion
+    real(kind=r8)          :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
+    real(kind=r8)          :: vol_to_mass          ! (mmol/m^3) -> (mol/kg)
+    real(kind=r8)          :: htotal2, denom
+    real(kind=r8)          :: htotal(num_elements) ! free concentration of H ion
     !---------------------------------------------------------------------------
 
     associate(                     &
@@ -718,11 +720,12 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_co2calc_mod:marbl_comp_htotal'
+    character(len=*), parameter :: subname = 'marbl_co2calc_mod:marbl_comp_htotal'
+
     integer(kind=int_kind) :: c
-    real(kind=r8) :: mass_to_vol                        ! (mol/kg) -> (mmol/m^3)
-    real(kind=r8) :: vol_to_mass                        ! (mmol/m^3) -> (mol/kg)
-    real(kind=r8) :: x1(num_elements), x2(num_elements) ! bounds on htotal for solver
+    real(kind=r8)          :: mass_to_vol                        ! (mol/kg) -> (mmol/m^3)
+    real(kind=r8)          :: vol_to_mass                        ! (mmol/m^3) -> (mol/kg)
+    real(kind=r8)          :: x1(num_elements), x2(num_elements) ! bounds on htotal for solver
     !---------------------------------------------------------------------------
 
     associate(                      &
@@ -826,8 +829,9 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    character(*), parameter :: subname = 'marbl_co2calc_mod:drtsafe'
-    character(len=char_len) :: log_message
+    character(len=*), parameter :: subname = 'marbl_co2calc_mod:drtsafe'
+    character(len=char_len)     :: log_message
+
     logical(kind=log_kind)                          :: leave_bracket, dx_decrease
     logical(kind=log_kind)                          :: abort
     logical(kind=log_kind), dimension(num_elements) :: mask
