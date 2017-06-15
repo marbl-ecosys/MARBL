@@ -2257,8 +2257,8 @@ contains
     use marbl_schmidt_number_mod , only : schmidt_co2_surf
     use marbl_oxygen             , only : schmidt_o2_surf
     use marbl_co2calc_mod        , only : marbl_co2calc_surf
-    use marbl_co2calc_mod        , only : thermodynamic_coefficients_type
-    use marbl_co2calc_mod        , only : thermodynamic_species_concentration_type
+    use marbl_co2calc_mod        , only : co2calc_coeffs_type
+    use marbl_co2calc_mod        , only : co2calc_state_type
     use marbl_oxygen             , only : o2sat_surf
     use marbl_constants_mod      , only : molw_Fe
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
@@ -2299,8 +2299,8 @@ contains
     real (r8)               :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (mmol/m^3)
     real (r8)               :: totalChl_loc(num_elements)  ! local value of totalChl
     real (r8)               :: flux_o2_loc(num_elements)   ! local value of o2 flux
-    type(thermodynamic_coefficients_type), dimension(num_elements) :: co3_coeffs
-    type(thermodynamic_species_concentration_type), dimension(num_elements) :: species_concentration
+    type(co2calc_coeffs_type), dimension(num_elements) :: co3_coeffs
+    type(co2calc_state_type),  dimension(num_elements) :: species_concentration
     !-----------------------------------------------------------------------
 
     associate(                                                                                      &
@@ -3296,8 +3296,8 @@ contains
 
     use marbl_co2calc_mod, only : marbl_comp_co3terms
     use marbl_co2calc_mod, only : marbl_comp_co3_sat_vals
-    use marbl_co2calc_mod, only : thermodynamic_coefficients_type
-    use marbl_co2calc_mod        , only : thermodynamic_species_concentration_type
+    use marbl_co2calc_mod, only : co2calc_coeffs_type
+    use marbl_co2calc_mod, only : co2calc_state_type
 
     type(marbl_domain_type)                 , intent(in)    :: domain
     real (r8)                               , intent(in)    :: temperature(:)
@@ -3317,17 +3317,17 @@ contains
     !-----------------------------------------------------------------------
     character(*), parameter :: subname = 'marbl_mod:marbl_compute_carbonate_chemistry'
     integer :: k
-    type(thermodynamic_coefficients_type), dimension(domain%km) :: co3_coeffs
-    type(thermodynamic_species_concentration_type), dimension(domain%km) :: species_concentration
-    logical(log_kind) , dimension(domain%km) :: pressure_correct
-    real(r8)          , dimension(domain%km) :: ph_lower_bound
-    real(r8)          , dimension(domain%km) :: ph_upper_bound
-    real(r8)          , dimension(domain%km) :: dic_loc
-    real(r8)          , dimension(domain%km) :: dic_alt_co2_loc
-    real(r8)          , dimension(domain%km) :: alk_loc
-    real(r8)          , dimension(domain%km) :: alk_alt_co2_loc
-    real(r8)          , dimension(domain%km) :: po4_loc
-    real(r8)          , dimension(domain%km) :: sio3_loc
+    type(co2calc_coeffs_type), dimension(domain%km) :: co3_coeffs
+    type(co2calc_state_type) , dimension(domain%km) :: species_concentration
+    logical(log_kind)        , dimension(domain%km) :: pressure_correct
+    real(r8)                 , dimension(domain%km) :: ph_lower_bound
+    real(r8)                 , dimension(domain%km) :: ph_upper_bound
+    real(r8)                 , dimension(domain%km) :: dic_loc
+    real(r8)                 , dimension(domain%km) :: dic_alt_co2_loc
+    real(r8)                 , dimension(domain%km) :: alk_loc
+    real(r8)                 , dimension(domain%km) :: alk_alt_co2_loc
+    real(r8)                 , dimension(domain%km) :: po4_loc
+    real(r8)                 , dimension(domain%km) :: sio3_loc
     !-----------------------------------------------------------------------
 
     ! make local copies instead of using associate construct because of gnu fortran bug
