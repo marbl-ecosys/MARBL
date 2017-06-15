@@ -2267,9 +2267,7 @@ contains
 
         if (autotrophs_config(n)%silicifier) then
           lname = trim(autotrophs_config(n)%lname) // ' Si Uptake'
-          sname = trim(autotrophs_config(n)%sname) // 'bSi_form'
-          ! FIXME #22 - eventually add _
-          !sname = trim(autotrophs_config(n)%sname) // '_bSi_form'
+          sname = trim(autotrophs_config(n)%sname) // '_bSi_form'
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .true.
