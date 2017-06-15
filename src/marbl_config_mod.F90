@@ -699,6 +699,8 @@ contains
       new_vars(n)%group         = this%vars(n)%group
       new_vars(n)%category_ind  = this%vars(n)%category_ind
       new_vars(n)%comment       = this%vars(n)%comment
+      ! All pointer components of new_vars are nullified in the type definition
+      ! via => NULL() statements
       if (associated(this%vars(n)%lptr)) &
         new_vars(n)%lptr => this%vars(n)%lptr
       if (associated(this%vars(n)%iptr)) &
@@ -709,7 +711,9 @@ contains
         new_vars(n)%sptr => this%vars(n)%sptr
     end do
 
-    ! 3) add newest parm variable
+    ! 4) add newest parm variable
+    !    All pointer components of new_vars are nullified in the type definition
+    !    via => NULL() statements
     select case (trim(datatype))
       case ('real')
         if (present(rptr)) then
@@ -764,7 +768,7 @@ contains
       new_vars(id)%comment = ''
     end if
 
-    ! 4) deallocate this%vars / point to new_vars (and update cnt)
+    ! 5) deallocate this%vars / point to new_vars (and update cnt)
     deallocate(this%vars)
     this%vars => new_vars
     this%cnt = id
