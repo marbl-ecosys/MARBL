@@ -2302,8 +2302,8 @@ contains
     real (r8)          :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (mmol/m^3)
     real (r8)          :: totalChl_loc(num_elements)  ! local value of totalChl
     real (r8)          :: flux_o2_loc(num_elements)   ! local value of o2 flux
-    type(co2calc_coeffs_type), dimension(num_elements) :: co3_coeffs
-    type(co2calc_state_type),  dimension(num_elements) :: species_concentration
+    type(co2calc_coeffs_type), dimension(num_elements) :: co2calc_coeffs
+    type(co2calc_state_type),  dimension(num_elements) :: co2calc_state
     !-----------------------------------------------------------------------
 
     associate(                                                                                      &
@@ -2447,7 +2447,7 @@ contains
           ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
           call marbl_co2calc_surf(                                         &
                num_elements     = num_elements,                            &
-               lcomp_co3_coeffs = .true.,                                  &
+               lcomp_co2calc_coeffs = .true.,                              &
                dic_in     = surface_vals(:,dic_ind),                       &
                xco2_in    = surface_input_forcings(ind%xco2_id)%field_0d,  &
                ta_in      = surface_vals(:,alk_ind),                       &
@@ -2456,8 +2456,8 @@ contains
                temp       = surface_input_forcings(ind%sst_id)%field_0d,   &
                salt       = surface_input_forcings(ind%sss_id)%field_0d,   &
                atmpres    = surface_input_forcings(ind%atm_pressure_id)%field_0d, &
-               co3_coeffs = co3_coeffs,                                    &
-               species_concentration = species_concentration,              &
+               co2calc_coeffs = co2calc_coeffs,                            &
+               co2calc_state = co2calc_state,                              &
                co3        = co3,                                           &
                co2star    = co2star,                                       &
                dco2star   = dco2star,                                      &
@@ -2507,7 +2507,7 @@ contains
           ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
           call marbl_co2calc_surf(                                         &
                num_elements     = num_elements,                            &
-               lcomp_co3_coeffs = .false.,                                 &
+               lcomp_co2calc_coeffs = .false.,                             &
                dic_in     = surface_vals(:,dic_alt_co2_ind),               &
                xco2_in    = surface_input_forcings(ind%xco2_alt_co2_id)%field_0d, &
                ta_in      = surface_vals(:,alk_alt_co2_ind),               &
@@ -2516,8 +2516,8 @@ contains
                temp       = surface_input_forcings(ind%sst_id)%field_0d,   &
                salt       = surface_input_forcings(ind%sss_id)%field_0d,   &
                atmpres    = surface_input_forcings(ind%atm_pressure_id)%field_0d, &
-               co3_coeffs = co3_coeffs,                                    &
-               species_concentration = species_concentration,              &
+               co2calc_coeffs = co2calc_coeffs,                            &
+               co2calc_state = co2calc_state,                              &
                co3        = co3,                                           &
                co2star    = co2star_alt,                                   &
                dco2star   = dco2star_alt,                                  &
@@ -3322,8 +3322,8 @@ contains
     character(len=*), parameter :: subname = 'marbl_mod:marbl_compute_carbonate_chemistry'
 
     integer :: k
-    type(co2calc_coeffs_type), dimension(domain%km) :: co3_coeffs
-    type(co2calc_state_type) , dimension(domain%km) :: species_concentration
+    type(co2calc_coeffs_type), dimension(domain%km) :: co2calc_coeffs
+    type(co2calc_state_type) , dimension(domain%km) :: co2calc_state
     logical(log_kind)        , dimension(domain%km) :: pressure_correct
     real(r8)                 , dimension(domain%km) :: ph_lower_bound
     real(r8)                 , dimension(domain%km) :: ph_upper_bound
@@ -3375,8 +3375,8 @@ contains
     enddo
 
     call marbl_comp_CO3terms(&
-         dkm, column_kmt, pressure_correct, .true., co3_coeffs, species_concentration, &
-         temperature, salinity, press_bar, dic_loc, alk_loc, po4_loc, sio3_loc,        &
+         dkm, column_kmt, pressure_correct, .true., co2calc_coeffs, co2calc_state, &
+         temperature, salinity, press_bar, dic_loc, alk_loc, po4_loc, sio3_loc,    &
          ph_lower_bound, ph_upper_bound, ph, h2co3, hco3, co3, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
@@ -3400,7 +3400,7 @@ contains
     enddo
 
     call marbl_comp_CO3terms(&
-         dkm, column_kmt, pressure_correct, .false., co3_coeffs, species_concentration, &
+         dkm, column_kmt, pressure_correct, .false., co2calc_coeffs, co2calc_state,     &
          temperature, salinity, press_bar, dic_alt_co2_loc, alk_alt_co2_loc, po4_loc,   &
          sio3_loc, ph_lower_bound, ph_upper_bound, ph_alt_co2, h2co3_alt_co2,           &
          hco3_alt_co2, co3_alt_co2, marbl_status_log)
