@@ -59,7 +59,7 @@ module marbl_constants_mod
       rho_sw    =   1.026_r8,          & ! density of salt water (g/cm^3)
       epsC      =   1.00e-8,           & ! small C concentration (mmol C/m^3)
       epsTinv   =   3.17e-8,           & ! small inverse time scale (1/year) (1/sec)
-      molw_Fe   =  55.845_r8,          & ! molecular weight of iron
+      molw_Fe   =  55.845_r8,          & ! molecular weight of iron (gFe / mol Fe)
       R13C_std  =   1.0_r8,            & ! actual 13C/12C PDB standard ratio (Craig, 1957) = 1123.72e-5_r8
       R14C_std =    1.0_r8               ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
 
