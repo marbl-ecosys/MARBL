@@ -1410,10 +1410,7 @@ contains
     character(len=char_len) :: sname_in, sname_out
     integer :: m, n
 
-    call marbl_status_log%log_noerror('---------------------', subname)
-    call marbl_status_log%log_noerror('Setting derived parms', subname)
-    call marbl_status_log%log_noerror('---------------------', subname)
-    call marbl_status_log%log_noerror('', subname)
+    call marbl_status_log%log_header('Setting derived parms', subname)
 
     select case (caco3_bury_thres_opt)
     case ('fixed_depth')
@@ -1479,8 +1476,6 @@ contains
                grazing(m,n)%z_umax_0, subname, marbl_status_log)
        end do
     end do
-
-    call marbl_status_log%log_noerror('', subname)
 
   end subroutine set_derived_parms
 
