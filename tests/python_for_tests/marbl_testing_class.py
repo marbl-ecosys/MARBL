@@ -44,7 +44,7 @@ class MARBL_testcase(object):
       parser.add_argument('--clean', action='store_true',
              help='remove object, module, and library files for MARBL driver')
 
-    parser.add_argument('-m', '--mach', action='store', dest='mach',
+    parser.add_argument('-m', '--mach', '--machine', action='store', dest='mach',
            help='machine to build on', choices=machs.supported_machines)
 
     parser.add_argument('--mpitasks', action='store', dest='mpitasks',
@@ -121,7 +121,7 @@ class MARBL_testcase(object):
 
     src_dir = '%s/src' % self._marbl_dir
 
-    if self._machine != 'local-gnu':
+    if self._machine not in ['local-gnu','local-pgi']:
       machs.load_module(self._machine, loc_compiler)
 
     makecmd = 'make %s' % loc_compiler
@@ -139,7 +139,7 @@ class MARBL_testcase(object):
 
     drv_dir = '%s/tests/driver_src' % self._marbl_dir
 
-    if self._machine != 'local-gnu':
+    if self._machine not in ['local-gnu','local-pgi']:
       machs.load_module(self._machine, loc_compiler)
 
     makecmd = 'make %s' % loc_compiler
