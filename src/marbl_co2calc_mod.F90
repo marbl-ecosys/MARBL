@@ -23,6 +23,7 @@ module marbl_co2calc_mod
   public  :: marbl_comp_co3_sat_vals
 
   private :: comp_htotal
+  private :: comp_co2calc_coeffs
   private :: drtsafe
   private :: total_alkalinity
   private :: apply_pressure_correction
@@ -46,10 +47,9 @@ module marbl_co2calc_mod
 
   !-----------------------------------------------------------------------------
   !   declarations for function coefficients & species concentrations
-  !   FIXME #19: move dic, ta, pt, sit into their own derived type
   !-----------------------------------------------------------------------------
 
-  type, public :: thermodynamic_coefficients_type
+  type, public :: co2calc_coeffs_type
      real(kind=r8) :: k0  ! equilibrium constants for CO2 species
      real(kind=r8) :: k1  ! equilibrium constants for CO2 species
      real(kind=r8) :: k2  ! equilibrium constants for CO2 species
@@ -65,11 +65,14 @@ module marbl_co2calc_mod
      real(kind=r8) :: bt
      real(kind=r8) :: st
      real(kind=r8) :: ft
+  end type co2calc_coeffs_type
+
+  type, public :: co2calc_state_type
      real(kind=r8) :: dic ! total dissolved inorganic carbon
      real(kind=r8) :: ta  ! total alkalinity
      real(kind=r8) :: pt  ! total phosphorous
      real(kind=r8) :: sit ! total silicon
-  end type thermodynamic_coefficients_type
+  end type co2calc_state_type
 
   !*****************************************************************************
 
@@ -79,7 +82,7 @@ contains
 
   subroutine marbl_co2calc_surf( &
        num_elements,             &
-       lcomp_co3_coeffs,         &
+       lcomp_co2calc_coeffs,     &
        dic_in,                   &
        xco2_in,                  &
        ta_in,                    &
@@ -88,7 +91,8 @@ contains
        temp,                     &
        salt,                     &
        atmpres,                  &
-       co3_coeffs,               &
+       co2calc_coeffs,           &
+       co2calc_state,            &
        co3,                      &
        co2star,                  &
        dco2star,                 &
@@ -106,26 +110,27 @@ contains
 
     implicit none
 
-    integer(kind=int_kind)                , intent(in)    :: num_elements
-    logical(kind=log_kind)                , intent(in)    :: lcomp_co3_coeffs
-    real(kind=r8)                         , intent(in)    :: dic_in(num_elements)   ! total inorganic carbon (nmol/cm^3)
-    real(kind=r8)                         , intent(in)    :: xco2_in(num_elements)  ! atmospheric mole fraction CO2 in dry air (ppmv)
-    real(kind=r8)                         , intent(in)    :: ta_in(num_elements)    ! total alkalinity (neq/cm^3)
-    real(kind=r8)                         , intent(in)    :: pt_in(num_elements)    ! inorganic phosphate (nmol/cm^3)
-    real(kind=r8)                         , intent(in)    :: sit_in(num_elements)   ! inorganic silicate (nmol/cm^3)
-    real(kind=r8)                         , intent(in)    :: temp(num_elements)     ! temperature (degrees C)
-    real(kind=r8)                         , intent(in)    :: salt(num_elements)     ! salinity (PSU)
-    real(kind=r8)                         , intent(in)    :: atmpres(num_elements)  ! atmospheric pressure (atmosphere)
-    real(kind=r8)                         , intent(inout) :: phlo(num_elements)     ! lower limit of ph range
-    real(kind=r8)                         , intent(inout) :: phhi(num_elements)     ! upper limit of ph range
-    real(kind=r8)                         , intent(out)   :: ph(num_elements)       ! computed ph values, for initial guess on next time step
-    real(kind=r8)                         , intent(out)   :: co3(num_elements)      ! Carbonate Ion Concentration
-    type(thermodynamic_coefficients_type) , intent(inout) :: co3_coeffs(num_elements)
-    real(kind=r8)                         , intent(out)   :: co2star(num_elements)  ! CO2*water (nmol/cm^3)
-    real(kind=r8)                         , intent(out)   :: dco2star(num_elements) ! delta CO2 (nmol/cm^3)
-    real(kind=r8)                         , intent(out)   :: pco2surf(num_elements) ! oceanic pCO2 (ppmv)
-    real(kind=r8)                         , intent(out)   :: dpco2(num_elements)    ! Delta pCO2, i.e, pCO2ocn - pCO2atm (ppmv)
-    type(marbl_log_type), optional        , intent(inout) :: marbl_status_log
+    integer(kind=int_kind)        , intent(in)    :: num_elements
+    logical(kind=log_kind)        , intent(in)    :: lcomp_co2calc_coeffs
+    real(kind=r8)                 , intent(in)    :: dic_in(num_elements)   ! total inorganic carbon (nmol/cm^3)
+    real(kind=r8)                 , intent(in)    :: xco2_in(num_elements)  ! atmospheric mole fraction CO2 in dry air (ppmv)
+    real(kind=r8)                 , intent(in)    :: ta_in(num_elements)    ! total alkalinity (neq/cm^3)
+    real(kind=r8)                 , intent(in)    :: pt_in(num_elements)    ! inorganic phosphate (nmol/cm^3)
+    real(kind=r8)                 , intent(in)    :: sit_in(num_elements)   ! inorganic silicate (nmol/cm^3)
+    real(kind=r8)                 , intent(in)    :: temp(num_elements)     ! temperature (degrees C)
+    real(kind=r8)                 , intent(in)    :: salt(num_elements)     ! salinity (PSU)
+    real(kind=r8)                 , intent(in)    :: atmpres(num_elements)  ! atmospheric pressure (atmosphere)
+    real(kind=r8)                 , intent(inout) :: phlo(num_elements)     ! lower limit of ph range
+    real(kind=r8)                 , intent(inout) :: phhi(num_elements)     ! upper limit of ph range
+    real(kind=r8)                 , intent(out)   :: ph(num_elements)       ! computed ph values, for initial guess on next time step
+    real(kind=r8)                 , intent(out)   :: co3(num_elements)      ! Carbonate Ion Concentration
+    type(co2calc_coeffs_type)     , intent(inout) :: co2calc_coeffs(num_elements)
+    type(co2calc_state_type)      , intent(inout) :: co2calc_state(num_elements)
+    real(kind=r8)                 , intent(out)   :: co2star(num_elements)  ! CO2*water (nmol/cm^3)
+    real(kind=r8)                 , intent(out)   :: dco2star(num_elements) ! delta CO2 (nmol/cm^3)
+    real(kind=r8)                 , intent(out)   :: pco2surf(num_elements) ! oceanic pCO2 (ppmv)
+    real(kind=r8)                 , intent(out)   :: dpco2(num_elements)    ! Delta pCO2, i.e, pCO2ocn - pCO2atm (ppmv)
+    type(marbl_log_type), optional, intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -144,11 +149,11 @@ contains
     logical(kind=log_kind)  :: pressure_correct(num_elements)
     !---------------------------------------------------------------------------
 
-    associate(                     &
-         k1  => co3_coeffs(:)%k1,  &
-         k2  => co3_coeffs(:)%k2,  &
-         ff  => co3_coeffs(:)%ff,  &
-         dic => co3_coeffs(:)%dic  &
+    associate(                        &
+         k1  => co2calc_coeffs(:)%k1, &
+         k2  => co2calc_coeffs(:)%k2, &
+         ff  => co2calc_coeffs(:)%ff, &
+         dic => co2calc_state(:)%dic  &
          )
 
     !---------------------------------------------------------------------------
@@ -167,18 +172,18 @@ contains
     !   compute thermodynamic CO3 coefficients
     !---------------------------------------------------------------------------
 
-    if (lcomp_co3_coeffs) then
-       call marbl_comp_co3_coeffs(num_elements, pressure_correct, &
-            temp, salt, press_bar, co3_coeffs)
+    if (lcomp_co2calc_coeffs) then
+       call comp_co2calc_coeffs(num_elements, pressure_correct, temp, salt,   &
+                 press_bar, co2calc_coeffs, co2calc_state)
     end if
 
     !---------------------------------------------------------------------------
     !   compute htotal
     !---------------------------------------------------------------------------
 
-    call comp_htotal(num_elements, num_elements, temp, dic_in, &
-                     ta_in, pt_in, sit_in, co3_coeffs, &
-                     phlo, phhi, htotal, marbl_status_log)
+    call comp_htotal(num_elements, num_elements, temp, dic_in, ta_in, pt_in,    &
+                     sit_in, co2calc_coeffs, co2calc_state, phlo, phhi, htotal, &
+                     marbl_status_log)
 
     if (present (marbl_status_log)) then
        if (marbl_status_log%labort_marbl) then
@@ -237,9 +242,9 @@ contains
   !***********************************************************************
 
   subroutine marbl_comp_CO3terms(&
-       num_elements, num_active_elements, pressure_correct, lcomp_co3_coeffs, co3_coeffs,  &
-       temp, salt, press_bar, dic_in, ta_in, pt_in, sit_in, phlo, phhi, ph, &
-       H2CO3, HCO3, CO3, marbl_status_log)
+       num_elements, num_active_elements, pressure_correct, lcomp_co2calc_coeffs,   &
+       co2calc_coeffs,  co2calc_state, temp, salt, press_bar, dic_in, ta_in, pt_in, &
+       sit_in, phlo, phhi, ph, H2CO3, HCO3, CO3, marbl_status_log)
 
     !---------------------------------------------------------------------------
     ! Calculate H2CO3, HCO3, CO3 from total alkalinity, total CO2, temp, salinity (s), etc.
@@ -247,25 +252,26 @@ contains
 
     implicit none
 
-    integer(kind=int_kind)                , intent(in)    :: num_elements
-    integer(kind=int_kind)                , intent(in)    :: num_active_elements
-    logical(kind=log_kind)                , intent(in)    :: pressure_correct(num_elements)
-    logical(kind=log_kind)                , intent(in)    :: lcomp_co3_coeffs
-    real(kind=r8)                         , intent(in)    :: temp(num_elements)      ! temperature (degrees C)
-    real(kind=r8)                         , intent(in)    :: salt(num_elements)      ! salinity (PSU)
-    real(kind=r8)                         , intent(in)    :: press_bar(num_elements) ! pressure at level (bars)
-    real(kind=r8)                         , intent(in)    :: dic_in(num_elements)    ! total inorganic carbon (nmol/cm^3)
-    real(kind=r8)                         , intent(in)    :: ta_in(num_elements)     ! total alkalinity (neq/cm^3)
-    real(kind=r8)                         , intent(in)    :: pt_in(num_elements)     ! inorganic phosphate (nmol/cm^3)
-    real(kind=r8)                         , intent(in)    :: sit_in(num_elements)    ! inorganic silicate (nmol/cm^3)
-    type(thermodynamic_coefficients_type) , intent(inout) :: co3_coeffs(num_elements)
-    real(kind=r8)                         , intent(inout) :: phlo(num_elements)      ! lower limit of pH range
-    real(kind=r8)                         , intent(inout) :: phhi(num_elements)      ! upper limit of pH range
-    real(kind=r8)                         , intent(out)   :: pH(num_elements)        ! computed ph values, for initial guess on next time step
-    real(kind=r8)                         , intent(out)   :: H2CO3(num_elements)     ! Carbonic Acid Concentration
-    real(kind=r8)                         , intent(out)   :: HCO3(num_elements)      ! Bicarbonate Ion Concentration
-    real(kind=r8)                         , intent(out)   :: CO3(num_elements)       ! Carbonate Ion Concentration
-    type(marbl_log_type)                  , intent(inout) :: marbl_status_log
+    integer(kind=int_kind)    , intent(in)    :: num_elements
+    integer(kind=int_kind)    , intent(in)    :: num_active_elements
+    logical(kind=log_kind)    , intent(in)    :: pressure_correct(num_elements)
+    logical(kind=log_kind)    , intent(in)    :: lcomp_co2calc_coeffs
+    real(kind=r8)             , intent(in)    :: temp(num_elements)      ! temperature (degrees C)
+    real(kind=r8)             , intent(in)    :: salt(num_elements)      ! salinity (PSU)
+    real(kind=r8)             , intent(in)    :: press_bar(num_elements) ! pressure at level (bars)
+    real(kind=r8)             , intent(in)    :: dic_in(num_elements)    ! total inorganic carbon (nmol/cm^3)
+    real(kind=r8)             , intent(in)    :: ta_in(num_elements)     ! total alkalinity (neq/cm^3)
+    real(kind=r8)             , intent(in)    :: pt_in(num_elements)     ! inorganic phosphate (nmol/cm^3)
+    real(kind=r8)             , intent(in)    :: sit_in(num_elements)    ! inorganic silicate (nmol/cm^3)
+    type(co2calc_coeffs_type) , intent(inout) :: co2calc_coeffs(num_elements)
+    type(co2calc_state_type)  , intent(inout) :: co2calc_state(num_elements)
+    real(kind=r8)             , intent(inout) :: phlo(num_elements)      ! lower limit of pH range
+    real(kind=r8)             , intent(inout) :: phhi(num_elements)      ! upper limit of pH range
+    real(kind=r8)             , intent(out)   :: pH(num_elements)        ! computed ph values, for initial guess on next time step
+    real(kind=r8)             , intent(out)   :: H2CO3(num_elements)     ! Carbonic Acid Concentration
+    real(kind=r8)             , intent(out)   :: HCO3(num_elements)      ! Bicarbonate Ion Concentration
+    real(kind=r8)             , intent(out)   :: CO3(num_elements)       ! Carbonate Ion Concentration
+    type(marbl_log_type)      , intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -279,25 +285,25 @@ contains
     real(kind=r8)          :: htotal(num_elements) ! free concentration of H ion
     !---------------------------------------------------------------------------
 
-    associate(                     &
-         k0  => co3_coeffs(:)%k0,  &
-         k1  => co3_coeffs(:)%k1,  &
-         k2  => co3_coeffs(:)%k2,  &
-         ff  => co3_coeffs(:)%ff,  &
-         kw  => co3_coeffs(:)%kw,  &
-         kb  => co3_coeffs(:)%kb,  &
-         ks  => co3_coeffs(:)%ks,  &
-         kf  => co3_coeffs(:)%kf,  &
-         k1p => co3_coeffs(:)%k1p, &
-         k2p => co3_coeffs(:)%k2p, &
-         ksi => co3_coeffs(:)%ksi, &
-         bt  => co3_coeffs(:)%bt,  &
-         st  => co3_coeffs(:)%st,  &
-         ft  => co3_coeffs(:)%ft,  &
-         dic => co3_coeffs(:)%dic, &
-         ta  => co3_coeffs(:)%ta,  &
-         pt  => co3_coeffs(:)%pt,  &
-         sit => co3_coeffs(:)%sit  &
+    associate(                         &
+         k0  => co2calc_coeffs(:)%k0,  &
+         k1  => co2calc_coeffs(:)%k1,  &
+         k2  => co2calc_coeffs(:)%k2,  &
+         ff  => co2calc_coeffs(:)%ff,  &
+         kw  => co2calc_coeffs(:)%kw,  &
+         kb  => co2calc_coeffs(:)%kb,  &
+         ks  => co2calc_coeffs(:)%ks,  &
+         kf  => co2calc_coeffs(:)%kf,  &
+         k1p => co2calc_coeffs(:)%k1p, &
+         k2p => co2calc_coeffs(:)%k2p, &
+         ksi => co2calc_coeffs(:)%ksi, &
+         bt  => co2calc_coeffs(:)%bt,  &
+         st  => co2calc_coeffs(:)%st,  &
+         ft  => co2calc_coeffs(:)%ft,  &
+         dic => co2calc_state(:)%dic,  &
+         ta  => co2calc_state(:)%ta,   &
+         pt  => co2calc_state(:)%pt,   &
+         sit => co2calc_state(:)%sit   &
          )
 
     !---------------------------------------------------------------------------
@@ -311,18 +317,18 @@ contains
     !   compute thermodynamic CO3 coefficients
     !------------------------------------------------------------------------
 
-    if (lcomp_co3_coeffs) then
-       call marbl_comp_co3_coeffs(num_elements, pressure_correct, &
-            temp, salt, press_bar, co3_coeffs)
+    if (lcomp_co2calc_coeffs) then
+       call comp_co2calc_coeffs(num_elements, pressure_correct, temp, salt,   &
+                 press_bar, co2calc_coeffs, co2calc_state)
     end if
 
     !------------------------------------------------------------------------
     !   compute htotal
     !------------------------------------------------------------------------
 
-    call comp_htotal(num_elements, num_active_elements, temp, dic_in, &
-         ta_in, pt_in, sit_in, co3_coeffs, &
-         phlo, phhi, htotal, marbl_status_log)
+    call comp_htotal(num_elements, num_active_elements, temp, dic_in, ta_in,    &
+              pt_in, sit_in, co2calc_coeffs, co2calc_state, phlo, phhi, htotal, &
+              marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace("comp_htotal()", subname)
@@ -362,9 +368,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_comp_co3_coeffs(&
-       num_elements, pressure_correct, &
-       temp, salt, press_bar, co3_coeffs)
+  subroutine comp_co2calc_coeffs(num_elements, pressure_correct, temp, salt,  &
+                  press_bar, co2calc_coeffs, co2calc_state)
 
     !---------------------------------------------------------------------------
     ! FIXME #20: the computations for the individual constants need to
@@ -373,12 +378,13 @@ contains
 
     implicit none
 
-    integer(kind=int_kind)                , intent(in)  :: num_elements
-    logical(kind=log_kind)                , intent(in)  :: pressure_correct(num_elements)
-    real(kind=r8)                         , intent(in)  :: temp(num_elements)      ! temperature (degrees c)
-    real(kind=r8)                         , intent(in)  :: salt(num_elements)      ! salinity (psu)
-    real(kind=r8)                         , intent(in)  :: press_bar(num_elements) ! pressure at level (bars)
-    type(thermodynamic_coefficients_type) , intent(out) :: co3_coeffs(num_elements)
+    integer(kind=int_kind)    , intent(in)  :: num_elements
+    logical(kind=log_kind)    , intent(in)  :: pressure_correct(num_elements)
+    real(kind=r8)             , intent(in)  :: temp(num_elements)      ! temperature (degrees c)
+    real(kind=r8)             , intent(in)  :: salt(num_elements)      ! salinity (psu)
+    real(kind=r8)             , intent(in)  :: press_bar(num_elements) ! pressure at level (bars)
+    type(co2calc_coeffs_type) , intent(out) :: co2calc_coeffs(num_elements)
+    type(co2calc_state_type)  , intent(out) :: co2calc_state(num_elements)
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -408,26 +414,26 @@ contains
     real(kind=r8), dimension(num_elements) :: log_1_p_tot_sulfate_div_ks
     !---------------------------------------------------------------------------
 
-    associate(                     &
-         k0  => co3_coeffs(:)%k0,  &
-         k1  => co3_coeffs(:)%k1,  &
-         k2  => co3_coeffs(:)%k2,  &
-         ff  => co3_coeffs(:)%ff,  &
-         kw  => co3_coeffs(:)%kw,  &
-         kb  => co3_coeffs(:)%kb,  &
-         ks  => co3_coeffs(:)%ks,  &
-         kf  => co3_coeffs(:)%kf,  &
-         k1p => co3_coeffs(:)%k1p, &
-         k2p => co3_coeffs(:)%k2p, &
-         k3p => co3_coeffs(:)%k3p, &
-         ksi => co3_coeffs(:)%ksi, &
-         bt  => co3_coeffs(:)%bt,  &
-         st  => co3_coeffs(:)%st,  &
-         ft  => co3_coeffs(:)%ft,  &
-         dic => co3_coeffs(:)%dic, &
-         ta  => co3_coeffs(:)%ta,  &
-         pt  => co3_coeffs(:)%pt,  &
-         sit => co3_coeffs(:)%sit  &
+    associate(                         &
+         k0  => co2calc_coeffs(:)%k0,  &
+         k1  => co2calc_coeffs(:)%k1,  &
+         k2  => co2calc_coeffs(:)%k2,  &
+         ff  => co2calc_coeffs(:)%ff,  &
+         kw  => co2calc_coeffs(:)%kw,  &
+         kb  => co2calc_coeffs(:)%kb,  &
+         ks  => co2calc_coeffs(:)%ks,  &
+         kf  => co2calc_coeffs(:)%kf,  &
+         k1p => co2calc_coeffs(:)%k1p, &
+         k2p => co2calc_coeffs(:)%k2p, &
+         k3p => co2calc_coeffs(:)%k3p, &
+         ksi => co2calc_coeffs(:)%ksi, &
+         bt  => co2calc_coeffs(:)%bt,  &
+         st  => co2calc_coeffs(:)%st,  &
+         ft  => co2calc_coeffs(:)%ft,  &
+         dic => co2calc_state(:)%dic,  &
+         ta  => co2calc_state(:)%ta,   &
+         pt  => co2calc_state(:)%pt,   &
+         sit => co2calc_state(:)%sit   &
          )
 
     !---------------------------------------------------------------------------
@@ -686,30 +692,32 @@ contains
 
     end associate
 
-  end subroutine marbl_comp_co3_coeffs
+  end subroutine comp_co2calc_coeffs
 
   !*****************************************************************************
 
-  subroutine comp_htotal(num_elements, num_active_elements, temp, dic_in, ta_in, pt_in, sit_in, &
-                         co3_coeffs, phlo, phhi, htotal, marbl_status_log)
+  subroutine comp_htotal(num_elements, num_active_elements, temp, dic_in, ta_in,    &
+                  pt_in, sit_in, co2calc_coeffs, co2calc_state, phlo, phhi, htotal, &
+                  marbl_status_log)
 
     !---------------------------------------------------------------------------
-    ! Calculate htotal (free concentration of H ion) from 
+    ! Calculate htotal (free concentration of H ion) from
     ! total alkalinity, total CO2, temp, salinity (s), etc.
     !---------------------------------------------------------------------------
 
-    integer(kind=int_kind)                , intent(in)    :: num_elements
-    integer(kind=int_kind)                , intent(in)    :: num_active_elements
-    real(kind=r8)                         , intent(in)    :: temp(num_elements)   ! temperature (degrees C)
-    real(kind=r8)                         , intent(in)    :: dic_in(num_elements) ! total inorganic carbon (nmol/cm^3)
-    real(kind=r8)                         , intent(in)    :: ta_in(num_elements)  ! total alkalinity (neq/cm^3)
-    real(kind=r8)                         , intent(in)    :: pt_in(num_elements)  ! inorganic phosphate (nmol/cm^3)
-    real(kind=r8)                         , intent(in)    :: sit_in(num_elements) ! inorganic silicate (nmol/cm^3)
-    type(thermodynamic_coefficients_type) , intent(inout) :: co3_coeffs(num_elements)
-    real(kind=r8)                         , intent(inout) :: phlo(num_elements)   ! lower limit of pH range
-    real(kind=r8)                         , intent(inout) :: phhi(num_elements)   ! upper limit of pH range
-    real(kind=r8)                         , intent(out)   :: htotal(num_elements) ! free concentration of H ion
-    type(marbl_log_type), optional        , intent(inout) :: marbl_status_log
+    integer(kind=int_kind)        , intent(in)    :: num_elements
+    integer(kind=int_kind)        , intent(in)    :: num_active_elements
+    real(kind=r8)                 , intent(in)    :: temp(num_elements)   ! temperature (degrees C)
+    real(kind=r8)                 , intent(in)    :: dic_in(num_elements) ! total inorganic carbon (nmol/cm^3)
+    real(kind=r8)                 , intent(in)    :: ta_in(num_elements)  ! total alkalinity (neq/cm^3)
+    real(kind=r8)                 , intent(in)    :: pt_in(num_elements)  ! inorganic phosphate (nmol/cm^3)
+    real(kind=r8)                 , intent(in)    :: sit_in(num_elements) ! inorganic silicate (nmol/cm^3)
+    type(co2calc_coeffs_type)     , intent(inout) :: co2calc_coeffs(num_elements)
+    type(co2calc_state_type)      , intent(inout) :: co2calc_state(num_elements)
+    real(kind=r8)                 , intent(inout) :: phlo(num_elements)   ! lower limit of pH range
+    real(kind=r8)                 , intent(inout) :: phhi(num_elements)   ! upper limit of pH range
+    real(kind=r8)                 , intent(out)   :: htotal(num_elements) ! free concentration of H ion
+    type(marbl_log_type), optional, intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -722,24 +730,24 @@ contains
     real(kind=r8)          :: x1(num_elements), x2(num_elements) ! bounds on htotal for solver
     !---------------------------------------------------------------------------
 
-    associate(                      &
-          k1  => co3_coeffs(:)%k1,  &
-          k2  => co3_coeffs(:)%k2,  &
-          kw  => co3_coeffs(:)%kw,  &
-          kb  => co3_coeffs(:)%kb,  &
-          ks  => co3_coeffs(:)%ks,  &
-          kf  => co3_coeffs(:)%kf,  &
-          k1p => co3_coeffs(:)%k1p, &
-          k2p => co3_coeffs(:)%k2p, &
-          k3p => co3_coeffs(:)%k3p, &
-          ksi => co3_coeffs(:)%ksi, &
-          bt  => co3_coeffs(:)%bt,  &
-          st  => co3_coeffs(:)%st,  &
-          ft  => co3_coeffs(:)%ft,  &
-          dic => co3_coeffs(:)%dic, &
-          ta  => co3_coeffs(:)%ta,  &
-          pt  => co3_coeffs(:)%pt,  &
-          sit => co3_coeffs(:)%sit  &
+    associate(                          &
+          k1  => co2calc_coeffs(:)%k1,  &
+          k2  => co2calc_coeffs(:)%k2,  &
+          kw  => co2calc_coeffs(:)%kw,  &
+          kb  => co2calc_coeffs(:)%kb,  &
+          ks  => co2calc_coeffs(:)%ks,  &
+          kf  => co2calc_coeffs(:)%kf,  &
+          k1p => co2calc_coeffs(:)%k1p, &
+          k2p => co2calc_coeffs(:)%k2p, &
+          k3p => co2calc_coeffs(:)%k3p, &
+          ksi => co2calc_coeffs(:)%ksi, &
+          bt  => co2calc_coeffs(:)%bt,  &
+          st  => co2calc_coeffs(:)%st,  &
+          ft  => co2calc_coeffs(:)%ft,  &
+          dic => co2calc_state(:)%dic,  &
+          ta  => co2calc_state(:)%ta,   &
+          pt  => co2calc_state(:)%pt,   &
+          sit => co2calc_state(:)%sit   &
           )
 
     !---------------------------------------------------------------------------
@@ -778,8 +786,8 @@ contains
     !   set x1 and x2 to the previous value of the pH +/- ~0.5.
     !---------------------------------------------------------------------------
 
-    call drtsafe(num_elements, num_active_elements, k1, k2, co3_coeffs, x1, x2, xacc, htotal,&
-         marbl_status_log)
+    call drtsafe(num_elements, num_active_elements, k1, k2, co2calc_coeffs,   &
+                 co2calc_state, x1, x2, xacc, htotal, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace("drtsafe", subname)
@@ -792,8 +800,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine drtsafe(num_elements, num_active_elements, k1, k2, co3_coeffs, x1, x2, xacc, &
-                         soln, marbl_status_log)
+  subroutine drtsafe(num_elements, num_active_elements, k1, k2, co2calc_coeffs, &
+                     co2calc_state, x1, x2, xacc, soln, marbl_status_log)
 
     !---------------------------------------------------------------------------
     !   Vectorized version of drtsafe, which was a modified version of
@@ -808,16 +816,17 @@ contains
 
     implicit none
 
-    integer(kind=int_kind)                , intent(in)    :: num_elements
-    integer(kind=int_kind)                , intent(in)    :: num_active_elements
-    real(kind=r8)                         , intent(in)    :: k1(num_elements)
-    real(kind=r8)                         , intent(in)    :: k2(num_elements)
-    type(thermodynamic_coefficients_type) , intent(in)    :: co3_coeffs(num_elements)
-    real(kind=r8)                         , intent(in)    :: xacc
-    real(kind=r8)                         , intent(inout) :: x1(num_elements)
-    real(kind=r8)                         , intent(inout) :: x2(num_elements)
-    real(kind=r8)                         , intent(out)   :: soln(num_elements)
-    type(marbl_log_type)                  , intent(inout) :: marbl_status_log
+    integer(kind=int_kind)        , intent(in)    :: num_elements
+    integer(kind=int_kind)        , intent(in)    :: num_active_elements
+    real(kind=r8)                 , intent(in)    :: k1(num_elements)
+    real(kind=r8)                 , intent(in)    :: k2(num_elements)
+    type(co2calc_coeffs_type)     , intent(in)    :: co2calc_coeffs(num_elements)
+    type(co2calc_state_type)      , intent(in)    :: co2calc_state(num_elements)
+    real(kind=r8)                 , intent(in)    :: xacc
+    real(kind=r8)                 , intent(inout) :: x1(num_elements)
+    real(kind=r8)                 , intent(inout) :: x2(num_elements)
+    real(kind=r8)                 , intent(out)   :: soln(num_elements)
+    type(marbl_log_type)          , intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -847,8 +856,8 @@ contains
     it = 0
 
     do
-       call total_alkalinity(num_elements, mask, k1, k2, x1, co3_coeffs, flo, df)
-       call total_alkalinity(num_elements, mask, k1, k2, x2, co3_coeffs, fhi, df)
+       call total_alkalinity(num_elements, mask, k1, k2, x1, co2calc_coeffs, co2calc_state, flo, df)
+       call total_alkalinity(num_elements, mask, k1, k2, x2, co2calc_coeffs, co2calc_state, fhi, df)
 
        where ( mask )
           mask = (flo > c0 .AND. fhi > c0) .OR. &
@@ -910,7 +919,7 @@ contains
        dx(c) = dxold(c)
     end do
 
-    call total_alkalinity(num_elements, mask, k1, k2, soln, co3_coeffs, f, df)
+    call total_alkalinity(num_elements, mask, k1, k2, soln, co2calc_coeffs, co2calc_state, f, df)
 
     !---------------------------------------------------------------------------
     !   perform iterations, zeroing mask when a location has converged
@@ -940,7 +949,7 @@ contains
 
        if (.not. ANY(mask)) return
 
-       call total_alkalinity(num_elements, mask, k1, k2, soln, co3_coeffs, f, df)
+       call total_alkalinity(num_elements, mask, k1, k2, soln, co2calc_coeffs, co2calc_state, f, df)
 
        do c = 1,num_elements
           if (mask(c)) then
@@ -964,7 +973,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine total_alkalinity(num_elements, mask, k1, k2, x, co3_coeffs, fn, df)
+  subroutine total_alkalinity(num_elements, mask, k1, k2, x, co2calc_coeffs, &
+             co2calc_state, fn, df)
 
     !---------------------------------------------------------------------------
     !   This routine computes TA as a function of DIC, htotal and constants.
@@ -976,14 +986,15 @@ contains
 
     implicit none
 
-    integer(kind=int_kind)                , intent(in)  :: num_elements
-    logical(kind=log_kind)                , intent(in)  :: mask(num_elements)
-    real(kind=r8)                         , intent(in)  :: k1(num_elements)
-    real(kind=r8)                         , intent(in)  :: k2(num_elements)
-    real(kind=r8)                         , intent(in)  :: x(num_elements)
-    type(thermodynamic_coefficients_type) , intent(in)  :: co3_coeffs(num_elements)
-    real(kind=r8)                         , intent(out) :: fn(num_elements)
-    real(kind=r8)                         , intent(out) :: df(num_elements)
+    integer(kind=int_kind)    , intent(in)  :: num_elements
+    logical(kind=log_kind)    , intent(in)  :: mask(num_elements)
+    real(kind=r8)             , intent(in)  :: k1(num_elements)
+    real(kind=r8)             , intent(in)  :: k2(num_elements)
+    real(kind=r8)             , intent(in)  :: x(num_elements)
+    type(co2calc_coeffs_type) , intent(in)  :: co2calc_coeffs(num_elements)
+    type(co2calc_state_type)  , intent(in)  :: co2calc_state(num_elements)
+    real(kind=r8)             , intent(out) :: fn(num_elements)
+    real(kind=r8)             , intent(out) :: df(num_elements)
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -994,22 +1005,22 @@ contains
     real(kind=r8) :: kb_p_x1_r, ksi_p_x1_r, c1_p_c_ks_x1_r_r, c1_p_kf_x1_r_r
     !---------------------------------------------------------------------------
 
-    associate(                     &
-         kw  => co3_coeffs(:)%kw,  &
-         kb  => co3_coeffs(:)%kb,  &
-         ks  => co3_coeffs(:)%ks,  &
-         kf  => co3_coeffs(:)%kf,  &
-         k1p => co3_coeffs(:)%k1p, &
-         k2p => co3_coeffs(:)%k2p, &
-         k3p => co3_coeffs(:)%k3p, &
-         ksi => co3_coeffs(:)%ksi, &
-         bt  => co3_coeffs(:)%bt,  &
-         st  => co3_coeffs(:)%st,  &
-         ft  => co3_coeffs(:)%ft,  &
-         dic => co3_coeffs(:)%dic, &
-         ta  => co3_coeffs(:)%ta,  &
-         pt  => co3_coeffs(:)%pt,  &
-         sit => co3_coeffs(:)%sit  &
+    associate(                         &
+         kw  => co2calc_coeffs(:)%kw,  &
+         kb  => co2calc_coeffs(:)%kb,  &
+         ks  => co2calc_coeffs(:)%ks,  &
+         kf  => co2calc_coeffs(:)%kf,  &
+         k1p => co2calc_coeffs(:)%k1p, &
+         k2p => co2calc_coeffs(:)%k2p, &
+         k3p => co2calc_coeffs(:)%k3p, &
+         ksi => co2calc_coeffs(:)%ksi, &
+         bt  => co2calc_coeffs(:)%bt,  &
+         st  => co2calc_coeffs(:)%st,  &
+         ft  => co2calc_coeffs(:)%ft,  &
+         dic => co2calc_state(:)%dic,  &
+         ta  => co2calc_state(:)%ta,   &
+         pt  => co2calc_state(:)%pt,   &
+         sit => co2calc_state(:)%sit   &
          )
 
     do c = 1,num_elements
