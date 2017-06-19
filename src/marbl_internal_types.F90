@@ -204,7 +204,7 @@ module marbl_internal_types
      real(r8) :: auto_loss_dic_fields      ! auto_loss routed to dic (mmol C/m^3/sec)
      real(r8) :: auto_agg_fields           ! autotroph aggregation (mmol C/m^3/sec)
      real(r8) :: photoC_fields             ! C-fixation (mmol C/m^3/sec)
-     real(r8) :: CaCO3_PROD_fields         ! prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
+     real(r8) :: CaCO3_form_fields         ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
      real(r8) :: PCphoto_fields            ! C-specific rate of photosynth. (1/sec)
   end type marbl_autotroph_share_type
 
@@ -296,7 +296,7 @@ module marbl_internal_types
      real (r8) :: auto_graze_doc  ! auto_graze routed to doc (mmol C/m^3/sec)
      real (r8) :: auto_graze_dic  ! auto_graze routed to dic (mmol C/m^3/sec)
      real (r8) :: Pprime          ! used to limit autotroph mort at low biomass (mmol C/m^3)
-     real (r8) :: CaCO3_PROD      ! prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
+     real (r8) :: CaCO3_form      ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
      real (r8) :: Nfix            ! total Nitrogen fixation (mmol N/m^3/sec)
      real (r8) :: Nexcrete        ! fixed N excretion
      real (r8) :: remaining_P_dop ! remaining_P from grazing routed to DOP pool
