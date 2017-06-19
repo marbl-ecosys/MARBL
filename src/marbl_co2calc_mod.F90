@@ -817,7 +817,7 @@ contains
     real(kind=r8)                         , intent(inout) :: x1(num_elements)
     real(kind=r8)                         , intent(inout) :: x2(num_elements)
     real(kind=r8)                         , intent(out)   :: soln(num_elements)
-    type(marbl_log_type), optional        , intent(inout) :: marbl_status_log
+    type(marbl_log_type)                  , intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -863,30 +863,22 @@ contains
           if (mask(c)) then
              ! Log a warning message if bounding box end points have same sign
              ! (no guarantee that there is a root on the interval)
-             if (present(marbl_status_log)) then
-                ! FIXME #21: make marbl_status_log required - this is currently needed
-                !            since abio_dic_dic14_mod is calling this routine but has
-                !            not itself been MARBLized yet
-                WRITE(log_message,"(3A,1X,A,I0)") '(', subname, ')', 'it = ', it
-                call marbl_status_log%log_noerror(log_message, subname, c, &
-                                lonly_master_writes=.false.)
-                WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')', &
-                     'x1,f = ', x1(c), flo(c)
-                call marbl_status_log%log_noerror(log_message, subname, c, &
-                                lonly_master_writes=.false.)
-                WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')', &
-                     'x2,f = ', x2(c), fhi(c)
-                call marbl_status_log%log_noerror(log_message, subname, c, &
-                                lonly_master_writes=.false.)
-             end if
+             WRITE(log_message,"(3A,1X,A,I0)") '(', subname, ')', 'it = ', it
+             call marbl_status_log%log_noerror(log_message, subname, c,       &
+                             lonly_master_writes=.false.)
+             WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')',       &
+                  'x1,f = ', x1(c), flo(c)
+             call marbl_status_log%log_noerror(log_message, subname, c,       &
+                             lonly_master_writes=.false.)
+             WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')',       &
+                  'x2,f = ', x2(c), fhi(c)
+             call marbl_status_log%log_noerror(log_message, subname, c,       &
+                             lonly_master_writes=.false.)
 
              ! Error if iteration count exceeds max_bracket_grow_it
              if (it > max_bracket_grow_it) then
-                if (present(marbl_status_log)) then
-                   ! FIXME #21 (see above)
-                   log_message = "bounding bracket for pH solution not found"
-                   call marbl_status_log%log_error(log_message, subname, c)
-                end if
+                log_message = "bounding bracket for pH solution not found"
+                call marbl_status_log%log_error(log_message, subname, c)
                 abort = .true.
              end if
           end if
@@ -946,7 +938,7 @@ contains
           end if
        end do
 
-       if (.not. ANY(mask)) return 
+       if (.not. ANY(mask)) return
 
        call total_alkalinity(num_elements, mask, k1, k2, soln, co3_coeffs, f, df)
 
@@ -955,7 +947,7 @@ contains
              if (f(c) .LT. c0) then
                 xlo(c) = soln(c)
                 flo(c) = f(c)
-             else   
+             else
                 xhi(c) = soln(c)
                 fhi(c) = f(c)
              end if
