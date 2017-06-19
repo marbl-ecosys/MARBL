@@ -234,12 +234,11 @@ contains
 
     implicit none
 
-    type(marbl_domain_type)                 , intent(in)    :: marbl_domain                               
-    ! FIXME #17: intent is inout due to DIC_Loc
-    type(marbl_interior_share_type)         , intent(inout) :: marbl_interior_share(marbl_domain%km)
+    type(marbl_domain_type)                 , intent(in)    :: marbl_domain
+    type(marbl_interior_share_type)         , intent(in)    :: marbl_interior_share(marbl_domain%km)
     type(marbl_zooplankton_share_type)      , intent(in)    :: marbl_zooplankton_share(zooplankton_cnt, marbl_domain%km)
     type(marbl_autotroph_share_type)        , intent(in)    :: marbl_autotroph_share(autotroph_cnt, marbl_domain%km)
-    type(marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
+    type(marbl_particulate_share_type)      , intent(in)    :: marbl_particulate_share
     real (r8)                               , intent(in)    :: temperature(:)
     real (r8)                               , intent(in)    :: column_tracer(:,:)
     real (r8)                               , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
@@ -461,11 +460,6 @@ contains
     !-----------------------------------------------------------------------
 
     do k = 1, column_km
-
-       if (k > column_kmt) then
-          DIC_loc(k) = c0
-          DOC_loc(k) = c0
-       end if
 
        !-----------------------------------------------------------------------
        !  set local 13C/12C ratios, assuming ecosystem carries 12C (C=C12+C13+C14)

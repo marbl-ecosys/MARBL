@@ -40,9 +40,6 @@ module marbl_interface
   use marbl_internal_types  , only : marbl_interior_forcing_indexing_type
   use marbl_internal_types  , only : marbl_interior_saved_state_indexing_type
   use marbl_internal_types  , only : marbl_PAR_type
-  use marbl_internal_types  , only : marbl_interior_share_type
-  use marbl_internal_types  , only : marbl_autotroph_share_type
-  use marbl_internal_types  , only : marbl_zooplankton_share_type
   use marbl_internal_types  , only : marbl_particulate_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
@@ -117,9 +114,6 @@ module marbl_interface
      ! private data
      type(marbl_PAR_type)                      , private              :: PAR
      type(marbl_particulate_share_type)        , private              :: particulate_share
-     type(marbl_interior_share_type)           , private, allocatable :: interior_share(:)
-     type(marbl_zooplankton_share_type)        , private, allocatable :: zooplankton_share(:,:)
-     type(marbl_autotroph_share_type)          , private, allocatable :: autotroph_share(:,:)
      type(marbl_surface_forcing_share_type)    , private              :: surface_forcing_share
      type(marbl_surface_forcing_internal_type) , private              :: surface_forcing_internal
      logical                                   , private              :: lallow_glo_ops
@@ -346,12 +340,6 @@ contains
     call this%PAR%construct(num_levels, num_PAR_subcols)
 
     call this%particulate_share%construct(num_levels)
-
-    allocate (this%interior_share(num_levels))
-
-    allocate (this%zooplankton_share(zooplankton_cnt, num_levels))
-
-    allocate (this%autotroph_share(autotroph_cnt, num_levels))
 
     call this%domain%construct(                                 &
          num_levels                    = num_levels,            &
@@ -726,9 +714,6 @@ contains
          marbl_timers             = this%timers,                              &
          marbl_timer_indices      = this%timer_ids,                           &
          PAR                      = this%PAR,                                 &
-         marbl_interior_share     = this%interior_share,                      &
-         marbl_zooplankton_share  = this%zooplankton_share,                   &
-         marbl_autotroph_share    = this%autotroph_share,                     &
          marbl_particulate_share  = this%particulate_share,                   &
          interior_forcing_diags   = this%interior_forcing_diags,              &
          glo_avg_fields_interior  = this%glo_avg_fields_interior,             &
