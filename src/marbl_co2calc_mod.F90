@@ -724,11 +724,14 @@ contains
     !---------------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_co2calc_mod:marbl_comp_htotal'
 
-    integer(kind=int_kind) :: c
-    real(kind=r8)          :: mass_to_vol                        ! (mol/kg) -> (mmol/m^3)
-    real(kind=r8)          :: vol_to_mass                        ! (mmol/m^3) -> (mol/kg)
-    real(kind=r8)          :: x1(num_elements), x2(num_elements) ! bounds on htotal for solver
+    type(co2calc_state_type) :: co2calc_state_uncapped(num_elements) ! Values of co2calc_state components before enforcing min values
+    integer(kind=int_kind)   :: c
+    real(kind=r8)            :: mass_to_vol                          ! (mol/kg) -> (mmol/m^3)
+    real(kind=r8)            :: vol_to_mass                          ! (mmol/m^3) -> (mol/kg)
+    real(kind=r8)            :: x1(num_elements), x2(num_elements)   ! bounds on htotal for solver
     !---------------------------------------------------------------------------
+
+    co2calc_state_uncapped = co2calc_state
 
     associate(                          &
           k1  => co2calc_coeffs(:)%k1,  &
@@ -786,8 +789,9 @@ contains
     !   set x1 and x2 to the previous value of the pH +/- ~0.5.
     !---------------------------------------------------------------------------
 
-    call drtsafe(num_elements, num_active_elements, k1, k2, co2calc_coeffs,   &
-                 co2calc_state, x1, x2, xacc, htotal, marbl_status_log)
+    call drtsafe(num_elements, num_active_elements, k1, k2, co2calc_coeffs,    &
+                 co2calc_state, co2calc_state_uncapped,  x1, x2, xacc, htotal, &
+                 marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace("drtsafe", subname)
@@ -801,7 +805,8 @@ contains
   !*****************************************************************************
 
   subroutine drtsafe(num_elements, num_active_elements, k1, k2, co2calc_coeffs, &
-                     co2calc_state, x1, x2, xacc, soln, marbl_status_log)
+                     co2calc_state, co2calc_state_uncapped, x1, x2, xacc, soln, &
+                     marbl_status_log)
 
     !---------------------------------------------------------------------------
     !   Vectorized version of drtsafe, which was a modified version of
@@ -822,6 +827,7 @@ contains
     real(kind=r8)                 , intent(in)    :: k2(num_elements)
     type(co2calc_coeffs_type)     , intent(in)    :: co2calc_coeffs(num_elements)
     type(co2calc_state_type)      , intent(in)    :: co2calc_state(num_elements)
+    type(co2calc_state_type)      , intent(in)    :: co2calc_state_uncapped(num_elements)
     real(kind=r8)                 , intent(in)    :: xacc
     real(kind=r8)                 , intent(inout) :: x1(num_elements)
     real(kind=r8)                 , intent(inout) :: x2(num_elements)
@@ -872,13 +878,19 @@ contains
           if (mask(c)) then
              ! Log a warning message if bounding box end points have same sign
              ! (no guarantee that there is a root on the interval)
+
+             ! Iteration number
              WRITE(log_message,"(3A,1X,A,I0)") '(', subname, ')', 'it = ', it
              call marbl_status_log%log_noerror(log_message, subname, c,       &
                              lonly_master_writes=.false.)
+
+             ! x1 & f
              WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')',       &
                   'x1,f = ', x1(c), flo(c)
              call marbl_status_log%log_noerror(log_message, subname, c,       &
                              lonly_master_writes=.false.)
+
+             ! x2 & f
              WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')',       &
                   'x2,f = ', x2(c), fhi(c)
              call marbl_status_log%log_noerror(log_message, subname, c,       &
@@ -886,8 +898,24 @@ contains
 
              ! Error if iteration count exceeds max_bracket_grow_it
              if (it > max_bracket_grow_it) then
+                ! Error message
                 log_message = "bounding bracket for pH solution not found"
                 call marbl_status_log%log_error(log_message, subname, c)
+
+                ! Original state values
+                ! DIC
+                WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
+                      'dic = ', co2calc_state_uncapped(c)%dic
+                ! TA
+                WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
+                      'ta = ', co2calc_state_uncapped(c)%ta
+                ! PT
+                WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
+                      'pt = ', co2calc_state_uncapped(c)%pt
+                ! SIT
+                WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
+                      'sit = ', co2calc_state_uncapped(c)%sit
+
                 abort = .true.
              end if
           end if
