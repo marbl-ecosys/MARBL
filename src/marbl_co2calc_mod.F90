@@ -916,15 +916,22 @@ contains
                 ! DIC
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
                       'dic = ', co2calc_state_in(c)%dic
+                call marbl_status_log%log_error(log_message, subname, c)
+
                 ! TA
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
                       'ta = ', co2calc_state_in(c)%ta
+                call marbl_status_log%log_error(log_message, subname, c)
+
                 ! PT
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
                       'pt = ', co2calc_state_in(c)%pt
+                call marbl_status_log%log_error(log_message, subname, c)
+
                 ! SIT
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
                       'sit = ', co2calc_state_in(c)%sit
+                call marbl_status_log%log_error(log_message, subname, c)
 
                 abort = .true.
              end if
