@@ -301,10 +301,17 @@ contains
     real(kind=r8)            :: htotal(num_elements) ! free concentration of H ion
     !---------------------------------------------------------------------------
 
+    ! temp and salt are not used out of co2calc_state at this time but are
+    ! set here to avoid having co2calc_state%temp and %salt uninitialized
+    co2calc_state(:)%temp = temp
+    co2calc_state(:)%salt = salt
+
     co2calc_state_in(:)%dic = dic_in
     co2calc_state_in(:)%ta  = ta_in
     co2calc_state_in(:)%pt  = pt_in
     co2calc_state_in(:)%sit = sit_in
+    co2calc_state_in(:)%temp = temp
+    co2calc_state_in(:)%salt = salt
 
     associate(                         &
          k0  => co2calc_coeffs(:)%k0,  &
