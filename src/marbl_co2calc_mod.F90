@@ -68,10 +68,12 @@ module marbl_co2calc_mod
   end type co2calc_coeffs_type
 
   type, public :: co2calc_state_type
-     real(kind=r8) :: dic ! total dissolved inorganic carbon
-     real(kind=r8) :: ta  ! total alkalinity
-     real(kind=r8) :: pt  ! total phosphorous
-     real(kind=r8) :: sit ! total silicon
+     real(kind=r8) :: dic  ! total dissolved inorganic carbon
+     real(kind=r8) :: ta   ! total alkalinity
+     real(kind=r8) :: pt   ! total phosphorous
+     real(kind=r8) :: sit  ! total silicon
+     real(kind=r8) :: temp ! temperature (for error reporting)
+     real(kind=r8) :: salt ! salinity (for error reporting)
   end type co2calc_state_type
 
   !*****************************************************************************
@@ -150,10 +152,17 @@ contains
     logical(kind=log_kind)   :: pressure_correct(num_elements)
     !---------------------------------------------------------------------------
 
-    co2calc_state_in(:)%dic = dic_in
-    co2calc_state_in(:)%ta  = ta_in
-    co2calc_state_in(:)%pt  = pt_in
-    co2calc_state_in(:)%sit = sit_in
+    ! temp and salt are not used out of co2calc_state at this time but are
+    ! set here to avoid having co2calc_state%temp and %salt uninitialized
+    co2calc_state(:)%temp = temp
+    co2calc_state(:)%salt = salt
+
+    co2calc_state_in(:)%dic  = dic_in
+    co2calc_state_in(:)%ta   = ta_in
+    co2calc_state_in(:)%pt   = pt_in
+    co2calc_state_in(:)%sit  = sit_in
+    co2calc_state_in(:)%temp = temp
+    co2calc_state_in(:)%salt = salt
 
     associate(                        &
          k1  => co2calc_coeffs(:)%k1, &
@@ -179,15 +188,15 @@ contains
     !---------------------------------------------------------------------------
 
     if (lcomp_co2calc_coeffs) then
-       call comp_co2calc_coeffs(num_elements, pressure_correct, temp, salt,   &
-                 press_bar, co2calc_coeffs, co2calc_state)
+       call comp_co2calc_coeffs(num_elements, pressure_correct, press_bar,    &
+                                co2calc_state_in, co2calc_coeffs)
     end if
 
     !---------------------------------------------------------------------------
     !   compute htotal
     !---------------------------------------------------------------------------
 
-    call comp_htotal(num_elements, num_elements, temp, co2calc_state_in,      &
+    call comp_htotal(num_elements, num_elements, co2calc_state_in,            &
                      co2calc_coeffs, co2calc_state, phlo, phhi, htotal,       &
                      marbl_status_log)
 
@@ -330,16 +339,16 @@ contains
     !------------------------------------------------------------------------
 
     if (lcomp_co2calc_coeffs) then
-       call comp_co2calc_coeffs(num_elements, pressure_correct, temp, salt,   &
-                 press_bar, co2calc_coeffs, co2calc_state)
+       call comp_co2calc_coeffs(num_elements, pressure_correct, press_bar,    &
+                                co2calc_state_in, co2calc_coeffs)
     end if
 
     !------------------------------------------------------------------------
     !   compute htotal
     !------------------------------------------------------------------------
 
-    call comp_htotal(num_elements, num_active_elements, temp, co2calc_state_in, &
-                     co2calc_coeffs, co2calc_state, phlo, phhi, htotal,         &
+    call comp_htotal(num_elements, num_active_elements, co2calc_state_in,     &
+                     co2calc_coeffs, co2calc_state, phlo, phhi, htotal,       &
                      marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
@@ -380,8 +389,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine comp_co2calc_coeffs(num_elements, pressure_correct, temp, salt,  &
-                  press_bar, co2calc_coeffs, co2calc_state)
+  subroutine comp_co2calc_coeffs(num_elements, pressure_correct, press_bar,   &
+                                 co2calc_state_in, co2calc_coeffs)
 
     !---------------------------------------------------------------------------
     ! FIXME #20: the computations for the individual constants need to
@@ -392,11 +401,9 @@ contains
 
     integer(kind=int_kind)    , intent(in)  :: num_elements
     logical(kind=log_kind)    , intent(in)  :: pressure_correct(num_elements)
-    real(kind=r8)             , intent(in)  :: temp(num_elements)      ! temperature (degrees c)
-    real(kind=r8)             , intent(in)  :: salt(num_elements)      ! salinity (psu)
     real(kind=r8)             , intent(in)  :: press_bar(num_elements) ! pressure at level (bars)
+    type(co2calc_state_type)  , intent(in)  :: co2calc_state_in(num_elements)
     type(co2calc_coeffs_type) , intent(out) :: co2calc_coeffs(num_elements)
-    type(co2calc_state_type)  , intent(out) :: co2calc_state(num_elements)
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -442,10 +449,8 @@ contains
          bt  => co2calc_coeffs(:)%bt,  &
          st  => co2calc_coeffs(:)%st,  &
          ft  => co2calc_coeffs(:)%ft,  &
-         dic => co2calc_state(:)%dic,  &
-         ta  => co2calc_state(:)%ta,   &
-         pt  => co2calc_state(:)%pt,   &
-         sit => co2calc_state(:)%sit   &
+         temp => co2calc_state_in(:)%temp, &
+         salt => co2calc_state_in(:)%salt  &
          )
 
     !---------------------------------------------------------------------------
@@ -708,18 +713,16 @@ contains
 
   !*****************************************************************************
 
-  subroutine comp_htotal(num_elements, num_active_elements, temp, co2calc_state_in, &
-                  co2calc_coeffs, co2calc_state, phlo, phhi, htotal,                &
+  subroutine comp_htotal(num_elements, num_active_elements, co2calc_state_in, &
+                  co2calc_coeffs, co2calc_state, phlo, phhi, htotal,          &
                   marbl_status_log)
 
     !---------------------------------------------------------------------------
-    ! Calculate htotal (free concentration of H ion) from
-    ! total alkalinity, total CO2, temp, salinity (s), etc.
+    ! Calculate htotal (free concentration of H ion)
     !---------------------------------------------------------------------------
 
     integer(kind=int_kind)        , intent(in)    :: num_elements
     integer(kind=int_kind)        , intent(in)    :: num_active_elements
-    real(kind=r8)                 , intent(in)    :: temp(num_elements)   ! temperature (degrees C)
     type(co2calc_state_type)      , intent(in)    :: co2calc_state_in(num_elements)
     type(co2calc_coeffs_type)     , intent(inout) :: co2calc_coeffs(num_elements)
     type(co2calc_state_type)      , intent(inout) :: co2calc_state(num_elements)
@@ -913,24 +916,34 @@ contains
                 call marbl_status_log%log_error(log_message, subname, c)
 
                 ! Original state values
-                ! DIC
+                ! total DIC
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
                       'dic = ', co2calc_state_in(c)%dic
                 call marbl_status_log%log_error(log_message, subname, c)
 
-                ! TA
+                ! total alkalinity
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
                       'ta = ', co2calc_state_in(c)%ta
                 call marbl_status_log%log_error(log_message, subname, c)
 
-                ! PT
+                ! total phosphorus
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
                       'pt = ', co2calc_state_in(c)%pt
                 call marbl_status_log%log_error(log_message, subname, c)
 
-                ! SIT
+                ! total silicon
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
                       'sit = ', co2calc_state_in(c)%sit
+                call marbl_status_log%log_error(log_message, subname, c)
+
+                ! temperature
+                WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
+                      'temp = ', co2calc_state_in(c)%temp
+                call marbl_status_log%log_error(log_message, subname, c)
+
+                ! salinity
+                WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
+                      'salt = ', co2calc_state_in(c)%salt
                 call marbl_status_log%log_error(log_message, subname, c)
 
                 abort = .true.
