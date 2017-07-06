@@ -162,7 +162,7 @@ module marbl_parms
       gQsi_0        = 0.137_r8,           & !initial Si/C ratio for growth
       gQsi_max      = 0.685_r8,           & !max Si/C ratio for growth
       gQsi_min      = 0.0457_r8,          & !min Si/C ratio for growth
-      QCaCO3_max    = 0.4_r8,             & !max QCaCO3
+      QCaCO3_max    = 1.0_r8,             & !max QCaCO3
       ! parameters in GalbraithMartiny Pquota Model^M
       PquotaSlope     = 7.0_r8,        &
       PquotaIntercept = 5.571_r8,      &
@@ -352,6 +352,28 @@ contains
           autotrophs(n)%agg_rate_min    = 0.01_r8
           autotrophs(n)%loss_poc        = 0.0_r8
 
+        case ('cocco')
+        autotrophs(n)%kFe             = 0.03e-3_r8         ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kPO4            = 0.006_r8           ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kDOP            = 0.3_r8             ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kNO3            = 0.3_r8            ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kNH4            = 0.012_r8            ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
+        autotrophs(n)%gQfe_0          = 10.0e-6_r8
+        autotrophs(n)%gQfe_min        = 3.0e-6_r8
+        autotrophs(n)%alphaPI_per_day = 0.35_r8
+        autotrophs(n)%PCref_per_day   = 5.0_r8
+        autotrophs(n)%thetaN_max      = 3.2_r8
+        autotrophs(n)%loss_thres      = 0.01_r8
+        autotrophs(n)%loss_thres2     = 0.0_r8
+        autotrophs(n)%temp_thres      = -10.0_r8
+        autotrophs(n)%mort_per_day    = 0.1_r8
+        autotrophs(n)%mort2_per_day   = 0.01_r8
+        autotrophs(n)%agg_rate_max    = 0.5_r8
+        autotrophs(n)%agg_rate_min    = 0.01_r8
+        autotrophs(n)%loss_poc        = 0.0_r8
+
         case DEFAULT
           autotrophs(n)%kFe             = c0
           autotrophs(n)%kPO4            = c0
@@ -428,6 +450,15 @@ contains
           grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_parms framework, see NOTE above
           grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_parms framework, see NOTE above
           grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_parms framework, see NOTE above
+        elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
+        (trim(autotrophs_config(m)%sname).eq.'cocco')) then
+        grazing(m,n)%z_umax_0_per_day = 3.2_r8    ! in marbl_parms framework, see NOTE above
+        grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_parms framework, see NOTE above
+        grazing(m,n)%graze_zoo        = 0.25_r8    ! in marbl_parms framework, see NOTE above
+        grazing(m,n)%graze_poc        = 0.3_r8    ! in marbl_parms framework, see NOTE above
+        grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_parms framework, see NOTE above
+        grazing(m,n)%f_zoo_detr       = 0.18_r8   ! in marbl_parms framework, see NOTE above
+        grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_parms framework, see NOTE above
         else
           grazing(m,n)%z_umax_0_per_day = c0
           grazing(m,n)%z_grz            = c0

@@ -146,7 +146,7 @@ contains
           autotrophs_config(n)%sname         = 'sp'
           autotrophs_config(n)%lname         = 'Small Phyto'
           autotrophs_config(n)%Nfixer        = .false.
-          autotrophs_config(n)%imp_calcifier = .true.
+          autotrophs_config(n)%imp_calcifier = .false.
           autotrophs_config(n)%exp_calcifier = .false.
           autotrophs_config(n)%silicifier    = .false.
         case (2)
@@ -163,6 +163,13 @@ contains
           autotrophs_config(n)%imp_calcifier = .false.
           autotrophs_config(n)%exp_calcifier = .false.
           autotrophs_config(n)%silicifier    = .false.
+        case (4)
+        autotrophs_config(n)%sname         = 'cocco'
+        autotrophs_config(n)%lname         = 'Coccolithophores'
+        autotrophs_config(n)%Nfixer        = .false.
+        autotrophs_config(n)%imp_calcifier = .false.
+        autotrophs_config(n)%exp_calcifier = .true.
+        autotrophs_config(n)%silicifier    = .false.
         case DEFAULT
           write(autotrophs_config(n)%sname,"(A,I0)") 'auto', n
           write(autotrophs_config(n)%lname,"(A,I0)") 'Autotroph number ', n
