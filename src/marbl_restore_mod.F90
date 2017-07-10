@@ -7,7 +7,6 @@ module marbl_restore_mod
   use marbl_constants_mod  , only : p5, c0, c2, c1000
   use marbl_interface_types, only : marbl_domain_type
   use marbl_sizes          , only : marbl_total_tracer_cnt
-  use marbl_sizes          , only : tracer_restore_cnt
 
   implicit none
   public
@@ -56,7 +55,7 @@ subroutine marbl_restore_compute_interior_restore(interior_tracers, km,       &
   restoring_inds => interior_forcing_ind%tracer_restore_id
   inv_tau_inds   => interior_forcing_ind%inv_tau_id
 
-  do m=1,tracer_restore_cnt
+  do m=1,size(interior_forcing_ind%tracer_id)
     n = interior_forcing_ind%tracer_id(m)
     associate(restore_field => interior_forcings(restoring_inds(n))%field_1d, &
               inv_tau       =>  interior_forcings(inv_tau_inds(n))%field_1d)

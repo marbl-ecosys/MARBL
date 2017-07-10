@@ -925,7 +925,6 @@ contains
     ! determine what forcing fields are required from the driver.
 
     use marbl_sizes, only : marbl_total_tracer_cnt
-    use marbl_sizes, only : tracer_restore_cnt
 
     class(marbl_interior_forcing_indexing_type), intent(inout) :: this
     character(len=char_len), dimension(:),       intent(in)    :: tracer_names
@@ -935,18 +934,12 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_internal_types:interior_forcing_index_constructor'
     character(len=char_len)     :: log_message
-
+    integer :: tracer_restore_cnt
     integer :: m, n
 
     associate(forcing_cnt => num_interior_forcing_fields)
 
       forcing_cnt = 0
-      allocate(this%tracer_restore_id(marbl_total_tracer_cnt))
-      this%tracer_restore_id = 0
-      allocate(this%inv_tau_id(marbl_total_tracer_cnt))
-      this%inv_tau_id = 0
-      allocate(this%tracer_id(marbl_total_tracer_cnt))
-      this%tracer_id = 0
 
       ! -------------------------------
       ! | Always request these fields |
@@ -982,11 +975,19 @@ contains
 
       ! Tracer restoring
       ! Note that this section
-      ! (1) sets tracer_restore_cnt
+      ! (1) sets tracer_restore_cnt and allocate memory for restoring
+      !     arrays
       ! (2) includes consistency check on the tracer_restore_vars array
       ! (3) writes all tracer restore fields to log
 
       tracer_restore_cnt = count((len_trim(tracer_restore_vars).gt.0))
+      allocate(this%tracer_restore_id(marbl_total_tracer_cnt))
+      this%tracer_restore_id = 0
+      allocate(this%inv_tau_id(marbl_total_tracer_cnt))
+      this%inv_tau_id = 0
+      allocate(this%tracer_id(tracer_restore_cnt))
+      this%tracer_id = 0
+
       if (tracer_restore_cnt .gt. 0) then
         log_message = "Restoring the following tracers to data:"
         call marbl_status_log%log_noerror(log_message, subname)
