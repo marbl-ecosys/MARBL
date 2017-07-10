@@ -803,18 +803,17 @@ contains
   !*****************************************************************************
 
   subroutine surface_forcing_index_constructor(this, ciso_on, lflux_gas_o2,   &
-             lflux_gas_co2, ladjust_bury_coeff)
+             lflux_gas_co2, ladjust_bury_coeff, num_surface_forcing_fields)
 
     ! This subroutine sets the surface forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
-
-    use marbl_sizes,         only : num_surface_forcing_fields
 
     class(marbl_surface_forcing_indexing_type), intent(inout) :: this
     logical,                                    intent(in)    :: ciso_on
     logical,                                    intent(in)    :: lflux_gas_o2
     logical,                                    intent(in)    :: lflux_gas_co2
     logical,                                    intent(in)    :: ladjust_bury_coeff
+    integer,                                    intent(out)   :: num_surface_forcing_fields
 
     associate(forcing_cnt => num_surface_forcing_fields)
 
@@ -919,18 +918,19 @@ contains
   subroutine interior_forcing_index_constructor(this,                         &
                                                 tracer_names,                 &
                                                 tracer_restore_vars,          &
+                                                num_interior_forcing_fields,  &
                                                 marbl_status_log)
 
     ! This subroutine sets the interior forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
 
-    use marbl_sizes, only : num_interior_forcing_fields
     use marbl_sizes, only : marbl_total_tracer_cnt
     use marbl_sizes, only : tracer_restore_cnt
 
     class(marbl_interior_forcing_indexing_type), intent(inout) :: this
     character(len=char_len), dimension(:),       intent(in)    :: tracer_names
     character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
+    integer,                                     intent(out)   :: num_interior_forcing_fields
     type(marbl_log_type),                        intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_internal_types:interior_forcing_index_constructor'

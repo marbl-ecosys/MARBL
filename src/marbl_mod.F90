@@ -279,8 +279,6 @@ contains
   subroutine marbl_init_surface_forcing_fields(num_elements, surface_forcing_indices, &
                                         surface_forcings, marbl_status_log)
 
-    use marbl_sizes, only : num_surface_forcing_fields
-
     !  Initialize the surface forcing_fields datatype with information from the
     !  namelist read
     !
@@ -305,7 +303,7 @@ contains
     associate(ind => surface_forcing_indices)
 
     surface_forcings(:)%metadata%varname = ''
-    do id=1,num_surface_forcing_fields
+    do id=1,size(surface_forcings)
       found = .false.
 
       ! Square of 10m wind
@@ -451,8 +449,6 @@ contains
        interior_forcings, &
        marbl_status_log)
 
-    use marbl_sizes, only : num_interior_forcing_fields
-
     !  Initialize the interior forcing_fields datatype with information from the
     !  namelist read
     !
@@ -485,7 +481,7 @@ contains
     interior_forcings(:)%metadata%varname = ''
 
     ! Surface fluxes that influence interior forcing
-    do id=1,num_interior_forcing_fields
+    do id=1,size(interior_forcings)
       found = .false.
       ! Dust Flux
       if (id .eq. ind%dustflux_id) then
@@ -3181,7 +3177,7 @@ contains
 
     integer(int_kind)                         , intent(in)    :: auto_cnt
     type(marbl_domain_type)                   , intent(in)    :: domain
-    type(marbl_forcing_fields_type)           , intent(in)    :: interior_forcings(:) ! (num_elements, num_interior_forcing_fields_0d)
+    type(marbl_forcing_fields_type)           , intent(in)    :: interior_forcings(:)
     type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_ind
     real(r8)                                  , intent(in)    :: totalChl_local(:)
     type(marbl_PAR_type)                      , intent(inout) :: PAR

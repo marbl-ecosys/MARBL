@@ -23,8 +23,6 @@ module marbl_interface
   use marbl_sizes           , only : marbl_total_tracer_cnt
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
-  use marbl_sizes           , only : num_surface_forcing_fields
-  use marbl_sizes           , only : num_interior_forcing_fields
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
@@ -492,6 +490,8 @@ contains
     character(len=*), parameter :: subname = 'marbl_interface:complete_config_and_init'
     character(len=char_len)     :: log_message
 
+    integer :: num_surface_forcing_fields
+    integer :: num_interior_forcing_fields
     integer :: i
 
     call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
@@ -538,9 +538,11 @@ contains
     !  Initialize surface and interior forcing (including tracer restoring)
     !-----------------------------------------------------------------------
 
-    call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2, ladjust_bury_coeff)
-    call this%interior_forcing_ind%construct(this%tracer_metadata%short_name, &
-                                   tracer_restore_vars, this%StatusLog)
+    call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2,    &
+                                   ladjust_bury_coeff, num_surface_forcing_fields)
+    call this%interior_forcing_ind%construct(this%tracer_metadata%short_name,        &
+                                   tracer_restore_vars, num_interior_forcing_fields, &
+                                   this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("interior_forcing_ind%construct",   &
                                           subname)
