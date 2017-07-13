@@ -34,7 +34,7 @@ Contains
     ! Call marbl%config
     call marbl_instance%init_configuration()
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%config', subname)
+      call marbl_instance%StatusLog%log_error_trace('marbl%init_configuration', subname)
       return
     end if
 
@@ -53,7 +53,7 @@ Contains
                              gcm_zw = zw,                                     &
                              gcm_zt = zt)
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%init', subname)
+      call marbl_instance%StatusLog%log_error_trace('marbl%init_parameters_and_tracers', subname)
       return
     end if
 
@@ -61,8 +61,7 @@ Contains
 
     call marbl_instance%init_complete()
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace(                          &
-           'marbl%complete_config_and_init', subname)
+      call marbl_instance%StatusLog%log_error_trace('marbl%init_complete', subname)
       return
     end if
 

@@ -120,6 +120,7 @@ module marbl_interface
 
    contains
 
+     procedure, public  :: init
      procedure, public  :: init_configuration
      procedure, public  :: init_parameters_and_tracers
      procedure, public  :: init_complete
@@ -134,6 +135,7 @@ module marbl_interface
 
   end type marbl_interface_class
 
+  private :: init
   private :: init_configuration
   private :: init_parameters_and_tracers
   private :: init_complete
@@ -147,6 +149,62 @@ module marbl_interface
   !***********************************************************************
 
 contains
+
+  !***********************************************************************
+
+  subroutine init(this,     &
+       gcm_nl_buffer,                     &
+       gcm_num_levels,                    &
+       gcm_num_PAR_subcols,               &
+       gcm_num_elements_surface_forcing,  &
+       gcm_delta_z,                       &
+       gcm_zw,                            &
+       gcm_zt,                            &
+       marbl_tracer_cnt,                  &
+       lgcm_has_global_ops)
+
+
+    class(marbl_interface_class), intent(inout) :: this
+    character(len=*),             intent(in)    :: gcm_nl_buffer(:)
+    integer(int_kind),            intent(in)    :: gcm_num_levels
+    integer(int_kind),            intent(in)    :: gcm_num_PAR_subcols
+    integer(int_kind),            intent(in)    :: gcm_num_elements_surface_forcing
+    real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
+    real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
+    real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
+    integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
+    logical,           optional,  intent(in)    :: lgcm_has_global_ops
+
+    character(len=*), parameter :: subname = 'marbl_interface:init'
+
+
+    call this%init_configuration(lgcm_has_global_ops=lgcm_has_global_ops, &
+                                 gcm_nl_buffer=gcm_nl_buffer)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('init_configuration', subname)
+      return
+    end if
+
+    call this%init_parameters_and_tracers(gcm_num_levels, &
+                   gcm_num_PAR_subcols,                   &
+                   gcm_num_elements_surface_forcing,      &
+                   gcm_delta_z,                           &
+                   gcm_zw,                                &
+                   gcm_zt,                                &
+                   gcm_nl_buffer=gcm_nl_buffer,           &
+                   marbl_tracer_cnt=marbl_tracer_cnt)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('init_parameters_and_tracers', subname)
+      return
+    end if
+
+    call this%init_complete()
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('init_complete', subname)
+      return
+    end if
+
+  end subroutine init
 
   !***********************************************************************
 
