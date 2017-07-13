@@ -384,6 +384,17 @@ contains
 
     call this%tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs_config, &
          zooplankton_config)
+
+    ! Ensure total tracer count is correct
+    if ((this%tracer_indices%ecosys_base%cnt + this%tracer_indices%ciso%cnt) .ne.  &
+        this%tracer_indices%marbl_total_tracer_cnt) then
+      write(log_message,'(A,I0,A,I0,A,I0)') 'Tracer inconsistency: ecosys_base%cnt = ',      &
+           this%tracer_indices%ecosys_base%cnt, 'ciso%cnt = ', this%tracer_indices%ciso%cnt, &
+           'but total tracer count is ', this%tracer_indices%marbl_total_tracer_cnt
+      call this%StatusLog%log_error(log_message, subname)
+      return
+    end if
+
     if (present(marbl_tracer_cnt)) &
       marbl_tracer_cnt = this%tracer_indices%marbl_total_tracer_cnt
 
