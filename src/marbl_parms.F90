@@ -238,17 +238,17 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_parms_set_defaults(km)
+  subroutine marbl_parms_set_defaults(marbl_total_tracer_cnt, km)
     ! assign default values to all module variables
 
     ! NOTE: defaults values below, of vars in the marbl_parms framework, may be overridden at runtime
     !       through either a namelist read or a put call from marbl_config_and_parms_type class
 
-    use marbl_sizes           , only : marbl_total_tracer_cnt
     use marbl_config_mod      , only : autotrophs_config
     use marbl_config_mod      , only : zooplankton_config
 
-    integer,              intent(in)    :: km ! max number of levels
+    integer, intent(in) :: marbl_total_tracer_cnt ! number of marbl tracers
+    integer, intent(in) :: km                     ! max number of levels
 
     !---------------------------------------------------------------------------
     !   local variables

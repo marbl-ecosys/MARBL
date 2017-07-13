@@ -6,7 +6,6 @@ module marbl_restore_mod
   use marbl_kinds_mod      , only : r8, int_kind, char_len
   use marbl_constants_mod  , only : p5, c0, c2, c1000
   use marbl_interface_types, only : marbl_domain_type
-  use marbl_sizes          , only : marbl_total_tracer_cnt
 
   implicit none
   public
@@ -41,7 +40,7 @@ subroutine marbl_restore_compute_interior_restore(interior_tracers, km,       &
   !  output variables
   !-----------------------------------------------------------------------
 
-  real(kind=r8), dimension(marbl_total_tracer_cnt, km), intent(out) :: interior_restore
+  real(kind=r8), dimension(:, :), intent(out) :: interior_restore
 
   !-----------------------------------------------------------------------
   !  local variables

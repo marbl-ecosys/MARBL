@@ -7,15 +7,6 @@ module marbl_sizes
   public
 
   !-----------------------------------------------------------------------------
-  ! number of ecosystem tracers
-  !-----------------------------------------------------------------------------
-
-  integer(int_kind), parameter :: ecosys_base_tracer_cnt = ECOSYS_BASE_NT
-  integer(int_kind), parameter :: ciso_tracer_cnt = 14
-  integer(int_kind)            :: marbl_total_tracer_cnt = 0
-
-
-  !-----------------------------------------------------------------------------
   ! number of ecosystem constituents and grazing interactions
   !-----------------------------------------------------------------------------
 

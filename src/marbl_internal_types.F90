@@ -365,12 +365,23 @@ module marbl_internal_types
 
   !*****************************************************************************
 
-  type, public :: marbl_tracer_index_type
+  type, private :: marbl_tracer_count_type
+    ! Total count
+    integer(int_kind) :: cnt
     ! Index ranges
-    integer (int_kind) :: ecosys_base_ind_beg
-    integer (int_kind) :: ecosys_base_ind_end
-    integer (int_kind) :: ciso_ind_beg
-    integer (int_kind) :: ciso_ind_end
+    integer(int_kind) :: ind_beg
+    integer(int_kind) :: ind_end
+  contains
+    procedure, public :: set_tracer_cnt
+  end type marbl_tracer_count_type
+
+  !*****************************************************************************
+
+  type, public :: marbl_tracer_index_type
+    ! Book-keeping (tracer count and index ranges)
+    integer (int_kind) :: marbl_total_tracer_cnt
+    type (marbl_tracer_count_type) :: ecosys_base
+    type (marbl_tracer_count_type) :: ciso
 
     ! General tracers
     integer (int_kind) :: po4_ind         = 0 ! dissolved inorganic phosphate
@@ -648,7 +659,6 @@ contains
     ! tracer_cnt by 1 for each tracer that is included. Note that this gives an
     ! accurate count whether the carbon isotope tracers are included or not.
 
-    use marbl_sizes,         only : marbl_total_tracer_cnt
     use marbl_constants_mod, only : c0
 
     class(marbl_tracer_index_type), intent(inout) :: this
@@ -659,14 +669,14 @@ contains
 
     integer :: n
 
-    associate(tracer_cnt      => marbl_total_tracer_cnt)
+    associate(tracer_cnt => this%marbl_total_tracer_cnt)
 
       tracer_cnt = 0
-      this%ciso_ind_beg = 0
-      this%ciso_ind_end = 0
+      this%ciso%ind_beg = 0
+      this%ciso%ind_end = 0
 
       ! General ecosys tracers
-      this%ecosys_base_ind_beg = tracer_cnt + 1
+      this%ecosys_base%ind_beg = tracer_cnt + 1
 
       tracer_cnt  = tracer_cnt + 1
       this%po4_ind = tracer_cnt
@@ -750,11 +760,12 @@ contains
           this%auto_inds(n)%CaCO3_ind = tracer_cnt
         end if
       end do
-      this%ecosys_base_ind_end = tracer_cnt
+      this%ecosys_base%ind_end = tracer_cnt
+      call this%ecosys_base%set_tracer_cnt()
 
       if (ciso_on) then
         ! Next tracer is start of the CISO tracers
-        this%ciso_ind_beg = tracer_cnt + 1
+        this%ciso%ind_beg = tracer_cnt + 1
 
         tracer_cnt     = tracer_cnt + 1
         this%di13c_ind = tracer_cnt
@@ -792,13 +803,29 @@ contains
 
         end do
 
-        this%ciso_ind_end = tracer_cnt
+        this%ciso%ind_end = tracer_cnt
+        call this%ciso%set_tracer_cnt()
+
+      else
+
+        this%ciso%cnt = 0
+        this%ciso%ind_beg = 0
+        this%ciso%ind_end = 0
 
       end if
-
     end associate
 
   end subroutine tracer_index_constructor
+
+  !*****************************************************************************
+
+  subroutine set_tracer_cnt(this)
+
+    class(marbl_tracer_count_type), intent(inout) :: this
+
+    this%cnt = this%ind_end - this%ind_beg + 1
+
+  end subroutine set_tracer_cnt
 
   !*****************************************************************************
 
@@ -918,18 +945,18 @@ contains
   subroutine interior_forcing_index_constructor(this,                         &
                                                 tracer_names,                 &
                                                 tracer_restore_vars,          &
+                                                marbl_total_tracer_cnt,       &
                                                 num_interior_forcing_fields,  &
                                                 marbl_status_log)
 
     ! This subroutine sets the interior forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
 
-    use marbl_sizes, only : marbl_total_tracer_cnt
-
     class(marbl_interior_forcing_indexing_type), intent(inout) :: this
     character(len=char_len), dimension(:),       intent(in)    :: tracer_names
     character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
-    integer,                                     intent(out)   :: num_interior_forcing_fields
+    integer(int_kind),                           intent(in)    :: marbl_total_tracer_cnt
+    integer(int_kind),                           intent(out)   :: num_interior_forcing_fields
     type(marbl_log_type),                        intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_internal_types:interior_forcing_index_constructor'

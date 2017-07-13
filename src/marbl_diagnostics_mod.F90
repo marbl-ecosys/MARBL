@@ -8,7 +8,6 @@ module marbl_diagnostics_mod
   use marbl_kinds_mod       , only : log_kind
   use marbl_kinds_mod       , only : char_len
 
-  use marbl_sizes           , only : marbl_total_tracer_cnt
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
 
@@ -3078,10 +3077,10 @@ contains
        !    i.e. if this is called from 2 threads simulatneously, a race condition
        !    on the allocation status check and allocation is introduced
        if (.not. allocated(ind%restore_tend)) then
-          allocate(ind%restore_tend(marbl_total_tracer_cnt))
+          allocate(ind%restore_tend(marbl_tracer_indices%marbl_total_tracer_cnt))
        end if
 
-       do n = 1,marbl_total_tracer_cnt
+       do n = 1,marbl_tracer_indices%marbl_total_tracer_cnt
           ! restoring tendency
           lname = trim(marbl_tracer_metadata(n)%long_name) // " Restoring Tendency"
           sname = trim(marbl_tracer_metadata(n)%short_name) // "_RESTORE_TEND"
@@ -4317,7 +4316,7 @@ contains
          ind     => marbl_interior_diag_ind  &
          )
 
-    do n=1, marbl_total_tracer_cnt
+    do n=1, size(ind%restore_tend)
        diags(ind%restore_tend(n))%field_3d(:,1) = interior_restore(n,:)
     end do
 

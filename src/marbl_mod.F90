@@ -159,7 +159,6 @@ module marbl_mod
   use marbl_parms, only : caco3_bury_thres_depth
   use marbl_parms, only : PON_bury_coeff
 
-  use marbl_sizes, only : ecosys_base_tracer_cnt
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
   use marbl_sizes, only : grazer_prey_cnt
@@ -212,7 +211,6 @@ module marbl_mod
   public  :: marbl_set_interior_forcing
   public  :: marbl_set_surface_forcing
   public  :: marbl_set_global_scalars_interior
-  public  :: marbl_tracer_index_consistency_check
 
   private :: marbl_init_non_autotroph_tracer_metadata
   private :: marbl_init_non_autotroph_tracers_metadata
@@ -922,7 +920,6 @@ contains
     !  Compute time derivatives for ecosystem state variables
 
     use marbl_ciso_mod      , only : marbl_ciso_set_interior_forcing
-    use marbl_sizes         , only : marbl_total_tracer_cnt
     use marbl_internal_types, only : marbl_internal_timers_type
     use marbl_internal_types, only : marbl_timer_indexing_type
     use marbl_internal_types, only : marbl_interior_saved_state_indexing_type
@@ -950,7 +947,7 @@ contains
     !-----------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_mod:marbl_set_interior_forcing'
 
-    real(r8), dimension(marbl_total_tracer_cnt, domain%km) :: interior_restore
+    real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
 
     type(marbl_interior_share_type)    :: marbl_interior_share(domain%km)
     type(marbl_autotroph_share_type)   :: marbl_autotroph_share(autotroph_cnt, domain%km)
@@ -980,7 +977,7 @@ contains
     real (r8) :: Lig_deg(domain%km)          ! loss of Fe-binding Ligand from bacterial degradation
     real (r8) :: Lig_loss(domain%km)         ! loss of Fe-binding Ligand
     real (r8) :: totalChl_local(domain%km)   ! local value of totalChl
-    real (r8) :: tracer_local(ecosys_base_tracer_cnt, domain%km)
+    real (r8) :: tracer_local(marbl_tracer_indices%ecosys_base%cnt, domain%km)
 
     type(zooplankton_local_type)             :: zooplankton_local(zooplankton_cnt, domain%km)
     type(autotroph_local_type)               :: autotroph_local(autotroph_cnt, domain%km)
@@ -1524,28 +1521,28 @@ contains
     use marbl_parms        , only : parm_Fe_desorption_rate0
     use marbl_parms        , only : parm_sed_denitrif_coeff
 
-    integer (int_kind)                      , intent(in)    :: k                   ! vertical model level
-    type(marbl_domain_type)                 , intent(in)    :: domain
-    real (r8)                               , intent(in)    :: temperature         ! temperature for scaling functions bsi%diss
-    real (r8), dimension(ecosys_base_tracer_cnt) , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
-    type(carbonate_type)                    , intent(in)    :: carbonate
-    real(r8)                                , intent(in)    :: fesedflux           ! sedimentary Fe input
-    real(r8)                                , intent(out)   :: PON_remin           ! remin of PON
-    real(r8)                                , intent(out)   :: PON_sed_loss        ! loss of PON to sediments
-    type(column_sinking_particle_type)      , intent(inout) :: POC                 ! base units = nmol C
-    type(column_sinking_particle_type)      , intent(inout) :: POP                 ! base units = nmol P
-    type(column_sinking_particle_type)      , intent(inout) :: P_CaCO3             ! base units = nmol CaCO3
-    type(column_sinking_particle_type)      , intent(inout) :: P_CaCO3_ALT_CO2     ! base units = nmol CaCO3
-    type(column_sinking_particle_type)      , intent(inout) :: P_SiO2              ! base units = nmol SiO2
-    type(column_sinking_particle_type)      , intent(inout) :: dust                ! base units = g
-    type(column_sinking_particle_type)      , intent(inout) :: P_iron              ! base units = nmol Fe
-    real (r8)                               , intent(inout) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux
-    real (r8)                               , intent(out)   :: sed_denitrif        ! sedimentary denitrification (umolN/cm^2/s)
-    real (r8)                               , intent(out)   :: other_remin         ! sedimentary remin not due to oxic or denitrification
-    type(marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
-    type(marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
-    real (r8)                               , intent(inout) :: glo_avg_fields_interior(:)
-    type(marbl_log_type)                    , intent(inout) :: marbl_status_log
+    integer (int_kind)                , intent(in)    :: k                   ! vertical model level
+    type(marbl_domain_type)           , intent(in)    :: domain
+    real (r8)                         , intent(in)    :: temperature         ! temperature for scaling functions bsi%diss
+    real (r8), dimension(:)           , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
+    type(carbonate_type)              , intent(in)    :: carbonate
+    real(r8)                          , intent(in)    :: fesedflux           ! sedimentary Fe input
+    real(r8)                          , intent(out)   :: PON_remin           ! remin of PON
+    real(r8)                          , intent(out)   :: PON_sed_loss        ! loss of PON to sediments
+    type(column_sinking_particle_type), intent(inout) :: POC                 ! base units = nmol C
+    type(column_sinking_particle_type), intent(inout) :: POP                 ! base units = nmol P
+    type(column_sinking_particle_type), intent(inout) :: P_CaCO3             ! base units = nmol CaCO3
+    type(column_sinking_particle_type), intent(inout) :: P_CaCO3_ALT_CO2     ! base units = nmol CaCO3
+    type(column_sinking_particle_type), intent(inout) :: P_SiO2              ! base units = nmol SiO2
+    type(column_sinking_particle_type), intent(inout) :: dust                ! base units = g
+    type(column_sinking_particle_type), intent(inout) :: P_iron              ! base units = nmol Fe
+    real (r8)                         , intent(inout) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux
+    real (r8)                         , intent(out)   :: sed_denitrif        ! sedimentary denitrification (umolN/cm^2/s)
+    real (r8)                         , intent(out)   :: other_remin         ! sedimentary remin not due to oxic or denitrification
+    type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
+    type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
+    real (r8)                         , intent(inout) :: glo_avg_fields_interior(:)
+    type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -2257,7 +2254,6 @@ contains
     use marbl_parms              , only : xkw_coeff
     use marbl_parms              , only : iron_frac_in_dust
     use marbl_parms              , only : iron_frac_in_bc
-    use marbl_sizes              , only : marbl_total_tracer_cnt
     use marbl_ciso_mod           , only : marbl_ciso_set_surface_forcing
 
     implicit none
@@ -2851,7 +2847,7 @@ contains
     end do
 
   end subroutine marbl_init_autotroph_tracer_metadata
-  
+
   !***********************************************************************
 
   subroutine marbl_setup_local_tracers(column_kmt, marbl_tracer_indices, autotroph_parms, &
@@ -2881,11 +2877,11 @@ contains
     !-----------------------------------------------------------------------
 
     do k = 1, column_kmt
-       tracer_local(1:ecosys_base_tracer_cnt,k) = max(c0, tracers(1:ecosys_base_tracer_cnt,k))
+       tracer_local(:,k) = max(c0, tracers(1:size(tracer_local,1),k))
     end do
 
-    do k = column_kmt+1, size(tracers,2)
-       tracer_local(1:ecosys_base_tracer_cnt,k) = c0
+    do k = column_kmt+1, size(tracer_local,2)
+       tracer_local(:,k) = c0
     end do
 
     !-----------------------------------------------------------------------
@@ -2938,41 +2934,6 @@ contains
     totalChl_local = sum(autotroph_local(:,:)%Chl, dim=1)
 
   end subroutine marbl_setup_local_tracers
-
-  !***********************************************************************
-
-  subroutine marbl_tracer_index_consistency_check(tracer_indices, marbl_status_log)
-
-    use marbl_ciso_mod, only : marbl_ciso_tracer_index_consistency_check
-
-    type(marbl_tracer_index_type), intent(in)    :: tracer_indices
-    type(marbl_log_type),          intent(inout) :: marbl_status_log
-
-    character(len=*), parameter :: subname = 'marbl_mod:marbl_tracer_index_consistency_check'
-    character(len=char_len)     :: log_message
-
-    integer :: tracer_cnt
-
-    tracer_cnt = tracer_indices%ecosys_base_ind_end -                         &
-                 (tracer_indices%ecosys_base_ind_beg-1)
-    if (tracer_cnt.ne.ecosys_base_tracer_cnt) then
-      write(log_message, "(A,I0,A,I0)") "Expected ", ecosys_base_tracer_cnt,  &
-            " base tracers, but provided indexes for ", tracer_cnt
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    if (ciso_on) then
-      call marbl_ciso_tracer_index_consistency_check(tracer_indices,          &
-           marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace('ciso_tracer_ind_consistency', &
-             subname)
-        return
-      end if
-    end if
-
-  end subroutine marbl_tracer_index_consistency_check
 
   !***********************************************************************
 
@@ -3045,12 +3006,12 @@ contains
 
     implicit none
 
-    integer (int_kind)         , intent(in) :: auto_cnt
-    type(autotroph_parms_type) , intent(in) :: autotroph_parms(auto_cnt)             ! autotrophs
-    type(autotroph_local_type) , intent(in) :: autotroph_local(auto_cnt)
-    real (r8)                  , intent(in) :: tracer_local(ecosys_base_tracer_cnt) ! local copies of model tracer concentrations
-    type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
-    type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species(auto_cnt)
+    integer (int_kind)                    , intent(in)    :: auto_cnt
+    type(autotroph_parms_type)            , intent(in)    :: autotroph_parms(:)             ! autotrophs
+    type(autotroph_local_type)            , intent(in)    :: autotroph_local(:)
+    real (r8)                             , intent(in)    :: tracer_local(:) ! local copies of model tracer concentrations
+    type(marbl_tracer_index_type)         , intent(in)    :: marbl_tracer_indices
+    type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species(:)
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -3301,13 +3262,13 @@ contains
     real (r8)                               , intent(in)    :: temperature(:)
     real (r8)                               , intent(in)    :: press_bar(:)
     real (r8)                               , intent(in)    :: salinity(:)
-    real (r8)                               , intent(in)    :: tracer_local(ecosys_base_tracer_cnt,domain%km) ! local copies of model tracer concentrations
+    real (r8)                               , intent(in)    :: tracer_local(:,:)       ! local copies of model tracer concentrations
     type(marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
-    type(carbonate_type)                    , intent(out)   :: carbonate(domain%km)
-    real(r8)                                , intent(inout) :: ph_prev_col(domain%km)
-    real(r8)                                , intent(inout) :: ph_prev_alt_co2_col(domain%km)
-    real(r8)                                , intent(inout) :: zsat_calcite(domain%km)                   ! Calcite Saturation Depth
-    real(r8)                                , intent(inout) :: zsat_aragonite(domain%km)                 ! Aragonite Saturation Depth
+    type(carbonate_type)                    , intent(out)   :: carbonate(:)            ! km
+    real(r8)                                , intent(inout) :: ph_prev_col(:)          ! km
+    real(r8)                                , intent(inout) :: ph_prev_alt_co2_col(:)  ! km
+    real(r8)                                , intent(inout) :: zsat_calcite(:)         ! Calcite Saturation Depth (km)
+    real(r8)                                , intent(inout) :: zsat_aragonite(:)       ! Aragonite Saturation Depth (km)
     type(marbl_log_type)                    , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
@@ -3548,11 +3509,11 @@ contains
        tracer_local, marbl_tracer_indices, autotroph_secondary_species)
 
     integer(int_kind)                      , intent(in)  :: auto_cnt
-    type(autotroph_config_type)            , intent(in)  :: auto_config(auto_cnt)
-    type(autotroph_parms_type)             , intent(in)  :: auto_meta(auto_cnt)
-    real(r8)                               , intent(in)  :: tracer_local(ecosys_base_tracer_cnt)
+    type(autotroph_config_type)            , intent(in)  :: auto_config(:)
+    type(autotroph_parms_type)             , intent(in)  :: auto_meta(:)
+    real(r8)                               , intent(in)  :: tracer_local(:)
     type(marbl_tracer_index_type)          , intent(in)  :: marbl_tracer_indices
-    type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(auto_cnt)
+    type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(:)
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -4281,14 +4242,14 @@ contains
     integer                                 , intent(in)  :: auto_cnt
     integer                                 , intent(in)  :: zoo_cnt
     integer(int_kind)                       , intent(in)  :: PAR_nsubcols
-    type(autotroph_parms_type)              , intent(in)  :: auto_meta(auto_cnt)
-    type(zooplankton_secondary_species_type), intent(in)  :: zooplankton_secondary_species(zoo_cnt)
-    type(autotroph_secondary_species_type)  , intent(in)  :: autotroph_secondary_species(auto_cnt)
-    real(r8)                                , intent(in)  :: PAR_col_frac(PAR_nsubcols)
-    real(r8)                                , intent(in)  :: PAR_in(PAR_nsubcols)
-    real(r8)                                , intent(in)  :: PAR_avg(PAR_nsubcols)
+    type(autotroph_parms_type)              , intent(in)  :: auto_meta(:)
+    type(zooplankton_secondary_species_type), intent(in)  :: zooplankton_secondary_species(:)
+    type(autotroph_secondary_species_type)  , intent(in)  :: autotroph_secondary_species(:)
+    real(r8)                                , intent(in)  :: PAR_col_frac(:)
+    real(r8)                                , intent(in)  :: PAR_in(:)
+    real(r8)                                , intent(in)  :: PAR_avg(:)
     real(r8)                                , intent(in)  :: dz1
-    real(r8)                                , intent(in)  :: tracer_local(ecosys_base_tracer_cnt)
+    real(r8)                                , intent(in)  :: tracer_local(:)
     type(marbl_tracer_index_type)           , intent(in)  :: marbl_tracer_indices
     type(dissolved_organic_matter_type)     , intent(out) :: dissolved_organic_matter
 
@@ -4890,11 +4851,11 @@ contains
 
     integer                                  , intent(in)  :: auto_cnt
     integer                                  , intent(in)  :: zoo_cnt
-    type(autotroph_config_type)              , intent(in)  :: auto_config(auto_cnt)
-    type(autotroph_parms_type)               , intent(in)  :: auto_meta(auto_cnt)
-    type(zooplankton_parms_type)             , intent(in)  :: zoo_meta(zoo_cnt)
-    type(zooplankton_secondary_species_type) , intent(in)  :: zooplankton_secondary_species(zoo_cnt)
-    type(autotroph_secondary_species_type)   , intent(in)  :: autotroph_secondary_species(auto_cnt)
+    type(autotroph_config_type)              , intent(in)  :: auto_config(:)
+    type(autotroph_parms_type)               , intent(in)  :: auto_meta(:)
+    type(zooplankton_parms_type)             , intent(in)  :: zoo_meta(:)
+    type(zooplankton_secondary_species_type) , intent(in)  :: zooplankton_secondary_species(:)
+    type(autotroph_secondary_species_type)   , intent(in)  :: autotroph_secondary_species(:)
     type(dissolved_organic_matter_type)      , intent(in)  :: dissolved_organic_matter
     real(r8)                                 , intent(in)  :: nitrif
     real(r8)                                 , intent(in)  :: denitrif
@@ -4910,11 +4871,11 @@ contains
     real(r8)                                 , intent(in)  :: P_CaCO3_ALT_CO2_remin
     real(r8)                                 , intent(in)  :: other_remin
     real(r8)                                 , intent(in)  :: PON_remin
-    real(r8)                                 , intent(in)  :: interior_restore(ecosys_base_tracer_cnt)
+    real(r8)                                 , intent(in)  :: interior_restore(:)
     real(r8)                                 , intent(in)  :: O2_loc
     real(r8)                                 , intent(out) :: o2_production
     real(r8)                                 , intent(out) :: o2_consumption
-    real(r8)                                 , intent(out) :: dtracers(ecosys_base_tracer_cnt)
+    real(r8)                                 , intent(out) :: dtracers(:)
     type(marbl_tracer_index_type)            , intent(in)  :: marbl_tracer_indices
 
     !-----------------------------------------------------------------------
@@ -5189,7 +5150,7 @@ contains
        QA_dust_def, &
        marbl_interior_share)
 
-    real(r8)                            , intent(in)    :: tracer_local(ecosys_base_tracer_cnt)
+    real(r8)                            , intent(in)    :: tracer_local(:)
     type(marbl_tracer_index_type)       , intent(in)    :: marbl_tracer_indices
     type(carbonate_type)                , intent(in)    :: carbonate
     type(dissolved_organic_matter_type) , intent(in)    :: dissolved_organic_matter

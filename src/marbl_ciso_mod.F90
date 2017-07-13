@@ -47,7 +47,7 @@ module marbl_ciso_mod
   use marbl_internal_types  , only : marbl_particulate_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_tracer_index_type
-  
+
   implicit none
   private
 
@@ -58,7 +58,6 @@ module marbl_ciso_mod
   public  :: marbl_ciso_init_tracer_metadata
   public  :: marbl_ciso_set_interior_forcing
   public  :: marbl_ciso_set_surface_forcing
-  public  :: marbl_ciso_tracer_index_consistency_check
 
   private :: setup_cell_attributes
   private :: setup_local_column_tracers
@@ -69,7 +68,7 @@ module marbl_ciso_mod
 
   type, private :: autotroph_local_type
      real (r8) :: C13     ! local copy of model autotroph C13
-     real (r8) :: C14     ! local copy of model autotroph C14 
+     real (r8) :: C14     ! local copy of model autotroph C14
      real (r8) :: Ca13CO3 ! local copy of model autotroph Ca13CO3
      real (r8) :: Ca14CO3 ! local copy of model autotroph Ca14CO3
   end type autotroph_local_type
@@ -119,8 +118,8 @@ contains
               di14c_ind         => marbl_tracer_indices%di14c_ind,            &
               do14c_ind         => marbl_tracer_indices%do14c_ind,            &
               zoo14c_ind        => marbl_tracer_indices%zoo14c_ind,           &
-              ciso_ind_beg      => marbl_tracer_indices%ciso_ind_beg,         &
-              ciso_ind_end      => marbl_tracer_indices%ciso_ind_end          &
+              ciso_ind_beg      => marbl_tracer_indices%ciso%ind_beg,         &
+              ciso_ind_end      => marbl_tracer_indices%ciso%ind_end          &
              )
 
     ! All CISO tracers share units, tend_units, flux_units, and
@@ -895,7 +894,7 @@ contains
        marbl_interior_diags)
 
     !-----------------------------------------------------------------------
-    ! Deallocate memory for column_sinking_particle data types 
+    ! Deallocate memory for column_sinking_particle data types
     !-----------------------------------------------------------------------
 
     call PO13C%destruct()
@@ -904,30 +903,6 @@ contains
     call P_Ca14CO3%destruct()
 
   end subroutine marbl_ciso_set_interior_forcing
-
-  !***********************************************************************
-
-  subroutine marbl_ciso_tracer_index_consistency_check(tracer_indices, marbl_status_log)
-
-    use marbl_sizes, only : ciso_tracer_cnt
-
-    type(marbl_tracer_index_type), intent(in)    :: tracer_indices
-    type(marbl_log_type),          intent(inout) :: marbl_status_log
-
-    character(len=*), parameter :: subname = 'marbl_ciso_mod:' // &
-                  'marbl_ciso_tracer_index_consistency_check'
-    character(len=char_len)     :: log_message
-
-    integer :: tracer_cnt
-
-    tracer_cnt = tracer_indices%ciso_ind_end - (tracer_indices%ciso_ind_beg-1)
-    if (tracer_cnt.ne.ciso_tracer_cnt) then
-      write(log_message, "(A,I0,A,I0)") "Expected ", ciso_tracer_cnt,         &
-            " CISO tracers, but provided indexes for ", tracer_cnt
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-  end subroutine marbl_ciso_tracer_index_consistency_check
 
   !***********************************************************************
 
@@ -1803,8 +1778,8 @@ contains
          do13c_ind          => marbl_tracer_indices%do13c_ind                  , &
          di14c_ind          => marbl_tracer_indices%di14c_ind                  , &
          do14c_ind          => marbl_tracer_indices%do14c_ind                  , &
-              ciso_ind_beg  => marbl_tracer_indices%ciso_ind_beg               , &
-              ciso_ind_end  => marbl_tracer_indices%ciso_ind_end                 &
+         ciso_ind_beg       => marbl_tracer_indices%ciso%ind_beg               , &
+         ciso_ind_end       => marbl_tracer_indices%ciso%ind_end                 &
          )
 
     !-----------------------------------------------------------------------

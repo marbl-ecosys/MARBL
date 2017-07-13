@@ -20,7 +20,6 @@ module marbl_interface
   use marbl_kinds_mod       , only : r8, log_kind, int_kind, log_kind, char_len
   use marbl_logging         , only : marbl_log_type
 
-  use marbl_sizes           , only : marbl_total_tracer_cnt
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
 
@@ -311,7 +310,6 @@ contains
 
     use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
     use marbl_mod             , only : marbl_init_tracer_metadata
-    use marbl_mod             , only : marbl_tracer_index_consistency_check
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
     use marbl_config_mod      , only : ladjust_bury_coeff
     use marbl_config_mod      , only : autotrophs_config
@@ -387,7 +385,7 @@ contains
     call this%tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs_config, &
          zooplankton_config)
     if (present(marbl_tracer_cnt)) &
-      marbl_tracer_cnt = marbl_total_tracer_cnt
+      marbl_tracer_cnt = this%tracer_indices%marbl_total_tracer_cnt
 
     !--------------------------------------------------------------------
     ! call constructors and allocate memory
@@ -406,13 +404,13 @@ contains
          zw                            = gcm_zw,                &
          zt                            = gcm_zt)
 
-    allocate(this%surface_vals(num_surface_elements, marbl_total_tracer_cnt))
+    allocate(this%surface_vals(num_surface_elements, this%tracer_indices%marbl_total_tracer_cnt))
 
-    allocate(this%surface_tracer_fluxes(num_surface_elements, marbl_total_tracer_cnt))
+    allocate(this%surface_tracer_fluxes(num_surface_elements, this%tracer_indices%marbl_total_tracer_cnt))
 
-    allocate(this%column_tracers(marbl_total_tracer_cnt, num_levels))
+    allocate(this%column_tracers(this%tracer_indices%marbl_total_tracer_cnt, num_levels))
 
-    allocate(this%column_dtracers(marbl_total_tracer_cnt, num_levels))
+    allocate(this%column_dtracers(this%tracer_indices%marbl_total_tracer_cnt, num_levels))
 
     !--------------------------------------------------------------------
     ! set up saved state variables
@@ -437,7 +435,7 @@ contains
     ! And then update tracer input info based on namelist
     !--------------------------------------------------------------------
 
-    allocate(this%tracer_metadata(marbl_total_tracer_cnt))
+    allocate(this%tracer_metadata(this%tracer_indices%marbl_total_tracer_cnt))
 
     call marbl_init_tracer_metadata( &
          this%tracer_metadata,       &
@@ -455,22 +453,15 @@ contains
     end if
 
     !--------------------------------------------------------------------
-    ! Report what tracers are being used, abort if count is not correct
+    ! Report what tracers are being used
     !--------------------------------------------------------------------
 
     call this%StatusLog%log_header('MARBL Tracer indices', subname)
-    do i=1,marbl_total_tracer_cnt
+    do i=1,this%tracer_indices%marbl_total_tracer_cnt
       write(log_message, "(I3,2A)") i, '. ', &
                                  trim(this%tracer_metadata(i)%short_name)
       call this%StatusLog%log_noerror(log_message, subname)
     end do
-
-    call marbl_tracer_index_consistency_check(this%tracer_indices, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_tracer_index_consistency_check', &
-           subname)
-      return
-    end if
 
     !--------------------------------------------------------------------
     ! Initialize marbl diagnostics
@@ -492,7 +483,7 @@ contains
     ! set default values for parameters
     !---------------------------------------------------------------------------
 
-    call marbl_parms_set_defaults(num_levels)
+    call marbl_parms_set_defaults(this%tracer_indices%marbl_total_tracer_cnt, num_levels)
 
     !---------------------------------------------------------------------------
     ! read parameters from namelist (if present)
@@ -598,8 +589,10 @@ contains
 
     call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2,    &
                                    ladjust_bury_coeff, num_surface_forcing_fields)
-    call this%interior_forcing_ind%construct(this%tracer_metadata%short_name,        &
-                                   tracer_restore_vars, num_interior_forcing_fields, &
+    call this%interior_forcing_ind%construct(this%tracer_metadata%short_name,  &
+                                   tracer_restore_vars,                        &
+                                   this%tracer_indices%marbl_total_tracer_cnt, &
+                                   num_interior_forcing_fields,                &
                                    this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("interior_forcing_ind%construct",   &
@@ -893,7 +886,7 @@ contains
     integer :: n
 
     get_tracer_index = 0
-    do n=1,marbl_total_tracer_cnt
+    do n=1,this%tracer_indices%marbl_total_tracer_cnt
       if (trim(tracer_name).eq.trim(this%tracer_metadata(n)%short_name) .or.  &
           trim(tracer_name).eq.trim(this%tracer_metadata(n)%long_name)) then
         get_tracer_index = n
