@@ -120,9 +120,9 @@ module marbl_interface
 
    contains
 
-     procedure, public  :: config
-     procedure, public  :: init
-     procedure, public  :: complete_config_and_init
+     procedure, public  :: init_configuration
+     procedure, public  :: init_parameters_and_tracers
+     procedure, public  :: init_complete
      procedure, public  :: reset_timers
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
@@ -134,9 +134,9 @@ module marbl_interface
 
   end type marbl_interface_class
 
-  private :: config
-  private :: init
-  private :: complete_config_and_init
+  private :: init_configuration
+  private :: init_parameters_and_tracers
+  private :: init_complete
   private :: reset_timers
   private :: extract_timing
   private :: glo_vars_init
@@ -150,7 +150,7 @@ contains
 
   !***********************************************************************
 
-  subroutine config(this,                 &
+  subroutine init_configuration(this,     &
        lgcm_has_global_ops,               &
        gcm_nl_buffer)
 
@@ -162,7 +162,7 @@ contains
     character(len=*), optional,   intent(in)    :: gcm_nl_buffer(:)
     logical,          optional,   intent(in)    :: lgcm_has_global_ops
 
-    character(len=*), parameter :: subname = 'marbl_interface:config'
+    character(len=*), parameter :: subname = 'marbl_interface:init_configuration'
     character(len=char_len)     :: log_message
 
     !--------------------------------------------------------------------
@@ -237,18 +237,18 @@ contains
       return
     end if
 
-  end subroutine config
+  end subroutine init_configuration
 
   !***********************************************************************
 
-  subroutine init(this,                   &
-       gcm_num_levels,                    &
-       gcm_num_PAR_subcols,               &
-       gcm_num_elements_surface_forcing,  &
-       gcm_delta_z,                       &
-       gcm_zw,                            &
-       gcm_zt,                            &
-       gcm_nl_buffer,                     &
+  subroutine init_parameters_and_tracers(this, &
+       gcm_num_levels,                         &
+       gcm_num_PAR_subcols,                    &
+       gcm_num_elements_surface_forcing,       &
+       gcm_delta_z,                            &
+       gcm_zw,                                 &
+       gcm_zt,                                 &
+       gcm_nl_buffer,                          &
        marbl_tracer_cnt)
 
     use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
@@ -276,7 +276,7 @@ contains
     character(len=*),  optional,  intent(in)    :: gcm_nl_buffer(:)
     integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
-    character(len=*), parameter :: subname = 'marbl_interface:init'
+    character(len=*), parameter :: subname = 'marbl_interface:init_parameters_and_tracers'
     character(len=char_len)     :: log_message
 
     integer :: i
@@ -470,11 +470,11 @@ contains
       return
     end if
 
-  end subroutine init
+  end subroutine init_parameters_and_tracers
 
   !***********************************************************************
 
-  subroutine complete_config_and_init(this)
+  subroutine init_complete(this)
 
     use marbl_parms,       only : set_derived_parms
     use marbl_parms,       only : tracer_restore_vars
@@ -487,7 +487,7 @@ contains
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:complete_config_and_init'
+    character(len=*), parameter :: subname = 'marbl_interface:init_complete'
     character(len=char_len)     :: log_message
 
     integer :: num_surface_forcing_fields
@@ -608,7 +608,7 @@ contains
       return
     end if
 
-  end subroutine complete_config_and_init
+  end subroutine init_complete
 
   !***********************************************************************
 

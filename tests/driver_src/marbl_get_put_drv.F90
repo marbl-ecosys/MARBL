@@ -39,7 +39,7 @@ Contains
     end do
 
     ! Call marbl%config
-    call marbl_instance%config(lgcm_has_global_ops = .true.)
+    call marbl_instance%init_configuration(lgcm_has_global_ops = .true.)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%config', subname)
       return
@@ -68,7 +68,7 @@ Contains
     end if
 
     ! Call marbl%init
-    call marbl_instance%init(gcm_num_levels = km,                             &
+    call marbl_instance%init_parameters_and_tracers(gcm_num_levels = km,      &
                              gcm_num_PAR_subcols = 1,                         &
                              gcm_num_elements_surface_forcing = 1,            &
                              gcm_delta_z = delta_z,                           &
@@ -96,7 +96,7 @@ Contains
     ! Reset to default values + ciso_on (needed to ensure tracer count consistency)
     call marbl_parms_set_defaults(km)
 
-    call marbl_instance%complete_config_and_init
+    call marbl_instance%init_complete()
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace(                          &
            'marbl%complete_config_and_init', subname)
