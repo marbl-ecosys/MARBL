@@ -238,7 +238,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_parms_set_defaults(marbl_total_tracer_cnt, km)
+  subroutine marbl_parms_set_defaults(tracer_cnt, km)
     ! assign default values to all module variables
 
     ! NOTE: defaults values below, of vars in the marbl_parms framework, may be overridden at runtime
@@ -247,8 +247,8 @@ contains
     use marbl_config_mod      , only : autotrophs_config
     use marbl_config_mod      , only : zooplankton_config
 
-    integer, intent(in) :: marbl_total_tracer_cnt ! number of marbl tracers
-    integer, intent(in) :: km                     ! max number of levels
+    integer, intent(in) :: tracer_cnt ! number of marbl tracers
+    integer, intent(in) :: km         ! max number of levels
 
     !---------------------------------------------------------------------------
     !   local variables
@@ -449,7 +449,7 @@ contains
 
     ! FIXME #69: not thread-safe!
     if (.not.allocated(tracer_restore_vars)) &
-      allocate(tracer_restore_vars(marbl_total_tracer_cnt))
+      allocate(tracer_restore_vars(tracer_cnt))
 
     ! initialize namelist variables to default values
     tracer_restore_vars = ''

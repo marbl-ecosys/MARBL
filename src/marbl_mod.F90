@@ -927,13 +927,13 @@ contains
 
     type    (marbl_domain_type)                 , intent(in)    :: domain
     type(marbl_forcing_fields_type)             , intent(in)    :: interior_forcings(:)
-    real    (r8)                                , intent(in)    :: tracers(:,: )         ! (marbl_total_tracer_cnt, km) tracer values
+    real    (r8)                                , intent(in)    :: tracers(:,: )         ! (tracer_cnt, km) tracer values
     type(marbl_surface_forcing_indexing_type)   , intent(in)    :: surface_forcing_indices
     type(marbl_interior_forcing_indexing_type)  , intent(in)    :: interior_forcing_indices
     type    (marbl_PAR_type)                    , intent(inout) :: PAR
     type    (marbl_saved_state_type)            , intent(inout) :: saved_state
     type    (marbl_interior_saved_state_indexing_type), intent(in) :: saved_state_ind
-    real    (r8)                                , intent(out)   :: dtracers(:,:)          ! (marbl_total_tracer_cnt, km) computed source/sink terms
+    real    (r8)                                , intent(out)   :: dtracers(:,:)          ! (tracer_cnt, km) computed source/sink terms
     type    (marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
     type    (marbl_internal_timers_type)        , intent(inout) :: marbl_timers
     type    (marbl_timer_indexing_type)         , intent(in)    :: marbl_timer_indices

@@ -3077,10 +3077,10 @@ contains
        !    i.e. if this is called from 2 threads simulatneously, a race condition
        !    on the allocation status check and allocation is introduced
        if (.not. allocated(ind%restore_tend)) then
-          allocate(ind%restore_tend(marbl_tracer_indices%marbl_total_tracer_cnt))
+          allocate(ind%restore_tend(marbl_tracer_indices%total_cnt))
        end if
 
-       do n = 1,marbl_tracer_indices%marbl_total_tracer_cnt
+       do n = 1,marbl_tracer_indices%total_cnt
           ! restoring tendency
           lname = trim(marbl_tracer_metadata(n)%long_name) // " Restoring Tendency"
           sname = trim(marbl_tracer_metadata(n)%short_name) // "_RESTORE_TEND"
@@ -3147,7 +3147,7 @@ contains
     type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
 
     type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
-    real(r8), intent(in) :: dtracers(:,:) ! (marbl_total_tracer_cnt, km) computed source/sink terms
+    real(r8), intent(in) :: dtracers(:,:) ! (tracer_cnt, km) computed source/sink terms
 
     type(marbl_tracer_index_type)             , intent(in) :: marbl_tracer_indices
     type (carbonate_type)                     , intent(in) :: carbonate(domain%km)
@@ -3173,7 +3173,7 @@ contains
     real (r8)                                 , intent(in) :: Fefree(domain%km)
     real (r8)                                 , intent(in) :: Lig_photochem(domain%km)
     real (r8)                                 , intent(in) :: Lig_deg(domain%km)
-    real (r8)                                 , intent(in) :: interior_restore(:,:)       ! (marbl_total_tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
+    real (r8)                                 , intent(in) :: interior_restore(:,:)       ! (tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
     type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_forcing_diags
     type (marbl_log_type)                     , intent(inout) :: marbl_status_log
 
@@ -4016,8 +4016,8 @@ contains
     type(marbl_domain_type)     , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: POC
     type(column_sinking_particle_type) , intent(in)    :: P_CaCO3
-    real(r8)                           , intent(in)    :: dtracers(:,:)         ! marbl_total_tracer_cnt, km
-    real(r8)                           , intent(in)    :: interior_restore(:,:) ! marbl_total_tracer_cnt, km
+    real(r8)                           , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
+    real(r8)                           , intent(in)    :: interior_restore(:,:) ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
@@ -4081,8 +4081,8 @@ contains
     real(r8)                               , intent(in)    :: denitrif(:)     ! km
     real(r8)                               , intent(in)    :: sed_denitrif(:) ! km
     type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:)
-    real(r8)                               , intent(in)    :: dtracers(:,:)         ! marbl_total_tracer_cnt, km
-    real(r8)                               , intent(in)    :: interior_restore(:,:) ! marbl_total_tracer_cnt, km
+    real(r8)                               , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
+    real(r8)                               , intent(in)    :: interior_restore(:,:) ! tracer_cnt, km
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
 
@@ -4146,8 +4146,8 @@ contains
     type(marbl_domain_type)                , intent(in)    :: marbl_domain
     type(column_sinking_particle_type)     , intent(in)    :: POP
     type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:)
-    real(r8)                               , intent(in)    :: dtracers(:,:)         ! marbl_total_tracer_cnt, km
-    real(r8)                               , intent(in)    :: interior_restore(:,:) ! marbl_total_tracer_cnt, km
+    real(r8)                               , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
+    real(r8)                               , intent(in)    :: interior_restore(:,:) ! tracer_cnt, km
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
 
@@ -4208,8 +4208,8 @@ contains
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: P_SiO2
-    real(r8)                           , intent(in)    :: dtracers(:,:)         ! marbl_total_tracer_cnt, km
-    real(r8)                           , intent(in)    :: interior_restore(:,:) ! marbl_total_tracer_cnt, km
+    real(r8)                           , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
+    real(r8)                           , intent(in)    :: interior_restore(:,:) ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
@@ -4262,8 +4262,8 @@ contains
     type(column_sinking_particle_type) , intent(in)    :: P_iron
     type(column_sinking_particle_type) , intent(in)    :: dust
     real(r8)                           , intent(in)    :: fesedflux(:)          ! km
-    real(r8)                           , intent(in)    :: dtracers(:,:)         ! marbl_total_tracer_cnt, km
-    real(r8)                           , intent(in)    :: interior_restore(:,:) ! marbl_total_tracer_cnt, km
+    real(r8)                           , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
+    real(r8)                           , intent(in)    :: interior_restore(:,:) ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
@@ -4393,7 +4393,7 @@ contains
          eps_aq_g    , & ! equilibrium fractionation (CO2_gaseous <-> CO2_aq)
          eps_dic_g       ! equilibrium fractionation between total DIC and gaseous CO2
 
-    real (r8), intent(in) :: dtracers(:,:) ! (marbl_total_tracer_cnt, km) computed source/sink terms
+    real (r8), intent(in) :: dtracers(:,:) ! (tracer_cnt, km) computed source/sink terms
 
     type(marbl_tracer_index_type), intent(in)      :: marbl_tracer_indices
 

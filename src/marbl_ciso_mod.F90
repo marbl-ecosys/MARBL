@@ -1024,7 +1024,7 @@ contains
 
     integer(int_kind) , intent(in)  :: column_km
     integer(int_kind) , intent(in)  :: column_kmt
-    real (r8)         , intent(in)  :: column_tracer(:,:) ! (marbl_total_tracer_cnt,km) tracer values
+    real (r8)         , intent(in)  :: column_tracer(:,:) ! (tracer_cnt,km) tracer values
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
 
     real (r8)         , intent(out) :: DI13C_loc(:)     ! (km) local copy of model DI13C
@@ -1083,7 +1083,7 @@ contains
 
     integer(int_kind)          , intent(in)  :: column_km
     integer(int_kind)          , intent(in)  :: column_kmt
-    real (r8)                  , intent(in)  :: column_tracer(:,:)  ! (marbl_total_tracer_cnt, km) tracer values
+    real (r8)                  , intent(in)  :: column_tracer(:,:)  ! (tracer_cnt, km) tracer values
 
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
     type(autotroph_local_type) , intent(out) :: autotroph_loc(:,:)  ! (autotroph_cnt)

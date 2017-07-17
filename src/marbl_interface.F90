@@ -387,16 +387,16 @@ contains
 
     ! Ensure total tracer count is correct
     if ((this%tracer_indices%ecosys_base%cnt + this%tracer_indices%ciso%cnt) .ne.  &
-        this%tracer_indices%marbl_total_tracer_cnt) then
+        this%tracer_indices%total_cnt) then
       write(log_message,'(A,I0,A,I0,A,I0)') 'Tracer inconsistency: ecosys_base%cnt = ',      &
            this%tracer_indices%ecosys_base%cnt, 'ciso%cnt = ', this%tracer_indices%ciso%cnt, &
-           'but total tracer count is ', this%tracer_indices%marbl_total_tracer_cnt
+           'but total tracer count is ', this%tracer_indices%total_cnt
       call this%StatusLog%log_error(log_message, subname)
       return
     end if
 
     if (present(marbl_tracer_cnt)) &
-      marbl_tracer_cnt = this%tracer_indices%marbl_total_tracer_cnt
+      marbl_tracer_cnt = this%tracer_indices%total_cnt
 
     !--------------------------------------------------------------------
     ! call constructors and allocate memory
@@ -415,13 +415,13 @@ contains
          zw                            = gcm_zw,                &
          zt                            = gcm_zt)
 
-    allocate(this%surface_vals(num_surface_elements, this%tracer_indices%marbl_total_tracer_cnt))
+    allocate(this%surface_vals(num_surface_elements, this%tracer_indices%total_cnt))
 
-    allocate(this%surface_tracer_fluxes(num_surface_elements, this%tracer_indices%marbl_total_tracer_cnt))
+    allocate(this%surface_tracer_fluxes(num_surface_elements, this%tracer_indices%total_cnt))
 
-    allocate(this%column_tracers(this%tracer_indices%marbl_total_tracer_cnt, num_levels))
+    allocate(this%column_tracers(this%tracer_indices%total_cnt, num_levels))
 
-    allocate(this%column_dtracers(this%tracer_indices%marbl_total_tracer_cnt, num_levels))
+    allocate(this%column_dtracers(this%tracer_indices%total_cnt, num_levels))
 
     !--------------------------------------------------------------------
     ! set up saved state variables
@@ -446,7 +446,7 @@ contains
     ! And then update tracer input info based on namelist
     !--------------------------------------------------------------------
 
-    allocate(this%tracer_metadata(this%tracer_indices%marbl_total_tracer_cnt))
+    allocate(this%tracer_metadata(this%tracer_indices%total_cnt))
 
     call marbl_init_tracer_metadata( &
          this%tracer_metadata,       &
@@ -468,7 +468,7 @@ contains
     !--------------------------------------------------------------------
 
     call this%StatusLog%log_header('MARBL Tracer indices', subname)
-    do i=1,this%tracer_indices%marbl_total_tracer_cnt
+    do i=1,this%tracer_indices%total_cnt
       write(log_message, "(I3,2A)") i, '. ', &
                                  trim(this%tracer_metadata(i)%short_name)
       call this%StatusLog%log_noerror(log_message, subname)
@@ -494,7 +494,7 @@ contains
     ! set default values for parameters
     !---------------------------------------------------------------------------
 
-    call marbl_parms_set_defaults(this%tracer_indices%marbl_total_tracer_cnt, num_levels)
+    call marbl_parms_set_defaults(this%tracer_indices%total_cnt, num_levels)
 
     !---------------------------------------------------------------------------
     ! read parameters from namelist (if present)
@@ -896,7 +896,7 @@ contains
     integer :: n
 
     get_tracer_index = 0
-    do n=1,this%tracer_indices%marbl_total_tracer_cnt
+    do n=1,this%tracer_indices%total_cnt
       if (trim(tracer_name).eq.trim(this%tracer_metadata(n)%short_name) .or.  &
           trim(tracer_name).eq.trim(this%tracer_metadata(n)%long_name)) then
         get_tracer_index = n

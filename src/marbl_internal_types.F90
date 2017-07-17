@@ -379,7 +379,7 @@ module marbl_internal_types
 
   type, public :: marbl_tracer_index_type
     ! Book-keeping (tracer count and index ranges)
-    integer (int_kind) :: marbl_total_tracer_cnt
+    integer (int_kind) :: total_cnt
     type (marbl_tracer_count_type) :: ecosys_base
     type (marbl_tracer_count_type) :: ciso
 
@@ -669,7 +669,7 @@ contains
 
     integer :: n
 
-    associate(tracer_cnt => this%marbl_total_tracer_cnt)
+    associate(tracer_cnt => this%total_cnt)
 
       tracer_cnt = 0
       this%ciso%ind_beg = 0
@@ -960,12 +960,12 @@ contains
     character(len=*), parameter :: subname = 'marbl_internal_types:interior_forcing_index_constructor'
     character(len=char_len)     :: log_message
 
-    integer :: tracer_restore_cnt, marbl_total_tracer_cnt
+    integer :: tracer_restore_cnt, tracer_cnt
     integer :: m, n
 
     associate(forcing_cnt => num_interior_forcing_fields)
     
-      marbl_total_tracer_cnt = size(tracer_names)
+      tracer_cnt = size(tracer_names)
 
       forcing_cnt = 0
 
@@ -1009,9 +1009,9 @@ contains
       ! (3) writes all tracer restore fields to log
 
       tracer_restore_cnt = count((len_trim(tracer_restore_vars).gt.0))
-      allocate(this%tracer_restore_id(marbl_total_tracer_cnt))
+      allocate(this%tracer_restore_id(tracer_cnt))
       this%tracer_restore_id = 0
-      allocate(this%inv_tau_id(marbl_total_tracer_cnt))
+      allocate(this%inv_tau_id(tracer_cnt))
       this%inv_tau_id = 0
       allocate(this%tracer_id(tracer_restore_cnt))
       this%tracer_id = 0
@@ -1031,7 +1031,7 @@ contains
         end if
 
         ! Check for duplicate tracers in tracer_restore_vars
-        if (m .lt. marbl_total_tracer_cnt) then
+        if (m .lt. tracer_cnt) then
           if (any(tracer_restore_vars(m).eq.tracer_restore_vars(m+1:))) then
             write(log_message,"(A,1X,A)") trim(tracer_restore_vars(m)),           &
                                   "appears in tracer_restore_vars more than once"
@@ -1041,7 +1041,7 @@ contains
         end if
 
         ! For each element
-        do n=1,marbl_total_tracer_cnt ! loop over tracer_names
+        do n=1,tracer_cnt ! loop over tracer_names
           if (trim(tracer_restore_vars(m)).eq.trim(tracer_names(n))) then
             forcing_cnt = forcing_cnt + 1
             this%tracer_restore_id(n) = forcing_cnt
@@ -1052,7 +1052,7 @@ contains
         end do
 
         ! Check to make sure match was found
-        if (n.le.marbl_total_tracer_cnt) then
+        if (n.le.tracer_cnt) then
           this%tracer_id(m) = n
           write(log_message, "(2A,I0,A)") trim(tracer_names(n)),              &
                                           " (tracer index: ", n, ')'
