@@ -959,11 +959,13 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_internal_types:interior_forcing_index_constructor'
     character(len=char_len)     :: log_message
-    integer :: tracer_restore_cnt
+
+    integer :: tracer_restore_cnt, marbl_total_tracer_cnt
     integer :: m, n
 
-    associate(forcing_cnt => num_interior_forcing_fields, &
-              marbl_total_tracer_cnt => size(tracer_names))
+    associate(forcing_cnt => num_interior_forcing_fields)
+    
+      marbl_total_tracer_cnt = size(tracer_names)
 
       forcing_cnt = 0
 
