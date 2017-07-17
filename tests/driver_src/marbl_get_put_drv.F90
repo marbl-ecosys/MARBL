@@ -39,9 +39,9 @@ Contains
     end do
 
     ! Call marbl%config
-    call marbl_instance%init_configuration(lgcm_has_global_ops = .true.)
+    call marbl_instance%init_phase1(lgcm_has_global_ops = .true.)
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%init_configuration', subname)
+      call marbl_instance%StatusLog%log_error_trace('marbl%init_phase1', subname)
       return
     end if
 
@@ -68,7 +68,7 @@ Contains
     end if
 
     ! Call marbl%init (note we need total tracer count to set parms back to defaults)
-    call marbl_instance%init_parameters_and_tracers(gcm_num_levels = km,      &
+    call marbl_instance%init_phase2(gcm_num_levels = km,      &
                              gcm_num_PAR_subcols = 1,                         &
                              gcm_num_elements_surface_forcing = 1,            &
                              gcm_delta_z = delta_z,                           &
@@ -76,7 +76,7 @@ Contains
                              gcm_zt = zt,                                     &
                              marbl_tracer_cnt = nt)
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%init_parameters_and_tracers', subname)
+      call marbl_instance%StatusLog%log_error_trace('marbl%init_phase2', subname)
       return
     end if
 
@@ -97,9 +97,9 @@ Contains
     ! Reset to default values + ciso_on (needed to ensure tracer count consistency)
     call marbl_parms_set_defaults(nt, km)
 
-    call marbl_instance%init_complete()
+    call marbl_instance%init_phase3()
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%init_complete', subname)
+      call marbl_instance%StatusLog%log_error_trace('marbl%init_phase3', subname)
       return
     end if
 

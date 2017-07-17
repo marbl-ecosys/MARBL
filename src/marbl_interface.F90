@@ -120,9 +120,9 @@ module marbl_interface
    contains
 
      procedure, public  :: init
-     procedure, public  :: init_configuration
-     procedure, public  :: init_parameters_and_tracers
-     procedure, public  :: init_complete
+     procedure, public  :: init_phase1
+     procedure, public  :: init_phase2
+     procedure, public  :: init_phase3
      procedure, public  :: reset_timers
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
@@ -135,9 +135,9 @@ module marbl_interface
   end type marbl_interface_class
 
   private :: init
-  private :: init_configuration
-  private :: init_parameters_and_tracers
-  private :: init_complete
+  private :: init_phase1
+  private :: init_phase2
+  private :: init_phase3
   private :: reset_timers
   private :: extract_timing
   private :: glo_vars_init
@@ -151,7 +151,7 @@ contains
 
   !***********************************************************************
 
-  subroutine init(this,     &
+  subroutine init(this,                   &
        gcm_nl_buffer,                     &
        gcm_num_levels,                    &
        gcm_num_PAR_subcols,               &
@@ -177,29 +177,29 @@ contains
     character(len=*), parameter :: subname = 'marbl_interface:init'
 
 
-    call this%init_configuration(lgcm_has_global_ops=lgcm_has_global_ops, &
-                                 gcm_nl_buffer=gcm_nl_buffer)
+    call this%init_phase1(lgcm_has_global_ops=lgcm_has_global_ops,            &
+                          gcm_nl_buffer=gcm_nl_buffer)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('init_configuration', subname)
+      call this%StatusLog%log_error_trace('init_phase1', subname)
       return
     end if
 
-    call this%init_parameters_and_tracers(gcm_num_levels, &
-                   gcm_num_PAR_subcols,                   &
-                   gcm_num_elements_surface_forcing,      &
-                   gcm_delta_z,                           &
-                   gcm_zw,                                &
-                   gcm_zt,                                &
-                   gcm_nl_buffer=gcm_nl_buffer,           &
+    call this%init_phase2(gcm_num_levels,              &
+                   gcm_num_PAR_subcols,                &
+                   gcm_num_elements_surface_forcing,   &
+                   gcm_delta_z,                        &
+                   gcm_zw,                             &
+                   gcm_zt,                             &
+                   gcm_nl_buffer=gcm_nl_buffer,        &
                    marbl_tracer_cnt=marbl_tracer_cnt)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('init_parameters_and_tracers', subname)
+      call this%StatusLog%log_error_trace('init_phase2', subname)
       return
     end if
 
-    call this%init_complete()
+    call this%init_phase3()
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('init_complete', subname)
+      call this%StatusLog%log_error_trace('init_phase3', subname)
       return
     end if
 
@@ -207,8 +207,8 @@ contains
 
   !***********************************************************************
 
-  subroutine init_configuration(this,     &
-       lgcm_has_global_ops,               &
+  subroutine init_phase1(this,     &
+       lgcm_has_global_ops,        &
        gcm_nl_buffer)
 
     use marbl_config_mod  , only : marbl_config_set_defaults
@@ -219,7 +219,7 @@ contains
     character(len=*), optional,   intent(in)    :: gcm_nl_buffer(:)
     logical,          optional,   intent(in)    :: lgcm_has_global_ops
 
-    character(len=*), parameter :: subname = 'marbl_interface:init_configuration'
+    character(len=*), parameter :: subname = 'marbl_interface:init_phase1'
     character(len=char_len)     :: log_message
 
     !--------------------------------------------------------------------
@@ -294,18 +294,18 @@ contains
       return
     end if
 
-  end subroutine init_configuration
+  end subroutine init_phase1
 
   !***********************************************************************
 
-  subroutine init_parameters_and_tracers(this, &
-       gcm_num_levels,                         &
-       gcm_num_PAR_subcols,                    &
-       gcm_num_elements_surface_forcing,       &
-       gcm_delta_z,                            &
-       gcm_zw,                                 &
-       gcm_zt,                                 &
-       gcm_nl_buffer,                          &
+  subroutine init_phase2(this,           &
+       gcm_num_levels,                   &
+       gcm_num_PAR_subcols,              &
+       gcm_num_elements_surface_forcing, &
+       gcm_delta_z,                      &
+       gcm_zw,                           &
+       gcm_zt,                           &
+       gcm_nl_buffer,                    &
        marbl_tracer_cnt)
 
     use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
@@ -332,7 +332,7 @@ contains
     character(len=*),  optional,  intent(in)    :: gcm_nl_buffer(:)
     integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
-    character(len=*), parameter :: subname = 'marbl_interface:init_parameters_and_tracers'
+    character(len=*), parameter :: subname = 'marbl_interface:init_phase2'
     character(len=char_len)     :: log_message
 
     integer :: i
@@ -530,11 +530,11 @@ contains
       return
     end if
 
-  end subroutine init_parameters_and_tracers
+  end subroutine init_phase2
 
   !***********************************************************************
 
-  subroutine init_complete(this)
+  subroutine init_phase3(this)
 
     use marbl_parms,       only : set_derived_parms
     use marbl_parms,       only : tracer_restore_vars
@@ -547,7 +547,7 @@ contains
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:init_complete'
+    character(len=*), parameter :: subname = 'marbl_interface:init_phase3'
     character(len=char_len)     :: log_message
 
     integer :: num_surface_forcing_fields
@@ -670,7 +670,7 @@ contains
       return
     end if
 
-  end subroutine init_complete
+  end subroutine init_phase3
 
   !***********************************************************************
 
