@@ -27,7 +27,7 @@ Contains
 
     character(*), parameter      :: subname = 'marbl_get_put_drv:test'
     real(kind=r8), dimension(km) :: delta_z, zw, zt
-    integer                      :: k, nt
+    integer                      :: k
 
     ! Initialize levels
     delta_z = c1
@@ -38,7 +38,7 @@ Contains
       zt(k) = p5*(zw(k-1)+zw(k))
     end do
 
-    ! Call marbl%config
+    ! Call marbl%init_phase1
     call marbl_instance%init_phase1(lgcm_has_global_ops = .true.)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%init_phase1', subname)
@@ -67,14 +67,13 @@ Contains
       return
     end if
 
-    ! Call marbl%init (note we need total tracer count to set parms back to defaults)
+    ! Call marbl%init_phase2
     call marbl_instance%init_phase2(gcm_num_levels = km,      &
                              gcm_num_PAR_subcols = 1,                         &
                              gcm_num_elements_surface_forcing = 1,            &
                              gcm_delta_z = delta_z,                           &
                              gcm_zw = zw,                                     &
-                             gcm_zt = zt,                                     &
-                             marbl_tracer_cnt = nt)
+                             gcm_zt = zt)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%init_phase2', subname)
       return
@@ -95,7 +94,7 @@ Contains
     end if
 
     ! Reset to default values + ciso_on (needed to ensure tracer count consistency)
-    call marbl_parms_set_defaults(nt, km)
+    call marbl_parms_set_defaults(km)
 
     call marbl_instance%init_phase3()
     if (marbl_instance%StatusLog%labort_marbl) then

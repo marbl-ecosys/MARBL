@@ -318,6 +318,7 @@ contains
     use marbl_parms           , only : marbl_parms_set_defaults
     use marbl_parms           , only : marbl_parms_read_namelist
     use marbl_parms           , only : marbl_define_parameters
+    use marbl_parms           , only : tracer_restore_vars
     use marbl_saved_state_mod , only : marbl_saved_state_init
 
     implicit none
@@ -423,6 +424,9 @@ contains
 
     allocate(this%column_dtracers(this%tracer_indices%total_cnt, num_levels))
 
+    if (.not.allocated(tracer_restore_vars)) &
+      allocate(tracer_restore_vars(this%tracer_indices%total_cnt))
+
     !--------------------------------------------------------------------
     ! set up saved state variables
     !--------------------------------------------------------------------
@@ -494,7 +498,7 @@ contains
     ! set default values for parameters
     !---------------------------------------------------------------------------
 
-    call marbl_parms_set_defaults(this%tracer_indices%total_cnt, num_levels)
+    call marbl_parms_set_defaults(num_levels)
 
     !---------------------------------------------------------------------------
     ! read parameters from namelist (if present)

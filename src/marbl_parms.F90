@@ -95,6 +95,8 @@ module marbl_parms
   real(r8),                target :: PON_bury_coeff
   character(len=char_len), target :: ciso_fract_factors           ! option for which biological fractionation calculation to use
 
+  ! FIXME #69: this array is allocated in marbl_interface::init_phase2
+  !            and that allocation is not thread safe
   character(len=char_len), allocatable, target, dimension(:) :: tracer_restore_vars
 
   !---------------------------------------------------------------------
@@ -238,7 +240,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_parms_set_defaults(tracer_cnt, km)
+  subroutine marbl_parms_set_defaults(km)
     ! assign default values to all module variables
 
     ! NOTE: defaults values below, of vars in the marbl_parms framework, may be overridden at runtime
@@ -247,7 +249,6 @@ contains
     use marbl_config_mod      , only : autotrophs_config
     use marbl_config_mod      , only : zooplankton_config
 
-    integer, intent(in) :: tracer_cnt ! number of marbl tracers
     integer, intent(in) :: km         ! max number of levels
 
     !---------------------------------------------------------------------------
@@ -446,10 +447,6 @@ contains
     caco3_bury_thres_depth = 3000.0e2              ! in marbl_parms framework, see NOTE above
     PON_bury_coeff         = 0.5_r8                ! in marbl_parms framework, see NOTE above
     ciso_fract_factors     = 'Rau'                 ! in marbl_parms framework, see NOTE above
-
-    ! FIXME #69: not thread-safe!
-    if (.not.allocated(tracer_restore_vars)) &
-      allocate(tracer_restore_vars(tracer_cnt))
 
     ! initialize namelist variables to default values
     tracer_restore_vars = ''
