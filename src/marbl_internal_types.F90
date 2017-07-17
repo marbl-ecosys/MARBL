@@ -945,7 +945,6 @@ contains
   subroutine interior_forcing_index_constructor(this,                         &
                                                 tracer_names,                 &
                                                 tracer_restore_vars,          &
-                                                marbl_total_tracer_cnt,       &
                                                 num_interior_forcing_fields,  &
                                                 marbl_status_log)
 
@@ -955,7 +954,6 @@ contains
     class(marbl_interior_forcing_indexing_type), intent(inout) :: this
     character(len=char_len), dimension(:),       intent(in)    :: tracer_names
     character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
-    integer(int_kind),                           intent(in)    :: marbl_total_tracer_cnt
     integer(int_kind),                           intent(out)   :: num_interior_forcing_fields
     type(marbl_log_type),                        intent(inout) :: marbl_status_log
 
@@ -964,7 +962,8 @@ contains
     integer :: tracer_restore_cnt
     integer :: m, n
 
-    associate(forcing_cnt => num_interior_forcing_fields)
+    associate(forcing_cnt => num_interior_forcing_fields, &
+              marbl_total_tracer_cnt => size(tracer_names))
 
       forcing_cnt = 0
 

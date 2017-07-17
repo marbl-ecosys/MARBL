@@ -602,7 +602,6 @@ contains
                                    ladjust_bury_coeff, num_surface_forcing_fields)
     call this%interior_forcing_ind%construct(this%tracer_metadata%short_name,  &
                                    tracer_restore_vars,                        &
-                                   this%tracer_indices%marbl_total_tracer_cnt, &
                                    num_interior_forcing_fields,                &
                                    this%StatusLog)
     if (this%StatusLog%labort_marbl) then
