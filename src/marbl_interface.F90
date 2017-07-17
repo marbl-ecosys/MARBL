@@ -478,6 +478,22 @@ contains
       call this%StatusLog%log_noerror(log_message, subname)
     end do
 
+100 format(A, ' tracer module contains ', I0, ' tracers; indices are ', I0, ' to ', I0)
+    if (this%tracer_indices%ecosys_base%cnt.gt.0) then
+      write(log_message, 100) 'ecosys_base', &
+                              this%tracer_indices%ecosys_base%cnt, &
+                              this%tracer_indices%ecosys_base%ind_beg, &
+                              this%tracer_indices%ecosys_base%ind_end
+      call this%StatusLog%log_noerror(log_message, subname)
+    end if
+    if (this%tracer_indices%ciso%cnt.gt.0) then
+      write(log_message, 100) 'ciso', &
+                              this%tracer_indices%ciso%cnt, &
+                              this%tracer_indices%ciso%ind_beg, &
+                              this%tracer_indices%ciso%ind_end
+      call this%StatusLog%log_noerror(log_message, subname)
+    end if
+
     !--------------------------------------------------------------------
     ! Initialize marbl diagnostics
     !--------------------------------------------------------------------

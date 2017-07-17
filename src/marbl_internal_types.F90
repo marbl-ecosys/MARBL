@@ -367,19 +367,19 @@ module marbl_internal_types
 
   type, private :: marbl_tracer_count_type
     ! Total count
-    integer(int_kind) :: cnt
+    integer(int_kind) :: cnt = 0
     ! Index ranges
-    integer(int_kind) :: ind_beg
-    integer(int_kind) :: ind_end
+    integer(int_kind) :: ind_beg = 0
+    integer(int_kind) :: ind_end = 0
   contains
-    procedure, public :: set_tracer_cnt
+    procedure, public :: update_count
   end type marbl_tracer_count_type
 
   !*****************************************************************************
 
   type, public :: marbl_tracer_index_type
     ! Book-keeping (tracer count and index ranges)
-    integer (int_kind) :: total_cnt
+    integer (int_kind) :: total_cnt = 0
     type (marbl_tracer_count_type) :: ecosys_base
     type (marbl_tracer_count_type) :: ciso
 
@@ -418,6 +418,7 @@ module marbl_internal_types
     integer (int_kind) :: zoo14C_ind      = 0 ! zooplankton carbon 14
 
   contains
+    procedure, public :: add_tracer_index
     procedure, public :: construct => tracer_index_constructor
   end type marbl_tracer_index_type
 
@@ -669,163 +670,107 @@ contains
 
     integer :: n
 
-    associate(tracer_cnt => this%total_cnt)
+    ! General ecosys tracers
+    call this%add_tracer_index('ecosys_base', this%po4_ind)
+    call this%add_tracer_index('ecosys_base', this%no3_ind)
+    call this%add_tracer_index('ecosys_base', this%sio3_ind)
+    call this%add_tracer_index('ecosys_base', this%nh4_ind)
+    call this%add_tracer_index('ecosys_base', this%fe_ind)
+    call this%add_tracer_index('ecosys_base', this%lig_ind)
+    call this%add_tracer_index('ecosys_base', this%o2_ind)
+    call this%add_tracer_index('ecosys_base', this%dic_ind)
+    call this%add_tracer_index('ecosys_base', this%dic_alt_co2_ind)
+    call this%add_tracer_index('ecosys_base', this%alk_ind)
+    call this%add_tracer_index('ecosys_base', this%alk_alt_co2_ind)
+    call this%add_tracer_index('ecosys_base', this%doc_ind)
+    call this%add_tracer_index('ecosys_base', this%don_ind)
+    call this%add_tracer_index('ecosys_base', this%dop_ind)
+    call this%add_tracer_index('ecosys_base', this%dopr_ind)
+    call this%add_tracer_index('ecosys_base', this%donr_ind)
+    call this%add_tracer_index('ecosys_base', this%docr_ind)
 
-      tracer_cnt = 0
-      this%ciso%ind_beg = 0
-      this%ciso%ind_end = 0
+    do n=1,zooplankton_cnt
+      call this%add_tracer_index('ecosys_base', this%zoo_inds(n)%C_ind)
+    end do
 
-      ! General ecosys tracers
-      this%ecosys_base%ind_beg = tracer_cnt + 1
+    do n=1,autotroph_cnt
+      call this%add_tracer_index('ecosys_base', this%auto_inds(n)%Chl_ind)
+      call this%add_tracer_index('ecosys_base', this%auto_inds(n)%C_ind)
+      if (lvariable_PtoC) then
+        call this%add_tracer_index('ecosys_base', this%auto_inds(n)%P_ind)
+      end if
+      call this%add_tracer_index('ecosys_base', this%auto_inds(n)%Fe_ind)
+      if (autotrophs_config(n)%silicifier) then
+        call this%add_tracer_index('ecosys_base', this%auto_inds(n)%Si_ind)
+      end if
 
-      tracer_cnt  = tracer_cnt + 1
-      this%po4_ind = tracer_cnt
+      if (autotrophs_config(n)%imp_calcifier.or.                            &
+          autotrophs_config(n)%exp_calcifier) then
+        call this%add_tracer_index('ecosys_base', this%auto_inds(n)%CaCO3_ind)
+      end if
+    end do
 
-      tracer_cnt   = tracer_cnt + 1
-      this%no3_ind = tracer_cnt
-
-      tracer_cnt    = tracer_cnt + 1
-      this%sio3_ind = tracer_cnt
-
-      tracer_cnt    = tracer_cnt + 1
-      this%nh4_ind  = tracer_cnt
-
-      tracer_cnt  = tracer_cnt + 1
-      this%fe_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%lig_ind = tracer_cnt
-
-      tracer_cnt  = tracer_cnt + 1
-      this%o2_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%dic_ind = tracer_cnt
-
-      tracer_cnt           = tracer_cnt + 1
-      this%dic_alt_co2_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%alk_ind = tracer_cnt
-
-      tracer_cnt           = tracer_cnt + 1
-      this%alk_alt_co2_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%doc_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%don_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%dop_ind = tracer_cnt
-
-      tracer_cnt    = tracer_cnt + 1
-      this%dopr_ind = tracer_cnt
-
-      tracer_cnt    = tracer_cnt + 1
-      this%donr_ind = tracer_cnt
-
-      tracer_cnt    = tracer_cnt + 1
-      this%docr_ind = tracer_cnt
-
-      do n=1,zooplankton_cnt
-        tracer_cnt    = tracer_cnt + 1
-        this%zoo_inds(n)%C_ind = tracer_cnt
-      end do
+    if (ciso_on) then
+      call this%add_tracer_index('ciso', this%di13c_ind)
+      call this%add_tracer_index('ciso', this%do13c_ind)
+      call this%add_tracer_index('ciso', this%di14c_ind)
+      call this%add_tracer_index('ciso', this%do14c_ind)
+      call this%add_tracer_index('ciso', this%zoo13C_ind)
+      call this%add_tracer_index('ciso', this%zoo14C_ind)
 
       do n=1,autotroph_cnt
-        tracer_cnt                = tracer_cnt + 1
-        this%auto_inds(n)%Chl_ind = tracer_cnt
+        call this%add_tracer_index('ciso', this%auto_inds(n)%C13_ind)
+        call this%add_tracer_index('ciso', this%auto_inds(n)%C14_ind)
 
-        tracer_cnt              = tracer_cnt + 1
-        this%auto_inds(n)%C_ind = tracer_cnt
-
-        if (lvariable_PtoC) then
-          tracer_cnt              = tracer_cnt + 1
-          this%auto_inds(n)%P_ind = tracer_cnt
-        end if
-
-        tracer_cnt               = tracer_cnt + 1
-        this%auto_inds(n)%Fe_ind = tracer_cnt
-
-        if (autotrophs_config(n)%silicifier) then
-          tracer_cnt               = tracer_cnt + 1
-          this%auto_inds(n)%Si_ind = tracer_cnt
-        end if
-
-        if (autotrophs_config(n)%imp_calcifier.or.                            &
+        if (autotrophs_config(n)%imp_calcifier .or. &
             autotrophs_config(n)%exp_calcifier) then
-          tracer_cnt                  = tracer_cnt + 1
-          this%auto_inds(n)%CaCO3_ind = tracer_cnt
+          call this%add_tracer_index('ciso', this%auto_inds(n)%Ca13CO3_ind)
+          call this%add_tracer_index('ciso', this%auto_inds(n)%Ca14CO3_ind)
         end if
+
       end do
-      this%ecosys_base%ind_end = tracer_cnt
-      call this%ecosys_base%set_tracer_cnt()
 
-      if (ciso_on) then
-        ! Next tracer is start of the CISO tracers
-        this%ciso%ind_beg = tracer_cnt + 1
-
-        tracer_cnt     = tracer_cnt + 1
-        this%di13c_ind = tracer_cnt
-
-        tracer_cnt     = tracer_cnt + 1
-        this%do13c_ind = tracer_cnt
-
-        tracer_cnt     = tracer_cnt + 1
-        this%di14c_ind = tracer_cnt
-
-        tracer_cnt     = tracer_cnt + 1
-        this%do14c_ind = tracer_cnt
-
-        tracer_cnt      = tracer_cnt + 1
-        this%zoo13C_ind = tracer_cnt
-
-        tracer_cnt      = tracer_cnt + 1
-        this%zoo14C_ind = tracer_cnt
-
-        do n=1,autotroph_cnt
-          tracer_cnt                = tracer_cnt + 1
-          this%auto_inds(n)%C13_ind = tracer_cnt
-
-          tracer_cnt                = tracer_cnt + 1
-          this%auto_inds(n)%C14_ind = tracer_cnt
-
-          if (autotrophs_config(n)%imp_calcifier .or. &
-              autotrophs_config(n)%exp_calcifier) then
-            tracer_cnt                    = tracer_cnt + 1
-            this%auto_inds(n)%Ca13CO3_ind = tracer_cnt
-
-            tracer_cnt                    = tracer_cnt + 1
-            this%auto_inds(n)%Ca14CO3_ind = tracer_cnt
-          end if
-
-        end do
-
-        this%ciso%ind_end = tracer_cnt
-        call this%ciso%set_tracer_cnt()
-
-      else
-
-        this%ciso%cnt = 0
-        this%ciso%ind_beg = 0
-        this%ciso%ind_end = 0
-
-      end if
-    end associate
+    end if
 
   end subroutine tracer_index_constructor
 
   !*****************************************************************************
 
-  subroutine set_tracer_cnt(this)
+  subroutine add_tracer_index(this, category, ind)
+
+    class(marbl_tracer_index_type), intent(inout) :: this
+    character(len=*),               intent(in)    :: category
+    integer(int_kind),              intent(out)   :: ind
+
+    ind = this%total_cnt+1
+    select case (trim(category))
+      case ('ecosys_base')
+        call this%ecosys_base%update_count(ind)
+      case ('ciso')
+        call this%ciso%update_count(ind)
+      ! TO-DO add default case with "category not found" error
+    end select
+    this%total_cnt = ind
+
+  end subroutine add_tracer_index
+
+  !*****************************************************************************
+
+  subroutine update_count(this, ind)
 
     class(marbl_tracer_count_type), intent(inout) :: this
+    integer(int_kind),              intent(in)    :: ind
 
-    this%cnt = this%ind_end - this%ind_beg + 1
+    ! TO-DO: needs error checking inside select case (maybe refactor?)
+    !        if ind_end != 0, and ind_end != ind - 1, abort because
+    !        we need contiguous memory for tracer modules
 
-  end subroutine set_tracer_cnt
+    if (this%ind_beg .eq. 0) &
+      this%ind_beg = ind
+    this%ind_end = ind
+    this%cnt = this%cnt + 1
+
+  end subroutine update_count
 
   !*****************************************************************************
 
