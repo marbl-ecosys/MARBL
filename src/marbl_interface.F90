@@ -152,27 +152,27 @@ contains
   !***********************************************************************
 
   subroutine init(this,                   &
-       gcm_nl_buffer,                     &
        gcm_num_levels,                    &
        gcm_num_PAR_subcols,               &
        gcm_num_elements_surface_forcing,  &
        gcm_delta_z,                       &
        gcm_zw,                            &
        gcm_zt,                            &
-       marbl_tracer_cnt,                  &
-       lgcm_has_global_ops)
+       gcm_nl_buffer,                     &
+       lgcm_has_global_ops,               &
+       marbl_tracer_cnt)
 
 
     class(marbl_interface_class), intent(inout) :: this
-    character(len=*),             intent(in)    :: gcm_nl_buffer(:)
     integer(int_kind),            intent(in)    :: gcm_num_levels
     integer(int_kind),            intent(in)    :: gcm_num_PAR_subcols
     integer(int_kind),            intent(in)    :: gcm_num_elements_surface_forcing
     real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
-    integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
+    character(len=*),             intent(in)    :: gcm_nl_buffer(:)
     logical,           optional,  intent(in)    :: lgcm_has_global_ops
+    integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
     character(len=*), parameter :: subname = 'marbl_interface:init'
 
