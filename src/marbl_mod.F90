@@ -3846,12 +3846,12 @@ contains
              CaCO3_form(auto_ind) = min((CaCO3_form(auto_ind) * autotroph_loc(auto_ind)%C / CaCO3_sp_thres), &
                   (f_photosp_CaCO3 * photoC(auto_ind)))
           end if
+
+       else if(auto_config(auto_ind)%exp_calcifier) then
+
+          CaCO3_form(auto_ind) = QCaCO3_max * photoC(auto_ind) !just a one to one ratio for now
+
        end if
-
-        if (auto_config(auto_ind)%exp_calcifier) then
-        CaCO3_form(auto_ind) = QCaCO3_max * photoC(auto_ind) !just a one to one ratio for now
-        end if
-
 
 
     end do
@@ -3956,6 +3956,8 @@ contains
        !-----------------------------------------------------------------------
 
        if (auto_config(auto_ind)%imp_calcifier) then
+          auto_loss_poc(auto_ind) = QCaCO3(auto_ind) * auto_loss(auto_ind)
+       else if (auto_config(auto_ind)%exp_calcifier) then
           auto_loss_poc(auto_ind) = QCaCO3(auto_ind) * auto_loss(auto_ind)
        else
           auto_loss_poc(auto_ind) = auto_meta(auto_ind)%loss_poc * auto_loss(auto_ind)
@@ -4107,6 +4109,11 @@ contains
 
              ! routed to POC
              if (auto_config(auto_ind)%imp_calcifier) then
+                auto_graze_poc(auto_ind) = auto_graze_poc(auto_ind) &
+                     + work2 * max((caco3_poc_min * QCaCO3(auto_ind)),  &
+                     min(spc_poc_fac * (Pprime(auto_ind)+0.6_r8)**1.6_r8,    &
+                     f_graze_sp_poc_lim))
+             else if (auto_config(auto_ind)%exp_calcifier) then
                 auto_graze_poc(auto_ind) = auto_graze_poc(auto_ind) &
                      + work2 * max((caco3_poc_min * QCaCO3(auto_ind)),  &
                      min(spc_poc_fac * (Pprime(auto_ind)+0.6_r8)**1.6_r8,    &
