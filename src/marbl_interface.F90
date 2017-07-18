@@ -384,7 +384,11 @@ contains
     !-----------------------------------------------------------------------
 
     call this%tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs_config, &
-         zooplankton_config)
+         zooplankton_config, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("this%tracer_indices%construct", subname)
+      return
+    end if
 
     ! Ensure total tracer count is correct
     if ((this%tracer_indices%ecosys_base%cnt + this%tracer_indices%ciso%cnt) .ne.  &

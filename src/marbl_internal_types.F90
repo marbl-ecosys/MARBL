@@ -653,7 +653,7 @@ contains
   !*****************************************************************************
 
   subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs_config, &
-             zooplankton_config)
+             zooplankton_config, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -667,106 +667,166 @@ contains
     logical,                        intent(in)    :: lvariable_PtoC
     type(autotroph_config_type),    intent(in)    :: autotrophs_config(:)
     type(zooplankton_config_type),  intent(in)    :: zooplankton_config(:)
+    type(marbl_log_type),           intent(inout) :: marbl_status_log
 
+    character(len=*), parameter :: subname = 'marbl_internal_types:tracer_index_constructor'
+    character(len=char_len) :: ind_name
     integer :: n
 
     ! General ecosys tracers
-    call this%add_tracer_index('ecosys_base', this%po4_ind)
-    call this%add_tracer_index('ecosys_base', this%no3_ind)
-    call this%add_tracer_index('ecosys_base', this%sio3_ind)
-    call this%add_tracer_index('ecosys_base', this%nh4_ind)
-    call this%add_tracer_index('ecosys_base', this%fe_ind)
-    call this%add_tracer_index('ecosys_base', this%lig_ind)
-    call this%add_tracer_index('ecosys_base', this%o2_ind)
-    call this%add_tracer_index('ecosys_base', this%dic_ind)
-    call this%add_tracer_index('ecosys_base', this%dic_alt_co2_ind)
-    call this%add_tracer_index('ecosys_base', this%alk_ind)
-    call this%add_tracer_index('ecosys_base', this%alk_alt_co2_ind)
-    call this%add_tracer_index('ecosys_base', this%doc_ind)
-    call this%add_tracer_index('ecosys_base', this%don_ind)
-    call this%add_tracer_index('ecosys_base', this%dop_ind)
-    call this%add_tracer_index('ecosys_base', this%dopr_ind)
-    call this%add_tracer_index('ecosys_base', this%donr_ind)
-    call this%add_tracer_index('ecosys_base', this%docr_ind)
+    call this%add_tracer_index('po4', 'ecosys_base', this%po4_ind, marbl_status_log)
+    call this%add_tracer_index('no3', 'ecosys_base', this%no3_ind, marbl_status_log)
+    call this%add_tracer_index('sio3', 'ecosys_base', this%sio3_ind, marbl_status_log)
+    call this%add_tracer_index('nh4', 'ecosys_base', this%nh4_ind, marbl_status_log)
+    call this%add_tracer_index('fe', 'ecosys_base', this%fe_ind, marbl_status_log)
+    call this%add_tracer_index('lig', 'ecosys_base', this%lig_ind, marbl_status_log)
+    call this%add_tracer_index('o2', 'ecosys_base', this%o2_ind, marbl_status_log)
+    call this%add_tracer_index('dic', 'ecosys_base', this%dic_ind, marbl_status_log)
+    call this%add_tracer_index('dic_alt_co2', 'ecosys_base', this%dic_alt_co2_ind, marbl_status_log)
+    call this%add_tracer_index('alk', 'ecosys_base', this%alk_ind, marbl_status_log)
+    call this%add_tracer_index('alk_alt_co2', 'ecosys_base', this%alk_alt_co2_ind, marbl_status_log)
+    call this%add_tracer_index('doc', 'ecosys_base', this%doc_ind, marbl_status_log)
+    call this%add_tracer_index('don', 'ecosys_base', this%don_ind, marbl_status_log)
+    call this%add_tracer_index('dop', 'ecosys_base', this%dop_ind, marbl_status_log)
+    call this%add_tracer_index('dopr', 'ecosys_base', this%dopr_ind, marbl_status_log)
+    call this%add_tracer_index('donr', 'ecosys_base', this%donr_ind, marbl_status_log)
+    call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
 
     do n=1,zooplankton_cnt
-      call this%add_tracer_index('ecosys_base', this%zoo_inds(n)%C_ind)
+      write(ind_name, "(2A)") trim(zooplankton_config(n)%sname), "C"
+      call this%add_tracer_index(ind_name, 'ecosys_base', this%zoo_inds(n)%C_ind, marbl_status_log)
     end do
 
     do n=1,autotroph_cnt
-      call this%add_tracer_index('ecosys_base', this%auto_inds(n)%Chl_ind)
-      call this%add_tracer_index('ecosys_base', this%auto_inds(n)%C_ind)
+      write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "Chl"
+      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Chl_ind, marbl_status_log)
+
+      write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "C"
+      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%C_ind, marbl_status_log)
+
       if (lvariable_PtoC) then
-        call this%add_tracer_index('ecosys_base', this%auto_inds(n)%P_ind)
+        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "P"
+        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%P_ind, marbl_status_log)
       end if
-      call this%add_tracer_index('ecosys_base', this%auto_inds(n)%Fe_ind)
+
+      write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "Fe"
+      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Fe_ind, marbl_status_log)
+
       if (autotrophs_config(n)%silicifier) then
-        call this%add_tracer_index('ecosys_base', this%auto_inds(n)%Si_ind)
+        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "Si"
+        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Si_ind, marbl_status_log)
       end if
 
       if (autotrophs_config(n)%imp_calcifier.or.                            &
           autotrophs_config(n)%exp_calcifier) then
-        call this%add_tracer_index('ecosys_base', this%auto_inds(n)%CaCO3_ind)
+        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "CaCO3"
+        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
       end if
     end do
 
     if (ciso_on) then
-      call this%add_tracer_index('ciso', this%di13c_ind)
-      call this%add_tracer_index('ciso', this%do13c_ind)
-      call this%add_tracer_index('ciso', this%di14c_ind)
-      call this%add_tracer_index('ciso', this%do14c_ind)
-      call this%add_tracer_index('ciso', this%zoo13C_ind)
-      call this%add_tracer_index('ciso', this%zoo14C_ind)
+      call this%add_tracer_index('di13c', 'ciso', this%di13c_ind, marbl_status_log)
+      call this%add_tracer_index('do13c', 'ciso', this%do13c_ind, marbl_status_log)
+      call this%add_tracer_index('di14c', 'ciso', this%di14c_ind, marbl_status_log)
+      call this%add_tracer_index('do14c', 'ciso', this%do14c_ind, marbl_status_log)
+      call this%add_tracer_index('zoo13c', 'ciso', this%zoo13C_ind, marbl_status_log)
+      call this%add_tracer_index('zoo14c', 'ciso', this%zoo14C_ind, marbl_status_log)
 
       do n=1,autotroph_cnt
-        call this%add_tracer_index('ciso', this%auto_inds(n)%C13_ind)
-        call this%add_tracer_index('ciso', this%auto_inds(n)%C14_ind)
+        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "C13"
+        call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C13_ind, marbl_status_log)
+
+        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "C14"
+        call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C14_ind, marbl_status_log)
 
         if (autotrophs_config(n)%imp_calcifier .or. &
             autotrophs_config(n)%exp_calcifier) then
-          call this%add_tracer_index('ciso', this%auto_inds(n)%Ca13CO3_ind)
-          call this%add_tracer_index('ciso', this%auto_inds(n)%Ca14CO3_ind)
+        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "Ca13CO3"
+          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca13CO3_ind, marbl_status_log)
+
+        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "Ca14CO3"
+          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca14CO3_ind, marbl_status_log)
         end if
-
       end do
+    end if
 
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("add_tracer_index", subname)
+      return
     end if
 
   end subroutine tracer_index_constructor
 
   !*****************************************************************************
 
-  subroutine add_tracer_index(this, category, ind)
+  subroutine add_tracer_index(this, ind_name, category, ind, marbl_status_log)
 
     class(marbl_tracer_index_type), intent(inout) :: this
+    character(len=*),               intent(in)    :: ind_name
     character(len=*),               intent(in)    :: category
     integer(int_kind),              intent(out)   :: ind
+    type(marbl_log_type),           intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_internal_types:add_tracer_index'
+    character(len=char_len)     :: log_message
+
+    ! This routine may be called multiple times after an error has been logged
+    ! (tracer_index_constructor doesn't check log status until all indices have
+    ! been added)
+    if (marbl_status_log%labort_marbl) return
 
     ind = this%total_cnt+1
     select case (trim(category))
       case ('ecosys_base')
-        call this%ecosys_base%update_count(ind)
+        call this%ecosys_base%update_count(ind, marbl_status_log)
       case ('ciso')
-        call this%ciso%update_count(ind)
+        call this%ciso%update_count(ind, marbl_status_log)
+      case DEFAULT
+        write(log_message, "(A,1X,A)") trim(category), &
+              'is not a recognized tracer module!'
+        call marbl_status_log%log_error(log_message, subname)
+        write(log_message, "(2A)") "Error triggered by ", trim(ind_name)
+        call marbl_status_log%log_error(log_message, subname)
+        return
       ! TO-DO add default case with "category not found" error
     end select
+
+    if (marbl_status_log%labort_marbl) then
+      write(log_message, "(2A)") trim(category), "%update_count"
+      call marbl_status_log%log_error_trace(log_message, subname)
+      write(log_message, "(2A)") "Error triggered by ", trim(ind_name)
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
     this%total_cnt = ind
 
   end subroutine add_tracer_index
 
   !*****************************************************************************
 
-  subroutine update_count(this, ind)
+  subroutine update_count(this, ind, marbl_status_log)
 
     class(marbl_tracer_count_type), intent(inout) :: this
     integer(int_kind),              intent(in)    :: ind
+    type(marbl_log_type),           intent(inout) :: marbl_status_log
 
-    ! TO-DO: needs error checking inside select case (maybe refactor?)
-    !        if ind_end != 0, and ind_end != ind - 1, abort because
-    !        we need contiguous memory for tracer modules
+    character(len=*), parameter :: subname = 'marbl_internal_types:update_count'
+    character(len=char_len)     :: log_message
 
-    if (this%ind_beg .eq. 0) &
-      this%ind_beg = ind
+    ! (1) Make sure tracer modules have contiguous indices
+    if ((this%ind_end .ne. 0) .and. (this%ind_end .ne. ind-1)) then
+      write(log_message, "(2A,I0,A,I0)") "Can not add another tracer to this module", &
+            " current tracer index is ", ind, " and last tracer in module is ",       &
+            this%ind_end
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    ! (2) If this is first tracer in module, set ind_beg
+    if (this%ind_beg .eq. 0) this%ind_beg = ind
+
+    ! (3) Update ind_end and total count
     this%ind_end = ind
     this%cnt = this%cnt + 1
 
