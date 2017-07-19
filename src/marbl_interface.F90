@@ -120,9 +120,9 @@ module marbl_interface
    contains
 
      procedure, public  :: init
-     procedure, public  :: init_phase1
      procedure, public  :: init_phase2
      procedure, public  :: init_phase3
+     procedure, public  :: init_phase4
      procedure, public  :: reset_timers
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
@@ -135,9 +135,9 @@ module marbl_interface
   end type marbl_interface_class
 
   private :: init
-  private :: init_phase1
   private :: init_phase2
   private :: init_phase3
+  private :: init_phase4
   private :: reset_timers
   private :: extract_timing
   private :: glo_vars_init
@@ -177,14 +177,14 @@ contains
     character(len=*), parameter :: subname = 'marbl_interface:init'
 
 
-    call this%init_phase1(lgcm_has_global_ops=lgcm_has_global_ops,            &
+    call this%init_phase2(lgcm_has_global_ops=lgcm_has_global_ops,            &
                           gcm_nl_buffer=gcm_nl_buffer)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('init_phase1', subname)
+      call this%StatusLog%log_error_trace('init_phase2', subname)
       return
     end if
 
-    call this%init_phase2(gcm_num_levels,              &
+    call this%init_phase3(gcm_num_levels,              &
                    gcm_num_PAR_subcols,                &
                    gcm_num_elements_surface_forcing,   &
                    gcm_delta_z,                        &
@@ -193,13 +193,13 @@ contains
                    gcm_nl_buffer=gcm_nl_buffer,        &
                    marbl_tracer_cnt=marbl_tracer_cnt)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('init_phase2', subname)
+      call this%StatusLog%log_error_trace('init_phase3', subname)
       return
     end if
 
-    call this%init_phase3()
+    call this%init_phase4()
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('init_phase3', subname)
+      call this%StatusLog%log_error_trace('init_phase4', subname)
       return
     end if
 
@@ -207,7 +207,7 @@ contains
 
   !***********************************************************************
 
-  subroutine init_phase1(this,     &
+  subroutine init_phase2(this,     &
        lgcm_has_global_ops,        &
        gcm_nl_buffer)
 
@@ -219,7 +219,7 @@ contains
     character(len=*), optional,   intent(in)    :: gcm_nl_buffer(:)
     logical,          optional,   intent(in)    :: lgcm_has_global_ops
 
-    character(len=*), parameter :: subname = 'marbl_interface:init_phase1'
+    character(len=*), parameter :: subname = 'marbl_interface:init_phase2'
     character(len=char_len)     :: log_message
 
     !--------------------------------------------------------------------
@@ -294,11 +294,11 @@ contains
       return
     end if
 
-  end subroutine init_phase1
+  end subroutine init_phase2
 
   !***********************************************************************
 
-  subroutine init_phase2(this,           &
+  subroutine init_phase3(this,           &
        gcm_num_levels,                   &
        gcm_num_PAR_subcols,              &
        gcm_num_elements_surface_forcing, &
@@ -333,7 +333,7 @@ contains
     character(len=*),  optional,  intent(in)    :: gcm_nl_buffer(:)
     integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
-    character(len=*), parameter :: subname = 'marbl_interface:init_phase2'
+    character(len=*), parameter :: subname = 'marbl_interface:init_phase3'
     character(len=char_len)     :: log_message
 
     integer :: i
@@ -554,11 +554,11 @@ contains
       return
     end if
 
-  end subroutine init_phase2
+  end subroutine init_phase3
 
   !***********************************************************************
 
-  subroutine init_phase3(this)
+  subroutine init_phase4(this)
 
     use marbl_parms,       only : set_derived_parms
     use marbl_parms,       only : tracer_restore_vars
@@ -571,7 +571,7 @@ contains
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:init_phase3'
+    character(len=*), parameter :: subname = 'marbl_interface:init_phase4'
     character(len=char_len)     :: log_message
 
     integer :: num_surface_forcing_fields
@@ -693,7 +693,7 @@ contains
       return
     end if
 
-  end subroutine init_phase3
+  end subroutine init_phase4
 
   !***********************************************************************
 

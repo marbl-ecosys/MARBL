@@ -32,9 +32,9 @@ Contains
     end do
 
     ! Call marbl%config
-    call marbl_instance%init_phase1()
+    call marbl_instance%init_phase2()
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%init_phase1', subname)
+      call marbl_instance%StatusLog%log_error_trace('marbl%init_phase2', subname)
       return
     end if
 
@@ -46,22 +46,22 @@ Contains
     end if
 
     ! Call marbl%init
-    call marbl_instance%init_phase2(gcm_num_levels = km,           &
+    call marbl_instance%init_phase3(gcm_num_levels = km,           &
                              gcm_num_PAR_subcols = 1,              &
                              gcm_num_elements_surface_forcing = 1, &
                              gcm_delta_z = delta_z,                &
                              gcm_zw = zw,                          &
                              gcm_zt = zt)
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%init_phase2', subname)
+      call marbl_instance%StatusLog%log_error_trace('marbl%init_phase3', subname)
       return
     end if
 
     ! Optional: call marbl_instance%parameters%put()
 
-    call marbl_instance%init_phase3()
+    call marbl_instance%init_phase4()
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%init_phase3', subname)
+      call marbl_instance%StatusLog%log_error_trace('marbl%init_phase4', subname)
       return
     end if
 
