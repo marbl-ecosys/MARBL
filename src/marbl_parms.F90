@@ -162,7 +162,8 @@ module marbl_parms
       gQsi_0        = 0.137_r8,           & !initial Si/C ratio for growth
       gQsi_max      = 0.685_r8,           & !max Si/C ratio for growth
       gQsi_min      = 0.0457_r8,          & !min Si/C ratio for growth
-      QCaCO3_max    = 1.0_r8,             & !max QCaCO3
+      QCaCO3_max    = 0.4_r8,             & !max QCaCO3 for implicit calcifiers
+      QCaCO3_max_exp = 1.0_r8,            & !max QCaCO3 for explicit calcifiers
       ! parameters in GalbraithMartiny Pquota Model^M
       PquotaSlope     = 7.0_r8,        &
       PquotaIntercept = 5.571_r8,      &
@@ -290,7 +291,7 @@ contains
           autotrophs(n)%kFe             = 0.03e-3_r8         ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kPO4            = 0.005_r8           ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kDOP            = 0.3_r8             ! in marbl_parms framework, see NOTE above
-          autotrophs(n)%kNO3            = 0.25_r8            ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kNO3            = 0.22_r8            ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kNH4            = 0.01_r8            ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
           autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
@@ -356,13 +357,13 @@ contains
         autotrophs(n)%kFe             = 0.03e-3_r8         ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kPO4            = 0.006_r8           ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kDOP            = 0.3_r8             ! in marbl_parms framework, see NOTE above
-        autotrophs(n)%kNO3            = 0.3_r8            ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kNO3            = 0.35_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kNH4            = 0.012_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
         autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
-        autotrophs(n)%gQfe_0          = 10.0e-6_r8
+        autotrophs(n)%gQfe_0          = 25.0e-6_r8
         autotrophs(n)%gQfe_min        = 3.0e-6_r8
-        autotrophs(n)%alphaPI_per_day = 0.35_r8
+        autotrophs(n)%alphaPI_per_day = 0.38_r8
         autotrophs(n)%PCref_per_day   = 5.0_r8
         autotrophs(n)%thetaN_max      = 3.2_r8
         autotrophs(n)%loss_thres      = 0.01_r8

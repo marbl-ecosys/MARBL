@@ -3808,7 +3808,7 @@ contains
     !-----------------------------------------------------------------------
 
     use marbl_parms     , only : parm_f_prod_sp_CaCO3
-    use marbl_parms     , only : QCaCO3_max
+    use marbl_parms     , only : QCaCO3_max_exp
     use marbl_parms     , only : CaCO3_sp_thres
     use marbl_parms     , only : CaCO3_temp_thres1
     use marbl_parms     , only : CaCO3_temp_thres2
@@ -3849,7 +3849,7 @@ contains
 
        else if(auto_config(auto_ind)%exp_calcifier) then
 
-          CaCO3_form(auto_ind) = QCaCO3_max * photoC(auto_ind) !just a one to one ratio for now
+          CaCO3_form(auto_ind) = QCaCO3_max_exp * photoC(auto_ind) !just a one to one ratio for now
 
        end if
 
