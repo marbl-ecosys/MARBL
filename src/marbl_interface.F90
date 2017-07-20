@@ -384,14 +384,11 @@ contains
     !-----------------------------------------------------------------------
 
     call this%tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs_config, &
-         zooplankton_config, this%StatusLog)
+         zooplankton_config, this%StatusLog, marbl_tracer_cnt)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("this%tracer_indices%construct", subname)
       return
     end if
-
-    if (present(marbl_tracer_cnt)) &
-      marbl_tracer_cnt = this%tracer_indices%total_cnt
 
     !--------------------------------------------------------------------
     ! call constructors and allocate memory

@@ -653,7 +653,7 @@ contains
   !*****************************************************************************
 
   subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs_config, &
-             zooplankton_config, marbl_status_log)
+             zooplankton_config, marbl_status_log, marbl_tracer_cnt)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -668,10 +668,15 @@ contains
     type(autotroph_config_type),    intent(in)    :: autotrophs_config(:)
     type(zooplankton_config_type),  intent(in)    :: zooplankton_config(:)
     type(marbl_log_type),           intent(inout) :: marbl_status_log
+    integer(int_kind), optional,    intent(out)   :: marbl_tracer_cnt
 
     character(len=*), parameter :: subname = 'marbl_internal_types:tracer_index_constructor'
     character(len=char_len) :: ind_name
     integer :: n
+
+    ! If marbl_tracer_cnt is requested, initialize to zero
+    ! (so that count is zero if an error is encountered)
+    if (present(marbl_tracer_cnt)) marbl_tracer_cnt = 0
 
     ! General ecosys tracers
     call this%add_tracer_index('po4', 'ecosys_base', this%po4_ind, marbl_status_log)
@@ -754,6 +759,9 @@ contains
       call marbl_status_log%log_error_trace("add_tracer_index", subname)
       return
     end if
+
+    ! If marbl_tracer_cnt is requested, provide before returning
+    if (present(marbl_tracer_cnt)) marbl_tracer_cnt = this%total_cnt
 
   end subroutine tracer_index_constructor
 
