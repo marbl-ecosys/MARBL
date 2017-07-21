@@ -149,6 +149,7 @@ module marbl_mod
   use marbl_parms, only : parm_red_d_c_o2_diaz
   use marbl_parms, only : parm_Remin_D_C_O2
   use marbl_parms, only : QCaCO3_max
+  use marbl_parms, only : QCaCO3_max_exp
   use marbl_parms, only : Qfe_zoo
   use marbl_parms, only : r_Nfix_photo
   use marbl_parms, only : spc_poc_fac
