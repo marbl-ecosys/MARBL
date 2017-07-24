@@ -365,7 +365,7 @@ contains
         autotrophs(n)%gQfe_min        = 3.0e-6_r8
         autotrophs(n)%alphaPI_per_day = 0.32_r8
         autotrophs(n)%PCref_per_day   = 5.0_r8
-        autotrophs(n)%thetaN_max      = 3.0_r8
+        autotrophs(n)%thetaN_max      = 3.3_r8
         autotrophs(n)%loss_thres      = 0.01_r8
         autotrophs(n)%loss_thres2     = 0.0_r8
         autotrophs(n)%temp_thres      = -10.0_r8
