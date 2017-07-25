@@ -361,9 +361,9 @@ contains
         autotrophs(n)%kNH4            = 0.012_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
         autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
-        autotrophs(n)%gQfe_0          = 25.0e-6_r8
+        autotrophs(n)%gQfe_0          = 15.0e-6_r8
         autotrophs(n)%gQfe_min        = 3.0e-6_r8
-        autotrophs(n)%alphaPI_per_day = 0.28_r8
+        autotrophs(n)%alphaPI_per_day = 0.30_r8
         autotrophs(n)%PCref_per_day   = 5.0_r8
         autotrophs(n)%thetaN_max      = 3.1_r8
         autotrophs(n)%loss_thres      = 0.01_r8
