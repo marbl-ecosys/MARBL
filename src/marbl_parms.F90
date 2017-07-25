@@ -368,7 +368,7 @@ contains
         autotrophs(n)%thetaN_max      = 3.1_r8
         autotrophs(n)%loss_thres      = 0.01_r8
         autotrophs(n)%loss_thres2     = 0.0_r8
-        autotrophs(n)%temp_thres      = -10.0_r8
+        autotrophs(n)%temp_thres      = 0.0_r8
         autotrophs(n)%mort_per_day    = 0.1_r8
         autotrophs(n)%mort2_per_day   = 0.01_r8
         autotrophs(n)%agg_rate_max    = 0.5_r8
