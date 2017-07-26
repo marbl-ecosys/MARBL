@@ -23,6 +23,7 @@ module marbl_init_mod
   public :: marbl_init_config_vars2
   public :: marbl_init_tracers
   public :: marbl_init_parameters1
+  public :: marbl_init_parameters2
   public :: marbl_init_bury_coeff
   public :: marbl_init_forcing_fields
 
@@ -365,6 +366,36 @@ contains
 
   !***********************************************************************
 
+  subroutine marbl_init_parameters2(marbl_parameters, marbl_status_log)
+
+    use marbl_config_mod, only : marbl_config_and_parms_type
+    use marbl_parms,    only : set_derived_parms
+
+    type(marbl_config_and_parms_type), intent(inout) :: marbl_parameters
+    type(marbl_log_type),              intent(inout) :: marbl_status_log
+
+    ! local variables
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters2'
+
+    !  Lock and log parameters
+    call marbl_parameters%finalize_vars(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('parmeters%finalize_vars', &
+           subname)
+      return
+    end if
+
+    ! Set parameters that depend on now-locked parameters
+    call set_derived_parms(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('set_derived_parms', subname)
+      return
+    end if
+
+  end subroutine marbl_init_parameters2
+
+  !***********************************************************************
+
   subroutine marbl_init_bury_coeff(marbl_particulate_share, marbl_status_log)
 
     use marbl_logging, only : marbl_log_type
@@ -436,8 +467,10 @@ contains
 
     ! Local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_forcing_fields'
+    character(len=char_len) :: log_message
     integer :: num_surface_forcing_fields
     integer :: num_interior_forcing_fields
+    integer :: i
 
     associate(&
          num_surface_elements  => domain%num_elements_surface_forcing,   &
@@ -491,6 +524,24 @@ contains
         call marbl_status_log%log_error_trace("marbl_init_interior_forcing_fields()", subname)
         return
       end if
+
+      !--------------------------------------------------------------------
+      ! Report what forcings are required from the driver
+      !--------------------------------------------------------------------
+
+      call marbl_status_log%log_header('MARBL-Required Forcing Fields', subname)
+      call marbl_status_log%log_noerror('Surface:', subname)
+      do i=1,size(surface_input_forcings)
+        write(log_message, "(2A)") '* ', trim(surface_input_forcings(i)%metadata%varname)
+        call marbl_status_log%log_noerror(log_message, subname)
+      end do
+
+      call marbl_status_log%log_noerror('', subname)
+      call marbl_status_log%log_noerror('Interior:', subname)
+      do i=1,size(interior_input_forcings)
+        write(log_message, "(2A)") '* ', trim(interior_input_forcings(i)%metadata%varname)
+        call marbl_status_log%log_noerror(log_message, subname)
+      end do
 
     end associate
 

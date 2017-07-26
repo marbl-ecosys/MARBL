@@ -217,7 +217,6 @@ contains
     logical,          optional,   intent(in)    :: lgcm_has_global_ops
 
     character(len=*), parameter :: subname = 'marbl_interface:init_phase2'
-    character(len=char_len)     :: log_message
 
     !--------------------------------------------------------------------
     ! initialize status log and timers
@@ -291,11 +290,10 @@ contains
     character(len=*),  optional,  intent(in)    :: gcm_nl_buffer(:)
     integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
+    ! Local variables
     character(len=*), parameter :: subname = 'marbl_interface:init_phase3'
-    character(len=char_len)     :: log_message
-
-    integer :: i
     integer, parameter :: num_interior_elements = 1 ! FIXME #66: get this value from interface, let it vary
+
     !--------------------------------------------------------------------
 
     call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
@@ -315,6 +313,10 @@ contains
     !-----------------------------------------------------------------------
 
     call marbl_init_config_vars2(this%lallow_glo_ops, this%configuration, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_init_config_vars2", subname)
+      return
+    end if
 
     !-----------------------------------------------------------------------
     !  Set up domain type
@@ -403,17 +405,13 @@ contains
 
   subroutine init_phase4(this)
 
-    use marbl_parms,       only : set_derived_parms
-    use marbl_init_mod,    only : marbl_init_bury_coeff
-    use marbl_init_mod,    only : marbl_init_forcing_fields
+    use marbl_init_mod, only : marbl_init_parameters2
+    use marbl_init_mod, only : marbl_init_bury_coeff
+    use marbl_init_mod, only : marbl_init_forcing_fields
 
     class(marbl_interface_class), intent(inout) :: this
 
     character(len=*), parameter :: subname = 'marbl_interface:init_phase4'
-    character(len=char_len)     :: log_message
-
-
-    integer :: i
 
     call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -425,16 +423,9 @@ contains
     !  Lock and log this%parameters
     !-----------------------------------------------------------------------
 
-    call this%parameters%finalize_vars(this%StatusLog)
+    call marbl_init_parameters2(this%parameters, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('parmeters%finalize_list', &
-           subname)
-      return
-    end if
-
-    call set_derived_parms(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('set_derived_parms', subname)
+      call this%StatusLog%log_error_trace("marbl_init_parameters2", subname)
       return
     end if
 
@@ -465,24 +456,6 @@ contains
       call this%StatusLog%log_error_trace("marbl_init_forcing_fields", subname)
       return
     end if
-
-    !--------------------------------------------------------------------
-    ! Report what forcings are required from the driver
-    !--------------------------------------------------------------------
-
-    call this%StatusLog%log_header('MARBL-Required Forcing Fields', subname)
-    call this%StatusLog%log_noerror('Surface:', subname)
-    do i=1,size(this%surface_input_forcings)
-      write(log_message, "(2A)") '* ', trim(this%surface_input_forcings(i)%metadata%varname)
-      call this%StatusLog%log_noerror(log_message, subname)
-    end do
-
-    call this%StatusLog%log_noerror('', subname)
-    call this%StatusLog%log_noerror('Interior:', subname)
-    do i=1,size(this%interior_input_forcings)
-      write(log_message, "(2A)") '* ', trim(this%interior_input_forcings(i)%metadata%varname)
-      call this%StatusLog%log_noerror(log_message, subname)
-    end do
 
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
