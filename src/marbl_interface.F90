@@ -211,9 +211,8 @@ contains
        lgcm_has_global_ops,        &
        gcm_nl_buffer)
 
-    use marbl_config_mod  , only : marbl_config_set_defaults
-    use marbl_config_mod  , only : marbl_config_read_namelist
-    use marbl_config_mod  , only : marbl_define_config_vars
+    use marbl_init_mod, only : marbl_init_log_and_timers
+    use marbl_init_mod, only : marbl_init_config_vars1
 
     class(marbl_interface_class), intent(inout) :: this
     character(len=*), optional,   intent(in)    :: gcm_nl_buffer(:)
@@ -223,19 +222,12 @@ contains
     character(len=char_len)     :: log_message
 
     !--------------------------------------------------------------------
-    ! initialize status log
+    ! initialize status log and timers
     !--------------------------------------------------------------------
 
-    call this%StatusLog%construct()
-    call this%StatusLog%log_noerror('', subname)
-
-    !-----------------------------------------------------------------------
-    !  Set up timers
-    !-----------------------------------------------------------------------
-
-    call this%timers%setup(this%timer_ids, this%StatusLog)
+    call marbl_init_log_and_timers(this%timers, this%timer_ids, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("setup_timers()", subname)
+      call this%StatusLog%log_error_trace("marbl_init_log_and_timers", subname)
       return
     end if
 
@@ -257,37 +249,12 @@ contains
     end if
 
     !---------------------------------------------------------------------------
-    ! set default values for configuration
+    ! Initialize configuration variables
     !---------------------------------------------------------------------------
 
-    call marbl_config_set_defaults()
+    call marbl_init_config_vars1(this%configuration, this%StatusLog, gcm_nl_buffer)
 
-    !---------------------------------------------------------------------------
-    ! read configuration from namelist (if present)
-    !---------------------------------------------------------------------------
-
-    if (present(gcm_nl_buffer)) then
-      call marbl_config_read_namelist(gcm_nl_buffer, this%StatusLog)
-      if (this%StatusLog%labort_marbl) then
-        call this%StatusLog%log_error_trace('marbl_config_read_namelist', subname)
-        return
-      end if
-    else
-      write(log_message, "(2A)") '** No namelists were provided to config, ', &
-           'use put() and get() to change configuration variables'
-      call this%StatusLog%log_noerror(log_message, subname)
-    end if
-
-    !---------------------------------------------------------------------------
-    ! construct configuration_type
-    !---------------------------------------------------------------------------
-
-    call marbl_define_config_vars(this%configuration, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_define_config_vars()", subname)
-      return
-    end if
-
+    ! Stop initialization timer
     call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("this%timers%stop()", subname)

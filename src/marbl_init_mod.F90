@@ -18,9 +18,11 @@ module marbl_init_mod
   implicit none
   private
 
-  public  :: marbl_init_tracer_metadata
-  public  :: marbl_init_bury_coeff
-  public  :: marbl_init_forcing_fields
+  public :: marbl_init_log_and_timers
+  public :: marbl_init_config_vars1
+  public :: marbl_init_tracer_metadata
+  public :: marbl_init_bury_coeff
+  public :: marbl_init_forcing_fields
 
   private :: marbl_init_non_autotroph_tracer_metadata
   private :: marbl_init_non_autotroph_tracers_metadata
@@ -30,6 +32,83 @@ module marbl_init_mod
   private :: marbl_init_interior_forcing_fields
 
 contains
+
+  !***********************************************************************
+
+  subroutine marbl_init_log_and_timers(marbl_timers, timer_ids, marbl_status_log)
+
+    use marbl_internal_types  , only : marbl_internal_timers_type
+    use marbl_internal_types  , only : marbl_timer_indexing_type
+
+    type(marbl_internal_timers_type), intent(inout) :: marbl_timers
+    type(marbl_timer_indexing_type),  intent(inout) :: timer_ids
+    type(marbl_log_type),             intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_log_and_timers'
+
+    ! Construct status log
+    call marbl_status_log%construct()
+    call marbl_status_log%log_noerror('', subname)
+
+    ! Set up timers
+    call marbl_timers%setup(timer_ids, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("setup_timers()", subname)
+      return
+    end if
+
+  end subroutine marbl_init_log_and_timers
+
+  !***********************************************************************
+
+  subroutine marbl_init_config_vars1(marbl_configuration, marbl_status_log, gcm_nl_buffer)
+
+    use marbl_config_mod, only : marbl_config_and_parms_type
+    use marbl_config_mod, only : marbl_config_set_defaults
+    use marbl_config_mod, only : marbl_config_read_namelist
+    use marbl_config_mod, only : marbl_define_config_vars
+
+    type(marbl_config_and_parms_type), intent(inout) :: marbl_configuration
+    type(marbl_log_type),              intent(inout) :: marbl_status_log
+    character(len=*), optional,        intent(in)    :: gcm_nl_buffer(:)
+
+    ! local variables
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_config_vars1'
+    character(len=char_len) :: log_message
+
+    !---------------------------------------------------------------------------
+    ! set default values for configuration
+    !---------------------------------------------------------------------------
+
+    call marbl_config_set_defaults()
+
+    !---------------------------------------------------------------------------
+    ! read configuration from namelist (if present)
+    !---------------------------------------------------------------------------
+
+    if (present(gcm_nl_buffer)) then
+      call marbl_config_read_namelist(gcm_nl_buffer, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('marbl_config_read_namelist', subname)
+        return
+      end if
+    else
+      write(log_message, "(2A)") '** No namelists were provided to config, ', &
+           'use put() and get() to change configuration variables'
+      call marbl_status_log%log_noerror(log_message, subname)
+    end if
+
+    !---------------------------------------------------------------------------
+    ! construct configuration_type
+    !---------------------------------------------------------------------------
+
+    call marbl_define_config_vars(marbl_configuration, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_define_config_vars()", subname)
+      return
+    end if
+
+  end subroutine marbl_init_config_vars1
 
   !***********************************************************************
 
