@@ -20,10 +20,13 @@ module marbl_init_mod
 
   public :: marbl_init_log_and_timers
   public :: marbl_init_config_vars1
-  public :: marbl_init_tracer_metadata
+  public :: marbl_init_config_vars2
+  public :: marbl_init_tracers
+  public :: marbl_init_parameters1
   public :: marbl_init_bury_coeff
   public :: marbl_init_forcing_fields
 
+  private :: marbl_init_tracer_metadata
   private :: marbl_init_non_autotroph_tracer_metadata
   private :: marbl_init_non_autotroph_tracers_metadata
   private :: marbl_init_zooplankton_tracer_metadata
@@ -112,6 +115,134 @@ contains
 
   !***********************************************************************
 
+  subroutine marbl_init_config_vars2(lallow_glo_ops, marbl_configuration, marbl_status_log)
+
+    use marbl_config_mod, only : marbl_config_and_parms_type
+    use marbl_config_mod, only : ladjust_bury_coeff
+    use marbl_config_mod, only : set_derived_config
+
+    logical,                           intent(in)    :: lallow_glo_ops
+    type(marbl_config_and_parms_type), intent(inout) :: marbl_configuration
+    type(marbl_log_type),              intent(inout) :: marbl_status_log
+
+    ! local variables
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_config_vars2'
+    character(len=char_len) :: log_message
+
+    ! lock and log configuration variables
+    call marbl_configuration%finalize_vars(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('configuration%finalize_vars', subname)
+      return
+    end if
+
+    !  Abort if GCM doesn't support global ops but configuration requires them
+    if (ladjust_bury_coeff .and. (.not.lallow_glo_ops)) then
+      write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
+             '.true. unless GCM can perform global operations'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    ! set configuration variables that depend on now-locked vars
+    call set_derived_config(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('set_derived_config', subname)
+      return
+    end if
+
+  end subroutine marbl_init_config_vars2
+
+  !***********************************************************************
+
+  subroutine marbl_init_tracers(num_levels, &
+                                num_surface_elements, &
+                                tracer_indices, &
+                                surface_vals, &
+                                surface_tracer_fluxes, &
+                                column_tracers, &
+                                column_dtracers, &
+                                tracer_metadata, &
+                                marbl_status_log, &
+                                marbl_tracer_cnt)
+
+    use marbl_config_mod, only : ciso_on
+    use marbl_config_mod, only : lvariable_PtoC
+    use marbl_config_mod, only : autotrophs_config
+    use marbl_config_mod, only : zooplankton_config
+    use marbl_parms,      only : tracer_restore_vars
+    use marbl_ciso_mod,   only : marbl_ciso_init_tracer_metadata
+
+    integer(int_kind),                             intent(in)    :: num_levels
+    integer(int_kind),                             intent(in)    :: num_surface_elements
+    type(marbl_tracer_index_type),                 intent(inout) :: tracer_indices
+    real(r8),                         allocatable, intent(inout) :: surface_vals(:,:)
+    real(r8),                         allocatable, intent(inout) :: surface_tracer_fluxes(:,:)
+    real(r8),                         allocatable, intent(inout) :: column_tracers(:,:)
+    real(r8),                         allocatable, intent(inout) :: column_dtracers(:,:)
+    type(marbl_tracer_metadata_type), allocatable, intent(inout) :: tracer_metadata(:)
+    type(marbl_log_type),                          intent(inout) :: marbl_status_log
+    integer(int_kind), optional,                   intent(out)   :: marbl_tracer_cnt
+
+    ! local variables
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_tracers'
+    character(len=char_len) :: log_message
+    integer :: i
+
+    ! Construct tracer indices
+    call tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs_config, zooplankton_config, &
+                                  marbl_status_log, marbl_tracer_cnt)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
+      return
+    end if
+
+    ! Allocate memory for tracers
+    allocate(surface_vals(num_surface_elements, tracer_indices%total_cnt))
+    allocate(surface_tracer_fluxes(num_surface_elements, tracer_indices%total_cnt))
+    allocate(column_tracers(tracer_indices%total_cnt, num_levels))
+    allocate(column_dtracers(tracer_indices%total_cnt, num_levels))
+    allocate(tracer_metadata(tracer_indices%total_cnt))
+    if (.not.allocated(tracer_restore_vars)) &
+      allocate(tracer_restore_vars(tracer_indices%total_cnt))
+
+    ! Set up tracer metadata
+    call marbl_init_tracer_metadata(tracer_metadata, tracer_indices, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_init_tracer_metadata()", subname)
+      return
+    end if
+    if (ciso_on) then
+       call marbl_ciso_init_tracer_metadata(tracer_metadata, tracer_indices)
+    end if
+
+    ! Log what tracers are being used
+    call marbl_status_log%log_header('MARBL Tracer indices', subname)
+    do i=1,tracer_indices%total_cnt
+      write(log_message, "(I3,2A)") i, '. ', trim(tracer_metadata(i)%short_name)
+      call marbl_status_log%log_noerror(log_message, subname)
+    end do
+
+100 format(A, ' tracer module contains ', I0, ' tracers; indices are ', I0, ' to ', I0)
+    if (tracer_indices%ecosys_base%cnt.gt.0) then
+      write(log_message, 100) 'ecosys_base', &
+                              tracer_indices%ecosys_base%cnt, &
+                              tracer_indices%ecosys_base%ind_beg, &
+                              tracer_indices%ecosys_base%ind_end
+      call marbl_status_log%log_noerror(log_message, subname)
+    end if
+    if (tracer_indices%ciso%cnt.gt.0) then
+      write(log_message, 100) 'ciso', &
+                              tracer_indices%ciso%cnt, &
+                              tracer_indices%ciso%ind_beg, &
+                              tracer_indices%ciso%ind_end
+      call marbl_status_log%log_noerror(log_message, subname)
+    end if
+
+  end subroutine marbl_init_tracers
+
+  !***********************************************************************
+
   subroutine marbl_init_tracer_metadata(marbl_tracer_metadata,                &
              marbl_tracer_indices, marbl_status_log)
 
@@ -188,6 +319,49 @@ contains
     end do
 
   end subroutine marbl_init_tracer_metadata
+
+  !***********************************************************************
+
+  subroutine marbl_init_parameters1(num_levels, marbl_parameters, marbl_status_log, gcm_nl_buffer)
+
+    use marbl_config_mod, only : marbl_config_and_parms_type
+    use marbl_parms, only : marbl_parms_set_defaults
+    use marbl_parms, only : marbl_parms_read_namelist
+    use marbl_parms, only : marbl_define_parameters
+
+    integer(int_kind),                 intent(in)    :: num_levels
+    type(marbl_config_and_parms_type), intent(inout) :: marbl_parameters
+    type(marbl_log_type),              intent(inout) :: marbl_status_log
+    character(len=*), optional,        intent(in)    :: gcm_nl_buffer(:)
+
+    ! local variables
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters1'
+    character(len=char_len) :: log_message
+
+    ! set default values for parameters
+    call marbl_parms_set_defaults(num_levels)
+
+    ! read parameters from namelist (if present)
+    if (present(gcm_nl_buffer)) then
+      call marbl_parms_read_namelist(gcm_nl_buffer, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('marbl_parms_read_namelist', subname)
+        return
+      end if
+    else
+      write(log_message, "(2A)") '** No namelists were provided to init, ',   &
+           'use put() and get() to change parameters'
+      call marbl_status_log%log_noerror(log_message, subname)
+    end if
+
+    ! construct parameters_type
+    call marbl_define_parameters(marbl_parameters, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_define_parameters()", subname)
+      return
+    end if
+
+  end subroutine marbl_init_parameters1
 
   !***********************************************************************
 

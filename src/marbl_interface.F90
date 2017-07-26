@@ -46,8 +46,6 @@ module marbl_interface
 
 
   use marbl_config_mod, only : marbl_config_and_parms_type
-  use marbl_config_mod, only : ciso_on
-  use marbl_config_mod, only : lvariable_PtoC
 
   implicit none
 
@@ -275,17 +273,10 @@ contains
        gcm_nl_buffer,                    &
        marbl_tracer_cnt)
 
-    use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
-    use marbl_init_mod        , only : marbl_init_tracer_metadata
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
-    use marbl_config_mod      , only : ladjust_bury_coeff
-    use marbl_config_mod      , only : autotrophs_config
-    use marbl_config_mod      , only : zooplankton_config
-    use marbl_config_mod      , only : set_derived_config
-    use marbl_parms           , only : marbl_parms_set_defaults
-    use marbl_parms           , only : marbl_parms_read_namelist
-    use marbl_parms           , only : marbl_define_parameters
-    use marbl_parms           , only : tracer_restore_vars
+    use marbl_init_mod        , only : marbl_init_config_vars2
+    use marbl_init_mod        , only : marbl_init_tracers
+    use marbl_init_mod        , only : marbl_init_parameters1
     use marbl_saved_state_mod , only : marbl_saved_state_init
 
     implicit none
@@ -323,47 +314,11 @@ contains
     !  Lock and log this%configuration
     !-----------------------------------------------------------------------
 
-    call this%configuration%finalize_vars(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('configuration%finalize_vars', subname)
-      return
-    end if
-
-    call set_derived_config(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('set_derived_config', subname)
-      return
-    end if
+    call marbl_init_config_vars2(this%lallow_glo_ops, this%configuration, this%StatusLog)
 
     !-----------------------------------------------------------------------
-    !  Abort if GCM doesn't support global ops but configuration requires them
+    !  Set up domain type
     !-----------------------------------------------------------------------
-
-    if (ladjust_bury_coeff .and. (.not.this%lallow_glo_ops)) then
-      write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
-             '.true. unless GCM can perform global operations'
-      call this%StatusLog%log_error(log_message, subname)
-      return
-    end if
-
-    !-----------------------------------------------------------------------
-    !  Set up tracer indices
-    !-----------------------------------------------------------------------
-
-    call this%tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs_config, &
-         zooplankton_config, this%StatusLog, marbl_tracer_cnt)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%tracer_indices%construct", subname)
-      return
-    end if
-
-    !--------------------------------------------------------------------
-    ! call constructors and allocate memory
-    !--------------------------------------------------------------------
-
-    call this%PAR%construct(num_levels, num_PAR_subcols)
-
-    call this%particulate_share%construct(num_levels)
 
     call this%domain%construct(                                 &
          num_levels                    = num_levels,            &
@@ -374,16 +329,26 @@ contains
          zw                            = gcm_zw,                &
          zt                            = gcm_zt)
 
-    allocate(this%surface_vals(num_surface_elements, this%tracer_indices%total_cnt))
+    !--------------------------------------------------------------------
+    ! call constructors and allocate memory
+    !--------------------------------------------------------------------
 
-    allocate(this%surface_tracer_fluxes(num_surface_elements, this%tracer_indices%total_cnt))
+    call this%PAR%construct(num_levels, num_PAR_subcols)
 
-    allocate(this%column_tracers(this%tracer_indices%total_cnt, num_levels))
+    call this%particulate_share%construct(num_levels)
 
-    allocate(this%column_dtracers(this%tracer_indices%total_cnt, num_levels))
+    !-----------------------------------------------------------------------
+    !  Set up tracers
+    !-----------------------------------------------------------------------
 
-    if (.not.allocated(tracer_restore_vars)) &
-      allocate(tracer_restore_vars(this%tracer_indices%total_cnt))
+    call marbl_init_tracers(num_levels, num_surface_elements, &
+                            this%tracer_indices, this%surface_vals, this%surface_tracer_fluxes, &
+                            this%column_tracers, this%column_dtracers, this%tracer_metadata,    &
+                            this%StatusLog, marbl_tracer_cnt)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_init_tracers", subname)
+      return
+    end if
 
     !--------------------------------------------------------------------
     ! set up saved state variables
@@ -404,55 +369,6 @@ contains
     end if
 
     !--------------------------------------------------------------------
-    ! Initialize public data / general tracer metadata
-    ! And then update tracer input info based on namelist
-    !--------------------------------------------------------------------
-
-    allocate(this%tracer_metadata(this%tracer_indices%total_cnt))
-
-    call marbl_init_tracer_metadata( &
-         this%tracer_metadata,       &
-         this%tracer_indices,        &
-         this%StatusLog)
-
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_init_tracer_metadata()", subname)
-      return
-    end if
-
-    if (ciso_on) then
-       call marbl_ciso_init_tracer_metadata(this%tracer_metadata,             &
-            this%tracer_indices)
-    end if
-
-    !--------------------------------------------------------------------
-    ! Report what tracers are being used
-    !--------------------------------------------------------------------
-
-    call this%StatusLog%log_header('MARBL Tracer indices', subname)
-    do i=1,this%tracer_indices%total_cnt
-      write(log_message, "(I3,2A)") i, '. ', &
-                                 trim(this%tracer_metadata(i)%short_name)
-      call this%StatusLog%log_noerror(log_message, subname)
-    end do
-
-100 format(A, ' tracer module contains ', I0, ' tracers; indices are ', I0, ' to ', I0)
-    if (this%tracer_indices%ecosys_base%cnt.gt.0) then
-      write(log_message, 100) 'ecosys_base', &
-                              this%tracer_indices%ecosys_base%cnt, &
-                              this%tracer_indices%ecosys_base%ind_beg, &
-                              this%tracer_indices%ecosys_base%ind_end
-      call this%StatusLog%log_noerror(log_message, subname)
-    end if
-    if (this%tracer_indices%ciso%cnt.gt.0) then
-      write(log_message, 100) 'ciso', &
-                              this%tracer_indices%ciso%cnt, &
-                              this%tracer_indices%ciso%ind_beg, &
-                              this%tracer_indices%ciso%ind_end
-      call this%StatusLog%log_noerror(log_message, subname)
-    end if
-
-    !--------------------------------------------------------------------
     ! Initialize marbl diagnostics
     !--------------------------------------------------------------------
 
@@ -469,38 +385,11 @@ contains
     end if
 
     !---------------------------------------------------------------------------
-    ! set default values for parameters
+    ! Initialize parameters
     !---------------------------------------------------------------------------
-
-    call marbl_parms_set_defaults(num_levels)
-
-    !---------------------------------------------------------------------------
-    ! read parameters from namelist (if present)
-    !---------------------------------------------------------------------------
-
-    if (present(gcm_nl_buffer)) then
-      call marbl_parms_read_namelist(gcm_nl_buffer, this%StatusLog)
-      if (this%StatusLog%labort_marbl) then
-        call this%StatusLog%log_error_trace('marbl_parms_read_namelist', subname)
-        return
-      end if
-    else
-      write(log_message, "(2A)") '** No namelists were provided to init, ',   &
-           'use put() and get() to change parameters'
-      call this%StatusLog%log_noerror(log_message, subname)
-    end if
+    call marbl_init_parameters1(num_levels, this%parameters, this%StatusLog, gcm_nl_buffer)
 
     end associate
-
-    !---------------------------------------------------------------------------
-    ! construct parameters_type
-    !---------------------------------------------------------------------------
-
-    call marbl_define_parameters(this%parameters, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_define_parameters()", subname)
-      return
-    end if
 
     call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
