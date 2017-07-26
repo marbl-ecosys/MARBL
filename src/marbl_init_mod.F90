@@ -50,7 +50,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
 
-    character(len=*), parameter :: subname = 'marbl_mod:marbl_init_tracer_metadata'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_tracer_metadata'
 
     integer (int_kind) :: n        ! index for looping over tracers
     integer (int_kind) :: zoo_ind  ! zooplankton functional group index
@@ -128,7 +128,7 @@ contains
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_mod:marbl_init_bury_coeff'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_bury_coeff'
 
     !---------------------------------------------------------------------------
 
@@ -182,7 +182,7 @@ contains
     type(marbl_log_type),                         intent(inout) :: marbl_status_log
 
     ! Local variables
-    character(len=*), parameter :: subname = 'marbl_mod:marbl_init_forcing_fields'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_forcing_fields'
     integer :: num_surface_forcing_fields
     integer :: num_interior_forcing_fields
 
@@ -455,7 +455,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_mod:marbl_init_surface_forcing_fields'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_surface_forcing_fields'
     character(len=char_len)     :: log_message
 
     integer :: id
@@ -629,7 +629,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_mod:marbl_init_interior_forcing_fields'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_interior_forcing_fields'
     character(len=char_len)     :: log_message
 
     ! NAG didn't like associating to tracer_metadata(:)%*
