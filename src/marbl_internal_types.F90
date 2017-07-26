@@ -977,7 +977,7 @@ contains
     integer :: m, n
 
     associate(forcing_cnt => num_interior_forcing_fields)
-    
+
       tracer_cnt = size(tracer_names)
 
       forcing_cnt = 0
@@ -1029,11 +1029,6 @@ contains
       allocate(this%tracer_id(tracer_restore_cnt))
       this%tracer_id = 0
 
-      if (tracer_restore_cnt .gt. 0) then
-        log_message = "Restoring the following tracers to data:"
-        call marbl_status_log%log_noerror(log_message, subname)
-      end if
-
       do m=1,tracer_restore_cnt ! loop over tracer_restore_vars
         ! Check for empty strings in first tracer_restore_cnt elements of
         ! tracer_restore_vars
@@ -1067,9 +1062,6 @@ contains
         ! Check to make sure match was found
         if (n.le.tracer_cnt) then
           this%tracer_id(m) = n
-          write(log_message, "(2A,I0,A)") trim(tracer_names(n)),              &
-                                          " (tracer index: ", n, ')'
-          call marbl_status_log%log_noerror(log_message, subname)
         else
           write(log_message, "(2A)") "Can not find tracer named ",            &
                 trim(tracer_restore_vars(m))
