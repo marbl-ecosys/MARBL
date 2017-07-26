@@ -309,7 +309,7 @@ contains
        marbl_tracer_cnt)
 
     use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
-    use marbl_mod             , only : marbl_init_tracer_metadata
+    use marbl_init_mod        , only : marbl_init_tracer_metadata
     use marbl_diagnostics_mod , only : marbl_diagnostics_init
     use marbl_config_mod      , only : ladjust_bury_coeff
     use marbl_config_mod      , only : autotrophs_config
@@ -548,8 +548,8 @@ contains
   subroutine init_phase4(this)
 
     use marbl_parms,       only : set_derived_parms
-    use marbl_mod,         only : marbl_init_bury_coeff
-    use marbl_mod,         only : marbl_init_forcing_fields
+    use marbl_init_mod,    only : marbl_init_bury_coeff
+    use marbl_init_mod,    only : marbl_init_forcing_fields
 
     class(marbl_interface_class), intent(inout) :: this
 
