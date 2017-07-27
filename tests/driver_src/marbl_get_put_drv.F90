@@ -19,7 +19,7 @@ Contains
   subroutine test(marbl_instance, marbl_status_log)
 
     use marbl_interface,  only : marbl_interface_class
-    use marbl_config_mod, only : marbl_config_set_defaults
+    use marbl_parms,      only : marbl_config_set_defaults
     use marbl_parms,      only : marbl_parms_set_defaults
 
     type(marbl_interface_class), intent(inout) :: marbl_instance

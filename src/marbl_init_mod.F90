@@ -68,9 +68,9 @@ contains
   subroutine marbl_init_config_vars1(marbl_configuration, marbl_status_log, gcm_nl_buffer)
 
     use marbl_config_mod, only : marbl_config_and_parms_type
-    use marbl_config_mod, only : marbl_config_set_defaults
-    use marbl_config_mod, only : marbl_config_read_namelist
-    use marbl_config_mod, only : marbl_define_config_vars
+    use marbl_parms, only : marbl_config_set_defaults
+    use marbl_parms, only : marbl_config_read_namelist
+    use marbl_parms, only : marbl_define_config_vars
 
     type(marbl_config_and_parms_type), intent(inout) :: marbl_configuration
     type(marbl_log_type),              intent(inout) :: marbl_status_log
@@ -119,8 +119,8 @@ contains
   subroutine marbl_init_config_vars2(lallow_glo_ops, marbl_configuration, marbl_status_log)
 
     use marbl_config_mod, only : marbl_config_and_parms_type
-    use marbl_config_mod, only : ladjust_bury_coeff
-    use marbl_config_mod, only : set_derived_config
+    use marbl_parms, only : ladjust_bury_coeff
+    use marbl_parms, only : set_derived_config
 
     logical,                           intent(in)    :: lallow_glo_ops
     type(marbl_config_and_parms_type), intent(inout) :: marbl_configuration
@@ -167,10 +167,10 @@ contains
                                 marbl_status_log, &
                                 marbl_tracer_cnt)
 
-    use marbl_config_mod, only : ciso_on
-    use marbl_config_mod, only : lvariable_PtoC
-    use marbl_config_mod, only : autotrophs_config
-    use marbl_config_mod, only : zooplankton_config
+    use marbl_parms, only : ciso_on
+    use marbl_parms, only : lvariable_PtoC
+    use marbl_parms, only : autotrophs_config
+    use marbl_parms, only : zooplankton_config
     use marbl_parms,      only : tracer_restore_vars
     use marbl_ciso_mod,   only : marbl_ciso_init_tracer_metadata
 
@@ -249,7 +249,7 @@ contains
 
     !  Set tracer and forcing metadata
 
-    use marbl_config_mod, only : lecovars_full_depth_tavg
+    use marbl_parms, only : lecovars_full_depth_tavg
 
     implicit none
 
@@ -369,7 +369,7 @@ contains
   subroutine marbl_init_parameters2(marbl_parameters, marbl_status_log)
 
     use marbl_config_mod, only : marbl_config_and_parms_type
-    use marbl_parms,    only : set_derived_parms
+    use marbl_parms,      only : set_derived_parms
 
     type(marbl_config_and_parms_type), intent(inout) :: marbl_parameters
     type(marbl_log_type),              intent(inout) :: marbl_status_log
@@ -399,8 +399,8 @@ contains
   subroutine marbl_init_bury_coeff(marbl_particulate_share, marbl_status_log)
 
     use marbl_logging, only : marbl_log_type
-    use marbl_config_mod, only : init_bury_coeff_opt
-    use marbl_config_mod, only : ladjust_bury_coeff
+    use marbl_parms, only : init_bury_coeff_opt
+    use marbl_parms, only : ladjust_bury_coeff
     use marbl_parms, only : parm_init_POC_bury_coeff
     use marbl_parms, only : parm_init_POP_bury_coeff
     use marbl_parms, only : parm_init_bSi_bury_coeff
@@ -449,10 +449,10 @@ contains
     use marbl_internal_types  , only : marbl_surface_forcing_share_type
     use marbl_internal_types  , only : marbl_surface_forcing_internal_type
     use marbl_internal_types, only : marbl_interior_forcing_indexing_type
-    use marbl_config_mod, only : ciso_on
-    use marbl_config_mod, only : lflux_gas_o2
-    use marbl_config_mod, only : lflux_gas_co2
-    use marbl_config_mod, only : ladjust_bury_coeff
+    use marbl_parms, only : ciso_on
+    use marbl_parms, only : lflux_gas_o2
+    use marbl_parms, only : lflux_gas_co2
+    use marbl_parms, only : ladjust_bury_coeff
     use marbl_parms, only : tracer_restore_vars
 
     type(marbl_domain_type),                      intent(in)    :: domain
@@ -640,7 +640,7 @@ contains
     !  initialize zooplankton tracer_d values and tracer indices
     !-----------------------------------------------------------------------
 
-    use marbl_config_mod, only : zooplankton_config
+    use marbl_parms, only : zooplankton_config
 
     implicit none
 
@@ -673,7 +673,7 @@ contains
     !  initialize autotroph tracer_d values and tracer indices
     !-----------------------------------------------------------------------
 
-    use marbl_config_mod, only : autotrophs_config
+    use marbl_parms, only : autotrophs_config
 
     implicit none
 

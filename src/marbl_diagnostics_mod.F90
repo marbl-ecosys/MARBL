@@ -11,9 +11,8 @@ module marbl_diagnostics_mod
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
 
-  use marbl_config_mod, only : autotrophs_config
-  use marbl_config_mod, only : zooplankton_config
-
+  use marbl_parms, only : autotrophs_config
+  use marbl_parms, only : zooplankton_config
   use marbl_parms, only : autotrophs
 
   use marbl_constants_mod   , only : c0
@@ -343,7 +342,7 @@ contains
        marbl_surface_forcing_diags,  &
        marbl_status_log)
 
-    use marbl_config_mod, only : ciso_on
+    use marbl_parms, only : ciso_on
 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
@@ -3279,8 +3278,8 @@ contains
 
     use marbl_internal_types , only : marbl_surface_forcing_indexing_type
     use marbl_internal_types , only : marbl_surface_saved_state_indexing_type
-    use marbl_config_mod     , only : lflux_gas_o2
-    use marbl_config_mod     , only : lflux_gas_co2
+    use marbl_parms          , only : lflux_gas_o2
+    use marbl_parms          , only : lflux_gas_co2
     use marbl_constants_mod  , only : mpercm
 
     implicit none
@@ -4140,8 +4139,8 @@ contains
        autotroph_secondary_species, dtracers, interior_restore, &
        marbl_tracer_indices, marbl_diags)
 
-    use marbl_parms     , only : Qp_zoo
-    use marbl_config_mod, only : lvariable_PtoC
+    use marbl_parms, only : Qp_zoo
+    use marbl_parms, only : lvariable_PtoC
 
     type(marbl_domain_type)                , intent(in)    :: marbl_domain
     type(column_sinking_particle_type)     , intent(in)    :: POP

@@ -90,15 +90,14 @@ module marbl_mod
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : char_len
 
-  use marbl_config_mod, only : ciso_on
-  use marbl_config_mod, only : lsource_sink
-  use marbl_config_mod, only : lflux_gas_o2
-  use marbl_config_mod, only : lflux_gas_co2
-  use marbl_config_mod, only : autotrophs_config
-  use marbl_config_mod, only : grazing_config
-  use marbl_config_mod, only : init_bury_coeff_opt
-  use marbl_config_mod, only : ladjust_bury_coeff
-
+  use marbl_parms, only : ciso_on
+  use marbl_parms, only : lsource_sink
+  use marbl_parms, only : lflux_gas_o2
+  use marbl_parms, only : lflux_gas_co2
+  use marbl_parms, only : autotrophs_config
+  use marbl_parms, only : grazing_config
+  use marbl_parms, only : init_bury_coeff_opt
+  use marbl_parms, only : ladjust_bury_coeff
   use marbl_parms, only : autotrophs
   use marbl_parms, only : zooplankton
   use marbl_parms, only : grz_fnc_michaelis_menten
@@ -1809,7 +1808,7 @@ contains
     use marbl_oxygen             , only : o2sat_surf
     use marbl_constants_mod      , only : molw_Fe
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
-    use marbl_config_mod         , only : lcompute_nhx_surface_emis
+    use marbl_parms              , only : lcompute_nhx_surface_emis
     use marbl_parms              , only : xkw_coeff
     use marbl_parms              , only : iron_frac_in_dust
     use marbl_parms              , only : iron_frac_in_bc
@@ -2370,7 +2369,7 @@ contains
              autotroph_secondary_species)
 
     use marbl_constants_mod, only : epsC
-    use marbl_config_mod   , only : lvariable_PtoC
+    use marbl_parms        , only : lvariable_PtoC
     use marbl_parms        , only : gQsi_0
     use marbl_parms        , only : gQsi_max
     use marbl_parms        , only : gQsi_min
