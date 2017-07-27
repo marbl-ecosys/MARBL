@@ -15,7 +15,8 @@ module marbl_config_mod
   !  Datatypes for marbl_instance%configuration and marbl_instance%parameters
   !---------------------------------------------------------------------------
 
-  type, private :: marbl_single_config_or_parm_type
+  ! Needs to be public so that GCMs can create linked list to request metadata
+  type, public :: marbl_single_config_or_parm_ll_type
     ! Metadata
     character(len=char_len) :: long_name
     character(len=char_len) :: short_name
@@ -24,25 +25,26 @@ module marbl_config_mod
     character(len=char_len) :: datatype
     integer                 :: category_ind ! used for sorting output list
     character(len=char_len) :: comment      ! used to add comment in log
+    type(marbl_single_config_or_parm_ll_type), pointer :: next => NULL()
     ! Actual parameter data
     real(r8),                pointer :: rptr => NULL()
     integer(int_kind),       pointer :: iptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
-  end type marbl_single_config_or_parm_type
+  end type marbl_single_config_or_parm_ll_type
 
   type, public :: marbl_config_and_parms_type
     logical :: locked = .false.
-    integer :: cnt = 0
-    character(len=char_len),                dimension(:), pointer :: categories
-    type(marbl_single_config_or_parm_type), dimension(:), pointer :: vars => NULL()
+!    integer :: cnt = 0
+    character(len=char_len), dimension(:),     pointer :: categories
+    type(marbl_single_config_or_parm_ll_type), pointer :: vars => NULL()
+    type(marbl_single_config_or_parm_ll_type), pointer :: LastEntry => NULL()
   contains
     procedure          :: add_var          => marbl_var_add
     procedure          :: add_var_1d_r8    => marbl_var_add_1d_r8
     procedure          :: add_var_1d_int   => marbl_var_add_1d_int
     procedure          :: add_var_1d_str   => marbl_var_add_1d_str
     procedure          :: finalize_vars    => marbl_vars_finalize
-    procedure          :: inquire_id       => marbl_var_inquire_id
     procedure          :: inquire_metadata => marbl_var_inquire_metadata
     generic            :: put              => put_real,                       &
                                               put_integer,                    &
@@ -90,24 +92,12 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_add'
 
-    type(marbl_single_config_or_parm_type), dimension(:), pointer :: new_vars
-    character(len=char_len),                dimension(:), pointer :: new_categories
-    integer :: old_size, id, cat_ind, n
+    type(marbl_single_config_or_parm_ll_type), pointer :: ll_index => NULL()
+    character(len=char_len), dimension(:), pointer :: new_categories
+    integer :: cat_ind, n
     character(len=char_len) :: log_message
 
-    if (.not.associated(this%vars)) then
-      write(log_message, "(A)") 'Constructor must be run before adding vars'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    old_size = size(this%vars)
-    id = old_size+1
-
-    ! 1) Allocate new_vars to be size N (one element larger than this%vars)
-    allocate(new_vars(id))
-
-    ! 2) Determine category ID
+    ! 1) Determine category ID
     do cat_ind = 1, size(this%categories)
       if (trim(category) .eq. trim(this%categories(cat_ind))) then
         exit
@@ -121,72 +111,56 @@ contains
       this%categories => new_categories
     end if
 
-    ! 3) copy this%vars into first N-1 elements of new_vars
-    do n=1, old_size
-      ! Also do some error checking
-      ! (a) Ensure sname does not match a previous variable short_name
-      if (trim(sname) .eq. trim(this%vars(n)%short_name)) then
+    ! 2) Error checking
+    ll_index => this%vars
+    do while (associated(ll_index))
+      if (trim(sname) .eq. trim(ll_index%short_name)) then
         write(log_message, "(A,1X,A)") trim(sname), "has been added twice"
         call marbl_status_log%log_error(log_message, subname)
       end if
 
       ! (b) Ensure pointers do not point to same target as other variables
       if (present(rptr)) then
-        if (associated(rptr, this%vars(n)%rptr)) then
-          write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
+        if (associated(rptr, ll_index%rptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(ll_index%short_name), &
                                      " both point to same variable in memory."
           call marbl_status_log%log_error(log_message, subname)
         end if
       end if
       if (present(iptr)) then
-        if (associated(iptr, this%vars(n)%iptr)) then
-          write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
+        if (associated(iptr, ll_index%iptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(ll_index%short_name), &
                                      " both point to same variable in memory."
           call marbl_status_log%log_error(log_message, subname)
         end if
       end if
       if (present(lptr)) then
-        if (associated(lptr, this%vars(n)%lptr)) then
-          write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
+        if (associated(lptr, ll_index%lptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(ll_index%short_name), &
                                      " both point to same variable in memory."
           call marbl_status_log%log_error(log_message, subname)
         end if
       end if
       if (present(sptr)) then
-        if (associated(sptr, this%vars(n)%sptr)) then
-          write(log_message, "(4A)") trim(sname), " and ", trim(this%vars(n)%short_name), &
+        if (associated(sptr, ll_index%sptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(ll_index%short_name), &
                                      " both point to same variable in memory."
           call marbl_status_log%log_error(log_message, subname)
         end if
       end if
-      if (marbl_status_log%labort_marbl) return
 
-      new_vars(n)%long_name     = this%vars(n)%long_name
-      new_vars(n)%short_name    = this%vars(n)%short_name
-      new_vars(n)%units         = this%vars(n)%units
-      new_vars(n)%datatype      = this%vars(n)%datatype
-      new_vars(n)%group         = this%vars(n)%group
-      new_vars(n)%category_ind  = this%vars(n)%category_ind
-      new_vars(n)%comment       = this%vars(n)%comment
-      ! All pointer components of new_vars are nullified in the type definition
-      ! via => NULL() statements
-      if (associated(this%vars(n)%lptr)) &
-        new_vars(n)%lptr => this%vars(n)%lptr
-      if (associated(this%vars(n)%iptr)) &
-        new_vars(n)%iptr => this%vars(n)%iptr
-      if (associated(this%vars(n)%rptr)) &
-        new_vars(n)%rptr => this%vars(n)%rptr
-      if (associated(this%vars(n)%sptr)) &
-        new_vars(n)%sptr => this%vars(n)%sptr
+      if (marbl_status_log%labort_marbl) return
+      ll_index => ll_index%next
     end do
 
-    ! 4) add newest parm variable
-    !    All pointer components of new_vars are nullified in the type definition
+    ! 3) Create new entry
+    !    All pointer components of ll_index are nullified in the type definition
     !    via => NULL() statements
+    allocate(ll_index)
     select case (trim(datatype))
       case ('real')
         if (present(rptr)) then
-          new_vars(id)%rptr => rptr
+          ll_index%rptr => rptr
         else
           write(log_message, "(A)")                                           &
                "Defining real parameter but rptr not present!"
@@ -195,7 +169,7 @@ contains
         end if
       case ('integer')
         if (present(iptr)) then
-          new_vars(id)%iptr => iptr
+          ll_index%iptr => iptr
         else
           write(log_message, "(A)")                                           &
                "Defining integer parameter but iptr not present!"
@@ -204,7 +178,7 @@ contains
         end if
       case ('logical')
         if (present(lptr)) then
-          new_vars(id)%lptr => lptr
+          ll_index%lptr => lptr
         else
           write(log_message, "(A)")                                           &
                "Defining logical parameter but lptr not present!"
@@ -213,7 +187,7 @@ contains
         end if
       case ('string')
         if (present(sptr)) then
-          new_vars(id)%sptr => sptr
+          ll_index%sptr => sptr
         else
           write(log_message, "(A)")                                           &
                "Defining string parameter but aptr not present!"
@@ -225,22 +199,25 @@ contains
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
-    new_vars(id)%short_name   = trim(sname)
-    new_vars(id)%long_name    = trim(lname)
-    new_vars(id)%units        = trim(units)
-    new_vars(id)%datatype     = trim(datatype)
-    new_vars(id)%group        = trim(group)
-    new_vars(id)%category_ind = cat_ind
+    ll_index%short_name   = trim(sname)
+    ll_index%long_name    = trim(lname)
+    ll_index%units        = trim(units)
+    ll_index%datatype     = trim(datatype)
+    ll_index%group        = trim(group)
+    ll_index%category_ind = cat_ind
     if (present(comment)) then
-      new_vars(id)%comment = comment
+      ll_index%comment = comment
     else
-      new_vars(id)%comment = ''
+      ll_index%comment = ''
     end if
 
-    ! 5) deallocate this%vars / point to new_vars (and update cnt)
-    deallocate(this%vars)
-    this%vars => new_vars
-    this%cnt = id
+    ! 4) Append new entry to list
+    if (.not.associated(this%vars)) then
+      this%vars => ll_index
+    else
+      this%LastEntry%next => ll_index
+    end if
+    this%LastEntry => ll_index
 
   end subroutine marbl_var_add
 
@@ -348,59 +325,61 @@ contains
   subroutine marbl_vars_finalize(this, marbl_status_log)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_vars_finalize'
     character(len=char_len)     :: log_message
 
     character(len=char_len) :: group
     character(len=7)        :: logic
-    integer                 :: i,n, cat_ind
+    integer                 :: i, cat_ind
+    type(marbl_single_config_or_parm_ll_type), pointer :: ll_index => NULL()
 
     ! (1) Lock data type (put calls will now cause MARBL to abort)
     this%locked = .true.
     group = ''
 
     do cat_ind = 1,size(this%categories)
-      do n=1,this%cnt
-        if (this%vars(n)%category_ind .eq. cat_ind) then
+      ll_index => this%vars
+      do while (associated(ll_index))
+        if (ll_index%category_ind .eq. cat_ind) then
           ! (2) Log the group name if different than previous parameter
-          if (this%vars(n)%group.ne.group) then
-            group = trim(this%vars(n)%group)
+          if (ll_index%group.ne.group) then
+            group = trim(ll_index%group)
             call marbl_status_log%log_header(trim(group), subname)
           end if
 
         ! (3) write parameter to log_message (format depends on datatype)
-          select case(trim(this%vars(n)%datatype))
+          select case(trim(ll_index%datatype))
             case ('string')
-              write(log_message, "(4A)") trim(this%vars(n)%short_name), " = '",  &
-                                         trim(this%vars(n)%sptr), "'"
+              write(log_message, "(4A)") trim(ll_index%short_name), " = '",  &
+                                         trim(ll_index%sptr), "'"
             case ('real')
-              write(log_message, "(2A,E24.16)") trim(this%vars(n)%short_name),   &
-                                                " = ", this%vars(n)%rptr
+              write(log_message, "(2A,E24.16)") trim(ll_index%short_name),   &
+                                                " = ", ll_index%rptr
             case ('integer')
-              write(log_message, "(2A,I0)") trim(this%vars(n)%short_name), " = ", &
-                                            this%vars(n)%iptr
+              write(log_message, "(2A,I0)") trim(ll_index%short_name), " = ", &
+                                            ll_index%iptr
             case ('logical')
-              if (this%vars(n)%lptr) then
+              if (ll_index%lptr) then
                 logic = '.true.'
               else
                 logic = '.false.'
               end if
-              write(log_message, "(3A)") trim(this%vars(n)%short_name), " = ",   &
+              write(log_message, "(3A)") trim(ll_index%short_name), " = ",   &
                                          trim(logic)
             case DEFAULT
-              write(log_message, "(2A)") trim(this%vars(n)%datatype),            &
+              write(log_message, "(2A)") trim(ll_index%datatype),            &
                                          ' is not a valid datatype for parameter'
               call marbl_status_log%log_error(log_message, subname)
               return
           end select
 
           ! (4) Write log_message to the log
-          if (this%vars(n)%comment.ne.'') then
-            if (len_trim(log_message) + 3 + len_trim(this%vars(n)%comment) .le. len(log_message)) then
+          if (ll_index%comment.ne.'') then
+            if (len_trim(log_message) + 3 + len_trim(ll_index%comment) .le. len(log_message)) then
               write(log_message, "(3A)") trim(log_message), ' ! ',                  &
-                                         trim(this%vars(n)%comment)
+                                         trim(ll_index%comment)
             else
               call marbl_status_log%log_noerror(&
                    '! WARNING: omitting comment on line below because including it exceeds max length for log message', &
@@ -409,11 +388,12 @@ contains
           endif
           call marbl_status_log%log_noerror(log_message, subname)
         end if
-      end do
+        ll_index => ll_index%next
+      end do  ! ll_index
       if (cat_ind .ne. size(this%categories)) then
         call marbl_status_log%log_noerror('', subname)
       end if
-    end do
+    end do  ! cat_ind
 
   end subroutine marbl_vars_finalize
 
@@ -447,7 +427,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_config_mod%marbl_var_put_all_types'
     character(len=char_len)     :: log_message
 
-    integer :: varid
+    type(marbl_single_config_or_parm_ll_type), pointer :: ll_index => NULL()
 
     if (this%locked) then
       write(log_message, "(3A)") 'Can not change value of ', trim(var),       &
@@ -456,38 +436,42 @@ contains
       return
     end if
 
-    varid = this%inquire_id(var, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      write(log_message, "(3A)") 'config_parms%put(', trim(var), ')'
-      call marbl_status_log%log_error_trace(log_message, subname)
+    ll_index => this%vars
+    do while (associated(ll_index))
+      if (trim(ll_index%short_name) .eq. trim(var)) exit
+      ll_index => ll_index%next
+    end do
+    if (.not.associated(ll_index)) then
+      write(log_message, "(2A)") trim(var), 'not found!'
+      call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
-    select case(trim(this%vars(varid)%datatype))
+    select case(trim(ll_index%datatype))
       case ('real')
         if (present(rval)) then
-          this%vars(varid)%rptr = rval
+          ll_index%rptr = rval
         else
           write(log_message, "(2A)") trim(var), ' requires real value'
           call marbl_status_log%log_error(log_message, subname)
         end if
       case ('integer')
         if (present(ival)) then
-          this%vars(varid)%iptr = ival
+          ll_index%iptr = ival
         else
           write(log_message, "(2A)") trim(var), ' requires integer value'
           call marbl_status_log%log_error(log_message, subname)
         end if
       case ('logical')
         if (present(lval)) then
-          this%vars(varid)%lptr = lval
+          ll_index%lptr = lval
         else
           write(log_message, "(2A)") trim(var), ' requires logical value'
           call marbl_status_log%log_error(log_message, subname)
         end if
       case ('string')
         if (present(sval)) then
-          this%vars(varid)%sptr = sval
+          ll_index%sptr = sval
         else
           write(log_message, "(2A)") trim(var), ' requires string value'
           call marbl_status_log%log_error(log_message, subname)
@@ -512,7 +496,8 @@ contains
     character(len=*), parameter :: subname = 'marbl_config_mod%marbl_var_get_all_types'
     character(len=char_len)     :: log_message
 
-    integer :: varid, cnt
+    type(marbl_single_config_or_parm_ll_type), pointer :: ll_index => NULL()
+    integer :: cnt
 
     cnt = 0
     if (present(rval)) cnt = cnt + 1
@@ -532,45 +517,49 @@ contains
       return
     end if
 
-    varid = this%inquire_id(var, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      write(log_message, "(3A)") 'config_parms%get(', trim(var), ')'
-      call marbl_status_log%log_error_trace(log_message, subname)
+    ll_index => this%vars
+    do while (associated(ll_index))
+      if (trim(ll_index%short_name) .eq. trim(var)) exit
+      ll_index => ll_index%next
+    end do
+    if (.not.associated(ll_index)) then
+      write(log_message, "(2A)") trim(var), 'not found!'
+      call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
-    select case(trim(this%vars(varid)%datatype))
+    select case(trim(ll_index%datatype))
       case ('real')
         if (present(rval)) then
-          rval = this%vars(varid)%rptr
+          rval = ll_index%rptr
         else
           write(log_message, "(2A)") trim(var), ' requires real value'
           call marbl_status_log%log_error(log_message, subname)
         end if
       case ('integer')
         if (present(ival)) then
-          ival = this%vars(varid)%iptr
+          ival = ll_index%iptr
         else
           write(log_message, "(2A)") trim(var), ' requires integer value'
           call marbl_status_log%log_error(log_message, subname)
         end if
       case ('logical')
         if (present(lval)) then
-          lval = this%vars(varid)%lptr
+          lval = ll_index%lptr
         else
           write(log_message, "(2A)") trim(var), ' requires logical value'
           call marbl_status_log%log_error(log_message, subname)
         end if
       case ('string')
         if (present(sval)) then
-          if (len(sval).lt.len(trim(this%vars(varid)%sptr))) then
+          if (len(sval).lt.len(trim(ll_index%sptr))) then
             write(log_message, "(2A,I0,A,I0,A)") trim(var), ' requires ',     &
-              len(trim(this%vars(varid)%sptr)), ' bytes to store, but only ', &
+              len(trim(ll_index%sptr)), ' bytes to store, but only ', &
               len(sval), ' are provided.'
             call marbl_status_log%log_error(log_message, subname)
             return
           end if
-          sval = trim(this%vars(varid)%sptr)
+          sval = trim(ll_index%sptr)
         else
           write(log_message, "(2A)") trim(var), ' requires string value'
           call marbl_status_log%log_error(log_message, subname)
@@ -685,69 +674,45 @@ contains
 
   !*****************************************************************************
 
-  function marbl_var_inquire_id(this, var, marbl_status_log) result(id)
+  subroutine marbl_var_inquire_metadata(this, var, marbl_status_log, lname,   &
+             units, group, datatype)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),                   intent(in)    :: var
     type(marbl_log_type),               intent(inout) :: marbl_status_log
-    integer                                           :: id
-
-    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_id'
-    character(len=char_len)     :: log_message
-
-    integer :: n
-
-    id = 0
-    do n=1,this%cnt
-      if (trim(var).eq.trim(this%vars(n)%short_name)) then
-        id = n
-        return
-      end if
-    end do
-    write(log_message, "(2A)") trim(var), ' is not a known variable name for put'
-    call marbl_status_log%log_error(log_message, subname)
-
-  end function marbl_var_inquire_id
-
-  !*****************************************************************************
-
-  subroutine marbl_var_inquire_metadata(this, ind, marbl_status_log, lname,   &
-             sname, units, group, datatype)
-
-    class(marbl_config_and_parms_type), intent(inout) :: this
-    integer,                            intent(in)    :: ind
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
-    character(len=*), optional,         intent(out)   :: lname, sname, units
+    character(len=*), optional,         intent(out)   :: lname, units
     character(len=*), optional,         intent(out)   :: group, datatype
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_metadata'
     character(len=char_len)     :: log_message
 
-    if ((ind .lt. 1).or.(ind .gt. this%cnt)) then
-      write(log_message,'(I0,2A,I0)') ind, ' is not a valid index: must be ', &
-                                      'between 1 and ', this%cnt
+    type(marbl_single_config_or_parm_ll_type), pointer :: ll_index => NULL()
+
+    ll_index => this%vars
+    do while (associated(ll_index))
+      if (trim(ll_index%short_name) .eq. trim(var)) exit
+      ll_index => ll_index%next
+    end do
+    if (.not.associated(ll_index)) then
+      write(log_message, "(2A)") trim(var), 'not found!'
       call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
     if (present(lname)) then
-      lname = this%vars(ind)%long_name
-    end if
-
-    if (present(sname)) then
-      sname = this%vars(ind)%short_name
+      lname = ll_index%long_name
     end if
 
     if (present(units)) then
-      units = this%vars(ind)%units
+      units = ll_index%units
     end if
 
     if (present(group)) then
-      group = this%vars(ind)%group
+      group = ll_index%group
     end if
 
     if (present(datatype)) then
-      datatype = this%vars(ind)%datatype
+      datatype = ll_index%datatype
     end if
 
   end subroutine marbl_var_inquire_metadata

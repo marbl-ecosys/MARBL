@@ -115,14 +115,15 @@ Contains
 
   subroutine set_all_vals(config_or_parms, marbl_status_log)
 
+    use marbl_config_mod, only : marbl_single_config_or_parm_ll_type
     use marbl_config_mod, only : marbl_config_and_parms_type
 
     type(marbl_config_and_parms_type), intent(inout) :: config_or_parms
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_get_put_drv:set_all_vals'
+    type(marbl_single_config_or_parm_ll_type), pointer :: ll_index => NULL()
     character(len=char_len) :: log_message, sname, datatype
-    integer :: n
 
     ! Put values into marbl_instance%configuration%vars(n)
     ! logicals = .true.
@@ -131,9 +132,11 @@ Contains
     ! strings  = '-1'
     log_message = "Setting variables to .true. or -1 ..."
     call marbl_status_log%log_noerror(log_message, subname)
-    do n=1,config_or_parms%cnt
-      call config_or_parms%inquire_metadata(n, marbl_status_log,              &
-                                            sname=sname, datatype=datatype)
+    ll_index => config_or_parms%vars
+    do while (associated(ll_index))
+      sname = ll_index%short_name
+      call config_or_parms%inquire_metadata(sname, marbl_status_log,          &
+                                            datatype=datatype)
       if (marbl_status_log%labort_marbl) then
         call marbl_status_log%log_error_trace('inquire_metadata', subname)
         return
@@ -148,6 +151,7 @@ Contains
         case ('logical')
           call config_or_parms%put(sname, .true., marbl_status_log)
       end select
+      ll_index => ll_index%next
     end do
     log_message = "... Done!"
     call marbl_status_log%log_noerror(log_message, subname)
@@ -158,6 +162,7 @@ Contains
 
   subroutine check_all_vals(config_or_parms, marbl_status_log)
 
+    use marbl_config_mod, only : marbl_single_config_or_parm_ll_type
     use marbl_config_mod, only : marbl_config_and_parms_type
 
     type(marbl_config_and_parms_type), intent(inout) :: config_or_parms
@@ -165,17 +170,22 @@ Contains
 
     character(*), parameter :: subname = 'marbl_get_put_drv:check_all_vals'
     character(len=char_len) :: log_message, sname, datatype, sval
+    type(marbl_single_config_or_parm_ll_type), pointer :: ll_index => NULL()
     logical  :: lval
     real(r8) :: rval
     integer  :: ival
-    integer  :: n
+    integer  :: n ! unique value for each variable
 
     write(log_message, "(2A)") "Making sure variables are .true. or -1 then", &
                                " setting to .false. or n ..."
     call marbl_status_log%log_noerror(log_message, subname)
-    do n=1,config_or_parms%cnt
-      call config_or_parms%inquire_metadata(n, marbl_status_log,              &
-                                            sname=sname, datatype=datatype)
+    ll_index => config_or_parms%vars
+    n = 0
+    do while (associated(ll_index))
+      n = n+1
+      sname = ll_index%short_name
+      call config_or_parms%inquire_metadata(sname, marbl_status_log,          &
+                                            datatype=datatype)
       if (marbl_status_log%labort_marbl) then
         call marbl_status_log%log_error_trace('inquire_metadata', subname)
         return
@@ -223,6 +233,7 @@ Contains
           ! (2) Change value
           call config_or_parms%put(sname, .false., marbl_status_log)
       end select
+      ll_index => ll_index%next
     end do
     log_message = "... Done!"
     call marbl_status_log%log_noerror(log_message, subname)

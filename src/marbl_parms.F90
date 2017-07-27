@@ -424,8 +424,6 @@ contains
       return
     end if
 
-    this%cnt = 0
-    allocate(this%vars(this%cnt))
     allocate(this%categories(0))
 
     !------------------!
@@ -1076,8 +1074,6 @@ contains
       return
     end if
 
-    this%cnt = 0
-    allocate(this%vars(this%cnt))
     allocate(this%categories(0))
 
     !-----------------!
