@@ -530,7 +530,6 @@ contains
 
   subroutine marbl_define_parameters(this, marbl_status_log)
 
-    use marbl_config_mod, only : ciso_on
     use marbl_config_mod, only : log_add_var_error
     use marbl_config_mod, only : autotrophs_config
     use marbl_config_mod, only : zooplankton_config
@@ -1362,19 +1361,17 @@ contains
       return
     end if
 
-    if (ciso_on) then
-      sname     = 'ciso_fract_factors'
-      lname     = 'Optiob for which biological fractionation calculation to use'
-      units     = 'unitless'
-      datatype  = 'string'
-      group     = 'marbl_parms_nml'
-      sptr      => ciso_fract_factors
-      call this%add_var(sname, lname, units, datatype, group, category,       &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+    sname     = 'ciso_fract_factors'
+    lname     = 'Option for which biological fractionation calculation to use'
+    units     = 'unitless'
+    datatype  = 'string'
+    group     = 'marbl_parms_nml'
+    sptr      => ciso_fract_factors
+    call this%add_var(sname, lname, units, datatype, group, category,       &
+                      marbl_status_log, sptr=sptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
     end if
 
     category  = 'tracer restoring'
