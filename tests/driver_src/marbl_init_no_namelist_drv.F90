@@ -16,9 +16,12 @@ Contains
 
   subroutine test(marbl_instance)
 
+    use marbl_mpi_mod, only : marbl_mpi_abort
+
     type(marbl_interface_class), intent(inout) :: marbl_instance
 
     character(*), parameter      :: subname = 'marbl_init_no_namelist_drv:test'
+    character(len=256)           :: marbl_status
     real(kind=r8), dimension(km) :: delta_z, zw, zt
     integer                      :: k
 
@@ -31,17 +34,17 @@ Contains
       zt(k) = p5*(zw(k-1)+zw(k))
     end do
 
+    ! Optional: call marbl_instance%configuration%put()
+    call marbl_instance%configuration%put('ciso_on', .true., marbl_status)
+    if (len_trim(marbl_status).ne.0) then
+      write(*,'(2A)') "ERROR from marbl put: ", trim(marbl_status)
+      call marbl_mpi_abort()
+    end if
+
     ! Call marbl%config
     call marbl_instance%init_phase2()
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%init_phase2', subname)
-      return
-    end if
-
-    ! Optional: call marbl_instance%configuration%put()
-    call marbl_instance%configuration%put('ciso_on', .true., marbl_instance%StatusLog)
-    if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%config%put', subname)
       return
     end if
 
