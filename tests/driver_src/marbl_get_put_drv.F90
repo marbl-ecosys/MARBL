@@ -26,7 +26,6 @@ Contains
     type(marbl_log_type),        intent(inout) :: marbl_status_log
 
     character(*), parameter      :: subname = 'marbl_get_put_drv:test'
-    character(char_len)          :: log_message
     real(kind=r8), dimension(km) :: delta_z, zw, zt
     integer                      :: k
 
@@ -62,12 +61,7 @@ Contains
 
     ! Reset to default values + ciso_on (needed to ensure tracer count consistency)
     call marbl_config_set_defaults()
-    call marbl_instance%configuration%put('ciso_on', .true., log_message)
-    if (len_trim(log_message).ne.0) then
-      call marbl_status_log%log_error(log_message, subname)
-      call marbl_status_log%log_error_trace('configuration%put(ciso_on)', subname)
-      return
-    end if
+    call marbl_instance%configuration%put('ciso_on', .true.)
 
     ! Call marbl%init_phase3
     call marbl_instance%init_phase3(gcm_num_levels = km,      &
@@ -146,18 +140,14 @@ Contains
       end if
       select case (trim(datatype))
         case ('real')
-          call config_or_parms%put(sname, -1, log_message)
+          call config_or_parms%put(sname, -1)
         case ('integer')
-          call config_or_parms%put(sname, -1, log_message)
+          call config_or_parms%put(sname, -1)
         case ('string')
-          call config_or_parms%put(sname, '-1', log_message)
+          call config_or_parms%put(sname, '-1')
         case ('logical')
-          call config_or_parms%put(sname, .true., log_message)
+          call config_or_parms%put(sname, .true.)
       end select
-      if (len_trim(log_message).ne.0) then
-        call marbl_status_log%log_error(log_message, subname)
-        return
-      end if
       ll_index => ll_index%next
     end do
     log_message = "... Done!"
@@ -207,7 +197,7 @@ Contains
             return
           end if
           ! (2) Change value
-          call config_or_parms%put(sname, n, log_message)
+          call config_or_parms%put(sname, n)
         case ('integer')
           ! (1) Check to see that variable was set to -1 correctly
           call config_or_parms%get(sname, ival, marbl_status_log)
@@ -217,7 +207,7 @@ Contains
             return
           end if
           ! (2) Change value
-          call config_or_parms%put(sname, n, log_message)
+          call config_or_parms%put(sname, n)
         case ('string')
           ! (1) Check to see that variable was set to .true. correctly
           call config_or_parms%get(sname, sval, marbl_status_log)
@@ -228,7 +218,7 @@ Contains
           end if
           ! (2) Change value
           write(sval, "(I0)") n
-          call config_or_parms%put(sname, sval, log_message)
+          call config_or_parms%put(sname, sval)
         case ('logical')
           ! (1) Check to see that variable was set to .true. correctly
           call config_or_parms%get(sname, lval, marbl_status_log)
@@ -238,12 +228,8 @@ Contains
             return
           end if
           ! (2) Change value
-          call config_or_parms%put(sname, .false., log_message)
+          call config_or_parms%put(sname, .false.)
       end select
-      if (len_trim(log_message).ne.0) then
-        call marbl_status_log%log_error(log_message, subname)
-        return
-      end if
       ll_index => ll_index%next
     end do
     log_message = "... Done!"

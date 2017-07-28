@@ -97,6 +97,7 @@ contains
     character(len=char_len), dimension(:), pointer :: new_categories
     integer :: cat_ind, n
     character(len=char_len) :: log_message
+    logical :: put_success
 
     ! 1) Determine category ID
     do cat_ind = 1, size(this%categories)
@@ -223,6 +224,7 @@ contains
     ! 5) Was there a put() call to change this variable?
     !    note that "new_entry" is a dummy pointer used to track ll_index%prev
     ll_index => this%user_supplied
+    nullify(new_entry)
     do while (associated(ll_index))
       if (ll_index%short_name .eq. this%LastEntry%short_name) then
         ! 5a) Update variable value
@@ -231,28 +233,42 @@ contains
         else
           select case (this%LastEntry%datatype)
           case ("real")
-            this%LastEntry%rptr = ll_index%rptr
+            put_success = associated(ll_index%rptr)
+            if (put_success) this%LastEntry%rptr = ll_index%rptr
           case ("integer")
-            this%LastEntry%iptr = ll_index%iptr
+            put_success = associated(ll_index%iptr)
+            if (put_success) this%LastEntry%iptr = ll_index%iptr
           case ("string")
-            this%LastEntry%sptr = ll_index%sptr
+            put_success = associated(ll_index%sptr)
+            if (put_success) this%LastEntry%sptr = ll_index%sptr
           case ("logical")
-            this%LastEntry%lptr = ll_index%lptr
+            put_success = associated(ll_index%lptr)
+            if (put_success) this%LastEntry%lptr = ll_index%lptr
           end select
+          if (.not.put_success) then
+            write(log_message, "(2A)") "Datatype does not match for put ", &
+                               trim(ll_index%short_name)
+            call marbl_status_log%log_error(log_message, subname)
+            return
+          end if
         end if
 
         ! 5b) Remove entry from user_supplied list
+        !     Different procedure if ll_index is first entry in list
         if (associated(ll_index,this%user_supplied)) then
           this%user_supplied => ll_index%next
+          deallocate(ll_index)
+          ll_index => this%user_supplied
         else
           new_entry%next => ll_index%next
+          deallocate(ll_index)
+          ll_index => new_entry%next
         end if
-        deallocate(ll_index)
-        exit
+      else
+        ! Once we are past first entry, new entry%next = ll_index
+        new_entry => ll_index
+        ll_index => ll_index%next
       end if
-      ! Once we are past first entry, new entry%next = ll_index
-      new_entry => ll_index
-      ll_index => ll_index%next
     end do
 
   end subroutine marbl_var_add
@@ -379,8 +395,7 @@ contains
     if (associated(this%user_supplied)) then
       ll_index => this%user_supplied
       do while (associated(ll_index))
-        write(log_message, "(3A)") trim(ll_index%short_name), ' was put() but not set!', &
-                                   ' (either parameter is not recognized or was put twice)'
+        write(log_message, "(3A)") trim(ll_index%short_name), ' was put() but not set!'
         call marbl_status_log%log_error(log_message, subname)
         ll_index => ll_index%next
       end do
@@ -461,41 +476,16 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_var_put_all_types(this, var, status, rval, ival, lval, sval)
+  subroutine marbl_var_put_all_types(this, var, rval, ival, lval, sval)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),                   intent(in)    :: var
-    character(len=*),                   intent(out)   :: status
     real(r8),         optional,         intent(in)    :: rval
     integer,          optional,         intent(in)    :: ival
     logical,          optional,         intent(in)    :: lval
     character(len=*), optional,         intent(in)    :: sval
 
     type(marbl_single_config_or_parm_ll_type), pointer :: new_entry, ll_index
-    integer :: cnt
-
-    status = ''
-    cnt = 0
-    if (present(rval)) cnt = cnt + 1
-    if (present(ival)) cnt = cnt + 1
-    if (present(lval)) cnt = cnt + 1
-    if (present(sval)) cnt = cnt + 1
-
-    if (cnt .eq. 0) then
-      write(status, "(A)") 'Must provide rval, ival, lval, or sval to put()'
-      return
-    end if
-
-    if (cnt .gt. 1) then
-      write(status, "(A)") 'Must provide just one of rval, ival, lval, or sval to put()'
-      return
-    end if
-
-    if (this%locked) then
-      write(status, "(3A)") 'Can not change value of ', trim(var),       &
-                                 ', parameters are locked!'
-      return
-    end if
 
     allocate(new_entry)
     new_entry%short_name = var
@@ -611,53 +601,49 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_var_put_real(this, var, val, status)
+  subroutine marbl_var_put_real(this, var, val)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),                   intent(in)    :: var
     real(r8),                           intent(in)    :: val
-    character(len=*),                   intent(out)   :: status
 
-    call this%put_general(var, status, rval = val)
+    call this%put_general(var, rval = val)
 
   end subroutine marbl_var_put_real
 
   !*****************************************************************************
 
-  subroutine marbl_var_put_integer(this, var, val, status)
+  subroutine marbl_var_put_integer(this, var, val)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),                   intent(in)    :: var
     integer,                            intent(in)    :: val
-    character(len=*),                   intent(out)   :: status
 
-    call this%put_general(var, status, ival=val)
+    call this%put_general(var, ival=val)
 
   end subroutine marbl_var_put_integer
 
   !*****************************************************************************
 
-  subroutine marbl_var_put_string(this, var, val, status)
+  subroutine marbl_var_put_string(this, var, val)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),                   intent(in)    :: var
     character(len=*),                   intent(in)    :: val
-    character(len=*),                   intent(out)   :: status
 
-    call this%put_general(var, status, sval=val)
+    call this%put_general(var, sval=val)
 
   end subroutine marbl_var_put_string
 
   !*****************************************************************************
 
-  subroutine marbl_var_put_logical(this, var, val, status)
+  subroutine marbl_var_put_logical(this, var, val)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),                   intent(in)    :: var
     logical,                            intent(in)    :: val
-    character(len=*),                   intent(out)   :: status
 
-    call this%put_general(var, status, lval=val)
+    call this%put_general(var, lval=val)
 
   end subroutine marbl_var_put_logical
 

@@ -21,7 +21,6 @@ Contains
     type(marbl_interface_class), intent(inout) :: marbl_instance
 
     character(*), parameter      :: subname = 'marbl_init_no_namelist_drv:test'
-    character(len=256)           :: marbl_status
     real(kind=r8), dimension(km) :: delta_z, zw, zt
     integer                      :: k
 
@@ -35,11 +34,7 @@ Contains
     end do
 
     ! Optional: call marbl_instance%configuration%put()
-    call marbl_instance%configuration%put('ciso_on', .true., marbl_status)
-    if (len_trim(marbl_status).ne.0) then
-      write(*,'(2A)') "ERROR from marbl put: ", trim(marbl_status)
-      call marbl_mpi_abort()
-    end if
+    call marbl_instance%configuration%put('ciso_on', .true.)
 
     ! Call marbl%config
     call marbl_instance%init_phase2()
