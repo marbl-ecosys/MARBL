@@ -112,7 +112,7 @@ Contains
 
     use marbl_mpi_mod, only : marbl_mpi_abort
 
-    type(marbl_interface_class),       intent(in)    :: local_instance
+    type(marbl_interface_class),       intent(inout) :: local_instance ! inout because inquire_settings_metadata updates StatusLog
     type(marbl_interface_class),       intent(inout) :: marbl_instance
     type(marbl_log_type),              intent(inout) :: driver_status_log
 
@@ -130,11 +130,9 @@ Contains
     call driver_status_log%log_noerror(log_message, subname)
 
     ! configuration variables and parameters
-    do n=1,local_instance%settings%get_cnt()
-      call local_instance%settings%inquire_metadata(n, marbl_instance%StatusLog, &
-                                                    sname=sname,                 &
-                                                    datatype=datatype)
-      if (marbl_instance%StatusLog%labort_marbl) then
+    do n=1,local_instance%get_cnt()
+      call local_instance%inquire_settings_metadata(n, sname=sname, datatype=datatype)
+      if (local_instance%StatusLog%labort_marbl) then
         call marbl_instance%StatusLog%log_error_trace('inquire_metadata', subname)
         return
       end if
@@ -185,10 +183,8 @@ Contains
     associate(marbl_status_log => marbl_instance%StatusLog)
 
       ! Configuration variables and parameters
-      do n = 1,marbl_instance%settings%get_cnt()
-        call marbl_instance%settings%inquire_metadata(n, marbl_status_log,    &
-                                                      sname = sname,          &
-                                                      datatype=datatype)
+      do n = 1,marbl_instance%get_cnt()
+        call marbl_instance%inquire_settings_metadata(n, sname = sname, datatype=datatype)
         if (marbl_status_log%labort_marbl) then
           call marbl_status_log%log_error_trace('inquire_metadata', subname)
           return
@@ -203,7 +199,7 @@ Contains
         select case (trim(datatype))
           case ('real')
             ! Check to see that variable was set to -1 correctly
-            call marbl_instance%settings%get(sname, rval, marbl_status_log)
+            call marbl_instance%get(sname, rval)
             if (rval.ne.real(-1,r8)) then
               write(log_message, "(2A,E24.16,A)") trim(sname), ' = ', rval, ' not -1'
               call marbl_status_log%log_error(log_message, subname)
@@ -211,7 +207,7 @@ Contains
             end if
           case ('integer')
             ! Check to see that variable was set to -1 correctly
-            call marbl_instance%settings%get(sname, ival, marbl_status_log)
+            call marbl_instance%get(sname, ival)
             if (ival.ne.-1) then
               write(log_message, "(2A,I0,A)") trim(sname), ' = ', ival, ' not -1'
               call marbl_status_log%log_error(log_message, subname)
@@ -219,7 +215,7 @@ Contains
             end if
           case ('string')
             ! Check to see that variable was set to .true. correctly
-            call marbl_instance%settings%get(sname, sval, marbl_status_log)
+            call marbl_instance%get(sname, sval)
             if (trim(sval).ne.'-1') then
               write(log_message, "(4A)") trim(sname), ' = ', trim(sval), ', not -1'
               call marbl_status_log%log_error(log_message, subname)
@@ -227,7 +223,7 @@ Contains
             end if
           case ('logical')
             ! Check to see that variable was set to .true. correctly
-            call marbl_instance%settings%get(sname, lval, marbl_status_log)
+            call marbl_instance%get(sname, lval)
             if (.not.lval) then
               write(log_message, "(2A)") trim(sname), ' is .false., not .true.'
               call marbl_status_log%log_error(log_message, subname)
@@ -235,7 +231,7 @@ Contains
             end if
         end select
         if (marbl_status_log%labort_marbl) then
-          call marbl_status_log%log_error_trace('marbl_instance%settings%get', subname)
+          call marbl_status_log%log_error_trace('marbl_instance%get', subname)
           return
         end if
       end do

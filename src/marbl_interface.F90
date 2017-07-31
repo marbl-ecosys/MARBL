@@ -64,7 +64,6 @@ module marbl_interface
      type(marbl_tracer_metadata_type)  , public, allocatable  :: tracer_metadata(:)
      type(marbl_tracer_index_type)     , public               :: tracer_indices
      type(marbl_log_type)              , public               :: StatusLog
-     type(marbl_settings_type)         , public               :: settings
 
      type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
      type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
@@ -112,6 +111,7 @@ module marbl_interface
      logical                                   , private              :: lallow_glo_ops
      type(marbl_internal_timers_type)          , private              :: timers
      type(marbl_timer_indexing_type)           , private              :: timer_ids
+     type(marbl_settings_type)                 , private              :: settings
 
    contains
 
@@ -124,14 +124,24 @@ module marbl_interface
      procedure, public  :: set_surface_forcing
      procedure, public  :: set_global_scalars
      procedure, public  :: shutdown
+     procedure, public  :: inquire_settings_metadata
      generic            :: put => put_real,                       &
                                   put_integer,                    &
                                   put_logical,                    &
                                   put_string
+     generic            :: get => get_real,                       &
+                                  get_integer,                    &
+                                  get_logical,                    &
+                                  get_string
+     procedure, public  :: get_cnt
      procedure, private :: put_real
      procedure, private :: put_integer
      procedure, private :: put_logical
      procedure, private :: put_string
+     procedure, private :: get_real
+     procedure, private :: get_integer
+     procedure, private :: get_logical
+     procedure, private :: get_string
 
   end type marbl_interface_class
 
@@ -435,6 +445,116 @@ contains
 
   end subroutine put_string
 
+  !***********************************************************************
+
+  subroutine get_real(this, varname, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    real(r8),                      intent(out)   :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:get_real'
+    character(len=char_len) :: log_message
+
+    call this%StatusLog%construct()
+    call this%settings%get(varname, val, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%get()', subname)
+      return
+    end if
+
+  end subroutine get_real
+
+  !***********************************************************************
+
+  subroutine get_integer(this, varname, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    integer(int_kind),             intent(out)   :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:get_integer'
+    character(len=char_len) :: log_message
+
+    call this%StatusLog%construct()
+    call this%settings%get(varname, val, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%get()', subname)
+      return
+    end if
+
+  end subroutine get_integer
+
+  !***********************************************************************
+
+  subroutine get_logical(this, varname, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    logical,                       intent(out)   :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:get_logical'
+    character(len=char_len) :: log_message
+
+    call this%StatusLog%construct()
+    call this%settings%get(varname, val, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%get()', subname)
+      return
+    end if
+
+  end subroutine get_logical
+
+  !***********************************************************************
+
+  subroutine get_string(this, varname, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    character(len=*),              intent(out)   :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:get_string'
+    character(len=char_len) :: log_message
+
+    call this%StatusLog%construct()
+    call this%settings%get(varname, val, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%get()', subname)
+      return
+    end if
+
+  end subroutine get_string
+
+  !***********************************************************************
+
+  function get_cnt(this) result(cnt)
+
+    class (marbl_interface_class), intent(in) :: this
+    integer :: cnt
+
+    cnt = this%settings%get_cnt()
+
+  end function get_cnt
+
+  !***********************************************************************
+
+  subroutine inquire_settings_metadata(this, id, sname, lname, units, group, datatype)
+
+    class (marbl_interface_class), intent(inout) :: this
+    integer(int_kind),          intent(in)    :: id
+    character(len=*), optional, intent(out)   :: sname, lname, units
+    character(len=*), optional, intent(out)   :: group, datatype
+
+    character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata'
+
+    call this%settings%inquire_metadata(id, this%StatusLog, sname, lname, units, &
+                                        group, datatype)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%inquire_metadata', subname)
+      return
+    end if
+
+  end subroutine inquire_settings_metadata
   !***********************************************************************
 
   subroutine reset_timers(this)
