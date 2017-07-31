@@ -176,7 +176,7 @@ contains
     real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
-    character(len=*),             intent(in)    :: gcm_nl_buffer(:)
+    character(len=*),  optional,  intent(in)    :: gcm_nl_buffer(:)
     logical,           optional,  intent(in)    :: lgcm_has_global_ops
     integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 

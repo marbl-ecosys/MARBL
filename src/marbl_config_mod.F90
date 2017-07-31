@@ -34,7 +34,7 @@ module marbl_config_mod
   end type marbl_single_config_or_parm_ll_type
 
   type, public :: marbl_config_and_parms_type
-    logical :: locked = .false.
+    logical :: init_called = .false.
 !    integer :: cnt = 0
     character(len=char_len), dimension(:),     pointer :: categories
     type(marbl_single_config_or_parm_ll_type), pointer :: vars => NULL()
@@ -388,7 +388,7 @@ contains
     type(marbl_single_config_or_parm_ll_type), pointer :: ll_index
 
     ! (1) Lock data type (put calls will now cause MARBL to abort)
-    this%locked = .true.
+    this%init_called = .true.
     group = ''
 
     ! (2) Abort if anything is left in this%user_supplied
@@ -490,8 +490,8 @@ contains
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_put_all_types'
     character(len=char_len) :: log_message
 
-    if (this%locked) then
-      write(log_message, "(3A)") "Can not put ", trim(var), ", datatype is locked"
+    if (this%init_called) then
+      write(log_message, "(3A)") "Can not put ", trim(var), ", init has already been called"
       call marbl_status_log%log_error(log_message, subname)
       return
     end if
