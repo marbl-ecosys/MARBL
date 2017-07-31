@@ -476,16 +476,25 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_var_put_all_types(this, var, rval, ival, lval, sval)
+  subroutine marbl_var_put_all_types(this, var, marbl_status_log, rval, ival, lval, sval)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),                   intent(in)    :: var
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
     real(r8),         optional,         intent(in)    :: rval
     integer,          optional,         intent(in)    :: ival
     logical,          optional,         intent(in)    :: lval
     character(len=*), optional,         intent(in)    :: sval
 
     type(marbl_single_config_or_parm_ll_type), pointer :: new_entry, ll_index
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_put_all_types'
+    character(len=char_len) :: log_message
+
+    if (this%locked) then
+      write(log_message, "(3A)") "Can not put ", trim(var), ", datatype is locked"
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
 
     allocate(new_entry)
     new_entry%short_name = var
@@ -601,49 +610,81 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_var_put_real(this, var, val)
+  subroutine marbl_var_put_real(this, var, val, marbl_status_log)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),                   intent(in)    :: var
     real(r8),                           intent(in)    :: val
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
 
-    call this%put_general(var, rval = val)
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_put_real'
+    character(len=char_len) :: log_message
+
+    call this%put_general(var, marbl_status_log, rval = val)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('this%put_general', subname)
+      return
+    end if
 
   end subroutine marbl_var_put_real
 
   !*****************************************************************************
 
-  subroutine marbl_var_put_integer(this, var, val)
+  subroutine marbl_var_put_integer(this, var, val, marbl_status_log)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),                   intent(in)    :: var
     integer,                            intent(in)    :: val
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
 
-    call this%put_general(var, ival=val)
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_put_integer'
+    character(len=char_len) :: log_message
+
+    call this%put_general(var, marbl_status_log, ival=val)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('this%put_general', subname)
+      return
+    end if
 
   end subroutine marbl_var_put_integer
 
   !*****************************************************************************
 
-  subroutine marbl_var_put_string(this, var, val)
+  subroutine marbl_var_put_string(this, var, val, marbl_status_log)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),                   intent(in)    :: var
     character(len=*),                   intent(in)    :: val
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
 
-    call this%put_general(var, sval=val)
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_put_string'
+    character(len=char_len) :: log_message
+
+    call this%put_general(var, marbl_status_log, sval=val)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('this%put_general', subname)
+      return
+    end if
 
   end subroutine marbl_var_put_string
 
   !*****************************************************************************
 
-  subroutine marbl_var_put_logical(this, var, val)
+  subroutine marbl_var_put_logical(this, var, val, marbl_status_log)
 
     class(marbl_config_and_parms_type), intent(inout) :: this
     character(len=*),                   intent(in)    :: var
     logical,                            intent(in)    :: val
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
 
-    call this%put_general(var, lval=val)
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_put_logical'
+    character(len=char_len) :: log_message
+
+    call this%put_general(var, marbl_status_log, lval=val)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('this%put_general', subname)
+      return
+    end if
 
   end subroutine marbl_var_put_logical
 

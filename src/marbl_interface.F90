@@ -491,14 +491,18 @@ contains
     call this%StatusLog%construct()
     select case(trim(var_phase))
       case('phase2')
-        call this%configuration%put(varname, val)
+        call this%configuration%put(varname, val, this%StatusLog)
       case('phase3')
-        call this%parameters%put(varname, val)
+        call this%parameters%put(varname, val, this%StatusLog)
       case DEFAULT
         write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
         call this%StatusLog%log_error(log_message, subname)
         return
     end select
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('config/parms%put()', subname)
+      return
+    end if
 
   end subroutine put_real
 
@@ -516,14 +520,18 @@ contains
     call this%StatusLog%construct()
     select case(trim(var_phase))
       case('phase2')
-        call this%configuration%put(varname, val)
+        call this%configuration%put(varname, val, this%StatusLog)
       case('phase3')
-        call this%parameters%put(varname, val)
+        call this%parameters%put(varname, val, this%StatusLog)
       case DEFAULT
         write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
         call this%StatusLog%log_error(log_message, subname)
         return
     end select
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('config/parms%put()', subname)
+      return
+    end if
 
   end subroutine put_integer
 
@@ -541,14 +549,18 @@ contains
     call this%StatusLog%construct()
     select case(trim(var_phase))
       case('phase2')
-        call this%configuration%put(varname, val)
+        call this%configuration%put(varname, val, this%StatusLog)
       case('phase3')
-        call this%parameters%put(varname, val)
+        call this%parameters%put(varname, val, this%StatusLog)
       case DEFAULT
         write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
         call this%StatusLog%log_error(log_message, subname)
         return
     end select
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('config/parms%put()', subname)
+      return
+    end if
 
   end subroutine put_logical
 
@@ -566,14 +578,18 @@ contains
     call this%StatusLog%construct()
     select case(trim(var_phase))
       case('phase2')
-        call this%configuration%put(varname, val)
+        call this%configuration%put(varname, val, this%StatusLog)
       case('phase3')
-        call this%parameters%put(varname, val)
+        call this%parameters%put(varname, val, this%StatusLog)
       case DEFAULT
         write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
         call this%StatusLog%log_error(log_message, subname)
         return
     end select
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('config/parms%put()', subname)
+      return
+    end if
 
   end subroutine put_string
 
