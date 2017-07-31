@@ -118,9 +118,9 @@ module marbl_interface
    contains
 
      procedure, public  :: init
-     procedure, public  :: init_phase2
-     procedure, public  :: init_phase3
-     procedure, public  :: init_phase4
+     procedure, private :: init_phase2
+     procedure, private :: init_phase3
+     procedure, private :: init_phase4
      procedure, public  :: reset_timers
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init

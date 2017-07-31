@@ -15,8 +15,7 @@ module marbl_config_mod
   !  Datatypes for marbl_instance%configuration and marbl_instance%parameters
   !---------------------------------------------------------------------------
 
-  ! Needs to be public so that GCMs can create linked list to request metadata
-  type, public :: marbl_single_config_or_parm_ll_type
+  type, private :: marbl_single_config_or_parm_ll_type
     ! Metadata
     character(len=char_len) :: long_name
     character(len=char_len) :: short_name
@@ -33,20 +32,28 @@ module marbl_config_mod
     character(len=char_len), pointer :: sptr => NULL()
   end type marbl_single_config_or_parm_ll_type
 
+  type, private :: marbl_setting_ptr
+    type(marbl_single_config_or_parm_ll_type), pointer :: ptr => NULL()
+  end type marbl_setting_ptr
+
   type, public :: marbl_config_and_parms_type
-    logical :: init_called = .false.
-!    integer :: cnt = 0
-    character(len=char_len), dimension(:),     pointer :: categories
-    type(marbl_single_config_or_parm_ll_type), pointer :: vars => NULL()
-    type(marbl_single_config_or_parm_ll_type), pointer :: LastEntry => NULL()
-    type(marbl_single_config_or_parm_ll_type), pointer :: user_supplied => NULL()
+    logical, private :: init_called = .false.
+    integer, private :: cnt = 0
+    character(len=char_len), dimension(:),              pointer :: categories
+    type(marbl_single_config_or_parm_ll_type),          pointer :: vars => NULL()
+    type(marbl_single_config_or_parm_ll_type), private, pointer :: LastEntry => NULL()
+    type(marbl_single_config_or_parm_ll_type), private, pointer :: user_supplied => NULL()
+    type(marbl_single_config_or_parm_ll_type), private, pointer :: LastUserSupplied => NULL()
+    type(marbl_setting_ptr), dimension(:),     private, allocatable :: varArray
   contains
     procedure          :: add_var          => marbl_var_add
     procedure          :: add_var_1d_r8    => marbl_var_add_1d_r8
     procedure          :: add_var_1d_int   => marbl_var_add_1d_int
     procedure          :: add_var_1d_str   => marbl_var_add_1d_str
     procedure          :: finalize_vars    => marbl_vars_finalize
+    procedure          :: inquire_id       => marbl_var_inquire_id
     procedure          :: inquire_metadata => marbl_var_inquire_metadata
+    procedure          :: get_cnt          => marbl_var_get_cnt
     generic            :: put              => put_real,                       &
                                               put_integer,                    &
                                               put_logical,                    &
@@ -271,6 +278,9 @@ contains
       end if
     end do
 
+    ! 6) Increment count
+    this%cnt = this%cnt + 1
+
   end subroutine marbl_var_add
 
   !*****************************************************************************
@@ -458,6 +468,19 @@ contains
       end if
     end do  ! cat_ind
 
+    ! (6) Set up array of pointers
+    if (allocated(this%varArray)) then
+      write(log_message, "(A)") "Already allocated memory for varArray!"
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+    allocate(this%varArray(this%cnt))
+    ll_index => this%vars
+    do i = 1,this%cnt
+      this%varArray(i)%ptr => ll_index
+      ll_index => ll_index%next
+    end do
+
   end subroutine marbl_vars_finalize
 
   !***********************************************************************
@@ -523,12 +546,9 @@ contains
     if (.not.associated(this%user_supplied)) then
       this%user_supplied => new_entry
     else
-      ll_index => this%user_supplied
-      do while (associated(ll_index%next))
-        ll_index => ll_index%next
-      end do
-      ll_index%next => new_entry
+      this%LastUserSupplied%next => new_entry
     end if
+    this%LastUserSupplied => new_entry
 
   end subroutine marbl_var_put_all_types
 
@@ -537,7 +557,7 @@ contains
   subroutine marbl_var_get_all_types(this, var, marbl_status_log, rval, ival, &
                                      lval, sval)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
+    class(marbl_config_and_parms_type), intent(in)    :: this
     character(len=*),                   intent(in)    :: var
     real(r8),         optional,         intent(out)   :: rval
     integer,          optional,         intent(out)   :: ival
@@ -692,7 +712,7 @@ contains
 
   subroutine marbl_var_get_real(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
+    class(marbl_config_and_parms_type), intent(in)    :: this
     character(len=*),                   intent(in)    :: var
     real(r8),                           intent(out)   :: val
     type(marbl_log_type),               intent(inout) :: marbl_status_log
@@ -705,7 +725,7 @@ contains
 
   subroutine marbl_var_get_integer(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
+    class(marbl_config_and_parms_type), intent(in)    :: this
     character(len=*),                   intent(in)    :: var
     integer,                            intent(out)   :: val
     type(marbl_log_type),               intent(inout) :: marbl_status_log
@@ -718,7 +738,7 @@ contains
 
   subroutine marbl_var_get_string(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
+    class(marbl_config_and_parms_type), intent(in)    :: this
     character(len=*),                   intent(in)    :: var
     character(len=*),                   intent(out)   :: val
     type(marbl_log_type),               intent(inout) :: marbl_status_log
@@ -731,7 +751,7 @@ contains
 
   subroutine marbl_var_get_logical(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
+    class(marbl_config_and_parms_type), intent(in)    :: this
     character(len=*),                   intent(in)    :: var
     logical,                            intent(out)   :: val
     type(marbl_log_type),               intent(inout) :: marbl_status_log
@@ -742,45 +762,72 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_var_inquire_metadata(this, var, marbl_status_log, lname,   &
-             units, group, datatype)
+  function marbl_var_get_cnt(this) result(cnt)
+    class(marbl_config_and_parms_type), intent(in) :: this
+    integer(int_kind) :: cnt
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
+    cnt = this%cnt
+
+  end function marbl_var_get_cnt
+
+  !*****************************************************************************
+
+  function marbl_var_inquire_id(this, var, marbl_status_log) result(id)
+
+    class(marbl_config_and_parms_type), intent(in)    :: this
     character(len=*),                   intent(in)    :: var
     type(marbl_log_type),               intent(inout) :: marbl_status_log
-    character(len=*), optional,         intent(out)   :: lname, units
+    integer(int_kind) :: id
+
+    character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_id'
+    character(len=char_len)     :: log_message
+    integer(int_kind) :: n
+
+    id = -1
+    do n=1,this%cnt
+      if (trim(var).eq.trim(this%varArray(n)%ptr%short_name)) then
+        id = n
+        return
+      end if
+    end do
+
+    write(log_message, "(2A)") "No match for variable named ", trim(var)
+    call marbl_status_log%log_error(log_message, subname)
+
+  end function marbl_var_inquire_id
+
+  !*****************************************************************************
+
+  subroutine marbl_var_inquire_metadata(this, id, marbl_status_log, sname,   &
+             lname, units, group, datatype)
+
+    class(marbl_config_and_parms_type), intent(in)    :: this
+    integer(int_kind),                  intent(in)    :: id
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    character(len=*), optional,         intent(out)   :: sname, lname, units
     character(len=*), optional,         intent(out)   :: group, datatype
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_metadata'
     character(len=char_len)     :: log_message
 
-    type(marbl_single_config_or_parm_ll_type), pointer :: ll_index
-
-    ll_index => this%vars
-    do while (associated(ll_index))
-      if (trim(ll_index%short_name) .eq. trim(var)) exit
-      ll_index => ll_index%next
-    end do
-    if (.not.associated(ll_index)) then
-      write(log_message, "(2A)") trim(var), 'not found!'
-      call marbl_status_log%log_error(log_message, subname)
-      return
+    if (present(sname)) then
+      sname = this%varArray(id)%ptr%short_name
     end if
 
     if (present(lname)) then
-      lname = ll_index%long_name
+      lname = this%varArray(id)%ptr%long_name
     end if
 
     if (present(units)) then
-      units = ll_index%units
+      units = this%varArray(id)%ptr%units
     end if
 
     if (present(group)) then
-      group = ll_index%group
+      group = this%varArray(id)%ptr%group
     end if
 
     if (present(datatype)) then
-      datatype = ll_index%datatype
+      datatype = this%varArray(id)%ptr%datatype
     end if
 
   end subroutine marbl_var_inquire_metadata

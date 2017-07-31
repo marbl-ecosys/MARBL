@@ -193,19 +193,13 @@ Program marbl
   end select
 
   ! (4) Print log(s)
-  ! (4a) If MARBL returns an error, print MARBL log
-  if (marbl_instance%StatusLog%labort_marbl) &
+  ! (4a) If MARBL returns an error (or MARBL log was requested), print MARBL log
+  if (marbl_instance%StatusLog%labort_marbl.or.lprint_marbl_log) &
       call print_marbl_log(marbl_instance%StatusLog)
 
-  ! (4b) If requested, print MARBL log
-  if (lprint_marbl_log) then
-    call print_marbl_log(marbl_instance%StatusLog)
-  end if
-
-  ! (5) Print timer results (and any other driver-logged output)
+  ! (4b) Print timer results (and any other driver-logged output)
   call summarize_timers()
   call print_marbl_log(driver_status_log)
-
 
   call marbl_mpi_finalize()
 
