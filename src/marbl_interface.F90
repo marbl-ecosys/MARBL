@@ -118,9 +118,6 @@ module marbl_interface
    contains
 
      procedure, public  :: init
-     procedure, private :: init_phase2
-     procedure, private :: init_phase3
-     procedure, private :: init_phase4
      procedure, public  :: reset_timers
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
@@ -141,9 +138,6 @@ module marbl_interface
   end type marbl_interface_class
 
   private :: init
-  private :: init_phase2
-  private :: init_phase3
-  private :: init_phase4
   private :: reset_timers
   private :: extract_timing
   private :: glo_vars_init
@@ -168,6 +162,19 @@ contains
        lgcm_has_global_ops,               &
        marbl_tracer_cnt)
 
+    use marbl_init_mod, only : marbl_init_log_and_timers
+    use marbl_init_mod, only : marbl_init_config_vars1
+    use marbl_init_mod, only : marbl_init_config_vars2
+    use marbl_init_mod, only : marbl_init_tracers
+    use marbl_init_mod, only : marbl_init_parameters1
+    use marbl_init_mod, only : marbl_init_parameters2
+    use marbl_init_mod, only : marbl_init_bury_coeff
+    use marbl_init_mod, only : marbl_init_forcing_fields
+
+
+    use marbl_diagnostics_mod, only : marbl_diagnostics_init
+
+    use marbl_saved_state_mod, only : marbl_saved_state_init
 
     class(marbl_interface_class), intent(inout) :: this
     integer(int_kind),            intent(in)    :: gcm_num_levels
@@ -181,50 +188,7 @@ contains
     integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
     character(len=*), parameter :: subname = 'marbl_interface:init'
-
-
-    call this%init_phase2(lgcm_has_global_ops=lgcm_has_global_ops,            &
-                          gcm_nl_buffer=gcm_nl_buffer)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('init_phase2', subname)
-      return
-    end if
-
-    call this%init_phase3(gcm_num_levels,              &
-                   gcm_num_PAR_subcols,                &
-                   gcm_num_elements_surface_forcing,   &
-                   gcm_delta_z,                        &
-                   gcm_zw,                             &
-                   gcm_zt,                             &
-                   gcm_nl_buffer=gcm_nl_buffer,        &
-                   marbl_tracer_cnt=marbl_tracer_cnt)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('init_phase3', subname)
-      return
-    end if
-
-    call this%init_phase4()
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('init_phase4', subname)
-      return
-    end if
-
-  end subroutine init
-
-  !***********************************************************************
-
-  subroutine init_phase2(this,     &
-       lgcm_has_global_ops,        &
-       gcm_nl_buffer)
-
-    use marbl_init_mod, only : marbl_init_log_and_timers
-    use marbl_init_mod, only : marbl_init_config_vars1
-
-    class(marbl_interface_class), intent(inout) :: this
-    character(len=*), optional,   intent(in)    :: gcm_nl_buffer(:)
-    logical,          optional,   intent(in)    :: lgcm_has_global_ops
-
-    character(len=*), parameter :: subname = 'marbl_interface:init_phase2'
+    integer, parameter :: num_interior_elements = 1 ! FIXME #66: get this value from interface, let it vary
 
     !--------------------------------------------------------------------
     ! initialize status log and timers
@@ -258,57 +222,6 @@ contains
     !---------------------------------------------------------------------------
 
     call marbl_init_config_vars1(this%configuration, this%StatusLog, gcm_nl_buffer)
-
-    ! Stop initialization timer
-    call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%timers%stop()", subname)
-      return
-    end if
-
-  end subroutine init_phase2
-
-  !***********************************************************************
-
-  subroutine init_phase3(this,           &
-       gcm_num_levels,                   &
-       gcm_num_PAR_subcols,              &
-       gcm_num_elements_surface_forcing, &
-       gcm_delta_z,                      &
-       gcm_zw,                           &
-       gcm_zt,                           &
-       gcm_nl_buffer,                    &
-       marbl_tracer_cnt)
-
-    use marbl_diagnostics_mod , only : marbl_diagnostics_init
-    use marbl_init_mod        , only : marbl_init_config_vars2
-    use marbl_init_mod        , only : marbl_init_tracers
-    use marbl_init_mod        , only : marbl_init_parameters1
-    use marbl_saved_state_mod , only : marbl_saved_state_init
-
-    implicit none
-
-    class(marbl_interface_class), intent(inout) :: this
-    integer(int_kind),            intent(in)    :: gcm_num_levels
-    integer(int_kind),            intent(in)    :: gcm_num_PAR_subcols
-    integer(int_kind),            intent(in)    :: gcm_num_elements_surface_forcing
-    real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
-    real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
-    real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
-    character(len=*),  optional,  intent(in)    :: gcm_nl_buffer(:)
-    integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
-
-    ! Local variables
-    character(len=*), parameter :: subname = 'marbl_interface:init_phase3'
-    integer, parameter :: num_interior_elements = 1 ! FIXME #66: get this value from interface, let it vary
-
-    !--------------------------------------------------------------------
-
-    call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%timers%start()", subname)
-      return
-    end if
 
     associate(&
          num_levels            => gcm_num_levels,                              &
@@ -401,32 +314,6 @@ contains
 
     end associate
 
-    call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%timers%stop()", subname)
-      return
-    end if
-
-  end subroutine init_phase3
-
-  !***********************************************************************
-
-  subroutine init_phase4(this)
-
-    use marbl_init_mod, only : marbl_init_parameters2
-    use marbl_init_mod, only : marbl_init_bury_coeff
-    use marbl_init_mod, only : marbl_init_forcing_fields
-
-    class(marbl_interface_class), intent(inout) :: this
-
-    character(len=*), parameter :: subname = 'marbl_interface:init_phase4'
-
-    call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%timers%start()", subname)
-      return
-    end if
-
     !-----------------------------------------------------------------------
     !  Lock and log this%parameters
     !-----------------------------------------------------------------------
@@ -475,7 +362,7 @@ contains
       return
     end if
 
-  end subroutine init_phase4
+  end subroutine init
 
   !***********************************************************************
 
