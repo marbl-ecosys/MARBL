@@ -15,7 +15,7 @@ module marbl_config_mod
   !  Datatypes for marbl_instance%configuration and marbl_instance%parameters
   !---------------------------------------------------------------------------
 
-  type, private :: marbl_single_config_or_parm_ll_type
+  type, private :: marbl_single_setting_ll_type
     ! Metadata
     character(len=char_len) :: long_name
     character(len=char_len) :: short_name
@@ -24,26 +24,26 @@ module marbl_config_mod
     character(len=char_len) :: datatype
     integer                 :: category_ind ! used for sorting output list
     character(len=char_len) :: comment      ! used to add comment in log
-    type(marbl_single_config_or_parm_ll_type), pointer :: next => NULL()
+    type(marbl_single_setting_ll_type), pointer :: next => NULL()
     ! Actual parameter data
     real(r8),                pointer :: rptr => NULL()
     integer(int_kind),       pointer :: iptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
-  end type marbl_single_config_or_parm_ll_type
+  end type marbl_single_setting_ll_type
 
   type, private :: marbl_setting_ptr
-    type(marbl_single_config_or_parm_ll_type), pointer :: ptr => NULL()
+    type(marbl_single_setting_ll_type), pointer :: ptr => NULL()
   end type marbl_setting_ptr
 
-  type, public :: marbl_config_and_parms_type
+  type, public :: marbl_settings_type
     logical, private :: init_called = .false.
     integer, private :: cnt = 0
     character(len=char_len), dimension(:),              pointer :: categories
-    type(marbl_single_config_or_parm_ll_type),          pointer :: vars => NULL()
-    type(marbl_single_config_or_parm_ll_type), private, pointer :: LastEntry => NULL()
-    type(marbl_single_config_or_parm_ll_type), private, pointer :: user_supplied => NULL()
-    type(marbl_single_config_or_parm_ll_type), private, pointer :: LastUserSupplied => NULL()
+    type(marbl_single_setting_ll_type),          pointer :: vars => NULL()
+    type(marbl_single_setting_ll_type), private, pointer :: LastEntry => NULL()
+    type(marbl_single_setting_ll_type), private, pointer :: user_supplied => NULL()
+    type(marbl_single_setting_ll_type), private, pointer :: LastUserSupplied => NULL()
     type(marbl_setting_ptr), dimension(:),     private, allocatable :: varArray
   contains
     procedure          :: add_var          => marbl_var_add
@@ -72,7 +72,7 @@ module marbl_config_mod
     procedure, private :: get_string       => marbl_var_get_string
     procedure, private :: put_general      => marbl_var_put_all_types
     procedure, private :: get_general      => marbl_var_get_all_types
-  end type marbl_config_and_parms_type
+  end type marbl_settings_type
 
   public :: log_add_var_error
 
@@ -84,14 +84,14 @@ contains
                            category, marbl_status_log,                        &
                            rptr, iptr, lptr, sptr, comment)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
-    character(len=*),        intent(in)    :: sname
-    character(len=*),        intent(in)    :: lname
-    character(len=*),        intent(in)    :: units
-    character(len=*),        intent(in)    :: datatype
-    character(len=*),        intent(in)    :: group
-    character(len=*),        intent(in)    :: category
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
+    class(marbl_settings_type),                 intent(inout) :: this
+    character(len=*),                           intent(in)    :: sname
+    character(len=*),                           intent(in)    :: lname
+    character(len=*),                           intent(in)    :: units
+    character(len=*),                           intent(in)    :: datatype
+    character(len=*),                           intent(in)    :: group
+    character(len=*),                           intent(in)    :: category
+    type(marbl_log_type),                       intent(inout) :: marbl_status_log
     real(r8),                optional, pointer, intent(in) :: rptr
     integer,                 optional, pointer, intent(in) :: iptr
     logical,                 optional, pointer, intent(in) :: lptr
@@ -100,7 +100,7 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_add'
 
-    type(marbl_single_config_or_parm_ll_type), pointer :: new_entry, ll_index
+    type(marbl_single_setting_ll_type), pointer :: new_entry, ll_index
     character(len=char_len), dimension(:), pointer :: new_categories
     integer :: cat_ind, n
     character(len=char_len) :: log_message
@@ -288,7 +288,7 @@ contains
   subroutine marbl_var_add_1d_r8(this, sname, lname, units, group, category,  &
                                  r8array, marbl_status_log)
 
-    class(marbl_config_and_parms_type),       intent(inout) :: this
+    class(marbl_settings_type),          intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
@@ -321,7 +321,7 @@ contains
   subroutine marbl_var_add_1d_int(this, sname, lname, units, group, category, &
                                   intarray, marbl_status_log)
 
-    class(marbl_config_and_parms_type),       intent(inout) :: this
+    class(marbl_settings_type),          intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
@@ -354,7 +354,7 @@ contains
   subroutine marbl_var_add_1d_str(this, sname, lname, units, group, category, &
                                   strarray, marbl_status_log)
 
-    class(marbl_config_and_parms_type),       intent(inout) :: this
+    class(marbl_settings_type),          intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
@@ -386,8 +386,8 @@ contains
 
   subroutine marbl_vars_finalize(this, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(inout) :: this
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_vars_finalize'
     character(len=char_len)     :: log_message
@@ -395,7 +395,7 @@ contains
     character(len=char_len) :: group
     character(len=7)        :: logic
     integer                 :: i, cat_ind
-    type(marbl_single_config_or_parm_ll_type), pointer :: ll_index
+    type(marbl_single_setting_ll_type), pointer :: ll_index
 
     ! (1) Lock data type (put calls will now cause MARBL to abort)
     this%init_called = .true.
@@ -501,15 +501,15 @@ contains
 
   subroutine marbl_var_put_all_types(this, var, marbl_status_log, rval, ival, lval, sval)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
-    character(len=*),                   intent(in)    :: var
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
-    real(r8),         optional,         intent(in)    :: rval
-    integer,          optional,         intent(in)    :: ival
-    logical,          optional,         intent(in)    :: lval
-    character(len=*), optional,         intent(in)    :: sval
+    class(marbl_settings_type), intent(inout) :: this
+    character(len=*),           intent(in)    :: var
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
+    real(r8),         optional, intent(in)    :: rval
+    integer,          optional, intent(in)    :: ival
+    logical,          optional, intent(in)    :: lval
+    character(len=*), optional, intent(in)    :: sval
 
-    type(marbl_single_config_or_parm_ll_type), pointer :: new_entry, ll_index
+    type(marbl_single_setting_ll_type), pointer :: new_entry, ll_index
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_put_all_types'
     character(len=char_len) :: log_message
 
@@ -557,18 +557,18 @@ contains
   subroutine marbl_var_get_all_types(this, var, marbl_status_log, rval, ival, &
                                      lval, sval)
 
-    class(marbl_config_and_parms_type), intent(in)    :: this
-    character(len=*),                   intent(in)    :: var
-    real(r8),         optional,         intent(out)   :: rval
-    integer,          optional,         intent(out)   :: ival
-    logical,          optional,         intent(out)   :: lval
-    character(len=*), optional,         intent(out)   :: sval
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(in)    :: this
+    character(len=*),           intent(in)    :: var
+    real(r8),         optional, intent(out)   :: rval
+    integer,          optional, intent(out)   :: ival
+    logical,          optional, intent(out)   :: lval
+    character(len=*), optional, intent(out)   :: sval
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_config_mod%marbl_var_get_all_types'
     character(len=char_len)     :: log_message
 
-    type(marbl_single_config_or_parm_ll_type), pointer :: ll_index
+    type(marbl_single_setting_ll_type), pointer :: ll_index
     integer :: cnt
 
     cnt = 0
@@ -632,10 +632,10 @@ contains
 
   subroutine marbl_var_put_real(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
-    character(len=*),                   intent(in)    :: var
-    real(r8),                           intent(in)    :: val
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(inout) :: this
+    character(len=*),           intent(in)    :: var
+    real(r8),                   intent(in)    :: val
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_put_real'
     character(len=char_len) :: log_message
@@ -652,10 +652,10 @@ contains
 
   subroutine marbl_var_put_integer(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
-    character(len=*),                   intent(in)    :: var
-    integer,                            intent(in)    :: val
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(inout) :: this
+    character(len=*),           intent(in)    :: var
+    integer,                    intent(in)    :: val
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_put_integer'
     character(len=char_len) :: log_message
@@ -672,10 +672,10 @@ contains
 
   subroutine marbl_var_put_string(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
-    character(len=*),                   intent(in)    :: var
-    character(len=*),                   intent(in)    :: val
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(inout) :: this
+    character(len=*),           intent(in)    :: var
+    character(len=*),           intent(in)    :: val
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_put_string'
     character(len=char_len) :: log_message
@@ -692,10 +692,10 @@ contains
 
   subroutine marbl_var_put_logical(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
-    character(len=*),                   intent(in)    :: var
-    logical,                            intent(in)    :: val
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(inout) :: this
+    character(len=*),           intent(in)    :: var
+    logical,                    intent(in)    :: val
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_put_logical'
     character(len=char_len) :: log_message
@@ -712,10 +712,10 @@ contains
 
   subroutine marbl_var_get_real(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(in)    :: this
-    character(len=*),                   intent(in)    :: var
-    real(r8),                           intent(out)   :: val
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(in)    :: this
+    character(len=*),           intent(in)    :: var
+    real(r8),                   intent(out)   :: val
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     call this%get_general(var, marbl_status_log, rval = val)
 
@@ -725,10 +725,10 @@ contains
 
   subroutine marbl_var_get_integer(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(in)    :: this
-    character(len=*),                   intent(in)    :: var
-    integer,                            intent(out)   :: val
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(in)    :: this
+    character(len=*),           intent(in)    :: var
+    integer,                    intent(out)   :: val
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     call this%get_general(var, marbl_status_log, ival=val)
 
@@ -738,10 +738,10 @@ contains
 
   subroutine marbl_var_get_string(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(in)    :: this
-    character(len=*),                   intent(in)    :: var
-    character(len=*),                   intent(out)   :: val
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(in)    :: this
+    character(len=*),           intent(in)    :: var
+    character(len=*),           intent(out)   :: val
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     call this%get_general(var, marbl_status_log, sval=val)
 
@@ -751,10 +751,10 @@ contains
 
   subroutine marbl_var_get_logical(this, var, val, marbl_status_log)
 
-    class(marbl_config_and_parms_type), intent(in)    :: this
-    character(len=*),                   intent(in)    :: var
-    logical,                            intent(out)   :: val
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(in)    :: this
+    character(len=*),           intent(in)    :: var
+    logical,                    intent(out)   :: val
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     call this%get_general(var, marbl_status_log, lval=val)
 
@@ -763,7 +763,7 @@ contains
   !*****************************************************************************
 
   function marbl_var_get_cnt(this) result(cnt)
-    class(marbl_config_and_parms_type), intent(in) :: this
+    class(marbl_settings_type), intent(in) :: this
     integer(int_kind) :: cnt
 
     cnt = this%cnt
@@ -774,9 +774,9 @@ contains
 
   function marbl_var_inquire_id(this, var, marbl_status_log) result(id)
 
-    class(marbl_config_and_parms_type), intent(in)    :: this
-    character(len=*),                   intent(in)    :: var
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(in)    :: this
+    character(len=*),           intent(in)    :: var
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
     integer(int_kind) :: id
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_id'
@@ -801,11 +801,11 @@ contains
   subroutine marbl_var_inquire_metadata(this, id, marbl_status_log, sname,   &
              lname, units, group, datatype)
 
-    class(marbl_config_and_parms_type), intent(in)    :: this
-    integer(int_kind),                  intent(in)    :: id
-    type(marbl_log_type),               intent(inout) :: marbl_status_log
-    character(len=*), optional,         intent(out)   :: sname, lname, units
-    character(len=*), optional,         intent(out)   :: group, datatype
+    class(marbl_settings_type), intent(in)    :: this
+    integer(int_kind),          intent(in)    :: id
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
+    character(len=*), optional, intent(out)   :: sname, lname, units
+    character(len=*), optional, intent(out)   :: group, datatype
 
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_var_inquire_metadata'
     character(len=char_len)     :: log_message

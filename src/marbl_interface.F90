@@ -44,8 +44,7 @@ module marbl_interface
   use marbl_internal_types  , only : marbl_internal_timers_type
   use marbl_internal_types  , only : marbl_timer_indexing_type
 
-
-  use marbl_config_mod, only : marbl_config_and_parms_type
+  use marbl_config_mod, only : marbl_settings_type
 
   implicit none
 
@@ -61,12 +60,12 @@ module marbl_interface
   type, public :: marbl_interface_class
 
      ! public data - general
-     type(marbl_domain_type)                   , public               :: domain
-     type(marbl_tracer_metadata_type)          , public, allocatable  :: tracer_metadata(:)
-     type(marbl_tracer_index_type)             , public               :: tracer_indices
-     type(marbl_log_type)                      , public               :: StatusLog
-     type(marbl_config_and_parms_type)         , public               :: configuration
-     type(marbl_config_and_parms_type)         , public               :: parameters
+     type(marbl_domain_type)           , public               :: domain
+     type(marbl_tracer_metadata_type)  , public, allocatable  :: tracer_metadata(:)
+     type(marbl_tracer_index_type)     , public               :: tracer_indices
+     type(marbl_log_type)              , public               :: StatusLog
+     type(marbl_settings_type)         , public               :: configuration
+     type(marbl_settings_type)         , public               :: parameters
 
      type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
      type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output

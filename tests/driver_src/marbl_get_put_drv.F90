@@ -200,8 +200,6 @@ Contains
 
   subroutine check_all_vals(marbl_instance, driver_status_log)
 
-    use marbl_config_mod, only : marbl_config_and_parms_type
-
     type(marbl_interface_class), intent(inout) :: marbl_instance
     type(marbl_log_type),        intent(inout) :: driver_status_log
 

@@ -19,7 +19,7 @@ module marbl_parms
   use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : char_len
 
-  use marbl_config_mod, only : marbl_config_and_parms_type
+  use marbl_config_mod, only : marbl_settings_type
 
   use marbl_constants_mod, only : c0
   use marbl_constants_mod, only : c1
@@ -403,8 +403,8 @@ contains
 
     use marbl_config_mod, only : log_add_var_error
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(inout) :: this
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_parms:marbl_define_config_vars'
     character(len=char_len)     :: log_message
@@ -768,7 +768,7 @@ contains
     ! assign default values to all module variables
 
     ! NOTE: defaults values below, of vars in the marbl_parms framework, may be overridden at runtime
-    !       through either a namelist read or a put call from marbl_config_and_parms_type class
+    !       through either a namelist read or a put call from marbl_settings_type class
 
     integer, intent(in) :: km         ! max number of levels
 
@@ -1053,8 +1053,8 @@ contains
 
     use marbl_config_mod, only : log_add_var_error
 
-    class(marbl_config_and_parms_type), intent(inout) :: this
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
+    class(marbl_settings_type), intent(inout) :: this
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_parms:marbl_define_parameters'
     character(len=char_len)     :: log_message

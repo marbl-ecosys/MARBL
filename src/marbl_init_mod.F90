@@ -65,17 +65,17 @@ contains
 
   subroutine marbl_init_config_vars(lallow_glo_ops, marbl_configuration, marbl_status_log, gcm_nl_buffer)
 
-    use marbl_config_mod, only : marbl_config_and_parms_type
+    use marbl_config_mod, only : marbl_settings_type
     use marbl_parms, only : marbl_config_set_defaults
     use marbl_parms, only : marbl_config_read_namelist
     use marbl_parms, only : marbl_define_config_vars
     use marbl_parms, only : ladjust_bury_coeff
     use marbl_parms, only : set_derived_config
 
-    logical,                           intent(in)    :: lallow_glo_ops
-    type(marbl_config_and_parms_type), intent(inout) :: marbl_configuration
-    type(marbl_log_type),              intent(inout) :: marbl_status_log
-    character(len=*), optional,        intent(in)    :: gcm_nl_buffer(:)
+    logical,                    intent(in)    :: lallow_glo_ops
+    type(marbl_settings_type),  intent(inout) :: marbl_configuration
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
+    character(len=*), optional, intent(in)    :: gcm_nl_buffer(:)
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_config_vars'
@@ -308,16 +308,16 @@ contains
 
   subroutine marbl_init_parameters(num_levels, marbl_parameters, marbl_status_log, gcm_nl_buffer)
 
-    use marbl_config_mod, only : marbl_config_and_parms_type
+    use marbl_config_mod, only : marbl_settings_type
     use marbl_parms, only : marbl_parms_set_defaults
     use marbl_parms, only : marbl_parms_read_namelist
     use marbl_parms, only : marbl_define_parameters
     use marbl_parms, only : set_derived_parms
 
-    integer(int_kind),                 intent(in)    :: num_levels
-    type(marbl_config_and_parms_type), intent(inout) :: marbl_parameters
-    type(marbl_log_type),              intent(inout) :: marbl_status_log
-    character(len=*), optional,        intent(in)    :: gcm_nl_buffer(:)
+    integer(int_kind),          intent(in)    :: num_levels
+    type(marbl_settings_type),  intent(inout) :: marbl_parameters
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
+    character(len=*), optional, intent(in)    :: gcm_nl_buffer(:)
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters'
