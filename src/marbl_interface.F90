@@ -129,6 +129,14 @@ module marbl_interface
      procedure, public  :: set_surface_forcing
      procedure, public  :: set_global_scalars
      procedure, public  :: shutdown
+     generic            :: put => put_real,                       &
+                                  put_integer,                    &
+                                  put_logical,                    &
+                                  put_string
+     procedure, private :: put_real
+     procedure, private :: put_integer
+     procedure, private :: put_logical
+     procedure, private :: put_string
 
   end type marbl_interface_class
 
@@ -468,6 +476,106 @@ contains
     end if
 
   end subroutine init_phase4
+
+  !***********************************************************************
+
+  subroutine put_real(this, varname, var_phase, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname, var_phase
+    real(r8),                      intent(in)    :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:put_real'
+    character(len=char_len) :: log_message
+
+    call this%StatusLog%construct()
+    select case(trim(var_phase))
+      case('phase2')
+        call this%configuration%put(varname, val)
+      case('phase3')
+        call this%parameters%put(varname, val)
+      case DEFAULT
+        write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
+        call this%StatusLog%log_error(log_message, subname)
+        return
+    end select
+
+  end subroutine put_real
+
+  !***********************************************************************
+
+  subroutine put_integer(this, varname, var_phase, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname, var_phase
+    integer(int_kind),             intent(in)    :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:put_integer'
+    character(len=char_len) :: log_message
+
+    call this%StatusLog%construct()
+    select case(trim(var_phase))
+      case('phase2')
+        call this%configuration%put(varname, val)
+      case('phase3')
+        call this%parameters%put(varname, val)
+      case DEFAULT
+        write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
+        call this%StatusLog%log_error(log_message, subname)
+        return
+    end select
+
+  end subroutine put_integer
+
+  !***********************************************************************
+
+  subroutine put_logical(this, varname, var_phase, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname, var_phase
+    logical,                       intent(in)    :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:put_logical'
+    character(len=char_len) :: log_message
+
+    call this%StatusLog%construct()
+    select case(trim(var_phase))
+      case('phase2')
+        call this%configuration%put(varname, val)
+      case('phase3')
+        call this%parameters%put(varname, val)
+      case DEFAULT
+        write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
+        call this%StatusLog%log_error(log_message, subname)
+        return
+    end select
+
+  end subroutine put_logical
+
+  !***********************************************************************
+
+  subroutine put_string(this, varname, var_phase, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname, var_phase
+    character(len=*),              intent(in)    :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:put_string'
+    character(len=char_len) :: log_message
+
+    call this%StatusLog%construct()
+    select case(trim(var_phase))
+      case('phase2')
+        call this%configuration%put(varname, val)
+      case('phase3')
+        call this%parameters%put(varname, val)
+      case DEFAULT
+        write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
+        call this%StatusLog%log_error(log_message, subname)
+        return
+    end select
+
+  end subroutine put_string
 
   !***********************************************************************
 

@@ -34,7 +34,11 @@ Contains
     end do
 
     ! Optional: call marbl_instance%configuration%put()
-    call marbl_instance%configuration%put('ciso_on', .true.)
+    call marbl_instance%put('ciso_on', 'phase2', .true.)
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error_trace('marbl%put', subname)
+      return
+    end if
 
     ! Call marbl%config
     call marbl_instance%init_phase2()

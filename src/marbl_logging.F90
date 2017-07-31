@@ -102,7 +102,8 @@ module marbl_logging
   !****************************************************************************
 
   type, public :: marbl_log_type
-    logical, public :: labort_marbl ! True => driver should abort GCM
+    logical, private :: lconstructed = .false. ! True => constructor was already called
+    logical, public :: labort_marbl = .false. ! True => driver should abort GCM
     type(marbl_log_output_options_type) :: OutputOptions
     type(marbl_status_log_entry_type), pointer :: FullLog
     type(marbl_status_log_entry_type), pointer :: LastEntry
@@ -172,7 +173,8 @@ contains
 
     class(marbl_log_type), intent(inout) :: this
 
-    this%labort_marbl = .false.
+    if (this%lconstructed) return
+    this%lconstructed = .true.
     nullify(this%FullLog)
     nullify(this%LastEntry)
     call this%OutputOptions%construct()
