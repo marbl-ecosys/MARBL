@@ -63,7 +63,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_config_vars(lallow_glo_ops, marbl_configuration, marbl_status_log, gcm_nl_buffer)
+  subroutine marbl_init_config_vars(lallow_glo_ops, marbl_settings, marbl_status_log, gcm_nl_buffer)
 
     use marbl_config_mod, only : marbl_settings_type
     use marbl_parms, only : marbl_config_set_defaults
@@ -73,7 +73,7 @@ contains
     use marbl_parms, only : set_derived_config
 
     logical,                    intent(in)    :: lallow_glo_ops
-    type(marbl_settings_type),  intent(inout) :: marbl_configuration
+    type(marbl_settings_type),  intent(inout) :: marbl_settings
     type(marbl_log_type),       intent(inout) :: marbl_status_log
     character(len=*), optional, intent(in)    :: gcm_nl_buffer(:)
 
@@ -107,16 +107,9 @@ contains
     ! construct configuration_type
     !---------------------------------------------------------------------------
 
-    call marbl_define_config_vars(marbl_configuration, marbl_status_log)
+    call marbl_define_config_vars(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_define_config_vars()", subname)
-      return
-    end if
-
-    ! lock and log configuration variables
-    call marbl_configuration%finalize_vars(marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('configuration%finalize_vars', subname)
       return
     end if
 
@@ -306,7 +299,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_parameters(num_levels, marbl_parameters, marbl_status_log, gcm_nl_buffer)
+  subroutine marbl_init_parameters(num_levels, marbl_settings, marbl_status_log, gcm_nl_buffer)
 
     use marbl_config_mod, only : marbl_settings_type
     use marbl_parms, only : marbl_parms_set_defaults
@@ -315,7 +308,7 @@ contains
     use marbl_parms, only : set_derived_parms
 
     integer(int_kind),          intent(in)    :: num_levels
-    type(marbl_settings_type),  intent(inout) :: marbl_parameters
+    type(marbl_settings_type),  intent(inout) :: marbl_settings
     type(marbl_log_type),       intent(inout) :: marbl_status_log
     character(len=*), optional, intent(in)    :: gcm_nl_buffer(:)
 
@@ -340,17 +333,9 @@ contains
     end if
 
     ! construct parameters_type
-    call marbl_define_parameters(marbl_parameters, marbl_status_log)
+    call marbl_define_parameters(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_define_parameters()", subname)
-      return
-    end if
-
-    !  Lock and log parameters
-    call marbl_parameters%finalize_vars(marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('parmeters%finalize_vars', &
-           subname)
       return
     end if
 

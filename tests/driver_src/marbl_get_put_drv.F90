@@ -45,7 +45,7 @@ Contains
     end do
 
     ! Set ciso_on = .true. for local instance
-    call marbl_instance_loc%put('ciso_on', 'phase2', .true.)
+    call marbl_instance_loc%put('ciso_on', .true.)
     if (marbl_instance_loc%StatusLog%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_loc%put', subname)
       return
@@ -121,7 +121,7 @@ Contains
     integer :: n, n2
     logical :: var_match
 
-    ! Put values into marbl_instance%configuration%vars(n)
+    ! Put values into marbl_instance%settings%vars(n)
     ! logicals = .true.
     ! integers = -1
     ! reals    = real(-1,r8)
@@ -129,11 +129,11 @@ Contains
     log_message = "Setting variables to .true. or -1 ..."
     call driver_status_log%log_noerror(log_message, subname)
 
-    ! configuration variables
-    do n=1,local_instance%configuration%get_cnt()
-      call local_instance%configuration%inquire_metadata(n, marbl_instance%StatusLog, &
-                                                         sname=sname,         &
-                                                         datatype=datatype)
+    ! configuration variables and parameters
+    do n=1,local_instance%settings%get_cnt()
+      call local_instance%settings%inquire_metadata(n, marbl_instance%StatusLog, &
+                                                    sname=sname,                 &
+                                                    datatype=datatype)
       if (marbl_instance%StatusLog%labort_marbl) then
         call marbl_instance%StatusLog%log_error_trace('inquire_metadata', subname)
         return
@@ -146,44 +146,13 @@ Contains
       if (var_match) cycle
       select case (trim(datatype))
         case ('real')
-          call marbl_instance%put(sname, 'phase2', -1)
+          call marbl_instance%put(sname, -1)
         case ('integer')
-          call marbl_instance%put(sname, 'phase2', -1)
+          call marbl_instance%put(sname, -1)
         case ('string')
-          call marbl_instance%put(sname, 'phase2', '-1')
+          call marbl_instance%put(sname, '-1')
         case ('logical')
-          call marbl_instance%put(sname, 'phase2', .true.)
-      end select
-      if (marbl_instance%StatusLog%labort_marbl) then
-        call marbl_instance%StatusLog%log_error_trace('marbl_instance%put', subname)
-        return
-      end if
-    end do
-
-    ! parameters variables
-    do n=1,local_instance%parameters%get_cnt()
-      call local_instance%parameters%inquire_metadata(n, marbl_instance%StatusLog,    &
-                                                      sname=sname,            &
-                                                      datatype=datatype)
-      if (marbl_instance%StatusLog%labort_marbl) then
-        call marbl_instance%StatusLog%log_error_trace('inquire_metadata', subname)
-        return
-      end if
-      ! Do not change variables listed in ignore_in_varnames
-      var_match = .false.
-      do n2=1,size(ignore_in_varnames)
-        if (index(sname, trim(ignore_in_varnames(n2))).ne.0) var_match = .true.
-      end do
-      if (var_match) cycle
-      select case (trim(datatype))
-        case ('real')
-          call marbl_instance%put(sname, 'phase3', -1)
-        case ('integer')
-          call marbl_instance%put(sname, 'phase3', -1)
-        case ('string')
-          call marbl_instance%put(sname, 'phase3', '-1')
-        case ('logical')
-          call marbl_instance%put(sname, 'phase3', .true.)
+          call marbl_instance%put(sname, .true.)
       end select
       if (marbl_instance%StatusLog%labort_marbl) then
         call marbl_instance%StatusLog%log_error_trace('marbl_instance%put', subname)
@@ -215,11 +184,11 @@ Contains
 
     associate(marbl_status_log => marbl_instance%StatusLog)
 
-      ! Configuration Variables
-      do n = 1,marbl_instance%configuration%get_cnt()
-        call marbl_instance%configuration%inquire_metadata(n, marbl_status_log, &
-                                                           sname = sname,       &
-                                                           datatype=datatype)
+      ! Configuration variables and parameters
+      do n = 1,marbl_instance%settings%get_cnt()
+        call marbl_instance%settings%inquire_metadata(n, marbl_status_log,    &
+                                                      sname = sname,          &
+                                                      datatype=datatype)
         if (marbl_status_log%labort_marbl) then
           call marbl_status_log%log_error_trace('inquire_metadata', subname)
           return
@@ -234,7 +203,7 @@ Contains
         select case (trim(datatype))
           case ('real')
             ! Check to see that variable was set to -1 correctly
-            call marbl_instance%configuration%get(sname, rval, marbl_status_log)
+            call marbl_instance%settings%get(sname, rval, marbl_status_log)
             if (rval.ne.real(-1,r8)) then
               write(log_message, "(2A,E24.16,A)") trim(sname), ' = ', rval, ' not -1'
               call marbl_status_log%log_error(log_message, subname)
@@ -242,7 +211,7 @@ Contains
             end if
           case ('integer')
             ! Check to see that variable was set to -1 correctly
-            call marbl_instance%configuration%get(sname, ival, marbl_status_log)
+            call marbl_instance%settings%get(sname, ival, marbl_status_log)
             if (ival.ne.-1) then
               write(log_message, "(2A,I0,A)") trim(sname), ' = ', ival, ' not -1'
               call marbl_status_log%log_error(log_message, subname)
@@ -250,7 +219,7 @@ Contains
             end if
           case ('string')
             ! Check to see that variable was set to .true. correctly
-            call marbl_instance%configuration%get(sname, sval, marbl_status_log)
+            call marbl_instance%settings%get(sname, sval, marbl_status_log)
             if (trim(sval).ne.'-1') then
               write(log_message, "(4A)") trim(sname), ' = ', trim(sval), ', not -1'
               call marbl_status_log%log_error(log_message, subname)
@@ -258,7 +227,7 @@ Contains
             end if
           case ('logical')
             ! Check to see that variable was set to .true. correctly
-            call marbl_instance%configuration%get(sname, lval, marbl_status_log)
+            call marbl_instance%settings%get(sname, lval, marbl_status_log)
             if (.not.lval) then
               write(log_message, "(2A)") trim(sname), ' is .false., not .true.'
               call marbl_status_log%log_error(log_message, subname)
@@ -266,7 +235,7 @@ Contains
             end if
         end select
         if (marbl_status_log%labort_marbl) then
-          call marbl_status_log%log_error_trace('marbl_instance%configuration%put', subname)
+          call marbl_status_log%log_error_trace('marbl_instance%settings%get', subname)
           return
         end if
       end do

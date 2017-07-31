@@ -34,7 +34,7 @@ Contains
     end do
 
     ! Optional: call marbl_instance%put()
-    call marbl_instance%put('ciso_on', 'phase2', .true.)
+    call marbl_instance%put('ciso_on', .true.)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%put', subname)
       return

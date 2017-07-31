@@ -64,8 +64,7 @@ module marbl_interface
      type(marbl_tracer_metadata_type)  , public, allocatable  :: tracer_metadata(:)
      type(marbl_tracer_index_type)     , public               :: tracer_indices
      type(marbl_log_type)              , public               :: StatusLog
-     type(marbl_settings_type)         , public               :: configuration
-     type(marbl_settings_type)         , public               :: parameters
+     type(marbl_settings_type)         , public               :: settings
 
      type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
      type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
@@ -215,10 +214,10 @@ contains
     end if
 
     !---------------------------------------------------------------------------
-    ! Initialize configuration variables
+    ! Initialize configuration variables in settings
     !---------------------------------------------------------------------------
 
-    call marbl_init_config_vars(this%lallow_glo_ops, this%configuration, this%StatusLog, gcm_nl_buffer)
+    call marbl_init_config_vars(this%lallow_glo_ops, this%settings, this%StatusLog, gcm_nl_buffer)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_config_vars", subname)
       return
@@ -299,9 +298,9 @@ contains
     end if
 
     !---------------------------------------------------------------------------
-    ! Initialize parameters
+    ! Initialize parameters in settings
     !---------------------------------------------------------------------------
-    call marbl_init_parameters(num_levels, this%parameters, this%StatusLog, gcm_nl_buffer)
+    call marbl_init_parameters(num_levels, this%settings, this%StatusLog, gcm_nl_buffer)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_parameters", subname)
       return
@@ -340,6 +339,13 @@ contains
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
 
+    !  Lock and log configuration variables and parameters
+    call this%settings%finalize_vars(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('parmeters%finalize_vars', subname)
+      return
+    end if
+
     ! End of initialization
     call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -351,28 +357,19 @@ contains
 
   !***********************************************************************
 
-  subroutine put_real(this, varname, var_phase, val)
+  subroutine put_real(this, varname, val)
 
     class (marbl_interface_class), intent(inout) :: this
-    character(len=*),              intent(in)    :: varname, var_phase
+    character(len=*),              intent(in)    :: varname
     real(r8),                      intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_real'
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    select case(trim(var_phase))
-      case('phase2')
-        call this%configuration%put(varname, val, this%StatusLog)
-      case('phase3')
-        call this%parameters%put(varname, val, this%StatusLog)
-      case DEFAULT
-        write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
-        call this%StatusLog%log_error(log_message, subname)
-        return
-    end select
+    call this%settings%put(varname, val, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('config/parms%put()', subname)
+      call this%StatusLog%log_error_trace('settings%put()', subname)
       return
     end if
 
@@ -380,28 +377,19 @@ contains
 
   !***********************************************************************
 
-  subroutine put_integer(this, varname, var_phase, val)
+  subroutine put_integer(this, varname, val)
 
     class (marbl_interface_class), intent(inout) :: this
-    character(len=*),              intent(in)    :: varname, var_phase
+    character(len=*),              intent(in)    :: varname
     integer(int_kind),             intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_integer'
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    select case(trim(var_phase))
-      case('phase2')
-        call this%configuration%put(varname, val, this%StatusLog)
-      case('phase3')
-        call this%parameters%put(varname, val, this%StatusLog)
-      case DEFAULT
-        write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
-        call this%StatusLog%log_error(log_message, subname)
-        return
-    end select
+    call this%settings%put(varname, val, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('config/parms%put()', subname)
+      call this%StatusLog%log_error_trace('settings%put()', subname)
       return
     end if
 
@@ -409,28 +397,19 @@ contains
 
   !***********************************************************************
 
-  subroutine put_logical(this, varname, var_phase, val)
+  subroutine put_logical(this, varname, val)
 
     class (marbl_interface_class), intent(inout) :: this
-    character(len=*),              intent(in)    :: varname, var_phase
+    character(len=*),              intent(in)    :: varname
     logical,                       intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_logical'
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    select case(trim(var_phase))
-      case('phase2')
-        call this%configuration%put(varname, val, this%StatusLog)
-      case('phase3')
-        call this%parameters%put(varname, val, this%StatusLog)
-      case DEFAULT
-        write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
-        call this%StatusLog%log_error(log_message, subname)
-        return
-    end select
+    call this%settings%put(varname, val, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('config/parms%put()', subname)
+      call this%StatusLog%log_error_trace('settings%put()', subname)
       return
     end if
 
@@ -438,28 +417,19 @@ contains
 
   !***********************************************************************
 
-  subroutine put_string(this, varname, var_phase, val)
+  subroutine put_string(this, varname, val)
 
     class (marbl_interface_class), intent(inout) :: this
-    character(len=*),              intent(in)    :: varname, var_phase
+    character(len=*),              intent(in)    :: varname
     character(len=*),              intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_string'
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    select case(trim(var_phase))
-      case('phase2')
-        call this%configuration%put(varname, val, this%StatusLog)
-      case('phase3')
-        call this%parameters%put(varname, val, this%StatusLog)
-      case DEFAULT
-        write(log_message, "(2A)") "Invalid phase: ", trim(var_phase)
-        call this%StatusLog%log_error(log_message, subname)
-        return
-    end select
+    call this%settings%put(varname, val, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('config/parms%put()', subname)
+      call this%StatusLog%log_error_trace('settings%put()', subname)
       return
     end if
 

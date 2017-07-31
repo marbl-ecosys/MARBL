@@ -1068,14 +1068,6 @@ contains
     character(len=char_len) :: prefix, comment
     integer :: m, n, cnt
 
-    if (associated(this%vars)) then
-      write(log_message, "(A)") "this%parameters has been constructed already"
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    allocate(this%categories(0))
-
     !-----------------!
     ! marbl_parms_nml !
     !-----------------!
