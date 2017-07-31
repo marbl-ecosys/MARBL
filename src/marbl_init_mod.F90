@@ -19,11 +19,9 @@ module marbl_init_mod
   private
 
   public :: marbl_init_log_and_timers
-  public :: marbl_init_config_vars1
-  public :: marbl_init_config_vars2
+  public :: marbl_init_config_vars
   public :: marbl_init_tracers
-  public :: marbl_init_parameters1
-  public :: marbl_init_parameters2
+  public :: marbl_init_parameters
   public :: marbl_init_bury_coeff
   public :: marbl_init_forcing_fields
 
@@ -65,19 +63,22 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_config_vars1(marbl_configuration, marbl_status_log, gcm_nl_buffer)
+  subroutine marbl_init_config_vars(lallow_glo_ops, marbl_configuration, marbl_status_log, gcm_nl_buffer)
 
     use marbl_config_mod, only : marbl_config_and_parms_type
     use marbl_parms, only : marbl_config_set_defaults
     use marbl_parms, only : marbl_config_read_namelist
     use marbl_parms, only : marbl_define_config_vars
+    use marbl_parms, only : ladjust_bury_coeff
+    use marbl_parms, only : set_derived_config
 
+    logical,                           intent(in)    :: lallow_glo_ops
     type(marbl_config_and_parms_type), intent(inout) :: marbl_configuration
     type(marbl_log_type),              intent(inout) :: marbl_status_log
     character(len=*), optional,        intent(in)    :: gcm_nl_buffer(:)
 
     ! local variables
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_config_vars1'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_config_vars'
     character(len=char_len) :: log_message
 
     !---------------------------------------------------------------------------
@@ -112,24 +113,6 @@ contains
       return
     end if
 
-  end subroutine marbl_init_config_vars1
-
-  !***********************************************************************
-
-  subroutine marbl_init_config_vars2(lallow_glo_ops, marbl_configuration, marbl_status_log)
-
-    use marbl_config_mod, only : marbl_config_and_parms_type
-    use marbl_parms, only : ladjust_bury_coeff
-    use marbl_parms, only : set_derived_config
-
-    logical,                           intent(in)    :: lallow_glo_ops
-    type(marbl_config_and_parms_type), intent(inout) :: marbl_configuration
-    type(marbl_log_type),              intent(inout) :: marbl_status_log
-
-    ! local variables
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_config_vars2'
-    character(len=char_len) :: log_message
-
     ! lock and log configuration variables
     call marbl_configuration%finalize_vars(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
@@ -152,7 +135,7 @@ contains
       return
     end if
 
-  end subroutine marbl_init_config_vars2
+  end subroutine marbl_init_config_vars
 
   !***********************************************************************
 
@@ -323,12 +306,13 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_parameters1(num_levels, marbl_parameters, marbl_status_log, gcm_nl_buffer)
+  subroutine marbl_init_parameters(num_levels, marbl_parameters, marbl_status_log, gcm_nl_buffer)
 
     use marbl_config_mod, only : marbl_config_and_parms_type
     use marbl_parms, only : marbl_parms_set_defaults
     use marbl_parms, only : marbl_parms_read_namelist
     use marbl_parms, only : marbl_define_parameters
+    use marbl_parms, only : set_derived_parms
 
     integer(int_kind),                 intent(in)    :: num_levels
     type(marbl_config_and_parms_type), intent(inout) :: marbl_parameters
@@ -336,7 +320,7 @@ contains
     character(len=*), optional,        intent(in)    :: gcm_nl_buffer(:)
 
     ! local variables
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters1'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters'
     character(len=char_len) :: log_message
 
     ! set default values for parameters
@@ -362,21 +346,6 @@ contains
       return
     end if
 
-  end subroutine marbl_init_parameters1
-
-  !***********************************************************************
-
-  subroutine marbl_init_parameters2(marbl_parameters, marbl_status_log)
-
-    use marbl_config_mod, only : marbl_config_and_parms_type
-    use marbl_parms,      only : set_derived_parms
-
-    type(marbl_config_and_parms_type), intent(inout) :: marbl_parameters
-    type(marbl_log_type),              intent(inout) :: marbl_status_log
-
-    ! local variables
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters2'
-
     !  Lock and log parameters
     call marbl_parameters%finalize_vars(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
@@ -392,7 +361,7 @@ contains
       return
     end if
 
-  end subroutine marbl_init_parameters2
+  end subroutine marbl_init_parameters
 
   !***********************************************************************
 

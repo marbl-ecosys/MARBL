@@ -163,11 +163,9 @@ contains
        marbl_tracer_cnt)
 
     use marbl_init_mod, only : marbl_init_log_and_timers
-    use marbl_init_mod, only : marbl_init_config_vars1
-    use marbl_init_mod, only : marbl_init_config_vars2
+    use marbl_init_mod, only : marbl_init_config_vars
     use marbl_init_mod, only : marbl_init_tracers
-    use marbl_init_mod, only : marbl_init_parameters1
-    use marbl_init_mod, only : marbl_init_parameters2
+    use marbl_init_mod, only : marbl_init_parameters
     use marbl_init_mod, only : marbl_init_bury_coeff
     use marbl_init_mod, only : marbl_init_forcing_fields
 
@@ -221,23 +219,17 @@ contains
     ! Initialize configuration variables
     !---------------------------------------------------------------------------
 
-    call marbl_init_config_vars1(this%configuration, this%StatusLog, gcm_nl_buffer)
+    call marbl_init_config_vars(this%lallow_glo_ops, this%configuration, this%StatusLog, gcm_nl_buffer)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_init_config_vars", subname)
+      return
+    end if
 
     associate(&
          num_levels            => gcm_num_levels,                              &
          num_PAR_subcols       => gcm_num_PAR_subcols,                         &
          num_surface_elements  => gcm_num_elements_surface_forcing             &
          )
-
-    !-----------------------------------------------------------------------
-    !  Lock and log this%configuration
-    !-----------------------------------------------------------------------
-
-    call marbl_init_config_vars2(this%lallow_glo_ops, this%configuration, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_init_config_vars2", subname)
-      return
-    end if
 
     !-----------------------------------------------------------------------
     !  Set up domain type
@@ -310,19 +302,13 @@ contains
     !---------------------------------------------------------------------------
     ! Initialize parameters
     !---------------------------------------------------------------------------
-    call marbl_init_parameters1(num_levels, this%parameters, this%StatusLog, gcm_nl_buffer)
-
-    end associate
-
-    !-----------------------------------------------------------------------
-    !  Lock and log this%parameters
-    !-----------------------------------------------------------------------
-
-    call marbl_init_parameters2(this%parameters, this%StatusLog)
+    call marbl_init_parameters(num_levels, this%parameters, this%StatusLog, gcm_nl_buffer)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_init_parameters2", subname)
+      call this%StatusLog%log_error_trace("marbl_init_parameters", subname)
       return
     end if
+
+    end associate
 
     !-----------------------------------------------------------------------
     !  Initialize bury coefficient
