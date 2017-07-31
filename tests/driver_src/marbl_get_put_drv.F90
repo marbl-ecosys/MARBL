@@ -16,14 +16,14 @@ Contains
 
   !*****************************************************************************
 
-  subroutine test(marbl_instance, marbl_status_log)
+  subroutine test(marbl_instance, driver_status_log)
 
     use marbl_interface,  only : marbl_interface_class
     use marbl_parms,      only : marbl_config_set_defaults
     use marbl_parms,      only : marbl_parms_set_defaults
 
     type(marbl_interface_class), intent(inout) :: marbl_instance
-    type(marbl_log_type),        intent(inout) :: marbl_status_log
+    type(marbl_log_type),        intent(inout) :: driver_status_log
 
     character(*), parameter      :: subname = 'marbl_get_put_drv:test'
     real(kind=r8), dimension(km) :: delta_z, zw, zt
@@ -38,6 +38,13 @@ Contains
       zt(k) = p5*(zw(k-1)+zw(k))
     end do
 
+    ! Set ciso_on = .true.
+    call marbl_instance%put('ciso_on', 'phase2', .true.)
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error_trace('marbl%put', subname)
+      return
+    end if
+
     ! Call marbl%init_phase2
     call marbl_instance%init_phase2(lgcm_has_global_ops = .true.)
     if (marbl_instance%StatusLog%labort_marbl) then
@@ -46,22 +53,18 @@ Contains
     end if
 
     ! Set all config vars to -1 or .true.
-    call set_all_vals(marbl_instance%configuration, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('set_all_vals', subname)
+    call set_all_vals(marbl_instance%configuration, driver_status_log, marbl_instance%StatusLog)
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error_trace('set_all_vals', subname)
       return
     end if
 
     ! One by one, make sure vars are -1 or .true. and then set to n or .false.
-    call check_all_vals(marbl_instance%configuration, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('check_all_vals', subname)
+    call check_all_vals(marbl_instance%configuration, driver_status_log, marbl_instance%StatusLog)
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error_trace('check_all_vals', subname)
       return
     end if
-
-    ! Reset to default values + ciso_on (needed to ensure tracer count consistency)
-    call marbl_config_set_defaults()
-    call marbl_instance%configuration%put('ciso_on', .true.)
 
     ! Call marbl%init_phase3
     call marbl_instance%init_phase3(gcm_num_levels = km,      &
@@ -76,16 +79,16 @@ Contains
     end if
 
     ! Set all parameters to -1 or .true.
-    call set_all_vals(marbl_instance%parameters, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('set_all_vals', subname)
+    call set_all_vals(marbl_instance%parameters, driver_status_log, marbl_instance%StatusLog)
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error_trace('set_all_vals', subname)
       return
     end if
 
     ! One by one, make sure parms are -1 or .true. and then set to n or .false.
-    call check_all_vals(marbl_instance%parameters, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('check_all_vals', subname)
+    call check_all_vals(marbl_instance%parameters, driver_status_log, marbl_instance%StatusLog)
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error_trace('check_all_vals', subname)
       return
     end if
 
@@ -109,13 +112,14 @@ Contains
 
   !*****************************************************************************
 
-  subroutine set_all_vals(config_or_parms, marbl_status_log)
+  subroutine set_all_vals(config_or_parms, driver_status_log, marbl_status_log)
 
     use marbl_config_mod, only : marbl_single_config_or_parm_ll_type
     use marbl_config_mod, only : marbl_config_and_parms_type
     use marbl_mpi_mod, only : marbl_mpi_abort
 
     type(marbl_config_and_parms_type), intent(inout) :: config_or_parms
+    type(marbl_log_type),              intent(inout) :: driver_status_log
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_get_put_drv:set_all_vals'
@@ -128,7 +132,7 @@ Contains
     ! reals    = real(-1,r8)
     ! strings  = '-1'
     log_message = "Setting variables to .true. or -1 ..."
-    call marbl_status_log%log_noerror(log_message, subname)
+    call driver_status_log%log_noerror(log_message, subname)
     ll_index => config_or_parms%vars
     do while (associated(ll_index))
       sname = ll_index%short_name
@@ -140,29 +144,34 @@ Contains
       end if
       select case (trim(datatype))
         case ('real')
-          call config_or_parms%put(sname, -1)
+          call config_or_parms%put(sname, -1, marbl_status_log)
         case ('integer')
-          call config_or_parms%put(sname, -1)
+          call config_or_parms%put(sname, -1, marbl_status_log)
         case ('string')
-          call config_or_parms%put(sname, '-1')
+          call config_or_parms%put(sname, '-1', marbl_status_log)
         case ('logical')
-          call config_or_parms%put(sname, .true.)
+          call config_or_parms%put(sname, .true., marbl_status_log)
       end select
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('config_or_parms%put', subname)
+        return
+      end if
       ll_index => ll_index%next
     end do
     log_message = "... Done!"
-    call marbl_status_log%log_noerror(log_message, subname)
+    call driver_status_log%log_noerror(log_message, subname)
 
   end subroutine set_all_vals
 
   !*****************************************************************************
 
-  subroutine check_all_vals(config_or_parms, marbl_status_log)
+  subroutine check_all_vals(config_or_parms, driver_status_log, marbl_status_log)
 
     use marbl_config_mod, only : marbl_single_config_or_parm_ll_type
     use marbl_config_mod, only : marbl_config_and_parms_type
 
     type(marbl_config_and_parms_type), intent(inout) :: config_or_parms
+    type(marbl_log_type),              intent(inout) :: driver_status_log
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
     character(*), parameter :: subname = 'marbl_get_put_drv:check_all_vals'
@@ -175,7 +184,7 @@ Contains
 
     write(log_message, "(2A)") "Making sure variables are .true. or -1 then", &
                                " setting to .false. or n ..."
-    call marbl_status_log%log_noerror(log_message, subname)
+    call driver_status_log%log_noerror(log_message, subname)
     ll_index => config_or_parms%vars
     n = 0
     do while (associated(ll_index))
@@ -197,7 +206,7 @@ Contains
             return
           end if
           ! (2) Change value
-          call config_or_parms%put(sname, n)
+          call config_or_parms%put(sname, n, marbl_status_log)
         case ('integer')
           ! (1) Check to see that variable was set to -1 correctly
           call config_or_parms%get(sname, ival, marbl_status_log)
@@ -207,7 +216,7 @@ Contains
             return
           end if
           ! (2) Change value
-          call config_or_parms%put(sname, n)
+          call config_or_parms%put(sname, n, marbl_status_log)
         case ('string')
           ! (1) Check to see that variable was set to .true. correctly
           call config_or_parms%get(sname, sval, marbl_status_log)
@@ -218,7 +227,7 @@ Contains
           end if
           ! (2) Change value
           write(sval, "(I0)") n
-          call config_or_parms%put(sname, sval)
+          call config_or_parms%put(sname, sval, marbl_status_log)
         case ('logical')
           ! (1) Check to see that variable was set to .true. correctly
           call config_or_parms%get(sname, lval, marbl_status_log)
@@ -228,12 +237,16 @@ Contains
             return
           end if
           ! (2) Change value
-          call config_or_parms%put(sname, .false.)
+          call config_or_parms%put(sname, .false., marbl_status_log)
       end select
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('config_or_parms%put', subname)
+        return
+      end if
       ll_index => ll_index%next
     end do
     log_message = "... Done!"
-    call marbl_status_log%log_noerror(log_message, subname)
+    call driver_status_log%log_noerror(log_message, subname)
 
   end subroutine check_all_vals
 
