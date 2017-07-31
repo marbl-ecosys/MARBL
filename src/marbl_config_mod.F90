@@ -392,14 +392,12 @@ contains
     character(len=*), parameter :: subname = 'marbl_config_mod:marbl_vars_finalize'
     character(len=char_len)     :: log_message
 
-    character(len=char_len) :: group
     character(len=7)        :: logic
     integer                 :: i, cat_ind
     type(marbl_single_setting_ll_type), pointer :: ll_index
 
     ! (1) Lock data type (put calls will now cause MARBL to abort)
     this%init_called = .true.
-    group = ''
 
     ! (2) Abort if anything is left in this%user_supplied
     if (associated(this%user_supplied)) then
@@ -412,17 +410,13 @@ contains
       return
     end if
 
+    call marbl_status_log%log_header("Tunable Parameters", subname)
+
     do cat_ind = 1,size(this%categories)
       ll_index => this%vars
       do while (associated(ll_index))
         if (ll_index%category_ind .eq. cat_ind) then
-          ! (3) Log the group name if different than previous parameter
-          if (ll_index%group.ne.group) then
-            group = trim(ll_index%group)
-            call marbl_status_log%log_header(trim(group), subname)
-          end if
-
-        ! (4) write parameter to log_message (format depends on datatype)
+        ! (3) write parameter to log_message (format depends on datatype)
           select case(trim(ll_index%datatype))
             case ('string')
               write(log_message, "(4A)") trim(ll_index%short_name), " = '",  &
@@ -448,7 +442,7 @@ contains
               return
           end select
 
-          ! (5) Write log_message to the log
+          ! (4) Write log_message to the log
           if (ll_index%comment.ne.'') then
             if (len_trim(log_message) + 3 + len_trim(ll_index%comment) .le. len(log_message)) then
               write(log_message, "(3A)") trim(log_message), ' ! ',                  &
@@ -468,7 +462,7 @@ contains
       end if
     end do  ! cat_ind
 
-    ! (6) Set up array of pointers
+    ! (5) Set up array of pointers
     if (allocated(this%varArray)) then
       write(log_message, "(A)") "Already allocated memory for varArray!"
       call marbl_status_log%log_error(log_message, subname)

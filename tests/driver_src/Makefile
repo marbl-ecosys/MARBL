@@ -149,7 +149,7 @@ $(LIB_DIR)/%.a: $(LIB_SRC_DIR)/*.F90
 	make -f $(LIB_SRC_DIR)/Makefile FC=$(FC) FCFLAGS="$(FCFLAGS) $(INC)" USE_DEPS=TRUE $(COMP_ARGS) $@
 
 # Driver object files
-$(OBJ_DIR)/%.o: $(EXE_SRC_DIR)/%.F90
+$(OBJ_DIR)/%.o: $(EXE_SRC_DIR)/%.F90 $(LIB_DIR)/$(LIB_NAME)
 	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(INC2) $(INCLUDES) -c $< -o $@
 
 # Executable
