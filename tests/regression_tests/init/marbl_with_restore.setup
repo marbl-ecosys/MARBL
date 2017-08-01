@@ -1,0 +1,3 @@
+tracer_restore_vars(1) string 'SiO3'
+tracer_restore_vars(2) string 'NO3'
+tracer_restore_vars(3) string 'PO4'

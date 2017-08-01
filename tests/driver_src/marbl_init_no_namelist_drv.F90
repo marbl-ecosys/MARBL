@@ -14,11 +14,12 @@ module marbl_init_no_namelist_drv
 
 Contains
 
-  subroutine test(marbl_instance)
+  subroutine test(marbl_instance, nt)
 
     use marbl_mpi_mod, only : marbl_mpi_abort
 
     type(marbl_interface_class), intent(inout) :: marbl_instance
+    integer, optional,           intent(inout) :: nt
 
     character(*), parameter      :: subname = 'marbl_init_no_namelist_drv:test'
     real(kind=r8), dimension(km) :: delta_z, zw, zt
@@ -34,11 +35,6 @@ Contains
     end do
 
     ! Optional: call marbl_instance%put()
-    call marbl_instance%put_setting('ciso_on', .true.)
-    if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%put', subname)
-      return
-    end if
 
     ! Call marbl%init
     call marbl_instance%init(gcm_num_levels = km,                  &
@@ -46,7 +42,8 @@ Contains
                              gcm_num_elements_surface_forcing = 1, &
                              gcm_delta_z = delta_z,                &
                              gcm_zw = zw,                          &
-                             gcm_zt = zt)
+                             gcm_zt = zt,                          &
+                             marbl_tracer_cnt = nt)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%init_phase3', subname)
       return

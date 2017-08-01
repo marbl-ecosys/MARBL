@@ -7,7 +7,7 @@ from marbl_testing_class import MARBL_testcase
 from general import pause
 
 mt = MARBL_testcase()
-mt.parse_args(desc='Build lib-marbl.a with every supported compiler on specified machine', HaveCompiler=False, HaveNamelist=False, CleanLibOnly=True)
+mt.parse_args(desc='Build lib-marbl.a with every supported compiler on specified machine', HaveCompiler=False, HaveInputFile=False, CleanLibOnly=True)
 
 for i,compiler in enumerate(mt.supported_compilers):
   mt.build_lib(loc_compiler=compiler)

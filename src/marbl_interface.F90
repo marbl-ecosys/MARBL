@@ -128,16 +128,19 @@ module marbl_interface
      generic            :: put_setting => put_real,    &
                                           put_integer, &
                                           put_logical, &
-                                          put_string
+                                          put_string,  &
+                                          put_all_string
      generic            :: get_setting => get_real,    &
                                           get_integer, &
                                           get_logical, &
                                           get_string
      procedure, public  :: get_settings_var_cnt
+     procedure, public  :: parse_inputfile_line
      procedure, private :: put_real
      procedure, private :: put_integer
      procedure, private :: put_logical
      procedure, private :: put_string
+     procedure, private :: put_all_string
      procedure, private :: get_real
      procedure, private :: get_integer
      procedure, private :: get_logical
@@ -444,6 +447,56 @@ contains
     end if
 
   end subroutine put_string
+
+  !***********************************************************************
+
+  subroutine put_all_string(this, varname, datatype, val)
+    ! This interface to put_setting() complements parse_inputfile_line()
+
+    class (marbl_interface_class),  intent(inout) :: this
+    character(len=*), dimension(:), intent(in)    :: varname, datatype, val
+
+    character(len=*), parameter :: subname = 'marbl_interface:put_all_string'
+    character(len=char_len)     :: log_message
+    real(r8)          :: rval
+    integer(int_kind) :: ival
+    logical(log_kind) :: lval
+    integer(int_kind) :: n, ioerr
+
+    call this%StatusLog%construct()
+    do n=1,size(datatype)
+      if (len_trim(datatype(n)) .eq. 0) exit
+      select case (trim(datatype(n)))
+        case ('integer')
+          read(val(n), *, iostat=ioerr) ival
+          if (ioerr.eq.0) then
+            call this%put_setting(trim(varname(n)), ival)
+          else
+            write(log_message, "(2A)") trim(val(n)), ' is not a valid integer value'
+            call this%StatusLog%log_error(log_message, subname)
+          end if
+        case ('string')
+          call this%put_setting(trim(varname(n)), trim(val(n)))
+        case ('logical')
+          select case (trim(val(n)))
+            case ('.true.')
+              call this%put_setting(trim(varname(n)), .true.)
+            case ('.false.')
+              call this%put_setting(trim(varname(n)), .false.)
+            case DEFAULT
+              write(log_message, "(2A)") trim(val(n)), ' is not a valid logical value'
+              ! Put something in case we need to construct StatusLog
+              call this%put_setting('MARBL ABORT', .true.)
+              call this%StatusLog%log_error(log_message, subname)
+          end select
+        case DEFAULT
+          write(log_message,"(2A)") trim(datatype(n)), " is not a recognized type"
+          ! Put something in case we need to construct StatusLog
+          call this%put_setting('MARBL ABORT', .true.)
+          call this%StatusLog%log_error(log_message, subname)
+      end select
+    end do
+  end subroutine put_all_string
 
   !***********************************************************************
 
@@ -789,6 +842,76 @@ contains
     end do
 
   end function get_tracer_index
+
+  !***********************************************************************
+
+  subroutine parse_inputfile_line(this, line, varname, datatype, value)
+
+    ! This subroutine takes a single line from MARBL's default inputfile format
+    ! and returns the variable name, type of variable, and the value (all as
+    ! strings).
+    !
+    ! This is useful because the standard fortran parser treats commas as
+    ! delimiters, but some variable names have commas in them because they are
+    ! 2D arrays.
+
+    class(marbl_interface_class), intent(in)  :: this
+    character(len=*),             intent(in)  :: line
+    character(len=*),             intent(out) :: varname, datatype, value
+
+    character(len=char_len) :: line_loc
+    integer(int_kind) :: char_ind
+
+    varname = ''
+    datatype = ''
+    value = ''
+    line_loc = adjustl(line)
+
+    if (len_trim(line_loc) .eq. 0) return
+    if (line_loc(1:1) .eq. '!') return
+
+    ! Everything up to first space is varname
+    do char_ind = 1, len_trim(line_loc)
+      varname(char_ind:char_ind) = line_loc(char_ind:char_ind)
+      if (line_loc(char_ind:char_ind) .eq. ' ') then
+        exit
+      else
+        line_loc(char_ind:char_ind) = ' '
+      end if
+    end do
+    line_loc = adjustl(line_loc)
+
+    ! Everything up to second space is datatype
+    do char_ind = 1, len_trim(line_loc)
+      datatype(char_ind:char_ind) = line_loc(char_ind:char_ind)
+      if (line_loc(char_ind:char_ind) .eq. ' ') then
+        exit
+      else
+        line_loc(char_ind:char_ind) = ' '
+      end if
+    end do
+    line_loc = adjustl(line_loc)
+
+    ! Everything up to third space is value
+    do char_ind = 1, len_trim(line_loc)
+      value(char_ind:char_ind) = line_loc(char_ind:char_ind)
+      if (line_loc(char_ind:char_ind) .eq. ' ') exit
+    end do
+
+    ! Strip leading / trailing quotes from string values
+    if (trim(datatype) .eq. 'string') then
+      char_ind = 1
+      if ((value(char_ind:char_ind) .eq. "'") .or. (value(char_ind:char_ind) .eq. '"')) &
+        value(char_ind:char_ind) = ' '
+      char_ind = len_trim(value)
+      if ((value(char_ind:char_ind) .eq. "'") .or. (value(char_ind:char_ind) .eq. '"')) &
+        value(char_ind:char_ind) = ' '
+      value = adjustl(value)
+    end if
+
+    ! TODO: error checking
+
+  end subroutine parse_inputfile_line
 
   !*****************************************************************************
 

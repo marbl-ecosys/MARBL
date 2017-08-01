@@ -110,7 +110,6 @@ COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(
 OBJS = marbl_mpi_mod.o                 \
        marbl_init_no_namelist_drv.o    \
        marbl_get_put_drv.o             \
-       marbl_init_namelist_drv.o       \
        marbl.o
 
 MODS = marbl_mpi_mod.mod
