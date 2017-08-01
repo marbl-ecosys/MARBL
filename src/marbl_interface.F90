@@ -125,15 +125,15 @@ module marbl_interface
      procedure, public  :: set_global_scalars
      procedure, public  :: shutdown
      procedure, public  :: inquire_settings_metadata
-     generic            :: put => put_real,                       &
-                                  put_integer,                    &
-                                  put_logical,                    &
-                                  put_string
-     generic            :: get => get_real,                       &
-                                  get_integer,                    &
-                                  get_logical,                    &
-                                  get_string
-     procedure, public  :: get_cnt
+     generic            :: put_setting => put_real,    &
+                                          put_integer, &
+                                          put_logical, &
+                                          put_string
+     generic            :: get_setting => get_real,    &
+                                          get_integer, &
+                                          get_logical, &
+                                          get_string
+     procedure, public  :: get_settings_var_cnt
      procedure, private :: put_real
      procedure, private :: put_integer
      procedure, private :: put_logical
@@ -377,7 +377,7 @@ contains
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    call this%settings%put(varname, val, this%StatusLog)
+    call this%settings%put(varname, this%StatusLog, rval=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%put()', subname)
       return
@@ -397,7 +397,7 @@ contains
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    call this%settings%put(varname, val, this%StatusLog)
+    call this%settings%put(varname, this%StatusLog, ival=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%put()', subname)
       return
@@ -417,7 +417,7 @@ contains
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    call this%settings%put(varname, val, this%StatusLog)
+    call this%settings%put(varname, this%StatusLog, lval=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%put()', subname)
       return
@@ -437,7 +437,7 @@ contains
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    call this%settings%put(varname, val, this%StatusLog)
+    call this%settings%put(varname, this%StatusLog, sval=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%put()', subname)
       return
@@ -457,7 +457,7 @@ contains
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    call this%settings%get(varname, val, this%StatusLog)
+    call this%settings%get(varname, this%StatusLog, rval=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%get()', subname)
       return
@@ -477,7 +477,7 @@ contains
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    call this%settings%get(varname, val, this%StatusLog)
+    call this%settings%get(varname, this%StatusLog, ival=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%get()', subname)
       return
@@ -497,7 +497,7 @@ contains
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    call this%settings%get(varname, val, this%StatusLog)
+    call this%settings%get(varname, this%StatusLog, lval=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%get()', subname)
       return
@@ -517,7 +517,7 @@ contains
     character(len=char_len) :: log_message
 
     call this%StatusLog%construct()
-    call this%settings%get(varname, val, this%StatusLog)
+    call this%settings%get(varname, this%StatusLog, sval=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%get()', subname)
       return
@@ -527,14 +527,14 @@ contains
 
   !***********************************************************************
 
-  function get_cnt(this) result(cnt)
+  function get_settings_var_cnt(this) result(cnt)
 
     class (marbl_interface_class), intent(in) :: this
     integer :: cnt
 
     cnt = this%settings%get_cnt()
 
-  end function get_cnt
+  end function get_settings_var_cnt
 
   !***********************************************************************
 
