@@ -1109,7 +1109,7 @@ contains
 
        call marbl_compute_autotroph_uptake(autotroph_cnt, autotrophs_config,  &
             autotrophs, tracer_local(:, k), marbl_tracer_indices,             &
-            autotroph_secondary_species(:, k))
+            autotroph_secondary_species(:, k),carbonate(k))
 
        call marbl_compute_autotroph_photosynthesis(autotroph_cnt,       &
             num_PAR_subcols, autotrophs, autotroph_local(:, k),         &
@@ -1122,7 +1122,7 @@ contains
 
        call marbl_compute_autotroph_calcification(autotroph_cnt,              &
             autotrophs_config, autotroph_local(:, k), temperature(k),         &
-            autotroph_secondary_species(:, k))
+            autotroph_secondary_species(:, k), carbonate(k))
 
        call marbl_compute_autotroph_nfixation(autotroph_cnt, autotrophs_config, &
             autotroph_secondary_species(:, k))
@@ -3158,9 +3158,15 @@ contains
        !-----------------------------------------------------------------------
 
        if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
+        !set a local variable to the correct QCaCO3 max based on whether implicit or explicit
+          ! if (implicit) then
+          !   QCaCO3_loc = QCaCO3_max
+          ! else
+          !   QCaCO3_loc = QCaCO3_max_exp
+          ! end if
           QCaCO3(auto_ind) = auto_CaCO3(auto_ind) / (auto_C(auto_ind) + epsC)
-          if (QCaCO3(auto_ind) > QCaCO3_max) then
-             QCaCO3(auto_ind) = QCaCO3_max
+          if (QCaCO3(auto_ind) > QCaCO3_max) then !_loc
+             QCaCO3(auto_ind) = QCaCO3_max!_loc
           end if
        end if
     end do
@@ -3550,7 +3556,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_autotroph_uptake (auto_cnt, auto_config, auto_meta, &
-       tracer_local, marbl_tracer_indices, autotroph_secondary_species)
+       tracer_local, marbl_tracer_indices, autotroph_secondary_species,carbonate)
 
     integer(int_kind)                      , intent(in)  :: auto_cnt
     type(autotroph_config_type)            , intent(in)  :: auto_config(auto_cnt)
@@ -3558,6 +3564,7 @@ contains
     real(r8)                               , intent(in)  :: tracer_local(ecosys_base_tracer_cnt)
     type(marbl_tracer_index_type)          , intent(in)  :: marbl_tracer_indices
     type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(auto_cnt)
+    type(carbonate_type)                   , intent(in)   :: carbonate
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -3580,6 +3587,7 @@ contains
                  PO4_loc => tracer_local(marbl_tracer_indices%po4_ind),       &
                  Fe_loc   => tracer_local(marbl_tracer_indices%fe_ind),       &
                  SiO3_loc => tracer_local(marbl_tracer_indices%sio3_ind),     &
+                 CO2_loc => carbonate%H2CO3,                                  & ! input
                  ! OUTPUTS
                  VNO3  => autotroph_secondary_species(auto_ind)%VNO3,         &
                  VNH4  => autotroph_secondary_species(auto_ind)%VNH4,         &
@@ -3590,16 +3598,19 @@ contains
                  VPO4  => autotroph_secondary_species(auto_ind)%VPO4,         &
                  VPtot => autotroph_secondary_species(auto_ind)%VPtot,        &
                  VSiO3 => autotroph_secondary_species(auto_ind)%VSiO3,        &
+                 VCO2  => autotroph_secondary_species(auto_ind)%VCO2,        &
                  ! AUTO_CONFIG
                  Nfixer     => auto_config(auto_ind)%Nfixer,                  &
                  silicifier => auto_config(auto_ind)%silicifier,              &
+                 calcifier  => auto_config(auto_ind)%imp_calcifier,               &
                  ! AUTO_META
                  kNO3   => auto_meta(auto_ind)%kNO3,                          &
                  kNH4   => auto_meta(auto_ind)%kNH4,                          &
                  kFe    => auto_meta(auto_ind)%kFe,                           &
                  kPO4   => auto_meta(auto_ind)%kPO4,                          &
                  kDOP   => auto_meta(auto_ind)%kDOP,                          &
-                 kSiO3  => auto_meta(auto_ind)%kSiO3                          &
+                 kSiO3  => auto_meta(auto_ind)%kSiO3,                         &
+                 kCO2   => auto_meta(auto_ind)%kCO2                           &
                 )
 
        VNO3 = (NO3_loc / kNO3) / (c1 + (NO3_loc / kNO3) + (NH4_loc / kNH4))
@@ -3619,11 +3630,23 @@ contains
           VSiO3 = SiO3_loc / (SiO3_loc + kSiO3)
        endif
 
+        if (calcifier) then
+            VCO2 = CO2_loc / (CO2_loc + kCO2)
+        endif
+
+
        f_nut = min(VNtot, VFe)
        f_nut = min(f_nut, VPtot)
+
        if (silicifier) then
           f_nut = min(f_nut, VSiO3)
        endif
+
+        if (calcifier) then
+            f_nut = min(f_nut, VCO2)
+        end if
+
+
 
     end associate
 
@@ -3799,7 +3822,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_autotroph_calcification (auto_cnt, auto_config,    &
-             autotroph_loc, temperature, autotroph_secondary_species)
+             autotroph_loc, temperature, autotroph_secondary_species, carbonate)
 
     !-----------------------------------------------------------------------
     !  CaCO3 Production, parameterized as function of small phyto production
@@ -3809,7 +3832,6 @@ contains
     !-----------------------------------------------------------------------
 
     use marbl_parms     , only : parm_f_prod_sp_CaCO3
-    use marbl_parms     , only : QCaCO3_max_exp
     use marbl_parms     , only : CaCO3_sp_thres
     use marbl_parms     , only : CaCO3_temp_thres1
     use marbl_parms     , only : CaCO3_temp_thres2
@@ -3820,17 +3842,21 @@ contains
     type(autotroph_local_type)             , intent(in)    :: autotroph_loc(auto_cnt)
     real(r8)                               , intent(in)    :: temperature
     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(auto_cnt)
+    type(carbonate_type)                   , intent(in)    :: carbonate
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
     integer  :: auto_ind
+    real(r8) :: picpoc
     !-----------------------------------------------------------------------
 
     associate(                                                       &
-         f_nut      => autotroph_secondary_species(:)%f_nut,     & ! input
-         photoC     => autotroph_secondary_species(:)%photoC,    & ! input
-         CaCO3_form => autotroph_secondary_species(:)%CaCO3_form & ! output
+         f_nut      => autotroph_secondary_species(:)%f_nut,      & ! input
+         photoC     => autotroph_secondary_species(:)%photoC,     & ! input
+         CaCO3_form => autotroph_secondary_species(:)%CaCO3_form, & ! output
+         Plim       => autotroph_secondary_species(:)%VPO4,       & ! input
+         CO2        => carbonate%H2CO3                         & ! input
          )
 
     do auto_ind = 1, auto_cnt
@@ -3850,7 +3876,24 @@ contains
 
        else if(auto_config(auto_ind)%exp_calcifier) then
 
-          CaCO3_form(auto_ind) = QCaCO3_max_exp * photoC(auto_ind) !just a one to one ratio for now
+            !first calculate PIC/POC in coccolithophore biomass----------
+
+            !temperature effect
+            if (temperature < 11.) then
+                picpoc = 0.104 * temperature - 0.108
+            else
+                picpoc = 1.
+            end if
+
+            !CO2 effect
+            picpoc = -0.0136 * CO2 + picpoc + 0.21
+
+            !nut lim effect
+            picpoc = -0.48 * Plim(auto_ind) + picpoc + 0.48
+
+        !multiply cocco growth rate by picpoc to get CaCO3 formation
+
+          CaCO3_form(auto_ind) = picpoc * photoC(auto_ind)
 
        end if
 

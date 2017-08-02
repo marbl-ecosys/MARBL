@@ -49,7 +49,7 @@ module marbl_internal_types
   end type autotroph_config_type
 
   type, public :: autotroph_parms_type
-     real    (KIND=r8)       :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3 ! nutrient uptake half-sat constants
+     real    (KIND=r8)       :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3, kCO2 ! nutrient uptake half-sat constants
      real    (KIND=r8)       :: Qp_fixed                           ! P/C ratio for fixed P/C ratios
      real    (KIND=r8)       :: gQfe_0, gQfe_min                   ! initial and minimum Fe/C ratio for growth
      real    (KIND=r8)       :: alphaPI_per_day                    ! init slope of P_I curve (GD98) (mmol C m^2/(mg Chl W day))
@@ -268,6 +268,7 @@ module marbl_internal_types
      real (r8) :: gQsi            ! diatom Si/C ratio for growth (new biomass)
      real (r8) :: VNO3            ! NH4 uptake rate (non-dim)
      real (r8) :: VNH4            ! NO3 uptake rate (non-dim)
+    real (r8) :: VCO2             ! CO2 uptake rate (non-dim)
      real (r8) :: VNtot           ! total N uptake rate (non-dim)
      real (r8) :: NO3_V           ! nitrate uptake (mmol NO3/m^3/sec)
      real (r8) :: NH4_V           ! ammonium uptake (mmol NH4/m^3/sec)
