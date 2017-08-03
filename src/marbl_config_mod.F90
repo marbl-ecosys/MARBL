@@ -704,8 +704,8 @@ contains
 
     do i=1,len_trim(str1)
       ! character by character compare, convert letters to lower-case
-      int_char(1) = iachar(str1)
-      int_char(2) = iachar(str2)
+      int_char(1) = iachar(str1(i:i))
+      int_char(2) = iachar(str2(i:i))
       do j=1,2
         if ((int_char(j) .ge. iachar('A')) .and. (int_char(j) .le. iachar('Z'))) &
           int_char(j) = int_char(j) + iachar('a') - iachar('A')
