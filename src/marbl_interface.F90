@@ -920,7 +920,6 @@ contains
     ! Variables used to determine datatype
     integer(int_kind) :: ioerr, ioerr2
     real(r8)          :: rval, rval2
-    integer(int_kind) :: ival, ival2
 
     varname = ''
     datatype = ''
@@ -962,27 +961,23 @@ contains
     if ((trim(value).eq.'.true.').or.(trim(value).eq.'.false.')) &
       datatype = "logical"
 
-    ! (2) check for integer
-    if (len_trim(datatype).eq.0) then
-      read(value, *, iostat=ioerr) ival
-      if (ioerr.eq.0) then
-        ! make sure not an array (those are parsed later)
-        read(value, *, iostat=ioerr2) ival, ival2
-        if (ioerr2.ne.0) datatype="integer"
-      end if
-    end if
-
-    ! (3) check for real
+    ! (2) check for integer / real
     if (len_trim(datatype).eq.0) then
       read(value, *, iostat=ioerr) rval
       if ((ioerr.eq.0) .and. (.not.ieee_is_nan(rval))) then
         ! make sure not an array (those are parsed later)
         read(value, *, iostat=ioerr2) rval, rval2
-        if ((ioerr2.ne.0) .and. (.not.ieee_is_nan(rval2))) datatype="real"
+        if (ioerr2.ne.0) then
+          if (floor(rval).eq.rval) then
+            datatype = "integer"
+          else
+            datatype="real"
+          end if
+        end if
       end if
     end if
 
-    ! (4) everything else is string
+    ! (3) everything else is string
     if (len_trim(datatype).eq.0) then
       datatype="string"
       value = adjustl(value)
