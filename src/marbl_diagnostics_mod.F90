@@ -185,6 +185,7 @@ module marbl_diagnostics_mod
     integer(int_kind), dimension(autotroph_cnt) :: P_lim
     integer(int_kind), dimension(autotroph_cnt) :: Fe_lim
     integer(int_kind), dimension(autotroph_cnt) :: SiO3_lim
+    integer(int_kind), dimension(autotroph_cnt) :: C_lim
     integer(int_kind), dimension(autotroph_cnt) :: light_lim
     integer(int_kind), dimension(autotroph_cnt) :: photoC
     integer(int_kind), dimension(autotroph_cnt) :: photoC_NO3
@@ -2071,6 +2072,23 @@ contains
           end if
         else
           ind%SiO3_lim(n) = -1
+        end if
+
+!!!!!!-added this for cocco_C_lim
+        if (autotrophs_config(n)%exp_calcifier) then
+            lname = trim(autotrophs_config(n)%lname) // ' C Limitation'
+            sname = trim(autotrophs_config(n)%sname) // '_C_lim'
+            units = 'none'
+            vgrid = 'layer_avg'
+            truncate = .true.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+            ind%C_lim(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+                call log_add_diagnostics_error(marbl_status_log, sname, subname)
+                return
+            end if
+        else
+            ind%C_lim(n) = -1
         end if
 
         lname = trim(autotrophs_config(n)%lname) // ' Light Limitation'

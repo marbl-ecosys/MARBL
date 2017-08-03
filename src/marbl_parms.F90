@@ -975,6 +975,23 @@ contains
         return
       end if
 
+
+!!!!added for cocco C lim
+write(sname, "(2A)") trim(prefix), 'kCO2'
+lname    = 'nutrient uptake half-sat constants'
+units    = 'nmol/cm^3'
+datatype = 'real'
+group    = 'marbl_parms_nml'
+rptr     => autotrophs(n)%kCO2
+call this%add_var(sname, lname, units, datatype, group, category,     &
+marbl_status_log, rptr=rptr, comment=comment)
+if (marbl_status_log%labort_marbl) then
+call log_add_var_error(marbl_status_log, sname, subname)
+return
+end if
+
+
+
       write(sname, "(2A)") trim(prefix), 'Qp_fixed'
       lname    = 'P/C ratio when using fixed P/C ratios'
       units    = 'unitless'
