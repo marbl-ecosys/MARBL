@@ -1,1 +1,1 @@
-ciso_on logical .true.
+ciso_on = .true.

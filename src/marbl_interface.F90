@@ -46,6 +46,8 @@ module marbl_interface
 
   use marbl_config_mod, only : marbl_settings_type
 
+  use ieee_arithmetic, only : ieee_is_nan
+
   implicit none
 
   private
@@ -467,6 +469,14 @@ contains
     do n=1,size(datatype)
       if (len_trim(datatype(n)) .eq. 0) exit
       select case (trim(datatype(n)))
+        case ('real')
+          read(val(n), *, iostat=ioerr) rval
+          if ((ioerr.eq.0) .and. (.not.ieee_is_nan(rval))) then
+            call this%put_setting(trim(varname(n)), rval)
+          else
+            write(log_message, "(2A)") trim(val(n)), ' is not a valid real value'
+            call this%StatusLog%log_error(log_message, subname)
+          end if
         case ('integer')
           read(val(n), *, iostat=ioerr) ival
           if (ioerr.eq.0) then
@@ -862,44 +872,60 @@ contains
     character(len=char_len) :: line_loc
     integer(int_kind) :: char_ind
 
+    ! Variables used to determine datatype
+    integer(int_kind) :: ioerr
+    real(r8)          :: rval
+    integer(int_kind) :: ival
+
     varname = ''
     datatype = ''
     value = ''
     line_loc = adjustl(line)
 
+    ! Strip out comments (denoted by '!')
+    do char_ind = 1, len_trim(line_loc)
+      if (line_loc(char_ind:char_ind) .eq. '!') exit
+    end do
+    if (char_ind .le. len_trim(line_loc)) &
+      line_loc(char_ind:len_trim(line_loc)) = ' '
+
+    ! Return without processing if
+    ! (a) line is empty / only contains spaces
     if (len_trim(line_loc) .eq. 0) return
-    if (line_loc(1:1) .eq. '!') return
+    ! (b) first non-space character is '&' (can use namelist files)
+    if (line_loc(1:1) .eq. '&') return
+    ! (c) line contains only '/' (can use namelist files)
+    if (trim(line_loc) .eq. '/') return
 
-    ! Everything up to first space is varname
+    ! Everything up to first '=' is varname
     do char_ind = 1, len_trim(line_loc)
+      if (line_loc(char_ind:char_ind) .eq. '=') then
+        line_loc(char_ind:char_ind) = ' '
+        exit
+      end if
       varname(char_ind:char_ind) = line_loc(char_ind:char_ind)
-      if (line_loc(char_ind:char_ind) .eq. ' ') then
-        exit
-      else
-        line_loc(char_ind:char_ind) = ' '
-      end if
+      line_loc(char_ind:char_ind) = ' '
     end do
-    line_loc = adjustl(line_loc)
+    ! Everything else is value
+    value = adjustl(line_loc)
 
-    ! Everything up to second space is datatype
-    do char_ind = 1, len_trim(line_loc)
-      datatype(char_ind:char_ind) = line_loc(char_ind:char_ind)
-      if (line_loc(char_ind:char_ind) .eq. ' ') then
-        exit
-      else
-        line_loc(char_ind:char_ind) = ' '
-      end if
-    end do
-    line_loc = adjustl(line_loc)
-
-    ! Everything up to third space is value
-    do char_ind = 1, len_trim(line_loc)
-      value(char_ind:char_ind) = line_loc(char_ind:char_ind)
-      if (line_loc(char_ind:char_ind) .eq. ' ') exit
-    end do
-
-    ! Strip leading / trailing quotes from string values
-    if (trim(datatype) .eq. 'string') then
+    ! Determine datatype
+    ! check for logical
+    if ((trim(value).eq.'.true.').or.(trim(value).eq.'.false.')) then
+      datatype = "logical"
+    end if
+    ! check for integer
+    if (len_trim(datatype).eq.0) then
+      read(value, *, iostat=ioerr) ival
+      if (ioerr.eq.0) datatype="integer"
+    end if
+    ! check for real
+    read(value, *, iostat=ioerr) rval
+    if ((ioerr.eq.0) .and. (.not.ieee_is_nan(rval))) datatype="real"
+    ! everything else is string
+    if (len_trim(datatype).eq.0) then
+      datatype="string"
+      ! Strip leading / trailing quotes from string values
       char_ind = 1
       if ((value(char_ind:char_ind) .eq. "'") .or. (value(char_ind:char_ind) .eq. '"')) &
         value(char_ind:char_ind) = ' '
