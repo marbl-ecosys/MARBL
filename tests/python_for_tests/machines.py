@@ -39,6 +39,8 @@ def load_module(mach, compiler):
     module('purge')
     if compiler == 'pgi':
       module(['load', 'compiler/%s/17.01' % compiler])
+    elif compiler == 'gnu':
+      module(['load', 'compiler/%s/5.4.0' % compiler])
     else:
       module(['load', 'compiler/%s' % compiler])
 

@@ -909,20 +909,27 @@ contains
     ! Everything else is value
     value = adjustl(line_loc)
 
+    ! ------------------
     ! Determine datatype
-    ! check for logical
-    if ((trim(value).eq.'.true.').or.(trim(value).eq.'.false.')) then
+    ! ------------------
+
+    ! (1) check for logical
+    if ((trim(value).eq.'.true.').or.(trim(value).eq.'.false.')) &
       datatype = "logical"
-    end if
-    ! check for integer
+
+    ! (2) check for integer
     if (len_trim(datatype).eq.0) then
       read(value, *, iostat=ioerr) ival
       if (ioerr.eq.0) datatype="integer"
     end if
-    ! check for real
-    read(value, *, iostat=ioerr) rval
-    if ((ioerr.eq.0) .and. (.not.ieee_is_nan(rval))) datatype="real"
-    ! everything else is string
+
+    ! (3) check for real
+    if (len_trim(datatype).eq.0) then
+      read(value, *, iostat=ioerr) rval
+      if ((ioerr.eq.0) .and. (.not.ieee_is_nan(rval))) datatype="real"
+    end if
+
+    ! (4) everything else is string
     if (len_trim(datatype).eq.0) then
       datatype="string"
       ! Strip leading / trailing quotes from string values
