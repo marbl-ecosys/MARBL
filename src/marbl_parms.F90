@@ -255,10 +255,6 @@ module marbl_parms
 
   !*****************************************************************************
 
-  public :: &
-       marbl_parms_read_namelist, &
-       marbl_parms_set_defaults
-
   ! Variables used from other modules should be private
   ! (So we don't accidentally use them from this module)
   private :: r8, int_kind, log_kind, char_len
@@ -351,51 +347,6 @@ contains
     end do
 
   end subroutine marbl_config_set_defaults
-
-  !*****************************************************************************
-
-  subroutine marbl_config_read_namelist(nl_buffer, marbl_status_log)
-
-    use marbl_namelist_mod, only : marbl_namelist
-
-    character(len=*),     intent(in)    :: nl_buffer(:)
-    type(marbl_log_type), intent(inout) :: marbl_status_log
-
-    !---------------------------------------------------------------------------
-    !   local variables
-    !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_config:marbl_config_read_namelist'
-    character(len=char_len)     :: log_message
-
-    character(len=len(nl_buffer)) :: tmp_nl_buffer
-    integer (int_kind)            :: nml_error                   ! namelist i/o error flag
-
-    namelist /marbl_config_nml/                                               &
-         ciso_on, lsource_sink, ciso_lsource_sink, lecovars_full_depth_tavg,  &
-         ciso_lecovars_full_depth_tavg,                                       &
-         lflux_gas_o2, lflux_gas_co2, lcompute_nhx_surface_emis,              &
-         init_bury_coeff_opt, ladjust_bury_coeff,                             &
-         lvariable_PtoC,                                                      &
-         autotrophs_config, zooplankton_config, grazing_config
-
-    !-----------------------------------------------------------------------
-    ! read the &marbl_config_nml namelist
-    !-----------------------------------------------------------------------
-
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_config_nml', marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('marbl_namelist', subname)
-      return
-    end if
-
-    read(tmp_nl_buffer, nml=marbl_config_nml, iostat=nml_error)
-    if (nml_error /= 0) then
-      write(log_message, "(A)") 'error reading &marbl_config_nml'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-  end subroutine marbl_config_read_namelist
 
   !*****************************************************************************
 
@@ -973,79 +924,6 @@ contains
     tracer_restore_vars = ''
 
   end subroutine marbl_parms_set_defaults
-
-  !*****************************************************************************
-
-  subroutine marbl_parms_read_namelist(nl_buffer, marbl_status_log)
-
-    use marbl_namelist_mod, only : marbl_namelist
-
-    character(len=*),     intent(in)    :: nl_buffer(:)
-    type(marbl_log_type), intent(inout) :: marbl_status_log
-
-    !---------------------------------------------------------------------------
-    !   local variables
-    !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_parms:marbl_parms_read_namelist'
-    character(len=char_len)     :: log_message
-
-    character(len=len(nl_buffer)) :: tmp_nl_buffer
-
-    integer (int_kind)           :: n                           ! index for looping over tracers
-    integer (int_kind)           :: nml_error                   ! namelist i/o error flag
-    integer (int_kind)           :: zoo_ind                     ! zooplankton functional group index
-
-    NAMELIST /marbl_parms_nml/ &
-         parm_Fe_bioavail, &
-         parm_o2_min, &
-         parm_o2_min_delta, &
-         parm_kappa_nitrif_per_day, &
-         parm_nitrif_par_lim, &
-         parm_labile_ratio, &
-         parm_init_POC_bury_coeff, &
-         parm_init_POP_bury_coeff, &
-         parm_init_bSi_bury_coeff, &
-         parm_Fe_scavenge_rate0, &
-         parm_Lig_scavenge_rate0, &
-         parm_FeLig_scavenge_rate0, &
-         parm_Lig_degrade_rate0, &
-         parm_Fe_desorption_rate0, &
-         parm_f_prod_sp_CaCO3, &
-         parm_POC_diss, &
-         parm_SiO2_diss, &
-         parm_CaCO3_diss, &
-         parm_sed_denitrif_coeff, &
-         iron_frac_in_dust, &
-         iron_frac_in_bc, &
-         caco3_bury_thres_opt, &
-         caco3_bury_thres_depth, &
-         PON_bury_coeff, &
-         ciso_fract_factors, &
-         tracer_restore_vars, &
-         bury_coeff_rmean_timescale_years, &
-         parm_scalelen_z, &
-         parm_scalelen_vals, &
-         autotrophs, &
-         zooplankton, &
-         grazing
-
-    !---------------------------------------------------------------------------
-    ! read the &marbl_parms_nml namelist
-    !---------------------------------------------------------------------------
-    tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_parms_nml', marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('marbl_namelist', subname)
-      return
-    end if
-
-    read(tmp_nl_buffer, nml=marbl_parms_nml, iostat=nml_error)
-    if (nml_error /= 0) then
-      write(log_message, "(A)") 'error reading &marbl_parms_nml'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-  end subroutine marbl_parms_read_namelist
 
   !*****************************************************************************
 

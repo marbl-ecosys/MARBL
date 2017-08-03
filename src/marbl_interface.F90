@@ -171,7 +171,6 @@ contains
        gcm_delta_z,                       &
        gcm_zw,                            &
        gcm_zt,                            &
-       gcm_nl_buffer,                     &
        lgcm_has_global_ops,               &
        marbl_tracer_cnt)
 
@@ -194,7 +193,6 @@ contains
     real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
-    character(len=*),  optional,  intent(in)    :: gcm_nl_buffer(:)
     logical,           optional,  intent(in)    :: lgcm_has_global_ops
     integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
@@ -232,7 +230,7 @@ contains
     ! Initialize configuration variables in settings
     !---------------------------------------------------------------------------
 
-    call marbl_init_config_vars(this%lallow_glo_ops, this%settings, this%StatusLog, gcm_nl_buffer)
+    call marbl_init_config_vars(this%lallow_glo_ops, this%settings, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_config_vars", subname)
       return
@@ -315,7 +313,7 @@ contains
     !---------------------------------------------------------------------------
     ! Initialize parameters in settings
     !---------------------------------------------------------------------------
-    call marbl_init_parameters(num_levels, this%settings, this%StatusLog, gcm_nl_buffer)
+    call marbl_init_parameters(num_levels, this%settings, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_parameters", subname)
       return

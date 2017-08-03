@@ -63,11 +63,10 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_config_vars(lallow_glo_ops, marbl_settings, marbl_status_log, gcm_nl_buffer)
+  subroutine marbl_init_config_vars(lallow_glo_ops, marbl_settings, marbl_status_log)
 
     use marbl_config_mod, only : marbl_settings_type
     use marbl_parms, only : marbl_config_set_defaults
-    use marbl_parms, only : marbl_config_read_namelist
     use marbl_parms, only : marbl_define_config_vars
     use marbl_parms, only : ladjust_bury_coeff
     use marbl_parms, only : set_derived_config
@@ -75,7 +74,6 @@ contains
     logical,                    intent(in)    :: lallow_glo_ops
     type(marbl_settings_type),  intent(inout) :: marbl_settings
     type(marbl_log_type),       intent(inout) :: marbl_status_log
-    character(len=*), optional, intent(in)    :: gcm_nl_buffer(:)
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_config_vars'
@@ -86,22 +84,6 @@ contains
     !---------------------------------------------------------------------------
 
     call marbl_config_set_defaults()
-
-    !---------------------------------------------------------------------------
-    ! read configuration from namelist (if present)
-    !---------------------------------------------------------------------------
-
-    if (present(gcm_nl_buffer)) then
-      call marbl_config_read_namelist(gcm_nl_buffer, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace('marbl_config_read_namelist', subname)
-        return
-      end if
-    else
-      write(log_message, "(2A)") '** No namelists were provided to config, ', &
-           'use put() and get() to change configuration variables'
-      call marbl_status_log%log_noerror(log_message, subname)
-    end if
 
     !---------------------------------------------------------------------------
     ! construct configuration_type
@@ -299,18 +281,16 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_parameters(num_levels, marbl_settings, marbl_status_log, gcm_nl_buffer)
+  subroutine marbl_init_parameters(num_levels, marbl_settings, marbl_status_log)
 
     use marbl_config_mod, only : marbl_settings_type
     use marbl_parms, only : marbl_parms_set_defaults
-    use marbl_parms, only : marbl_parms_read_namelist
     use marbl_parms, only : marbl_define_parameters
     use marbl_parms, only : set_derived_parms
 
     integer(int_kind),          intent(in)    :: num_levels
     type(marbl_settings_type),  intent(inout) :: marbl_settings
     type(marbl_log_type),       intent(inout) :: marbl_status_log
-    character(len=*), optional, intent(in)    :: gcm_nl_buffer(:)
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters'
@@ -318,19 +298,6 @@ contains
 
     ! set default values for parameters
     call marbl_parms_set_defaults(num_levels)
-
-    ! read parameters from namelist (if present)
-    if (present(gcm_nl_buffer)) then
-      call marbl_parms_read_namelist(gcm_nl_buffer, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace('marbl_parms_read_namelist', subname)
-        return
-      end if
-    else
-      write(log_message, "(2A)") '** No namelists were provided to init, ',   &
-           'use put() and get() to change parameters'
-      call marbl_status_log%log_noerror(log_message, subname)
-    end if
 
     ! construct parameters_type
     call marbl_define_parameters(marbl_settings, marbl_status_log)
