@@ -439,8 +439,20 @@ contains
     character(len=*), parameter :: subname = 'marbl_interface:put_string'
     character(len=char_len) :: log_message
 
+    integer(int_kind) :: char_ind
+    character(len=len_trim(val)) :: val_loc
+
+    ! Strip leading / trailing quotes from string values
+    char_ind = 1
+    val_loc = trim(val)
+    if ((val_loc(char_ind:char_ind) .eq. "'") .or. (val_loc(char_ind:char_ind) .eq. '"')) &
+      val_loc(char_ind:char_ind) = ' '
+    char_ind = len_trim(val_loc)
+    if ((val_loc(char_ind:char_ind) .eq. "'") .or. (val_loc(char_ind:char_ind) .eq. '"')) &
+      val_loc(char_ind:char_ind) = ' '
+    val_loc = adjustl(val_loc)
     call this%StatusLog%construct()
-    call this%settings%put(varname, this%StatusLog, sval=val)
+    call this%settings%put(varname, this%StatusLog, sval=val_loc)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%put()', subname)
       return
@@ -458,10 +470,14 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_interface:put_all_string'
     character(len=char_len)     :: log_message
+
+    character(len=char_len+5) :: var_loc ! add enough buffer to add "(999)"
+    character(len=char_len)   :: val_loc, sval
     real(r8)          :: rval
     integer(int_kind) :: ival
     logical(log_kind) :: lval
-    integer(int_kind) :: n, ioerr
+    integer(int_kind) :: m, n, char_ind, char_ind_loc, ioerr
+    logical(log_kind) :: lput_array
 
     call this%StatusLog%construct()
     do n=1,size(datatype)
@@ -484,7 +500,38 @@ contains
             call this%StatusLog%log_error(log_message, subname)
           end if
         case ('string')
-          call this%put_setting(trim(varname(n)), trim(val(n)))
+          ! Is this string an array?
+          m=0
+          char_ind_loc=0
+          sval=''
+          val_loc = val(n)
+          do char_ind=1,len_trim(val_loc)
+            char_ind_loc = char_ind_loc + 1
+            lput_array = ((m.gt.0) .and. (char_ind.eq.len_trim(val_loc)))
+            ! Write array element if you find a ',' or if written previous
+            ! array element and hit end of val_loc
+            if (val_loc(char_ind:char_ind) .ne. ',') then
+              sval(char_ind_loc:char_ind_loc) = val_loc(char_ind:char_ind)
+            else
+              lput_array = .true.
+            end if
+            if (lput_array) then
+              m = m+1
+              write(var_loc, "(2A,I0,A)") trim(varname(n)), '(', m, ')'
+              read(sval, *, iostat=ioerr) rval
+              if ((ioerr.eq.0) .and. (.not.ieee_is_nan(rval))) then
+                call this%put_setting(trim(var_loc), rval)
+              else
+                call this%put_setting(trim(var_loc), trim(sval))
+              end if
+              sval=''
+              char_ind_loc = 0
+            end if
+          end do
+          ! If this was not an array, put as usual
+          if (m .eq. 0) then
+            call this%put_setting(trim(varname(n)), trim(val(n)))
+          end if
         case ('logical')
           select case (trim(val(n)))
             case ('.true.')
@@ -871,9 +918,9 @@ contains
     integer(int_kind) :: char_ind
 
     ! Variables used to determine datatype
-    integer(int_kind) :: ioerr
-    real(r8)          :: rval
-    integer(int_kind) :: ival
+    integer(int_kind) :: ioerr, ioerr2
+    real(r8)          :: rval, rval2
+    integer(int_kind) :: ival, ival2
 
     varname = ''
     datatype = ''
@@ -918,25 +965,26 @@ contains
     ! (2) check for integer
     if (len_trim(datatype).eq.0) then
       read(value, *, iostat=ioerr) ival
-      if (ioerr.eq.0) datatype="integer"
+      if (ioerr.eq.0) then
+        ! make sure not an array (those are parsed later)
+        read(value, *, iostat=ioerr2) ival, ival2
+        if (ioerr2.ne.0) datatype="integer"
+      end if
     end if
 
     ! (3) check for real
     if (len_trim(datatype).eq.0) then
       read(value, *, iostat=ioerr) rval
-      if ((ioerr.eq.0) .and. (.not.ieee_is_nan(rval))) datatype="real"
+      if ((ioerr.eq.0) .and. (.not.ieee_is_nan(rval))) then
+        ! make sure not an array (those are parsed later)
+        read(value, *, iostat=ioerr2) rval, rval2
+        if ((ioerr2.ne.0) .and. (.not.ieee_is_nan(rval2))) datatype="real"
+      end if
     end if
 
     ! (4) everything else is string
     if (len_trim(datatype).eq.0) then
       datatype="string"
-      ! Strip leading / trailing quotes from string values
-      char_ind = 1
-      if ((value(char_ind:char_ind) .eq. "'") .or. (value(char_ind:char_ind) .eq. '"')) &
-        value(char_ind:char_ind) = ' '
-      char_ind = len_trim(value)
-      if ((value(char_ind:char_ind) .eq. "'") .or. (value(char_ind:char_ind) .eq. '"')) &
-        value(char_ind:char_ind) = ' '
       value = adjustl(value)
     end if
 
