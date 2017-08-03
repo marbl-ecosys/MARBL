@@ -236,8 +236,10 @@ contains
             if (put_success) this%LastEntry%lptr = ll_index%lptr
           end select
           if (.not.put_success) then
-            write(log_message, "(2A)") "Datatype does not match for put ", &
-                               trim(ll_index%short_name)
+            write(log_message, "(6A)") "Datatype does not match for put ", &
+                               trim(ll_index%short_name), "; expecting ",  &
+                               trim(this%LastEntry%datatype), " but got ", &
+                               trim(ll_index%datatype)
             call marbl_status_log%log_error(log_message, subname)
             return
           end if
