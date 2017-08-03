@@ -492,7 +492,8 @@ contains
             call this%StatusLog%log_error(log_message, subname)
           end if
         case ('integer')
-          read(val(n), *, iostat=ioerr) ival
+          read(val(n), *, iostat=ioerr) rval
+          ival = floor(rval)
           if (ioerr.eq.0) then
             call this%put_setting(trim(varname(n)), ival)
           else
