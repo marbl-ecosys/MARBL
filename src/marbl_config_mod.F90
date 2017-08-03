@@ -216,7 +216,7 @@ contains
     ll_index => this%user_supplied
     nullify(new_entry)
     do while (associated(ll_index))
-      if (ll_index%short_name .eq. this%LastEntry%short_name) then
+      if (case_insensitive_eq(ll_index%short_name, this%LastEntry%short_name)) then
         ! 5a) Update variable value
         if (associated(ll_index%iptr).and.associated(this%LastEntry%rptr)) then
           this%LastEntry%rptr = real(ll_index%iptr,r8)
@@ -677,6 +677,47 @@ contains
     call marbl_status_log%log_error_trace(routine_name, subname)
 
   end subroutine log_add_var_error
+
+  !***********************************************************************
+
+  function case_insensitive_eq(str1, str2) result(same_str)
+
+    ! This routine is necessary to allow put statements to use different case
+    ! than the add_var() routine. For example, MARBL calls add_var with the
+    ! string 'parm_Fe_bioavail' but it's okay for the GCM to call put with the
+    ! string 'parm_fe_bioavail'
+
+    character(len=*), intent(in) :: str1, str2
+    logical :: same_str
+
+    integer :: int_char(2)
+    integer :: i, j
+
+    ! Assume strings are not the same
+    same_str = .false.
+
+    ! If strings are not the same length, they can't be equal!
+    if (len_trim(str1).ne.len_trim(str2)) then
+      return
+    end if
+
+
+    do i=1,len_trim(str1)
+      ! character by character compare, convert letters to lower-case
+      int_char(1) = iachar(str1)
+      int_char(2) = iachar(str2)
+      do j=1,2
+        if ((int_char(j) .ge. iachar('A')) .and. (int_char(j) .le. iachar('Z'))) &
+          int_char(j) = int_char(j) + iachar('a') - iachar('A')
+      end do
+      ! return if characters are not the same
+      if (int_char(1).ne.int_char(2)) return
+    end do
+
+    ! If test made it this far, strings match
+    same_str = .true.
+
+  end function case_insensitive_eq
 
   !*****************************************************************************
 
