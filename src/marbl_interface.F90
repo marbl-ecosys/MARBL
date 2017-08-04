@@ -175,6 +175,7 @@ contains
        marbl_tracer_cnt)
 
     use marbl_init_mod, only : marbl_init_log_and_timers
+    use marbl_init_mod, only : marbl_init_settings
     use marbl_init_mod, only : marbl_init_config_vars
     use marbl_init_mod, only : marbl_init_tracers
     use marbl_init_mod, only : marbl_init_parameters
@@ -224,6 +225,16 @@ contains
       this%lallow_glo_ops = lgcm_has_global_ops
     else
       this%lallow_glo_ops = .false.
+    end if
+
+    !---------------------------------------------------------------------------
+    ! Initialize basic settings
+    !---------------------------------------------------------------------------
+
+    call marbl_init_settings(this%lallow_glo_ops, this%settings, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_init_settings", subname)
+      return
     end if
 
     !---------------------------------------------------------------------------

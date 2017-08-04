@@ -19,6 +19,7 @@ module marbl_init_mod
   private
 
   public :: marbl_init_log_and_timers
+  public :: marbl_init_settings
   public :: marbl_init_config_vars
   public :: marbl_init_tracers
   public :: marbl_init_parameters
@@ -63,12 +64,65 @@ contains
 
   !***********************************************************************
 
+  subroutine marbl_init_settings(lallow_glo_ops, marbl_settings, marbl_status_log)
+
+    use marbl_config_mod, only : marbl_settings_type
+    use marbl_parms, only : marbl_settings_set_defaults
+    use marbl_parms, only : marbl_define_settings
+    use marbl_parms, only : ladjust_bury_coeff
+    use marbl_parms, only : set_derived_settings
+
+    logical,                    intent(in)    :: lallow_glo_ops
+    type(marbl_settings_type),  intent(inout) :: marbl_settings
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
+
+    ! local variables
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_settings'
+    character(len=char_len) :: log_message
+
+    !---------------------------------------------------------------------------
+    ! set default values for basic settings
+    !---------------------------------------------------------------------------
+
+    call marbl_settings_set_defaults()
+
+    !---------------------------------------------------------------------------
+    ! Add basic settings to list of allowable put / get vars
+    !---------------------------------------------------------------------------
+
+    call marbl_define_settings(marbl_settings, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_define_config_vars()", subname)
+      return
+    end if
+
+    !  Abort if GCM doesn't support global ops but configuration requires them
+    if (ladjust_bury_coeff .and. (.not.lallow_glo_ops)) then
+      write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
+             '.true. unless GCM can perform global operations'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    !---------------------------------------------------------------------------
+    ! set basic settings that depend on now-locked vars
+    !---------------------------------------------------------------------------
+
+    call set_derived_settings(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('set_derived_config', subname)
+      return
+    end if
+
+  end subroutine marbl_init_settings
+
+  !***********************************************************************
+
   subroutine marbl_init_config_vars(lallow_glo_ops, marbl_settings, marbl_status_log)
 
     use marbl_config_mod, only : marbl_settings_type
     use marbl_parms, only : marbl_config_set_defaults
     use marbl_parms, only : marbl_define_config_vars
-    use marbl_parms, only : ladjust_bury_coeff
     use marbl_parms, only : set_derived_config
 
     logical,                    intent(in)    :: lallow_glo_ops
@@ -95,15 +149,10 @@ contains
       return
     end if
 
-    !  Abort if GCM doesn't support global ops but configuration requires them
-    if (ladjust_bury_coeff .and. (.not.lallow_glo_ops)) then
-      write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
-             '.true. unless GCM can perform global operations'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
+    !---------------------------------------------------------------------------
     ! set configuration variables that depend on now-locked vars
+    !---------------------------------------------------------------------------
+
     call set_derived_config(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('set_derived_config', subname)

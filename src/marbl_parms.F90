@@ -4,12 +4,12 @@ module marbl_parms
   !   This module manages BGC-specific parameters.
   !
   !   Most of the variables are not parameters in the Fortran sense. In the
-  !   the Fortran sense, they are vanilla module variables most of which are
-  !   associated with the MARBL namelist (marbl_parms_nml)
+  !   the Fortran sense, they are vanilla module variables that can be set
+  !   by marbl_instance%put_setting() calls from the GCM.
   !
-  !   In addition to containing all the namelist variables, this modules also
-  !   handles initializing the variables in &marbl_parms_nml to default values
-  !   and then reading that specific namelist.
+  !   In addition to containing all the parameters, this module also handles
+  !   initializing the variables to default values and then applying any
+  !   changes made via put_setting().
   !
   !   This module also writes parameter values to the status log.
   !-----------------------------------------------------------------------------
@@ -52,7 +52,7 @@ module marbl_parms
   save
 
   !---------------------------------------------------------------------
-  !  Variables read in via &marbl_config_nml
+  !  Variables defined in marbl_define_settings
   !---------------------------------------------------------------------
 
   logical(log_kind), target ::  ciso_on                       ! control whether ciso tracer module is active
@@ -64,6 +64,11 @@ module marbl_parms
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lcompute_nhx_surface_emis      ! control if NHx emissions are computed
   logical(log_kind), target :: lvariable_PtoC                 ! control if PtoC ratios in autotrophs vary
+
+  !---------------------------------------------------------------------
+  !  Variables defined in marbl_define_config_vars
+  !---------------------------------------------------------------------
+
   type(autotroph_config_type), allocatable, target :: autotrophs_config(:)
   type(zooplankton_config_type), allocatable, target :: zooplankton_config(:)
   type(grazing_config_type), allocatable, target :: grazing_config(:,:)
@@ -80,7 +85,7 @@ module marbl_parms
 
 
   !---------------------------------------------------------------------
-  !  Variables read in via &marbl_parms_nml
+  !  Variables defined in marbl_define_parameters
   !---------------------------------------------------------------------
 
   real(kind=r8), target :: &
@@ -263,28 +268,29 @@ module marbl_parms
   private :: autotroph_cnt, zooplankton_cnt, grazer_prey_cnt
   private :: marbl_log_type
 
+  interface print_single_derived_parm
+    module procedure print_single_derived_parm_r8
+    module procedure print_single_derived_parm_int
+  end interface print_single_derived_parm
+
+  ! Functions only used in this module
+  private :: print_single_derived_parm
+  private :: print_single_derived_parm_r8
+  private :: print_single_derived_parm_int
+
 contains
 
   !*****************************************************************************
 
-  subroutine marbl_config_set_defaults()
-
-    integer :: m, n
-
-    ! move these to marbl_setting_set_defaults
-    autotroph_cnt = 3
-    zooplankton_cnt = 1
-    grazer_prey_cnt = 3
-
-    ! Allocate memory
-    allocate(autotrophs_config(autotroph_cnt))
-    allocate(zooplankton_config(zooplankton_cnt))
-    allocate(grazing_config(grazer_prey_cnt, zooplankton_cnt))
+  subroutine marbl_settings_set_defaults()
 
     !-----------------------------------------------------------------------
-    !  &marbl_config_nml
+    !  Default values
     !-----------------------------------------------------------------------
 
+    autotroph_cnt                 = 3
+    zooplankton_cnt               = 1
+    grazer_prey_cnt               = 3
     ciso_on                       = .false.
     lsource_sink                  = .true.
     ciso_lsource_sink             = .true.
@@ -297,77 +303,18 @@ contains
     init_bury_coeff_opt           = 'nml'
     ladjust_bury_coeff            = .false.
 
-    do n=1,autotroph_cnt
-      select case (n)
-        case (1)
-          autotrophs_config(n)%sname         = 'sp'
-          autotrophs_config(n)%lname         = 'Small Phyto'
-          autotrophs_config(n)%Nfixer        = .false.
-          autotrophs_config(n)%imp_calcifier = .true.
-          autotrophs_config(n)%exp_calcifier = .false.
-          autotrophs_config(n)%silicifier    = .false.
-        case (2)
-          autotrophs_config(n)%sname         = 'diat'
-          autotrophs_config(n)%lname         = 'Diatom'
-          autotrophs_config(n)%Nfixer        = .false.
-          autotrophs_config(n)%imp_calcifier = .false.
-          autotrophs_config(n)%exp_calcifier = .false.
-          autotrophs_config(n)%silicifier    = .true.
-        case (3)
-          autotrophs_config(n)%sname         = 'diaz'
-          autotrophs_config(n)%lname         = 'Diazotroph'
-          autotrophs_config(n)%Nfixer        = .true.
-          autotrophs_config(n)%imp_calcifier = .false.
-          autotrophs_config(n)%exp_calcifier = .false.
-          autotrophs_config(n)%silicifier    = .false.
-        case DEFAULT
-          write(autotrophs_config(n)%sname,"(A,I0)") 'auto', n
-          write(autotrophs_config(n)%lname,"(A,I0)") 'Autotroph number ', n
-          autotrophs_config(n)%Nfixer        = .false.
-          autotrophs_config(n)%imp_calcifier = .false.
-          autotrophs_config(n)%exp_calcifier = .false.
-          autotrophs_config(n)%silicifier    = .false.
-      end select
-    end do
-
-    do n=1,zooplankton_cnt
-      select case (n)
-        case (1)
-          zooplankton_config(n)%sname = 'zoo'
-          zooplankton_config(n)%lname = 'Zooplankton'
-        case DEFAULT
-          write(zooplankton_config(n)%sname, "(A,I0)") 'zoo', n
-          write(zooplankton_config(n)%lname, "(A,I0)") 'Zooplankton number ', n
-      end select
-    end do
-
-    ! predator-prey relationships
-    do n=1,zooplankton_cnt
-      do m=1,grazer_prey_cnt
-
-        write(grazing_config(m,n)%sname, "(4A)") 'grz_',                      &
-                                   trim(autotrophs_config(m)%sname),          &
-                                   '_', trim(zooplankton_config(n)%sname)
-        write(grazing_config(m,n)%lname, "(4A)") 'Grazing of ',               &
-                                   trim(autotrophs_config(m)%sname),          &
-                                   ' by ', trim(zooplankton_config(n)%sname)
-        grazing_config(m,n)%auto_ind_cnt = 1
-        grazing_config(m,n)%zoo_ind_cnt  = 0
-      end do
-    end do
-
-  end subroutine marbl_config_set_defaults
+  end subroutine marbl_settings_set_defaults
 
   !*****************************************************************************
 
-  subroutine marbl_define_config_vars(this, marbl_status_log)
+  subroutine marbl_define_settings(this, marbl_status_log)
 
     use marbl_config_mod, only : log_add_var_error
 
     class(marbl_settings_type), intent(inout) :: this
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_parms:marbl_define_config_vars'
+    character(len=*), parameter :: subname = 'marbl_parms:marbl_define_settings'
     character(len=char_len)     :: log_message
 
     character(len=char_len)          :: sname, lname, units, datatype, group, category
@@ -376,22 +323,57 @@ contains
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
 
-    integer :: m, n
-    character(len=char_len) :: prefix
-
     if (associated(this%vars)) then
-      write(log_message, "(A)") "this%configuration has been constructed already"
+      write(log_message, "(A)") "this%settings has been constructed already"
       call marbl_status_log%log_error(log_message, subname)
       return
     end if
-
     allocate(this%categories(0))
 
-    !------------------!
-    ! marbl_config_nml !
-    !------------------!
+    !----------!
+    ! Settings !
+    !----------!
 
     category  = 'config flags'
+
+    sname     = 'autotroph_cnt'
+    lname     = 'Number of autotroph classes'
+    units     = 'unitless'
+    datatype  = 'integer'
+    group     = 'marbl_config_nml'
+    iptr      => autotroph_cnt
+    call this%add_var(sname, lname, units, datatype, group, category,       &
+                        marbl_status_log, iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'zooplankton_cnt'
+    lname     = 'Number of zooplankton classes'
+    units     = 'unitless'
+    datatype  = 'integer'
+    group     = 'marbl_config_nml'
+    iptr      => zooplankton_cnt
+    call this%add_var(sname, lname, units, datatype, group, category,       &
+                        marbl_status_log, iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
+
+    sname     = 'grazer_prey_cnt'
+    lname     = 'Number of grazer prey classes'
+    units     = 'unitless'
+    datatype  = 'integer'
+    group     = 'marbl_config_nml'
+    iptr      => grazer_prey_cnt
+    call this%add_var(sname, lname, units, datatype, group, category,       &
+                        marbl_status_log, iptr=iptr)
+    if (marbl_status_log%labort_marbl) then
+      call log_add_var_error(marbl_status_log, sname, subname)
+      return
+    end if
 
     sname     = 'ciso_on'
     lname     = 'Control whether CISO tracer module is active'
@@ -535,6 +517,122 @@ contains
       call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
+
+  end subroutine marbl_define_settings
+
+  !*****************************************************************************
+
+  subroutine set_derived_settings(marbl_status_log)
+
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_parms_mod:set_derived_settings'
+    character(len=char_len) :: log_message
+
+  end subroutine set_derived_settings
+
+  !*****************************************************************************
+
+  subroutine marbl_config_set_defaults()
+
+    integer :: m, n
+
+    ! Allocate memory
+    allocate(autotrophs_config(autotroph_cnt))
+    allocate(zooplankton_config(zooplankton_cnt))
+    allocate(grazing_config(grazer_prey_cnt, zooplankton_cnt))
+
+    !-----------------------------------------------------------------------
+    !  Default values
+    !-----------------------------------------------------------------------
+
+    do n=1,autotroph_cnt
+      select case (n)
+        case (1)
+          autotrophs_config(n)%sname         = 'sp'
+          autotrophs_config(n)%lname         = 'Small Phyto'
+          autotrophs_config(n)%Nfixer        = .false.
+          autotrophs_config(n)%imp_calcifier = .true.
+          autotrophs_config(n)%exp_calcifier = .false.
+          autotrophs_config(n)%silicifier    = .false.
+        case (2)
+          autotrophs_config(n)%sname         = 'diat'
+          autotrophs_config(n)%lname         = 'Diatom'
+          autotrophs_config(n)%Nfixer        = .false.
+          autotrophs_config(n)%imp_calcifier = .false.
+          autotrophs_config(n)%exp_calcifier = .false.
+          autotrophs_config(n)%silicifier    = .true.
+        case (3)
+          autotrophs_config(n)%sname         = 'diaz'
+          autotrophs_config(n)%lname         = 'Diazotroph'
+          autotrophs_config(n)%Nfixer        = .true.
+          autotrophs_config(n)%imp_calcifier = .false.
+          autotrophs_config(n)%exp_calcifier = .false.
+          autotrophs_config(n)%silicifier    = .false.
+        case DEFAULT
+          write(autotrophs_config(n)%sname,"(A,I0)") 'auto', n
+          write(autotrophs_config(n)%lname,"(A,I0)") 'Autotroph number ', n
+          autotrophs_config(n)%Nfixer        = .false.
+          autotrophs_config(n)%imp_calcifier = .false.
+          autotrophs_config(n)%exp_calcifier = .false.
+          autotrophs_config(n)%silicifier    = .false.
+      end select
+    end do
+
+    do n=1,zooplankton_cnt
+      select case (n)
+        case (1)
+          zooplankton_config(n)%sname = 'zoo'
+          zooplankton_config(n)%lname = 'Zooplankton'
+        case DEFAULT
+          write(zooplankton_config(n)%sname, "(A,I0)") 'zoo', n
+          write(zooplankton_config(n)%lname, "(A,I0)") 'Zooplankton number ', n
+      end select
+    end do
+
+    ! predator-prey relationships
+    do n=1,zooplankton_cnt
+      do m=1,grazer_prey_cnt
+
+        write(grazing_config(m,n)%sname, "(4A)") 'grz_',                      &
+                                   trim(autotrophs_config(m)%sname),          &
+                                   '_', trim(zooplankton_config(n)%sname)
+        write(grazing_config(m,n)%lname, "(4A)") 'Grazing of ',               &
+                                   trim(autotrophs_config(m)%sname),          &
+                                   ' by ', trim(zooplankton_config(n)%sname)
+        grazing_config(m,n)%auto_ind_cnt = 1
+        grazing_config(m,n)%zoo_ind_cnt  = 0
+      end do
+    end do
+
+  end subroutine marbl_config_set_defaults
+
+  !*****************************************************************************
+
+  subroutine marbl_define_config_vars(this, marbl_status_log)
+
+    use marbl_config_mod, only : log_add_var_error
+
+    class(marbl_settings_type), intent(inout) :: this
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_parms:marbl_define_config_vars'
+    character(len=char_len)     :: log_message
+
+    character(len=char_len)          :: sname, lname, units, datatype, group, category
+    real(r8),                pointer :: rptr => NULL()
+    integer(int_kind),       pointer :: iptr => NULL()
+    logical(log_kind),       pointer :: lptr => NULL()
+    character(len=char_len), pointer :: sptr => NULL()
+
+    integer :: m, n
+    character(len=char_len) :: prefix
+
+    !-------------!
+    ! Config vars !
+    !-------------!
+
+    category  = 'PFT config'
 
     do n=1,autotroph_cnt
       write(prefix, "(A,I0,A)") 'autotrophs_config(', n, ')%'
@@ -749,7 +847,7 @@ contains
     allocate(grazing(grazer_prey_cnt, zooplankton_cnt))
 
     !-----------------------------------------------------------------------
-    !  &marbl_parms_nml
+    !  Default values
     !-----------------------------------------------------------------------
 
     parm_Fe_bioavail           = 1.0_r8         ! in marbl_parms framework, see NOTE above
@@ -1820,13 +1918,17 @@ contains
     select case (caco3_bury_thres_opt)
     case ('fixed_depth')
        caco3_bury_thres_iopt = caco3_bury_thres_iopt_fixed_depth
+       sname_out = 'caco3_bury_thres_iopt_fixed_depth'
     case ('omega_calc')
        caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
+       sname_out = 'caco3_bury_thres_iopt_omega_calc'
     case default
        write(log_message, "(2A)") "unknown caco3_bury_thres_opt: ", trim(caco3_bury_thres_opt)
        call marbl_status_log%log_error(log_message, subname)
        return
     end select
+    call print_single_derived_parm('caco3_bury_thres_iopt', sname_out, &
+         caco3_bury_thres_iopt, subname, marbl_status_log)
 
     parm_kappa_nitrif = dps * parm_kappa_nitrif_per_day
     call print_single_derived_parm('parm_kappa_nitrif_per_day', 'parm_kappa_nitrif', &
@@ -1886,7 +1988,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine print_single_derived_parm(sname_in, sname_out, val_out, subname, marbl_status_log)
+  subroutine print_single_derived_parm_r8(sname_in, sname_out, val_out, subname, marbl_status_log)
 
     character(len=*), intent(in) :: sname_in
     character(len=*), intent(in) :: sname_out
@@ -1903,7 +2005,28 @@ contains
          trim(sname_out), ' = ', val_out, ' (from ', trim(sname_in), ')'
     call marbl_status_log%log_noerror(log_message, subname)
 
-  end subroutine print_single_derived_parm
+  end subroutine print_single_derived_parm_r8
+
+  !*****************************************************************************
+
+  subroutine print_single_derived_parm_int(sname_in, sname_out, val_out, subname, marbl_status_log)
+
+    character(len=*),  intent(in) :: sname_in
+    character(len=*),  intent(in) :: sname_out
+    integer(int_kind), intent(in) :: val_out
+    character(len=*),  intent(in) :: subname
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+
+    !---------------------------------------------------------------------------
+    !   local variables
+    !---------------------------------------------------------------------------
+    character(len=char_len) :: log_message
+
+    write(log_message, "(2A,I0,3A)") &
+         trim(sname_out), ' = ', val_out, ' (from ', trim(sname_in), ')'
+    call marbl_status_log%log_noerror(log_message, subname)
+
+  end subroutine print_single_derived_parm_int
 
   !*****************************************************************************
 
