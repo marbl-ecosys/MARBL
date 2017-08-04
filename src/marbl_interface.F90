@@ -873,13 +873,36 @@ contains
 
   subroutine shutdown(this)
 
+    use marbl_parms, only : autotrophs_config
+    use marbl_parms, only : zooplankton_config
+    use marbl_parms, only : grazing_config
+    use marbl_parms, only : autotrophs
+    use marbl_parms, only : zooplankton
+    use marbl_parms, only : grazing
+    use marbl_sizes, only : grazer_prey_cnt
+    use marbl_diagnostics_mod, only : marbl_interior_diag_ind
+
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
 
     character(len=*), parameter :: subname = 'marbl_interface:shutdown'
+    integer(int_kind) :: m,n
 
     ! free dynamically allocated memory, etc
+    deallocate(autotrophs_config)
+    deallocate(zooplankton_config)
+    deallocate(grazing_config)
+    deallocate(autotrophs)
+    deallocate(zooplankton)
+    do m=1,grazer_prey_cnt
+      do n=1,zooplankton_cnt
+        deallocate(grazing(m,n)%auto_ind)
+        deallocate(grazing(m,n)%zoo_ind)
+      end do
+    end do
+    deallocate(grazing)
+    call marbl_interior_diag_ind%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)
     if (this%StatusLog%labort_marbl) then

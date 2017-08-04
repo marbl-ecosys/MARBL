@@ -11,9 +11,10 @@ module marbl_get_put_drv
 
   ! List of keywords (from variable names) to ignore in put / get statements
   ! (necessary to prevent internal MARBL errors do to inconsistent settings)
-  character(len=*), dimension(3), parameter :: ignore_in_varnames = (/"_ind                ", &
+  character(len=*), dimension(4), parameter :: ignore_in_varnames = (/"_ind                ", &
                                                                       "caco3_bury_thres_opt", &
-                                                                      "tracer_restore_vars "/)
+                                                                      "tracer_restore_vars ", &
+                                                                      "_cnt                "/)
   integer, parameter :: km = 5
 
   Public :: test
@@ -23,9 +24,6 @@ Contains
   !*****************************************************************************
 
   subroutine test(marbl_instance, driver_status_log)
-
-    use marbl_parms,      only : marbl_config_set_defaults
-    use marbl_parms,      only : marbl_parms_set_defaults
 
     type(marbl_interface_class), intent(inout) :: marbl_instance
     type(marbl_log_type),        intent(inout) :: driver_status_log
@@ -77,7 +75,7 @@ Contains
       return
     end if
 
-    ! Call marbl_loc%init
+    ! Call marbl%init
     call marbl_instance%init(gcm_num_levels = km,                             &
                              gcm_num_PAR_subcols = 1,                         &
                              gcm_num_elements_surface_forcing = 1,            &

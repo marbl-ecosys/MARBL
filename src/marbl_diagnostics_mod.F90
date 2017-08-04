@@ -273,7 +273,8 @@ module marbl_diagnostics_mod
 
      ! restoring 3D diags
      integer(int_kind), dimension(:), allocatable :: restore_tend
-
+   contains
+     procedure, public :: destruct => interior_diag_ind_deconstructor
   end type marbl_interior_diagnostics_indexing_type
   type(marbl_interior_diagnostics_indexing_type), public :: marbl_interior_diag_ind
 
@@ -4762,5 +4763,65 @@ contains
     call marbl_status_log%log_error_trace(routine_name, subname)
 
   end subroutine log_add_diagnostics_error
+
+  !*****************************************************************************
+
+  subroutine interior_diag_ind_deconstructor(this)
+
+    class(marbl_interior_diagnostics_indexing_type), intent(inout) :: this
+
+    deallocate(this%photoC_zint)
+    deallocate(this%photoC_NO3_zint)
+    deallocate(this%CaCO3_form_zint)
+    deallocate(this%Qp)
+    deallocate(this%N_lim)
+    deallocate(this%P_lim)
+    deallocate(this%Fe_lim)
+    deallocate(this%SiO3_lim)
+    deallocate(this%light_lim)
+    deallocate(this%photoC)
+    deallocate(this%photoC_NO3)
+    deallocate(this%photoFe)
+    deallocate(this%photoNO3)
+    deallocate(this%photoNH4)
+    deallocate(this%DOP_uptake)
+    deallocate(this%PO4_uptake)
+    deallocate(this%auto_graze)
+    deallocate(this%auto_graze_poc)
+    deallocate(this%auto_graze_doc)
+    deallocate(this%auto_graze_zoo)
+    deallocate(this%auto_loss)
+    deallocate(this%auto_loss_poc)
+    deallocate(this%auto_loss_doc)
+    deallocate(this%auto_agg)
+    deallocate(this%bSi_form)
+    deallocate(this%CaCO3_form)
+    deallocate(this%Nfix)
+    deallocate(this%zoo_loss)
+    deallocate(this%zoo_loss_poc)
+    deallocate(this%zoo_loss_doc)
+    deallocate(this%zoo_graze)
+    deallocate(this%zoo_graze_poc)
+    deallocate(this%zoo_graze_doc)
+    deallocate(this%zoo_graze_zoo)
+    deallocate(this%x_graze_zoo)
+    deallocate(this%CISO_eps_autotroph)
+    deallocate(this%CISO_mui_to_co2star)
+    deallocate(this%CISO_Ca13CO3_form)
+    deallocate(this%CISO_Ca14CO3_form)
+    deallocate(this%CISO_Ca13CO3_form_zint)
+    deallocate(this%CISO_Ca14CO3_form_zint)
+    deallocate(this%CISO_photo13C)
+    deallocate(this%CISO_photo14C)
+    deallocate(this%CISO_photo13C_zint)
+    deallocate(this%CISO_photo14C_zint)
+    deallocate(this%CISO_d13C)
+    deallocate(this%CISO_d14C)
+    deallocate(this%CISO_autotrophCaCO3_d14C)
+    deallocate(this%CISO_autotrophCaCO3_d13C)
+
+  end subroutine interior_diag_ind_deconstructor
+
+  !*****************************************************************************
 
 end module marbl_diagnostics_mod

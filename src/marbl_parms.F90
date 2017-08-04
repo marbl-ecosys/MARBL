@@ -334,7 +334,7 @@ contains
     ! Settings !
     !----------!
 
-    category  = 'config flags'
+    category  = 'config ints'
 
     sname     = 'autotroph_cnt'
     lname     = 'Number of autotroph classes'
@@ -374,6 +374,8 @@ contains
       call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
+
+    category  = 'config flags'
 
     sname     = 'ciso_on'
     lname     = 'Control whether CISO tracer module is active'
@@ -505,6 +507,8 @@ contains
       return
     end if
 
+    category  = 'config strings'
+
     sname     = 'init_bury_coeff_opt'
     lname     = 'How to set initial bury coefficients'
     units     = 'unitless'
@@ -631,8 +635,6 @@ contains
     !-------------!
     ! Config vars !
     !-------------!
-
-    category  = 'PFT config'
 
     do n=1,autotroph_cnt
       write(prefix, "(A,I0,A)") 'autotrophs_config(', n, ')%'
