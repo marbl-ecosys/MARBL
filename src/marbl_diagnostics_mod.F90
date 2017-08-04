@@ -3654,6 +3654,10 @@ contains
        if (ind%SiO3_lim(n).ne.-1) then
           diags(ind%SiO3_lim(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%VSiO3
        end if
+!!!!!!!add for coccos
+        if (ind%C_lim(n).ne.-1) then
+            diags(ind%C_lim(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%VCO2
+        end if
 
        diags(ind%light_lim(n))%field_3d(:, 1)   = autotroph_secondary_species(n,:)%light_lim
        diags(ind%photoNO3(n))%field_3d(:, 1)    = autotroph_secondary_species(n,:)%NO3_V

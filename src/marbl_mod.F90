@@ -1099,7 +1099,7 @@ contains
     do k = 1, km
 
        call marbl_compute_autotroph_elemental_ratios( autotroph_cnt,    &
-            autotrophs, autotroph_local(:, k), tracer_local(:, k),      &
+            autotrophs, autotrophs_config, autotroph_local(:, k), tracer_local(:, k),      &
             marbl_tracer_indices, autotroph_secondary_species(:, k))
 
        call marbl_compute_function_scaling(temperature(k), Tfunc(k))
@@ -3038,7 +3038,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_autotroph_elemental_ratios(auto_cnt, autotroph_parms, &
-             autotroph_local, tracer_local, marbl_tracer_indices,                &
+             auto_config, autotroph_local, tracer_local, marbl_tracer_indices,                &
              autotroph_secondary_species)
 
     use marbl_constants_mod, only : epsC
@@ -3053,6 +3053,7 @@ contains
     integer (int_kind)         , intent(in) :: auto_cnt
     type(autotroph_parms_type) , intent(in) :: autotroph_parms(auto_cnt)             ! autotrophs
     type(autotroph_local_type) , intent(in) :: autotroph_local(auto_cnt)
+    type(autotroph_config_type), intent(in) :: auto_config(auto_cnt)
     real (r8)                  , intent(in) :: tracer_local(ecosys_base_tracer_cnt) ! local copies of model tracer concentrations
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
     type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species(auto_cnt)
@@ -3063,6 +3064,7 @@ contains
     real :: cks      ! constant used in  quota modification
     real :: cksi     ! constant used in Si quota modification
     integer(int_kind) :: auto_ind
+    real :: QCaCO3_max_loc !
     !-----------------------------------------------------------------------
 
     associate(                                                 &
@@ -3159,15 +3161,18 @@ contains
 
        if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
         !set a local variable to the correct QCaCO3 max based on whether implicit or explicit
-          ! if (implicit) then
-          !   QCaCO3_loc = QCaCO3_max
-          ! else
-          !   QCaCO3_loc = QCaCO3_max_exp
-          ! end if
+           if (auto_config(auto_ind)%imp_calcifier) then
+             QCaCO3_max_loc = QCaCO3_max
+           else
+             QCaCO3_max_loc = QCaCO3_max_exp
+           end if
+
           QCaCO3(auto_ind) = auto_CaCO3(auto_ind) / (auto_C(auto_ind) + epsC)
-          if (QCaCO3(auto_ind) > QCaCO3_max) then !_loc
-             QCaCO3(auto_ind) = QCaCO3_max!_loc
+
+          if (QCaCO3(auto_ind) > QCaCO3_max_loc) then
+             QCaCO3(auto_ind) = QCaCO3_max_loc
           end if
+
        end if
     end do
     end associate
@@ -3602,7 +3607,8 @@ contains
                  ! AUTO_CONFIG
                  Nfixer     => auto_config(auto_ind)%Nfixer,                  &
                  silicifier => auto_config(auto_ind)%silicifier,              &
-                 calcifier  => auto_config(auto_ind)%imp_calcifier,               &
+                 imp_calcifier  => auto_config(auto_ind)%imp_calcifier,       &
+                 exp_calcifier  => auto_config(auto_ind)%exp_calcifier,       &
                  ! AUTO_META
                  kNO3   => auto_meta(auto_ind)%kNO3,                          &
                  kNH4   => auto_meta(auto_ind)%kNH4,                          &
@@ -3630,7 +3636,7 @@ contains
           VSiO3 = SiO3_loc / (SiO3_loc + kSiO3)
        endif
 
-        if (calcifier) then
+        if (exp_calcifier) then
             VCO2 = CO2_loc / (CO2_loc + kCO2)
         endif
 
@@ -3642,7 +3648,7 @@ contains
           f_nut = min(f_nut, VSiO3)
        endif
 
-        if (calcifier) then
+        if (exp_calcifier) then
             f_nut = min(f_nut, VCO2)
         end if
 
@@ -3889,11 +3895,11 @@ contains
             picpoc = -0.0136 * CO2 + picpoc + 0.21
 
             !nut lim effect
-            picpoc = -0.48 * Plim(auto_ind) + picpoc + 0.48
+            !picpoc = -0.48 * Plim(auto_ind) + picpoc + 0.48
 
-        !multiply cocco growth rate by picpoc to get CaCO3 formation
+            !multiply cocco growth rate by picpoc to get CaCO3 formation
 
-          CaCO3_form(auto_ind) = picpoc * photoC(auto_ind)
+            CaCO3_form(auto_ind) = picpoc * photoC(auto_ind)
 
        end if
 
