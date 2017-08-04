@@ -9,7 +9,6 @@ module marbl_internal_types
 
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
-  use marbl_sizes, only : max_prey_class_size
 
   use marbl_logging, only : marbl_log_type
 
@@ -86,16 +85,10 @@ module marbl_internal_types
     real    (KIND=r8)       :: graze_poc        ! routing of grazed term, remainder goes to dic
     real    (KIND=r8)       :: graze_doc        ! routing of grazed term, remainder goes to dic
     real    (KIND=r8)       :: f_zoo_detr       ! fraction of zoo losses to detrital
-    ! FIXME #78: we want auto_ind and zoo_ind to be allocatable, but gfortran
-    !            does not support having derived types with allocatable components
-    !            in a namelist (at least as of 5.2.0). Eventually these two
-    !            components should be made allocatable and then we can
-    !             (1) remove max_prey_class_size from marbl_sizes
-    !             (2) uncomment the constructor for this class
-    integer (KIND=int_kind), dimension(max_prey_class_size) :: auto_ind
-    integer (KIND=int_kind), dimension(max_prey_class_size) :: zoo_ind
-!  contains
-!    procedure, public :: construct => grazing_parms_constructor
+    integer (KIND=int_kind), allocatable :: auto_ind(:)
+    integer (KIND=int_kind), allocatable :: zoo_ind(:)
+  contains
+    procedure, public :: construct => grazing_parms_constructor
   end type grazing_parms_type
 
   !****************************************************************************
@@ -409,8 +402,8 @@ module marbl_internal_types
     integer (int_kind) :: do14c_ind       = 0 ! dissolved organic carbon 14
 
     ! Living tracers
-    type(marbl_living_tracer_index_type), dimension(autotroph_cnt)   :: auto_inds
-    type(marbl_living_tracer_index_type), dimension(zooplankton_cnt) :: zoo_inds
+    type(marbl_living_tracer_index_type), allocatable :: auto_inds(:)
+    type(marbl_living_tracer_index_type), allocatable :: zoo_inds(:)
     ! For CISO, don't want individual C13 and C14 tracers for each zooplankton
     ! Instead we collect them into one tracer for each isotope, regardless of
     ! zooplankton_cnt
@@ -677,6 +670,10 @@ contains
     ! If marbl_tracer_cnt is requested, initialize to zero
     ! (so that count is zero if an error is encountered)
     if (present(marbl_tracer_cnt)) marbl_tracer_cnt = 0
+
+    !Allocate memory
+    allocate(this%auto_inds(autotroph_cnt))
+    allocate(this%zoo_inds(zooplankton_cnt))
 
     ! General ecosys tracers
     call this%add_tracer_index('po4', 'ecosys_base', this%po4_ind, marbl_status_log)
@@ -1078,8 +1075,6 @@ contains
 
   !*****************************************************************************
 
-#if 0
-  ! FIXME #78: commented because auto_ind and zoo_ind are not allocatable yet
   subroutine grazing_parms_constructor(this, grazing_conf, marbl_status_log)
 
     class(grazing_parms_type), intent(inout) :: this
@@ -1105,7 +1100,6 @@ contains
     allocate(this%zoo_ind(grazing_conf%zoo_ind_cnt))
 
   end subroutine grazing_parms_constructor
-#endif
 
   !*****************************************************************************
 

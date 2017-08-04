@@ -109,9 +109,9 @@ module marbl_diagnostics_mod
     integer(int_kind) :: pfeToSed
 
     ! Autotroph 2D diags
-    integer(int_kind), dimension(autotroph_cnt) :: photoC_zint
-    integer(int_kind), dimension(autotroph_cnt) :: photoC_NO3_zint
-    integer(int_kind), dimension(autotroph_cnt) :: CaCO3_form_zint
+    integer(int_kind), allocatable :: photoC_zint(:)
+    integer(int_kind), allocatable :: photoC_NO3_zint(:)
+    integer(int_kind), allocatable :: CaCO3_form_zint(:)
     integer(int_kind) :: tot_CaCO3_form_zint
 
     ! General 3D diags
@@ -178,43 +178,43 @@ module marbl_diagnostics_mod
     integer(int_kind) :: P_iron_REMIN
 
     ! Autotroph 3D diags
-    integer(int_kind), dimension(autotroph_cnt) :: Qp
-    integer(int_kind), dimension(autotroph_cnt) :: N_lim
-    integer(int_kind), dimension(autotroph_cnt) :: P_lim
-    integer(int_kind), dimension(autotroph_cnt) :: Fe_lim
-    integer(int_kind), dimension(autotroph_cnt) :: SiO3_lim
-    integer(int_kind), dimension(autotroph_cnt) :: light_lim
-    integer(int_kind), dimension(autotroph_cnt) :: photoC
-    integer(int_kind), dimension(autotroph_cnt) :: photoC_NO3
-    integer(int_kind), dimension(autotroph_cnt) :: photoFe
-    integer(int_kind), dimension(autotroph_cnt) :: photoNO3
-    integer(int_kind), dimension(autotroph_cnt) :: photoNH4
-    integer(int_kind), dimension(autotroph_cnt) :: DOP_uptake
-    integer(int_kind), dimension(autotroph_cnt) :: PO4_uptake
-    integer(int_kind), dimension(autotroph_cnt) :: auto_graze
-    integer(int_kind), dimension(autotroph_cnt) :: auto_graze_poc
-    integer(int_kind), dimension(autotroph_cnt) :: auto_graze_doc
-    integer(int_kind), dimension(autotroph_cnt) :: auto_graze_zoo
-    integer(int_kind), dimension(autotroph_cnt) :: auto_loss
-    integer(int_kind), dimension(autotroph_cnt) :: auto_loss_poc
-    integer(int_kind), dimension(autotroph_cnt) :: auto_loss_doc
-    integer(int_kind), dimension(autotroph_cnt) :: auto_agg
-    integer(int_kind), dimension(autotroph_cnt) :: bSi_form
-    integer(int_kind), dimension(autotroph_cnt) :: CaCO3_form
-    integer(int_kind), dimension(autotroph_cnt) :: Nfix
+    integer(int_kind), allocatable :: Qp(:)
+    integer(int_kind), allocatable :: N_lim(:)
+    integer(int_kind), allocatable :: P_lim(:)
+    integer(int_kind), allocatable :: Fe_lim(:)
+    integer(int_kind), allocatable :: SiO3_lim(:)
+    integer(int_kind), allocatable :: light_lim(:)
+    integer(int_kind), allocatable :: photoC(:)
+    integer(int_kind), allocatable :: photoC_NO3(:)
+    integer(int_kind), allocatable :: photoFe(:)
+    integer(int_kind), allocatable :: photoNO3(:)
+    integer(int_kind), allocatable :: photoNH4(:)
+    integer(int_kind), allocatable :: DOP_uptake(:)
+    integer(int_kind), allocatable :: PO4_uptake(:)
+    integer(int_kind), allocatable :: auto_graze(:)
+    integer(int_kind), allocatable :: auto_graze_poc(:)
+    integer(int_kind), allocatable :: auto_graze_doc(:)
+    integer(int_kind), allocatable :: auto_graze_zoo(:)
+    integer(int_kind), allocatable :: auto_loss(:)
+    integer(int_kind), allocatable :: auto_loss_poc(:)
+    integer(int_kind), allocatable :: auto_loss_doc(:)
+    integer(int_kind), allocatable :: auto_agg(:)
+    integer(int_kind), allocatable :: bSi_form(:)
+    integer(int_kind), allocatable :: CaCO3_form(:)
+    integer(int_kind), allocatable :: Nfix(:)
     integer(int_kind) :: tot_bSi_form
     integer(int_kind) :: tot_CaCO3_form
     integer(int_kind) :: tot_Nfix
 
     ! zooplankton 3D diags
-    integer(int_kind), dimension(zooplankton_cnt) :: zoo_loss
-    integer(int_kind), dimension(zooplankton_cnt) :: zoo_loss_poc
-    integer(int_kind), dimension(zooplankton_cnt) :: zoo_loss_doc
-    integer(int_kind), dimension(zooplankton_cnt) :: zoo_graze
-    integer(int_kind), dimension(zooplankton_cnt) :: zoo_graze_poc
-    integer(int_kind), dimension(zooplankton_cnt) :: zoo_graze_doc
-    integer(int_kind), dimension(zooplankton_cnt) :: zoo_graze_zoo
-    integer(int_kind), dimension(zooplankton_cnt) :: x_graze_zoo
+    integer(int_kind), allocatable :: zoo_loss(:)
+    integer(int_kind), allocatable :: zoo_loss_poc(:)
+    integer(int_kind), allocatable :: zoo_loss_doc(:)
+    integer(int_kind), allocatable :: zoo_graze(:)
+    integer(int_kind), allocatable :: zoo_graze_poc(:)
+    integer(int_kind), allocatable :: zoo_graze_doc(:)
+    integer(int_kind), allocatable :: zoo_graze_zoo(:)
+    integer(int_kind), allocatable :: x_graze_zoo(:)
 
      !  ciso ids for nonstandard 3d fields
      integer (int_kind) :: CISO_PO13C_FLUX_IN                                 ! po13c flux into cell
@@ -235,20 +235,20 @@ module marbl_diagnostics_mod
      integer (int_kind) :: CISO_photo14C_TOT_zint                             ! total 14C fixation vertical integral
 
      ! ciso ids for  MORE nonstandard 3d fields
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_eps_autotroph       ! epsilon for each autotroph
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_mui_to_co2star      ! mui_to_co2star for each autotroph
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_Ca13CO3_form        ! Ca13CO3 formation
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_Ca14CO3_form        ! Ca14CO3 formation
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_Ca13CO3_form_zint   ! Ca13CO3 formation vertical integral 0-100 m
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_Ca14CO3_form_zint   ! Ca14CO3 formation vertical integral 0-100 m
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_photo13C            ! 13C fixation
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_photo14C            ! 14C fixation
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_photo13C_zint       ! 13C fixation vertical integral
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_photo14C_zint       ! 14C fixation vertical integral
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_d13C                ! if for d13C of autotroph carbon
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_d14C                ! if for d14C of autotroph carbon
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_autotrophCaCO3_d14C ! if for d14C of autotrophCaCO3
-     integer (int_kind), dimension(autotroph_cnt) :: CISO_autotrophCaCO3_d13C ! if for d13C of autotrophCaCO3
+     integer (int_kind), allocatable :: CISO_eps_autotroph(:)       ! epsilon for each autotroph
+     integer (int_kind), allocatable :: CISO_mui_to_co2star(:)      ! mui_to_co2star for each autotroph
+     integer (int_kind), allocatable :: CISO_Ca13CO3_form(:)        ! Ca13CO3 formation
+     integer (int_kind), allocatable :: CISO_Ca14CO3_form(:)        ! Ca14CO3 formation
+     integer (int_kind), allocatable :: CISO_Ca13CO3_form_zint(:)   ! Ca13CO3 formation vertical integral 0-100 m
+     integer (int_kind), allocatable :: CISO_Ca14CO3_form_zint(:)   ! Ca14CO3 formation vertical integral 0-100 m
+     integer (int_kind), allocatable :: CISO_photo13C(:)            ! 13C fixation
+     integer (int_kind), allocatable :: CISO_photo14C(:)            ! 14C fixation
+     integer (int_kind), allocatable :: CISO_photo13C_zint(:)       ! 13C fixation vertical integral
+     integer (int_kind), allocatable :: CISO_photo14C_zint(:)       ! 14C fixation vertical integral
+     integer (int_kind), allocatable :: CISO_d13C(:)                ! if for d13C of autotroph carbon
+     integer (int_kind), allocatable :: CISO_d14C(:)                ! if for d14C of autotroph carbon
+     integer (int_kind), allocatable :: CISO_autotrophCaCO3_d14C(:) ! if for d14C of autotrophCaCO3
+     integer (int_kind), allocatable :: CISO_autotrophCaCO3_d13C(:) ! if for d13C of autotrophCaCO3
 
      integer (int_kind) :: CISO_eps_aq_g                                      ! eps_aq_g
      integer (int_kind) :: CISO_eps_dic_g                                     ! eps_dic_g
@@ -1240,6 +1240,9 @@ contains
       end if
 
       ! Autotroph 2D diags
+      allocate(ind%photoC_zint(autotroph_cnt))
+      allocate(ind%photoC_NO3_zint(autotroph_cnt))
+      allocate(ind%CaCO3_form_zint(autotroph_cnt))
       do n=1,autotroph_cnt
         lname = trim(autotrophs_config(n)%lname) // ' C Fixation Vertical Integral'
         sname = 'photoC_' // trim(autotrophs_config(n)%sname) // '_zint'
@@ -2006,6 +2009,30 @@ contains
       end if
 
       ! Autotroph 3D diags
+      allocate(ind%Qp(autotroph_cnt))
+      allocate(ind%N_lim(autotroph_cnt))
+      allocate(ind%P_lim(autotroph_cnt))
+      allocate(ind%Fe_lim(autotroph_cnt))
+      allocate(ind%SiO3_lim(autotroph_cnt))
+      allocate(ind%light_lim(autotroph_cnt))
+      allocate(ind%photoC(autotroph_cnt))
+      allocate(ind%photoC_NO3(autotroph_cnt))
+      allocate(ind%photoFe(autotroph_cnt))
+      allocate(ind%photoNO3(autotroph_cnt))
+      allocate(ind%photoNH4(autotroph_cnt))
+      allocate(ind%DOP_uptake(autotroph_cnt))
+      allocate(ind%PO4_uptake(autotroph_cnt))
+      allocate(ind%auto_graze(autotroph_cnt))
+      allocate(ind%auto_graze_poc(autotroph_cnt))
+      allocate(ind%auto_graze_doc(autotroph_cnt))
+      allocate(ind%auto_graze_zoo(autotroph_cnt))
+      allocate(ind%auto_loss(autotroph_cnt))
+      allocate(ind%auto_loss_poc(autotroph_cnt))
+      allocate(ind%auto_loss_doc(autotroph_cnt))
+      allocate(ind%auto_agg(autotroph_cnt))
+      allocate(ind%bSi_form(autotroph_cnt))
+      allocate(ind%CaCO3_form(autotroph_cnt))
+      allocate(ind%Nfix(autotroph_cnt))
       do n= 1,autotroph_cnt
         lname = trim(autotrophs_config(n)%lname) // ' P:C ratio'
         sname = trim(autotrophs_config(n)%sname) // '_Qp'
@@ -2312,7 +2339,7 @@ contains
           ind%Nfix(n) = -1
         end if
 
-      end do ! end do-loop for atutroph_cnt
+      end do ! end do-loop for autotroph_cnt
 
       lname    = 'Total Si Uptake'
       sname    = 'bSi_form'
@@ -2351,6 +2378,14 @@ contains
       end if
 
       ! Zooplankton 3D diags
+      allocate(ind%zoo_loss(zooplankton_cnt))
+      allocate(ind%zoo_loss_poc(zooplankton_cnt))
+      allocate(ind%zoo_loss_doc(zooplankton_cnt))
+      allocate(ind%zoo_graze(zooplankton_cnt))
+      allocate(ind%zoo_graze_poc(zooplankton_cnt))
+      allocate(ind%zoo_graze_doc(zooplankton_cnt))
+      allocate(ind%zoo_graze_zoo(zooplankton_cnt))
+      allocate(ind%x_graze_zoo(zooplankton_cnt))
       do n = 1,zooplankton_cnt
         lname    = trim(zooplankton_config(n)%lname) // ' Loss'
         sname    = trim(zooplankton_config(n)%sname) // '_loss'
@@ -2816,7 +2851,20 @@ contains
         end if
 
         !  Nonstandard autotroph 2D and 3D fields for each autotroph
-
+        allocate(ind%CISO_eps_autotroph(autotroph_cnt))
+        allocate(ind%CISO_mui_to_co2star(autotroph_cnt))
+        allocate(ind%CISO_Ca13CO3_form(autotroph_cnt))
+        allocate(ind%CISO_Ca14CO3_form(autotroph_cnt))
+        allocate(ind%CISO_Ca13CO3_form_zint(autotroph_cnt))
+        allocate(ind%CISO_Ca14CO3_form_zint(autotroph_cnt))
+        allocate(ind%CISO_photo13C(autotroph_cnt))
+        allocate(ind%CISO_photo14C(autotroph_cnt))
+        allocate(ind%CISO_photo13C_zint(autotroph_cnt))
+        allocate(ind%CISO_photo14C_zint(autotroph_cnt))
+        allocate(ind%CISO_d13C(autotroph_cnt))
+        allocate(ind%CISO_d14C(autotroph_cnt))
+        allocate(ind%CISO_autotrophCaCO3_d13C(autotroph_cnt))
+        allocate(ind%CISO_autotrophCaCO3_d14C(autotroph_cnt))
         do n = 1, autotroph_cnt
           lname    = trim(autotrophs_config(n)%lname) // ' Ca13CO3 Formation'
           sname    = 'CISO_' // trim(autotrophs_config(n)%sname) // '_Ca13CO3_form'

@@ -8,12 +8,12 @@ module marbl_sizes
 
   !-----------------------------------------------------------------------------
   ! number of ecosystem constituents and grazing interactions
+  ! Stored here and not in marbl_parms to avoid circular dependency
+  ! between marbl_parms and marbl_internal_types
   !-----------------------------------------------------------------------------
 
-  integer (KIND=int_kind), parameter :: zooplankton_cnt = ZOOPLANKTON_CNT
-  integer (KIND=int_kind), parameter :: autotroph_cnt   = AUTOTROPH_CNT
-  integer (KIND=int_kind), parameter :: grazer_prey_cnt = GRAZER_PREY_CNT
-
-  integer (KIND=int_kind), parameter :: max_prey_class_size = 9
+  integer (KIND=int_kind), target :: zooplankton_cnt
+  integer (KIND=int_kind), target :: autotroph_cnt
+  integer (KIND=int_kind), target :: grazer_prey_cnt
 
 end module marbl_sizes

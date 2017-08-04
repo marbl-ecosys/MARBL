@@ -297,7 +297,11 @@ contains
     character(len=char_len) :: log_message
 
     ! set default values for parameters
-    call marbl_parms_set_defaults(num_levels)
+    call marbl_parms_set_defaults(num_levels, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_parms_set_defaults()", subname)
+      return
+    end if
 
     ! construct parameters_type
     call marbl_define_parameters(marbl_settings, marbl_status_log)

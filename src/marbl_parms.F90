@@ -64,9 +64,9 @@ module marbl_parms
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lcompute_nhx_surface_emis      ! control if NHx emissions are computed
   logical(log_kind), target :: lvariable_PtoC                 ! control if PtoC ratios in autotrophs vary
-  type(autotroph_config_type), dimension(autotroph_cnt), target :: autotrophs_config
-  type(zooplankton_config_type), dimension(zooplankton_cnt), target :: zooplankton_config
-  type(grazing_config_type), dimension(grazer_prey_cnt, zooplankton_cnt), target :: grazing_config
+  type(autotroph_config_type), allocatable, target :: autotrophs_config(:)
+  type(zooplankton_config_type), allocatable, target :: zooplankton_config(:)
+  type(grazing_config_type), allocatable, target :: grazing_config(:,:)
 
   !-----------------------------------------------------------------------
   !  bury to sediment options
@@ -110,9 +110,9 @@ module marbl_parms
        parm_scalelen_z,       & ! depths of prescribed scalelen values
        parm_scalelen_vals       ! prescribed scalelen values
 
-  type(zooplankton_parms_type), target :: zooplankton(zooplankton_cnt)
-  type(autotroph_parms_type),   target :: autotrophs(autotroph_cnt)
-  type(grazing_parms_type),     target :: grazing(grazer_prey_cnt, zooplankton_cnt)
+  type(zooplankton_parms_type), allocatable, target :: zooplankton(:)
+  type(autotroph_parms_type),   allocatable, target :: autotrophs(:)
+  type(grazing_parms_type),     allocatable, target :: grazing(:, :)
 
   real(r8),                target :: iron_frac_in_dust            ! fraction by weight of iron in dust
   real(r8),                target :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
@@ -270,6 +270,16 @@ contains
   subroutine marbl_config_set_defaults()
 
     integer :: m, n
+
+    ! move these to marbl_setting_set_defaults
+    autotroph_cnt = 3
+    zooplankton_cnt = 1
+    grazer_prey_cnt = 3
+
+    ! Allocate memory
+    allocate(autotrophs_config(autotroph_cnt))
+    allocate(zooplankton_config(zooplankton_cnt))
+    allocate(grazing_config(grazer_prey_cnt, zooplankton_cnt))
 
     !-----------------------------------------------------------------------
     !  &marbl_config_nml
@@ -708,26 +718,35 @@ contains
 
     type(marbl_log_type), intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_config_mod:set_derived_config'
+    character(len=*), parameter :: subname = 'marbl_parms_mod:set_derived_config'
     character(len=char_len) :: log_message
 
   end subroutine set_derived_config
 
   !*****************************************************************************
 
-  subroutine marbl_parms_set_defaults(km)
-    ! assign default values to all module variables
+  subroutine marbl_parms_set_defaults(km, marbl_status_log)
+    ! allocate memory for allocatable parameters
+    ! assign default values to all parameters
 
     ! NOTE: defaults values below, of vars in the marbl_parms framework, may be overridden at runtime
     !       through either a namelist read or a put call from marbl_settings_type class
 
     integer, intent(in) :: km         ! max number of levels
+    type(marbl_log_type), intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'marbl_parms_mod:marbl_parms_set_defaults'
+    character(len=char_len) :: log_message
     integer :: m, n
     !---------------------------------------------------------------------------
+
+    ! Allocate memory
+    allocate(autotrophs(autotroph_cnt))
+    allocate(zooplankton(zooplankton_cnt))
+    allocate(grazing(grazer_prey_cnt, zooplankton_cnt))
 
     !-----------------------------------------------------------------------
     !  &marbl_parms_nml
@@ -867,6 +886,12 @@ contains
     ! predator-prey relationships
     do n=1,zooplankton_cnt
       do m=1,grazer_prey_cnt
+        call grazing(m,n)%construct(grazing_config(m,n), marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
+          call marbl_status_log%log_error_trace(log_message, subname)
+          return
+        end if
 
         ! Properties that are the same for all grazers
         grazing(m,n)%auto_ind(:)      = 0
