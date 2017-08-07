@@ -274,7 +274,8 @@ module marbl_diagnostics_mod
      ! restoring 3D diags
      integer(int_kind), dimension(:), allocatable :: restore_tend
    contains
-     procedure, public :: destruct => interior_diag_ind_deconstructor
+     procedure, public :: lconstructed => interior_diag_ind_constructed
+     procedure, public :: destruct => interior_diag_ind_destructor
   end type marbl_interior_diagnostics_indexing_type
   type(marbl_interior_diagnostics_indexing_type), public :: marbl_interior_diag_ind
 
@@ -1241,9 +1242,11 @@ contains
       end if
 
       ! Autotroph 2D diags
-      allocate(ind%photoC_zint(autotroph_cnt))
-      allocate(ind%photoC_NO3_zint(autotroph_cnt))
-      allocate(ind%CaCO3_form_zint(autotroph_cnt))
+      if (.not.ind%lconstructed()) then
+        allocate(ind%photoC_zint(autotroph_cnt))
+        allocate(ind%photoC_NO3_zint(autotroph_cnt))
+        allocate(ind%CaCO3_form_zint(autotroph_cnt))
+      end if
       do n=1,autotroph_cnt
         lname = trim(autotrophs_config(n)%lname) // ' C Fixation Vertical Integral'
         sname = 'photoC_' // trim(autotrophs_config(n)%sname) // '_zint'
@@ -2010,30 +2013,32 @@ contains
       end if
 
       ! Autotroph 3D diags
-      allocate(ind%Qp(autotroph_cnt))
-      allocate(ind%N_lim(autotroph_cnt))
-      allocate(ind%P_lim(autotroph_cnt))
-      allocate(ind%Fe_lim(autotroph_cnt))
-      allocate(ind%SiO3_lim(autotroph_cnt))
-      allocate(ind%light_lim(autotroph_cnt))
-      allocate(ind%photoC(autotroph_cnt))
-      allocate(ind%photoC_NO3(autotroph_cnt))
-      allocate(ind%photoFe(autotroph_cnt))
-      allocate(ind%photoNO3(autotroph_cnt))
-      allocate(ind%photoNH4(autotroph_cnt))
-      allocate(ind%DOP_uptake(autotroph_cnt))
-      allocate(ind%PO4_uptake(autotroph_cnt))
-      allocate(ind%auto_graze(autotroph_cnt))
-      allocate(ind%auto_graze_poc(autotroph_cnt))
-      allocate(ind%auto_graze_doc(autotroph_cnt))
-      allocate(ind%auto_graze_zoo(autotroph_cnt))
-      allocate(ind%auto_loss(autotroph_cnt))
-      allocate(ind%auto_loss_poc(autotroph_cnt))
-      allocate(ind%auto_loss_doc(autotroph_cnt))
-      allocate(ind%auto_agg(autotroph_cnt))
-      allocate(ind%bSi_form(autotroph_cnt))
-      allocate(ind%CaCO3_form(autotroph_cnt))
-      allocate(ind%Nfix(autotroph_cnt))
+      if (.not.ind%lconstructed()) then
+        allocate(ind%Qp(autotroph_cnt))
+        allocate(ind%N_lim(autotroph_cnt))
+        allocate(ind%P_lim(autotroph_cnt))
+        allocate(ind%Fe_lim(autotroph_cnt))
+        allocate(ind%SiO3_lim(autotroph_cnt))
+        allocate(ind%light_lim(autotroph_cnt))
+        allocate(ind%photoC(autotroph_cnt))
+        allocate(ind%photoC_NO3(autotroph_cnt))
+        allocate(ind%photoFe(autotroph_cnt))
+        allocate(ind%photoNO3(autotroph_cnt))
+        allocate(ind%photoNH4(autotroph_cnt))
+        allocate(ind%DOP_uptake(autotroph_cnt))
+        allocate(ind%PO4_uptake(autotroph_cnt))
+        allocate(ind%auto_graze(autotroph_cnt))
+        allocate(ind%auto_graze_poc(autotroph_cnt))
+        allocate(ind%auto_graze_doc(autotroph_cnt))
+        allocate(ind%auto_graze_zoo(autotroph_cnt))
+        allocate(ind%auto_loss(autotroph_cnt))
+        allocate(ind%auto_loss_poc(autotroph_cnt))
+        allocate(ind%auto_loss_doc(autotroph_cnt))
+        allocate(ind%auto_agg(autotroph_cnt))
+        allocate(ind%bSi_form(autotroph_cnt))
+        allocate(ind%CaCO3_form(autotroph_cnt))
+        allocate(ind%Nfix(autotroph_cnt))
+      end if
       do n= 1,autotroph_cnt
         lname = trim(autotrophs_config(n)%lname) // ' P:C ratio'
         sname = trim(autotrophs_config(n)%sname) // '_Qp'
@@ -2379,14 +2384,16 @@ contains
       end if
 
       ! Zooplankton 3D diags
-      allocate(ind%zoo_loss(zooplankton_cnt))
-      allocate(ind%zoo_loss_poc(zooplankton_cnt))
-      allocate(ind%zoo_loss_doc(zooplankton_cnt))
-      allocate(ind%zoo_graze(zooplankton_cnt))
-      allocate(ind%zoo_graze_poc(zooplankton_cnt))
-      allocate(ind%zoo_graze_doc(zooplankton_cnt))
-      allocate(ind%zoo_graze_zoo(zooplankton_cnt))
-      allocate(ind%x_graze_zoo(zooplankton_cnt))
+      if (.not.ind%lconstructed()) then
+        allocate(ind%zoo_loss(zooplankton_cnt))
+        allocate(ind%zoo_loss_poc(zooplankton_cnt))
+        allocate(ind%zoo_loss_doc(zooplankton_cnt))
+        allocate(ind%zoo_graze(zooplankton_cnt))
+        allocate(ind%zoo_graze_poc(zooplankton_cnt))
+        allocate(ind%zoo_graze_doc(zooplankton_cnt))
+        allocate(ind%zoo_graze_zoo(zooplankton_cnt))
+        allocate(ind%x_graze_zoo(zooplankton_cnt))
+      end if
       do n = 1,zooplankton_cnt
         lname    = trim(zooplankton_config(n)%lname) // ' Loss'
         sname    = trim(zooplankton_config(n)%sname) // '_loss'
@@ -2852,20 +2859,22 @@ contains
         end if
 
         !  Nonstandard autotroph 2D and 3D fields for each autotroph
-        allocate(ind%CISO_eps_autotroph(autotroph_cnt))
-        allocate(ind%CISO_mui_to_co2star(autotroph_cnt))
-        allocate(ind%CISO_Ca13CO3_form(autotroph_cnt))
-        allocate(ind%CISO_Ca14CO3_form(autotroph_cnt))
-        allocate(ind%CISO_Ca13CO3_form_zint(autotroph_cnt))
-        allocate(ind%CISO_Ca14CO3_form_zint(autotroph_cnt))
-        allocate(ind%CISO_photo13C(autotroph_cnt))
-        allocate(ind%CISO_photo14C(autotroph_cnt))
-        allocate(ind%CISO_photo13C_zint(autotroph_cnt))
-        allocate(ind%CISO_photo14C_zint(autotroph_cnt))
-        allocate(ind%CISO_d13C(autotroph_cnt))
-        allocate(ind%CISO_d14C(autotroph_cnt))
-        allocate(ind%CISO_autotrophCaCO3_d13C(autotroph_cnt))
-        allocate(ind%CISO_autotrophCaCO3_d14C(autotroph_cnt))
+        if (.not.ind%lconstructed()) then
+          allocate(ind%CISO_eps_autotroph(autotroph_cnt))
+          allocate(ind%CISO_mui_to_co2star(autotroph_cnt))
+          allocate(ind%CISO_Ca13CO3_form(autotroph_cnt))
+          allocate(ind%CISO_Ca14CO3_form(autotroph_cnt))
+          allocate(ind%CISO_Ca13CO3_form_zint(autotroph_cnt))
+          allocate(ind%CISO_Ca14CO3_form_zint(autotroph_cnt))
+          allocate(ind%CISO_photo13C(autotroph_cnt))
+          allocate(ind%CISO_photo14C(autotroph_cnt))
+          allocate(ind%CISO_photo13C_zint(autotroph_cnt))
+          allocate(ind%CISO_photo14C_zint(autotroph_cnt))
+          allocate(ind%CISO_d13C(autotroph_cnt))
+          allocate(ind%CISO_d14C(autotroph_cnt))
+          allocate(ind%CISO_autotrophCaCO3_d13C(autotroph_cnt))
+          allocate(ind%CISO_autotrophCaCO3_d14C(autotroph_cnt))
+        end if
         do n = 1, autotroph_cnt
           lname    = trim(autotrophs_config(n)%lname) // ' Ca13CO3 Formation'
           sname    = 'CISO_' // trim(autotrophs_config(n)%sname) // '_Ca13CO3_form'
@@ -3124,7 +3133,7 @@ contains
        ! FIXME #60: this approach is not thread-safe
        !    i.e. if this is called from 2 threads simulatneously, a race condition
        !    on the allocation status check and allocation is introduced
-       if (.not. allocated(ind%restore_tend)) then
+       if (.not.ind%lconstructed()) then
           allocate(ind%restore_tend(marbl_tracer_indices%total_cnt))
        end if
 
@@ -4766,7 +4775,18 @@ contains
 
   !*****************************************************************************
 
-  subroutine interior_diag_ind_deconstructor(this)
+  function interior_diag_ind_constructed(this) result(constructed)
+
+    class(marbl_interior_diagnostics_indexing_type), intent(inout) :: this
+    logical(log_kind) :: constructed
+
+    constructed = allocated(this%restore_tend)
+
+  end function interior_diag_ind_constructed
+
+  !*****************************************************************************
+
+  subroutine interior_diag_ind_destructor(this)
 
     class(marbl_interior_diagnostics_indexing_type), intent(inout) :: this
 
@@ -4819,8 +4839,9 @@ contains
     deallocate(this%CISO_d14C)
     deallocate(this%CISO_autotrophCaCO3_d14C)
     deallocate(this%CISO_autotrophCaCO3_d13C)
+    deallocate(this%restore_tend)
 
-  end subroutine interior_diag_ind_deconstructor
+  end subroutine interior_diag_ind_destructor
 
   !*****************************************************************************
 

@@ -131,8 +131,8 @@ module marbl_parms
   real(r8),                target :: PON_bury_coeff
   character(len=char_len), target :: ciso_fract_factors           ! option for which biological fractionation calculation to use
 
-  ! FIXME #69: this array is allocated in marbl_interface::init_phase2
-  !            and that allocation is not thread safe
+  ! FIXME #69: this array is allocated in marbl_init_mod:marbl_init_tracers()
+  !            and that allocation is not ideal for threaded runs
   character(len=char_len), allocatable, target, dimension(:) :: tracer_restore_vars
 
   !---------------------------------------------------------------------
@@ -542,9 +542,12 @@ contains
     integer :: m, n
 
     ! Allocate memory
-    allocate(autotrophs_config(autotroph_cnt))
-    allocate(zooplankton_config(zooplankton_cnt))
-    allocate(grazing_config(grazer_prey_cnt, zooplankton_cnt))
+    ! FIXME #69: this is not ideal for threaded runs
+    if (.not.allocated(autotrophs_config)) then
+      allocate(autotrophs_config(autotroph_cnt))
+      allocate(zooplankton_config(zooplankton_cnt))
+      allocate(grazing_config(grazer_prey_cnt, zooplankton_cnt))
+    end if
 
     !-----------------------------------------------------------------------
     !  Default values
@@ -844,9 +847,12 @@ contains
     !---------------------------------------------------------------------------
 
     ! Allocate memory
-    allocate(autotrophs(autotroph_cnt))
-    allocate(zooplankton(zooplankton_cnt))
-    allocate(grazing(grazer_prey_cnt, zooplankton_cnt))
+    ! FIXME #69: this is not ideal for threaded runs
+    if (.not.allocated(autotrophs)) then
+      allocate(autotrophs(autotroph_cnt))
+      allocate(zooplankton(zooplankton_cnt))
+      allocate(grazing(grazer_prey_cnt, zooplankton_cnt))
+    end if
 
     !-----------------------------------------------------------------------
     !  Default values
@@ -986,7 +992,9 @@ contains
     ! predator-prey relationships
     do n=1,zooplankton_cnt
       do m=1,grazer_prey_cnt
-        call grazing(m,n)%construct(grazing_config(m,n), marbl_status_log)
+        ! FIXME #69: this is not ideal for threaded runs
+        if (.not.allocated(grazing(m,n)%auto_ind)) &
+          call grazing(m,n)%construct(grazing_config(m,n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
           call marbl_status_log%log_error_trace(log_message, subname)

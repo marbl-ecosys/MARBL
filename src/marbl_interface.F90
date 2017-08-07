@@ -890,19 +890,25 @@ contains
     integer(int_kind) :: m,n
 
     ! free dynamically allocated memory, etc
-    deallocate(autotrophs_config)
-    deallocate(zooplankton_config)
-    deallocate(grazing_config)
-    deallocate(autotrophs)
-    deallocate(zooplankton)
-    do m=1,grazer_prey_cnt
-      do n=1,zooplankton_cnt
-        deallocate(grazing(m,n)%auto_ind)
-        deallocate(grazing(m,n)%zoo_ind)
+    ! FIXME #69: this is not ideal for threaded runs
+    if (allocated(autotrophs_config)) then
+      deallocate(autotrophs_config)
+      deallocate(zooplankton_config)
+      deallocate(grazing_config)
+    end if
+    if (allocated(autotrophs)) then
+      deallocate(autotrophs)
+      deallocate(zooplankton)
+      do m=1,grazer_prey_cnt
+        do n=1,zooplankton_cnt
+          deallocate(grazing(m,n)%auto_ind)
+          deallocate(grazing(m,n)%zoo_ind)
+        end do
       end do
-    end do
-    deallocate(grazing)
-    call marbl_interior_diag_ind%destruct()
+      deallocate(grazing)
+    end if
+    if (marbl_interior_diag_ind%lconstructed()) &
+      call marbl_interior_diag_ind%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
