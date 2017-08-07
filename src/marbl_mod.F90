@@ -3894,8 +3894,8 @@ contains
             !CO2 effect
             picpoc = -0.0136 * CO2 + picpoc + 0.21
 
-            !nut lim effect
-            !picpoc = -0.48 * Plim(auto_ind) + picpoc + 0.48
+            !nut lim effect (maybe just making this for P-limited areas? if (Plim(auto_ind) == f_nut(auto_ind) then..)
+            picpoc = -0.48 * Plim(auto_ind) + picpoc + 0.48
 
             !multiply cocco growth rate by picpoc to get CaCO3 formation
 

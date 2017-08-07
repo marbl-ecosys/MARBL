@@ -288,7 +288,7 @@ contains
     do n=1,autotroph_cnt
       select case (trim(autotrophs_config(n)%sname))
         case ('sp')
-          autotrophs(n)%kFe             = 0.03e-3_r8         ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kFe             = 0.027e-3_r8         ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kPO4            = 0.005_r8           ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kDOP            = 0.3_r8             ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kNO3            = 0.22_r8            ! in marbl_parms framework, see NOTE above
@@ -316,13 +316,13 @@ contains
           autotrophs(n)%kDOP            = 0.5_r8             ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kNO3            = 0.5_r8             ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kNH4            = 0.05_r8            ! in marbl_parms framework, see NOTE above
-          autotrophs(n)%kSiO3           = 0.7_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kSiO3           = 0.72_r8             ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kCO2            = 0.0_r8             !!!! added
           autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
           autotrophs(n)%gQfe_0          = 35.0e-6_r8
           autotrophs(n)%gQfe_min        = 3.0e-6_r8
           autotrophs(n)%alphaPI_per_day = 0.29_r8
-          autotrophs(n)%PCref_per_day   = 5.2_r8
+          autotrophs(n)%PCref_per_day   = 5.1_r8
           autotrophs(n)%thetaN_max      = 4.0_r8
           autotrophs(n)%loss_thres      = 0.02_r8
           autotrophs(n)%loss_thres2     = 0.0_r8
@@ -357,10 +357,10 @@ contains
           autotrophs(n)%loss_poc        = 0.0_r8
 
         case ('cocco')
-        autotrophs(n)%kFe             = 0.03e-3_r8         ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kFe             = 0.027e-3_r8         ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kPO4            = 0.006_r8           ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kDOP            = 0.3_r8             ! in marbl_parms framework, see NOTE above
-        autotrophs(n)%kNO3            = 0.35_r8            ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kNO3            = 0.32_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kNH4            = 0.012_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kCO2            = 2.12_r8             !!!! added Km for CO2 for coccos
