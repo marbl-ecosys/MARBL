@@ -4788,6 +4788,8 @@ contains
 
   subroutine interior_diag_ind_destructor(this)
 
+    use marbl_parms, only : ciso_on
+
     class(marbl_interior_diagnostics_indexing_type), intent(inout) :: this
 
     deallocate(this%photoC_zint)
@@ -4825,21 +4827,23 @@ contains
     deallocate(this%zoo_graze_doc)
     deallocate(this%zoo_graze_zoo)
     deallocate(this%x_graze_zoo)
-    deallocate(this%CISO_eps_autotroph)
-    deallocate(this%CISO_mui_to_co2star)
-    deallocate(this%CISO_Ca13CO3_form)
-    deallocate(this%CISO_Ca14CO3_form)
-    deallocate(this%CISO_Ca13CO3_form_zint)
-    deallocate(this%CISO_Ca14CO3_form_zint)
-    deallocate(this%CISO_photo13C)
-    deallocate(this%CISO_photo14C)
-    deallocate(this%CISO_photo13C_zint)
-    deallocate(this%CISO_photo14C_zint)
-    deallocate(this%CISO_d13C)
-    deallocate(this%CISO_d14C)
-    deallocate(this%CISO_autotrophCaCO3_d14C)
-    deallocate(this%CISO_autotrophCaCO3_d13C)
-    deallocate(this%restore_tend)
+    if (ciso_on) then
+      deallocate(this%CISO_eps_autotroph)
+      deallocate(this%CISO_mui_to_co2star)
+      deallocate(this%CISO_Ca13CO3_form)
+      deallocate(this%CISO_Ca14CO3_form)
+      deallocate(this%CISO_Ca13CO3_form_zint)
+      deallocate(this%CISO_Ca14CO3_form_zint)
+      deallocate(this%CISO_photo13C)
+      deallocate(this%CISO_photo14C)
+      deallocate(this%CISO_photo13C_zint)
+      deallocate(this%CISO_photo14C_zint)
+      deallocate(this%CISO_d13C)
+      deallocate(this%CISO_d14C)
+      deallocate(this%CISO_autotrophCaCO3_d14C)
+      deallocate(this%CISO_autotrophCaCO3_d13C)
+      deallocate(this%restore_tend)
+    end if
 
   end subroutine interior_diag_ind_destructor
 
