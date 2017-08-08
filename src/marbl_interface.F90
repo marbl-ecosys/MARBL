@@ -529,7 +529,7 @@ contains
             call string_to_var_or_datatype(array_elem_val, this%StatusLog, ival = ival)
             call this%put_setting(trim(var_loc), ival)
           case ("string")
-            call this%put_setting(trim(var_loc), trim(array_elem_val))
+            call this%put_single_string(trim(var_loc), trim(array_elem_val))
         end select
         array_elem_val=''
         char_ind_loc = 0
