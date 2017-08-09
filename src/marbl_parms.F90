@@ -526,17 +526,6 @@ contains
 
   !*****************************************************************************
 
-  subroutine set_derived_settings(marbl_status_log)
-
-    type(marbl_log_type), intent(inout) :: marbl_status_log
-
-    character(len=*), parameter :: subname = 'marbl_parms_mod:set_derived_settings'
-    character(len=char_len) :: log_message
-
-  end subroutine set_derived_settings
-
-  !*****************************************************************************
-
   subroutine marbl_config_set_defaults()
 
     integer :: m, n
@@ -814,17 +803,6 @@ contains
     end do
 
   end subroutine marbl_define_config_vars
-
-  !*****************************************************************************
-
-  subroutine set_derived_config(marbl_status_log)
-
-    type(marbl_log_type), intent(inout) :: marbl_status_log
-
-    character(len=*), parameter :: subname = 'marbl_parms_mod:set_derived_config'
-    character(len=char_len) :: log_message
-
-  end subroutine set_derived_config
 
   !*****************************************************************************
 
@@ -1910,14 +1888,14 @@ contains
 
   !*****************************************************************************
 
-  subroutine set_derived_parms(marbl_status_log)
+  subroutine set_derived(marbl_status_log)
 
     type(marbl_log_type), intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_parms:set_derived_parms'
+    character(len=*), parameter :: subname = 'marbl_parms:set_derived'
     character(len=char_len) :: log_message
 
     character(len=char_len) :: sname_in, sname_out
@@ -1928,21 +1906,21 @@ contains
     select case (caco3_bury_thres_opt)
     case ('fixed_depth')
        caco3_bury_thres_iopt = caco3_bury_thres_iopt_fixed_depth
-       sname_out = 'caco3_bury_thres_iopt_fixed_depth'
     case ('omega_calc')
        caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
-       sname_out = 'caco3_bury_thres_iopt_omega_calc'
     case default
        write(log_message, "(2A)") "unknown caco3_bury_thres_opt: ", trim(caco3_bury_thres_opt)
        call marbl_status_log%log_error(log_message, subname)
        return
     end select
-    call print_single_derived_parm('caco3_bury_thres_iopt', sname_out, &
+    call print_single_derived_parm('caco3_bury_thres_opt', 'caco3_bury_thres_iopt', &
          caco3_bury_thres_iopt, subname, marbl_status_log)
 
     parm_kappa_nitrif = dps * parm_kappa_nitrif_per_day
     call print_single_derived_parm('parm_kappa_nitrif_per_day', 'parm_kappa_nitrif', &
          parm_kappa_nitrif, subname, marbl_status_log)
+
+    call marbl_status_log%log_noerror('', subname)
 
     do n = 1, autotroph_cnt
        autotrophs(n)%alphaPI = dps * autotrophs(n)%alphaPI_per_day
@@ -1970,6 +1948,8 @@ contains
             autotrophs(n)%mort2, subname, marbl_status_log)
     end do
 
+    call marbl_status_log%log_noerror('', subname)
+
     do n = 1, zooplankton_cnt
        zooplankton(n)%z_mort_0 = dps * zooplankton(n)%z_mort_0_per_day
        write(sname_in,  "(A,I0,A)") 'zooplankton(', n, ')%z_mort_0_per_day'
@@ -1984,6 +1964,8 @@ contains
             zooplankton(n)%z_mort2_0, subname, marbl_status_log)
     end do
 
+    call marbl_status_log%log_noerror('', subname)
+
     do n = 1, zooplankton_cnt
        do m = 1, grazer_prey_cnt
           grazing(m,n)%z_umax_0 = dps * grazing(m,n)%z_umax_0_per_day
@@ -1994,7 +1976,7 @@ contains
        end do
     end do
 
-  end subroutine set_derived_parms
+  end subroutine set_derived
 
   !*****************************************************************************
 
@@ -2012,7 +1994,7 @@ contains
     character(len=char_len) :: log_message
 
     write(log_message, "(2A,E24.16,3A)") &
-         trim(sname_out), ' = ', val_out, ' (from ', trim(sname_in), ')'
+         trim(sname_out), ' = ', val_out, ' (value computed from ', trim(sname_in), ')'
     call marbl_status_log%log_noerror(log_message, subname)
 
   end subroutine print_single_derived_parm_r8
@@ -2033,7 +2015,7 @@ contains
     character(len=char_len) :: log_message
 
     write(log_message, "(2A,I0,3A)") &
-         trim(sname_out), ' = ', val_out, ' (from ', trim(sname_in), ')'
+         trim(sname_out), ' = ', val_out, ' (value computed from ', trim(sname_in), ')'
     call marbl_status_log%log_noerror(log_message, subname)
 
   end subroutine print_single_derived_parm_int

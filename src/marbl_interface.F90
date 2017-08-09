@@ -182,6 +182,7 @@ contains
     use marbl_init_mod, only : marbl_init_parameters
     use marbl_init_mod, only : marbl_init_bury_coeff
     use marbl_init_mod, only : marbl_init_forcing_fields
+    use marbl_parms,    only : set_derived
 
 
     use marbl_diagnostics_mod, only : marbl_diagnostics_init
@@ -368,6 +369,14 @@ contains
     call this%settings%finalize_vars(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('parmeters%finalize_vars', subname)
+      return
+    end if
+
+    ! Set variables that depend on previously-set values
+    ! (Typically unit conversion or string -> int for easy comparison)
+    call set_derived(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('set_derived_parms', subname)
       return
     end if
 

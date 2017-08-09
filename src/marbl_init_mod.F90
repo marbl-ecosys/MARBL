@@ -70,7 +70,6 @@ contains
     use marbl_parms, only : marbl_settings_set_defaults
     use marbl_parms, only : marbl_define_settings
     use marbl_parms, only : ladjust_bury_coeff
-    use marbl_parms, only : set_derived_settings
 
     logical,                    intent(in)    :: lallow_glo_ops
     type(marbl_settings_type),  intent(inout) :: marbl_settings
@@ -104,16 +103,6 @@ contains
       return
     end if
 
-    !---------------------------------------------------------------------------
-    ! set basic settings that depend on now-locked vars
-    !---------------------------------------------------------------------------
-
-    call set_derived_settings(marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('set_derived_config', subname)
-      return
-    end if
-
   end subroutine marbl_init_settings
 
   !***********************************************************************
@@ -123,7 +112,6 @@ contains
     use marbl_config_mod, only : marbl_settings_type
     use marbl_parms, only : marbl_config_set_defaults
     use marbl_parms, only : marbl_define_config_vars
-    use marbl_parms, only : set_derived_config
 
     logical,                    intent(in)    :: lallow_glo_ops
     type(marbl_settings_type),  intent(inout) :: marbl_settings
@@ -146,16 +134,6 @@ contains
     call marbl_define_config_vars(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_define_config_vars()", subname)
-      return
-    end if
-
-    !---------------------------------------------------------------------------
-    ! set configuration variables that depend on now-locked vars
-    !---------------------------------------------------------------------------
-
-    call set_derived_config(marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('set_derived_config', subname)
       return
     end if
 
@@ -335,7 +313,7 @@ contains
     use marbl_config_mod, only : marbl_settings_type
     use marbl_parms, only : marbl_parms_set_defaults
     use marbl_parms, only : marbl_define_parameters
-    use marbl_parms, only : set_derived_parms
+    use marbl_parms, only : set_derived
 
     integer(int_kind),          intent(in)    :: num_levels
     type(marbl_settings_type),  intent(inout) :: marbl_settings
@@ -356,13 +334,6 @@ contains
     call marbl_define_parameters(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_define_parameters()", subname)
-      return
-    end if
-
-    ! Set parameters that depend on now-locked parameters
-    call set_derived_parms(marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('set_derived_parms', subname)
       return
     end if
 
