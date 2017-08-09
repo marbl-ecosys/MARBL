@@ -1,4 +1,4 @@
-module marbl_init_no_namelist_drv
+module marbl_init_drv
 
   use marbl_interface,     only : marbl_interface_class
   use marbl_kinds_mod,     only : r8
@@ -21,7 +21,7 @@ Contains
     type(marbl_interface_class), intent(inout) :: marbl_instance
     integer, optional,           intent(inout) :: nt
 
-    character(*), parameter      :: subname = 'marbl_init_no_namelist_drv:test'
+    character(*), parameter      :: subname = 'marbl_init_drv:test'
     real(kind=r8), dimension(km) :: delta_z, zw, zt
     integer                      :: k
 
@@ -58,4 +58,4 @@ Contains
 
   end subroutine test
 
-end module marbl_init_no_namelist_drv
+end module marbl_init_drv
