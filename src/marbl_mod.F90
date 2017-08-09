@@ -971,6 +971,7 @@ contains
     real (r8) :: sed_denitrif(domain%km)     ! sedimentary denitrification (nmol N/cm^3/sec)
     real (r8) :: other_remin(domain%km)      ! organic C remin not due oxic or denitrif (nmolC/cm^3/sec)
     real (r8) :: Tfunc(domain%km)
+    real (r8) :: Tfunc_cocco(domain%km)     ! temperature function specific to coccolithophores
     real (r8) :: Fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient
     real (r8) :: Fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
     real (r8) :: Lig_scavenge(domain%km)     ! loss of Fe-binding Ligand from scavenging (mmol Fe/m^3/sec)
@@ -1102,7 +1103,7 @@ contains
             autotrophs, autotrophs_config, autotroph_local(:, k), tracer_local(:, k),      &
             marbl_tracer_indices, autotroph_secondary_species(:, k))
 
-       call marbl_compute_function_scaling(temperature(k), Tfunc(k))
+       call marbl_compute_function_scaling(temperature(k), Tfunc(k), Tfunc_cocco(k))
 
        call marbl_compute_Pprime(k, domain, autotroph_cnt, autotrophs, &
             autotroph_local(:, k), temperature(k), autotroph_secondary_species(:, k))
@@ -1113,7 +1114,7 @@ contains
 
        call marbl_compute_autotroph_photosynthesis(autotroph_cnt,       &
             num_PAR_subcols, autotrophs, autotroph_local(:, k),         &
-            temperature(k), Tfunc(k), PAR%col_frac(:), &
+            temperature(k), autotrophs_config, Tfunc(k), Tfunc_cocco(k), PAR%col_frac(:), &
             PAR%avg(k,:), autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_phyto_diatoms (autotroph_cnt, &
@@ -3432,7 +3433,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_function_scaling(column_temperature, Tfunc )
+  subroutine marbl_compute_function_scaling(column_temperature, Tfunc, Tfunc_cocco )
 
     !-----------------------------------------------------------------------
     !  Tref = 30.0 reference temperature (deg. C)
@@ -3446,8 +3447,12 @@ contains
 
     real(r8), intent(in)  :: column_temperature
     real(r8), intent(out) :: Tfunc
+    real(r8), intent(out) :: Tfunc_cocco
 
     Tfunc = Q_10**(((column_temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
+
+
+    Tfunc_cocco = 0.085 * (column_temperature + T0_Kelvin)**(0.53)
 
   end subroutine marbl_compute_function_scaling
 
@@ -3663,7 +3668,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_autotroph_photosynthesis (auto_cnt, PAR_nsubcols, &
-       auto_meta, autotroph_loc, temperature, Tfunc, PAR_col_frac, PAR_avg,  &
+       auto_meta, autotroph_loc, temperature, auto_config, Tfunc, Tfunc_cocco, PAR_col_frac, PAR_avg,  &
        autotroph_secondary_species)
 
     !-----------------------------------------------------------------------
@@ -3677,7 +3682,9 @@ contains
     type(autotroph_parms_type)             , intent(in)    :: auto_meta(auto_cnt)
     type(autotroph_local_type)             , intent(in)    :: autotroph_loc(auto_cnt)
     real(r8)                               , intent(in)    :: temperature
+    type(autotroph_config_type)            , intent(in)    :: auto_config(auto_cnt)
     real(r8)                               , intent(in)    :: Tfunc
+    real(r8)                               , intent(in)    :: Tfunc_cocco
     real(r8)                               , intent(in)    :: PAR_col_frac(PAR_nsubcols)
     real(r8)                               , intent(in)    :: PAR_avg(PAR_nsubcols)
     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(auto_cnt)
@@ -3709,7 +3716,14 @@ contains
             alphaPI   => auto_meta(auto_ind)%alphaPI                      &
             )
 
-       PCmax = PCref * f_nut * Tfunc
+
+       if (auto_config(auto_ind)%exp_calcifier) then
+           PCmax = PCref * f_nut * Tfunc_cocco
+       else
+           PCmax = PCref * f_nut * Tfunc
+       end if
+
+
        if (temperature < autotrophs(auto_ind)%temp_thres) then
           PCmax = c0
        end if
