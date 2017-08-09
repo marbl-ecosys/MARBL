@@ -902,9 +902,6 @@ end subroutine put_string
 
   subroutine shutdown(this)
 
-    use marbl_parms, only : autotrophs_config
-    use marbl_parms, only : zooplankton_config
-    use marbl_parms, only : grazing_config
     use marbl_parms, only : autotrophs
     use marbl_parms, only : zooplankton
     use marbl_parms, only : grazing
@@ -920,11 +917,6 @@ end subroutine put_string
 
     ! free dynamically allocated memory, etc
     ! FIXME #69: this is not ideal for threaded runs
-    if (allocated(autotrophs_config)) then
-      deallocate(autotrophs_config)
-      deallocate(zooplankton_config)
-      deallocate(grazing_config)
-    end if
     if (allocated(autotrophs)) then
       deallocate(autotrophs)
       deallocate(zooplankton)

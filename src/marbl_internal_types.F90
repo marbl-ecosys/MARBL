@@ -22,32 +22,28 @@ module marbl_internal_types
   !****************************************************************************
   ! derived types for zooplankton
 
-  type, public :: zooplankton_config_type
+  type, public :: zooplankton_type
      character(len=char_len)     :: sname
      character(len=char_len)     :: lname
-  end type zooplankton_config_type
 
-  type, public :: zooplankton_parms_type
      real    (KIND=r8)       :: z_mort_0_per_day   ! zoo linear mort rate (1/day)
      real    (KIND=r8)       :: z_mort_0           ! zoo linear mort rate (1/sec) (derived from z_mort_0_per_day)
      real    (KIND=r8)       :: z_mort2_0_per_day  ! zoo quad mort rate (1/day/((mmol C/m3))
      real    (KIND=r8)       :: z_mort2_0          ! zoo quad mort rate (1/sec/((mmol C/m3)) (derived from z_mort2_0_per_day)
      real    (KIND=r8)       :: loss_thres         ! zoo conc. where losses go to zero
-  end type zooplankton_parms_type
+  end type zooplankton_type
 
   !****************************************************************************
   ! derived types for autotrophs
 
-  type, public :: autotroph_config_type
+  type, public :: autotroph_type
      character(len=char_len)     :: sname
      character(len=char_len)     :: lname
      logical (KIND=log_kind)     :: Nfixer                             ! flag set to true if this autotroph fixes N2
      logical (KIND=log_kind)     :: imp_calcifier                      ! flag set to true if this autotroph implicitly handles calcification
      logical (KIND=log_kind)     :: exp_calcifier                      ! flag set to true if this autotroph explicitly handles calcification
      logical (KIND=log_kind)     :: silicifier                         ! flag set to true if this autotroph is a silicifier
-  end type autotroph_config_type
 
-  type, public :: autotroph_parms_type
      real    (KIND=r8)       :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3 ! nutrient uptake half-sat constants
      real    (KIND=r8)       :: Qp_fixed                           ! P/C ratio for fixed P/C ratios
      real    (KIND=r8)       :: gQfe_0, gQfe_min                   ! initial and minimum Fe/C ratio for growth
@@ -64,19 +60,17 @@ module marbl_internal_types
                                                                    !    (derived from mort_per_day and mort2_per_day)
      real    (KIND=r8)       :: agg_rate_max, agg_rate_min         ! max and min agg. rate (1/d)
      real    (KIND=r8)       :: loss_poc                           ! routing of loss term
-  end type autotroph_parms_type
+  end type autotroph_type
 
   !****************************************************************************
   ! derived types for grazing
 
-  type, public :: grazing_config_type
+  type, public :: grazing_type
     character(len=char_len) :: sname
     character(len=char_len) :: lname
     integer (KIND=int_kind) :: auto_ind_cnt     ! number of autotrophs in prey-clase auto_ind
     integer (KIND=int_kind) :: zoo_ind_cnt      ! number of zooplankton in prey-clase zoo_ind
-  end type grazing_config_type
 
-  type, public :: grazing_parms_type
     integer (KIND=int_kind) :: grazing_function ! functional form of grazing parameterization
     real    (KIND=r8)       :: z_umax_0_per_day ! max zoo growth rate at tref (1/day)
     real    (KIND=r8)       :: z_umax_0         ! max zoo growth rate at tref (1/sec) (derived from z_umax_0_per_day)
@@ -88,8 +82,8 @@ module marbl_internal_types
     integer (KIND=int_kind), allocatable :: auto_ind(:)
     integer (KIND=int_kind), allocatable :: zoo_ind(:)
   contains
-    procedure, public :: construct => grazing_parms_constructor
-  end type grazing_parms_type
+    procedure, public :: construct => grazing_constructor
+  end type grazing_type
 
   !****************************************************************************
 
@@ -645,8 +639,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs_config, &
-             zooplankton_config, marbl_status_log, marbl_tracer_cnt)
+  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs, &
+             zooplankton, marbl_status_log, marbl_tracer_cnt)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -658,8 +652,8 @@ contains
     class(marbl_tracer_index_type), intent(inout) :: this
     logical,                        intent(in)    :: ciso_on
     logical,                        intent(in)    :: lvariable_PtoC
-    type(autotroph_config_type),    intent(in)    :: autotrophs_config(:)
-    type(zooplankton_config_type),  intent(in)    :: zooplankton_config(:)
+    type(autotroph_type),           intent(in)    :: autotrophs(:)
+    type(zooplankton_type),         intent(in)    :: zooplankton(:)
     type(marbl_log_type),           intent(inout) :: marbl_status_log
     integer(int_kind), optional,    intent(out)   :: marbl_tracer_cnt
 
@@ -695,33 +689,33 @@ contains
     call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
 
     do n=1,zooplankton_cnt
-      write(ind_name, "(2A)") trim(zooplankton_config(n)%sname), "C"
+      write(ind_name, "(2A)") trim(zooplankton(n)%sname), "C"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%zoo_inds(n)%C_ind, marbl_status_log)
     end do
 
     do n=1,autotroph_cnt
-      write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "Chl"
+      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Chl"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Chl_ind, marbl_status_log)
 
-      write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "C"
+      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%C_ind, marbl_status_log)
 
       if (lvariable_PtoC) then
-        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "P"
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "P"
         call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%P_ind, marbl_status_log)
       end if
 
-      write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "Fe"
+      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Fe"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Fe_ind, marbl_status_log)
 
-      if (autotrophs_config(n)%silicifier) then
-        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "Si"
+      if (autotrophs(n)%silicifier) then
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Si"
         call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Si_ind, marbl_status_log)
       end if
 
-      if (autotrophs_config(n)%imp_calcifier.or.                            &
-          autotrophs_config(n)%exp_calcifier) then
-        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "CaCO3"
+      if (autotrophs(n)%imp_calcifier.or.                            &
+          autotrophs(n)%exp_calcifier) then
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "CaCO3"
         call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
       end if
     end do
@@ -735,18 +729,18 @@ contains
       call this%add_tracer_index('zoo14c', 'ciso', this%zoo14C_ind, marbl_status_log)
 
       do n=1,autotroph_cnt
-        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "C13"
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C13"
         call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C13_ind, marbl_status_log)
 
-        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "C14"
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C14"
         call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C14_ind, marbl_status_log)
 
-        if (autotrophs_config(n)%imp_calcifier .or. &
-            autotrophs_config(n)%exp_calcifier) then
-        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "Ca13CO3"
+        if (autotrophs(n)%imp_calcifier .or. &
+            autotrophs(n)%exp_calcifier) then
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Ca13CO3"
           call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca13CO3_ind, marbl_status_log)
 
-        write(ind_name, "(2A)") trim(autotrophs_config(n)%sname), "Ca14CO3"
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Ca14CO3"
           call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca14CO3_ind, marbl_status_log)
         end if
       end do
@@ -1075,13 +1069,12 @@ contains
 
   !*****************************************************************************
 
-  subroutine grazing_parms_constructor(this, grazing_conf, marbl_status_log)
+  subroutine grazing_constructor(this, marbl_status_log)
 
-    class(grazing_parms_type), intent(inout) :: this
-    type(grazing_config_type), intent(in)    :: grazing_conf
+    class(grazing_type), intent(inout) :: this
     type(marbl_log_type),      intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_internal_types:grazing_config_constructor'
+    character(len=*), parameter :: subname = 'marbl_internal_types:grazing_constructor'
     character(len=char_len)     :: log_message
 
     if (allocated(this%auto_ind)) then
@@ -1096,10 +1089,10 @@ contains
       return
     end if
 
-    allocate(this%auto_ind(grazing_conf%auto_ind_cnt))
-    allocate(this%zoo_ind(grazing_conf%zoo_ind_cnt))
+    allocate(this%auto_ind(this%auto_ind_cnt))
+    allocate(this%zoo_ind(this%zoo_ind_cnt))
 
-  end subroutine grazing_parms_constructor
+  end subroutine grazing_constructor
 
   !*****************************************************************************
 
