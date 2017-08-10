@@ -77,7 +77,7 @@ class MARBL_testcase(object):
         found = False
         print 'No machine specified and %s is not recognized' % self._hostname
         print 'This test will assume you are not running on a supported cluster'
-        self._machine = 'local-gnu'
+        self._machine = 'local'
 
       if found:
         print 'No machine specified, but it looks like you are running on %s' % self._machine
@@ -121,7 +121,7 @@ class MARBL_testcase(object):
 
     src_dir = '%s/src' % self._marbl_dir
 
-    if self._machine not in ['local-gnu','local-pgi']:
+    if self._machine is not 'local':
       machs.load_module(self._machine, loc_compiler)
 
     makecmd = 'make %s' % loc_compiler
@@ -139,7 +139,7 @@ class MARBL_testcase(object):
 
     drv_dir = '%s/tests/driver_src' % self._marbl_dir
 
-    if self._machine not in ['local-gnu','local-pgi']:
+    if self._machine is not 'local':
       machs.load_module(self._machine, loc_compiler)
 
     makecmd = 'make %s' % loc_compiler

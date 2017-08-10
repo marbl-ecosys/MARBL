@@ -1,15 +1,20 @@
 import sys
+import os
 from os import system as sh_command
 
 # Supported machines for running MARBL tests
-supported_machines = ['local-gnu', 
-                      'local-pgi',
+supported_machines = ['local',
                       'yellowstone',
                       'cheyenne',
                       'hobart',
                       'edison']
 
 # -----------------------------------------------
+
+def _compiler_is_present(compiler):
+  for path in os.environ["PATH"].split(os.pathsep):
+    if os.access(os.path.join(path, compiler), os.X_OK): return True
+  return False
 
 def load_module(mach, compiler):
 
@@ -89,16 +94,23 @@ def machine_specific(mach, supported_compilers):
     supported_compilers.append('cray')
     return
 
-  if mach == 'local-gnu':
+  if mach == 'local':
     # Not a specific machine, but a flag to specify
-    # "run with gnu without loading any modules"
-    supported_compilers.append('gnu')
-    return
+    # "look for all compilers in path, use what is available"
+    if _compiler_is_present('gfortran'):
+      supported_compilers.append('gnu')
+    if _compiler_is_present('pgf90'):
+      supported_compilers.append('pgi')
+    if _compiler_is_present('ifort'):
+      supported_compilers.append('intel')
+    if _compiler_is_present('nagfor'):
+      supported_compilers.append('nag')
+    if supported_compilers == []:
+      print 'ERROR: can not find any compilers on this machine'
+      sys.exit(1)
+    else:
+      print 'Found the following compilers in $PATH: ', supported_compilers
 
-  if mach == 'local-pgi':
-    # Not a specific machine, but a flag to specify
-    # "run with pgi without loading any modules"
-    supported_compilers.append('pgi')
     return
 
 # -----------------------------------------------
