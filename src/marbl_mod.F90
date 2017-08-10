@@ -3452,7 +3452,7 @@ contains
     Tfunc = Q_10**(((column_temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
 
 
-    Tfunc_cocco = 0.065 * (column_temperature + T0_Kelvin)**(0.6)
+    Tfunc_cocco = 0.085 * (column_temperature + T0_Kelvin)**(0.53)
 
   end subroutine marbl_compute_function_scaling
 
