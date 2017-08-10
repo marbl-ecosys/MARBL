@@ -176,10 +176,10 @@ contains
        marbl_tracer_cnt)
 
     use marbl_init_mod, only : marbl_init_log_and_timers
-    use marbl_init_mod, only : marbl_init_settings
-    use marbl_init_mod, only : marbl_init_config_vars
-    use marbl_init_mod, only : marbl_init_tracers
     use marbl_init_mod, only : marbl_init_parameters
+    use marbl_init_mod, only : marbl_init_PFTs
+    use marbl_init_mod, only : marbl_init_tracers
+    use marbl_init_mod, only : marbl_init_post_tracers
     use marbl_init_mod, only : marbl_init_bury_coeff
     use marbl_init_mod, only : marbl_init_forcing_fields
     use marbl_parms,    only : set_derived
@@ -233,7 +233,7 @@ contains
     ! Initialize basic settings
     !---------------------------------------------------------------------------
 
-    call marbl_init_settings(this%lallow_glo_ops, this%settings, this%StatusLog)
+    call marbl_init_parameters(this%lallow_glo_ops, this%settings, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_settings", subname)
       return
@@ -243,7 +243,7 @@ contains
     ! Initialize configuration variables in settings
     !---------------------------------------------------------------------------
 
-    call marbl_init_config_vars(this%lallow_glo_ops, this%settings, this%StatusLog)
+    call marbl_init_PFTs(this%lallow_glo_ops, this%settings, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_config_vars", subname)
       return
@@ -326,7 +326,7 @@ contains
     !---------------------------------------------------------------------------
     ! Initialize parameters in settings
     !---------------------------------------------------------------------------
-    call marbl_init_parameters(num_levels, this%settings, this%StatusLog)
+    call marbl_init_post_tracers(num_levels, this%settings, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_parameters", subname)
       return

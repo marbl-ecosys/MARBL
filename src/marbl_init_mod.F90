@@ -19,10 +19,10 @@ module marbl_init_mod
   private
 
   public :: marbl_init_log_and_timers
-  public :: marbl_init_settings
-  public :: marbl_init_config_vars
-  public :: marbl_init_tracers
   public :: marbl_init_parameters
+  public :: marbl_init_PFTs
+  public :: marbl_init_post_tracers
+  public :: marbl_init_tracers
   public :: marbl_init_bury_coeff
   public :: marbl_init_forcing_fields
 
@@ -64,11 +64,11 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_settings(lallow_glo_ops, marbl_settings, marbl_status_log)
+  subroutine marbl_init_parameters(lallow_glo_ops, marbl_settings, marbl_status_log)
 
     use marbl_config_mod, only : marbl_settings_type
-    use marbl_parms, only : marbl_settings_set_defaults
-    use marbl_parms, only : marbl_define_settings
+    use marbl_parms, only : marbl_parms_set_defaults
+    use marbl_parms, only : marbl_define_parameters
     use marbl_parms, only : ladjust_bury_coeff
 
     logical,                    intent(in)    :: lallow_glo_ops
@@ -76,20 +76,20 @@ contains
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     ! local variables
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_settings'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters'
     character(len=char_len) :: log_message
 
     !---------------------------------------------------------------------------
     ! set default values for basic settings
     !---------------------------------------------------------------------------
 
-    call marbl_settings_set_defaults()
+    call marbl_parms_set_defaults()
 
     !---------------------------------------------------------------------------
     ! Add basic settings to list of allowable put / get vars
     !---------------------------------------------------------------------------
 
-    call marbl_define_settings(marbl_settings, marbl_status_log)
+    call marbl_define_parameters(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_define_config_vars()", subname)
       return
@@ -103,15 +103,15 @@ contains
       return
     end if
 
-  end subroutine marbl_init_settings
+  end subroutine marbl_init_parameters
 
   !***********************************************************************
 
-  subroutine marbl_init_config_vars(lallow_glo_ops, marbl_settings, marbl_status_log)
+  subroutine marbl_init_PFTs(lallow_glo_ops, marbl_settings, marbl_status_log)
 
     use marbl_config_mod, only : marbl_settings_type
-    use marbl_parms, only : marbl_config_set_defaults
-    use marbl_parms, only : marbl_define_config_vars
+    use marbl_parms, only : marbl_PFT_set_defaults
+    use marbl_parms, only : marbl_define_PFTs
 
     logical,                    intent(in)    :: lallow_glo_ops
     type(marbl_settings_type),  intent(inout) :: marbl_settings
@@ -125,19 +125,19 @@ contains
     ! set default values for configuration
     !---------------------------------------------------------------------------
 
-    call marbl_config_set_defaults()
+    call marbl_PFT_set_defaults()
 
     !---------------------------------------------------------------------------
     ! construct configuration_type
     !---------------------------------------------------------------------------
 
-    call marbl_define_config_vars(marbl_settings, marbl_status_log)
+    call marbl_define_PFTs(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_define_config_vars()", subname)
       return
     end if
 
-  end subroutine marbl_init_config_vars
+  end subroutine marbl_init_PFTs
 
   !***********************************************************************
 
@@ -308,11 +308,11 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_parameters(num_levels, marbl_settings, marbl_status_log)
+  subroutine marbl_init_post_tracers(num_levels, marbl_settings, marbl_status_log)
 
     use marbl_config_mod, only : marbl_settings_type
-    use marbl_parms, only : marbl_parms_set_defaults
-    use marbl_parms, only : marbl_define_parameters
+    use marbl_parms, only : marbl_post_tracer_set_defaults
+    use marbl_parms, only : marbl_define_post_tracers
     use marbl_parms, only : set_derived
 
     integer(int_kind),          intent(in)    :: num_levels
@@ -320,24 +320,24 @@ contains
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     ! local variables
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_post_tracers'
     character(len=char_len) :: log_message
 
     ! set default values for parameters
-    call marbl_parms_set_defaults(num_levels, marbl_status_log)
+    call marbl_post_tracer_set_defaults(num_levels, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_parms_set_defaults()", subname)
       return
     end if
 
     ! construct parameters_type
-    call marbl_define_parameters(marbl_settings, marbl_status_log)
+    call marbl_define_post_tracers(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_define_parameters()", subname)
       return
     end if
 
-  end subroutine marbl_init_parameters
+  end subroutine marbl_init_post_tracers
 
   !***********************************************************************
 
