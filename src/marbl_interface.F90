@@ -94,9 +94,8 @@ module marbl_interface
      real (r8)                                 , public, allocatable  :: glo_avg_fields_surface(:,:)  ! output (num_elements,nfields)
      real (r8)                                 , public, allocatable  :: glo_avg_averages_surface(:)  ! input (nfields)
 
-     ! FIXME
-     ! for now, running means are being computed in the driver
-     ! they will eventually be moved from the interface to inside MARBL
+     ! FIXME #77: for now, running means are being computed in the driver
+     !            they will eventually be moved from the interface to inside MARBL
      real (r8)                                 , public, allocatable  :: glo_scalar_interior(:)
      real (r8)                                 , public, allocatable  :: glo_scalar_surface(:)
 

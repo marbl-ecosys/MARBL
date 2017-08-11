@@ -45,7 +45,7 @@ Contains
                              gcm_zt = zt,                          &
                              marbl_tracer_cnt = nt)
     if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%init_phase3', subname)
+      call marbl_instance%StatusLog%log_error_trace('marbl%init', subname)
       return
     end if
 

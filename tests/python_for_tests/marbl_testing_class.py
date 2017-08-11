@@ -14,7 +14,7 @@ class MARBL_testcase(object):
     self._compiler = None
     self._machine = None
     self._hostname = None
-    self._inputfile = 'marbl.setup'
+    self._inputfile = None
     self._mpitasks = 0
     self._marbl_dir = path.abspath('%s/../..' % path.dirname(__file__))
 
@@ -35,7 +35,7 @@ class MARBL_testcase(object):
 
     if HaveInputFile:
       parser.add_argument('-i', '--input-file', action='store', dest='inputfile',
-                          help='input file to read', default='marbl.setup')
+                          help='input file to read', default='marbl.input')
 
     if CleanLibOnly:
       parser.add_argument('--clean', action='store_true',
