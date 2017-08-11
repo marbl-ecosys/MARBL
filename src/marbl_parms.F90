@@ -357,8 +357,8 @@ contains
           autotrophs(n)%loss_poc        = 0.0_r8
 
         case ('cocco')
-        autotrophs(n)%kFe             = 0.029e-3_r8         ! in marbl_parms framework, see NOTE above
-        autotrophs(n)%kPO4            = 0.006_r8           ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kFe             = 0.032e-3_r8         ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kPO4            = 0.007_r8           ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kDOP            = 0.3_r8             ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kNO3            = 0.3_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kNH4            = 0.012_r8            ! in marbl_parms framework, see NOTE above
@@ -368,8 +368,8 @@ contains
         autotrophs(n)%gQfe_0          = 15.0e-6_r8
         autotrophs(n)%gQfe_min        = 3.0e-6_r8
         autotrophs(n)%alphaPI_per_day = 0.3_r8
-        autotrophs(n)%PCref_per_day   = 5.0_r8
-        autotrophs(n)%thetaN_max      = 2.8_r8
+        autotrophs(n)%PCref_per_day   = 4.0_r8
+        autotrophs(n)%thetaN_max      = 2.6_r8
         autotrophs(n)%loss_thres      = 0.01_r8
         autotrophs(n)%loss_thres2     = 0.0_r8
         autotrophs(n)%temp_thres      = 0.0_r8
