@@ -155,7 +155,7 @@ module marbl_parms
        POPremin_refract = DOPprod_refract * 0.06_r8    ! fraction of POCremin to refractory pool
 
   !---------------------------------------------------------------------
-  !  Variables defined in marbl_define_parameters
+  !  Variables defined in marbl_parms_define_pre_tracers1
   !---------------------------------------------------------------------
 
   logical(log_kind), target ::  ciso_on                       ! control whether ciso tracer module is active
@@ -216,8 +216,8 @@ module marbl_parms
   character(len=char_len), target :: ciso_fract_factors           ! option for which biological fractionation calculation to use
 
   !---------------------------------------------------------------------
-  !  Variables defined in marbl_define_PFTs
-  !  and / or marbl_define_post_tracers
+  !  Variables defined in marbl_parms_define_pre_tracers2
+  !  and / or marbl_parms_define_post_tracers
   !---------------------------------------------------------------------
 
   type(autotroph_type),   allocatable, target :: autotrophs(:)
@@ -265,7 +265,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_parms_set_defaults()
+  subroutine marbl_parms_set_defaults_pre_tracers1()
 
     !-----------------------------------------------------------------------
     !  Default values
@@ -315,18 +315,18 @@ contains
     PON_bury_coeff         = 0.5_r8                ! in marbl_parms framework, see NOTE above
     ciso_fract_factors     = 'Rau'                 ! in marbl_parms framework, see NOTE above
 
-  end subroutine marbl_parms_set_defaults
+  end subroutine marbl_parms_set_defaults_pre_tracers1
 
   !*****************************************************************************
 
-  subroutine marbl_define_parameters(this, marbl_status_log)
+  subroutine marbl_parms_define_pre_tracers1(this, marbl_status_log)
 
     use marbl_config_mod, only : log_add_var_error
 
     class(marbl_settings_type), intent(inout) :: this
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_parms:marbl_define_parameters'
+    character(len=*), parameter :: subname = 'marbl_parms:marbl_parms_define_pre_tracers1'
     character(len=char_len)     :: log_message
 
     character(len=char_len)          :: sname, lname, units, datatype, group, category
@@ -900,11 +900,11 @@ contains
       return
     end if
 
-  end subroutine marbl_define_parameters
+  end subroutine marbl_parms_define_pre_tracers1
 
   !*****************************************************************************
 
-  subroutine marbl_PFT_set_defaults()
+  subroutine marbl_parms_set_defaults_pre_tracers2()
 
     integer :: m, n
 
@@ -979,18 +979,18 @@ contains
       end do
     end do
 
-  end subroutine marbl_PFT_set_defaults
+  end subroutine marbl_parms_set_defaults_pre_tracers2
 
   !*****************************************************************************
 
-  subroutine marbl_define_PFTs(this, marbl_status_log)
+  subroutine marbl_parms_define_pre_tracers2(this, marbl_status_log)
 
     use marbl_config_mod, only : log_add_var_error
 
     class(marbl_settings_type), intent(inout) :: this
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_parms:marbl_define_PFTs'
+    character(len=*), parameter :: subname = 'marbl_parms:marbl_parms_define_pre_tracers2'
     character(len=char_len)     :: log_message
 
     character(len=char_len)          :: sname, lname, units, datatype, group, category
@@ -1176,11 +1176,11 @@ contains
       end do
     end do
 
-  end subroutine marbl_define_PFTs
+  end subroutine marbl_parms_define_pre_tracers2
 
   !*****************************************************************************
 
-  subroutine marbl_post_tracer_set_defaults(km, marbl_status_log)
+  subroutine marbl_parms_set_defaults_post_tracers(km, marbl_status_log)
     ! allocate memory for allocatable parameters
     ! assign default values to all parameters
 
@@ -1193,7 +1193,7 @@ contains
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_parms_mod:marbl_parms_set_defaults'
+    character(len=*), parameter :: subname = 'marbl_parms_mod:marbl_parms_set_defaults_post_tracers'
     character(len=char_len) :: log_message
     integer :: m, n
 
@@ -1369,18 +1369,18 @@ contains
     ! initialize namelist variables to default values
     tracer_restore_vars = ''
 
-  end subroutine marbl_post_tracer_set_defaults
+  end subroutine marbl_parms_set_defaults_post_tracers
 
   !*****************************************************************************
 
-  subroutine marbl_define_post_tracers(this, marbl_status_log)
+  subroutine marbl_parms_define_post_tracers(this, marbl_status_log)
 
     use marbl_config_mod, only : log_add_var_error
 
     class(marbl_settings_type), intent(inout) :: this
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_parms:marbl_define_post_tracers'
+    character(len=*), parameter :: subname = 'marbl_parms:marbl_parms_define_post_tracers'
     character(len=char_len)     :: log_message
 
     character(len=char_len) :: sname, lname, units, datatype, group, category
@@ -1845,18 +1845,18 @@ contains
       return
     end if
 
-  end subroutine marbl_define_post_tracers
+  end subroutine marbl_parms_define_post_tracers
 
   !*****************************************************************************
 
-  subroutine set_derived(marbl_status_log)
+  subroutine marbl_parms_set_all_derived(marbl_status_log)
 
     type(marbl_log_type), intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variables
     !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_parms:set_derived'
+    character(len=*), parameter :: subname = 'marbl_parms:marbl_parms_set_all_derived'
     character(len=char_len) :: log_message
 
     character(len=char_len) :: sname_in, sname_out
@@ -1937,7 +1937,7 @@ contains
        end do
     end do
 
-  end subroutine set_derived
+  end subroutine marbl_parms_set_all_derived
 
   !*****************************************************************************
 

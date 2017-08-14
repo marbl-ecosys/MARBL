@@ -180,7 +180,7 @@ contains
     use marbl_init_mod, only : marbl_init_parameters_post_tracers
     use marbl_init_mod, only : marbl_init_bury_coeff
     use marbl_init_mod, only : marbl_init_forcing_fields
-    use marbl_parms,    only : set_derived
+    use marbl_parms,    only : marbl_parms_set_all_derived
 
 
     use marbl_diagnostics_mod, only : marbl_diagnostics_init
@@ -362,9 +362,9 @@ contains
 
     ! Set variables that depend on previously-set values
     ! (Typically unit conversion or string -> int for easy comparison)
-    call set_derived(this%StatusLog)
+    call marbl_parms_set_all_derived(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('set_derived_parms', subname)
+      call this%StatusLog%log_error_trace('marbl_parms_set_all_derived', subname)
       return
     end if
 
