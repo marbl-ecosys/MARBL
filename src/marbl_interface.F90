@@ -388,7 +388,6 @@ contains
     character(len=*), parameter :: subname = 'marbl_interface:put_real'
     character(len=char_len) :: log_message
 
-    call this%StatusLog%construct()
     call this%settings%put(varname, this%StatusLog, rval=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%put()', subname)
@@ -408,7 +407,6 @@ contains
     character(len=*), parameter :: subname = 'marbl_interface:put_integer'
     character(len=char_len) :: log_message
 
-    call this%StatusLog%construct()
     call this%settings%put(varname, this%StatusLog, ival=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%put()', subname)
@@ -428,7 +426,6 @@ contains
     character(len=*), parameter :: subname = 'marbl_interface:put_logical'
     character(len=char_len) :: log_message
 
-    call this%StatusLog%construct()
     call this%settings%put(varname, this%StatusLog, lval=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%put()', subname)
@@ -460,7 +457,6 @@ contains
     if ((val_loc(char_ind:char_ind) .eq. "'") .or. (val_loc(char_ind:char_ind) .eq. '"')) &
       val_loc(char_ind:char_ind) = ' '
     val_loc = adjustl(val_loc)
-    call this%StatusLog%construct()
     call this%settings%put(varname, this%StatusLog, sval=val_loc)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%put()', subname)
@@ -552,7 +548,6 @@ end subroutine put_string
     logical(log_kind)       :: lval
     integer(int_kind)       :: n
 
-    call this%StatusLog%construct()
     do n=1,size(datatype)
       if (len_trim(datatype(n)) .eq. 0) exit
       select case (trim(datatype(n)))
@@ -569,9 +564,8 @@ end subroutine put_string
           call string_to_var_or_datatype(val(n), this%StatusLog, sval = sval)
           call this%put_setting(trim(varname(n)), trim(sval))
         case DEFAULT
+          call this%StatusLog%construct()
           write(log_message,"(2A)") trim(datatype(n)), " is not a recognized type"
-          ! Put something in case we need to construct StatusLog
-          call this%put_setting('MARBL ABORT', .true.)
           call this%StatusLog%log_error(log_message, subname)
       end select
       if (this%StatusLog%labort_marbl) then
@@ -593,7 +587,6 @@ end subroutine put_string
     character(len=*), parameter :: subname = 'marbl_interface:get_real'
     character(len=char_len) :: log_message
 
-    call this%StatusLog%construct()
     call this%settings%get(varname, this%StatusLog, rval=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%get()', subname)
@@ -613,7 +606,6 @@ end subroutine put_string
     character(len=*), parameter :: subname = 'marbl_interface:get_integer'
     character(len=char_len) :: log_message
 
-    call this%StatusLog%construct()
     call this%settings%get(varname, this%StatusLog, ival=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%get()', subname)
@@ -633,7 +625,6 @@ end subroutine put_string
     character(len=*), parameter :: subname = 'marbl_interface:get_logical'
     character(len=char_len) :: log_message
 
-    call this%StatusLog%construct()
     call this%settings%get(varname, this%StatusLog, lval=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%get()', subname)
@@ -653,7 +644,6 @@ end subroutine put_string
     character(len=*), parameter :: subname = 'marbl_interface:get_string'
     character(len=char_len) :: log_message
 
-    call this%StatusLog%construct()
     call this%settings%get(varname, this%StatusLog, sval=val)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%get()', subname)
@@ -1032,6 +1022,7 @@ end subroutine put_string
     integer(int_kind) :: ioerr, ioerr2
     logical(log_kind) :: lis_int
 
+    call marbl_status_log%construct()
     if ((trim(value).eq.'.true.').or.(trim(value).eq.'.false.')) then
       if (present(datatype)) datatype = "logical"
       if (present(lval)) lval = (trim(value).eq.'.true.')

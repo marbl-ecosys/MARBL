@@ -106,7 +106,7 @@ contains
     ! 2) Error checking
     ll_index => this%vars
     do while (associated(ll_index))
-      if (trim(sname) .eq. trim(ll_index%short_name)) then
+      if (case_insensitive_eq(trim(sname), trim(ll_index%short_name))) then
         write(log_message, "(A,1X,A)") trim(sname), "has been added twice"
         call marbl_status_log%log_error(log_message, subname)
       end if
@@ -478,6 +478,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_config_mod:put'
     character(len=char_len) :: log_message
 
+    call marbl_status_log%construct()
     if (this%init_called) then
       write(log_message, "(3A)") "Can not put ", trim(var), ", init has already been called"
       call marbl_status_log%log_error(log_message, subname)
@@ -535,6 +536,7 @@ contains
     type(marbl_single_setting_ll_type), pointer :: ll_index
     integer :: cnt
 
+    call marbl_status_log%construct()
     cnt = 0
     if (present(rval)) cnt = cnt + 1
     if (present(ival)) cnt = cnt + 1
@@ -543,7 +545,7 @@ contains
 
     ll_index => this%vars
     do while (associated(ll_index))
-      if (trim(ll_index%short_name) .eq. trim(var)) exit
+      if (case_insensitive_eq((ll_index%short_name), trim(var))) exit
       ll_index => ll_index%next
     end do
     if (.not.associated(ll_index)) then
@@ -617,7 +619,7 @@ contains
 
     id = -1
     do n=1,this%cnt
-      if (trim(var).eq.trim(this%varArray(n)%ptr%short_name)) then
+      if (case_insensitive_eq(trim(var), trim(this%varArray(n)%ptr%short_name))) then
         id = n
         return
       end if

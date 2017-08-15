@@ -56,7 +56,7 @@ Program marbl
   type(marbl_log_type)          :: driver_status_log
   integer                       :: m, n, nt, cnt
   character(len=256)            :: input_line, testname, varname, log_message
-  logical                       :: lprint_marbl_log
+  logical                       :: lprint_marbl_log, lhas_inputfile, labort
 
   ! Processing input file for put calls
   character(len=256), dimension(max_settings_cnt) :: vars, types, vals
@@ -64,7 +64,7 @@ Program marbl
   integer  :: ival
   real(r8) :: rval
 
-  namelist /marbl_driver_nml/testname
+  namelist /marbl_driver_nml/testname, lhas_inputfile
 
   !****************************************************************************
 
@@ -83,38 +83,10 @@ Program marbl
   call driver_status_log%construct()
 
   ! (1) Set marbl_driver_nml defaults
-  testname     = ''
+  testname       = ''
+  lhas_inputfile = .true.
 
-  ! Read inputfile
-  if (my_task.eq.0) then
-    n = 1
-    do while(ioerr.eq.0)
-      input_line = ''
-      read(*,"(A)", iostat=ioerr) input_line
-      call marbl_instance%parse_inputfile_line(input_line, vars(n), types(n), vals(n))
-      ! Increment array index if line is not empty / commented out
-      if (len_trim(vars(n)) .gt. 0) then
-        call marbl_mpi_bcast(vars(n), 0)
-        call marbl_mpi_bcast(types(n), 0)
-        call marbl_mpi_bcast(vals(n), 0)
-        n = n+1
-      end if
-    end do
-    if (.not.is_iostat_end(ioerr)) then
-      write(*,"(A,I0)") "ioerr = ", ioerr
-      write(*,"(A)") "ERROR encountered when reading MARBL input file from stdin"
-      call marbl_mpi_abort()
-    end if
-    n = n-1
-  end if
-
-  call marbl_instance%put_setting(vars, types, vals)
-  if (marbl_instance%StatusLog%labort_marbl) then
-    call marbl_instance%StatusLog%log_error("Error reading input file!", subname)
-    call print_marbl_log(marbl_instance%StatusLog)
-  end if
-
-  ! (2) Read driver namelist to know what test to run
+  ! (2a) Read driver namelist to know what test to run
   open(8, file="test.nml", status="old")
   read(8, nml=marbl_driver_nml, iostat=ioerr)
   if (ioerr.ne.0) then
@@ -122,6 +94,39 @@ Program marbl
     call marbl_mpi_abort()
   end if
   close(8)
+
+  ! (2b) Read inputfile
+  if (lhas_inputfile) then
+    labort = .false.
+    if (my_task.eq.0) then
+      n = 1
+      do while(ioerr.eq.0)
+        input_line = ''
+        read(*,"(A)", iostat=ioerr) input_line
+        call marbl_instance%parse_inputfile_line(input_line, vars(n), types(n), vals(n))
+        ! Increment array index if line is not empty / commented out
+        if (len_trim(vars(n)) .gt. 0) n = n+1
+      end do
+      if (.not.is_iostat_end(ioerr)) then
+        write(*,"(A,I0)") "ioerr = ", ioerr
+        write(*,"(A)") "ERROR encountered when reading MARBL input file from stdin"
+        labort = .true.
+      end if
+    end if
+    call marbl_mpi_bcast(labort, 0)
+    if (labort) call marbl_mpi_abort()
+    do n=1,size(vars)
+      call marbl_mpi_bcast(vars(n), 0)
+      call marbl_mpi_bcast(types(n), 0)
+      call marbl_mpi_bcast(vals(n), 0)
+    end do
+
+    call marbl_instance%put_setting(vars, types, vals)
+    if (marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%log_error("Error reading input file!", subname)
+      call print_marbl_log(marbl_instance%StatusLog)
+    end if
+  end if
 
   ! (3) Run proper test
   if (my_task.eq.0) write(*,"(3A)") "Beginning ", trim(testname), " test..."

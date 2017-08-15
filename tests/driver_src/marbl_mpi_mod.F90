@@ -31,6 +31,7 @@ module marbl_mpi_mod
 
   interface marbl_mpi_bcast
     module procedure marbl_mpi_bcast_str
+    module procedure marbl_mpi_bcast_logical
   end interface marbl_mpi_bcast
 
   !****************************************************************************
@@ -54,6 +55,17 @@ contains
 
   end subroutine marbl_mpi_init
 
+  !****************************************************************************
+
+  subroutine marbl_mpi_barrier()
+
+#ifdef MARBL_WITH_MPI
+    integer :: ierr
+
+    call MPI_Barrier(MPI_COMM_WORLD, ierr)
+#endif
+
+  end subroutine marbl_mpi_barrier
   !****************************************************************************
 
   subroutine marbl_mpi_finalize()
@@ -122,6 +134,25 @@ contains
 #endif
 
   end subroutine marbl_mpi_bcast_str
+
+  !****************************************************************************
+
+  subroutine marbl_mpi_bcast_logical(logical_to_bcast, root_task)
+
+    logical, intent(inout) :: logical_to_bcast
+    integer, intent(in)    :: root_task
+
+    integer :: ierr
+
+#ifdef MARBL_WITH_MPI
+    call MPI_Bcast(logical_to_bcast, 1, MPI_LOGICAL, root_task, &
+                   MPI_COMM_WORLD, ierr)
+#else
+    ! Avoid an empty subroutien when no MPI
+    ierr = root_task
+#endif
+
+  end subroutine marbl_mpi_bcast_logical
 
   !****************************************************************************
 

@@ -155,7 +155,10 @@ class MARBL_testcase(object):
     exe_dir = '%s/tests/driver_exe' % self._marbl_dir
 
     if self._mpitasks > 0:
-      execmd = '%s/marbl-mpi.exe < %s' % (exe_dir, self._inputfile)
+      if self._inputfile is not None:
+        execmd = '%s/marbl-mpi.exe < %s' % (exe_dir, self._inputfile)
+      else:
+        execmd = '%s/marbl-mpi.exe' % exe_dir
       if self._machine == 'yellowstone':
         execmd = 'mpirun.lsf %s' % execmd
         if 'yslogin' in self._hostname:
@@ -164,7 +167,10 @@ class MARBL_testcase(object):
       else:
         execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
     else:
-      execmd = '%s/marbl.exe < %s' % (exe_dir, self._inputfile)
+      if self._inputfile is not None:
+        execmd = '%s/marbl.exe < %s' % (exe_dir, self._inputfile)
+      else:
+        execmd = '%s/marbl.exe' % exe_dir
     print "Running following command:"
     print execmd
     print ''
