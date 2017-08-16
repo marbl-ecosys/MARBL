@@ -363,7 +363,7 @@ contains
         autotrophs(n)%kNO3            = 0.25_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kNH4            = 0.012_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
-        autotrophs(n)%kCO2            = 0.0_r8             !!!! added Km for CO2 for coccos
+        autotrophs(n)%kCO2            = 0.5_r8             !!!! added Km for CO2 for coccos
         autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
         autotrophs(n)%gQfe_0          = 15.0e-6_r8
         autotrophs(n)%gQfe_min        = 3.0e-6_r8
