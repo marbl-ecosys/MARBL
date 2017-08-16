@@ -126,10 +126,11 @@ module marbl_interface
      procedure, public  :: set_global_scalars
      procedure, public  :: shutdown
      procedure, public  :: inquire_settings_metadata
-     generic            :: put_setting => put_real,    &
-                                          put_integer, &
-                                          put_logical, &
-                                          put_string,  & ! This routine checks to see if string is actually an array
+     generic            :: put_setting => put_real,           &
+                                          put_integer,        &
+                                          put_logical,        &
+                                          put_string,         & ! This routine checks to see if string is actually an array
+                                          put_inputfile_line, & ! This line converts string "var = val" to proper put()
                                           put_all_string
      procedure, public  :: put_single_string             ! This routine assumes not an array
      generic            :: get_setting => get_real,    &
@@ -137,7 +138,7 @@ module marbl_interface
                                           get_logical, &
                                           get_string
      procedure, public  :: get_settings_var_cnt
-     procedure, public  :: parse_inputfile_line
+     procedure, private :: put_inputfile_line
      procedure, private :: put_real
      procedure, private :: put_integer
      procedure, private :: put_logical
@@ -436,37 +437,6 @@ contains
 
   !***********************************************************************
 
-  subroutine put_single_string(this, varname, val)
-
-    class (marbl_interface_class), intent(inout) :: this
-    character(len=*),              intent(in)    :: varname
-    character(len=*),              intent(in)    :: val
-
-    character(len=*), parameter :: subname = 'marbl_interface:put_single_string'
-    character(len=char_len) :: log_message
-
-    integer(int_kind) :: char_ind
-    character(len=len_trim(val)) :: val_loc
-
-    ! Strip leading / trailing quotes from string values
-    char_ind = 1
-    val_loc = trim(val)
-    if ((val_loc(char_ind:char_ind) .eq. "'") .or. (val_loc(char_ind:char_ind) .eq. '"')) &
-      val_loc(char_ind:char_ind) = ' '
-    char_ind = len_trim(val_loc)
-    if ((val_loc(char_ind:char_ind) .eq. "'") .or. (val_loc(char_ind:char_ind) .eq. '"')) &
-      val_loc(char_ind:char_ind) = ' '
-    val_loc = adjustl(val_loc)
-    call this%settings%put(varname, this%StatusLog, sval=val_loc)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('settings%put()', subname)
-      return
-    end if
-
-  end subroutine put_single_string
-
-  !***********************************************************************
-
   subroutine put_string(this, varname, val)
 
     class (marbl_interface_class), intent(inout) :: this
@@ -534,10 +504,10 @@ end subroutine put_string
   !***********************************************************************
 
   subroutine put_all_string(this, varname, datatype, val)
-    ! This interface to put_setting() complements parse_inputfile_line()
+    ! This interface to put_setting() is called from put_inputfile_line()
 
     class (marbl_interface_class),  intent(inout) :: this
-    character(len=*), dimension(:), intent(in)    :: varname, datatype, val
+    character(len=*),               intent(in)    :: varname, datatype, val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_all_string'
     character(len=char_len)     :: log_message
@@ -546,35 +516,127 @@ end subroutine put_string
     real(r8)                :: rval
     integer(int_kind)       :: ival
     logical(log_kind)       :: lval
-    integer(int_kind)       :: n
 
-    do n=1,size(datatype)
-      if (len_trim(datatype(n)) .eq. 0) exit
-      select case (trim(datatype(n)))
-        case ('logical')
-          call string_to_var_or_datatype(val(n), this%StatusLog, lval = lval)
-          call this%put_setting(trim(varname(n)), lval)
-        case ('real')
-          call string_to_var_or_datatype(val(n), this%StatusLog, rval = rval)
-          call this%put_setting(trim(varname(n)), rval)
-        case ('integer')
-          call string_to_var_or_datatype(val(n), this%StatusLog, ival = ival)
-          call this%put_setting(trim(varname(n)), ival)
-        case ('string')
-          call string_to_var_or_datatype(val(n), this%StatusLog, sval = sval)
-          call this%put_setting(trim(varname(n)), trim(sval))
-        case DEFAULT
-          call this%StatusLog%construct()
-          write(log_message,"(2A)") trim(datatype(n)), " is not a recognized type"
-          call this%StatusLog%log_error(log_message, subname)
-      end select
-      if (this%StatusLog%labort_marbl) then
-        write(log_message, "(3A)") "string_to_var(", trim(val(n)), ")"
-        call this%StatusLog%log_error_trace(log_message, subname)
-        return
-      end if
-    end do
+    select case (trim(datatype))
+      case ('logical')
+        call string_to_var_or_datatype(val, this%StatusLog, lval = lval)
+        call this%put_setting(trim(varname), lval)
+      case ('real')
+        call string_to_var_or_datatype(val, this%StatusLog, rval = rval)
+        call this%put_setting(trim(varname), rval)
+      case ('integer')
+        call string_to_var_or_datatype(val, this%StatusLog, ival = ival)
+        call this%put_setting(trim(varname), ival)
+      case ('string')
+        call string_to_var_or_datatype(val, this%StatusLog, sval = sval)
+        call this%put_setting(trim(varname), trim(sval))
+      case DEFAULT
+        call this%StatusLog%construct()
+        write(log_message,"(2A)") trim(datatype), " is not a recognized type"
+        call this%StatusLog%log_error(log_message, subname)
+    end select
+    if (this%StatusLog%labort_marbl) then
+      write(log_message, "(3A)") "string_to_var(", trim(val), ")"
+      call this%StatusLog%log_error_trace(log_message, subname)
+      return
+    end if
+
   end subroutine put_all_string
+
+  !***********************************************************************
+
+  subroutine put_inputfile_line(this, line)
+
+    ! This subroutine takes a single line from MARBL's default inputfile format
+    ! and returns the variable name, type of variable, and the value (all as
+    ! strings).
+    !
+    ! This is useful because the standard fortran parser treats commas as
+    ! delimiters, but some variable names have commas in them because they are
+    ! 2D arrays.
+
+    class(marbl_interface_class), intent(inout) :: this
+    character(len=*),             intent(in)    :: line
+
+    character(len=char_len) :: varname, datatype, value
+    character(len=char_len) :: line_loc
+    integer(int_kind) :: char_ind
+
+    ! Variables used to determine datatype
+    integer(int_kind) :: ioerr, ioerr2
+    real(r8)          :: rval, rval2
+
+    varname = ''
+    datatype = ''
+    value = ''
+    line_loc = adjustl(line)
+
+    ! Strip out comments (denoted by '!')
+    do char_ind = 1, len_trim(line_loc)
+      if (line_loc(char_ind:char_ind) .eq. '!') exit
+    end do
+    if (char_ind .le. len_trim(line_loc)) &
+      line_loc(char_ind:len_trim(line_loc)) = ' '
+
+    ! Return without processing if
+    ! (a) line is empty / only contains spaces
+    if (len_trim(line_loc) .eq. 0) return
+    ! (b) first non-space character is '&' (can use namelist files)
+    if (line_loc(1:1) .eq. '&') return
+    ! (c) line contains only '/' (can use namelist files)
+    if (trim(line_loc) .eq. '/') return
+
+    ! Everything up to first '=' is varname
+    do char_ind = 1, len_trim(line_loc)
+      if (line_loc(char_ind:char_ind) .eq. '=') then
+        line_loc(char_ind:char_ind) = ' '
+        exit
+      end if
+      varname(char_ind:char_ind) = line_loc(char_ind:char_ind)
+      line_loc(char_ind:char_ind) = ' '
+    end do
+    ! Everything else is value
+    value = adjustl(line_loc)
+
+    ! ------------------
+    ! Determine datatype
+    ! ------------------
+
+    call string_to_var_or_datatype(value, this%StatusLog, datatype = datatype)
+    call this%put_setting(varname, datatype, value)
+
+  end subroutine put_inputfile_line
+
+  !***********************************************************************
+
+  subroutine put_single_string(this, varname, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    character(len=*),              intent(in)    :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:put_single_string'
+    character(len=char_len) :: log_message
+
+    integer(int_kind) :: char_ind
+    character(len=len_trim(val)) :: val_loc
+
+    ! Strip leading / trailing quotes from string values
+    char_ind = 1
+    val_loc = trim(val)
+    if ((val_loc(char_ind:char_ind) .eq. "'") .or. (val_loc(char_ind:char_ind) .eq. '"')) &
+      val_loc(char_ind:char_ind) = ' '
+    char_ind = len_trim(val_loc)
+    if ((val_loc(char_ind:char_ind) .eq. "'") .or. (val_loc(char_ind:char_ind) .eq. '"')) &
+      val_loc(char_ind:char_ind) = ' '
+    val_loc = adjustl(val_loc)
+    call this%settings%put(varname, this%StatusLog, sval=val_loc)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%put()', subname)
+      return
+    end if
+
+  end subroutine put_single_string
 
   !***********************************************************************
 
@@ -937,70 +999,6 @@ end subroutine put_string
     end do
 
   end function get_tracer_index
-
-  !***********************************************************************
-
-  subroutine parse_inputfile_line(this, line, varname, datatype, value)
-
-    ! This subroutine takes a single line from MARBL's default inputfile format
-    ! and returns the variable name, type of variable, and the value (all as
-    ! strings).
-    !
-    ! This is useful because the standard fortran parser treats commas as
-    ! delimiters, but some variable names have commas in them because they are
-    ! 2D arrays.
-
-    class(marbl_interface_class), intent(inout) :: this
-    character(len=*),             intent(in)    :: line
-    character(len=*),             intent(out)   :: varname, datatype, value
-
-    character(len=char_len) :: line_loc
-    integer(int_kind) :: char_ind
-
-    ! Variables used to determine datatype
-    integer(int_kind) :: ioerr, ioerr2
-    real(r8)          :: rval, rval2
-
-    varname = ''
-    datatype = ''
-    value = ''
-    line_loc = adjustl(line)
-
-    ! Strip out comments (denoted by '!')
-    do char_ind = 1, len_trim(line_loc)
-      if (line_loc(char_ind:char_ind) .eq. '!') exit
-    end do
-    if (char_ind .le. len_trim(line_loc)) &
-      line_loc(char_ind:len_trim(line_loc)) = ' '
-
-    ! Return without processing if
-    ! (a) line is empty / only contains spaces
-    if (len_trim(line_loc) .eq. 0) return
-    ! (b) first non-space character is '&' (can use namelist files)
-    if (line_loc(1:1) .eq. '&') return
-    ! (c) line contains only '/' (can use namelist files)
-    if (trim(line_loc) .eq. '/') return
-
-    ! Everything up to first '=' is varname
-    do char_ind = 1, len_trim(line_loc)
-      if (line_loc(char_ind:char_ind) .eq. '=') then
-        line_loc(char_ind:char_ind) = ' '
-        exit
-      end if
-      varname(char_ind:char_ind) = line_loc(char_ind:char_ind)
-      line_loc(char_ind:char_ind) = ' '
-    end do
-    ! Everything else is value
-    value = adjustl(line_loc)
-
-    ! ------------------
-    ! Determine datatype
-    ! ------------------
-
-    call string_to_var_or_datatype(value, this%StatusLog, datatype = datatype)
-    ! TODO: error checking
-
-  end subroutine parse_inputfile_line
 
   !*****************************************************************************
 

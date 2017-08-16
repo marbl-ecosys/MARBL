@@ -32,6 +32,7 @@ module marbl_mpi_mod
   interface marbl_mpi_bcast
     module procedure marbl_mpi_bcast_str
     module procedure marbl_mpi_bcast_logical
+    module procedure marbl_mpi_bcast_integer
   end interface marbl_mpi_bcast
 
   !****************************************************************************
@@ -156,11 +157,31 @@ contains
 
   !****************************************************************************
 
+  subroutine marbl_mpi_bcast_integer(int_to_bcast, root_task)
+
+    integer, intent(inout) :: int_to_bcast
+    integer, intent(in)    :: root_task
+
+    integer :: ierr
+
+#ifdef MARBL_WITH_MPI
+    call MPI_Bcast(int_to_bcast, 1, MPI_INTEGER, root_task, &
+                   MPI_COMM_WORLD, ierr)
+#else
+    ! Avoid an empty subroutien when no MPI
+    ierr = root_task
+#endif
+
+  end subroutine marbl_mpi_bcast_integer
+
+  !****************************************************************************
+
   subroutine marbl_mpi_abort()
 
 #ifdef MARBL_WITH_MPI
     integer :: ierr
 
+    call marbl_mpi_barrier()
     call MPI_Abort(MPI_COMM_WORLD, ierr)
 #else
     stop 1

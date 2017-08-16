@@ -59,7 +59,6 @@ Program marbl
   logical                       :: lprint_marbl_log, lhas_inputfile, labort
 
   ! Processing input file for put calls
-  character(len=256), dimension(max_settings_cnt) :: vars, types, vals
   integer  :: ioerr=0
   integer  :: ival
   real(r8) :: rval
@@ -73,10 +72,6 @@ Program marbl
   call marbl_mpi_init()
 
   !     Set up local variables
-  !       * Empty strings that will be filled for put() calls in marbl init
-  vars(:) = ''
-  types(:) = ''
-  vals(:) = ''
   !       * Some tests use a different status log than marbl_instance%StatusLog
   !         (default is to use marbl_instance%StatusLog)
   lprint_marbl_log = .true.
@@ -98,34 +93,28 @@ Program marbl
   ! (2b) Read inputfile
   if (lhas_inputfile) then
     labort = .false.
-    if (my_task.eq.0) then
-      n = 1
-      do while(ioerr.eq.0)
-        input_line = ''
-        read(*,"(A)", iostat=ioerr) input_line
-        call marbl_instance%parse_inputfile_line(input_line, vars(n), types(n), vals(n))
-        ! Increment array index if line is not empty / commented out
-        if (len_trim(vars(n)) .gt. 0) n = n+1
-      end do
-      if (.not.is_iostat_end(ioerr)) then
-        write(*,"(A,I0)") "ioerr = ", ioerr
-        write(*,"(A)") "ERROR encountered when reading MARBL input file from stdin"
-        labort = .true.
+    ioerr = 0
+    do while(ioerr .eq. 0)
+      input_line = ''
+      ! (i) master task reads next line in inputfile
+      if (my_task .eq. 0) read(*,"(A)", iostat=ioerr) input_line
+      ! (ii) broadcast inputfile line to all tasks (along with iostat)
+      call marbl_mpi_bcast(ioerr, 0)
+      call marbl_mpi_bcast(input_line, 0)
+      ! (iii) call put_setting(); abort if error
+      call marbl_instance%put_setting(input_line)
+      if (marbl_instance%StatusLog%labort_marbl) then
+        call marbl_instance%StatusLog%log_error("Error reading input file!", subname)
+        call print_marbl_log(marbl_instance%StatusLog)
       end if
-    end if
-    call marbl_mpi_bcast(labort, 0)
-    if (labort) call marbl_mpi_abort()
-    do n=1,size(vars)
-      call marbl_mpi_bcast(vars(n), 0)
-      call marbl_mpi_bcast(types(n), 0)
-      call marbl_mpi_bcast(vals(n), 0)
     end do
 
-    call marbl_instance%put_setting(vars, types, vals)
-    if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error("Error reading input file!", subname)
-      call print_marbl_log(marbl_instance%StatusLog)
+    if (.not.is_iostat_end(ioerr)) then
+      write(*,"(A,I0)") "ioerr = ", ioerr
+      write(*,"(A)") "ERROR encountered when reading MARBL input file from stdin"
+      labort = .true.
     end if
+    if (labort) call marbl_mpi_abort()
   end if
 
   ! (3) Run proper test
