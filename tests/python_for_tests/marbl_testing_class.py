@@ -11,6 +11,7 @@ class MARBL_testcase(object):
     self.supported_compilers = []
 
     # all other variables are private
+    self._module_names = {}
     self._compiler = None
     self._machine = None
     self._hostname = None
@@ -87,7 +88,7 @@ class MARBL_testcase(object):
       self._machine = args.mach
       print 'Running test on %s' % self._machine
 
-    machs.machine_specific(self._machine, self.supported_compilers)
+    machs.machine_specific(self._machine, self.supported_compilers, self._module_names)
 
     if HaveCompiler:
       self._compiler = args.compiler
@@ -122,7 +123,7 @@ class MARBL_testcase(object):
     src_dir = '%s/src' % self._marbl_dir
 
     if self._machine not in ['local-gnu','local-pgi']:
-      machs.load_module(self._machine, loc_compiler)
+      machs.load_module(self._machine, loc_compiler, self._module_names[loc_compiler])
 
     makecmd = 'make %s' % loc_compiler
     if self._mpitasks > 0:
@@ -140,7 +141,7 @@ class MARBL_testcase(object):
     drv_dir = '%s/tests/driver_src' % self._marbl_dir
 
     if self._machine not in ['local-gnu','local-pgi']:
-      machs.load_module(self._machine, loc_compiler)
+      machs.load_module(self._machine, loc_compiler, self._module_names[loc_compiler])
 
     makecmd = 'make %s' % loc_compiler
     if self._mpitasks > 0:
