@@ -260,12 +260,17 @@ module marbl_settings_mod
 
   !---------------------------------------------------------------------
   !  Variables defined in marbl_settings_mod_define_pre_tracers2
-  !  and / or marbl_settings_mod_define_post_tracers
   !---------------------------------------------------------------------
 
   type(autotroph_type),   allocatable, target :: autotrophs(:)
   type(zooplankton_type), allocatable, target :: zooplankton(:)
   type(grazing_type),     allocatable, target :: grazing(:,:)
+
+  !---------------------------------------------------------------------
+  !  Variables defined in marbl_settings_mod_define_post_tracers
+  !  (note some components of autotrophs, zooplankton, and grazing
+  !  are also set in post_tracers)
+  !---------------------------------------------------------------------
 
   ! FIXME #69: this array is allocated in marbl_init_mod:marbl_init_tracers()
   !            and that allocation is not ideal for threaded runs
