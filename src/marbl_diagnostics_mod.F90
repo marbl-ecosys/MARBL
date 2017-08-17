@@ -11,8 +11,8 @@ module marbl_diagnostics_mod
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
 
-  use marbl_parms, only : autotrophs
-  use marbl_parms, only : zooplankton
+  use marbl_settings_mod    , only : autotrophs
+  use marbl_settings_mod    , only : zooplankton
 
   use marbl_constants_mod   , only : c0
   use marbl_constants_mod   , only : c1
@@ -343,7 +343,7 @@ contains
        marbl_surface_forcing_diags,  &
        marbl_status_log)
 
-    use marbl_parms, only : ciso_on
+    use marbl_settings_mod, only : ciso_on
 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
@@ -3335,8 +3335,8 @@ contains
 
     use marbl_internal_types , only : marbl_surface_forcing_indexing_type
     use marbl_internal_types , only : marbl_surface_saved_state_indexing_type
-    use marbl_parms          , only : lflux_gas_o2
-    use marbl_parms          , only : lflux_gas_co2
+    use marbl_settings_mod   , only : lflux_gas_o2
+    use marbl_settings_mod   , only : lflux_gas_co2
     use marbl_constants_mod  , only : mpercm
 
     implicit none
@@ -3802,9 +3802,9 @@ contains
     ! - Accumulte losses of BGC tracers to sediments
     !-----------------------------------------------------------------------
 
-    use marbl_parms , only : POCremin_refract
-    use marbl_parms , only : PONremin_refract
-    use marbl_parms , only : POPremin_refract
+    use marbl_settings_mod, only : POCremin_refract
+    use marbl_settings_mod, only : PONremin_refract
+    use marbl_settings_mod, only : POPremin_refract
 
     implicit none
 
@@ -4130,7 +4130,7 @@ contains
        PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracers, &
        interior_restore, marbl_tracer_indices, marbl_diags)
 
-    use marbl_parms, only : Q
+    use marbl_settings_mod, only : Q
 
     type(marbl_domain_type)         , intent(in)    :: marbl_domain
     real(r8)                               , intent(in)    :: PON_sed_loss(:) ! km
@@ -4196,8 +4196,8 @@ contains
        autotroph_secondary_species, dtracers, interior_restore, &
        marbl_tracer_indices, marbl_diags)
 
-    use marbl_parms, only : Qp_zoo
-    use marbl_parms, only : lvariable_PtoC
+    use marbl_settings_mod, only : Qp_zoo
+    use marbl_settings_mod, only : lvariable_PtoC
 
     type(marbl_domain_type)                , intent(in)    :: marbl_domain
     type(column_sinking_particle_type)     , intent(in)    :: POP
@@ -4311,8 +4311,8 @@ contains
   subroutine store_diagnostics_iron_fluxes(marbl_domain, P_iron, dust, &
              fesedflux, dtracers, interior_restore, marbl_tracer_indices, marbl_diags)
 
-    use marbl_parms     , only : Qfe_zoo
-    use marbl_parms     , only : dust_to_Fe
+    use marbl_settings_mod, only : Qfe_zoo
+    use marbl_settings_mod, only : dust_to_Fe
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: P_iron
@@ -4787,7 +4787,7 @@ contains
 
   subroutine interior_diag_ind_destructor(this)
 
-    use marbl_parms, only : ciso_on
+    use marbl_settings_mod, only : ciso_on
 
     class(marbl_interior_diagnostics_indexing_type), intent(inout) :: this
 

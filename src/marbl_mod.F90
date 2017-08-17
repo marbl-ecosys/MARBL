@@ -90,69 +90,69 @@ module marbl_mod
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : char_len
 
-  use marbl_parms, only : ciso_on
-  use marbl_parms, only : lsource_sink
-  use marbl_parms, only : lflux_gas_o2
-  use marbl_parms, only : lflux_gas_co2
-  use marbl_parms, only : init_bury_coeff_opt
-  use marbl_parms, only : ladjust_bury_coeff
-  use marbl_parms, only : autotrophs
-  use marbl_parms, only : zooplankton
-  use marbl_parms, only : grz_fnc_michaelis_menten
-  use marbl_parms, only : grz_fnc_sigmoidal
-  use marbl_parms, only : f_qsw_par
-  use marbl_parms, only : parm_Fe_bioavail
-  use marbl_parms, only : dust_to_Fe
-  use marbl_parms, only : denitrif_C_N
-  use marbl_parms, only : parm_Red_Fe_C
-  use marbl_parms, only : Q
-  use marbl_parms, only : Qp_zoo
-  use marbl_parms, only : parm_scalelen_z
-  use marbl_parms, only : parm_scalelen_vals
-  use marbl_parms, only : caco3_poc_min
-  use marbl_parms, only : CaCO3_sp_thres
-  use marbl_parms, only : CaCO3_temp_thres1
-  use marbl_parms, only : CaCO3_temp_thres2
-  use marbl_parms, only : DOC_reminR_light
-  use marbl_parms, only : DON_reminR_light
-  use marbl_parms, only : DOP_reminR_light
-  use marbl_parms, only : DOC_reminR_dark
-  use marbl_parms, only : DON_reminR_dark
-  use marbl_parms, only : DOP_reminR_dark
-  use marbl_parms, only : DOCr_reminR0
-  use marbl_parms, only : DONr_reminR0
-  use marbl_parms, only : DOPr_reminR0
-  use marbl_parms, only : DOCprod_refract
-  use marbl_parms, only : DONprod_refract
-  use marbl_parms, only : DOPprod_refract
-  use marbl_parms, only : POCremin_refract
-  use marbl_parms, only : PONremin_refract
-  use marbl_parms, only : POPremin_refract
-  use marbl_parms, only : f_toDON
-  use marbl_parms, only : f_graze_CaCO3_REMIN
-  use marbl_parms, only : f_graze_si_remin
-  use marbl_parms, only : f_graze_sp_poc_lim
-  use marbl_parms, only : f_photosp_CaCO3
-  use marbl_parms, only : bury_coeff_rmean_timescale_years
-  use marbl_parms, only : parm_f_prod_sp_CaCO3
-  use marbl_parms, only : parm_kappa_nitrif
-  use marbl_parms, only : parm_labile_ratio
-  use marbl_parms, only : parm_nitrif_par_lim
-  use marbl_parms, only : parm_o2_min
-  use marbl_parms, only : parm_o2_min_delta
-  use marbl_parms, only : parm_red_d_c_o2
-  use marbl_parms, only : parm_red_d_c_o2_diaz
-  use marbl_parms, only : parm_Remin_D_C_O2
-  use marbl_parms, only : QCaCO3_max
-  use marbl_parms, only : Qfe_zoo
-  use marbl_parms, only : r_Nfix_photo
-  use marbl_parms, only : spc_poc_fac
-  use marbl_parms, only : grazing
-  use marbl_parms, only : caco3_bury_thres_iopt
-  use marbl_parms, only : caco3_bury_thres_iopt_fixed_depth
-  use marbl_parms, only : caco3_bury_thres_iopt_omega_calc
-  use marbl_parms, only : caco3_bury_thres_depth
-  use marbl_parms, only : PON_bury_coeff
+  use marbl_settings_mod, only : ciso_on
+  use marbl_settings_mod, only : lsource_sink
+  use marbl_settings_mod, only : lflux_gas_o2
+  use marbl_settings_mod, only : lflux_gas_co2
+  use marbl_settings_mod, only : init_bury_coeff_opt
+  use marbl_settings_mod, only : ladjust_bury_coeff
+  use marbl_settings_mod, only : autotrophs
+  use marbl_settings_mod, only : zooplankton
+  use marbl_settings_mod, only : grz_fnc_michaelis_menten
+  use marbl_settings_mod, only : grz_fnc_sigmoidal
+  use marbl_settings_mod, only : f_qsw_par
+  use marbl_settings_mod, only : parm_Fe_bioavail
+  use marbl_settings_mod, only : dust_to_Fe
+  use marbl_settings_mod, only : denitrif_C_N
+  use marbl_settings_mod, only : parm_Red_Fe_C
+  use marbl_settings_mod, only : Q
+  use marbl_settings_mod, only : Qp_zoo
+  use marbl_settings_mod, only : parm_scalelen_z
+  use marbl_settings_mod, only : parm_scalelen_vals
+  use marbl_settings_mod, only : caco3_poc_min
+  use marbl_settings_mod, only : CaCO3_sp_thres
+  use marbl_settings_mod, only : CaCO3_temp_thres1
+  use marbl_settings_mod, only : CaCO3_temp_thres2
+  use marbl_settings_mod, only : DOC_reminR_light
+  use marbl_settings_mod, only : DON_reminR_light
+  use marbl_settings_mod, only : DOP_reminR_light
+  use marbl_settings_mod, only : DOC_reminR_dark
+  use marbl_settings_mod, only : DON_reminR_dark
+  use marbl_settings_mod, only : DOP_reminR_dark
+  use marbl_settings_mod, only : DOCr_reminR0
+  use marbl_settings_mod, only : DONr_reminR0
+  use marbl_settings_mod, only : DOPr_reminR0
+  use marbl_settings_mod, only : DOCprod_refract
+  use marbl_settings_mod, only : DONprod_refract
+  use marbl_settings_mod, only : DOPprod_refract
+  use marbl_settings_mod, only : POCremin_refract
+  use marbl_settings_mod, only : PONremin_refract
+  use marbl_settings_mod, only : POPremin_refract
+  use marbl_settings_mod, only : f_toDON
+  use marbl_settings_mod, only : f_graze_CaCO3_REMIN
+  use marbl_settings_mod, only : f_graze_si_remin
+  use marbl_settings_mod, only : f_graze_sp_poc_lim
+  use marbl_settings_mod, only : f_photosp_CaCO3
+  use marbl_settings_mod, only : bury_coeff_rmean_timescale_years
+  use marbl_settings_mod, only : parm_f_prod_sp_CaCO3
+  use marbl_settings_mod, only : parm_kappa_nitrif
+  use marbl_settings_mod, only : parm_labile_ratio
+  use marbl_settings_mod, only : parm_nitrif_par_lim
+  use marbl_settings_mod, only : parm_o2_min
+  use marbl_settings_mod, only : parm_o2_min_delta
+  use marbl_settings_mod, only : parm_red_d_c_o2
+  use marbl_settings_mod, only : parm_red_d_c_o2_diaz
+  use marbl_settings_mod, only : parm_Remin_D_C_O2
+  use marbl_settings_mod, only : QCaCO3_max
+  use marbl_settings_mod, only : Qfe_zoo
+  use marbl_settings_mod, only : r_Nfix_photo
+  use marbl_settings_mod, only : spc_poc_fac
+  use marbl_settings_mod, only : grazing
+  use marbl_settings_mod, only : caco3_bury_thres_iopt
+  use marbl_settings_mod, only : caco3_bury_thres_iopt_fixed_depth
+  use marbl_settings_mod, only : caco3_bury_thres_iopt_omega_calc
+  use marbl_settings_mod, only : caco3_bury_thres_depth
+  use marbl_settings_mod, only : PON_bury_coeff
 
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
@@ -329,9 +329,9 @@ contains
        glo_scalar_rmean_surface)
 
     use marbl_interface_types, only : marbl_running_mean_0d_type
-    use marbl_parms          , only : parm_init_POC_bury_coeff
-    use marbl_parms          , only : parm_init_POP_bury_coeff
-    use marbl_parms          , only : parm_init_bSi_bury_coeff
+    use marbl_settings_mod   , only : parm_init_POC_bury_coeff
+    use marbl_settings_mod   , only : parm_init_POP_bury_coeff
+    use marbl_settings_mod   , only : parm_init_bSi_bury_coeff
 
     type(marbl_running_mean_0d_type), intent(out) :: glo_avg_rmean_interior(:)
     type(marbl_running_mean_0d_type), intent(out) :: glo_avg_rmean_surface(:)
@@ -851,9 +851,9 @@ contains
 
     ! !USES:
 
-    use marbl_parms, only : parm_POC_diss
-    use marbl_parms, only : parm_CaCO3_diss
-    use marbl_parms, only : parm_SiO2_diss
+    use marbl_settings_mod, only : parm_POC_diss
+    use marbl_settings_mod, only : parm_CaCO3_diss
+    use marbl_settings_mod, only : parm_SiO2_diss
 
     integer(int_kind)                  , intent(in)    :: k
     real (r8)                          , intent(in)    :: net_dust_in     ! dust flux
@@ -1074,8 +1074,8 @@ contains
     ! !USES:
 
     use marbl_constants_mod, only : Tref
-    use marbl_parms        , only : parm_Fe_desorption_rate0
-    use marbl_parms        , only : parm_sed_denitrif_coeff
+    use marbl_settings_mod , only : parm_Fe_desorption_rate0
+    use marbl_settings_mod , only : parm_sed_denitrif_coeff
 
     integer (int_kind)                , intent(in)    :: k                   ! vertical model level
     type(marbl_domain_type)           , intent(in)    :: domain
@@ -1806,10 +1806,10 @@ contains
     use marbl_oxygen             , only : o2sat_surf
     use marbl_constants_mod      , only : molw_Fe
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
-    use marbl_parms              , only : lcompute_nhx_surface_emis
-    use marbl_parms              , only : xkw_coeff
-    use marbl_parms              , only : iron_frac_in_dust
-    use marbl_parms              , only : iron_frac_in_bc
+    use marbl_settings_mod        , only : lcompute_nhx_surface_emis
+    use marbl_settings_mod        , only : xkw_coeff
+    use marbl_settings_mod        , only : iron_frac_in_dust
+    use marbl_settings_mod        , only : iron_frac_in_bc
     use marbl_ciso_mod           , only : marbl_ciso_set_surface_forcing
 
     implicit none
@@ -2367,11 +2367,11 @@ contains
              autotroph_secondary_species)
 
     use marbl_constants_mod, only : epsC
-    use marbl_parms        , only : lvariable_PtoC
-    use marbl_parms        , only : gQsi_0
-    use marbl_parms        , only : gQsi_max
-    use marbl_parms        , only : gQsi_min
-    use marbl_parms        , only : PquotaSlope, PquotaIntercept, PquotaMinNP
+    use marbl_settings_mod , only : lvariable_PtoC
+    use marbl_settings_mod , only : gQsi_0
+    use marbl_settings_mod , only : gQsi_max
+    use marbl_settings_mod , only : gQsi_min
+    use marbl_settings_mod , only : PquotaSlope, PquotaIntercept, PquotaMinNP
 
     implicit none
 
@@ -2754,7 +2754,7 @@ contains
     !  growth, mort and grazing rates scaled by Tfunc where they are computed
     !-----------------------------------------------------------------------
 
-    use marbl_parms,         only : Q_10
+    use marbl_settings_mod,  only : Q_10
     use marbl_constants_mod, only : Tref
     use marbl_constants_mod, only : c10
 
@@ -2770,8 +2770,8 @@ contains
   subroutine marbl_compute_Pprime(k, domain, auto_cnt, autotrophs, &
        autotroph_local, column_temperature, autotroph_secondary_species)
 
-    use marbl_parms           , only : thres_z1_auto
-    use marbl_parms           , only : thres_z2_auto
+    use marbl_settings_mod, only : thres_z1_auto
+    use marbl_settings_mod, only : thres_z2_auto
 
     integer(int_kind)                      , intent(in)  :: k
     type(marbl_domain_type)                , intent(in)  :: domain
@@ -2825,8 +2825,8 @@ contains
        zoo_cnt, zooplankton, zooC, &
        Tfunc, zooplankton_secondary_species)
 
-    use marbl_parms           , only : thres_z1_zoo
-    use marbl_parms           , only : thres_z2_zoo
+    use marbl_settings_mod, only : thres_z1_zoo
+    use marbl_settings_mod, only : thres_z2_zoo
 
     integer(int_kind)                        , intent(in)    :: k
     type(marbl_domain_type)                  , intent(in)    :: domain
@@ -3052,7 +3052,7 @@ contains
     !  Get nutrient uptakes by small phyto based on calculated C fixation
     !-----------------------------------------------------------------------
 
-    use marbl_parms     , only : Q
+    use marbl_settings_mod, only : Q
 
     integer(int_kind)                      , intent(in)    :: auto_cnt
     type(autotroph_local_type)             , intent(in)    :: autotroph_loc(auto_cnt)
@@ -3130,11 +3130,11 @@ contains
     !  maximum calcification rate is 40% of primary production
     !-----------------------------------------------------------------------
 
-    use marbl_parms     , only : parm_f_prod_sp_CaCO3
-    use marbl_parms     , only : CaCO3_sp_thres
-    use marbl_parms     , only : CaCO3_temp_thres1
-    use marbl_parms     , only : CaCO3_temp_thres2
-    use marbl_parms     , only : f_photosp_CaCO3
+    use marbl_settings_mod, only : parm_f_prod_sp_CaCO3
+    use marbl_settings_mod, only : CaCO3_sp_thres
+    use marbl_settings_mod, only : CaCO3_temp_thres1
+    use marbl_settings_mod, only : CaCO3_temp_thres2
+    use marbl_settings_mod, only : f_photosp_CaCO3
 
     integer(int_kind)                      , intent(in)    :: auto_cnt
     type(autotroph_type)                   , intent(in)    :: autotrophs(auto_cnt)
@@ -3184,8 +3184,8 @@ contains
     !  Diazotrophs fix more than they need then 20% is excreted
     !-----------------------------------------------------------------------
 
-    use marbl_parms     , only : Q
-    use marbl_parms     , only : r_Nfix_photo
+    use marbl_settings_mod, only : Q
+    use marbl_settings_mod, only : r_Nfix_photo
 
     integer(int_kind)                      , intent(in)  :: auto_cnt
     type(autotroph_type)                   , intent(in)  :: autotrophs(auto_cnt)
@@ -3298,8 +3298,8 @@ contains
 
     use marbl_constants_mod, only : epsC
     use marbl_constants_mod, only : epsTinv
-    use marbl_parms        , only : grz_fnc_michaelis_menten
-    use marbl_parms        , only : grz_fnc_sigmoidal
+    use marbl_settings_mod , only : grz_fnc_michaelis_menten
+    use marbl_settings_mod , only : grz_fnc_sigmoidal
 
     integer(int_kind)                        , intent(in)    :: auto_cnt
     integer(int_kind)                        , intent(in)    :: zoo_cnt
@@ -3478,9 +3478,9 @@ contains
   subroutine marbl_compute_routing (auto_cnt, zoo_cnt,  autotrophs, &
        zooplankton_secondary_species, autotroph_secondary_species)
 
-    use marbl_parms     , only : Qp_zoo
-    use marbl_parms     , only : parm_labile_ratio
-    use marbl_parms     , only : f_toDOP
+    use marbl_settings_mod, only : Qp_zoo
+    use marbl_settings_mod, only : parm_labile_ratio
+    use marbl_settings_mod, only : f_toDOP
 
     integer(int_kind)                        , intent(in)    :: auto_cnt
     integer(int_kind)                        , intent(in)    :: zoo_cnt
@@ -3587,21 +3587,19 @@ contains
              autotroph_secondary_species, PAR_col_frac, PAR_in, PAR_avg,      &
              dz1, tracer_local, marbl_tracer_indices, dissolved_organic_matter)
 
-    use marbl_parms     , only : Qfe_zoo
-    use marbl_parms     , only : Qp_zoo
-    use marbl_parms     , only : Q
-
-    use marbl_parms     , only : DOC_reminR_light
-    use marbl_parms     , only : DON_reminR_light
-    use marbl_parms     , only : DOP_reminR_light
-    use marbl_parms     , only : DOC_reminR_dark
-    use marbl_parms     , only : DON_reminR_dark
-    use marbl_parms     , only : DOP_reminR_dark
-
-    use marbl_parms     , only : DOCr_reminR0
-    use marbl_parms     , only : DONr_reminR0
-    use marbl_parms     , only : DOPr_reminR0
-    use marbl_parms     , only : DOMr_reminR_photo
+    use marbl_settings_mod, only : Qfe_zoo
+    use marbl_settings_mod, only : Qp_zoo
+    use marbl_settings_mod, only : Q
+    use marbl_settings_mod, only : DOC_reminR_light
+    use marbl_settings_mod, only : DON_reminR_light
+    use marbl_settings_mod, only : DOP_reminR_light
+    use marbl_settings_mod, only : DOC_reminR_dark
+    use marbl_settings_mod, only : DON_reminR_dark
+    use marbl_settings_mod, only : DOP_reminR_dark
+    use marbl_settings_mod, only : DOCr_reminR0
+    use marbl_settings_mod, only : DONr_reminR0
+    use marbl_settings_mod, only : DOPr_reminR0
+    use marbl_settings_mod, only : DOMr_reminR_photo
 
     integer(int_kind)                       , intent(in)  :: k
     integer                                 , intent(in)  :: auto_cnt
@@ -3723,11 +3721,11 @@ contains
        marbl_status_log)
 
     use marbl_constants_mod, only : c1, c2, c3, c4
-    use marbl_parms        , only : Lig_cnt
-    use marbl_parms        , only : parm_Fe_scavenge_rate0
-    use marbl_parms        , only : parm_Lig_scavenge_rate0
-    use marbl_parms        , only : parm_FeLig_scavenge_rate0
-    use marbl_parms        , only : dust_Fe_scavenge_scale
+    use marbl_settings_mod , only : Lig_cnt
+    use marbl_settings_mod , only : parm_Fe_scavenge_rate0
+    use marbl_settings_mod , only : parm_Lig_scavenge_rate0
+    use marbl_settings_mod , only : parm_FeLig_scavenge_rate0
+    use marbl_settings_mod , only : dust_Fe_scavenge_scale
 
     integer                                  , intent(in)    :: k
     real(r8)                                 , intent(in)    :: Fe_loc
@@ -3929,9 +3927,9 @@ contains
        Fe_scavenge, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, &
        marbl_tracer_indices)
 
-    use marbl_parms     , only : f_graze_CaCO3_remin
-    use marbl_parms     , only : f_graze_si_remin
-    use marbl_parms     , only : Qfe_zoo
+    use marbl_settings_mod, only : f_graze_CaCO3_remin
+    use marbl_settings_mod, only : f_graze_si_remin
+    use marbl_settings_mod, only : Qfe_zoo
 
     ! Note (mvertens, 2016-02), all the column_sinking_partiles must be intent(inout)
     ! rather than intent(out), since if they were intent(out) they would be automatically 
@@ -4044,8 +4042,8 @@ contains
         Lig_prod, Lig_photochem, Lig_deg, Lig_loss)
 
     use marbl_constants_mod , only : c2, yps, ypd, dps
-    use marbl_parms         , only : remin_to_Lig
-    use marbl_parms         , only : parm_Lig_degrade_rate0
+    use marbl_settings_mod  , only : remin_to_Lig
+    use marbl_settings_mod  , only : parm_Lig_degrade_rate0
 
     integer(int_kind)       , intent(in)  :: k
     real(r8)                , intent(in)  :: POC_remin
@@ -4123,8 +4121,8 @@ contains
     !  use exponential decay of PAR across model level to compute taper factor
     !-----------------------------------------------------------------------
 
-    use marbl_parms, only : parm_nitrif_par_lim
-    use marbl_parms, only : parm_kappa_nitrif
+    use marbl_settings_mod, only : parm_nitrif_par_lim
+    use marbl_settings_mod, only : parm_kappa_nitrif
 
     integer(int_kind) , intent(in)  :: k
     integer(int_kind) , intent(in)  :: PAR_nsubcols

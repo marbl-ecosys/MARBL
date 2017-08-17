@@ -66,11 +66,11 @@ contains
   subroutine marbl_init_parameters_pre_tracers(lallow_glo_ops, marbl_settings, marbl_status_log)
 
     use marbl_config_mod, only : marbl_settings_type
-    use marbl_parms, only : marbl_parms_set_defaults_pre_tracers1
-    use marbl_parms, only : marbl_parms_define_pre_tracers1
-    use marbl_parms, only : ladjust_bury_coeff
-    use marbl_parms, only : marbl_parms_set_defaults_pre_tracers2
-    use marbl_parms, only : marbl_parms_define_pre_tracers2
+    use marbl_settings_mod, only : marbl_settings_set_defaults_pre_tracers1
+    use marbl_settings_mod, only : marbl_settings_define_pre_tracers1
+    use marbl_settings_mod, only : ladjust_bury_coeff
+    use marbl_settings_mod, only : marbl_settings_set_defaults_pre_tracers2
+    use marbl_settings_mod, only : marbl_settings_define_pre_tracers2
 
     logical,                    intent(in)    :: lallow_glo_ops
     type(marbl_settings_type),  intent(inout) :: marbl_settings
@@ -84,15 +84,15 @@ contains
     ! set default values for basic settings
     !---------------------------------------------------------------------------
 
-    call marbl_parms_set_defaults_pre_tracers1()
+    call marbl_settings_set_defaults_pre_tracers1()
 
     !---------------------------------------------------------------------------
     ! Add basic settings to list of allowable put / get vars
     !---------------------------------------------------------------------------
 
-    call marbl_parms_define_pre_tracers1(marbl_settings, marbl_status_log)
+    call marbl_settings_define_pre_tracers1(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("marbl_parms_define_pre_tracers1()", subname)
+      call marbl_status_log%log_error_trace("marbl_settings_define_pre_tracers1()", subname)
       return
     end if
 
@@ -104,15 +104,15 @@ contains
       return
     end if
 
-    call marbl_parms_set_defaults_pre_tracers2()
+    call marbl_settings_set_defaults_pre_tracers2()
 
     !---------------------------------------------------------------------------
     ! construct configuration_type
     !---------------------------------------------------------------------------
 
-    call marbl_parms_define_pre_tracers2(marbl_settings, marbl_status_log)
+    call marbl_settings_define_pre_tracers2(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("marbl_parms_define_pre_tracers2()", subname)
+      call marbl_status_log%log_error_trace("marbl_settings_define_pre_tracers2()", subname)
       return
     end if
 
@@ -131,11 +131,11 @@ contains
                                 marbl_status_log, &
                                 marbl_tracer_cnt)
 
-    use marbl_parms,    only : ciso_on
-    use marbl_parms,    only : lvariable_PtoC
-    use marbl_parms,    only : autotrophs
-    use marbl_parms,    only : zooplankton
-    use marbl_parms,    only : tracer_restore_vars
+    use marbl_settings_mod, only : ciso_on
+    use marbl_settings_mod, only : lvariable_PtoC
+    use marbl_settings_mod, only : autotrophs
+    use marbl_settings_mod, only : zooplankton
+    use marbl_settings_mod, only : tracer_restore_vars
     use marbl_ciso_mod, only : marbl_ciso_init_tracer_metadata
 
     integer(int_kind),                             intent(in)    :: num_levels
@@ -213,7 +213,7 @@ contains
 
     !  Set tracer and forcing metadata
 
-    use marbl_parms, only : lecovars_full_depth_tavg
+    use marbl_settings_mod, only : lecovars_full_depth_tavg
 
     implicit none
 
@@ -290,8 +290,8 @@ contains
   subroutine marbl_init_parameters_post_tracers(num_levels, marbl_settings, marbl_status_log)
 
     use marbl_config_mod, only : marbl_settings_type
-    use marbl_parms, only : marbl_parms_set_defaults_post_tracers
-    use marbl_parms, only : marbl_parms_define_post_tracers
+    use marbl_settings_mod, only : marbl_settings_set_defaults_post_tracers
+    use marbl_settings_mod, only : marbl_settings_define_post_tracers
 
     integer(int_kind),          intent(in)    :: num_levels
     type(marbl_settings_type),  intent(inout) :: marbl_settings
@@ -302,16 +302,16 @@ contains
     character(len=char_len) :: log_message
 
     ! set default values for parameters
-    call marbl_parms_set_defaults_post_tracers(num_levels, marbl_status_log)
+    call marbl_settings_set_defaults_post_tracers(num_levels, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("marbl_parms_set_defaults_post_tracers()", subname)
+      call marbl_status_log%log_error_trace("marbl_settings_set_defaults_post_tracers()", subname)
       return
     end if
 
     ! construct parameters_type
-    call marbl_parms_define_post_tracers(marbl_settings, marbl_status_log)
+    call marbl_settings_define_post_tracers(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("marbl_parms_define_post_tracers()", subname)
+      call marbl_status_log%log_error_trace("marbl_settings_define_post_tracers()", subname)
       return
     end if
 
@@ -322,11 +322,11 @@ contains
   subroutine marbl_init_bury_coeff(marbl_particulate_share, marbl_status_log)
 
     use marbl_logging, only : marbl_log_type
-    use marbl_parms, only : init_bury_coeff_opt
-    use marbl_parms, only : ladjust_bury_coeff
-    use marbl_parms, only : parm_init_POC_bury_coeff
-    use marbl_parms, only : parm_init_POP_bury_coeff
-    use marbl_parms, only : parm_init_bSi_bury_coeff
+    use marbl_settings_mod, only : init_bury_coeff_opt
+    use marbl_settings_mod, only : ladjust_bury_coeff
+    use marbl_settings_mod, only : parm_init_POC_bury_coeff
+    use marbl_settings_mod, only : parm_init_POP_bury_coeff
+    use marbl_settings_mod, only : parm_init_bSi_bury_coeff
     use marbl_internal_types, only : marbl_particulate_share_type
 
     type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
@@ -369,14 +369,14 @@ contains
 
     use marbl_interface_types, only : marbl_domain_type
     use marbl_internal_types, only : marbl_surface_forcing_indexing_type
-    use marbl_internal_types  , only : marbl_surface_forcing_share_type
-    use marbl_internal_types  , only : marbl_surface_forcing_internal_type
+    use marbl_internal_types, only : marbl_surface_forcing_share_type
+    use marbl_internal_types, only : marbl_surface_forcing_internal_type
     use marbl_internal_types, only : marbl_interior_forcing_indexing_type
-    use marbl_parms, only : ciso_on
-    use marbl_parms, only : lflux_gas_o2
-    use marbl_parms, only : lflux_gas_co2
-    use marbl_parms, only : ladjust_bury_coeff
-    use marbl_parms, only : tracer_restore_vars
+    use marbl_settings_mod, only : ciso_on
+    use marbl_settings_mod, only : lflux_gas_o2
+    use marbl_settings_mod, only : lflux_gas_co2
+    use marbl_settings_mod, only : ladjust_bury_coeff
+    use marbl_settings_mod, only : tracer_restore_vars
 
     type(marbl_domain_type),                      intent(in)    :: domain
     type(marbl_tracer_metadata_type),             intent(in)    :: tracer_metadata(:)
@@ -563,7 +563,7 @@ contains
     !  initialize zooplankton tracer_d values and tracer indices
     !-----------------------------------------------------------------------
 
-    use marbl_parms, only : zooplankton
+    use marbl_settings_mod, only : zooplankton
 
     implicit none
 
@@ -596,7 +596,7 @@ contains
     !  initialize autotroph tracer_d values and tracer indices
     !-----------------------------------------------------------------------
 
-    use marbl_parms, only : autotrophs
+    use marbl_settings_mod, only : autotrophs
 
     implicit none
 

@@ -20,7 +20,6 @@ module marbl_config_mod
     character(len=char_len) :: long_name
     character(len=char_len) :: short_name
     character(len=char_len) :: units
-    character(len=char_len) :: group
     character(len=char_len) :: datatype
     integer                 :: category_ind ! used for sorting output list
     character(len=char_len) :: comment      ! used to add comment in log
@@ -64,7 +63,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine add_var(this, sname, lname, units, datatype, group, category,    &
+  subroutine add_var(this, sname, lname, units, datatype, category,    &
                      marbl_status_log, rptr, iptr, lptr, sptr, comment)
 
     class(marbl_settings_type),                 intent(inout) :: this
@@ -72,7 +71,6 @@ contains
     character(len=*),                           intent(in)    :: lname
     character(len=*),                           intent(in)    :: units
     character(len=*),                           intent(in)    :: datatype
-    character(len=*),                           intent(in)    :: group
     character(len=*),                           intent(in)    :: category
     type(marbl_log_type),                       intent(inout) :: marbl_status_log
     real(r8),                optional, pointer, intent(in) :: rptr
@@ -195,7 +193,6 @@ contains
     new_entry%long_name    = trim(lname)
     new_entry%units        = trim(units)
     new_entry%datatype     = trim(datatype)
-    new_entry%group        = trim(group)
     new_entry%category_ind = cat_ind
     if (present(comment)) then
       new_entry%comment = comment
@@ -270,14 +267,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine add_var_1d_r8(this, sname, lname, units, group, category,        &
+  subroutine add_var_1d_r8(this, sname, lname, units, category,        &
                            r8array, marbl_status_log)
 
     class(marbl_settings_type),          intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
-    character(len=char_len),             intent(in)    :: group
     character(len=char_len),             intent(in)    :: category
     real(kind=r8), dimension(:), target, intent(in)    :: r8array
     type(marbl_log_type),                intent(inout) :: marbl_status_log
@@ -291,7 +287,7 @@ contains
     do n=1,size(r8array)
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       rptr => r8array(n)
-      call this%add_var(sname_loc, lname, units, 'real', group, category,     &
+      call this%add_var(sname_loc, lname, units, 'real', category,     &
                           marbl_status_log, rptr=rptr)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname_loc, subname)
@@ -303,14 +299,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine add_var_1d_int(this, sname, lname, units, group, category,       &
+  subroutine add_var_1d_int(this, sname, lname, units, category,       &
                             intarray, marbl_status_log)
 
     class(marbl_settings_type),          intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
-    character(len=char_len),             intent(in)    :: group
     character(len=char_len),             intent(in)    :: category
     integer, dimension(:), target,       intent(in)    :: intarray
     type(marbl_log_type),                intent(inout) :: marbl_status_log
@@ -324,7 +319,7 @@ contains
     do n=1,size(intarray)
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       iptr => intarray(n)
-      call this%add_var(sname_loc, lname, units, 'integer', group, category,  &
+      call this%add_var(sname_loc, lname, units, 'integer', category,  &
                           marbl_status_log, iptr=iptr)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname_loc, subname)
@@ -336,14 +331,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine add_var_1d_str(this, sname, lname, units, group, category,       &
+  subroutine add_var_1d_str(this, sname, lname, units, category,       &
                             strarray, marbl_status_log)
 
     class(marbl_settings_type),          intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
     character(len=char_len),             intent(in)    :: lname
     character(len=char_len),             intent(in)    :: units
-    character(len=char_len),             intent(in)    :: group
     character(len=char_len),             intent(in)    :: category
     character(len=char_len),     target, intent(in)    :: strarray(:)
     type(marbl_log_type),                intent(inout) :: marbl_status_log
@@ -357,7 +351,7 @@ contains
     do n=1,size(strarray)
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       sptr => strarray(n)
-      call this%add_var(sname_loc, lname, units, 'string', group, category,   &
+      call this%add_var(sname_loc, lname, units, 'string', category,   &
                           marbl_status_log, sptr=sptr)
       if (marbl_status_log%labort_marbl) then
         call log_add_var_error(marbl_status_log, sname_loc, subname)
@@ -633,13 +627,13 @@ contains
   !*****************************************************************************
 
   subroutine inquire_metadata(this, id, marbl_status_log, sname, lname, units, &
-                              group, datatype)
+                              datatype)
 
     class(marbl_settings_type), intent(in)    :: this
     integer(int_kind),          intent(in)    :: id
     type(marbl_log_type),       intent(inout) :: marbl_status_log
     character(len=*), optional, intent(out)   :: sname, lname, units
-    character(len=*), optional, intent(out)   :: group, datatype
+    character(len=*), optional, intent(out)   :: datatype
 
     character(len=*), parameter :: subname = 'marbl_config_mod:inquire_metadata'
     character(len=char_len)     :: log_message
@@ -654,10 +648,6 @@ contains
 
     if (present(units)) then
       units = this%varArray(id)%ptr%units
-    end if
-
-    if (present(group)) then
-      group = this%varArray(id)%ptr%group
     end if
 
     if (present(datatype)) then

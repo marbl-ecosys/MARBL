@@ -181,11 +181,8 @@ contains
     use marbl_init_mod, only : marbl_init_parameters_post_tracers
     use marbl_init_mod, only : marbl_init_bury_coeff
     use marbl_init_mod, only : marbl_init_forcing_fields
-    use marbl_parms,    only : marbl_parms_set_all_derived
-
-
+    use marbl_settings_mod, only : marbl_settings_set_all_derived
     use marbl_diagnostics_mod, only : marbl_diagnostics_init
-
     use marbl_saved_state_mod, only : marbl_saved_state_init
 
     class(marbl_interface_class), intent(inout) :: this
@@ -363,9 +360,9 @@ contains
 
     ! Set variables that depend on previously-set values
     ! (Typically unit conversion or string -> int for easy comparison)
-    call marbl_parms_set_all_derived(this%StatusLog)
+    call marbl_settings_set_all_derived(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_parms_set_all_derived', subname)
+      call this%StatusLog%log_error_trace('marbl_settings_set_all_derived', subname)
       return
     end if
 
@@ -727,17 +724,17 @@ end subroutine put_string
 
   !***********************************************************************
 
-  subroutine inquire_settings_metadata(this, id, sname, lname, units, group, datatype)
+  subroutine inquire_settings_metadata(this, id, sname, lname, units, datatype)
 
     class (marbl_interface_class), intent(inout) :: this
     integer(int_kind),          intent(in)    :: id
     character(len=*), optional, intent(out)   :: sname, lname, units
-    character(len=*), optional, intent(out)   :: group, datatype
+    character(len=*), optional, intent(out)   :: datatype
 
     character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata'
 
     call this%settings%inquire_metadata(id, this%StatusLog, sname, lname, units, &
-                                        group, datatype)
+                                        datatype)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%inquire_metadata', subname)
       return
@@ -942,9 +939,9 @@ end subroutine put_string
 
   subroutine shutdown(this)
 
-    use marbl_parms, only : autotrophs
-    use marbl_parms, only : zooplankton
-    use marbl_parms, only : grazing
+    use marbl_settings_mod, only : autotrophs
+    use marbl_settings_mod, only : zooplankton
+    use marbl_settings_mod, only : grazing
     use marbl_sizes, only : grazer_prey_cnt
     use marbl_diagnostics_mod, only : marbl_interior_diag_ind
 

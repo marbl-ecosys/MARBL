@@ -23,9 +23,9 @@ module marbl_ciso_mod
   use marbl_constants_mod   , only : c1000
   use marbl_constants_mod   , only : mpercm
 
-  use marbl_parms, only : autotrophs
-  use marbl_parms, only : zooplankton
-  use marbl_parms, only : grazing
+  use marbl_settings_mod    , only : autotrophs
+  use marbl_settings_mod    , only : zooplankton
+  use marbl_settings_mod    , only : grazing
 
   use marbl_sizes           , only : autotroph_cnt
   use marbl_sizes           , only : zooplankton_cnt
@@ -89,7 +89,7 @@ contains
 
     !  Set tracer and forcing metadata
 
-    use marbl_parms, only : ciso_lecovars_full_depth_tavg
+    use marbl_settings_mod, only : ciso_lecovars_full_depth_tavg
 
     implicit none
 
@@ -220,9 +220,9 @@ contains
     !  13C code is based on code from X. Giraud, ETH ZÃ¼rich, 2008, for pop1
     !  Also added biotic 14C
 
-    use marbl_parms            , only : ciso_lsource_sink
-    use marbl_parms            , only : ciso_fract_factors
-    use marbl_parms            , only : f_graze_CaCO3_REMIN
+    use marbl_settings_mod     , only : ciso_lsource_sink
+    use marbl_settings_mod     , only : ciso_fract_factors
+    use marbl_settings_mod     , only : f_graze_CaCO3_REMIN
     use marbl_constants_mod    , only : R13C_std
     use marbl_constants_mod    , only : R14C_std
     use marbl_constants_mod    , only : spd
@@ -1348,9 +1348,9 @@ contains
     !  Incoming fluxes are assumed to be the outgoing fluxes from the previous level.
     !  For other comments, see compute_particulate_terms in marbl_mod
     !----------------------------------------------------------------------------------------
-    
-    use marbl_parms         , only : denitrif_C_N
-    use marbl_constants_mod , only : spd
+
+    use marbl_settings_mod , only : denitrif_C_N
+    use marbl_constants_mod, only : spd
 
     implicit none
 
@@ -1358,7 +1358,7 @@ contains
     integer (int_kind)                 , intent(in)    :: column_km
     integer (int_kind)                 , intent(in)    :: column_kmt
     real (r8)                          , intent(in)    :: column_delta_z
-    real (r8)                          , intent(in)    :: column_zw      
+    real (r8)                          , intent(in)    :: column_zw
     real (r8)                          , intent(in)    :: O2_loc            ! dissolved oxygen used to modify POC%diss, Sed fluxes
     real (r8)                          , intent(in)    :: NO3_loc           ! dissolved nitrate used to modify sed fluxes
     type(column_sinking_particle_type) , intent(in)    :: POC               ! base units = nmol C
