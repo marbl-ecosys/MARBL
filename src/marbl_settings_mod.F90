@@ -2072,9 +2072,9 @@ contains
             if (put_success) new_entry%lptr = ll_ptr%lptr
           end select
           if (.not.put_success) then
-            write(log_message, "(6A)") "Datatype does not match for put ", &
-                               trim(ll_ptr%short_name), "; expecting ",    &
-                               trim(new_entry%datatype), " but got ", &
+            write(log_message, "(6A)") "put_setting(", trim(ll_ptr%short_name), &
+                               ") failed because the datatype was incorrect; expecting ", &
+                               trim(new_entry%datatype), " but user provided ", &
                                trim(ll_ptr%datatype)
             call marbl_status_log%log_error(log_message, subname)
           end if
@@ -2220,7 +2220,8 @@ contains
     if (associated(this%VarsFromPut)) then
       ll_ptr => this%VarsFromPut
       do while (associated(ll_ptr))
-        write(log_message, "(3A)") trim(ll_ptr%short_name), ' was put() but not set!'
+        write(log_message, "(2A)") "Unrecognized varname from put_setting(): ", &
+                                   trim(ll_ptr%short_name)
         call marbl_status_log%log_error(log_message, subname)
         ll_ptr => ll_ptr%next
       end do
