@@ -73,12 +73,11 @@ module marbl_settings_mod
   type, public :: marbl_settings_type
     logical, private :: init_called = .false.
     integer, private :: cnt = 0
-    character(len=char_len), dimension(:),              pointer :: categories
-    type(marbl_single_setting_ll_type),          pointer :: vars => NULL()
-    type(marbl_single_setting_ll_type), private, pointer :: LastEntry => NULL()
-    type(marbl_single_setting_ll_type), private, pointer :: user_supplied => NULL()
-    type(marbl_single_setting_ll_type), private, pointer :: LastUserSupplied => NULL()
-    type(marbl_setting_ptr), dimension(:),     private, allocatable :: varArray
+    character(len=char_len), dimension(:), private, pointer :: categories
+    type(marbl_single_setting_ll_type),    private, pointer :: vars => NULL()
+    type(marbl_single_setting_ll_type),    private, pointer :: VarsFromPut => NULL()
+    type(marbl_single_setting_ll_type),    private, pointer :: LastVarFromPut => NULL()
+    type(marbl_setting_ptr), dimension(:), private, allocatable :: varArray
   contains
     procedure :: add_var
     procedure :: add_var_1d_r8
@@ -1922,7 +1921,7 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_settings_mod:add_var'
 
-    type(marbl_single_setting_ll_type), pointer :: new_entry, ll_index
+    type(marbl_single_setting_ll_type), pointer :: new_entry, ll_ptr, ll_prev
     character(len=char_len), dimension(:), pointer :: new_categories
     integer :: cat_ind, n
     character(len=char_len) :: log_message
@@ -1943,45 +1942,46 @@ contains
     end if
 
     ! 2) Error checking
-    ll_index => this%vars
-    do while (associated(ll_index))
-      if (case_insensitive_eq(trim(sname), trim(ll_index%short_name))) then
+    ll_ptr => this%vars
+    do while (associated(ll_ptr))
+      if (case_insensitive_eq(trim(sname), trim(ll_ptr%short_name))) then
         write(log_message, "(A,1X,A)") trim(sname), "has been added twice"
         call marbl_status_log%log_error(log_message, subname)
       end if
 
       ! (b) Ensure pointers do not point to same target as other variables
       if (present(rptr)) then
-        if (associated(rptr, ll_index%rptr)) then
-          write(log_message, "(4A)") trim(sname), " and ", trim(ll_index%short_name), &
+        if (associated(rptr, ll_ptr%rptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(ll_ptr%short_name), &
                                      " both point to same variable in memory."
           call marbl_status_log%log_error(log_message, subname)
         end if
       end if
       if (present(iptr)) then
-        if (associated(iptr, ll_index%iptr)) then
-          write(log_message, "(4A)") trim(sname), " and ", trim(ll_index%short_name), &
+        if (associated(iptr, ll_ptr%iptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(ll_ptr%short_name), &
                                      " both point to same variable in memory."
           call marbl_status_log%log_error(log_message, subname)
         end if
       end if
       if (present(lptr)) then
-        if (associated(lptr, ll_index%lptr)) then
-          write(log_message, "(4A)") trim(sname), " and ", trim(ll_index%short_name), &
+        if (associated(lptr, ll_ptr%lptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(ll_ptr%short_name), &
                                      " both point to same variable in memory."
           call marbl_status_log%log_error(log_message, subname)
         end if
       end if
       if (present(sptr)) then
-        if (associated(sptr, ll_index%sptr)) then
-          write(log_message, "(4A)") trim(sname), " and ", trim(ll_index%short_name), &
+        if (associated(sptr, ll_ptr%sptr)) then
+          write(log_message, "(4A)") trim(sname), " and ", trim(ll_ptr%short_name), &
                                      " both point to same variable in memory."
           call marbl_status_log%log_error(log_message, subname)
         end if
       end if
 
       if (marbl_status_log%labort_marbl) return
-      ll_index => ll_index%next
+      ll_prev => ll_ptr
+      ll_ptr => ll_ptr%next
     end do
 
     ! 3) Create new entry
@@ -2045,59 +2045,56 @@ contains
     if (.not.associated(this%vars)) then
       this%vars => new_entry
     else
-      this%LastEntry%next => new_entry
+      ll_prev%next => new_entry
     end if
-    this%LastEntry => new_entry
 
-    ! 5) Was there a put() call to change this variable?
-    !    note that "new_entry" is a dummy pointer used to track ll_index%prev
-    ll_index => this%user_supplied
-    nullify(new_entry)
-    do while (associated(ll_index))
-      if (case_insensitive_eq(ll_index%short_name, this%LastEntry%short_name)) then
+    ! 5) Was there a put_setting() call to change this variable?
+    nullify(ll_prev)
+    ll_ptr => this%VarsFromPut
+    do while (associated(ll_ptr))
+      if (case_insensitive_eq(ll_ptr%short_name, new_entry%short_name)) then
         ! 5a) Update variable value
-        if (associated(ll_index%iptr).and.associated(this%LastEntry%rptr)) then
-          this%LastEntry%rptr = real(ll_index%iptr,r8)
+        if (associated(ll_ptr%iptr).and.associated(new_entry%rptr)) then
+          new_entry%rptr = real(ll_ptr%iptr,r8)
         else
-          select case (this%LastEntry%datatype)
+          select case (new_entry%datatype)
           case ("real")
-            put_success = associated(ll_index%rptr)
-            if (put_success) this%LastEntry%rptr = ll_index%rptr
+            put_success = associated(ll_ptr%rptr)
+            if (put_success) new_entry%rptr = ll_ptr%rptr
           case ("integer")
-            put_success = associated(ll_index%iptr)
-            if (put_success) this%LastEntry%iptr = ll_index%iptr
+            put_success = associated(ll_ptr%iptr)
+            if (put_success) new_entry%iptr = ll_ptr%iptr
           case ("string")
-            put_success = associated(ll_index%sptr)
-            if (put_success) this%LastEntry%sptr = ll_index%sptr
+            put_success = associated(ll_ptr%sptr)
+            if (put_success) new_entry%sptr = ll_ptr%sptr
           case ("logical")
-            put_success = associated(ll_index%lptr)
-            if (put_success) this%LastEntry%lptr = ll_index%lptr
+            put_success = associated(ll_ptr%lptr)
+            if (put_success) new_entry%lptr = ll_ptr%lptr
           end select
           if (.not.put_success) then
             write(log_message, "(6A)") "Datatype does not match for put ", &
-                               trim(ll_index%short_name), "; expecting ",  &
-                               trim(this%LastEntry%datatype), " but got ", &
-                               trim(ll_index%datatype)
+                               trim(ll_ptr%short_name), "; expecting ",    &
+                               trim(new_entry%datatype), " but got ", &
+                               trim(ll_ptr%datatype)
             call marbl_status_log%log_error(log_message, subname)
-            return
           end if
         end if
 
-        ! 5b) Remove entry from user_supplied list
-        !     Different procedure if ll_index is first entry in list
-        if (associated(ll_index,this%user_supplied)) then
-          this%user_supplied => ll_index%next
-          deallocate(ll_index)
-          ll_index => this%user_supplied
+        ! 5b) Remove entry from VarsFromPut list
+        !     Different procedure if ll_ptr is first entry in list
+        if (associated(ll_ptr,this%VarsFromPut)) then
+          this%VarsFromPut => ll_ptr%next
+          deallocate(ll_ptr)
+          ll_ptr => this%VarsFromPut
         else
-          new_entry%next => ll_index%next
-          deallocate(ll_index)
-          ll_index => new_entry%next
+          ll_prev%next => ll_ptr%next
+          deallocate(ll_ptr)
+          ll_ptr => ll_prev%next
         end if
       else
-        ! Once we are past first entry, new entry%next = ll_index
-        new_entry => ll_index
-        ll_index => ll_index%next
+        ! Once we are past first entry, ll_prev%next => ll_ptr
+        ll_prev => ll_ptr
+        ll_ptr => ll_ptr%next
       end if
     end do
 
@@ -2214,18 +2211,18 @@ contains
 
     character(len=7)        :: logic
     integer                 :: i, cat_ind
-    type(marbl_single_setting_ll_type), pointer :: ll_index
+    type(marbl_single_setting_ll_type), pointer :: ll_ptr
 
     ! (1) Lock data type (put calls will now cause MARBL to abort)
     this%init_called = .true.
 
-    ! (2) Abort if anything is left in this%user_supplied
-    if (associated(this%user_supplied)) then
-      ll_index => this%user_supplied
-      do while (associated(ll_index))
-        write(log_message, "(3A)") trim(ll_index%short_name), ' was put() but not set!'
+    ! (2) Abort if anything is left in this%VarsFromPut
+    if (associated(this%VarsFromPut)) then
+      ll_ptr => this%VarsFromPut
+      do while (associated(ll_ptr))
+        write(log_message, "(3A)") trim(ll_ptr%short_name), ' was put() but not set!'
         call marbl_status_log%log_error(log_message, subname)
-        ll_index => ll_index%next
+        ll_ptr => ll_ptr%next
       end do
       return
     end if
@@ -2233,40 +2230,40 @@ contains
     call marbl_status_log%log_header("Tunable Parameters", subname)
 
     do cat_ind = 1,size(this%categories)
-      ll_index => this%vars
-      do while (associated(ll_index))
-        if (ll_index%category_ind .eq. cat_ind) then
+      ll_ptr => this%vars
+      do while (associated(ll_ptr))
+        if (ll_ptr%category_ind .eq. cat_ind) then
         ! (3) write parameter to log_message (format depends on datatype)
-          select case(trim(ll_index%datatype))
+          select case(trim(ll_ptr%datatype))
             case ('string')
-              write(log_message, "(4A)") trim(ll_index%short_name), " = '",  &
-                                         trim(ll_index%sptr), "'"
+              write(log_message, "(4A)") trim(ll_ptr%short_name), " = '",  &
+                                         trim(ll_ptr%sptr), "'"
             case ('real')
-              write(log_message, "(2A,E24.16)") trim(ll_index%short_name),   &
-                                                " = ", ll_index%rptr
+              write(log_message, "(2A,E24.16)") trim(ll_ptr%short_name),   &
+                                                " = ", ll_ptr%rptr
             case ('integer')
-              write(log_message, "(2A,I0)") trim(ll_index%short_name), " = ", &
-                                            ll_index%iptr
+              write(log_message, "(2A,I0)") trim(ll_ptr%short_name), " = ", &
+                                            ll_ptr%iptr
             case ('logical')
-              if (ll_index%lptr) then
+              if (ll_ptr%lptr) then
                 logic = '.true.'
               else
                 logic = '.false.'
               end if
-              write(log_message, "(3A)") trim(ll_index%short_name), " = ",   &
+              write(log_message, "(3A)") trim(ll_ptr%short_name), " = ",   &
                                          trim(logic)
             case DEFAULT
-              write(log_message, "(2A)") trim(ll_index%datatype),            &
+              write(log_message, "(2A)") trim(ll_ptr%datatype),            &
                                          ' is not a valid datatype for parameter'
               call marbl_status_log%log_error(log_message, subname)
               return
           end select
 
           ! (4) Write log_message to the log
-          if (ll_index%comment.ne.'') then
-            if (len_trim(log_message) + 3 + len_trim(ll_index%comment) .le. len(log_message)) then
+          if (ll_ptr%comment.ne.'') then
+            if (len_trim(log_message) + 3 + len_trim(ll_ptr%comment) .le. len(log_message)) then
               write(log_message, "(3A)") trim(log_message), ' ! ',                  &
-                                         trim(ll_index%comment)
+                                         trim(ll_ptr%comment)
             else
               call marbl_status_log%log_noerror(&
                    '! WARNING: omitting comment on line below because including it exceeds max length for log message', &
@@ -2275,8 +2272,8 @@ contains
           endif
           call marbl_status_log%log_noerror(log_message, subname)
         end if
-        ll_index => ll_index%next
-      end do  ! ll_index
+        ll_ptr => ll_ptr%next
+      end do  ! ll_ptr
       if (cat_ind .ne. size(this%categories)) then
         call marbl_status_log%log_noerror('', subname)
       end if
@@ -2289,10 +2286,10 @@ contains
       return
     end if
     allocate(this%varArray(this%cnt))
-    ll_index => this%vars
+    ll_ptr => this%vars
     do i = 1,this%cnt
-      this%varArray(i)%ptr => ll_index
-      ll_index => ll_index%next
+      this%varArray(i)%ptr => ll_ptr
+      ll_ptr => ll_ptr%next
     end do
 
   end subroutine finalize_vars
@@ -2309,7 +2306,7 @@ contains
     logical,          optional, intent(in)    :: lval
     character(len=*), optional, intent(in)    :: sval
 
-    type(marbl_single_setting_ll_type), pointer :: new_entry, ll_index
+    type(marbl_single_setting_ll_type), pointer :: new_entry, ll_ptr
     character(len=*), parameter :: subname = 'marbl_settings_mod:put'
     character(len=char_len) :: log_message
 
@@ -2344,12 +2341,12 @@ contains
       new_entry%datatype = 'string'
     end if
 
-    if (.not.associated(this%user_supplied)) then
-      this%user_supplied => new_entry
+    if (.not.associated(this%VarsFromPut)) then
+      this%VarsFromPut => new_entry
     else
-      this%LastUserSupplied%next => new_entry
+      this%LastVarFromPut%next => new_entry
     end if
-    this%LastUserSupplied => new_entry
+    this%LastVarFromPut => new_entry
 
   end subroutine put
 
@@ -2368,7 +2365,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_settings_mod%get'
     character(len=char_len)     :: log_message
 
-    type(marbl_single_setting_ll_type), pointer :: ll_index
+    type(marbl_single_setting_ll_type), pointer :: ll_ptr
     integer :: cnt
 
     call marbl_status_log%construct()
@@ -2378,49 +2375,49 @@ contains
     if (present(lval)) cnt = cnt + 1
     if (present(sval)) cnt = cnt + 1
 
-    ll_index => this%vars
-    do while (associated(ll_index))
-      if (case_insensitive_eq((ll_index%short_name), trim(var))) exit
-      ll_index => ll_index%next
+    ll_ptr => this%vars
+    do while (associated(ll_ptr))
+      if (case_insensitive_eq((ll_ptr%short_name), trim(var))) exit
+      ll_ptr => ll_ptr%next
     end do
-    if (.not.associated(ll_index)) then
+    if (.not.associated(ll_ptr)) then
       write(log_message, "(2A)") trim(var), 'not found!'
       call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
-    select case(trim(ll_index%datatype))
+    select case(trim(ll_ptr%datatype))
       case ('real')
         if (present(rval)) then
-          rval = ll_index%rptr
+          rval = ll_ptr%rptr
         else
           write(log_message, "(2A)") trim(var), ' requires real value'
           call marbl_status_log%log_error(log_message, subname)
         end if
       case ('integer')
         if (present(ival)) then
-          ival = ll_index%iptr
+          ival = ll_ptr%iptr
         else
           write(log_message, "(2A)") trim(var), ' requires integer value'
           call marbl_status_log%log_error(log_message, subname)
         end if
       case ('logical')
         if (present(lval)) then
-          lval = ll_index%lptr
+          lval = ll_ptr%lptr
         else
           write(log_message, "(2A)") trim(var), ' requires logical value'
           call marbl_status_log%log_error(log_message, subname)
         end if
       case ('string')
         if (present(sval)) then
-          if (len(sval).lt.len(trim(ll_index%sptr))) then
+          if (len(sval).lt.len(trim(ll_ptr%sptr))) then
             write(log_message, "(2A,I0,A,I0,A)") trim(var), ' requires ',     &
-              len(trim(ll_index%sptr)), ' bytes to store, but only ', &
+              len(trim(ll_ptr%sptr)), ' bytes to store, but only ',           &
               len(sval), ' are provided.'
             call marbl_status_log%log_error(log_message, subname)
             return
           end if
-          sval = trim(ll_index%sptr)
+          sval = trim(ll_ptr%sptr)
         else
           write(log_message, "(2A)") trim(var), ' requires string value'
           call marbl_status_log%log_error(log_message, subname)
