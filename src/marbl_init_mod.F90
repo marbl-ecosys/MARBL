@@ -65,7 +65,7 @@ contains
 
   subroutine marbl_init_parameters_pre_tracers(lallow_glo_ops, marbl_settings, marbl_status_log)
 
-    use marbl_config_mod, only : marbl_settings_type
+    use marbl_settings_mod, only : marbl_settings_type
     use marbl_settings_mod, only : marbl_settings_set_defaults_pre_tracers1
     use marbl_settings_mod, only : marbl_settings_define_pre_tracers1
     use marbl_settings_mod, only : ladjust_bury_coeff
@@ -289,7 +289,7 @@ contains
 
   subroutine marbl_init_parameters_post_tracers(num_levels, marbl_settings, marbl_status_log)
 
-    use marbl_config_mod, only : marbl_settings_type
+    use marbl_settings_mod, only : marbl_settings_type
     use marbl_settings_mod, only : marbl_settings_set_defaults_post_tracers
     use marbl_settings_mod, only : marbl_settings_define_post_tracers
 
