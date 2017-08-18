@@ -126,7 +126,8 @@ module marbl_interface
      procedure, public  :: set_surface_forcing
      procedure, public  :: set_global_scalars
      procedure, public  :: shutdown
-     procedure, public  :: inquire_settings_metadata
+     generic            :: inquire_settings_metadata => inquire_settings_metadata_by_name, &
+                                                        inquire_settings_metadata_by_id
      generic            :: put_setting => put_real,           &
                                           put_integer,        &
                                           put_logical,        &
@@ -139,11 +140,13 @@ module marbl_interface
                                           get_logical, &
                                           get_string
      procedure, public  :: get_settings_var_cnt
-     procedure, private :: put_inputfile_line
+     procedure, private :: inquire_settings_metadata_by_name
+     procedure, private :: inquire_settings_metadata_by_id
      procedure, private :: put_real
      procedure, private :: put_integer
      procedure, private :: put_logical
      procedure, private :: put_string
+     procedure, private :: put_inputfile_line
      procedure, private :: put_all_string
      procedure, private :: get_real
      procedure, private :: get_integer
@@ -477,7 +480,6 @@ contains
       if (lend_array_element .or. (char_ind.eq.len_trim(val_loc))) then
         m = m+1
         write(var_loc, "(2A,I0,A)") trim(varname), '(', m, ')'
-        print*, trim(var_loc), " = ", trim(array_elem_val)
         call string_to_var_or_datatype(array_elem_val, this%StatusLog, datatype = datatype)
         select case (trim(datatype))
           case ("logical")
@@ -695,19 +697,67 @@ end subroutine put_string
 
   !***********************************************************************
 
-  subroutine get_string(this, varname, val)
+  subroutine get_string(this, varname, val, linputfile_format)
 
     class (marbl_interface_class), intent(inout) :: this
     character(len=*),              intent(in)    :: varname
     character(len=*),              intent(out)   :: val
+    logical, optional,             intent(in)    :: linputfile_format
 
     character(len=*), parameter :: subname = 'marbl_interface:get_string'
     character(len=char_len) :: log_message
 
-    call this%settings%get(varname, this%StatusLog, sval=val)
+    logical :: linputfile_format_loc
+    character(len=char_len) :: datatype
+    real(r8)                :: rval
+    integer                 :: ival
+    logical                 :: lval
+    character(len=char_len) :: sval
+
+    val = ''
+    if (present(linputfile_format)) then
+      linputfile_format_loc = linputfile_format
+    else
+      linputfile_format_loc = .false.
+    end if
+
+    if (linputfile_format_loc) then
+      ! Determine datatype
+      call this%inquire_settings_metadata(varname, datatype=datatype)
+      if (this%StatusLog%labort_marbl) then
+        call this%StatusLog%log_error_trace('inquire_settings_metadata', subname)
+        return
+      end if
+      select case (trim(datatype))
+        case ('real')
+          call this%settings%get(varname, this%StatusLog, rval=rval)
+          write(val, "(A,' = ', E24.16)") trim(varname), rval
+        case ('integer')
+          call this%settings%get(varname, this%StatusLog, ival=ival)
+          write(val, "(A, ' = ', I0)") trim(varname), ival
+        case ('logical')
+          call this%settings%get(varname, this%StatusLog, lval=lval)
+          if (lval) then
+            sval = '.true.'
+          else
+            sval = '.false.'
+          end if
+          write(val, "(A, ' = ', A)") trim(varname), trim(sval)
+        case ('string')
+          call this%settings%get(varname, this%StatusLog, sval=sval)
+          write(val, "(A, ' = ', 3A)") trim(varname), "'", trim(sval), "'"
+        case DEFAULT
+          write(log_message, "(3A)") "Unknown datatype '", trim(datatype), &
+                                     "' returned from inquire_settings_metadata()"
+          call this%StatusLog%log_error(log_message, subname)
+          return
+      end select
+    else
+      call this%settings%get(varname, this%StatusLog, sval=val)
+    end if ! linputfile_format_loc
+
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%get()', subname)
-      return
     end if
 
   end subroutine get_string
@@ -725,23 +775,58 @@ end subroutine put_string
 
   !***********************************************************************
 
-  subroutine inquire_settings_metadata(this, id, sname, lname, units, datatype)
+  subroutine inquire_settings_metadata_by_name(this, varname, id, lname, units, datatype)
 
     class (marbl_interface_class), intent(inout) :: this
-    integer(int_kind),          intent(in)    :: id
-    character(len=*), optional, intent(out)   :: sname, lname, units
-    character(len=*), optional, intent(out)   :: datatype
+    character(len=*),              intent(in)    :: varname
+    integer(int_kind), optional,   intent(out)   :: id
+    character(len=*),  optional,   intent(out)   :: lname, units, datatype
 
-    character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata'
+    character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata_by_name'
+    integer :: id_loc
 
-    call this%settings%inquire_metadata(id, this%StatusLog, sname, lname, units, &
-                                        datatype)
+    id_loc = this%settings%inquire_id(varname, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%inquire_id', subname)
+      return
+    end if
+    if (present(id)) id = id_loc
+    if (any((/present(lname), present(units), present(datatype)/))) then
+      call this%settings%inquire_metadata(id_loc, this%StatusLog,  &
+                                          lname    = lname,        &
+                                          units    = units,        &
+                                          datatype = datatype)
+      if (this%StatusLog%labort_marbl) then
+        call this%StatusLog%log_error_trace('settings%inquire_metadata', subname)
+        return
+      end if
+    end if
+
+  end subroutine inquire_settings_metadata_by_name
+
+  !***********************************************************************
+
+  subroutine inquire_settings_metadata_by_id(this, id, sname, lname, units, datatype)
+
+    class (marbl_interface_class), intent(inout) :: this
+    integer(int_kind),             intent(in)    :: id
+    character(len=*), optional,    intent(out)   :: sname, lname, units
+    character(len=*), optional,    intent(out)   :: datatype
+
+    character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata_by_id'
+
+    call this%settings%inquire_metadata(id, this%StatusLog,  &
+                                        sname    = sname,    &
+                                        lname    = lname,    &
+                                        units    = units,    &
+                                        datatype = datatype)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%inquire_metadata', subname)
       return
     end if
 
-  end subroutine inquire_settings_metadata
+  end subroutine inquire_settings_metadata_by_id
+
   !***********************************************************************
 
   subroutine reset_timers(this)

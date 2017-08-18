@@ -55,15 +55,16 @@ Program marbl
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
   integer                       :: m, n, nt, cnt
-  character(len=256)            :: input_line, testname, varname, log_message
+  character(len=256)            :: input_line, testname, varname, log_message, log_out_file
   logical                       :: lprint_marbl_log, lhas_inputfile, labort
+  logical                       :: ldriver_log_to_file
 
   ! Processing input file for put calls
   integer  :: ioerr=0
   integer  :: ival
   real(r8) :: rval
 
-  namelist /marbl_driver_nml/testname, lhas_inputfile
+  namelist /marbl_driver_nml/testname, lhas_inputfile, log_out_file
 
   !****************************************************************************
 
@@ -75,11 +76,13 @@ Program marbl
   !       * Some tests use a different status log than marbl_instance%StatusLog
   !         (default is to use marbl_instance%StatusLog)
   lprint_marbl_log = .true.
+  ldriver_log_to_file = .false.
   call driver_status_log%construct()
 
   ! (1) Set marbl_driver_nml defaults
   testname       = ''
   lhas_inputfile = .true.
+  log_out_file   = 'marbl.out' ! only written if ldriver_log_to_file = .true.
 
   ! (2a) Read driver namelist to know what test to run
   open(8, file="test.nml", status="old")
@@ -122,6 +125,18 @@ Program marbl
   select case (trim(testname))
     case ('init')
       call marbl_init_test(marbl_instance)
+    case ('gen_inputfile')
+      lprint_marbl_log = .false.
+      ldriver_log_to_file = .true.
+      call marbl_init_test(marbl_instance, lshutdown=.false.)
+      do n=1,marbl_instance%get_settings_var_cnt()
+        call marbl_instance%inquire_settings_metadata(n, sname=varname)
+        if (marbl_instance%StatusLog%labort_marbl) exit
+        call marbl_instance%get_setting(varname, input_line, linputfile_format=.true.)
+        if (marbl_instance%StatusLog%labort_marbl) exit
+        call driver_status_log%log_noerror(trim(input_line), subname)
+      end do
+      call marbl_instance%shutdown()
     case ('get_put')
       lprint_marbl_log = .false.
       call marbl_get_put_test(marbl_instance, driver_status_log)
@@ -192,7 +207,14 @@ Program marbl
   if (marbl_instance%StatusLog%labort_marbl.or.lprint_marbl_log) &
       call print_marbl_log(marbl_instance%StatusLog)
 
-  ! (4b) Print timer results (and any other driver-logged output)
+  ! (4b) If driver log should be written to file, do so
+  if (ldriver_log_to_file) then
+    call print_marbl_log(driver_status_log, outfile=log_out_file)
+  end if
+
+  ! (4c) Add timer information to driver log, then print driver log
+  !      note that if driver log was previously written to a file,
+  !      timers are all that will be written to screen
   call summarize_timers()
   call print_marbl_log(driver_status_log)
 
@@ -204,25 +226,38 @@ Contains
 
   !****************************************************************************
 
-  subroutine print_marbl_log(log_to_print)
+  subroutine print_marbl_log(log_to_print, outfile)
 
     use marbl_logging, only : marbl_status_log_entry_type
 
-    class(marbl_log_type), intent(inout) :: log_to_print
+    class(marbl_log_type),      intent(inout) :: log_to_print
+    character(len=*), optional, intent(in)    :: outfile
     type(marbl_status_log_entry_type), pointer :: tmp
+    integer :: out_unit
+
+    ! write to stdout unless outfile is provided
+    out_unit = 6
+    if (present(outfile)) then
+      out_unit = 100
+      open(out_unit, file=outfile, action="write", status="replace")
+    end if
 
     tmp => log_to_print%FullLog
     do while (associated(tmp))
       if (mpi_on .and. (.not. tmp%lonly_master_writes)) then
         ! If running in parallel and all tasks are writing to the log, prefix
         ! the task # to log message
-        write(*,"(I0,': ',A)") my_task, trim(tmp%LogMessage)
+        write(out_unit, "(I0,': ',A)") my_task, trim(tmp%LogMessage)
       elseif (my_task.eq.0) then
         ! Otherwise only task 0 writes to the log and no prefix is necessary
-        write(*,"(A)") trim(tmp%LogMessage)
+        write(out_unit, "(A)") trim(tmp%LogMessage)
       end if
       tmp => tmp%next
     end do
+
+    if (present(outfile)) then
+      close(out_unit)
+    end if
 
     call log_to_print%erase()
 

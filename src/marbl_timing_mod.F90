@@ -126,6 +126,7 @@ Contains
 
     allocate(self%individual_timers(self%num_timers+1))
     self%individual_timers(1:self%num_timers) = tmp
+    deallocate(tmp)
     self%num_timers = self%num_timers + 1
     id = self%num_timers
     associate(new_timer => self%individual_timers(id))

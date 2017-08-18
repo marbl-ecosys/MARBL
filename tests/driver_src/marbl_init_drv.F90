@@ -14,16 +14,25 @@ module marbl_init_drv
 
 Contains
 
-  subroutine test(marbl_instance, nt)
+  subroutine test(marbl_instance, nt, lshutdown)
 
     use marbl_mpi_mod, only : marbl_mpi_abort
 
     type(marbl_interface_class), intent(inout) :: marbl_instance
     integer, optional,           intent(inout) :: nt
+    logical, optional,           intent(in)    :: lshutdown
 
     character(*), parameter      :: subname = 'marbl_init_drv:test'
     real(kind=r8), dimension(km) :: delta_z, zw, zt
     integer                      :: k
+    logical                      :: lshutdown_loc
+
+    ! Run marbl_instance%shutdown? (Skip when running get_setting() from driver
+    if (present(lshutdown)) then
+      lshutdown_loc = lshutdown
+    else
+      lshutdown_loc = .true.
+    end if
 
     ! Initialize levels
     delta_z = c1
@@ -49,11 +58,13 @@ Contains
       return
     end if
 
-    ! Shutdown
-    call marbl_instance%shutdown()
-    if (marbl_instance%StatusLog%labort_marbl) then
-      call marbl_instance%StatusLog%log_error_trace('marbl%shutdown', subname)
-      return
+    if (lshutdown_loc) then
+      ! Shutdown
+      call marbl_instance%shutdown()
+      if (marbl_instance%StatusLog%labort_marbl) then
+        call marbl_instance%StatusLog%log_error_trace('marbl%shutdown', subname)
+        return
+      end if
     end if
 
   end subroutine test

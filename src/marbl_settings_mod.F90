@@ -1324,9 +1324,12 @@ contains
         end if
 
         ! Properties that are the same for all grazers
-        grazing(m,n)%auto_ind(:)      = 0
-        grazing(m,n)%auto_ind(1)      = m
-        grazing(m,n)%zoo_ind          = -1
+        if (size(grazing(m,n)%auto_ind) .gt. 0) then
+          grazing(m,n)%auto_ind(:)      = 0
+          grazing(m,n)%auto_ind(1)      = m
+        end if
+        if (size(grazing(m,n)%zoo_ind) .gt. 0) &
+          grazing(m,n)%zoo_ind          = -1
 
         ! Properties that depend on m & n
         if ((trim(zooplankton(n)%sname).eq.'zoo').and.                 &
@@ -1775,7 +1778,7 @@ contains
           lname     = 'Indices of autotrophs in class'
           units     = 'unitless'
           call this%add_var_1d_int(sname, lname, units, category,      &
-                            grazing(m,n)%auto_ind(1:cnt),                     &
+                            grazing(m,n)%auto_ind,                     &
                             marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call marbl_status_log%log_error_trace('add_var_1d_int', subname)
@@ -1789,7 +1792,7 @@ contains
           lname     = 'Indices of autotrophs in class'
           units     = 'unitless'
           call this%add_var_1d_int(sname, lname, units, category,      &
-                                   grazing(m,n)%zoo_ind(1:cnt),               &
+                                   grazing(m,n)%zoo_ind,               &
                                    marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call marbl_status_log%log_error_trace('add_var_1d_int', subname)
