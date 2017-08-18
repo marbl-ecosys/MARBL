@@ -2381,6 +2381,12 @@ contains
     if (present(lval)) cnt = cnt + 1
     if (present(sval)) cnt = cnt + 1
 
+    if (cnt.gt.1) then
+      write(log_message, "(A)") 'Must provide just one of rval, ival, lval, or sval to get()'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
     ll_ptr => this%vars
     do while (associated(ll_ptr))
       if (case_insensitive_eq((ll_ptr%short_name), trim(var))) exit
