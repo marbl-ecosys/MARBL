@@ -238,7 +238,7 @@ Contains
     ! write to stdout unless outfile is provided
     out_unit = 6
     if (present(outfile)) then
-      out_unit = 100
+      out_unit = 99
       open(out_unit, file=outfile, action="write", status="replace")
     end if
 
