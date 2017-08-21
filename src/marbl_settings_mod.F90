@@ -89,6 +89,7 @@ module marbl_settings_mod
     procedure :: get_cnt
     procedure :: put
     procedure :: get
+    procedure :: destruct
   end type marbl_settings_type
 
   !---------------------------------------------------------------------
@@ -2440,6 +2441,37 @@ contains
     end select
 
   end subroutine get
+
+  !*****************************************************************************
+
+  subroutine destruct(this)
+
+    class(marbl_settings_type), intent(inout) :: this
+
+    type(marbl_single_setting_ll_type), pointer :: ll_next
+
+    ! Empty vars linked list
+    do while (associated(this%vars))
+      ll_next => this%vars%next
+      deallocate(this%vars)
+      this%vars => ll_next
+    end do
+
+    ! Empty VarsFromPut linked list (should already be empty)
+    do while (associated(this%VarsFromPut))
+      ll_next => this%VarsFromPut
+      deallocate(this%VarsFromPut)
+      this%VarsFromPut => ll_next
+    end do
+
+    ! Nullify LastVarFromPut
+    nullify(this%LastVarFromPut)
+
+    ! Deallocate varArray
+    if (allocated(this%varArray)) deallocate(this%varArray)
+    this%cnt=0
+
+  end subroutine destruct
 
   !*****************************************************************************
 

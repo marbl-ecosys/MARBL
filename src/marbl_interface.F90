@@ -1054,6 +1054,8 @@ end subroutine put_string
     if (marbl_interior_diag_ind%lconstructed()) &
       call marbl_interior_diag_ind%destruct()
 
+    call this%settings%destruct()
+
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('shutdown_timers', subname)
