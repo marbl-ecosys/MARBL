@@ -240,6 +240,7 @@ Contains
     if (present(outfile)) then
       out_unit = 99
       open(out_unit, file=outfile, action="write", status="replace")
+      if (my_task .eq. 0) write(6, "(3A)") "  Writing log to ", trim(outfile), "..."
     end if
 
     tmp => log_to_print%FullLog
@@ -257,6 +258,7 @@ Contains
 
     if (present(outfile)) then
       close(out_unit)
+      if (my_task .eq. 0) write(6, "(A)") "  ... Done writing to file!"
     end if
 
     call log_to_print%erase()
