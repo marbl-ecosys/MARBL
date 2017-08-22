@@ -56,7 +56,7 @@ Program marbl
   type(marbl_log_type)          :: driver_status_log
   integer                       :: m, n, nt, cnt
   character(len=256)            :: input_line, testname, varname, log_message, log_out_file
-  logical                       :: lprint_marbl_log, lhas_inputfile, labort
+  logical                       :: lprint_marbl_log, lhas_inputfile
   logical                       :: ldriver_log_to_file
 
   ! Processing input file for put calls
@@ -95,7 +95,6 @@ Program marbl
 
   ! (2b) Read inputfile
   if (lhas_inputfile) then
-    labort = .false.
     ioerr = 0
     do while(ioerr .eq. 0)
       input_line = ''
@@ -115,9 +114,8 @@ Program marbl
     if (.not.is_iostat_end(ioerr)) then
       write(*,"(A,I0)") "ioerr = ", ioerr
       write(*,"(A)") "ERROR encountered when reading MARBL input file from stdin"
-      labort = .true.
+      call marbl_mpi_abort()
     end if
-    if (labort) call marbl_mpi_abort()
   end if
 
   ! (3) Run proper test

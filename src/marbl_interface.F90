@@ -134,7 +134,6 @@ module marbl_interface
                                           put_string,         & ! This routine checks to see if string is actually an array
                                           put_inputfile_line, & ! This line converts string "var = val" to proper put()
                                           put_all_string
-     procedure, public  :: put_single_string             ! This routine assumes not an array
      generic            :: get_setting => get_real,    &
                                           get_integer, &
                                           get_logical, &
@@ -146,6 +145,7 @@ module marbl_interface
      procedure, private :: put_integer
      procedure, private :: put_logical
      procedure, private :: put_string
+     procedure, private :: put_single_string             ! This routine assumes not an array
      procedure, private :: put_inputfile_line
      procedure, private :: put_all_string
      procedure, private :: get_real
