@@ -47,8 +47,6 @@ module marbl_interface
   use marbl_internal_types  , only : marbl_internal_timers_type
   use marbl_internal_types  , only : marbl_timer_indexing_type
 
-  use ieee_arithmetic, only : ieee_is_nan
-
   implicit none
 
   private
@@ -480,20 +478,7 @@ contains
       if (lend_array_element .or. (char_ind.eq.len_trim(val_loc))) then
         m = m+1
         write(var_loc, "(2A,I0,A)") trim(varname), '(', m, ')'
-        call string_to_var_or_datatype(array_elem_val, this%StatusLog, datatype = datatype)
-        select case (trim(datatype))
-          case ("logical")
-            call string_to_var_or_datatype(array_elem_val, this%StatusLog, lval = lval)
-            call this%put_setting(trim(var_loc), lval)
-          case ("real")
-            call string_to_var_or_datatype(array_elem_val, this%StatusLog, rval = rval)
-            call this%put_setting(trim(var_loc), rval)
-          case ("integer")
-            call string_to_var_or_datatype(array_elem_val, this%StatusLog, ival = ival)
-            call this%put_setting(trim(var_loc), ival)
-          case ("string")
-            call this%put_single_string(trim(var_loc), trim(array_elem_val))
-        end select
+        call this%put_setting(trim(var_loc), "unknown", array_elem_val)
         array_elem_val=''
         char_ind_loc = 0
       end if
@@ -506,30 +491,45 @@ end subroutine put_string
   subroutine put_all_string(this, varname, datatype, val)
     ! This interface to put_setting() is called from put_inputfile_line()
 
+    use marbl_settings_mod, only : marbl_settings_string_to_var
+
     class (marbl_interface_class),  intent(inout) :: this
     character(len=*),               intent(in)    :: varname, datatype, val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_all_string'
     character(len=char_len)     :: log_message
 
-    character(len=char_len) :: sval
     real(r8)                :: rval
     integer(int_kind)       :: ival
     logical(log_kind)       :: lval
 
     select case (trim(datatype))
       case ('logical')
-        call string_to_var_or_datatype(val, this%StatusLog, lval = lval)
-        call this%put_setting(trim(varname), lval)
+        call marbl_settings_string_to_var(val, this%StatusLog, lval = lval)
+        if (this%StatusLog%labort_marbl) then
+          call this%StatusLog%log_error_trace('marbl_settings_string_to_var', subname)
+          return
+        end if
+        call this%settings%put(trim(varname), this%StatusLog, lval=lval)
       case ('real')
-        call string_to_var_or_datatype(val, this%StatusLog, rval = rval)
-        call this%put_setting(trim(varname), rval)
+        call marbl_settings_string_to_var(val, this%StatusLog, rval = rval)
+        if (this%StatusLog%labort_marbl) then
+          call this%StatusLog%log_error_trace('marbl_settings_string_to_var', subname)
+          return
+        end if
+        call this%settings%put(trim(varname), this%StatusLog, rval=rval)
       case ('integer')
-        call string_to_var_or_datatype(val, this%StatusLog, ival = ival)
-        call this%put_setting(trim(varname), ival)
+        call marbl_settings_string_to_var(val, this%StatusLog, ival = ival)
+        if (this%StatusLog%labort_marbl) then
+          call this%StatusLog%log_error_trace('marbl_settings_string_to_var', subname)
+          return
+        end if
+        call this%settings%put(trim(varname), this%StatusLog, ival=ival)
       case ('string')
-        call string_to_var_or_datatype(val, this%StatusLog, sval = sval)
-        call this%put_setting(trim(varname), trim(sval))
+        call this%settings%put(trim(varname), this%StatusLog, sval=val)
+      case('unknown')
+        ! Is val an array?
+        call this%settings%put(trim(varname), this%StatusLog, uval=val)
       case DEFAULT
         call this%StatusLog%construct()
         write(log_message,"(2A)") trim(datatype), " is not a recognized type"
@@ -558,16 +558,12 @@ end subroutine put_string
     class(marbl_interface_class), intent(inout) :: this
     character(len=*),             intent(in)    :: line
 
-    character(len=char_len) :: varname, datatype, value
-    character(len=char_len) :: line_loc
-    integer(int_kind) :: char_ind
-
-    ! Variables used to determine datatype
-    integer(int_kind) :: ioerr, ioerr2
-    real(r8)          :: rval, rval2
+    character(len=char_len) :: varname, value
+    character(len=char_len) :: line_loc, var_loc, val_loc
+    integer(int_kind) :: char_ind, elem_cnt, cur_pos
+    character :: quote_char
 
     varname = ''
-    datatype = ''
     value = ''
     line_loc = adjustl(line)
 
@@ -598,12 +594,57 @@ end subroutine put_string
     ! Everything else is value
     value = adjustl(line_loc)
 
-    ! ------------------
-    ! Determine datatype
-    ! ------------------
+    ! Input line might be an array; how many elements does it contain?
+    elem_cnt = 1
+    ! Arrays must be separated by commas
+    if (index(value, ',') .ne. 0) then
+      val_loc = ''
+      do char_ind = 1, len_trim(value)
+        ! Look for commas that do not appear between " or ' blocks
+        if (len_trim(val_loc) .eq. 0) then
+          if (len_trim(value(char_ind:char_ind)) .eq. 0) cycle
+          if ((value(char_ind:char_ind) .eq. '"') .or. (value(char_ind:char_ind) .eq. "'")) then
+            quote_char = value(char_ind:char_ind)
+          else
+            quote_char = ''
+          end if
+        end if
 
-    call string_to_var_or_datatype(value, this%StatusLog, datatype = datatype)
-    call this%put_setting(varname, datatype, value)
+        ! If found a , outside quotes then
+        ! (a) Call put_setting (with unknown datatype) for current array element
+        ! (b) increment elem_cnt
+        ! (c) empty val_loc
+        ! (d) ignore the comma
+        if ((len_trim(quote_char) .eq. 0) .and. (value(char_ind:char_ind) .eq. ",")) then
+          write(var_loc, "(A,'(',I0,')')") trim(varname), elem_cnt
+          call this%put_setting(var_loc, "unknown", val_loc)
+          elem_cnt = elem_cnt + 1
+          val_loc = ''
+          cycle
+        end if
+
+        ! Add character to val_loc
+        cur_pos = len_trim(val_loc) + 1
+        val_loc(cur_pos:cur_pos) = value(char_ind:char_ind)
+
+        ! If elem_cnt > 1 and this is last character, call put
+        if ((elem_cnt .gt. 1) .and. (char_ind .eq. len_trim(value))) then
+          write(var_loc, "(A,'(',I0,')')") trim(varname), elem_cnt
+          call this%put_setting(var_loc, "unknown", val_loc)
+          cycle
+        end if
+
+        ! If found a character = quote_char, empty quote_char (unless this is first char in val_loc)
+        if (len_trim(quote_char) .eq. 1) then
+          if (len_trim(val_loc) .eq. 1) cycle
+          if (value(char_ind:char_ind) .eq. quote_char) quote_char = ''
+        end if
+      end do ! loop through value
+    end if ! value contains at least 1 comma => might be array
+
+    ! not an array, put with "unknown" datatype
+    if (elem_cnt .eq. 1) &
+      call this%put_setting(varname, "unknown", value)
 
   end subroutine put_inputfile_line
 
@@ -737,12 +778,7 @@ end subroutine put_string
           write(val, "(A, ' = ', I0)") trim(varname), ival
         case ('logical')
           call this%settings%get(varname, this%StatusLog, lval=lval)
-          if (lval) then
-            sval = '.true.'
-          else
-            sval = '.false.'
-          end if
-          write(val, "(A, ' = ', A)") trim(varname), trim(sval)
+          write(val, "(A, ' = ', L1)") trim(varname), lval
         case ('string')
           call this%settings%get(varname, this%StatusLog, sval=sval)
           write(val, "(A, ' = ', 3A)") trim(varname), "'", trim(sval), "'"
@@ -1084,78 +1120,6 @@ end subroutine put_string
     end do
 
   end function get_tracer_index
-
-  !*****************************************************************************
-
-  subroutine string_to_var_or_datatype(value, marbl_status_log,          &
-                                       datatype, rval, ival, lval, sval)
-
-    character(len=*),            intent(in)    :: value
-    type(marbl_log_type),        intent(inout) :: marbl_status_log
-    character(len=*),  optional, intent(out)   :: datatype
-    real(r8),          optional, intent(out)   :: rval
-    integer(int_kind), optional, intent(out)   :: ival
-    logical(log_kind), optional, intent(out)   :: lval
-    character(len=*),  optional, intent(out)   :: sval
-
-    character(len=*), parameter :: subname = 'marbl_interface:string_to_var_or_datatype'
-    character(len=char_len)     :: log_message
-
-    real(r8)          :: rval_loc, rval_loc2
-    integer(int_kind) :: ioerr, ioerr2
-    logical(log_kind) :: lis_int
-
-    call marbl_status_log%construct()
-    if ((trim(value).eq.'.true.').or.(trim(value).eq.'.false.')) then
-      if (present(datatype)) datatype = "logical"
-      if (present(lval)) lval = (trim(value).eq.'.true.')
-      return
-    end if
-
-    if (present(lval)) then
-      write(log_message, "(2A)") trim(value), ' is not a valid logical value'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    read(value, *, iostat=ioerr) rval_loc
-    if ((ioerr .eq. 0) .and. (.not.ieee_is_nan(rval_loc))) then
-      ! make sure not an array (those are treated as strings)
-      read(value, *, iostat=ioerr2) rval_loc, rval_loc2
-      if (ioerr2 .ne. 0) then
-        lis_int = (rval_loc .eq. floor(rval_loc))
-        if (present(datatype)) then
-          if (lis_int) then
-            datatype = "integer"
-          else
-            datatype = "real"
-          end if
-        end if
-
-        if (present(rval)) rval = rval_loc
-        if (present(ival)) then
-          if (lis_int) then
-            ival = floor(rval_loc)
-          else
-            write(log_message, "(2A)") trim(value), ' is not a valid integer value'
-            call marbl_status_log%log_error(log_message, subname)
-            return
-          end if
-        end if
-        return
-      end if
-    end if
-
-    if (present(rval) .or. present(ival)) then
-      write(log_message, "(2A)") trim(value), ' is not a valid number'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    if (present(datatype)) datatype = "string"
-    if (present(sval)) sval = trim(value)
-
-  end subroutine string_to_var_or_datatype
 
   !*****************************************************************************
 

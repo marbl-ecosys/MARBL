@@ -1914,6 +1914,84 @@ contains
 
   !*****************************************************************************
 
+  subroutine marbl_settings_string_to_var(value, marbl_status_log, rval, ival, lval, sval)
+
+    use ieee_arithmetic, only : ieee_is_nan
+
+    character(len=*),            intent(in)    :: value
+    type(marbl_log_type),        intent(inout) :: marbl_status_log
+    real(r8),          optional, intent(out)   :: rval
+    integer(int_kind), optional, intent(out)   :: ival
+    logical(log_kind), optional, intent(out)   :: lval
+    character(len=*),  optional, intent(out)   :: sval
+
+    character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_string_to_var'
+    character(len=char_len)     :: log_message
+    integer :: ioerr, last_char
+
+    ! Real value requested?
+    if (present(rval)) then
+      read(value, *, iostat=ioerr) rval
+      if ((ioerr .ne. 0) .or. (ieee_is_nan(rval))) then
+        write(log_message, "(2A)") trim(value), ' is not a valid real value'
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+    end if
+
+    ! Integer value requested?
+    if (present(ival)) then
+      read(value, *, iostat=ioerr) ival
+      if (ioerr .ne. 0) then
+        write(log_message, "(2A)") trim(value), ' is not a valid integer value'
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+    end if
+
+    ! Logical value requested?
+    if (present(lval)) then
+      read(value, *, iostat=ioerr) lval
+      if (ioerr .ne. 0) then
+        write(log_message, "(2A)") trim(value), ' is not a valid logical value'
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+    end if
+
+    ! String value requested?
+    if (present(sval)) then
+      ! Error checking:
+      ! (a) empty string not allowed
+      ! (b) first character must be ' or "
+      ! (c) first and last character must match
+      last_char = len_trim(value)
+      if (last_char .eq. 0) then
+        log_message = "Empty string is not acceptable"
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+
+      if ((value(1:1) .ne. '"') .and. (value(1:1) .ne. "'")) then
+        write(log_message,"(3A)") "String value must be in quotes ", &
+              trim(value), " is not acceptable"
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+
+      if (value(1:1) .ne. value(last_char:last_char)) then
+        write(log_message,"(3A)") "String value must be in quotes ", &
+              trim(value), " is not acceptable"
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+      sval = value(2:last_char-1)
+    end if
+
+  end subroutine marbl_settings_string_to_var
+
+!*****************************************************************************
+
   subroutine add_var(this, sname, lname, units, datatype, category,    &
                      marbl_status_log, rptr, iptr, lptr, sptr, comment)
 
@@ -2074,29 +2152,47 @@ contains
       if (case_insensitive_eq(ll_ptr%short_name, new_entry%short_name) .or. &
           case_insensitive_eq(ll_ptr%short_name, alternate_sname)) then
         ! 5a) Update variable value
-        if (associated(ll_ptr%iptr).and.associated(new_entry%rptr)) then
-          new_entry%rptr = real(ll_ptr%iptr,r8)
-        else
+        if (trim(ll_ptr%datatype) .eq. "unknown") then
           select case (new_entry%datatype)
-          case ("real")
-            put_success = associated(ll_ptr%rptr)
-            if (put_success) new_entry%rptr = ll_ptr%rptr
-          case ("integer")
-            put_success = associated(ll_ptr%iptr)
-            if (put_success) new_entry%iptr = ll_ptr%iptr
-          case ("string")
-            put_success = associated(ll_ptr%sptr)
-            if (put_success) new_entry%sptr = ll_ptr%sptr
-          case ("logical")
-            put_success = associated(ll_ptr%lptr)
-            if (put_success) new_entry%lptr = ll_ptr%lptr
+            case ("real")
+              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, rval = new_entry%rptr)
+            case ("integer")
+              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, ival = new_entry%iptr)
+            case ("string")
+              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, sval = new_entry%sptr)
+            case ("logical")
+              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, lval = new_entry%lptr)
           end select
-          if (.not.put_success) then
-            write(log_message, "(6A)") "put_setting(", trim(ll_ptr%short_name), &
-                               ") failed because the datatype was incorrect; expecting ", &
-                               trim(new_entry%datatype), " but user provided ", &
-                               trim(ll_ptr%datatype)
-            call marbl_status_log%log_error(log_message, subname)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_status_log%log_error_trace('marbl_settings_string_to_var', subname)
+            return
+          end if
+        else
+          if (associated(ll_ptr%iptr).and.associated(new_entry%rptr)) then
+            new_entry%rptr = real(ll_ptr%iptr,r8)
+          else
+            select case (new_entry%datatype)
+              case ("real")
+                put_success = associated(ll_ptr%rptr)
+                if (put_success) new_entry%rptr = ll_ptr%rptr
+              case ("integer")
+                put_success = associated(ll_ptr%iptr)
+                if (put_success) new_entry%iptr = ll_ptr%iptr
+              case ("string")
+                put_success = associated(ll_ptr%sptr)
+                if (put_success) new_entry%sptr = ll_ptr%sptr
+              case ("logical")
+                put_success = associated(ll_ptr%lptr)
+                if (put_success) new_entry%lptr = ll_ptr%lptr
+            end select
+            ! Abort if the put() failed
+            if (.not.put_success) then
+              write(log_message, "(6A)") "put_setting(", trim(ll_ptr%short_name), &
+                                 ") failed because the datatype was incorrect; expecting ", &
+                                 trim(new_entry%datatype), " but user provided ", &
+                                 trim(ll_ptr%datatype)
+              call marbl_status_log%log_error(log_message, subname)
+            end if
           end if
         end if
 
@@ -2317,7 +2413,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine put(this, var, marbl_status_log, rval, ival, lval, sval)
+  subroutine put(this, var, marbl_status_log, rval, ival, lval, sval, uval)
 
     class(marbl_settings_type), intent(inout) :: this
     character(len=*),           intent(in)    :: var
@@ -2326,6 +2422,7 @@ contains
     integer,          optional, intent(in)    :: ival
     logical,          optional, intent(in)    :: lval
     character(len=*), optional, intent(in)    :: sval
+    character(len=*), optional, intent(in)    :: uval
 
     type(marbl_single_setting_ll_type), pointer :: new_entry, ll_ptr
     character(len=*), parameter :: subname = 'marbl_settings_mod:put'
@@ -2360,6 +2457,11 @@ contains
       allocate(new_entry%sptr)
       new_entry%sptr = sval
       new_entry%datatype = 'string'
+    end if
+    if (present(uval)) then
+      allocate(new_entry%sptr)
+      new_entry%sptr = uval
+      new_entry%datatype = 'unknown'
     end if
 
     if (.not.associated(this%VarsFromPut)) then

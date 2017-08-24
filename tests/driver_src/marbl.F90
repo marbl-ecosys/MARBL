@@ -127,14 +127,16 @@ Program marbl
       lprint_marbl_log = .false.
       ldriver_log_to_file = .true.
       call marbl_init_test(marbl_instance, lshutdown=.false.)
-      do n=1,marbl_instance%get_settings_var_cnt()
-        call marbl_instance%inquire_settings_metadata(n, sname=varname)
-        if (marbl_instance%StatusLog%labort_marbl) exit
-        call marbl_instance%get_setting(varname, input_line, linputfile_format=.true.)
-        if (marbl_instance%StatusLog%labort_marbl) exit
-        call driver_status_log%log_noerror(trim(input_line), subname)
-      end do
-      call marbl_instance%shutdown()
+      if (.not. marbl_instance%StatusLog%labort_marbl) then
+        do n=1,marbl_instance%get_settings_var_cnt()
+          call marbl_instance%inquire_settings_metadata(n, sname=varname)
+          if (marbl_instance%StatusLog%labort_marbl) exit
+          call marbl_instance%get_setting(varname, input_line, linputfile_format=.true.)
+          if (marbl_instance%StatusLog%labort_marbl) exit
+          call driver_status_log%log_noerror(trim(input_line), subname)
+        end do
+        call marbl_instance%shutdown()
+      end if
     case ('get_put')
       lprint_marbl_log = .false.
       call marbl_get_put_test(marbl_instance, driver_status_log)
