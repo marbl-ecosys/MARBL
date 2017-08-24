@@ -141,6 +141,7 @@ module marbl_internal_types
      real (r8), allocatable, dimension(:)   :: nhx_surface_emis
    contains
      procedure, public :: construct => marbl_surface_forcing_internal_constructor
+     procedure, public :: destruct => marbl_surface_forcing_internal_destructor
   end type marbl_surface_forcing_internal_type
 
   !****************************************************************************
@@ -360,6 +361,7 @@ module marbl_internal_types
     integer(int_kind) :: ind_end = 0
   contains
     procedure, public :: update_count
+    procedure, public :: reset => tracer_count_reset
   end type marbl_tracer_count_type
 
   !*****************************************************************************
@@ -407,6 +409,7 @@ module marbl_internal_types
   contains
     procedure, public :: add_tracer_index
     procedure, public :: construct => tracer_index_constructor
+    procedure, public :: destruct => tracer_index_destructor
   end type marbl_tracer_index_type
 
   !****************************************************************************
@@ -578,16 +581,21 @@ contains
      allocate(this%CO3_SURF_fields      (num_elements)) ! Surface carbonate ion
    end subroutine marbl_surface_forcing_share_constructor
 
-   subroutine marbl_surface_forcing_share_destructor(this, num_elements)
-     class(marbl_surface_forcing_share_type), intent(inout) :: this
-     integer (int_kind) , intent(in) :: num_elements
+   !***********************************************************************
 
-     deallocate(this%PV_SURF_fields      ) ! piston velocity (cm/s)
-     deallocate(this%DIC_SURF_fields     ) ! Surface values of DIC for solver
-     deallocate(this%CO2STAR_SURF_fields ) ! CO2STAR from solver
-     deallocate(this%DCO2STAR_SURF_fields) ! DCO2STAR from solver
-     deallocate(this%CO3_SURF_fields     ) ! Surface carbonate ion
-   end subroutine marbl_surface_forcing_share_destructor
+   subroutine marbl_surface_forcing_share_destructor(this)
+
+     class(marbl_surface_forcing_share_type), intent(inout) :: this
+
+     if (allocated(this%PV_SURF_fields)) then
+       deallocate(this%PV_SURF_fields      ) ! piston velocity (cm/s)
+       deallocate(this%DIC_SURF_fields     ) ! Surface values of DIC for solver
+       deallocate(this%CO2STAR_SURF_fields ) ! CO2STAR from solver
+       deallocate(this%DCO2STAR_SURF_fields) ! DCO2STAR from solver
+       deallocate(this%CO3_SURF_fields     ) ! Surface carbonate ion
+     end if
+
+   end subroutine
 
   !*****************************************************************************
 
@@ -636,6 +644,35 @@ contains
     allocate(this%o2sat           (num_elements))
     allocate(this%nhx_surface_emis(num_elements))
   end subroutine marbl_surface_forcing_internal_constructor
+
+  !***********************************************************************
+
+  subroutine marbl_surface_forcing_internal_destructor(this)
+
+    class(marbl_surface_forcing_internal_type) , intent(inout) :: this
+
+    if (allocated(this%piston_velocity)) then
+      deallocate(this%piston_velocity )
+      deallocate(this%flux_co2        )
+      deallocate(this%flux_alt_co2    )
+      deallocate(this%co2star         )
+      deallocate(this%dco2star        )
+      deallocate(this%pco2surf        )
+      deallocate(this%dpco2           )
+      deallocate(this%co3             )
+      deallocate(this%co2star_alt     )
+      deallocate(this%dco2star_alt    )
+      deallocate(this%pco2surf_alt    )
+      deallocate(this%dpco2_alt       )
+      deallocate(this%schmidt_co2     )
+      deallocate(this%schmidt_o2      )
+      deallocate(this%pv_o2           )
+      deallocate(this%pv_co2          )
+      deallocate(this%o2sat           )
+      deallocate(this%nhx_surface_emis)
+    end if
+
+  end subroutine marbl_surface_forcing_internal_destructor
 
   !*****************************************************************************
 
@@ -755,6 +792,34 @@ contains
     if (present(marbl_tracer_cnt)) marbl_tracer_cnt = this%total_cnt
 
   end subroutine tracer_index_constructor
+
+  !*****************************************************************************
+
+  subroutine tracer_index_destructor(this)
+
+    class(marbl_tracer_index_type), intent(inout) :: this
+
+    ! Zero out counts
+    this%total_cnt = 0
+    call this%ecosys_base%reset()
+    call this%ciso%reset()
+
+    ! Deallocate memory
+    if (allocated(this%auto_inds)) then
+      deallocate(this%auto_inds)
+      deallocate(this%zoo_inds)
+    end if
+
+  end subroutine tracer_index_destructor
+
+  !*****************************************************************************
+
+  subroutine tracer_count_reset(this)
+    class(marbl_tracer_count_type), intent(inout) :: this
+    this%cnt = 0
+    this%ind_beg = 0
+    this%ind_end = 0
+  end subroutine tracer_count_reset
 
   !*****************************************************************************
 

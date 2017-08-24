@@ -63,6 +63,7 @@ module marbl_interface_types
      real(r8), allocatable :: delta_z(:)                    ! (km) delta z - different values for partial bottom cells
    contains
      procedure, public :: construct => marbl_domain_constructor
+     procedure, public :: destruct => marbl_domain_destructor
   end type marbl_domain_type
 
   !*****************************************************************************
@@ -230,6 +231,20 @@ contains
     end do
 
   end subroutine marbl_domain_constructor
+
+  !*****************************************************************************
+
+  subroutine marbl_domain_destructor(this)
+
+    class(marbl_domain_type), intent(inout) :: this
+
+    if (allocated(this%delta_z)) then
+      deallocate(this%delta_z)
+      deallocate(this%zw)
+      deallocate(this%zt)
+    end if
+
+  end subroutine marbl_domain_destructor
 
   !*****************************************************************************
 

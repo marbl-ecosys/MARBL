@@ -1009,6 +1009,19 @@ end subroutine put_string
     character(len=*), parameter :: subname = 'marbl_interface:shutdown'
     integer(int_kind) :: m,n
 
+    if (allocated(this%glo_avg_fields_interior)) then
+      deallocate(this%glo_avg_fields_interior)
+      deallocate(this%glo_avg_averages_interior)
+      deallocate(this%glo_avg_fields_surface)
+      deallocate(this%glo_avg_averages_surface)
+      deallocate(this%glo_scalar_interior)
+      deallocate(this%glo_scalar_surface)
+      deallocate(this%glo_avg_rmean_interior)
+      deallocate(this%glo_avg_rmean_surface)
+      deallocate(this%glo_scalar_rmean_interior)
+      deallocate(this%glo_scalar_rmean_surface)
+    end if
+
     ! free dynamically allocated memory, etc
     ! FIXME #69: this is not ideal for threaded runs
     if (allocated(autotrophs)) then
@@ -1022,10 +1035,26 @@ end subroutine put_string
       end do
       deallocate(grazing)
     end if
-    if (marbl_interior_diag_ind%lconstructed()) &
-      call marbl_interior_diag_ind%destruct()
+    call marbl_interior_diag_ind%destruct()
 
+    if (allocated(this%interior_input_forcings)) then
+      deallocate(this%interior_input_forcings)
+      deallocate(this%surface_input_forcings)
+    end if
+    call this%surface_forcing_internal%destruct()
+    call this%surface_forcing_share%destruct()
+    if (allocated(this%surface_vals)) then
+      deallocate(this%surface_vals)
+      deallocate(this%surface_tracer_fluxes)
+      deallocate(this%column_tracers)
+      deallocate(this%column_dtracers)
+      deallocate(this%tracer_metadata)
+    end if
+    call this%tracer_indices%destruct()
     call this%settings%destruct()
+    call this%particulate_share%destruct()
+    call this%PAR%destruct()
+    call this%domain%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
