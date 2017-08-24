@@ -50,7 +50,6 @@ Program marbl
   Implicit None
 
   character(len=256), parameter :: subname = 'Program Marbl'
-  integer,            parameter :: max_settings_cnt = 1024
 
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
@@ -96,19 +95,22 @@ Program marbl
   ! (2b) Read inputfile
   if (lhas_inputfile) then
     ioerr = 0
+    input_line = ''
     do while(ioerr .eq. 0)
-      input_line = ''
-      ! (i) master task reads next line in inputfile
-      if (my_task .eq. 0) read(*,"(A)", iostat=ioerr) input_line
-      ! (ii) broadcast inputfile line to all tasks (along with iostat)
-      call marbl_mpi_bcast(ioerr, 0)
-      call marbl_mpi_bcast(input_line, 0)
-      ! (iii) call put_setting(); abort if error
+      ! (i) call put_setting(); abort if error
+      !     calling with empty input_line on first entry to loop is okay, and
+      !     this ensures we don't call put_setting with a garbage line if
+      !     ioerr is non-zero
       call marbl_instance%put_setting(input_line)
       if (marbl_instance%StatusLog%labort_marbl) then
-        call marbl_instance%StatusLog%log_error("Error reading input file!", subname)
+        call marbl_instance%StatusLog%log_error_trace("put_setting(input_line)", subname)
         call print_marbl_log(marbl_instance%StatusLog)
       end if
+      ! (ii) master task reads next line in inputfile
+      if (my_task .eq. 0) read(*,"(A)", iostat=ioerr) input_line
+      ! (iii) broadcast inputfile line to all tasks (along with iostat)
+      call marbl_mpi_bcast(input_line, 0)
+      call marbl_mpi_bcast(ioerr, 0)
     end do
 
     if (.not.is_iostat_end(ioerr)) then
