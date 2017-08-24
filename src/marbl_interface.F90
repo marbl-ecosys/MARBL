@@ -143,7 +143,6 @@ module marbl_interface
      procedure, private :: put_integer
      procedure, private :: put_logical
      procedure, private :: put_string
-     procedure, private :: put_single_string             ! This routine assumes not an array
      procedure, private :: put_inputfile_line
      procedure, private :: put_all_string
      procedure, private :: get_real
@@ -445,44 +444,11 @@ contains
     character(len=*), parameter :: subname = 'marbl_interface:put_string'
     character(len=char_len) :: log_message
 
-    character(len=len(varname)+5) :: var_loc ! add enough buffer to add "(999)"
-    character(len=len(val))       :: val_loc, array_elem_val
-    character(len=char_len)       :: datatype
-    real(r8)          :: rval
-    integer(int_kind) :: ival
-    logical(log_kind) :: lval
-    integer(int_kind) :: m, n, char_ind, char_ind_loc, ioerr
-    logical(log_kind) :: lend_array_element
-
-    ! Is this string an array?
-    if (index(val,',') .eq. 0) then
-      ! Not an array
-      call this%put_single_string(varname, val)
+    call this%settings%put(varname, this%StatusLog, sval=val)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%put()', subname)
       return
     end if
-
-    m=0
-    char_ind_loc=0
-    val_loc = val
-    array_elem_val = ''
-    do char_ind=1,len_trim(val_loc)
-      char_ind_loc = char_ind_loc + 1
-      ! Write array element if you find a ',' or if written previous
-      ! array element and hit end of val_loc
-      lend_array_element = .false.
-      if (val_loc(char_ind:char_ind) .ne. ',') then
-        array_elem_val(char_ind_loc:char_ind_loc) = val_loc(char_ind:char_ind)
-      else
-        lend_array_element = .true.
-      end if
-      if (lend_array_element .or. (char_ind.eq.len_trim(val_loc))) then
-        m = m+1
-        write(var_loc, "(2A,I0,A)") trim(varname), '(', m, ')'
-        call this%put_setting(trim(var_loc), "unknown", array_elem_val)
-        array_elem_val=''
-        char_ind_loc = 0
-      end if
-    end do
 
 end subroutine put_string
 
@@ -647,37 +613,6 @@ end subroutine put_string
       call this%put_setting(varname, "unknown", value)
 
   end subroutine put_inputfile_line
-
-  !***********************************************************************
-
-  subroutine put_single_string(this, varname, val)
-
-    class (marbl_interface_class), intent(inout) :: this
-    character(len=*),              intent(in)    :: varname
-    character(len=*),              intent(in)    :: val
-
-    character(len=*), parameter :: subname = 'marbl_interface:put_single_string'
-    character(len=char_len) :: log_message
-
-    integer(int_kind) :: char_ind
-    character(len=len_trim(val)) :: val_loc
-
-    ! Strip leading / trailing quotes from string values
-    char_ind = 1
-    val_loc = trim(val)
-    if ((val_loc(char_ind:char_ind) .eq. "'") .or. (val_loc(char_ind:char_ind) .eq. '"')) &
-      val_loc(char_ind:char_ind) = ' '
-    char_ind = len_trim(val_loc)
-    if ((val_loc(char_ind:char_ind) .eq. "'") .or. (val_loc(char_ind:char_ind) .eq. '"')) &
-      val_loc(char_ind:char_ind) = ' '
-    val_loc = adjustl(val_loc)
-    call this%settings%put(varname, this%StatusLog, sval=val_loc)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('settings%put()', subname)
-      return
-    end if
-
-  end subroutine put_single_string
 
   !***********************************************************************
 
