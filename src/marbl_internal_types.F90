@@ -488,7 +488,9 @@ contains
   !***********************************************************************
 
   subroutine column_sinking_particle_constructor(this, num_levels)
-    class(column_sinking_particle_type), intent(inout) :: this
+
+    class(column_sinking_particle_type), intent(out) :: this
+
     integer (int_kind) :: num_levels
 
     allocate(this%sflux_in (num_levels))
@@ -498,10 +500,15 @@ contains
     allocate(this%hflux_out(num_levels))
     allocate(this%sed_loss (num_levels))
     allocate(this%remin    (num_levels))
+
   end subroutine column_sinking_particle_constructor
 
+  !***********************************************************************
+
   subroutine column_sinking_particle_destructor(this)
+
     class(column_sinking_particle_type), intent(inout) :: this
+
     integer (int_kind) :: num_levels
 
     deallocate(this%sflux_in)
@@ -511,12 +518,15 @@ contains
     deallocate(this%hflux_out)
     deallocate(this%sed_loss)
     deallocate(this%remin)
+
   end subroutine column_sinking_particle_destructor
 
   !***********************************************************************
 
   subroutine marbl_particulate_share_constructor(this, num_levels)
-    class(marbl_particulate_share_type), intent(inout) :: this
+
+    class(marbl_particulate_share_type), intent(out) :: this
+
     integer (int_kind) :: num_levels
 
     allocate(this%decay_CaCO3_fields               (num_levels))
@@ -540,9 +550,13 @@ contains
     call this%P_SiO2%construct          (num_levels)
     call this%P_iron%construct          (num_levels)
     call this%dust%construct            (num_levels)
+
   end subroutine marbl_particulate_share_constructor
 
+  !***********************************************************************
+
   subroutine marbl_particulate_share_destructor(this)
+
     class(marbl_particulate_share_type), intent(inout) :: this
 
     deallocate(this%decay_CaCO3_fields)
@@ -566,12 +580,15 @@ contains
      call this%P_SiO2%destruct()
      call this%P_iron%destruct()
      call this%dust%destruct()
+
    end subroutine marbl_particulate_share_destructor
 
   !***********************************************************************
 
    subroutine marbl_surface_forcing_share_constructor(this, num_elements)
-     class(marbl_surface_forcing_share_type), intent(inout) :: this
+
+     class(marbl_surface_forcing_share_type), intent(out) :: this
+
      integer (int_kind) , intent(in) :: num_elements
 
      allocate(this%PV_SURF_fields       (num_elements)) ! piston velocity (cm/s)
@@ -579,6 +596,7 @@ contains
      allocate(this%CO2STAR_SURF_fields  (num_elements)) ! CO2STAR from solver
      allocate(this%DCO2STAR_SURF_fields (num_elements)) ! DCO2STAR from solver
      allocate(this%CO3_SURF_fields      (num_elements)) ! Surface carbonate ion
+
    end subroutine marbl_surface_forcing_share_constructor
 
    !***********************************************************************
@@ -600,30 +618,37 @@ contains
   !*****************************************************************************
 
   subroutine marbl_PAR_constructor(this, num_levels, num_PAR_subcols)
-    class(marbl_PAR_type) , intent(inout) :: this
-    integer               , intent(in)    :: num_levels
-    integer               , intent(in)    :: num_PAR_subcols
+
+    class(marbl_PAR_type), intent(out) :: this
+    integer,               intent(in)  :: num_levels
+    integer,               intent(in)  :: num_PAR_subcols
 
     allocate(this%interface(0:num_levels,num_PAR_subcols))
     allocate(this%avg      (  num_levels,num_PAR_subcols))
     allocate(this%KPARdz   (  num_levels                ))
     allocate(this%col_frac (             num_PAR_subcols))
+
   end subroutine marbl_PAR_constructor
 
+  !*****************************************************************************
+
   subroutine marbl_PAR_destructor(this)
+
     class(marbl_PAR_type) , intent(inout) :: this
 
     deallocate(this%interface)
     deallocate(this%avg      )
     deallocate(this%KPARdz   )
     deallocate(this%col_frac )
+
   end subroutine marbl_PAR_destructor
 
   !***********************************************************************
 
   subroutine marbl_surface_forcing_internal_constructor(this, num_elements)
-    class(marbl_surface_forcing_internal_type) , intent(inout) :: this
-    integer (int_kind)                         , intent(in)    :: num_elements
+
+    class(marbl_surface_forcing_internal_type), intent(out) :: this
+    integer (int_kind),                         intent(in)  :: num_elements
 
     allocate(this%piston_velocity (num_elements))
     allocate(this%flux_co2        (num_elements))
@@ -643,6 +668,7 @@ contains
     allocate(this%pv_co2          (num_elements))
     allocate(this%o2sat           (num_elements))
     allocate(this%nhx_surface_emis(num_elements))
+
   end subroutine marbl_surface_forcing_internal_constructor
 
   !***********************************************************************
@@ -686,7 +712,7 @@ contains
 
     use marbl_constants_mod, only : c0
 
-    class(marbl_tracer_index_type), intent(inout) :: this
+    class(marbl_tracer_index_type), intent(out)   :: this
     logical,                        intent(in)    :: ciso_on
     logical,                        intent(in)    :: lvariable_PtoC
     type(autotroph_type),           intent(in)    :: autotrophs(:)
@@ -904,12 +930,12 @@ contains
     ! This subroutine sets the surface forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
 
-    class(marbl_surface_forcing_indexing_type), intent(inout) :: this
-    logical,                                    intent(in)    :: ciso_on
-    logical,                                    intent(in)    :: lflux_gas_o2
-    logical,                                    intent(in)    :: lflux_gas_co2
-    logical,                                    intent(in)    :: ladjust_bury_coeff
-    integer,                                    intent(out)   :: num_surface_forcing_fields
+    class(marbl_surface_forcing_indexing_type), intent(out) :: this
+    logical,                                    intent(in)  :: ciso_on
+    logical,                                    intent(in)  :: lflux_gas_o2
+    logical,                                    intent(in)  :: lflux_gas_co2
+    logical,                                    intent(in)  :: ladjust_bury_coeff
+    integer,                                    intent(out) :: num_surface_forcing_fields
 
     associate(forcing_cnt => num_surface_forcing_fields)
 
@@ -1020,7 +1046,7 @@ contains
     ! This subroutine sets the interior forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
 
-    class(marbl_interior_forcing_indexing_type), intent(inout) :: this
+    class(marbl_interior_forcing_indexing_type), intent(out)   :: this
     character(len=char_len), dimension(:),       intent(in)    :: tracer_names
     character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
     integer(int_kind),                           intent(out)   :: num_interior_forcing_fields
@@ -1136,8 +1162,8 @@ contains
 
   subroutine grazing_constructor(this, marbl_status_log)
 
-    class(grazing_type), intent(inout) :: this
-    type(marbl_log_type),      intent(inout) :: marbl_status_log
+    class(grazing_type),  intent(out)   :: this
+    type(marbl_log_type), intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_internal_types:grazing_constructor'
     character(len=char_len)     :: log_message

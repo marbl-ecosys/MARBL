@@ -104,8 +104,11 @@ contains
       return
     end if
 
-    call marbl_settings_set_defaults_pre_tracers2()
-
+    call marbl_settings_set_defaults_pre_tracers2(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_settings_set_defaults_pre_tracers2()", subname)
+      return
+    end if
     !---------------------------------------------------------------------------
     ! construct configuration_type
     !---------------------------------------------------------------------------
@@ -140,12 +143,12 @@ contains
 
     integer(int_kind),                             intent(in)    :: num_levels
     integer(int_kind),                             intent(in)    :: num_surface_elements
-    type(marbl_tracer_index_type),                 intent(inout) :: tracer_indices
-    real(r8),                         allocatable, intent(inout) :: surface_vals(:,:)
-    real(r8),                         allocatable, intent(inout) :: surface_tracer_fluxes(:,:)
-    real(r8),                         allocatable, intent(inout) :: column_tracers(:,:)
-    real(r8),                         allocatable, intent(inout) :: column_dtracers(:,:)
-    type(marbl_tracer_metadata_type), allocatable, intent(inout) :: tracer_metadata(:)
+    type(marbl_tracer_index_type),                 intent(out)   :: tracer_indices
+    real(r8),                         allocatable, intent(out)   :: surface_vals(:,:)
+    real(r8),                         allocatable, intent(out)   :: surface_tracer_fluxes(:,:)
+    real(r8),                         allocatable, intent(out)   :: column_tracers(:,:)
+    real(r8),                         allocatable, intent(out)   :: column_dtracers(:,:)
+    type(marbl_tracer_metadata_type), allocatable, intent(out)   :: tracer_metadata(:)
     type(marbl_log_type),                          intent(inout) :: marbl_status_log
     integer(int_kind), optional,                   intent(out)   :: marbl_tracer_cnt
 

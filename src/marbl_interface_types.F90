@@ -204,14 +204,14 @@ contains
        num_elements_surface_forcing, num_elements_interior_forcing, &
        delta_z, zw, zt)
 
-    class(marbl_domain_type), intent(inout) :: this
-    integer (int_kind) , intent(in) :: num_levels
-    integer (int_kind) , intent(in) :: num_PAR_subcols
-    integer (int_kind) , intent(in) :: num_elements_surface_forcing
-    integer (int_kind) , intent(in) :: num_elements_interior_forcing
-    real (r8)          , intent(in) :: delta_z(num_levels)
-    real (r8)          , intent(in) :: zw(num_levels)
-    real (r8)          , intent(in) :: zt(num_levels)
+    class(marbl_domain_type), intent(out) :: this
+    integer (int_kind),       intent(in)  :: num_levels
+    integer (int_kind),       intent(in)  :: num_PAR_subcols
+    integer (int_kind),       intent(in)  :: num_elements_surface_forcing
+    integer (int_kind),       intent(in)  :: num_elements_interior_forcing
+    real (r8),                intent(in)  :: delta_z(num_levels)
+    real (r8),                intent(in)  :: zw(num_levels)
+    real (r8),                intent(in)  :: zt(num_levels)
 
     integer :: k
 
@@ -305,9 +305,9 @@ contains
 
   subroutine marbl_saved_state_constructor(this, num_elements, num_levels)
 
-    class(marbl_saved_state_type), intent(inout) :: this
-    integer (int_kind) , intent(in) :: num_elements
-    integer (int_kind) , intent(in) :: num_levels
+    class(marbl_saved_state_type), intent(out) :: this
+    integer (int_kind),            intent(in)  :: num_elements
+    integer (int_kind),            intent(in)  :: num_levels
 
     this%saved_state_cnt = 0
     this%num_elements    = num_elements
@@ -429,7 +429,8 @@ contains
 
   subroutine marbl_single_sfo_constructor(this, num_elements, field_name, id, &
                                           marbl_status_log)
-    class(marbl_single_sfo_type), intent(inout) :: this
+
+    class(marbl_single_sfo_type), intent(out)   :: this
     character(len=*),             intent(in)    :: field_name
     integer(int_kind),            intent(in)    :: num_elements
     integer(int_kind),            intent(in)    :: id
@@ -546,9 +547,9 @@ contains
 
   subroutine marbl_diagnostics_constructor(this, num_elements, num_levels)
 
-    class(marbl_diagnostics_type), intent(inout) :: this
-    integer (int_kind),            intent(in)    :: num_elements
-    integer (int_kind),            intent(in)    :: num_levels
+    class(marbl_diagnostics_type), intent(out) :: this
+    integer (int_kind),            intent(in)  :: num_elements
+    integer (int_kind),            intent(in)  :: num_levels
 
     allocate(this%diags(0))
     this%num_elements = num_elements
@@ -711,8 +712,8 @@ contains
 
   subroutine marbl_timers_constructor(this, num_timers)
 
-    class(marbl_timers_type), intent(inout) :: this
-    integer,                  intent(in)    :: num_timers
+    class(marbl_timers_type), intent(out) :: this
+    integer,                  intent(in)  :: num_timers
 
     this%num_timers = num_timers
     allocate(this%names(num_timers))

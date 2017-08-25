@@ -926,8 +926,12 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_settings_set_defaults_pre_tracers2()
+  subroutine marbl_settings_set_defaults_pre_tracers2(marbl_status_log)
 
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_set_defaults_pre_tracers2'
+    character(len=char_len)     :: log_message
     integer :: m, n
 
     ! Allocate memory
@@ -936,6 +940,16 @@ contains
       allocate(autotrophs(autotroph_cnt))
       allocate(zooplankton(zooplankton_cnt))
       allocate(grazing(grazer_prey_cnt, zooplankton_cnt))
+      do n=1,zooplankton_cnt
+        do m=1,grazer_prey_cnt
+          call grazing(m,n)%construct(marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
+            call marbl_status_log%log_error_trace(log_message, subname)
+            return
+          end if
+        end do
+      end do
     end if
 
     !-----------------------------------------------------------------------
@@ -989,7 +1003,6 @@ contains
     ! predator-prey relationships
     do n=1,zooplankton_cnt
       do m=1,grazer_prey_cnt
-
         write(grazing(m,n)%sname, "(4A)") 'grz_',                      &
                                    trim(autotrophs(m)%sname),          &
                                    '_', trim(zooplankton(n)%sname)
@@ -1317,15 +1330,6 @@ contains
     ! predator-prey relationships
     do n=1,zooplankton_cnt
       do m=1,grazer_prey_cnt
-        ! FIXME #69: this is not ideal for threaded runs
-        if (.not.allocated(grazing(m,n)%auto_ind)) &
-          call grazing(m,n)%construct(marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
-          call marbl_status_log%log_error_trace(log_message, subname)
-          return
-        end if
-
         ! Properties that are the same for all grazers
         if (size(grazing(m,n)%auto_ind) .gt. 0) then
           grazing(m,n)%auto_ind(:)      = 0
