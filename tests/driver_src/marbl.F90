@@ -144,7 +144,7 @@ Program marbl
       call marbl_get_put_test(marbl_instance, driver_status_log)
     case ('request_tracers')
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instance, nt)
+      call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
 
       ! Log tracers requested for initialization
       call driver_status_log%log_noerror('', subname)
@@ -155,9 +155,10 @@ Program marbl
           trim(marbl_instance%tracer_metadata(n)%short_name)
         call driver_status_log%log_noerror(log_message, subname)
       end do
+      call marbl_instance%shutdown()
     case ('request_forcings')
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instance)
+      call marbl_init_test(marbl_instance, lshutdown=.false.)
 
       ! Log requested surface forcing fields
       call driver_status_log%log_noerror('', subname)
@@ -178,9 +179,12 @@ Program marbl
              trim(marbl_instance%interior_input_forcings(n)%metadata%varname)
         call driver_status_log%log_noerror(log_message, subname)
       end do
+
+      call marbl_instance%shutdown()
+
     case ('request_restoring')
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instance, nt)
+      call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
 
       ! Log tracers requested for restoring
       call driver_status_log%log_noerror('', subname)
@@ -199,6 +203,7 @@ Program marbl
       if (cnt.eq.0) then
         call driver_status_log%log_noerror('No tracers to restore!', subname)
       end if
+      call marbl_instance%shutdown()
     case DEFAULT
       write(*,*) "ERROR: testname = ", trim(testname), " is not a valid option"
       call marbl_mpi_abort()

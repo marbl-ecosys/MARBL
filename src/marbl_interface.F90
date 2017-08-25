@@ -261,8 +261,6 @@ contains
 
     call this%PAR%construct(num_levels, num_PAR_subcols)
 
-    call this%particulate_share%construct(num_levels)
-
     !-----------------------------------------------------------------------
     !  Set up tracers
     !-----------------------------------------------------------------------
@@ -319,17 +317,17 @@ contains
       return
     end if
 
-    end associate
-
     !-----------------------------------------------------------------------
     !  Initialize bury coefficient
     !-----------------------------------------------------------------------
 
-    call marbl_init_bury_coeff(this%particulate_share, this%StatusLog)
+    call marbl_init_bury_coeff(this%particulate_share, num_levels, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
       return
     end if
+
+    end associate
 
     !-----------------------------------------------------------------------
     !  Initialize surface and interior forcing (including tracer restoring)

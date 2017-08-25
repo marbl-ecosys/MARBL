@@ -42,8 +42,8 @@ contains
     use marbl_internal_types  , only : marbl_internal_timers_type
     use marbl_internal_types  , only : marbl_timer_indexing_type
 
-    type(marbl_internal_timers_type), intent(inout) :: marbl_timers
-    type(marbl_timer_indexing_type),  intent(inout) :: timer_ids
+    type(marbl_internal_timers_type), intent(out)   :: marbl_timers
+    type(marbl_timer_indexing_type),  intent(out)   :: timer_ids
     type(marbl_log_type),             intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_log_and_timers'
@@ -220,7 +220,7 @@ contains
 
     implicit none
 
-    type (marbl_tracer_metadata_type), intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
+    type (marbl_tracer_metadata_type), intent(out)   :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
     type(marbl_log_type)             , intent(inout) :: marbl_status_log
 
@@ -322,7 +322,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_bury_coeff(marbl_particulate_share, marbl_status_log)
+  subroutine marbl_init_bury_coeff(marbl_particulate_share, num_levels, marbl_status_log)
 
     use marbl_logging, only : marbl_log_type
     use marbl_settings_mod, only : init_bury_coeff_opt
@@ -332,8 +332,9 @@ contains
     use marbl_settings_mod, only : parm_init_bSi_bury_coeff
     use marbl_internal_types, only : marbl_particulate_share_type
 
-    type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
-    type(marbl_log_type)              , intent(inout) :: marbl_status_log
+    type(marbl_particulate_share_type), intent(out)   :: marbl_particulate_share
+    integer(int_kind),                  intent(in)    :: num_levels
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
     !   local variables
@@ -341,6 +342,8 @@ contains
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_bury_coeff'
 
     !---------------------------------------------------------------------------
+
+    call marbl_particulate_share%construct(num_levels)
 
     ! if ladjust_bury_coeff is true, then bury coefficients are set at runtime
     ! so they do not need to be initialized here
@@ -383,12 +386,12 @@ contains
 
     type(marbl_domain_type),                      intent(in)    :: domain
     type(marbl_tracer_metadata_type),             intent(in)    :: tracer_metadata(:)
-    type(marbl_surface_forcing_indexing_type),    intent(inout) :: surface_forcing_ind
-    type(marbl_surface_forcing_share_type),       intent(inout) :: surface_forcing_share
-    type(marbl_surface_forcing_internal_type),    intent(inout) :: surface_forcing_internal
-    type(marbl_forcing_fields_type), allocatable, intent(inout) :: surface_input_forcings(:)
-    type(marbl_interior_forcing_indexing_type),   intent(inout) :: interior_forcing_ind
-    type(marbl_forcing_fields_type), allocatable, intent(inout) :: interior_input_forcings(:)
+    type(marbl_surface_forcing_indexing_type),    intent(out)   :: surface_forcing_ind
+    type(marbl_surface_forcing_share_type),       intent(out)   :: surface_forcing_share
+    type(marbl_surface_forcing_internal_type),    intent(out)   :: surface_forcing_internal
+    type(marbl_forcing_fields_type), allocatable, intent(out)   :: surface_input_forcings(:)
+    type(marbl_interior_forcing_indexing_type),   intent(out)   :: interior_forcing_ind
+    type(marbl_forcing_fields_type), allocatable, intent(out)   :: interior_input_forcings(:)
     type(marbl_log_type),                         intent(inout) :: marbl_status_log
 
     ! Local variables
@@ -679,7 +682,7 @@ contains
 
     integer,                                   intent(in)    :: num_elements
     type(marbl_surface_forcing_indexing_type), intent(in)    :: surface_forcing_indices
-    type(marbl_forcing_fields_type),           intent(inout) :: surface_forcings(:)
+    type(marbl_forcing_fields_type),           intent(out)   :: surface_forcings(:)
     type(marbl_log_type),                      intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
@@ -853,7 +856,7 @@ contains
     type(marbl_tracer_metadata_type),           intent(in)    :: tracer_metadata(:)
     integer,                                    intent(in)    :: num_PAR_subcols
     integer,                                    intent(in)    :: num_levels
-    type(marbl_forcing_fields_type),            intent(inout) :: interior_forcings(:)
+    type(marbl_forcing_fields_type),            intent(out)   :: interior_forcings(:)
     type(marbl_log_type),                       intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
