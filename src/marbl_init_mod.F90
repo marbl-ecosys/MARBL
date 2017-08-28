@@ -290,13 +290,12 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_parameters_post_tracers(num_levels, marbl_settings, marbl_status_log)
+  subroutine marbl_init_parameters_post_tracers(marbl_settings, marbl_status_log)
 
     use marbl_settings_mod, only : marbl_settings_type
     use marbl_settings_mod, only : marbl_settings_set_defaults_post_tracers
     use marbl_settings_mod, only : marbl_settings_define_post_tracers
 
-    integer(int_kind),          intent(in)    :: num_levels
     type(marbl_settings_type),  intent(inout) :: marbl_settings
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
@@ -305,7 +304,7 @@ contains
     character(len=char_len) :: log_message
 
     ! set default values for parameters
-    call marbl_settings_set_defaults_post_tracers(num_levels, marbl_status_log)
+    call marbl_settings_set_defaults_post_tracers(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_settings_set_defaults_post_tracers()", subname)
       return

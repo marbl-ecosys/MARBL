@@ -309,9 +309,9 @@ contains
     end if
 
     !---------------------------------------------------------------------------
-    ! Initialize parameters that depend on tracer count or PFT categories
+    ! Initialize parameters that depend on tracer count
     !---------------------------------------------------------------------------
-    call marbl_init_parameters_post_tracers(num_levels, this%settings, this%StatusLog)
+    call marbl_init_parameters_post_tracers(this%settings, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_parameters_post_tracers", subname)
       return

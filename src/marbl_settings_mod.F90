@@ -385,6 +385,258 @@ contains
 
   !*****************************************************************************
 
+  subroutine marbl_settings_set_defaults_pre_tracers2(marbl_status_log)
+
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_set_defaults_pre_tracers2'
+    character(len=char_len)     :: log_message
+    integer :: m, n
+
+    ! Allocate memory
+    ! FIXME #69: this is not ideal for threaded runs
+    if (.not.allocated(autotrophs)) then
+      allocate(autotrophs(autotroph_cnt))
+      allocate(zooplankton(zooplankton_cnt))
+      allocate(grazing(grazer_prey_cnt, zooplankton_cnt))
+      do n=1,zooplankton_cnt
+        do m=1,grazer_prey_cnt
+          call grazing(m,n)%construct(autotroph_cnt, zooplankton_cnt, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
+            call marbl_status_log%log_error_trace(log_message, subname)
+            return
+          end if
+        end do
+      end do
+    end if
+
+    !-----------------------------------------------------------------------
+    !  Default values
+    !-----------------------------------------------------------------------
+
+    do m=1,autotroph_cnt
+      select case (m)
+        case (1)
+          autotrophs(m)%sname = 'sp'
+          autotrophs(m)%lname = 'Small Phyto'
+          autotrophs(m)%Nfixer = .false.
+          autotrophs(m)%imp_calcifier = .true.
+          autotrophs(m)%exp_calcifier = .false.
+          autotrophs(m)%silicifier = .false.
+          autotrophs(m)%kFe             = 0.03e-3_r8         ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kPO4            = 0.005_r8           ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kDOP            = 0.3_r8             ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kNO3            = 0.25_r8            ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kNH4            = 0.01_r8            ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kSiO3           = 0.0_r8             ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
+          autotrophs(m)%gQfe_0          = 35.0e-6_r8
+          autotrophs(m)%gQfe_min        = 3.0e-6_r8
+          autotrophs(m)%alphaPI_per_day = 0.39_r8
+          autotrophs(m)%PCref_per_day   = 5.0_r8
+          autotrophs(m)%thetaN_max      = 2.5_r8
+          autotrophs(m)%loss_thres      = 0.01_r8
+          autotrophs(m)%loss_thres2     = 0.0_r8
+          autotrophs(m)%temp_thres      = -10.0_r8
+          autotrophs(m)%mort_per_day    = 0.1_r8
+          autotrophs(m)%mort2_per_day   = 0.01_r8
+          autotrophs(m)%agg_rate_max    = 0.5_r8
+          autotrophs(m)%agg_rate_min    = 0.01_r8
+          autotrophs(m)%loss_poc        = 0.0_r8
+        case (2)
+          autotrophs(m)%sname = 'diat'
+          autotrophs(m)%lname = 'Diatom'
+          autotrophs(m)%Nfixer = .false.
+          autotrophs(m)%imp_calcifier = .false.
+          autotrophs(m)%exp_calcifier = .false.
+          autotrophs(m)%silicifier = .true.
+          autotrophs(m)%kFe             = 0.06e-3_r8         ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kPO4            = 0.05_r8            ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kDOP            = 0.5_r8             ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kNO3            = 0.5_r8             ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kNH4            = 0.05_r8            ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kSiO3           = 0.7_r8             ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
+          autotrophs(m)%gQfe_0          = 35.0e-6_r8
+          autotrophs(m)%gQfe_min        = 3.0e-6_r8
+          autotrophs(m)%alphaPI_per_day = 0.29_r8
+          autotrophs(m)%PCref_per_day   = 5.0_r8
+          autotrophs(m)%thetaN_max      = 4.0_r8
+          autotrophs(m)%loss_thres      = 0.02_r8
+          autotrophs(m)%loss_thres2     = 0.0_r8
+          autotrophs(m)%temp_thres      = -10.0_r8
+          autotrophs(m)%mort_per_day    = 0.1_r8
+          autotrophs(m)%mort2_per_day   = 0.01_r8
+          autotrophs(m)%agg_rate_max    = 0.5_r8
+          autotrophs(m)%agg_rate_min    = 0.02_r8
+          autotrophs(m)%loss_poc        = 0.0_r8
+        case (3)
+          autotrophs(m)%sname = 'diaz'
+          autotrophs(m)%lname = 'Diazotroph'
+          autotrophs(m)%Nfixer = .true.
+          autotrophs(m)%imp_calcifier = .false.
+          autotrophs(m)%exp_calcifier = .false.
+          autotrophs(m)%silicifier = .false.
+          autotrophs(m)%kFe             = 0.045e-3_r8        ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kPO4            = 0.015_r8           ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kDOP            = 0.075_r8           ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kNO3            = 2.0_r8             ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kNH4            = 0.2_r8             ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kSiO3           = 0.0_r8             ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%Qp_fixed        = 0.32_r8 * Qp_zoo   ! only used for lvariable_PtoC=.false.
+          autotrophs(m)%gQfe_0          = 70.0e-6_r8
+          autotrophs(m)%gQfe_min        = 6.0e-6_r8
+          autotrophs(m)%alphaPI_per_day = 0.39_r8
+          autotrophs(m)%PCref_per_day   = 2.2_r8
+          autotrophs(m)%thetaN_max      = 2.5_r8
+          autotrophs(m)%loss_thres      = 0.02_r8
+          autotrophs(m)%loss_thres2     = 0.001_r8
+          autotrophs(m)%temp_thres      = 15.0_r8
+          autotrophs(m)%mort_per_day    = 0.1_r8
+          autotrophs(m)%mort2_per_day   = 0.01_r8
+          autotrophs(m)%agg_rate_max    = 0.5_r8
+          autotrophs(m)%agg_rate_min    = 0.01_r8
+          autotrophs(m)%loss_poc        = 0.0_r8
+        case DEFAULT
+          write(autotrophs(m)%sname,"(A,I3.3)") 'auto', n
+          write(autotrophs(m)%lname,"(A,I0)") 'Autotroph number ', n
+          autotrophs(m)%Nfixer        = .false.
+          autotrophs(m)%imp_calcifier = .false.
+          autotrophs(m)%exp_calcifier = .false.
+          autotrophs(m)%silicifier    = .false.
+          autotrophs(m)%kFe             = c0
+          autotrophs(m)%kPO4            = c0
+          autotrophs(m)%kDOP            = c0
+          autotrophs(m)%kNO3            = c0
+          autotrophs(m)%kNH4            = c0
+          autotrophs(m)%kSiO3           = c0
+          autotrophs(m)%Qp_fixed        = c0
+          autotrophs(m)%gQfe_0          = c0
+          autotrophs(m)%gQfe_min        = c0
+          autotrophs(m)%alphaPI_per_day = c0
+          autotrophs(m)%PCref_per_day   = c0
+          autotrophs(m)%thetaN_max      = c0
+          autotrophs(m)%loss_thres      = c0
+          autotrophs(m)%loss_thres2     = c0
+          autotrophs(m)%temp_thres      = c0
+          autotrophs(m)%mort_per_day    = c0
+          autotrophs(m)%mort2_per_day   = c0
+          autotrophs(m)%agg_rate_max    = c0
+          autotrophs(m)%agg_rate_min    = c0
+          autotrophs(m)%loss_poc        = c0
+        end select
+    end do
+
+    do n=1,zooplankton_cnt
+      select case (n)
+        case (1)
+          zooplankton(1)%sname = 'zoo'
+          zooplankton(1)%lname = 'Zooplankton'
+          zooplankton(n)%z_mort_0_per_day   = 0.1_r8     ! in marbl_settings framework, see NOTE in module var declaration
+          zooplankton(n)%z_mort2_0_per_day  = 0.4_r8     ! in marbl_settings framework, see NOTE in module var declaration
+          zooplankton(n)%loss_thres         = 0.075_r8   ! in marbl_settings framework, see NOTE in module var declaration
+        case DEFAULT
+          write(zooplankton(n)%sname, "(A,I3.3)") 'zoo', n
+          write(zooplankton(n)%lname, "(A,I0)") 'Zooplankton number ', n
+          zooplankton(n)%z_mort_0_per_day   = c0
+          zooplankton(n)%z_mort2_0_per_day  = c0
+          zooplankton(n)%loss_thres         = c0
+      end select
+    end do
+
+    ! predator-prey relationships
+    do n=1,zooplankton_cnt
+      do m=1,grazer_prey_cnt
+        select case (1000*n + m)
+          case (1001)
+            grazing(m,n)%sname = 'grz_sp_zoo'
+            grazing(m,n)%lname = 'Grazing of sp by zoo'
+            grazing(m,n)%auto_ind_cnt = 1
+            grazing(m,n)%zoo_ind_cnt = 0
+            grazing(m,n)%z_umax_0_per_day = 3.3_r8    ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%graze_zoo        = 0.3_r8    ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%graze_poc        = 0.0_r8    ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%auto_ind(1) = 1
+          case (1002)
+            grazing(m,n)%sname = 'grz_diat_zoo'
+            grazing(m,n)%lname = 'Grazing of diat by zoo'
+            grazing(m,n)%auto_ind_cnt = 1
+            grazing(m,n)%zoo_ind_cnt = 0
+            grazing(m,n)%z_umax_0_per_day = 3.05_r8
+            grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%graze_zoo        = 0.25_r8   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%graze_poc        = 0.38_r8   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%f_zoo_detr       = 0.24_r8   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%auto_ind(1) = 2
+          case (1003)
+            grazing(m,n)%sname = 'grz_diaz_zoo'
+            grazing(m,n)%lname = 'Grazing of diaz by zoo'
+            grazing(m,n)%auto_ind_cnt = 1
+            grazing(m,n)%zoo_ind_cnt = 0
+            grazing(m,n)%z_umax_0_per_day = 3.1_r8    ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%graze_zoo        = 0.3_r8    ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%graze_poc        = 0.1_r8    ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%auto_ind(1) = 3
+          case DEFAULT
+            write(grazing(m,n)%sname, "(A,I3.3,A,I3.3)") 'grz_', m, '_', n
+            write(grazing(m,n)%lname, "(A,I0,A,I0)") 'Grazing of prey class ', m, ' by grazer ', n
+            grazing(m,n)%auto_ind_cnt = 0
+            grazing(m,n)%zoo_ind_cnt  = 0
+            grazing(m,n)%auto_ind     = -1
+            grazing(m,n)%zoo_ind      = -1
+            grazing(m,n)%z_umax_0_per_day = c0
+            grazing(m,n)%z_grz            = c0
+            grazing(m,n)%graze_zoo        = c0
+            grazing(m,n)%graze_poc        = c0
+            grazing(m,n)%graze_doc        = c0
+            grazing(m,n)%f_zoo_detr       = c0
+            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
+        end select
+      end do
+    end do
+
+  end subroutine marbl_settings_set_defaults_pre_tracers2
+
+  !*****************************************************************************
+
+  subroutine marbl_settings_set_defaults_post_tracers(marbl_status_log)
+    ! allocate memory for allocatable parameters
+    ! assign default values to all parameters
+
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+
+    !---------------------------------------------------------------------------
+    !   local variables
+    !---------------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_set_defaults_post_tracers'
+
+    !-----------------------------------------------------------------------
+    !  Default values
+    !-----------------------------------------------------------------------
+
+    if (.not. allocated(tracer_restore_vars)) then
+      call marbl_status_log%log_error('tracer_restore_vars has not been allocated!', subname)
+      return
+    end if
+
+    ! initialize namelist variables to default values
+    tracer_restore_vars = ''
+
+  end subroutine marbl_settings_set_defaults_post_tracers
+
+  !*****************************************************************************
+
   subroutine marbl_settings_define_pre_tracers1(this, marbl_status_log)
 
     class(marbl_settings_type), intent(inout) :: this
@@ -926,98 +1178,6 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_settings_set_defaults_pre_tracers2(marbl_status_log)
-
-    type(marbl_log_type),       intent(inout) :: marbl_status_log
-
-    character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_set_defaults_pre_tracers2'
-    character(len=char_len)     :: log_message
-    integer :: m, n
-
-    ! Allocate memory
-    ! FIXME #69: this is not ideal for threaded runs
-    if (.not.allocated(autotrophs)) then
-      allocate(autotrophs(autotroph_cnt))
-      allocate(zooplankton(zooplankton_cnt))
-      allocate(grazing(grazer_prey_cnt, zooplankton_cnt))
-      do n=1,zooplankton_cnt
-        do m=1,grazer_prey_cnt
-          call grazing(m,n)%construct(autotroph_cnt, zooplankton_cnt, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
-            call marbl_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-        end do
-      end do
-    end if
-
-    !-----------------------------------------------------------------------
-    !  Default values
-    !-----------------------------------------------------------------------
-
-    do n=1,autotroph_cnt
-      select case (n)
-        case (1)
-          autotrophs(n)%sname         = 'sp'
-          autotrophs(n)%lname         = 'Small Phyto'
-          autotrophs(n)%Nfixer        = .false.
-          autotrophs(n)%imp_calcifier = .true.
-          autotrophs(n)%exp_calcifier = .false.
-          autotrophs(n)%silicifier    = .false.
-        case (2)
-          autotrophs(n)%sname         = 'diat'
-          autotrophs(n)%lname         = 'Diatom'
-          autotrophs(n)%Nfixer        = .false.
-          autotrophs(n)%imp_calcifier = .false.
-          autotrophs(n)%exp_calcifier = .false.
-          autotrophs(n)%silicifier    = .true.
-        case (3)
-          autotrophs(n)%sname         = 'diaz'
-          autotrophs(n)%lname         = 'Diazotroph'
-          autotrophs(n)%Nfixer        = .true.
-          autotrophs(n)%imp_calcifier = .false.
-          autotrophs(n)%exp_calcifier = .false.
-          autotrophs(n)%silicifier    = .false.
-        case DEFAULT
-          write(autotrophs(n)%sname,"(A,I0)") 'auto', n
-          write(autotrophs(n)%lname,"(A,I0)") 'Autotroph number ', n
-          autotrophs(n)%Nfixer        = .false.
-          autotrophs(n)%imp_calcifier = .false.
-          autotrophs(n)%exp_calcifier = .false.
-          autotrophs(n)%silicifier    = .false.
-      end select
-    end do
-
-    do n=1,zooplankton_cnt
-      select case (n)
-        case (1)
-          zooplankton(n)%sname = 'zoo'
-          zooplankton(n)%lname = 'Zooplankton'
-        case DEFAULT
-          write(zooplankton(n)%sname, "(A,I0)") 'zoo', n
-          write(zooplankton(n)%lname, "(A,I0)") 'Zooplankton number ', n
-      end select
-    end do
-
-    ! predator-prey relationships
-    do n=1,zooplankton_cnt
-      do m=1,grazer_prey_cnt
-        write(grazing(m,n)%sname, "(4A)") 'grz_',                      &
-                                   trim(autotrophs(m)%sname),          &
-                                   '_', trim(zooplankton(n)%sname)
-        write(grazing(m,n)%lname, "(4A)") 'Grazing of ',               &
-                                   trim(autotrophs(m)%sname),          &
-                                   ' by ', trim(zooplankton(n)%sname)
-        grazing(m,n)%auto_ind_cnt = 1
-        grazing(m,n)%zoo_ind_cnt  = 0
-      end do
-    end do
-
-  end subroutine marbl_settings_set_defaults_pre_tracers2
-
-  !*****************************************************************************
-
   subroutine marbl_settings_define_pre_tracers2(this, marbl_status_log)
 
     class(marbl_settings_type), intent(inout) :: this
@@ -1032,7 +1192,7 @@ contains
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
 
-    integer :: m, n
+    integer :: m, n, cnt
     character(len=char_len) :: prefix
 
     do n=1,autotroph_cnt
@@ -1110,301 +1270,6 @@ contains
         call log_add_var_error(marbl_status_log, sname, subname)
         return
       end if
-
-    end do
-
-    do n=1, zooplankton_cnt
-      write(prefix, "(A,I0,A)") 'zooplankton(', n, ')%'
-      write(category, "(A,1X,I0)") 'zooplankton', n
-
-      write(sname, "(2A)") trim(prefix), 'sname'
-      lname    = 'Short name of zooplankton'
-      units    = 'unitless'
-      datatype = 'string'
-      sptr     => zooplankton(n)%sname
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      write(sname, "(2A)") trim(prefix), 'lname'
-      lname    = 'Long name of zooplankton'
-      units    = 'unitless'
-      datatype = 'string'
-      sptr     => zooplankton(n)%lname
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
-    end do
-
-    do n=1,zooplankton_cnt
-      do m=1,grazer_prey_cnt
-        write(prefix, "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%'
-        write(category, "(A,1X,I0,1X,I0)") 'grazing', m, n
-
-        write(sname, "(2A)") trim(prefix), 'sname'
-        lname    = 'Short name of grazer'
-        units    = 'unitless'
-        datatype = 'string'
-        sptr     => grazing(m,n)%sname
-        call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, sptr=sptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        write(sname, "(2A)") trim(prefix), 'lname'
-        lname    = 'Long name of grazer'
-        units    = 'unitless'
-        datatype = 'string'
-        sptr     => grazing(m,n)%lname
-        call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, sptr=sptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        write(sname, "(2A)") trim(prefix), 'auto_ind_cnt'
-        lname    = 'number of autotrophs in prey-clase auto_ind'
-        units    = 'unitless'
-        datatype = 'integer'
-        iptr     => grazing(m,n)%auto_ind_cnt
-        call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, iptr=iptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        write(sname, "(2A)") trim(prefix), 'zoo_ind_cnt'
-        lname    = 'number of zooplankton in prey-clase auto_ind'
-        units    = 'unitless'
-        datatype = 'integer'
-        iptr     => grazing(m,n)%zoo_ind_cnt
-        call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, iptr=iptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
-      end do
-    end do
-
-  end subroutine marbl_settings_define_pre_tracers2
-
-  !*****************************************************************************
-
-  subroutine marbl_settings_set_defaults_post_tracers(km, marbl_status_log)
-    ! allocate memory for allocatable parameters
-    ! assign default values to all parameters
-
-    integer, intent(in) :: km         ! max number of levels
-    type(marbl_log_type), intent(inout) :: marbl_status_log
-
-    !---------------------------------------------------------------------------
-    !   local variables
-    !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_set_defaults_post_tracers'
-    character(len=char_len) :: log_message
-    integer :: m, n
-
-    !-----------------------------------------------------------------------
-    !  Default values
-    !-----------------------------------------------------------------------
-
-    ! Autotrophs
-    do n=1,autotroph_cnt
-      select case (trim(autotrophs(n)%sname))
-        case ('sp')
-          autotrophs(n)%kFe             = 0.03e-3_r8         ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kPO4            = 0.005_r8           ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kDOP            = 0.3_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kNO3            = 0.25_r8            ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kNH4            = 0.01_r8            ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
-          autotrophs(n)%gQfe_0          = 35.0e-6_r8
-          autotrophs(n)%gQfe_min        = 3.0e-6_r8
-          autotrophs(n)%alphaPI_per_day = 0.39_r8
-          autotrophs(n)%PCref_per_day   = 5.0_r8
-          autotrophs(n)%thetaN_max      = 2.5_r8
-          autotrophs(n)%loss_thres      = 0.01_r8
-          autotrophs(n)%loss_thres2     = 0.0_r8
-          autotrophs(n)%temp_thres      = -10.0_r8
-          autotrophs(n)%mort_per_day    = 0.1_r8
-          autotrophs(n)%mort2_per_day   = 0.01_r8
-          autotrophs(n)%agg_rate_max    = 0.5_r8
-          autotrophs(n)%agg_rate_min    = 0.01_r8
-          autotrophs(n)%loss_poc        = 0.0_r8
-
-        case ('diat')
-          autotrophs(n)%kFe             = 0.06e-3_r8         ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kPO4            = 0.05_r8            ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kDOP            = 0.5_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kNO3            = 0.5_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kNH4            = 0.05_r8            ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kSiO3           = 0.7_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
-          autotrophs(n)%gQfe_0          = 35.0e-6_r8
-          autotrophs(n)%gQfe_min        = 3.0e-6_r8
-          autotrophs(n)%alphaPI_per_day = 0.29_r8
-          autotrophs(n)%PCref_per_day   = 5.0_r8
-          autotrophs(n)%thetaN_max      = 4.0_r8
-          autotrophs(n)%loss_thres      = 0.02_r8
-          autotrophs(n)%loss_thres2     = 0.0_r8
-          autotrophs(n)%temp_thres      = -10.0_r8
-          autotrophs(n)%mort_per_day    = 0.1_r8
-          autotrophs(n)%mort2_per_day   = 0.01_r8
-          autotrophs(n)%agg_rate_max    = 0.5_r8
-          autotrophs(n)%agg_rate_min    = 0.02_r8
-          autotrophs(n)%loss_poc        = 0.0_r8
-
-        case ('diaz')
-          autotrophs(n)%kFe             = 0.045e-3_r8        ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kPO4            = 0.015_r8           ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kDOP            = 0.075_r8           ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kNO3            = 2.0_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kNH4            = 0.2_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(n)%Qp_fixed        = 0.32_r8 * Qp_zoo   ! only used for lvariable_PtoC=.false.
-          autotrophs(n)%gQfe_0          = 70.0e-6_r8
-          autotrophs(n)%gQfe_min        = 6.0e-6_r8
-          autotrophs(n)%alphaPI_per_day = 0.39_r8
-          autotrophs(n)%PCref_per_day   = 2.2_r8
-          autotrophs(n)%thetaN_max      = 2.5_r8
-          autotrophs(n)%loss_thres      = 0.02_r8
-          autotrophs(n)%loss_thres2     = 0.001_r8
-          autotrophs(n)%temp_thres      = 15.0_r8
-          autotrophs(n)%mort_per_day    = 0.1_r8
-          autotrophs(n)%mort2_per_day   = 0.01_r8
-          autotrophs(n)%agg_rate_max    = 0.5_r8
-          autotrophs(n)%agg_rate_min    = 0.01_r8
-          autotrophs(n)%loss_poc        = 0.0_r8
-
-        case DEFAULT
-          autotrophs(n)%kFe             = c0
-          autotrophs(n)%kPO4            = c0
-          autotrophs(n)%kDOP            = c0
-          autotrophs(n)%kNO3            = c0
-          autotrophs(n)%kNH4            = c0
-          autotrophs(n)%kSiO3           = c0
-          autotrophs(n)%Qp_fixed        = c0
-          autotrophs(n)%gQfe_0          = c0
-          autotrophs(n)%gQfe_min        = c0
-          autotrophs(n)%alphaPI_per_day = c0
-          autotrophs(n)%PCref_per_day   = c0
-          autotrophs(n)%thetaN_max      = c0
-          autotrophs(n)%loss_thres      = c0
-          autotrophs(n)%loss_thres2     = c0
-          autotrophs(n)%temp_thres      = c0
-          autotrophs(n)%mort_per_day    = c0
-          autotrophs(n)%mort2_per_day   = c0
-          autotrophs(n)%agg_rate_max    = c0
-          autotrophs(n)%agg_rate_min    = c0
-          autotrophs(n)%loss_poc        = c0
-      end select
-    end do
-
-    ! zooplankton
-    ! TODO: add do loop and select case
-    do n=1,zooplankton_cnt
-      select case (trim(zooplankton(n)%sname))
-        case ('zoo')
-          zooplankton(n)%z_mort_0_per_day   = 0.1_r8     ! in marbl_settings framework, see NOTE in module var declaration
-          zooplankton(n)%z_mort2_0_per_day  = 0.4_r8     ! in marbl_settings framework, see NOTE in module var declaration
-          zooplankton(n)%loss_thres         = 0.075_r8   ! in marbl_settings framework, see NOTE in module var declaration
-        case DEFAULT
-          zooplankton(n)%z_mort_0_per_day   = c0
-          zooplankton(n)%z_mort2_0_per_day  = c0
-          zooplankton(n)%loss_thres         = c0
-      end select
-    end do
-
-    ! predator-prey relationships
-    do n=1,zooplankton_cnt
-      do m=1,grazer_prey_cnt
-        ! Properties that are the same for all grazers
-        if (size(grazing(m,n)%auto_ind) .gt. 0) then
-          grazing(m,n)%auto_ind(:)      = 0
-          grazing(m,n)%auto_ind(1)      = m
-        end if
-        if (size(grazing(m,n)%zoo_ind) .gt. 0) &
-          grazing(m,n)%zoo_ind          = -1
-
-        ! Properties that depend on m & n
-        if ((trim(zooplankton(n)%sname).eq.'zoo').and.                 &
-            (trim(autotrophs(m)%sname).eq.'sp')) then
-          grazing(m,n)%z_umax_0_per_day = 3.3_r8    ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%graze_zoo        = 0.3_r8    ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%graze_poc        = 0.0_r8    ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_settings framework, see NOTE in module var declaration
-        elseif ((trim(zooplankton(n)%sname).eq.'zoo').and.             &
-                (trim(autotrophs(m)%sname).eq.'diat')) then
-          grazing(m,n)%z_umax_0_per_day = 3.05_r8
-          grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%graze_zoo        = 0.25_r8   ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%graze_poc        = 0.38_r8   ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%f_zoo_detr       = 0.24_r8   ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_settings framework, see NOTE in module var declaration
-        elseif ((trim(zooplankton(n)%sname).eq.'zoo').and.             &
-                (trim(autotrophs(m)%sname).eq.'diaz')) then
-          grazing(m,n)%z_umax_0_per_day = 3.1_r8    ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%graze_zoo        = 0.3_r8    ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%graze_poc        = 0.1_r8    ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_settings framework, see NOTE in module var declaration
-          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_settings framework, see NOTE in module var declaration
-        else
-          grazing(m,n)%z_umax_0_per_day = c0
-          grazing(m,n)%z_grz            = c0
-          grazing(m,n)%graze_zoo        = c0
-          grazing(m,n)%graze_poc        = c0
-          grazing(m,n)%graze_doc        = c0
-          grazing(m,n)%f_zoo_detr       = c0
-          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
-        end if
-      end do
-    end do
-
-    ! initialize namelist variables to default values
-    tracer_restore_vars = ''
-
-  end subroutine marbl_settings_set_defaults_post_tracers
-
-  !*****************************************************************************
-
-  subroutine marbl_settings_define_post_tracers(this, marbl_status_log)
-
-    class(marbl_settings_type), intent(inout) :: this
-    type(marbl_log_type),       intent(inout) :: marbl_status_log
-
-    character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_define_post_tracers'
-    character(len=char_len)     :: log_message
-
-    character(len=char_len) :: sname, lname, units, datatype, category
-    real(r8),                pointer :: rptr => NULL()
-    integer(int_kind),       pointer :: iptr => NULL()
-    logical(log_kind),       pointer :: lptr => NULL()
-    character(len=char_len), pointer :: sptr => NULL()
-
-    character(len=char_len) :: prefix
-    integer :: m, n, cnt
-
-    do n=1,size(autotrophs)
-      write(prefix, "(A,I0,A)") 'autotrophs(', n, ')%'
-      write(category, "(A,1X,I0)") 'autotroph', n
 
       write(sname, "(2A)") trim(prefix), 'kFe'
       lname    = 'nutrient uptake half-sat constants'
@@ -1648,9 +1513,33 @@ contains
 
     end do
 
-    do n=1,size(zooplankton)
+    do n=1, zooplankton_cnt
       write(prefix, "(A,I0,A)") 'zooplankton(', n, ')%'
       write(category, "(A,1X,I0)") 'zooplankton', n
+
+      write(sname, "(2A)") trim(prefix), 'sname'
+      lname    = 'Short name of zooplankton'
+      units    = 'unitless'
+      datatype = 'string'
+      sptr     => zooplankton(n)%sname
+      call this%add_var(sname, lname, units, datatype, category,     &
+                        marbl_status_log, sptr=sptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      write(sname, "(2A)") trim(prefix), 'lname'
+      lname    = 'Long name of zooplankton'
+      units    = 'unitless'
+      datatype = 'string'
+      sptr     => zooplankton(n)%lname
+      call this%add_var(sname, lname, units, datatype, category,     &
+                        marbl_status_log, sptr=sptr)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_var_error(marbl_status_log, sname, subname)
+        return
+      end if
 
       write(sname, "(2A)") trim(prefix), 'z_mort_0_per_day'
       lname    = 'Linear mortality rate'
@@ -1694,6 +1583,54 @@ contains
       do m=1,grazer_prey_cnt
         write(prefix, "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%'
         write(category, "(A,1X,I0,1X,I0)") 'grazing', m, n
+
+        write(sname, "(2A)") trim(prefix), 'sname'
+        lname    = 'Short name of grazer'
+        units    = 'unitless'
+        datatype = 'string'
+        sptr     => grazing(m,n)%sname
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, sptr=sptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'lname'
+        lname    = 'Long name of grazer'
+        units    = 'unitless'
+        datatype = 'string'
+        sptr     => grazing(m,n)%lname
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, sptr=sptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'auto_ind_cnt'
+        lname    = 'number of autotrophs in prey-clase auto_ind'
+        units    = 'unitless'
+        datatype = 'integer'
+        iptr     => grazing(m,n)%auto_ind_cnt
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, iptr=iptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        write(sname, "(2A)") trim(prefix), 'zoo_ind_cnt'
+        lname    = 'number of zooplankton in prey-clase auto_ind'
+        units    = 'unitless'
+        datatype = 'integer'
+        iptr     => grazing(m,n)%zoo_ind_cnt
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, iptr=iptr)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_var_error(marbl_status_log, sname, subname)
+          return
+        end if
 
         write(sname, "(2A)") trim(prefix), 'grazing_function'
         lname    = 'functional form of grazing parmaeterization'
@@ -1809,6 +1746,18 @@ contains
 
       end do
     end do
+
+  end subroutine marbl_settings_define_pre_tracers2
+
+  !*****************************************************************************
+
+  subroutine marbl_settings_define_post_tracers(this, marbl_status_log)
+
+    class(marbl_settings_type), intent(inout) :: this
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_define_post_tracers'
+    character(len=char_len) :: sname, lname, units, category
 
     category  = 'tracer restoring'
 
