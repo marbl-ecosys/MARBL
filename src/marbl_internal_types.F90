@@ -1160,9 +1160,11 @@ contains
 
   !*****************************************************************************
 
-  subroutine grazing_constructor(this, marbl_status_log)
+  subroutine grazing_constructor(this, autotroph_cnt, zooplankton_cnt, marbl_status_log)
 
     class(grazing_type),  intent(out)   :: this
+    integer(int_kind),    intent(in)    :: autotroph_cnt
+    integer(int_kind),    intent(in)    :: zooplankton_cnt
     type(marbl_log_type), intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_internal_types:grazing_constructor'
@@ -1180,8 +1182,8 @@ contains
       return
     end if
 
-    allocate(this%auto_ind(this%auto_ind_cnt))
-    allocate(this%zoo_ind(this%zoo_ind_cnt))
+    allocate(this%auto_ind(autotroph_cnt))
+    allocate(this%zoo_ind(zooplankton_cnt))
 
   end subroutine grazing_constructor
 

@@ -942,7 +942,7 @@ contains
       allocate(grazing(grazer_prey_cnt, zooplankton_cnt))
       do n=1,zooplankton_cnt
         do m=1,grazer_prey_cnt
-          call grazing(m,n)%construct(marbl_status_log)
+          call grazing(m,n)%construct(autotroph_cnt, zooplankton_cnt, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
             call marbl_status_log%log_error_trace(log_message, subname)
@@ -1785,7 +1785,7 @@ contains
           lname     = 'Indices of autotrophs in class'
           units     = 'unitless'
           call this%add_var_1d_int(sname, lname, units, category,      &
-                            grazing(m,n)%auto_ind,                     &
+                            grazing(m,n)%auto_ind(1:cnt),              &
                             marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call marbl_status_log%log_error_trace('add_var_1d_int', subname)
@@ -1799,7 +1799,7 @@ contains
           lname     = 'Indices of autotrophs in class'
           units     = 'unitless'
           call this%add_var_1d_int(sname, lname, units, category,      &
-                                   grazing(m,n)%zoo_ind,               &
+                                   grazing(m,n)%zoo_ind(1:cnt),        &
                                    marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call marbl_status_log%log_error_trace('add_var_1d_int', subname)
