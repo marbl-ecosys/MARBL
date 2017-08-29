@@ -207,7 +207,8 @@ module marbl_settings_mod
   !----------------------------------------------------------------------------------------------
 
   !  marbl_settings_mod_pre_tracers1
-  !---------------------------------
+  !    parameters with no dependencies on other parameter values
+  !-------------------------------------------------------------
 
   logical(log_kind), target ::  ciso_on                       ! control whether ciso tracer module is active
   logical(log_kind), target ::  lsource_sink                  ! control which portion of code is executed, useful for debugging
@@ -267,16 +268,23 @@ module marbl_settings_mod
   character(len=char_len), target :: ciso_fract_factors           ! option for which biological fractionation calculation to use
 
   !  marbl_settings_define_pre_tracers2
-  !------------------------------------
+  !    parameters with default values or dimensions dependent
+  !    on parameters from pre_tracers1
+  !    Currently just parameters associated with the PFT classes
+  !    (can not be set until autotroph_cnt, zooplankton_cnt
+  !     are grazer_prey_cnt are known)
+  !-------------------------------------------------------------
 
   type(autotroph_type),   allocatable, target :: autotrophs(:)
   type(zooplankton_type), allocatable, target :: zooplankton(:)
   type(grazing_type),     allocatable, target :: grazing(:,:)
 
   !  marbl_settings_define_post_tracers
-  !  (some components of autotrophs, zooplankton,
-  !  and grazing are also set in post_tracers)
-  !----------------------------------------------
+  !    parameters that can not be set until MARBL knows what tracers
+  !    have been enabled.
+  !    Currently just tracer_restore_vars (which has dimension of
+  !    tracer_cnt; also, only valid values are tracer short names)
+  !-----------------------------------------------------------------
 
   ! FIXME #69: this array is allocated in marbl_init_mod:marbl_init_tracers()
   !            and that allocation is not ideal for threaded runs
@@ -296,14 +304,6 @@ module marbl_settings_mod
          grz_fnc_sigmoidal        = 2
 
   !*****************************************************************************
-
-  ! Variables used from other modules should be private
-  ! (So we don't accidentally use them from this module)
-  private :: r8, int_kind, log_kind, char_len
-  private :: c1, dps
-  private :: zooplankton_type, autotroph_type, grazing_type
-  private :: autotroph_cnt, zooplankton_cnt, grazer_prey_cnt
-  private :: marbl_log_type
 
   interface print_single_derived_parm
     module procedure print_single_derived_parm_r8
@@ -331,14 +331,16 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_settings_set_defaults_pre_tracers1()
+  ! -------------------------------------------------------------------------------------
+  ! * marbl_settings_set_defaults_pre_tracers1, marbl_settings_set_defaults_pre_tracers2,
+  ! marbl_settings_set_defaults_post_tracers:
+  !
+  ! These routines set default values for the variables that are part of the
+  ! marbl_settings framework; see NOTE in module variable declaration for details
+  ! on how to change these parameters from a GCM
+  ! -------------------------------------------------------------------------------------
 
-    !-----------------------------------------------------------------------
-    !  Default values
-    !    All variables set in the following block are part of the
-    !    marbl_settings framework, see NOTE in module var declaration
-    !    for details on changing these values
-    !-----------------------------------------------------------------------
+  subroutine marbl_settings_set_defaults_pre_tracers1()
 
     autotroph_cnt                 = 3
     zooplankton_cnt               = 1
@@ -396,30 +398,11 @@ contains
     character(len=char_len)     :: log_message
     integer :: m, n
 
-    ! Allocate memory
-    ! FIXME #69: this is not ideal for threaded runs
-    if (.not.allocated(autotrophs)) then
-      allocate(autotrophs(autotroph_cnt))
-      allocate(zooplankton(zooplankton_cnt))
-      allocate(grazing(grazer_prey_cnt, zooplankton_cnt))
-      do n=1,zooplankton_cnt
-        do m=1,grazer_prey_cnt
-          call grazing(m,n)%construct(autotroph_cnt, zooplankton_cnt, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
-            call marbl_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-        end do
-      end do
+    if (.not. all((/allocated(autotrophs), allocated(zooplankton), allocated(grazing)/))) then
+      write(log_message, '(A)') 'autotrophs, zooplankton, and grazing have not been allocated!'
+      call marbl_status_log%log_error(log_message, subname)
+      return
     end if
-
-    !-----------------------------------------------------------------------
-    !  Default values
-    !    All variables set in the following block are part of the
-    !    marbl_settings framework, see NOTE in module var declaration
-    !    for details on changing these values
-    !-----------------------------------------------------------------------
 
     do m=1,autotroph_cnt
       select case (m)
@@ -617,22 +600,10 @@ contains
   !*****************************************************************************
 
   subroutine marbl_settings_set_defaults_post_tracers(marbl_status_log)
-    ! allocate memory for allocatable parameters
-    ! assign default values to all parameters
 
     type(marbl_log_type), intent(inout) :: marbl_status_log
 
-    !---------------------------------------------------------------------------
-    !   local variables
-    !---------------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_set_defaults_post_tracers'
-
-    !-----------------------------------------------------------------------
-    !  Default values
-    !    All variables set in the following block are part of the
-    !    marbl_settings framework, see NOTE in module var declaration
-    !    for details on changing these values
-    !-----------------------------------------------------------------------
 
     if (.not. allocated(tracer_restore_vars)) then
       call marbl_status_log%log_error('tracer_restore_vars has not been allocated!', subname)
@@ -645,6 +616,21 @@ contains
   end subroutine marbl_settings_set_defaults_post_tracers
 
   !*****************************************************************************
+
+  ! --------------------------------------------------------------------------
+  ! * marbl_settings_define_pre_tracers1, marbl_settings_define_pre_tracers2,
+  ! marbl_settings_define_post_tracers:
+  !
+  ! These routines add parameters to the marbl_settings framework. The call to
+  ! add_var() is the only time a parameter may change (if the GCM called
+  ! put_setting() to change a value), so the parameters can be considered
+  ! locked after the add_var() call.
+  !
+  ! Some parameters are allocatable and their size depends on another
+  ! parameter; memory for the dependent parameter is allocated immediately
+  ! after the add_var() all for the independent parameter. For example,
+  ! autotrophs() is allocated after the add_var() call for autotroph_cnt.
+  ! --------------------------------------------------------------------------
 
   subroutine marbl_settings_define_pre_tracers1(this, marbl_status_log)
 
@@ -659,6 +645,7 @@ contains
     integer(int_kind),       pointer :: iptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
+    integer                          :: m,n
 
     if (associated(this%vars)) then
       write(log_message, "(A)") "this%settings has been constructed already"
@@ -667,11 +654,9 @@ contains
     end if
     allocate(this%categories(0))
 
-    !----------!
-    ! Settings !
-    !----------!
-
-    category  = 'config ints'
+    ! ----------------------
+    category = 'config ints'
+    ! ----------------------
 
     sname     = 'autotroph_cnt'
     lname     = 'Number of autotroph classes'
@@ -684,6 +669,9 @@ contains
       call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
+    ! FIXME #69: this is not ideal for threaded runs
+    if (.not. allocated(autotrophs)) &
+      allocate(autotrophs(autotroph_cnt))
 
     sname     = 'zooplankton_cnt'
     lname     = 'Number of zooplankton classes'
@@ -696,6 +684,9 @@ contains
       call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
+    ! FIXME #69: this is not ideal for threaded runs
+    if (.not. allocated(zooplankton)) &
+      allocate(zooplankton(zooplankton_cnt))
 
     sname     = 'grazer_prey_cnt'
     lname     = 'Number of grazer prey classes'
@@ -708,8 +699,24 @@ contains
       call log_add_var_error(marbl_status_log, sname, subname)
       return
     end if
+    ! FIXME #69: this is not ideal for threaded runs
+    if (.not. allocated(grazing)) then
+      allocate(grazing(grazer_prey_cnt, zooplankton_cnt))
+      do n=1,zooplankton_cnt
+        do m=1,grazer_prey_cnt
+          call grazing(m,n)%construct(autotroph_cnt, zooplankton_cnt, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
+            call marbl_status_log%log_error_trace(log_message, subname)
+            return
+          end if
+        end do
+      end do
+    end if
 
-    category  = 'config flags'
+    ! -----------------------
+    category = 'config flags'
+    ! -----------------------
 
     sname     = 'ciso_on'
     lname     = 'Control whether CISO tracer module is active'
@@ -831,7 +838,9 @@ contains
       return
     end if
 
+    ! --------------------------
     category  = 'config strings'
+    ! --------------------------
 
     sname     = 'init_bury_coeff_opt'
     lname     = 'How to set initial bury coefficients'
@@ -845,7 +854,9 @@ contains
       return
     end if
 
+    ! -----------------------------
     category  = 'general parmeters'
+    ! -----------------------------
 
     sname     = 'parm_Fe_bioavail'
     lname     = 'Fraction of Fe flux that is bioavailable'
@@ -1087,7 +1098,9 @@ contains
       return
     end if
 
+    ! -------------------------
     category  = 'Scale lengths'
+    ! -------------------------
 
     sname     = 'parm_scalelen_z'
     lname     = 'Depths of prescribed scale length values'
@@ -1109,7 +1122,9 @@ contains
       return
     end if
 
+    ! -----------------------------
     category  = 'general parmeters'
+    ! -----------------------------
 
     sname     = 'iron_frac_in_dust'
     lname     = 'Fraction by weight of iron in dust'
@@ -1768,7 +1783,9 @@ contains
     character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_define_post_tracers'
     character(len=char_len) :: sname, lname, units, category
 
+    ! ----------------------------
     category  = 'tracer restoring'
+    ! ----------------------------
 
     sname     = 'tracer_restore_vars'
     lname     = 'Tracer names for tracers that are restored'
