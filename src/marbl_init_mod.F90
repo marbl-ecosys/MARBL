@@ -143,7 +143,7 @@ contains
 
     integer(int_kind),                             intent(in)    :: num_levels
     integer(int_kind),                             intent(in)    :: num_surface_elements
-    type(marbl_tracer_index_type),                 intent(out)   :: tracer_indices
+    type(marbl_tracer_index_type),    pointer,     intent(out)   :: tracer_indices
     real(r8),                         allocatable, intent(out)   :: surface_vals(:,:)
     real(r8),                         allocatable, intent(out)   :: surface_tracer_fluxes(:,:)
     real(r8),                         allocatable, intent(out)   :: column_tracers(:,:)
@@ -158,6 +158,7 @@ contains
     integer :: i
 
     ! Construct tracer indices
+    allocate(tracer_indices)
     call tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs, zooplankton, &
                                   marbl_status_log, marbl_tracer_cnt)
     if (marbl_status_log%labort_marbl) then

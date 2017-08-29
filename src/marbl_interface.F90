@@ -61,10 +61,12 @@ module marbl_interface
   type, public :: marbl_interface_class
 
      ! public data - general
-     type(marbl_domain_type)           , public               :: domain
-     type(marbl_tracer_metadata_type)  , public, allocatable  :: tracer_metadata(:)
-     type(marbl_tracer_index_type)     , public               :: tracer_indices
-     type(marbl_log_type)              , public               :: StatusLog
+     type(marbl_domain_type)                        , public  :: domain
+     type(marbl_tracer_metadata_type)  , allocatable, public  :: tracer_metadata(:)
+     ! Pointer so that destructor doesn't need to reset all inds to 0
+     ! (that happens automatically when new tracer indexing type is allocated)
+     type(marbl_tracer_index_type)     , pointer    , public  :: tracer_indices => NULL()
+     type(marbl_log_type)                           , public  :: StatusLog
 
      type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
      type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
@@ -997,6 +999,7 @@ end subroutine put_string
     use marbl_settings_mod, only : autotrophs
     use marbl_settings_mod, only : zooplankton
     use marbl_settings_mod, only : grazing
+    use marbl_settings_mod, only : tracer_restore_vars
     use marbl_sizes, only : grazer_prey_cnt
     use marbl_diagnostics_mod, only : marbl_interior_diag_ind
 
@@ -1047,8 +1050,10 @@ end subroutine put_string
       deallocate(this%column_tracers)
       deallocate(this%column_dtracers)
       deallocate(this%tracer_metadata)
+      deallocate(tracer_restore_vars)
     end if
     call this%tracer_indices%destruct()
+    deallocate(this%tracer_indices)
     call this%settings%destruct()
     call this%particulate_share%destruct()
     call this%PAR%destruct()

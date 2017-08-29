@@ -2536,6 +2536,7 @@ contains
     ! Deallocate varArray
     if (allocated(this%varArray)) deallocate(this%varArray)
     this%cnt=0
+    this%init_called = .false.
 
   end subroutine destruct
 
