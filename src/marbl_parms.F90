@@ -316,7 +316,7 @@ contains
           autotrophs(n)%kDOP            = 0.5_r8             ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kNO3            = 0.5_r8             ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kNH4            = 0.05_r8            ! in marbl_parms framework, see NOTE above
-          autotrophs(n)%kSiO3           = 0.72_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kSiO3           = 0.75_r8             ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kCO2            = 0.0_r8             !!!! added
           autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
           autotrophs(n)%gQfe_0          = 35.0e-6_r8
@@ -357,19 +357,19 @@ contains
           autotrophs(n)%loss_poc        = 0.0_r8
 
         case ('cocco')
-        autotrophs(n)%kFe             = 0.020e-3_r8         ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kFe             = 0.018e-3_r8         ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kPO4            = 0.005_r8           ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kDOP            = 0.3_r8             ! in marbl_parms framework, see NOTE above
-        autotrophs(n)%kNO3            = 0.25_r8            ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kNO3            = 0.22_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kNH4            = 0.012_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
-        autotrophs(n)%kCO2            = 1.5_r8             !!!! added Km for CO2 for coccos
+        autotrophs(n)%kCO2            = 1.0_r8             !!!! added Km for CO2 for coccos
         autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
         autotrophs(n)%gQfe_0          = 15.0e-6_r8
         autotrophs(n)%gQfe_min        = 3.0e-6_r8
-        autotrophs(n)%alphaPI_per_day = 0.27_r8
+        autotrophs(n)%alphaPI_per_day = 0.29_r8
         autotrophs(n)%PCref_per_day   = 5.0_r8
-        autotrophs(n)%thetaN_max      = 4.0_r8
+        autotrophs(n)%thetaN_max      = 3.9_r8
         autotrophs(n)%loss_thres      = 0.01_r8
         autotrophs(n)%loss_thres2     = 0.0_r8
         autotrophs(n)%temp_thres      = 0.0_r8
