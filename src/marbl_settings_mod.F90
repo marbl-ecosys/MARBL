@@ -335,6 +335,9 @@ contains
 
     !-----------------------------------------------------------------------
     !  Default values
+    !    All variables set in the following block are part of the
+    !    marbl_settings framework, see NOTE in module var declaration
+    !    for details on changing these values
     !-----------------------------------------------------------------------
 
     autotroph_cnt                 = 3
@@ -351,35 +354,35 @@ contains
     lvariable_PtoC                = .true.
     init_bury_coeff_opt           = 'nml'
     ladjust_bury_coeff            = .false.
-    parm_Fe_bioavail           = 1.0_r8         ! in marbl_settings framework, see NOTE in module var declaration
-    parm_o2_min                = 5.0_r8         ! in marbl_settings framework, see NOTE in module var declaration
-    parm_o2_min_delta          = 5.0_r8         ! in marbl_settings framework, see NOTE in module var declaration
-    parm_kappa_nitrif_per_day  = 0.06_r8        ! in marbl_settings framework, see NOTE in module var declaration
-    parm_nitrif_par_lim        = 1.0_r8         ! in marbl_settings framework, see NOTE in module var declaration
-    parm_labile_ratio          = 0.94_r8        ! in marbl_settings framework, see NOTE in module var declaration
-    parm_init_POC_bury_coeff   = 1.1_r8         ! in marbl_settings framework, see NOTE in module var declaration
-    parm_init_POP_bury_coeff   = 1.1_r8         ! in marbl_settings framework, see NOTE in module var declaration
-    parm_init_bSi_bury_coeff   = 1.0_r8         ! in marbl_settings framework, see NOTE in module var declaration
-    parm_Fe_scavenge_rate0     = 15.0_r8        ! in marbl_settings framework, see NOTE in module var declaration
-    parm_Lig_scavenge_rate0    = 0.015_r8       ! in marbl_settings framework, see NOTE in module var declaration
-    parm_FeLig_scavenge_rate0  = 1.3_r8         ! in marbl_settings framework, see NOTE in module var declaration
-    parm_Lig_degrade_rate0     = 0.000094_r8    ! in marbl_settings framework, see NOTE in module var declaration
-    parm_Fe_desorption_rate0   = 1.0e-6_r8      ! in marbl_settings framework, see NOTE in module var declaration
-    parm_f_prod_sp_CaCO3       = 0.070_r8       ! in marbl_settings framework, see NOTE in module var declaration
-    parm_POC_diss              = 100.0e2_r8     ! in marbl_settings framework, see NOTE in module var declaration
-    parm_SiO2_diss             = 770.0e2_r8     ! in marbl_settings framework, see NOTE in module var declaration
-    parm_CaCO3_diss            = 500.0e2_r8     ! in marbl_settings framework, see NOTE in module var declaration
-    parm_sed_denitrif_coeff    = 1.0_r8         ! in marbl_settings framework, see NOTE in module var declaration
-    bury_coeff_rmean_timescale_years = 10.0_r8  ! in marbl_settings framework, see NOTE in module var declaration
-    parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8, 1000.0e2_r8 /) ! in marbl_settings framework, see NOTE in module var declaration
-    parm_scalelen_vals = (/     1.0_r8,     2.2_r8,     4.0_r8,      5.0_r8 /) ! in marbl_settings framework, see NOTE in module var declaration
+    parm_Fe_bioavail           = 1.0_r8
+    parm_o2_min                = 5.0_r8
+    parm_o2_min_delta          = 5.0_r8
+    parm_kappa_nitrif_per_day  = 0.06_r8
+    parm_nitrif_par_lim        = 1.0_r8
+    parm_labile_ratio          = 0.94_r8
+    parm_init_POC_bury_coeff   = 1.1_r8
+    parm_init_POP_bury_coeff   = 1.1_r8
+    parm_init_bSi_bury_coeff   = 1.0_r8
+    parm_Fe_scavenge_rate0     = 15.0_r8
+    parm_Lig_scavenge_rate0    = 0.015_r8
+    parm_FeLig_scavenge_rate0  = 1.3_r8
+    parm_Lig_degrade_rate0     = 0.000094_r8
+    parm_Fe_desorption_rate0   = 1.0e-6_r8
+    parm_f_prod_sp_CaCO3       = 0.070_r8
+    parm_POC_diss              = 100.0e2_r8
+    parm_SiO2_diss             = 770.0e2_r8
+    parm_CaCO3_diss            = 500.0e2_r8
+    parm_sed_denitrif_coeff    = 1.0_r8
+    bury_coeff_rmean_timescale_years = 10.0_r8
+    parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8, 1000.0e2_r8 /)
+    parm_scalelen_vals = (/     1.0_r8,     2.2_r8,     4.0_r8,      5.0_r8 /)
 
-    iron_frac_in_dust      = 0.035_r8 * 0.01_r8    ! in marbl_settings framework, see NOTE in module var declaration
-    iron_frac_in_bc        = 0.06_r8               ! in marbl_settings framework, see NOTE in module var declaration
-    caco3_bury_thres_opt   = 'omega_calc'          ! in marbl_settings framework, see NOTE in module var declaration
-    caco3_bury_thres_depth = 3000.0e2              ! in marbl_settings framework, see NOTE in module var declaration
-    PON_bury_coeff         = 0.5_r8                ! in marbl_settings framework, see NOTE in module var declaration
-    ciso_fract_factors     = 'Rau'                 ! in marbl_settings framework, see NOTE in module var declaration
+    iron_frac_in_dust      = 0.035_r8 * 0.01_r8
+    iron_frac_in_bc        = 0.06_r8
+    caco3_bury_thres_opt   = 'omega_calc'
+    caco3_bury_thres_depth = 3000.0e2
+    PON_bury_coeff         = 0.5_r8
+    ciso_fract_factors     = 'Rau'
 
   end subroutine marbl_settings_set_defaults_pre_tracers1
 
@@ -413,6 +416,9 @@ contains
 
     !-----------------------------------------------------------------------
     !  Default values
+    !    All variables set in the following block are part of the
+    !    marbl_settings framework, see NOTE in module var declaration
+    !    for details on changing these values
     !-----------------------------------------------------------------------
 
     do m=1,autotroph_cnt
@@ -424,12 +430,12 @@ contains
           autotrophs(m)%imp_calcifier = .true.
           autotrophs(m)%exp_calcifier = .false.
           autotrophs(m)%silicifier = .false.
-          autotrophs(m)%kFe             = 0.03e-3_r8         ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kPO4            = 0.005_r8           ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kDOP            = 0.3_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kNO3            = 0.25_r8            ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kNH4            = 0.01_r8            ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kSiO3           = 0.0_r8             ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kFe             = 0.03e-3_r8
+          autotrophs(m)%kPO4            = 0.005_r8
+          autotrophs(m)%kDOP            = 0.3_r8
+          autotrophs(m)%kNO3            = 0.25_r8
+          autotrophs(m)%kNH4            = 0.01_r8
+          autotrophs(m)%kSiO3           = 0.0_r8
           autotrophs(m)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
           autotrophs(m)%gQfe_0          = 35.0e-6_r8
           autotrophs(m)%gQfe_min        = 3.0e-6_r8
@@ -451,12 +457,12 @@ contains
           autotrophs(m)%imp_calcifier = .false.
           autotrophs(m)%exp_calcifier = .false.
           autotrophs(m)%silicifier = .true.
-          autotrophs(m)%kFe             = 0.06e-3_r8         ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kPO4            = 0.05_r8            ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kDOP            = 0.5_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kNO3            = 0.5_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kNH4            = 0.05_r8            ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kSiO3           = 0.7_r8             ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kFe             = 0.06e-3_r8
+          autotrophs(m)%kPO4            = 0.05_r8
+          autotrophs(m)%kDOP            = 0.5_r8
+          autotrophs(m)%kNO3            = 0.5_r8
+          autotrophs(m)%kNH4            = 0.05_r8
+          autotrophs(m)%kSiO3           = 0.7_r8
           autotrophs(m)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
           autotrophs(m)%gQfe_0          = 35.0e-6_r8
           autotrophs(m)%gQfe_min        = 3.0e-6_r8
@@ -478,12 +484,12 @@ contains
           autotrophs(m)%imp_calcifier = .false.
           autotrophs(m)%exp_calcifier = .false.
           autotrophs(m)%silicifier = .false.
-          autotrophs(m)%kFe             = 0.045e-3_r8        ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kPO4            = 0.015_r8           ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kDOP            = 0.075_r8           ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kNO3            = 2.0_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kNH4            = 0.2_r8             ! in marbl_settings framework, see NOTE in module var declaration
-          autotrophs(m)%kSiO3           = 0.0_r8             ! in marbl_settings framework, see NOTE in module var declaration
+          autotrophs(m)%kFe             = 0.045e-3_r8
+          autotrophs(m)%kPO4            = 0.015_r8
+          autotrophs(m)%kDOP            = 0.075_r8
+          autotrophs(m)%kNO3            = 2.0_r8
+          autotrophs(m)%kNH4            = 0.2_r8
+          autotrophs(m)%kSiO3           = 0.0_r8
           autotrophs(m)%Qp_fixed        = 0.32_r8 * Qp_zoo   ! only used for lvariable_PtoC=.false.
           autotrophs(m)%gQfe_0          = 70.0e-6_r8
           autotrophs(m)%gQfe_min        = 6.0e-6_r8
@@ -533,9 +539,9 @@ contains
         case (1)
           zooplankton(1)%sname = 'zoo'
           zooplankton(1)%lname = 'Zooplankton'
-          zooplankton(n)%z_mort_0_per_day   = 0.1_r8     ! in marbl_settings framework, see NOTE in module var declaration
-          zooplankton(n)%z_mort2_0_per_day  = 0.4_r8     ! in marbl_settings framework, see NOTE in module var declaration
-          zooplankton(n)%loss_thres         = 0.075_r8   ! in marbl_settings framework, see NOTE in module var declaration
+          zooplankton(n)%z_mort_0_per_day   = 0.1_r8
+          zooplankton(n)%z_mort2_0_per_day  = 0.4_r8
+          zooplankton(n)%loss_thres         = 0.075_r8
         case DEFAULT
           write(zooplankton(n)%sname, "(A,I3.3)") 'zoo', n
           write(zooplankton(n)%lname, "(A,I0)") 'Zooplankton number ', n
@@ -554,13 +560,13 @@ contains
             grazing(m,n)%lname = 'Grazing of sp by zoo'
             grazing(m,n)%auto_ind_cnt = 1
             grazing(m,n)%zoo_ind_cnt = 0
-            grazing(m,n)%z_umax_0_per_day = 3.3_r8    ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%graze_zoo        = 0.3_r8    ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%graze_poc        = 0.0_r8    ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%z_umax_0_per_day = 3.3_r8
+            grazing(m,n)%z_grz            = 1.2_r8
+            grazing(m,n)%graze_zoo        = 0.3_r8
+            grazing(m,n)%graze_poc        = 0.0_r8
+            grazing(m,n)%graze_doc        = 0.06_r8
+            grazing(m,n)%f_zoo_detr       = 0.12_r8
+            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
             grazing(m,n)%auto_ind(1) = 1
           case (1002)
             grazing(m,n)%sname = 'grz_diat_zoo'
@@ -568,25 +574,25 @@ contains
             grazing(m,n)%auto_ind_cnt = 1
             grazing(m,n)%zoo_ind_cnt = 0
             grazing(m,n)%z_umax_0_per_day = 3.05_r8
-            grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%graze_zoo        = 0.25_r8   ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%graze_poc        = 0.38_r8   ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%f_zoo_detr       = 0.24_r8   ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%z_grz            = 1.2_r8
+            grazing(m,n)%graze_zoo        = 0.25_r8
+            grazing(m,n)%graze_poc        = 0.38_r8
+            grazing(m,n)%graze_doc        = 0.06_r8
+            grazing(m,n)%f_zoo_detr       = 0.24_r8
+            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
             grazing(m,n)%auto_ind(1) = 2
           case (1003)
             grazing(m,n)%sname = 'grz_diaz_zoo'
             grazing(m,n)%lname = 'Grazing of diaz by zoo'
             grazing(m,n)%auto_ind_cnt = 1
             grazing(m,n)%zoo_ind_cnt = 0
-            grazing(m,n)%z_umax_0_per_day = 3.1_r8    ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%graze_zoo        = 0.3_r8    ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%graze_poc        = 0.1_r8    ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_settings framework, see NOTE in module var declaration
-            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_settings framework, see NOTE in module var declaration
+            grazing(m,n)%z_umax_0_per_day = 3.1_r8
+            grazing(m,n)%z_grz            = 1.2_r8
+            grazing(m,n)%graze_zoo        = 0.3_r8
+            grazing(m,n)%graze_poc        = 0.1_r8
+            grazing(m,n)%graze_doc        = 0.06_r8
+            grazing(m,n)%f_zoo_detr       = 0.12_r8
+            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
             grazing(m,n)%auto_ind(1) = 3
           case DEFAULT
             write(grazing(m,n)%sname, "(A,I3.3,A,I3.3)") 'grz_', m, '_', n
@@ -623,6 +629,9 @@ contains
 
     !-----------------------------------------------------------------------
     !  Default values
+    !    All variables set in the following block are part of the
+    !    marbl_settings framework, see NOTE in module var declaration
+    !    for details on changing these values
     !-----------------------------------------------------------------------
 
     if (.not. allocated(tracer_restore_vars)) then
