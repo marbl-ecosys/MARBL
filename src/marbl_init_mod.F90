@@ -13,7 +13,6 @@ module marbl_init_mod
 
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
-  use marbl_sizes, only : grazer_prey_cnt
 
   implicit none
   private

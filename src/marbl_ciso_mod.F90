@@ -28,8 +28,6 @@ module marbl_ciso_mod
   use marbl_settings_mod    , only : grazing
 
   use marbl_sizes           , only : autotroph_cnt
-  use marbl_sizes           , only : zooplankton_cnt
-  use marbl_sizes           , only : grazer_prey_cnt
 
   use marbl_logging         , only : marbl_log_type
 
@@ -232,9 +230,9 @@ contains
     implicit none
 
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain
-    type(marbl_interior_share_type)         , intent(in)    :: marbl_interior_share(marbl_domain%km)
-    type(marbl_zooplankton_share_type)      , intent(in)    :: marbl_zooplankton_share(zooplankton_cnt, marbl_domain%km)
-    type(marbl_autotroph_share_type)        , intent(in)    :: marbl_autotroph_share(autotroph_cnt, marbl_domain%km)
+    type(marbl_interior_share_type)         , intent(in)    :: marbl_interior_share(:)
+    type(marbl_zooplankton_share_type)      , intent(in)    :: marbl_zooplankton_share(:, :)
+    type(marbl_autotroph_share_type)        , intent(in)    :: marbl_autotroph_share(:, :)
     type(marbl_particulate_share_type)      , intent(in)    :: marbl_particulate_share
     real (r8)                               , intent(in)    :: temperature(:)
     real (r8)                               , intent(in)    :: column_tracer(:,:)
@@ -274,7 +272,7 @@ contains
     real(r8), parameter :: &
          eps_carb = -2.0_r8      ! eps_carb = d13C(CaCO3) - d13C(DIC)  Ziveri et al., 2003
 
-    type(column_sinking_particle_type) :: &   
+    type(column_sinking_particle_type) :: &
          PO13C,          & ! base units = nmol 13C
          PO14C,          & ! base units = nmol 14C
          P_Ca13CO3,      & ! base units = nmol CaCO3 13C

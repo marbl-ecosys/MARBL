@@ -1000,7 +1000,7 @@ end subroutine put_string
     use marbl_settings_mod, only : zooplankton
     use marbl_settings_mod, only : grazing
     use marbl_settings_mod, only : tracer_restore_vars
-    use marbl_sizes, only : grazer_prey_cnt
+    use marbl_sizes, only : max_grazer_prey_cnt
     use marbl_diagnostics_mod, only : marbl_interior_diag_ind
 
     implicit none
@@ -1028,7 +1028,7 @@ end subroutine put_string
     if (allocated(autotrophs)) then
       deallocate(autotrophs)
       deallocate(zooplankton)
-      do m=1,grazer_prey_cnt
+      do m=1,max_grazer_prey_cnt
         do n=1,zooplankton_cnt
           deallocate(grazing(m,n)%auto_ind)
           deallocate(grazing(m,n)%zoo_ind)

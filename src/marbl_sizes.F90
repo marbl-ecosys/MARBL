@@ -14,6 +14,6 @@ module marbl_sizes
 
   integer (KIND=int_kind), target :: zooplankton_cnt
   integer (KIND=int_kind), target :: autotroph_cnt
-  integer (KIND=int_kind), target :: grazer_prey_cnt
+  integer (KIND=int_kind), target :: max_grazer_prey_cnt
 
 end module marbl_sizes

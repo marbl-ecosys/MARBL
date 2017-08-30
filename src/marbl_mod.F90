@@ -156,7 +156,7 @@ module marbl_mod
 
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
-  use marbl_sizes, only : grazer_prey_cnt
+  use marbl_sizes, only : max_grazer_prey_cnt
 
   use marbl_internal_types  , only : carbonate_type
   use marbl_internal_types  , only : zooplankton_type
@@ -681,9 +681,9 @@ contains
             zooplankton_cnt, zooplankton, zooplankton_local(:, k)%C, &
             Tfunc(k), zooplankton_secondary_species(:, k))
 
-       call marbl_compute_grazing (autotroph_cnt, zooplankton_cnt,            &
-            grazer_prey_cnt, autotrophs, Tfunc(k), zooplankton_local(:, k),   &
-            zooplankton_secondary_species(:, k),                              &
+       call marbl_compute_grazing (autotroph_cnt, zooplankton_cnt,              &
+            max_grazer_prey_cnt, autotrophs, Tfunc(k), zooplankton_local(:, k), &
+            zooplankton_secondary_species(:, k),                                &
             autotroph_secondary_species(:, k))
 
        call marbl_compute_routing (autotroph_cnt, zooplankton_cnt, autotrophs, &
@@ -3280,7 +3280,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_grazing (auto_cnt, zoo_cnt, grazer_prey_cnt,       &
+  subroutine marbl_compute_grazing (auto_cnt, zoo_cnt, max_grazer_prey_cnt,  &
              autotrophs, Tfunc, zooplankton_loc,                             &
        zooplankton_secondary_species, autotroph_secondary_species)
 
@@ -3303,7 +3303,7 @@ contains
 
     integer(int_kind)                        , intent(in)    :: auto_cnt
     integer(int_kind)                        , intent(in)    :: zoo_cnt
-    integer(int_kind)                        , intent(in)    :: grazer_prey_cnt
+    integer(int_kind)                        , intent(in)    :: max_grazer_prey_cnt
     type(autotroph_type)                     , intent(in)    :: autotrophs(auto_cnt)
     real(r8)                                 , intent(in)    :: Tfunc
     type(zooplankton_local_type)             , intent(in)    :: zooplankton_loc(zoo_cnt)
@@ -3358,7 +3358,7 @@ contains
        work3 = c0
        work4 = c0
 
-       do prey_ind = 1, grazer_prey_cnt
+       do prey_ind = 1, max_grazer_prey_cnt
 
           !-----------------------------------------------------------------------
           !  compute sum of carbon in the grazee class, both autotrophs and zoop

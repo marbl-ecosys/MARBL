@@ -32,7 +32,7 @@ module marbl_settings_mod
 
   use marbl_sizes, only : autotroph_cnt
   use marbl_sizes, only : zooplankton_cnt
-  use marbl_sizes, only : grazer_prey_cnt
+  use marbl_sizes, only : max_grazer_prey_cnt
 
   use marbl_logging, only: marbl_log_type
 
@@ -272,7 +272,7 @@ module marbl_settings_mod
   !    on parameters from pre_tracers1
   !    Currently just parameters associated with the PFT classes
   !    (can not be set until autotroph_cnt, zooplankton_cnt
-  !     are grazer_prey_cnt are known)
+  !     are max_grazer_prey_cnt are known)
   !-------------------------------------------------------------
 
   type(autotroph_type),   allocatable, target :: autotrophs(:)
@@ -344,7 +344,7 @@ contains
 
     autotroph_cnt                 = 3
     zooplankton_cnt               = 1
-    grazer_prey_cnt               = 3
+    max_grazer_prey_cnt           = 3
     ciso_on                       = .false.
     lsource_sink                  = .true.
     ciso_lsource_sink             = .true.
@@ -536,7 +536,7 @@ contains
 
     ! predator-prey relationships
     do n=1,zooplankton_cnt
-      do m=1,grazer_prey_cnt
+      do m=1,max_grazer_prey_cnt
         select case (1000*n + m)
           case (1001)
             grazing(m,n)%sname = 'grz_sp_zoo'
@@ -688,11 +688,11 @@ contains
     if (.not. allocated(zooplankton)) &
       allocate(zooplankton(zooplankton_cnt))
 
-    sname     = 'grazer_prey_cnt'
+    sname     = 'max_grazer_prey_cnt'
     lname     = 'Number of grazer prey classes'
     units     = 'unitless'
     datatype  = 'integer'
-    iptr      => grazer_prey_cnt
+    iptr      => max_grazer_prey_cnt
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, iptr=iptr)
     if (marbl_status_log%labort_marbl) then
@@ -701,9 +701,9 @@ contains
     end if
     ! FIXME #69: this is not ideal for threaded runs
     if (.not. allocated(grazing)) then
-      allocate(grazing(grazer_prey_cnt, zooplankton_cnt))
+      allocate(grazing(max_grazer_prey_cnt, zooplankton_cnt))
       do n=1,zooplankton_cnt
-        do m=1,grazer_prey_cnt
+        do m=1,max_grazer_prey_cnt
           call grazing(m,n)%construct(autotroph_cnt, zooplankton_cnt, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
@@ -1604,7 +1604,7 @@ contains
     end do
 
     do n=1,zooplankton_cnt
-      do m=1,grazer_prey_cnt
+      do m=1,max_grazer_prey_cnt
         write(prefix, "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%'
         write(category, "(A,1X,I0,1X,I0)") 'grazing', m, n
 
@@ -1880,7 +1880,7 @@ contains
     call marbl_status_log%log_noerror('', subname)
 
     do n = 1, zooplankton_cnt
-       do m = 1, grazer_prey_cnt
+       do m = 1, max_grazer_prey_cnt
           grazing(m,n)%z_umax_0 = dps * grazing(m,n)%z_umax_0_per_day
           write(sname_in,  "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%z_umax_0_per_day'
           write(sname_out, "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%z_umax_0'
