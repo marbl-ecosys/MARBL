@@ -30,10 +30,6 @@ module marbl_settings_mod
   use marbl_internal_types, only : zooplankton_type
   use marbl_internal_types, only : grazing_type
 
-  use marbl_sizes, only : autotroph_cnt
-  use marbl_sizes, only : zooplankton_cnt
-  use marbl_sizes, only : max_grazer_prey_cnt
-
   use marbl_logging, only: marbl_log_type
 
   implicit none
@@ -210,8 +206,11 @@ module marbl_settings_mod
   !    parameters with no dependencies on other parameter values
   !-------------------------------------------------------------
 
-  logical(log_kind), target ::  ciso_on                       ! control whether ciso tracer module is active
-  logical(log_kind), target ::  lsource_sink                  ! control which portion of code is executed, useful for debugging
+  integer(int_kind), target :: autotroph_cnt                  ! number of autotroph classes
+  integer(int_kind), target :: zooplankton_cnt                ! number of zooplankton classes
+  integer(int_kind), target :: max_grazer_prey_cnt            ! max number of biomass aggregates grazed by a zooplankton class
+  logical(log_kind), target :: ciso_on                        ! control whether ciso tracer module is active
+  logical(log_kind), target :: lsource_sink                   ! control which portion of code is executed, useful for debugging
   logical(log_kind), target :: ciso_lsource_sink              ! control which portion of carbon isotope code is executed, useful for debugging
   logical(log_kind), target :: lecovars_full_depth_tavg       ! should base ecosystem vars be written full depth
   logical(log_kind), target :: ciso_lecovars_full_depth_tavg  ! should carbon isotope vars be written full depth

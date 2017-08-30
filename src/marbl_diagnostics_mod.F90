@@ -8,9 +8,8 @@ module marbl_diagnostics_mod
   use marbl_kinds_mod       , only : log_kind
   use marbl_kinds_mod       , only : char_len
 
-  use marbl_sizes           , only : autotroph_cnt
-  use marbl_sizes           , only : zooplankton_cnt
-
+  use marbl_settings_mod    , only : autotroph_cnt
+  use marbl_settings_mod    , only : zooplankton_cnt
   use marbl_settings_mod    , only : autotrophs
   use marbl_settings_mod    , only : zooplankton
 

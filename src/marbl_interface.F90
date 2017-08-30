@@ -19,12 +19,11 @@ module marbl_interface
 
   use marbl_kinds_mod       , only : r8, log_kind, int_kind, log_kind, char_len
 
+  use marbl_settings_mod    , only : autotroph_cnt
+  use marbl_settings_mod    , only : zooplankton_cnt
   use marbl_settings_mod    , only : marbl_settings_type
 
   use marbl_logging         , only : marbl_log_type
-
-  use marbl_sizes           , only : autotroph_cnt
-  use marbl_sizes           , only : zooplankton_cnt
 
   use marbl_interface_types , only : marbl_domain_type
   use marbl_interface_types , only : marbl_tracer_metadata_type
@@ -996,11 +995,11 @@ end subroutine put_string
 
   subroutine shutdown(this)
 
+    use marbl_settings_mod, only : max_grazer_prey_cnt
     use marbl_settings_mod, only : autotrophs
     use marbl_settings_mod, only : zooplankton
     use marbl_settings_mod, only : grazing
     use marbl_settings_mod, only : tracer_restore_vars
-    use marbl_sizes, only : max_grazer_prey_cnt
     use marbl_diagnostics_mod, only : marbl_interior_diag_ind
 
     implicit none

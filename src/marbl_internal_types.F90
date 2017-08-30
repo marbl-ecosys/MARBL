@@ -7,9 +7,6 @@ module marbl_internal_types
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : char_len
 
-  use marbl_sizes, only : autotroph_cnt
-  use marbl_sizes, only : zooplankton_cnt
-
   use marbl_logging, only : marbl_log_type
 
   use marbl_timing_mod, only : marbl_internal_timers_type
@@ -722,10 +719,12 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_internal_types:tracer_index_constructor'
     character(len=char_len) :: ind_name
-    integer :: n
+    integer :: autotroph_cnt, zooplankton_cnt, n
 
     ! If marbl_tracer_cnt is requested, initialize to zero
     ! (so that count is zero if an error is encountered)
+    autotroph_cnt = size(autotrophs)
+    zooplankton_cnt = size(zooplankton)
     if (present(marbl_tracer_cnt)) marbl_tracer_cnt = 0
 
     !Allocate memory

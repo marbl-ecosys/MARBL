@@ -11,8 +11,8 @@ module marbl_init_mod
 
   use marbl_logging, only : marbl_log_type
 
-  use marbl_sizes, only : autotroph_cnt
-  use marbl_sizes, only : zooplankton_cnt
+  use marbl_settings_mod, only : autotroph_cnt
+  use marbl_settings_mod, only : zooplankton_cnt
 
   implicit none
   private

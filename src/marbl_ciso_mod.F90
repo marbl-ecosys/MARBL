@@ -23,11 +23,10 @@ module marbl_ciso_mod
   use marbl_constants_mod   , only : c1000
   use marbl_constants_mod   , only : mpercm
 
+  use marbl_settings_mod    , only : autotroph_cnt
   use marbl_settings_mod    , only : autotrophs
   use marbl_settings_mod    , only : zooplankton
   use marbl_settings_mod    , only : grazing
-
-  use marbl_sizes           , only : autotroph_cnt
 
   use marbl_logging         , only : marbl_log_type
 

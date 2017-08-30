@@ -90,6 +90,9 @@ module marbl_mod
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : char_len
 
+  use marbl_settings_mod, only : autotroph_cnt
+  use marbl_settings_mod, only : zooplankton_cnt
+  use marbl_settings_mod, only : max_grazer_prey_cnt
   use marbl_settings_mod, only : ciso_on
   use marbl_settings_mod, only : lsource_sink
   use marbl_settings_mod, only : lflux_gas_o2
@@ -153,10 +156,6 @@ module marbl_mod
   use marbl_settings_mod, only : caco3_bury_thres_iopt_omega_calc
   use marbl_settings_mod, only : caco3_bury_thres_depth
   use marbl_settings_mod, only : PON_bury_coeff
-
-  use marbl_sizes, only : autotroph_cnt
-  use marbl_sizes, only : zooplankton_cnt
-  use marbl_sizes, only : max_grazer_prey_cnt
 
   use marbl_internal_types  , only : carbonate_type
   use marbl_internal_types  , only : zooplankton_type
