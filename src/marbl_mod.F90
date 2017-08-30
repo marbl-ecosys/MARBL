@@ -101,15 +101,12 @@ module marbl_mod
   use marbl_settings_mod, only : ladjust_bury_coeff
   use marbl_settings_mod, only : autotrophs
   use marbl_settings_mod, only : zooplankton
-  use marbl_settings_mod, only : grz_fnc_michaelis_menten
-  use marbl_settings_mod, only : grz_fnc_sigmoidal
   use marbl_settings_mod, only : f_qsw_par
   use marbl_settings_mod, only : parm_Fe_bioavail
   use marbl_settings_mod, only : dust_to_Fe
   use marbl_settings_mod, only : denitrif_C_N
   use marbl_settings_mod, only : parm_Red_Fe_C
   use marbl_settings_mod, only : Q
-  use marbl_settings_mod, only : Qp_zoo
   use marbl_settings_mod, only : parm_scalelen_z
   use marbl_settings_mod, only : parm_scalelen_vals
   use marbl_settings_mod, only : caco3_poc_min
@@ -158,17 +155,11 @@ module marbl_mod
   use marbl_settings_mod, only : PON_bury_coeff
 
   use marbl_internal_types  , only : carbonate_type
-  use marbl_internal_types  , only : zooplankton_type
-  use marbl_internal_types  , only : autotroph_type
-  use marbl_internal_types  , only : zooplankton_secondary_species_type
-  use marbl_internal_types  , only : autotroph_secondary_species_type
   use marbl_internal_types  , only : dissolved_organic_matter_type
   use marbl_internal_types  , only : column_sinking_particle_type
   use marbl_internal_types  , only : marbl_PAR_type
   use marbl_internal_types  , only : marbl_particulate_share_type
   use marbl_internal_types  , only : marbl_interior_share_type
-  use marbl_internal_types  , only : marbl_autotroph_share_type
-  use marbl_internal_types  , only : marbl_zooplankton_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
   use marbl_internal_types  , only : marbl_tracer_index_type
@@ -181,6 +172,14 @@ module marbl_mod
   use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_diagnostics_type
   use marbl_interface_types , only : marbl_running_mean_0d_type
+
+  use marbl_pft_mod, only : autotroph_type
+  use marbl_pft_mod, only : zooplankton_type
+  use marbl_pft_mod, only : autotroph_secondary_species_type
+  use marbl_pft_mod, only : zooplankton_secondary_species_type
+  use marbl_pft_mod, only : marbl_autotroph_share_type
+  use marbl_pft_mod, only : marbl_zooplankton_share_type
+  use marbl_pft_mod, only : Qp_zoo
 
   use marbl_diagnostics_mod , only : marbl_diagnostics_set_surface_forcing
   use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
@@ -3297,8 +3296,8 @@ contains
 
     use marbl_constants_mod, only : epsC
     use marbl_constants_mod, only : epsTinv
-    use marbl_settings_mod , only : grz_fnc_michaelis_menten
-    use marbl_settings_mod , only : grz_fnc_sigmoidal
+    use marbl_pft_mod, only : grz_fnc_michaelis_menten
+    use marbl_pft_mod, only : grz_fnc_sigmoidal
 
     integer(int_kind)                        , intent(in)    :: auto_cnt
     integer(int_kind)                        , intent(in)    :: zoo_cnt
@@ -3477,7 +3476,6 @@ contains
   subroutine marbl_compute_routing (auto_cnt, zoo_cnt,  autotrophs, &
        zooplankton_secondary_species, autotroph_secondary_species)
 
-    use marbl_settings_mod, only : Qp_zoo
     use marbl_settings_mod, only : parm_labile_ratio
     use marbl_settings_mod, only : f_toDOP
 
@@ -3587,7 +3585,6 @@ contains
              dz1, tracer_local, marbl_tracer_indices, dissolved_organic_matter)
 
     use marbl_settings_mod, only : Qfe_zoo
-    use marbl_settings_mod, only : Qp_zoo
     use marbl_settings_mod, only : Q
     use marbl_settings_mod, only : DOC_reminR_light
     use marbl_settings_mod, only : DON_reminR_light

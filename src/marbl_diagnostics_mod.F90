@@ -17,15 +17,11 @@ module marbl_diagnostics_mod
   use marbl_constants_mod   , only : c1
 
   use marbl_internal_types  , only : carbonate_type
-  use marbl_internal_types  , only : zooplankton_secondary_species_type
-  use marbl_internal_types  , only : autotroph_secondary_species_type
   use marbl_internal_types  , only : dissolved_organic_matter_type
   use marbl_internal_types  , only : column_sinking_particle_type
   use marbl_internal_types  , only : marbl_PAR_type
   use marbl_internal_types  , only : marbl_particulate_share_type
   use marbl_internal_types  , only : marbl_interior_share_type
-  use marbl_internal_types  , only : marbl_autotroph_share_type
-  use marbl_internal_types  , only : marbl_zooplankton_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_share_type
   use marbl_internal_types  , only : marbl_surface_forcing_internal_type
   use marbl_internal_types  , only : marbl_tracer_index_type
@@ -35,6 +31,11 @@ module marbl_diagnostics_mod
   use marbl_interface_types , only : marbl_forcing_fields_type
   use marbl_interface_types , only : marbl_saved_state_type
   use marbl_interface_types , only : marbl_diagnostics_type
+
+  use marbl_pft_mod         , only : marbl_autotroph_share_type
+  use marbl_pft_mod         , only : marbl_zooplankton_share_type
+  use marbl_pft_mod         , only : autotroph_secondary_species_type
+  use marbl_pft_mod         , only : zooplankton_secondary_species_type
 
   use marbl_logging,          only : marbl_log_type
 
@@ -4195,7 +4196,7 @@ contains
        autotroph_secondary_species, dtracers, interior_restore, &
        marbl_tracer_indices, marbl_diags)
 
-    use marbl_settings_mod, only : Qp_zoo
+    use marbl_pft_mod, only : Qp_zoo
     use marbl_settings_mod, only : lvariable_PtoC
 
     type(marbl_domain_type)                , intent(in)    :: marbl_domain

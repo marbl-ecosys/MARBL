@@ -17,72 +17,6 @@ module marbl_internal_types
   private
 
   !****************************************************************************
-  ! derived types for zooplankton
-
-  type, public :: zooplankton_type
-     character(len=char_len)     :: sname
-     character(len=char_len)     :: lname
-
-     real    (KIND=r8)       :: z_mort_0_per_day   ! zoo linear mort rate (1/day)
-     real    (KIND=r8)       :: z_mort_0           ! zoo linear mort rate (1/sec) (derived from z_mort_0_per_day)
-     real    (KIND=r8)       :: z_mort2_0_per_day  ! zoo quad mort rate (1/day/((mmol C/m3))
-     real    (KIND=r8)       :: z_mort2_0          ! zoo quad mort rate (1/sec/((mmol C/m3)) (derived from z_mort2_0_per_day)
-     real    (KIND=r8)       :: loss_thres         ! zoo conc. where losses go to zero
-  end type zooplankton_type
-
-  !****************************************************************************
-  ! derived types for autotrophs
-
-  type, public :: autotroph_type
-     character(len=char_len)     :: sname
-     character(len=char_len)     :: lname
-     logical (KIND=log_kind)     :: Nfixer                             ! flag set to true if this autotroph fixes N2
-     logical (KIND=log_kind)     :: imp_calcifier                      ! flag set to true if this autotroph implicitly handles calcification
-     logical (KIND=log_kind)     :: exp_calcifier                      ! flag set to true if this autotroph explicitly handles calcification
-     logical (KIND=log_kind)     :: silicifier                         ! flag set to true if this autotroph is a silicifier
-
-     real    (KIND=r8)       :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3 ! nutrient uptake half-sat constants
-     real    (KIND=r8)       :: Qp_fixed                           ! P/C ratio for fixed P/C ratios
-     real    (KIND=r8)       :: gQfe_0, gQfe_min                   ! initial and minimum Fe/C ratio for growth
-     real    (KIND=r8)       :: alphaPI_per_day                    ! init slope of P_I curve (GD98) (mmol C m^2/(mg Chl W day))
-     real    (KIND=r8)       :: alphaPI                            ! init slope of P_I curve (GD98) (mmol C m^2/(mg Chl W sec))
-                                                                   !    (derived from alphaPI_per_day)
-     real    (KIND=r8)       :: PCref_per_day                      ! max C-spec. grth rate at tref (1/day)
-     real    (KIND=r8)       :: PCref                              ! max C-spec. grth rate at tref (1/sec) (derived from PCref_per_day)
-     real    (KIND=r8)       :: thetaN_max                         ! max thetaN (Chl/N) (mg Chl/mmol N)
-     real    (KIND=r8)       :: loss_thres, loss_thres2            ! conc. where losses go to zero
-     real    (KIND=r8)       :: temp_thres                         ! Temp. where concentration threshold and photosynth. rate drops
-     real    (KIND=r8)       :: mort_per_day, mort2_per_day        ! linear and quadratic mortality rates (1/day), (1/day/((mmol C/m3))
-     real    (KIND=r8)       :: mort, mort2                        ! linear and quadratic mortality rates (1/sec), (1/sec/((mmol C/m3))
-                                                                   !    (derived from mort_per_day and mort2_per_day)
-     real    (KIND=r8)       :: agg_rate_max, agg_rate_min         ! max and min agg. rate (1/d)
-     real    (KIND=r8)       :: loss_poc                           ! routing of loss term
-  end type autotroph_type
-
-  !****************************************************************************
-  ! derived types for grazing
-
-  type, public :: grazing_type
-    character(len=char_len) :: sname
-    character(len=char_len) :: lname
-    integer (KIND=int_kind) :: auto_ind_cnt     ! number of autotrophs in prey-clase auto_ind
-    integer (KIND=int_kind) :: zoo_ind_cnt      ! number of zooplankton in prey-clase zoo_ind
-
-    integer (KIND=int_kind) :: grazing_function ! functional form of grazing parameterization
-    real    (KIND=r8)       :: z_umax_0_per_day ! max zoo growth rate at tref (1/day)
-    real    (KIND=r8)       :: z_umax_0         ! max zoo growth rate at tref (1/sec) (derived from z_umax_0_per_day)
-    real    (KIND=r8)       :: z_grz            ! grazing coef. (mmol C/m^3)^2
-    real    (KIND=r8)       :: graze_zoo        ! routing of grazed term, remainder goes to dic
-    real    (KIND=r8)       :: graze_poc        ! routing of grazed term, remainder goes to dic
-    real    (KIND=r8)       :: graze_doc        ! routing of grazed term, remainder goes to dic
-    real    (KIND=r8)       :: f_zoo_detr       ! fraction of zoo losses to detrital
-    integer (KIND=int_kind), allocatable :: auto_ind(:)
-    integer (KIND=int_kind), allocatable :: zoo_ind(:)
-  contains
-    procedure, public :: construct => grazing_constructor
-  end type grazing_type
-
-  !****************************************************************************
 
   ! derived type for PAR computation
   type, public :: marbl_PAR_type
@@ -161,40 +95,6 @@ module marbl_internal_types
 
   !***********************************************************************
 
-  type, public :: marbl_zooplankton_share_type
-     real(r8) :: zooC_loc_fields     ! local copy of model zooC
-     real(r8) :: zoo_loss_fields     ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_poc_fields ! zoo_loss routed to large detrital (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_doc_fields ! zoo_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_dic_fields ! zoo_loss routed to dic (mmol C/m^3/sec)
-  end type marbl_zooplankton_share_type
-
-  !***********************************************************************
-
-  type, public :: marbl_autotroph_share_type
-     real(r8) :: autotrophChl_loc_fields   ! local copy of model autotroph Chl
-     real(r8) :: autotrophC_loc_fields     ! local copy of model autotroph C
-     real(r8) :: autotrophFe_loc_fields    ! local copy of model autotroph Fe
-     real(r8) :: autotrophSi_loc_fields    ! local copy of model autotroph Si
-     real(r8) :: autotrophCaCO3_loc_fields ! local copy of model autotroph CaCO3
-     real(r8) :: QCaCO3_fields             ! small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
-     real(r8) :: auto_graze_fields         ! autotroph grazing rate (mmol C/m^3/sec)
-     real(r8) :: auto_graze_zoo_fields     ! auto_graze routed to zoo (mmol C/m^3/sec)
-     real(r8) :: auto_graze_poc_fields     ! auto_graze routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_doc_fields     ! auto_graze routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_dic_fields     ! auto_graze routed to dic (mmol C/m^3/sec)
-     real(r8) :: auto_loss_fields          ! autotroph non-grazing mort (mmol C/m^3/sec)
-     real(r8) :: auto_loss_poc_fields      ! auto_loss routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_doc_fields      ! auto_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_dic_fields      ! auto_loss routed to dic (mmol C/m^3/sec)
-     real(r8) :: auto_agg_fields           ! autotroph aggregation (mmol C/m^3/sec)
-     real(r8) :: photoC_fields             ! C-fixation (mmol C/m^3/sec)
-     real(r8) :: CaCO3_form_fields         ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-     real(r8) :: PCphoto_fields            ! C-specific rate of photosynth. (1/sec)
-  end type marbl_autotroph_share_type
-
-  !***********************************************************************
-
   type, public :: marbl_particulate_share_type
      type(column_sinking_particle_type) :: POC              ! base units = nmol C
      type(column_sinking_particle_type) :: POP              ! base units = nmol P
@@ -239,72 +139,6 @@ module marbl_internal_types
      real (r8) :: H2CO3_ALT_CO2 ! carbonic acid, alternative CO2
      real (r8) :: pH_ALT_CO2
   end type carbonate_type
-
-  !*****************************************************************************
-
-  type, public :: autotroph_secondary_species_type
-     real (r8) :: thetaC          ! current Chl/C ratio (mg Chl/mmol C)
-     real (r8) :: QCaCO3          ! current CaCO3/C ratio (mmol CaCO3/mmol C)
-     real (r8) :: Qp              ! current P/C ratio (mmol P/mmol C)
-     real (r8) :: gQp             ! P/C for growth
-     real (r8) :: Qfe             ! current Fe/C ratio (mmol Fe/mmol C)
-     real (r8) :: gQfe            ! fe/C for growth
-     real (r8) :: Qsi             ! current Si/C ratio (mmol Si/mmol C)
-     real (r8) :: gQsi            ! diatom Si/C ratio for growth (new biomass)
-     real (r8) :: VNO3            ! NH4 uptake rate (non-dim)
-     real (r8) :: VNH4            ! NO3 uptake rate (non-dim)
-     real (r8) :: VNtot           ! total N uptake rate (non-dim)
-     real (r8) :: NO3_V           ! nitrate uptake (mmol NO3/m^3/sec)
-     real (r8) :: NH4_V           ! ammonium uptake (mmol NH4/m^3/sec)
-     real (r8) :: PO4_V           ! PO4 uptake (mmol PO4/m^3/sec)
-     real (r8) :: DOP_V           ! DOP uptake (mmol DOP/m^3/sec)
-     real (r8) :: VPO4            ! C-specific PO4 uptake (non-dim)
-     real (r8) :: VDOP            ! C-specific DOP uptake rate (non-dim)
-     real (r8) :: VPtot           ! total P uptake rate (non-dim)
-     real (r8) :: f_nut           ! nut limitation factor, modifies C fixation (non-dim)
-     real (r8) :: VFe             ! C-specific Fe uptake (non-dim)
-     real (r8) :: VSiO3           ! C-specific SiO3 uptake (non-dim)
-     real (r8) :: light_lim       ! light limitation factor
-     real (r8) :: PCphoto         ! C-specific rate of photosynth. (1/sec)
-     real (r8) :: photoC          ! C-fixation (mmol C/m^3/sec)
-     real (r8) :: photoFe         ! iron uptake
-     real (r8) :: photoSi         ! silicon uptake (mmol Si/m^3/sec)
-     real (r8) :: photoacc        ! Chl synth. term in photoadapt. (GD98) (mg Chl/m^3/sec)
-     real (r8) :: auto_loss       ! autotroph non-grazing mort (mmol C/m^3/sec)
-     real (r8) :: auto_loss_poc   ! auto_loss routed to poc (mmol C/m^3/sec)
-     real (r8) :: auto_loss_doc   ! auto_loss routed to doc (mmol C/m^3/sec)
-     real (r8) :: auto_loss_dic   ! auto_loss routed to dic (mmol C/m^3/sec)
-     real (r8) :: auto_agg        ! autotroph aggregation (mmol C/m^3/sec)
-     real (r8) :: auto_graze      ! autotroph grazing rate (mmol C/m^3/sec)
-     real (r8) :: auto_graze_zoo  ! auto_graze routed to zoo (mmol C/m^3/sec)
-     real (r8) :: auto_graze_poc  ! auto_graze routed to poc (mmol C/m^3/sec)
-     real (r8) :: auto_graze_doc  ! auto_graze routed to doc (mmol C/m^3/sec)
-     real (r8) :: auto_graze_dic  ! auto_graze routed to dic (mmol C/m^3/sec)
-     real (r8) :: Pprime          ! used to limit autotroph mort at low biomass (mmol C/m^3)
-     real (r8) :: CaCO3_form      ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-     real (r8) :: Nfix            ! total Nitrogen fixation (mmol N/m^3/sec)
-     real (r8) :: Nexcrete        ! fixed N excretion
-     real (r8) :: remaining_P_dop ! remaining_P from grazing routed to DOP pool
-     real (r8) :: remaining_P_pop ! remaining_P from grazing routed to POP pool
-     real (r8) :: remaining_P_dip ! remaining_P from grazing routed to remin
-  end type autotroph_secondary_species_type
-
-  !*****************************************************************************
-
-  type, public :: zooplankton_secondary_species_type
-     real (r8):: f_zoo_detr       ! frac of zoo losses into large detrital pool (non-dim)
-     real (r8):: x_graze_zoo      ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
-     real (r8):: zoo_graze        ! zooplankton losses due to grazing (mmol C/m^3/sec)
-     real (r8):: zoo_graze_zoo    ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
-     real (r8):: zoo_graze_poc    ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
-     real (r8):: zoo_graze_doc    ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
-     real (r8):: zoo_graze_dic    ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
-     real (r8):: zoo_loss         ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-     real (r8):: zoo_loss_poc     ! zoo_loss routed to poc (mmol C/m^3/sec)
-     real (r8):: zoo_loss_doc     ! zoo_loss routed to doc (mmol C/m^3/sec)
-     real (r8):: zoo_loss_dic     ! zoo_loss routed to dic (mmol C/m^3/sec)
-     real (r8):: Zprime           ! used to limit zoo mort at low biomass (mmol C/m^3)
-  end type zooplankton_secondary_species_type
 
   !*****************************************************************************
 
@@ -708,6 +542,8 @@ contains
     ! accurate count whether the carbon isotope tracers are included or not.
 
     use marbl_constants_mod, only : c0
+    use marbl_pft_mod, only : autotroph_type
+    use marbl_pft_mod, only : zooplankton_type
 
     class(marbl_tracer_index_type), intent(out)   :: this
     logical,                        intent(in)    :: ciso_on
@@ -1156,35 +992,6 @@ contains
     end associate
 
   end subroutine interior_forcing_index_constructor
-
-  !*****************************************************************************
-
-  subroutine grazing_constructor(this, autotroph_cnt, zooplankton_cnt, marbl_status_log)
-
-    class(grazing_type),  intent(out)   :: this
-    integer(int_kind),    intent(in)    :: autotroph_cnt
-    integer(int_kind),    intent(in)    :: zooplankton_cnt
-    type(marbl_log_type), intent(inout) :: marbl_status_log
-
-    character(len=*), parameter :: subname = 'marbl_internal_types:grazing_constructor'
-    character(len=char_len)     :: log_message
-
-    if (allocated(this%auto_ind)) then
-      log_message = 'grazing%auto_inds is already allocated!'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    if (allocated(this%zoo_ind)) then
-      log_message = 'grazing%zoo_inds is already allocated!'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    allocate(this%auto_ind(autotroph_cnt))
-    allocate(this%zoo_ind(zooplankton_cnt))
-
-  end subroutine grazing_constructor
 
   !*****************************************************************************
 

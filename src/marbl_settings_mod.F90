@@ -26,9 +26,9 @@ module marbl_settings_mod
   use marbl_constants_mod, only : dps
   use marbl_constants_mod, only : molw_Fe
 
-  use marbl_internal_types, only : autotroph_type
-  use marbl_internal_types, only : zooplankton_type
-  use marbl_internal_types, only : grazing_type
+  use marbl_pft_mod, only : autotroph_type
+  use marbl_pft_mod, only : zooplankton_type
+  use marbl_pft_mod, only : grazing_type
 
   use marbl_logging, only: marbl_log_type
 
@@ -145,7 +145,6 @@ module marbl_settings_mod
   ! SET parmaeters and RATIOS for N/C, P/C, SiO3/C, Fe/C, etc...
   real(r8), parameter :: &
       Q             = 16.0_r8 / 117.0_r8, & !N/C ratio (mmol/mmol) of phyto & zoo
-      Qp_zoo        = c1 / 117.0_r8,      & !P/C ratio (mmol/mmol) zoo
       Qfe_zoo       = 3.0e-6_r8,          & !zooplankton Fe/C ratio
       gQsi_0        = 0.137_r8,           & !initial Si/C ratio for growth
       gQsi_max      = 0.685_r8,           & !max Si/C ratio for growth
@@ -206,6 +205,8 @@ module marbl_settings_mod
   !    parameters with no dependencies on other parameter values
   !-------------------------------------------------------------
 
+  character(len=char_len), target :: PFT_defaults             ! Set up PFT parameters based on known classes, e.g. 'CESM2'
+                                                              ! (or set to 'user-specified' and use put_setting())
   integer(int_kind), target :: autotroph_cnt                  ! number of autotroph classes
   integer(int_kind), target :: zooplankton_cnt                ! number of zooplankton classes
   integer(int_kind), target :: max_grazer_prey_cnt            ! max number of biomass aggregates grazed by a zooplankton class
@@ -297,11 +298,6 @@ module marbl_settings_mod
   integer (int_kind), parameter :: caco3_bury_thres_iopt_fixed_depth = 1
   integer (int_kind), parameter :: caco3_bury_thres_iopt_omega_calc  = 2
 
-  ! grazing functions
-  integer (int_kind), parameter ::           &
-         grz_fnc_michaelis_menten = 1,       &
-         grz_fnc_sigmoidal        = 2
-
   !*****************************************************************************
 
   interface print_single_derived_parm
@@ -320,7 +316,7 @@ module marbl_settings_mod
   private :: get_cnt
   private :: inquire_id
   private :: inquire_metadata
-  private :: log_add_var_error
+  private :: check_and_log_add_var_error
   private :: case_insensitive_eq
   private :: print_single_derived_parm
   private :: print_single_derived_parm_r8
@@ -341,6 +337,7 @@ contains
 
   subroutine marbl_settings_set_defaults_pre_tracers1()
 
+    PFT_defaults                  = 'CESM2'
     autotroph_cnt                 = 3
     zooplankton_cnt               = 1
     max_grazer_prey_cnt           = 3
@@ -395,7 +392,7 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_set_defaults_pre_tracers2'
     character(len=char_len)     :: log_message
-    integer :: m, n
+    integer                     :: m, n
 
     if (.not. all((/allocated(autotrophs), allocated(zooplankton), allocated(grazing)/))) then
       write(log_message, '(A)') 'autotrophs, zooplankton, and grazing have not been allocated!'
@@ -403,196 +400,36 @@ contains
       return
     end if
 
-    do m=1,autotroph_cnt
-      select case (m)
-        case (1)
-          autotrophs(m)%sname = 'sp'
-          autotrophs(m)%lname = 'Small Phyto'
-          autotrophs(m)%Nfixer = .false.
-          autotrophs(m)%imp_calcifier = .true.
-          autotrophs(m)%exp_calcifier = .false.
-          autotrophs(m)%silicifier = .false.
-          autotrophs(m)%kFe             = 0.03e-3_r8
-          autotrophs(m)%kPO4            = 0.005_r8
-          autotrophs(m)%kDOP            = 0.3_r8
-          autotrophs(m)%kNO3            = 0.25_r8
-          autotrophs(m)%kNH4            = 0.01_r8
-          autotrophs(m)%kSiO3           = 0.0_r8
-          autotrophs(m)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
-          autotrophs(m)%gQfe_0          = 35.0e-6_r8
-          autotrophs(m)%gQfe_min        = 3.0e-6_r8
-          autotrophs(m)%alphaPI_per_day = 0.39_r8
-          autotrophs(m)%PCref_per_day   = 5.0_r8
-          autotrophs(m)%thetaN_max      = 2.5_r8
-          autotrophs(m)%loss_thres      = 0.01_r8
-          autotrophs(m)%loss_thres2     = 0.0_r8
-          autotrophs(m)%temp_thres      = -10.0_r8
-          autotrophs(m)%mort_per_day    = 0.1_r8
-          autotrophs(m)%mort2_per_day   = 0.01_r8
-          autotrophs(m)%agg_rate_max    = 0.5_r8
-          autotrophs(m)%agg_rate_min    = 0.01_r8
-          autotrophs(m)%loss_poc        = 0.0_r8
-        case (2)
-          autotrophs(m)%sname = 'diat'
-          autotrophs(m)%lname = 'Diatom'
-          autotrophs(m)%Nfixer = .false.
-          autotrophs(m)%imp_calcifier = .false.
-          autotrophs(m)%exp_calcifier = .false.
-          autotrophs(m)%silicifier = .true.
-          autotrophs(m)%kFe             = 0.06e-3_r8
-          autotrophs(m)%kPO4            = 0.05_r8
-          autotrophs(m)%kDOP            = 0.5_r8
-          autotrophs(m)%kNO3            = 0.5_r8
-          autotrophs(m)%kNH4            = 0.05_r8
-          autotrophs(m)%kSiO3           = 0.7_r8
-          autotrophs(m)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
-          autotrophs(m)%gQfe_0          = 35.0e-6_r8
-          autotrophs(m)%gQfe_min        = 3.0e-6_r8
-          autotrophs(m)%alphaPI_per_day = 0.29_r8
-          autotrophs(m)%PCref_per_day   = 5.0_r8
-          autotrophs(m)%thetaN_max      = 4.0_r8
-          autotrophs(m)%loss_thres      = 0.02_r8
-          autotrophs(m)%loss_thres2     = 0.0_r8
-          autotrophs(m)%temp_thres      = -10.0_r8
-          autotrophs(m)%mort_per_day    = 0.1_r8
-          autotrophs(m)%mort2_per_day   = 0.01_r8
-          autotrophs(m)%agg_rate_max    = 0.5_r8
-          autotrophs(m)%agg_rate_min    = 0.02_r8
-          autotrophs(m)%loss_poc        = 0.0_r8
-        case (3)
-          autotrophs(m)%sname = 'diaz'
-          autotrophs(m)%lname = 'Diazotroph'
-          autotrophs(m)%Nfixer = .true.
-          autotrophs(m)%imp_calcifier = .false.
-          autotrophs(m)%exp_calcifier = .false.
-          autotrophs(m)%silicifier = .false.
-          autotrophs(m)%kFe             = 0.045e-3_r8
-          autotrophs(m)%kPO4            = 0.015_r8
-          autotrophs(m)%kDOP            = 0.075_r8
-          autotrophs(m)%kNO3            = 2.0_r8
-          autotrophs(m)%kNH4            = 0.2_r8
-          autotrophs(m)%kSiO3           = 0.0_r8
-          autotrophs(m)%Qp_fixed        = 0.32_r8 * Qp_zoo   ! only used for lvariable_PtoC=.false.
-          autotrophs(m)%gQfe_0          = 70.0e-6_r8
-          autotrophs(m)%gQfe_min        = 6.0e-6_r8
-          autotrophs(m)%alphaPI_per_day = 0.39_r8
-          autotrophs(m)%PCref_per_day   = 2.2_r8
-          autotrophs(m)%thetaN_max      = 2.5_r8
-          autotrophs(m)%loss_thres      = 0.02_r8
-          autotrophs(m)%loss_thres2     = 0.001_r8
-          autotrophs(m)%temp_thres      = 15.0_r8
-          autotrophs(m)%mort_per_day    = 0.1_r8
-          autotrophs(m)%mort2_per_day   = 0.01_r8
-          autotrophs(m)%agg_rate_max    = 0.5_r8
-          autotrophs(m)%agg_rate_min    = 0.01_r8
-          autotrophs(m)%loss_poc        = 0.0_r8
-        case DEFAULT
-          write(autotrophs(m)%sname,"(A,I3.3)") 'auto', n
-          write(autotrophs(m)%lname,"(A,I0)") 'Autotroph number ', n
-          autotrophs(m)%Nfixer        = .false.
-          autotrophs(m)%imp_calcifier = .false.
-          autotrophs(m)%exp_calcifier = .false.
-          autotrophs(m)%silicifier    = .false.
-          autotrophs(m)%kFe             = c0
-          autotrophs(m)%kPO4            = c0
-          autotrophs(m)%kDOP            = c0
-          autotrophs(m)%kNO3            = c0
-          autotrophs(m)%kNH4            = c0
-          autotrophs(m)%kSiO3           = c0
-          autotrophs(m)%Qp_fixed        = c0
-          autotrophs(m)%gQfe_0          = c0
-          autotrophs(m)%gQfe_min        = c0
-          autotrophs(m)%alphaPI_per_day = c0
-          autotrophs(m)%PCref_per_day   = c0
-          autotrophs(m)%thetaN_max      = c0
-          autotrophs(m)%loss_thres      = c0
-          autotrophs(m)%loss_thres2     = c0
-          autotrophs(m)%temp_thres      = c0
-          autotrophs(m)%mort_per_day    = c0
-          autotrophs(m)%mort2_per_day   = c0
-          autotrophs(m)%agg_rate_max    = c0
-          autotrophs(m)%agg_rate_min    = c0
-          autotrophs(m)%loss_poc        = c0
-        end select
-    end do
-
-    do n=1,zooplankton_cnt
-      select case (n)
-        case (1)
-          zooplankton(1)%sname = 'zoo'
-          zooplankton(1)%lname = 'Zooplankton'
-          zooplankton(n)%z_mort_0_per_day   = 0.1_r8
-          zooplankton(n)%z_mort2_0_per_day  = 0.4_r8
-          zooplankton(n)%loss_thres         = 0.075_r8
-        case DEFAULT
-          write(zooplankton(n)%sname, "(A,I3.3)") 'zoo', n
-          write(zooplankton(n)%lname, "(A,I0)") 'Zooplankton number ', n
-          zooplankton(n)%z_mort_0_per_day   = c0
-          zooplankton(n)%z_mort2_0_per_day  = c0
-          zooplankton(n)%loss_thres         = c0
-      end select
-    end do
-
-    ! predator-prey relationships
-    do n=1,zooplankton_cnt
-      do m=1,max_grazer_prey_cnt
-        select case (1000*n + m)
-          case (1001)
-            grazing(m,n)%sname = 'grz_sp_zoo'
-            grazing(m,n)%lname = 'Grazing of sp by zoo'
-            grazing(m,n)%auto_ind_cnt = 1
-            grazing(m,n)%zoo_ind_cnt = 0
-            grazing(m,n)%z_umax_0_per_day = 3.3_r8
-            grazing(m,n)%z_grz            = 1.2_r8
-            grazing(m,n)%graze_zoo        = 0.3_r8
-            grazing(m,n)%graze_poc        = 0.0_r8
-            grazing(m,n)%graze_doc        = 0.06_r8
-            grazing(m,n)%f_zoo_detr       = 0.12_r8
-            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
-            grazing(m,n)%auto_ind(1) = 1
-          case (1002)
-            grazing(m,n)%sname = 'grz_diat_zoo'
-            grazing(m,n)%lname = 'Grazing of diat by zoo'
-            grazing(m,n)%auto_ind_cnt = 1
-            grazing(m,n)%zoo_ind_cnt = 0
-            grazing(m,n)%z_umax_0_per_day = 3.05_r8
-            grazing(m,n)%z_grz            = 1.2_r8
-            grazing(m,n)%graze_zoo        = 0.25_r8
-            grazing(m,n)%graze_poc        = 0.38_r8
-            grazing(m,n)%graze_doc        = 0.06_r8
-            grazing(m,n)%f_zoo_detr       = 0.24_r8
-            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
-            grazing(m,n)%auto_ind(1) = 2
-          case (1003)
-            grazing(m,n)%sname = 'grz_diaz_zoo'
-            grazing(m,n)%lname = 'Grazing of diaz by zoo'
-            grazing(m,n)%auto_ind_cnt = 1
-            grazing(m,n)%zoo_ind_cnt = 0
-            grazing(m,n)%z_umax_0_per_day = 3.1_r8
-            grazing(m,n)%z_grz            = 1.2_r8
-            grazing(m,n)%graze_zoo        = 0.3_r8
-            grazing(m,n)%graze_poc        = 0.1_r8
-            grazing(m,n)%graze_doc        = 0.06_r8
-            grazing(m,n)%f_zoo_detr       = 0.12_r8
-            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
-            grazing(m,n)%auto_ind(1) = 3
-          case DEFAULT
-            write(grazing(m,n)%sname, "(A,I3.3,A,I3.3)") 'grz_', m, '_', n
-            write(grazing(m,n)%lname, "(A,I0,A,I0)") 'Grazing of prey class ', m, ' by grazer ', n
-            grazing(m,n)%auto_ind_cnt = 0
-            grazing(m,n)%zoo_ind_cnt  = 0
-            grazing(m,n)%auto_ind     = -1
-            grazing(m,n)%zoo_ind      = -1
-            grazing(m,n)%z_umax_0_per_day = c0
-            grazing(m,n)%z_grz            = c0
-            grazing(m,n)%graze_zoo        = c0
-            grazing(m,n)%graze_poc        = c0
-            grazing(m,n)%graze_doc        = c0
-            grazing(m,n)%f_zoo_detr       = c0
-            grazing(m,n)%grazing_function = grz_fnc_michaelis_menten
-        end select
-      end do
-    end do
+    select case (trim(PFT_defaults))
+      case ('CESM2')
+        call autotrophs(1)%set_to_default('sp', marbl_status_log)
+        call autotrophs(2)%set_to_default('diat', marbl_status_log)
+        call autotrophs(3)%set_to_default('diaz', marbl_status_log)
+        call zooplankton(1)%set_to_default('zoo', marbl_status_log)
+        call grazing(1,1)%set_to_default('sp_zoo', marbl_status_log)
+        call grazing(2,1)%set_to_default('diat_zoo', marbl_status_log)
+        call grazing(3,1)%set_to_default('diaz_zoo', marbl_status_log)
+      case ('user-specified')
+        do m=1,autotroph_cnt
+          call autotrophs(m)%set_to_default('unset', marbl_status_log)
+        end do
+        do n=1,zooplankton_cnt
+          call zooplankton(n)%set_to_default('unset', marbl_status_log)
+        end do
+        do n=1,zooplankton_cnt
+          do m=1,max_grazer_prey_cnt
+            call grazing(m,n)%set_to_default('unset', marbl_status_log)
+          end do
+        end do
+      case DEFAULT
+        write(log_message, "(3A)") "'", trim(PFT_defaults), "' is not a valid value for PFT_defaults"
+        call marbl_status_log%log_error(log_message, subname)
+        return
+    end select
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('PFT set_to_default()', subname)
+      return
+    end if
 
   end subroutine marbl_settings_set_defaults_pre_tracers2
 
@@ -645,6 +482,7 @@ contains
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
     integer                          :: m,n
+    logical                          :: labort_marbl_loc
 
     if (associated(this%vars)) then
       write(log_message, "(A)") "this%settings has been constructed already"
@@ -652,66 +490,54 @@ contains
       return
     end if
     allocate(this%categories(0))
+    labort_marbl_loc = .false.
 
     ! ----------------------
-    category = 'config ints'
+    category = 'config PFTs'
     ! ----------------------
+
+    sname     = 'PFT_defaults'
+    lname     = 'Define how PFTs are initialized'
+    units     = 'unitless'
+    datatype  = 'string'
+    sptr      => PFT_defaults
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, sptr=sptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'autotroph_cnt'
     lname     = 'Number of autotroph classes'
     units     = 'unitless'
     datatype  = 'integer'
     iptr      => autotroph_cnt
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, iptr=iptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-    ! FIXME #69: this is not ideal for threaded runs
-    if (.not. allocated(autotrophs)) &
-      allocate(autotrophs(autotroph_cnt))
+    call this%add_var(sname, lname, units, datatype, category,         &
+                        marbl_status_log, iptr=iptr,                   &
+                        editable=(PFT_defaults .eq. "user-specified"), &
+                        must_be_put=(PFT_defaults .eq. "user-specified"))
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'zooplankton_cnt'
     lname     = 'Number of zooplankton classes'
     units     = 'unitless'
     datatype  = 'integer'
     iptr      => zooplankton_cnt
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, iptr=iptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-    ! FIXME #69: this is not ideal for threaded runs
-    if (.not. allocated(zooplankton)) &
-      allocate(zooplankton(zooplankton_cnt))
+    call this%add_var(sname, lname, units, datatype, category,         &
+                        marbl_status_log, iptr=iptr,                   &
+                        editable=(PFT_defaults .eq. "user-specified"), &
+                        must_be_put=(PFT_defaults .eq. "user-specified"))
+
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'max_grazer_prey_cnt'
     lname     = 'Number of grazer prey classes'
     units     = 'unitless'
     datatype  = 'integer'
     iptr      => max_grazer_prey_cnt
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, iptr=iptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
-    ! FIXME #69: this is not ideal for threaded runs
-    if (.not. allocated(grazing)) then
-      allocate(grazing(max_grazer_prey_cnt, zooplankton_cnt))
-      do n=1,zooplankton_cnt
-        do m=1,max_grazer_prey_cnt
-          call grazing(m,n)%construct(autotroph_cnt, zooplankton_cnt, marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
-            call marbl_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-        end do
-      end do
-    end if
+    call this%add_var(sname, lname, units, datatype, category,         &
+                        marbl_status_log, iptr=iptr,                   &
+                        editable=(PFT_defaults .eq. "user-specified"), &
+                        must_be_put=(PFT_defaults .eq. "user-specified"))
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     ! -----------------------
     category = 'config flags'
@@ -724,10 +550,7 @@ contains
     lptr      => ciso_on
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'lsource_sink'
     lname     = 'Control which portions of code are executed (useful for debugging)'
@@ -736,10 +559,7 @@ contains
     lptr      => lsource_sink
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'lecovars_full_depth_tavg'
     lname     = 'Are base ecosystem tracers full depth?'
@@ -748,10 +568,7 @@ contains
     lptr      => lecovars_full_depth_tavg
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'ciso_lsource_sink'
     lname     = 'Control which portions of carbon isotope code are executed (useful for debugging)'
@@ -760,10 +577,7 @@ contains
     lptr      => ciso_lsource_sink
     call this%add_var(sname, lname, units, datatype, category,       &
                       marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'ciso_lecovars_full_depth_tavg'
     lname     = 'Are carbon isotope tracers full depth?'
@@ -772,10 +586,7 @@ contains
     lptr      => ciso_lecovars_full_depth_tavg
     call this%add_var(sname, lname, units, datatype, category,       &
                       marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'lflux_gas_o2'
     lname     = 'Run O2 gas flux portion of the code'
@@ -784,10 +595,7 @@ contains
     lptr      => lflux_gas_o2
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'lflux_gas_co2'
     lname     = 'Run CO2 gas flux portion of the code'
@@ -796,10 +604,7 @@ contains
     lptr      => lflux_gas_co2
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'lcompute_nhx_surface_emis'
     lname     = 'control if NHx emissions are computed'
@@ -808,10 +613,7 @@ contains
     lptr      => lcompute_nhx_surface_emis
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'lvariable_PtoC'
     lname     = 'control if PtoC ratios in autotrophs vary'
@@ -820,10 +622,7 @@ contains
     lptr      => lvariable_PtoC
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'ladjust_bury_coeff'
     lname     = 'Adjust the bury coefficient to maintain equilibrium'
@@ -832,10 +631,7 @@ contains
     lptr      => ladjust_bury_coeff
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     ! --------------------------
     category  = 'config strings'
@@ -848,10 +644,7 @@ contains
     sptr      => init_bury_coeff_opt
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     ! -----------------------------
     category  = 'general parmeters'
@@ -864,10 +657,7 @@ contains
     rptr      => parm_Fe_bioavail
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_o2_min'
     lname     = 'Minimum O2 needed for production and consumption'
@@ -876,10 +666,7 @@ contains
     rptr      => parm_o2_min
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_o2_min_delta'
     lname     = 'Width of minimum O2 range'
@@ -888,10 +675,7 @@ contains
     rptr      => parm_o2_min_delta
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_kappa_nitrif_per_day'
     lname     = 'Nitrification inverse time constant'
@@ -900,10 +684,7 @@ contains
     rptr      => parm_kappa_nitrif_per_day
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_nitrif_par_lim'
     lname     = 'PAR limit for nitrification'
@@ -912,10 +693,7 @@ contains
     rptr      => parm_nitrif_par_lim
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_labile_ratio'
     lname     = 'Fraction of loss to DOC that is routed directly to DIC'
@@ -924,10 +702,7 @@ contains
     rptr      => parm_labile_ratio
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_init_POC_bury_coeff'
     lname     = 'initial scale factor for burial of POC, PON'
@@ -936,10 +711,7 @@ contains
     rptr      => parm_init_POC_bury_coeff
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_init_POP_bury_coeff'
     lname     = 'initial scale factor for burial of POP'
@@ -948,10 +720,7 @@ contains
     rptr      => parm_init_POP_bury_coeff
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_init_bSi_bury_coeff'
     lname     = 'initial scale factor for burial of bSi'
@@ -960,10 +729,7 @@ contains
     rptr      => parm_init_bSi_bury_coeff
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_Fe_scavenge_rate0'
     lname     = 'scavenging base rate for Fe'
@@ -972,10 +738,7 @@ contains
     rptr      => parm_Fe_scavenge_rate0
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_Lig_scavenge_rate0'
     lname     = 'scavenging base rate for bound ligand'
@@ -984,10 +747,7 @@ contains
     rptr      => parm_Lig_scavenge_rate0
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_FeLig_scavenge_rate0'
     lname     = 'scavenging base rate for bound iron'
@@ -996,10 +756,7 @@ contains
     rptr      => parm_FeLig_scavenge_rate0
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_Lig_degrade_rate0'
     lname     = 'Fe-binding ligand bacterial degradation rate coefficient'
@@ -1008,10 +765,7 @@ contains
     rptr      => parm_Lig_degrade_rate0
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_Fe_desorption_rate0'
     lname     = 'desorption rate for scavenged Fe from particles'
@@ -1020,10 +774,7 @@ contains
     rptr      => parm_Fe_desorption_rate0
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_f_prod_sp_CaCO3'
     lname     = 'Fraction of sp production as CaCO3 production'
@@ -1032,10 +783,7 @@ contains
     rptr      => parm_f_prod_sp_CaCO3
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_POC_diss'
     lname     = 'base POC dissolution length scale'
@@ -1044,10 +792,7 @@ contains
     rptr      => parm_POC_diss
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_SiO2_diss'
     lname     = 'base SiO2 dissolution length scale'
@@ -1056,10 +801,7 @@ contains
     rptr      => parm_SiO2_diss
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_CaCO3_diss'
     lname     = 'base CaCO3 dissolution length scale'
@@ -1068,10 +810,7 @@ contains
     rptr      => parm_CaCO3_diss
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_sed_denitrif_coeff'
     lname     = 'global scaling factor for sed_denitrif'
@@ -1080,10 +819,7 @@ contains
     rptr      => parm_sed_denitrif_coeff
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'bury_coeff_rmean_timescale_years'
     lname     = 'Timescale for bury coefficient running means'
@@ -1092,10 +828,7 @@ contains
     rptr      => bury_coeff_rmean_timescale_years
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     ! -------------------------
     category  = 'Scale lengths'
@@ -1106,20 +839,14 @@ contains
     units     = 'cm'
     call this%add_var_1d_r8(sname, lname, units, category,             &
                               parm_scalelen_z, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_scalelen_vals'
     lname     = 'Prescribed scale length values'
     units     = 'cm'
     call this%add_var_1d_r8(sname, lname, units, category,             &
                               parm_scalelen_vals, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_var_1d_r8', subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     ! -----------------------------
     category  = 'general parmeters'
@@ -1132,10 +859,7 @@ contains
     rptr      => iron_frac_in_dust
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'iron_frac_in_bc'
     lname     = 'Fraction by weight of iron in black carbon'
@@ -1144,10 +868,7 @@ contains
     rptr      => iron_frac_in_bc
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'caco3_bury_thres_opt'
     lname     = 'Option for CaCO3 burial threshold'
@@ -1156,10 +877,7 @@ contains
     sptr      => caco3_bury_thres_opt
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'caco3_bury_thres_depth'
     lname     = 'Threshold depth for CaCO3 burial (if using fixed_depth option)'
@@ -1168,10 +886,7 @@ contains
     rptr      => caco3_bury_thres_depth
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'PON_bury_coeff'
     lname     = 'scale factor for burial of PON'
@@ -1180,10 +895,7 @@ contains
     rptr      => PON_bury_coeff
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'ciso_fract_factors'
     lname     = 'Option for which biological fractionation calculation to use'
@@ -1192,9 +904,28 @@ contains
     sptr      => ciso_fract_factors
     call this%add_var(sname, lname, units, datatype, category,       &
                       marbl_status_log, sptr=sptr)
-    if (marbl_status_log%labort_marbl) then
-      call log_add_var_error(marbl_status_log, sname, subname)
-      return
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    marbl_status_log%labort_marbl = labort_marbl_loc
+    if (marbl_status_log%labort_marbl) return
+
+    ! FIXME #69: this is not ideal for threaded runs
+    if (.not. allocated(autotrophs)) &
+      allocate(autotrophs(autotroph_cnt))
+    if (.not. allocated(zooplankton)) &
+      allocate(zooplankton(zooplankton_cnt))
+    if (.not. allocated(grazing)) then
+      allocate(grazing(max_grazer_prey_cnt, zooplankton_cnt))
+      do n=1,zooplankton_cnt
+        do m=1,max_grazer_prey_cnt
+          call grazing(m,n)%construct(autotroph_cnt, zooplankton_cnt, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
+            call marbl_status_log%log_error_trace(log_message, subname)
+            return
+          end if
+        end do
+      end do
     end if
 
   end subroutine marbl_settings_define_pre_tracers1
@@ -1215,9 +946,11 @@ contains
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
 
+    logical :: labort_marbl_loc
     integer :: m, n, cnt
     character(len=char_len) :: prefix
 
+    labort_marbl_loc = .false.
     do n=1,autotroph_cnt
       write(prefix, "(A,I0,A)") 'autotrophs(', n, ')%'
       write(category, "(A,1X,I0)") 'autotroph', n
@@ -1228,11 +961,9 @@ contains
       datatype = 'string'
       sptr     => autotrophs(n)%sname
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, sptr=sptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'lname'
       lname    = 'Long name of autotroph'
@@ -1240,11 +971,9 @@ contains
       datatype = 'string'
       sptr     => autotrophs(n)%lname
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, sptr=sptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'Nfixer'
       lname    = 'Flag is true if this autotroph fixes N2'
@@ -1252,11 +981,9 @@ contains
       datatype = 'logical'
       lptr     => autotrophs(n)%Nfixer
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, lptr=lptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, lptr=lptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'imp_calcifier'
       lname    = 'Flag is true if this autotroph implicitly handles calcification'
@@ -1264,11 +991,9 @@ contains
       datatype = 'logical'
       lptr     => autotrophs(n)%imp_calcifier
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, lptr=lptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, lptr=lptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'exp_calcifier'
       lname    = 'Flag is true if this autotroph explicitly handles calcification'
@@ -1276,11 +1001,9 @@ contains
       datatype = 'logical'
       lptr     => autotrophs(n)%exp_calcifier
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, lptr=lptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, lptr=lptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'silicifier'
       lname    = 'Flag is true if this autotroph is a silicifier'
@@ -1288,11 +1011,9 @@ contains
       datatype = 'logical'
       lptr     => autotrophs(n)%silicifier
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, lptr=lptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, lptr=lptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'kFe'
       lname    = 'nutrient uptake half-sat constants'
@@ -1300,11 +1021,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%kFe
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'kPO4'
       lname    = 'nutrient uptake half-sat constants'
@@ -1312,11 +1031,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%kPO4
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'kDOP'
       lname    = 'nutrient uptake half-sat constants'
@@ -1324,11 +1041,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%kDOP
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'kNO3'
       lname    = 'nutrient uptake half-sat constants'
@@ -1336,11 +1051,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%kNO3
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'kNH4'
       lname    = 'nutrient uptake half-sat constants'
@@ -1348,11 +1061,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%kNH4
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'kSiO3'
       lname    = 'nutrient uptake half-sat constants'
@@ -1360,11 +1071,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%kSiO3
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'Qp_fixed'
       lname    = 'P/C ratio when using fixed P/C ratios'
@@ -1372,11 +1081,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%Qp_fixed
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'gQfe_0'
       lname    = 'initial Fe/C ratio for growth'
@@ -1384,11 +1091,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%gQFe_0
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'gQfe_min'
       lname    = 'minimum Fe/C ratio for growth'
@@ -1396,11 +1101,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%gQFe_min
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'alphaPi_per_day'
       lname    = 'Initial slope of P_I curve (GD98)'
@@ -1408,11 +1111,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%alphaPi_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'PCref_per_day'
       lname    = 'max C-spec growth rate at Tref'
@@ -1420,11 +1121,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%PCref_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'thetaN_max'
       lname    = 'max thetaN (Chl/N)'
@@ -1432,11 +1131,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%thetaN_max
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'loss_thres'
       lname    = 'concentration where losses go to zero'
@@ -1444,11 +1141,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%loss_thres
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'loss_thres2'
       lname    = 'concentration where losses go to zero'
@@ -1456,11 +1151,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%loss_thres2
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'temp_thres'
       lname    = 'Temperature where concentration threshold and photosynthesis rate drop'
@@ -1468,11 +1161,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%temp_thres
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'mort_per_day'
       lname    = 'linear mortality rate'
@@ -1480,11 +1171,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%mort_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'mort2_per_day'
       lname    = 'quadratic mortality rate'
@@ -1492,11 +1181,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%mort2_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'agg_rate_max'
       lname    = 'Maximum agg rate'
@@ -1504,11 +1191,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%agg_rate_max
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'agg_rate_min'
       lname    = 'Minimum agg rate'
@@ -1516,11 +1201,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%agg_rate_min
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'loss_poc'
       lname    = 'routing of loss term'
@@ -1528,11 +1211,9 @@ contains
       datatype = 'real'
       rptr     => autotrophs(n)%loss_poc
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     end do
 
@@ -1546,11 +1227,9 @@ contains
       datatype = 'string'
       sptr     => zooplankton(n)%sname
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, sptr=sptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'lname'
       lname    = 'Long name of zooplankton'
@@ -1558,11 +1237,9 @@ contains
       datatype = 'string'
       sptr     => zooplankton(n)%lname
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, sptr=sptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'z_mort_0_per_day'
       lname    = 'Linear mortality rate'
@@ -1570,11 +1247,9 @@ contains
       datatype = 'real'
       rptr     => zooplankton(n)%z_mort_0_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'loss_thres'
       lname    = 'Concentration where losses go to zero'
@@ -1582,11 +1257,9 @@ contains
       datatype = 'real'
       rptr     => zooplankton(n)%loss_thres
       call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'z_mort2_0_per_day'
       lname    = 'Quadratic mortality rate'
@@ -1594,11 +1267,9 @@ contains
       datatype = 'real'
       rptr     => zooplankton(n)%z_mort2_0_per_day
       call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname, subname)
-        return
-      end if
+                        marbl_status_log, rptr=rptr,                 &
+                        must_be_put=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     end do
 
@@ -1613,11 +1284,9 @@ contains
         datatype = 'string'
         sptr     => grazing(m,n)%sname
         call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, sptr=sptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
+                          marbl_status_log, sptr=sptr,                 &
+                          must_be_put=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'lname'
         lname    = 'Long name of grazer'
@@ -1625,11 +1294,9 @@ contains
         datatype = 'string'
         sptr     => grazing(m,n)%lname
         call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, sptr=sptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
+                          marbl_status_log, sptr=sptr,                 &
+                          must_be_put=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'auto_ind_cnt'
         lname    = 'number of autotrophs in prey-clase auto_ind'
@@ -1637,11 +1304,9 @@ contains
         datatype = 'integer'
         iptr     => grazing(m,n)%auto_ind_cnt
         call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, iptr=iptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
+                          marbl_status_log, iptr=iptr,                 &
+                          must_be_put=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'zoo_ind_cnt'
         lname    = 'number of zooplankton in prey-clase auto_ind'
@@ -1649,11 +1314,9 @@ contains
         datatype = 'integer'
         iptr     => grazing(m,n)%zoo_ind_cnt
         call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, iptr=iptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
+                          marbl_status_log, iptr=iptr,                 &
+                          must_be_put=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'grazing_function'
         lname    = 'functional form of grazing parmaeterization'
@@ -1661,11 +1324,9 @@ contains
         datatype = 'integer'
         iptr     => grazing(m,n)%grazing_function
         call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, iptr=iptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
+                          marbl_status_log, iptr=iptr,                 &
+                          must_be_put=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'z_umax_0_per_day'
         lname    = 'max zoo growth rate at Tref'
@@ -1673,11 +1334,9 @@ contains
         datatype = 'real'
         rptr     => grazing(m,n)%z_umax_0_per_day
         call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, rptr=rptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
+                          marbl_status_log, rptr=rptr,                 &
+                          must_be_put=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'z_grz'
         lname    = 'Grazing coefficient'
@@ -1685,11 +1344,9 @@ contains
         datatype = 'real'
         rptr     => grazing(m,n)%z_grz
         call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, rptr=rptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
+                          marbl_status_log, rptr=rptr,                 &
+                          must_be_put=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'graze_zoo'
         lname    = 'routing of grazed term (remainder goes to DIC)'
@@ -1697,11 +1354,9 @@ contains
         datatype = 'real'
         rptr     => grazing(m,n)%graze_zoo
         call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, rptr=rptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
+                          marbl_status_log, rptr=rptr,                 &
+                          must_be_put=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'graze_poc'
         lname    = 'routing of grazed term (remainder goes to DIC)'
@@ -1709,11 +1364,9 @@ contains
         datatype = 'real'
         rptr     => grazing(m,n)%graze_poc
         call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, rptr=rptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
+                          marbl_status_log, rptr=rptr,                 &
+                          must_be_put=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'graze_doc'
         lname    = 'routing of grazed term (remainder goes to DIC)'
@@ -1721,11 +1374,9 @@ contains
         datatype = 'real'
         rptr     => grazing(m,n)%graze_doc
         call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, rptr=rptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
+                          marbl_status_log, rptr=rptr,                 &
+                          must_be_put=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'f_zoo_detr'
         lname    = 'Fraction of zoo losses to detrital'
@@ -1733,11 +1384,9 @@ contains
         datatype = 'real'
         rptr     => grazing(m,n)%f_zoo_detr
         call this%add_var(sname, lname, units, datatype, category,     &
-                          marbl_status_log, rptr=rptr)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_var_error(marbl_status_log, sname, subname)
-          return
-        end if
+                          marbl_status_log, rptr=rptr,                 &
+                          must_be_put=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         cnt = grazing(m,n)%auto_ind_cnt
         if (cnt .gt. 0) then
@@ -1746,11 +1395,9 @@ contains
           units     = 'unitless'
           call this%add_var_1d_int(sname, lname, units, category,      &
                             grazing(m,n)%auto_ind(1:cnt),              &
-                            marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_status_log%log_error_trace('add_var_1d_int', subname)
-            return
-          end if
+                            marbl_status_log,                 &
+                            must_be_put=(PFT_defaults .eq. 'user-specified'))
+          call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
         end if
 
         cnt = grazing(m,n)%zoo_ind_cnt
@@ -1760,15 +1407,16 @@ contains
           units     = 'unitless'
           call this%add_var_1d_int(sname, lname, units, category,      &
                                    grazing(m,n)%zoo_ind(1:cnt),        &
-                                   marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_status_log%log_error_trace('add_var_1d_int', subname)
-            return
-          end if
+                                   marbl_status_log,                 &
+                                   must_be_put=(PFT_defaults .eq. 'user-specified'))
+          call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
         end if
 
       end do
     end do
+
+    marbl_status_log%labort_marbl = labort_marbl_loc
+    if (marbl_status_log%labort_marbl) return
 
   end subroutine marbl_settings_define_pre_tracers2
 
@@ -1781,7 +1429,9 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_define_post_tracers'
     character(len=char_len) :: sname, lname, units, category
+    logical                 :: labort_marbl_loc
 
+    labort_marbl_loc = .false.
     ! ----------------------------
     category  = 'tracer restoring'
     ! ----------------------------
@@ -1791,10 +1441,10 @@ contains
     units     = 'unitless'
     call this%add_var_1d_str(sname, lname, units, category,            &
                                tracer_restore_vars, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('add_var_1d_str', subname)
-      return
-    end if
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    marbl_status_log%labort_marbl = labort_marbl_loc
+    if (marbl_status_log%labort_marbl) return
 
   end subroutine marbl_settings_define_post_tracers
 
@@ -1964,6 +1614,7 @@ contains
         return
       end if
       sval = value(2:last_char-1)
+
     end if
 
   end subroutine marbl_settings_string_to_var
@@ -1971,7 +1622,10 @@ contains
 !*****************************************************************************
 
   subroutine add_var(this, sname, lname, units, datatype, category,    &
-                     marbl_status_log, rptr, iptr, lptr, sptr, comment)
+                     marbl_status_log, rptr, iptr, lptr, sptr,         &
+                     editable, must_be_put, comment)
+! nondefault_allowed
+! nondefault_required
 
     class(marbl_settings_type),                 intent(inout) :: this
     character(len=*),                           intent(in)    :: sname
@@ -1980,19 +1634,41 @@ contains
     character(len=*),                           intent(in)    :: datatype
     character(len=*),                           intent(in)    :: category
     type(marbl_log_type),                       intent(inout) :: marbl_status_log
-    real(r8),                optional, pointer, intent(in) :: rptr
-    integer,                 optional, pointer, intent(in) :: iptr
-    logical,                 optional, pointer, intent(in) :: lptr
-    character(len=char_len), optional, pointer, intent(in) :: sptr
-    character(len=char_len), optional,          intent(in) :: comment
+    real(r8),                optional, pointer, intent(in)    :: rptr
+    integer,                 optional, pointer, intent(in)    :: iptr
+    logical,                 optional, pointer, intent(in)    :: lptr
+    character(len=char_len), optional, pointer, intent(in)    :: sptr
+    logical,                 optional,          intent(in)    :: editable
+    logical,                 optional,          intent(in)    :: must_be_put
+    character(len=char_len), optional,          intent(in)    :: comment
 
     character(len=*), parameter :: subname = 'marbl_settings_mod:add_var'
 
     type(marbl_single_setting_ll_type), pointer :: new_entry, ll_ptr, ll_prev
     character(len=char_len), dimension(:), pointer :: new_categories
     integer :: cat_ind, n
-    character(len=char_len) :: log_message, alternate_sname
-    logical :: put_success
+    character(len=char_len) :: log_message, alternate_sname, tmp_sval
+    logical :: put_success, datatype_match, edit_attempt
+    logical :: allow_edit, require_put, put_called
+
+    if (present(editable)) then
+      allow_edit = editable
+    else
+      allow_edit = .true.
+    end if
+
+    if (present(must_be_put)) then
+      require_put = must_be_put
+    else
+      require_put = .false.
+    end if
+
+    if (require_put .and. (.not. allow_edit)) then
+      write(log_message, "(A)") "Variable ", trim(sname), &
+            " requires user to set a value but does not allow value to change"
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
 
     ! 1) Determine category ID
     do cat_ind = 1, size(this%categories)
@@ -2126,52 +1802,86 @@ contains
         alternate_sname = new_entry%short_name(1:len_trim(new_entry%short_name)-3)
       end if
     end if
+    put_called = .false.
     do while (associated(ll_ptr))
       if (case_insensitive_eq(ll_ptr%short_name, new_entry%short_name) .or. &
           case_insensitive_eq(ll_ptr%short_name, alternate_sname)) then
-        ! 5a) Update variable value
+        put_called = .true.
+        ! 5a) Look to see if put_setting used the inputline interface
         if (trim(ll_ptr%datatype) .eq. "unknown") then
           select case (new_entry%datatype)
             case ("real")
-              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, rval = new_entry%rptr)
+              allocate(ll_ptr%rptr)
+              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, rval = ll_ptr%rptr)
             case ("integer")
-              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, ival = new_entry%iptr)
+              allocate(ll_ptr%iptr)
+              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, ival = ll_ptr%iptr)
             case ("string")
-              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, sval = new_entry%sptr)
+              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, sval = tmp_sval)
+              ll_ptr%sptr = tmp_sval
             case ("logical")
-              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, lval = new_entry%lptr)
+              allocate(ll_ptr%lptr)
+              call marbl_settings_string_to_var(ll_ptr%sptr, marbl_status_log, lval = ll_ptr%lptr)
           end select
           if (marbl_status_log%labort_marbl) then
             call marbl_status_log%log_error_trace('marbl_settings_string_to_var', subname)
             return
           end if
-        else
-          if (associated(ll_ptr%iptr).and.associated(new_entry%rptr)) then
-            new_entry%rptr = real(ll_ptr%iptr,r8)
-          else
-            select case (new_entry%datatype)
-              case ("real")
-                put_success = associated(ll_ptr%rptr)
-                if (put_success) new_entry%rptr = ll_ptr%rptr
-              case ("integer")
-                put_success = associated(ll_ptr%iptr)
-                if (put_success) new_entry%iptr = ll_ptr%iptr
-              case ("string")
-                put_success = associated(ll_ptr%sptr)
-                if (put_success) new_entry%sptr = ll_ptr%sptr
-              case ("logical")
-                put_success = associated(ll_ptr%lptr)
-                if (put_success) new_entry%lptr = ll_ptr%lptr
-            end select
-            ! Abort if the put() failed
-            if (.not.put_success) then
-              write(log_message, "(6A)") "put_setting(", trim(ll_ptr%short_name), &
-                                 ") failed because the datatype was incorrect; expecting ", &
-                                 trim(new_entry%datatype), " but user provided ", &
-                                 trim(ll_ptr%datatype)
-              call marbl_status_log%log_error(log_message, subname)
-            end if
+          ll_ptr%datatype = new_entry%datatype
+        end if
+        ! 5b) Look to see if an integer value was explicitly put for a real variable
+        if (associated(ll_ptr%iptr).and.associated(new_entry%rptr)) then
+          allocate(ll_ptr%rptr)
+          ll_ptr%rptr = real(ll_ptr%iptr,r8)
+        end if
+        ! 5c) Actually update the new entry in the linked list
+        edit_attempt = .false.
+        select case (new_entry%datatype)
+          case ("real")
+            ! Allow update if the datatypes match and either the variable is editable or the values are the same
+            datatype_match = associated(ll_ptr%rptr)
+            if (datatype_match) &
+              edit_attempt = .not. (ll_ptr%rptr .eq. new_entry%rptr)
+            put_success = (datatype_match .and. (allow_edit .or. (.not. edit_attempt)))
+            if (put_success) new_entry%rptr = ll_ptr%rptr
+          case ("integer")
+            ! Allow update if the datatypes match and either the variable is editable or the values are the same
+            datatype_match = associated(ll_ptr%iptr)
+            if (datatype_match) &
+              edit_attempt = .not. (ll_ptr%iptr .eq. new_entry%iptr)
+            put_success = (datatype_match .and. (allow_edit .or. (.not. edit_attempt)))
+            if (put_success) new_entry%iptr = ll_ptr%iptr
+          case ("string")
+            ! Allow update if the datatypes match and either the variable is editable or the values are the same
+            datatype_match = associated(ll_ptr%sptr)
+            if (datatype_match) &
+              edit_attempt = .not. (ll_ptr%sptr .eq. new_entry%sptr)
+            put_success = (datatype_match .and. (allow_edit .or. (.not. edit_attempt)))
+            if (put_success) new_entry%sptr = ll_ptr%sptr
+          case ("logical")
+            ! Allow update if the datatypes match and either the variable is editable or the values are the same
+            datatype_match = associated(ll_ptr%lptr)
+            if (datatype_match) &
+              edit_attempt = .not. (ll_ptr%lptr .eqv. new_entry%lptr)
+            put_success = (datatype_match .and. (allow_edit .or. (.not. edit_attempt)))
+            if (put_success) new_entry%lptr = ll_ptr%lptr
+        end select
+        ! Abort if the put() failed
+        if (.not. put_success) then
+            write(log_message, "(3A)") "put_setting(", trim(ll_ptr%short_name), ") failed..."
+            call marbl_status_log%log_error(log_message, subname)
+          if (.not. datatype_match) then
+            write(log_message, "(4A)") "...the datatype was incorrect; expecting ", &
+                                       trim(new_entry%datatype), " but user provided ", &
+                                       trim(ll_ptr%datatype)
+            call marbl_status_log%log_error(log_message, subname)
           end if
+          if (edit_attempt .and. (.not. allow_edit)) then
+            write(log_message, "(3A)") "... ", trim(ll_ptr%short_name), &
+                                       " can not be changed in the current configuration"
+            call marbl_status_log%log_error(log_message, subname)
+          end if
+          return
         end if
 
         ! 5b) Remove entry from VarsFromPut list
@@ -2186,11 +1896,17 @@ contains
           ll_ptr => ll_prev%next
         end if
       else
-        ! Once we are past first entry, ll_prev%next => ll_ptr
+        ! 5c) Once we are past first entry, ll_prev%next => ll_ptr
         ll_prev => ll_ptr
         ll_ptr => ll_ptr%next
       end if
     end do
+    ! 5d) Error checking: was put_setting() called if variable requires it?
+    if (require_put .and. (.not. put_called)) then
+      write(log_message, "(3A)") "User must provide value for ", trim(sname), " via put_setting()"
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
 
     ! 6) Increment count
     this%cnt = this%cnt + 1
@@ -2199,8 +1915,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine add_var_1d_r8(this, sname, lname, units, category,        &
-                           r8array, marbl_status_log)
+  subroutine add_var_1d_r8(this, sname, lname, units, category,              &
+                           r8array, marbl_status_log, editable, must_be_put)
 
     class(marbl_settings_type),          intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
@@ -2209,30 +1925,35 @@ contains
     character(len=char_len),             intent(in)    :: category
     real(kind=r8), dimension(:), target, intent(in)    :: r8array
     type(marbl_log_type),                intent(inout) :: marbl_status_log
+    logical, optional,                   intent(in)    :: editable
+    logical, optional,                   intent(in)    :: must_be_put
 
     character(len=*), parameter :: subname = 'marbl_settings_mod:add_var_1d_r8'
 
     character(len=char_len) :: sname_loc
     real(r8), pointer       :: rptr => NULL()
     integer                 :: n
+    logical                 :: labort_marbl_loc
 
+    labort_marbl_loc = .false.
     do n=1,size(r8array)
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       rptr => r8array(n)
-      call this%add_var(sname_loc, lname, units, 'real', category,     &
-                          marbl_status_log, rptr=rptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname_loc, subname)
-        return
-      end if
+      call this%add_var(sname_loc, lname, units, 'real', category,        &
+                          marbl_status_log, rptr=rptr, editable=editable, &
+                          must_be_put=must_be_put)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
     end do
+
+    marbl_status_log%labort_marbl = labort_marbl_loc
+    if (marbl_status_log%labort_marbl) return
 
   end subroutine add_var_1d_r8
 
   !*****************************************************************************
 
-  subroutine add_var_1d_int(this, sname, lname, units, category,       &
-                            intarray, marbl_status_log)
+  subroutine add_var_1d_int(this, sname, lname, units, category,               &
+                            intarray, marbl_status_log, editable, must_be_put)
 
     class(marbl_settings_type),          intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
@@ -2241,30 +1962,35 @@ contains
     character(len=char_len),             intent(in)    :: category
     integer, dimension(:), target,       intent(in)    :: intarray
     type(marbl_log_type),                intent(inout) :: marbl_status_log
+    logical, optional,                   intent(in)    :: editable
+    logical, optional,                   intent(in)    :: must_be_put
 
     character(len=*), parameter :: subname = 'marbl_settings_mod:add_var_1d_int'
 
     character(len=char_len) :: sname_loc
     integer, pointer        :: iptr => NULL()
     integer                 :: n
+    logical                 :: labort_marbl_loc
 
+    labort_marbl_loc = .false.
     do n=1,size(intarray)
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       iptr => intarray(n)
-      call this%add_var(sname_loc, lname, units, 'integer', category,  &
-                          marbl_status_log, iptr=iptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname_loc, subname)
-        return
-      end if
+      call this%add_var(sname_loc, lname, units, 'integer', category,     &
+                          marbl_status_log, iptr=iptr, editable=editable, &
+                          must_be_put=must_be_put)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
     end do
+
+    marbl_status_log%labort_marbl = labort_marbl_loc
+    if (marbl_status_log%labort_marbl) return
 
   end subroutine add_var_1d_int
 
   !*****************************************************************************
 
-  subroutine add_var_1d_str(this, sname, lname, units, category,       &
-                            strarray, marbl_status_log)
+  subroutine add_var_1d_str(this, sname, lname, units, category,               &
+                            strarray, marbl_status_log, editable, must_be_put)
 
     class(marbl_settings_type),          intent(inout) :: this
     character(len=char_len),             intent(in)    :: sname
@@ -2273,23 +1999,28 @@ contains
     character(len=char_len),             intent(in)    :: category
     character(len=char_len),     target, intent(in)    :: strarray(:)
     type(marbl_log_type),                intent(inout) :: marbl_status_log
+    logical, optional,                   intent(in)    :: editable
+    logical, optional,                   intent(in)    :: must_be_put
 
     character(len=*), parameter :: subname = 'marbl_settings_mod:add_var_1d_str'
 
     character(len=char_len)          :: sname_loc
     character(len=char_len), pointer :: sptr => NULL()
     integer                          :: n
+    logical                          :: labort_marbl_loc
 
+    labort_marbl_loc = .false.
     do n=1,size(strarray)
       write(sname_loc, "(2A,I0,A)") trim(sname), '(', n, ')'
       sptr => strarray(n)
-      call this%add_var(sname_loc, lname, units, 'string', category,   &
-                          marbl_status_log, sptr=sptr)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_var_error(marbl_status_log, sname_loc, subname)
-        return
-      end if
+      call this%add_var(sname_loc, lname, units, 'string', category,      &
+                          marbl_status_log, sptr=sptr, editable=editable, &
+                          must_be_put=must_be_put)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
     end do
+
+    marbl_status_log%labort_marbl = labort_marbl_loc
+    if (marbl_status_log%labort_marbl) return
 
   end subroutine add_var_1d_str
 
@@ -2635,17 +2366,22 @@ contains
 
   !***********************************************************************
 
-  subroutine log_add_var_error(marbl_status_log, sname, subname)
+  subroutine check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     type(marbl_log_type), intent(inout) :: marbl_status_log
     character(len=*),     intent(in)    :: sname
     character(len=*),     intent(in)    :: subname
+    logical,              intent(inout) :: labort_marbl_loc
     character(len=char_len) :: routine_name
 
-    write(routine_name,"(3A)") "this%add_var(", trim(sname), ")"
-    call marbl_status_log%log_error_trace(routine_name, subname)
+    if (marbl_status_log%labort_marbl) then
+      labort_marbl_loc = marbl_status_log%labort_marbl
+      write(routine_name,"(3A)") "this%add_var(", trim(sname), ")"
+      call marbl_status_log%log_error_trace(routine_name, subname)
+      marbl_status_log%labort_marbl = .false.
+    end if
 
-  end subroutine log_add_var_error
+  end subroutine check_and_log_add_var_error
 
   !***********************************************************************
 

@@ -449,7 +449,7 @@ contains
       return
     end if
 
-end subroutine put_string
+  end subroutine put_string
 
   !***********************************************************************
 
