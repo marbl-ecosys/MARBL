@@ -510,7 +510,7 @@ end subroutine put_string
 
   !***********************************************************************
 
-  subroutine put_inputfile_line(this, line)
+  subroutine put_inputfile_line(this, line, pgi_bugfix_var)
 
     ! This subroutine takes a single line from MARBL's default inputfile format
     ! and returns the variable name, type of variable, and the value (all as
@@ -522,6 +522,13 @@ end subroutine put_string
 
     class(marbl_interface_class), intent(inout) :: this
     character(len=*),             intent(in)    :: line
+    ! For some reason PGI doesn't like this particular interface to put_setting()
+    ! --- Error from building stand-alone driver ---
+    ! PGF90-S-0155-cannot access PRIVATE type bound procedure
+    ! put_inputfile_line$tbp (/NO_BACKUP/codes/marbl/tests/driver_src/marbl.F90: 239)
+    !
+    ! But adding another variable to the interface makes it okay
+    logical, optional,            intent(in)    :: pgi_bugfix_var(0)
 
     character(len=char_len) :: varname, value
     character(len=char_len) :: line_loc, var_loc, val_loc
