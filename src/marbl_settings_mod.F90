@@ -207,9 +207,6 @@ module marbl_settings_mod
 
   character(len=char_len), target :: PFT_defaults             ! Set up PFT parameters based on known classes, e.g. 'CESM2'
                                                               ! (or set to 'user-specified' and use put_setting())
-  integer(int_kind), target :: autotroph_cnt                  ! number of autotroph classes
-  integer(int_kind), target :: zooplankton_cnt                ! number of zooplankton classes
-  integer(int_kind), target :: max_grazer_prey_cnt            ! max number of biomass aggregates grazed by a zooplankton class
   logical(log_kind), target :: ciso_on                        ! control whether ciso tracer module is active
   logical(log_kind), target :: lsource_sink                   ! control which portion of code is executed, useful for debugging
   logical(log_kind), target :: ciso_lsource_sink              ! control which portion of carbon isotope code is executed, useful for debugging
@@ -267,10 +264,17 @@ module marbl_settings_mod
   real(r8),                target :: PON_bury_coeff
   character(len=char_len), target :: ciso_fract_factors           ! option for which biological fractionation calculation to use
 
+  !  marbl_settings_define_PFT_counts
+  !    Parameters determining array size for PFT derived types
+  !    (can not be set until PFT_defaults is set)
+  !-------------------------------------------------------------
+
+  integer(int_kind), target :: autotroph_cnt                  ! number of autotroph classes
+  integer(int_kind), target :: zooplankton_cnt                ! number of zooplankton classes
+  integer(int_kind), target :: max_grazer_prey_cnt            ! max number of biomass aggregates grazed by a zooplankton class
+
   !  marbl_settings_define_PFT_derived_types
-  !    parameters with default values or dimensions dependent
-  !    on parameters from general_parms
-  !    Currently just parameters associated with the PFT classes
+  !    Parameters associated with the PFT classes
   !    (can not be set until autotroph_cnt, zooplankton_cnt
   !     are max_grazer_prey_cnt are known)
   !-------------------------------------------------------------
