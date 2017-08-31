@@ -311,12 +311,12 @@ contains
           autotrophs(n)%loss_poc        = 0.0_r8
 
         case ('diat')
-          autotrophs(n)%kFe             = 0.05e-3_r8         ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kFe             = 0.07e-3_r8         ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kPO4            = 0.05_r8            ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kDOP            = 0.5_r8             ! in marbl_parms framework, see NOTE above
-          autotrophs(n)%kNO3            = 0.5_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kNO3            = 0.7_r8             ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kNH4            = 0.05_r8            ! in marbl_parms framework, see NOTE above
-          autotrophs(n)%kSiO3           = 0.75_r8             ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kSiO3           = 0.9_r8             ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kCO2            = 0.0_r8             !!!! added
           autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
           autotrophs(n)%gQfe_0          = 35.0e-6_r8
@@ -367,9 +367,9 @@ contains
         autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
         autotrophs(n)%gQfe_0          = 15.0e-6_r8
         autotrophs(n)%gQfe_min        = 3.0e-6_r8
-        autotrophs(n)%alphaPI_per_day = 0.35_r8
+        autotrophs(n)%alphaPI_per_day = 0.38_r8
         autotrophs(n)%PCref_per_day   = 5.0_r8
-        autotrophs(n)%thetaN_max      = 3.2_r8
+        autotrophs(n)%thetaN_max      = 2.8_r8
         autotrophs(n)%loss_thres      = 0.01_r8
         autotrophs(n)%loss_thres2     = 0.0_r8
         autotrophs(n)%temp_thres      = 0.0_r8
