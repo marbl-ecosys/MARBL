@@ -65,11 +65,13 @@ contains
   subroutine marbl_init_parameters_pre_tracers(lallow_glo_ops, marbl_settings, marbl_status_log)
 
     use marbl_settings_mod, only : marbl_settings_type
-    use marbl_settings_mod, only : marbl_settings_set_defaults_pre_tracers1
-    use marbl_settings_mod, only : marbl_settings_define_pre_tracers1
     use marbl_settings_mod, only : ladjust_bury_coeff
-    use marbl_settings_mod, only : marbl_settings_set_defaults_pre_tracers2
-    use marbl_settings_mod, only : marbl_settings_define_pre_tracers2
+    use marbl_settings_mod, only : marbl_settings_set_defaults_general_parms
+    use marbl_settings_mod, only : marbl_settings_define_general_parms
+    use marbl_settings_mod, only : marbl_settings_set_defaults_PFT_counts
+    use marbl_settings_mod, only : marbl_settings_define_PFT_counts
+    use marbl_settings_mod, only : marbl_settings_set_defaults_PFT_derived_types
+    use marbl_settings_mod, only : marbl_settings_define_PFT_derived_types
 
     logical,                    intent(in)    :: lallow_glo_ops
     type(marbl_settings_type),  intent(inout) :: marbl_settings
@@ -83,15 +85,15 @@ contains
     ! set default values for basic settings
     !---------------------------------------------------------------------------
 
-    call marbl_settings_set_defaults_pre_tracers1()
+    call marbl_settings_set_defaults_general_parms()
 
     !---------------------------------------------------------------------------
-    ! Add basic settings to list of allowable put / get vars
+    ! Add general settings to list of allowable put / get vars
     !---------------------------------------------------------------------------
 
-    call marbl_settings_define_pre_tracers1(marbl_settings, marbl_status_log)
+    call marbl_settings_define_general_parms(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("marbl_settings_define_pre_tracers1()", subname)
+      call marbl_status_log%log_error_trace("marbl_settings_define_general_parms()", subname)
       return
     end if
 
@@ -103,18 +105,35 @@ contains
       return
     end if
 
-    call marbl_settings_set_defaults_pre_tracers2(marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("marbl_settings_set_defaults_pre_tracers2()", subname)
-      return
-    end if
     !---------------------------------------------------------------------------
-    ! construct configuration_type
+    ! Add PFT counts to list of allowable put / get vars
     !---------------------------------------------------------------------------
 
-    call marbl_settings_define_pre_tracers2(marbl_settings, marbl_status_log)
+    call marbl_settings_set_defaults_PFT_counts(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("marbl_settings_define_pre_tracers2()", subname)
+      call marbl_status_log%log_error_trace("marbl_settings_set_defaults_PFT_counts()", subname)
+      return
+    end if
+
+    call marbl_settings_define_PFT_counts(marbl_settings, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_settings_define_PFT_counts()", subname)
+      return
+    end if
+
+    !---------------------------------------------------------------------------
+    ! Add components of PFT derived types to list of allowable put / get vars
+    !---------------------------------------------------------------------------
+
+    call marbl_settings_set_defaults_PFT_derived_types(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_settings_set_defaults_PFT_derived_types()", subname)
+      return
+    end if
+
+    call marbl_settings_define_PFT_derived_types(marbl_settings, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_settings_define_PFT_derived_types()", subname)
       return
     end if
 
@@ -293,27 +312,27 @@ contains
   subroutine marbl_init_parameters_post_tracers(marbl_settings, marbl_status_log)
 
     use marbl_settings_mod, only : marbl_settings_type
-    use marbl_settings_mod, only : marbl_settings_set_defaults_post_tracers
-    use marbl_settings_mod, only : marbl_settings_define_post_tracers
+    use marbl_settings_mod, only : marbl_settings_set_defaults_tracer_dependent
+    use marbl_settings_mod, only : marbl_settings_define_tracer_dependent
 
     type(marbl_settings_type),  intent(inout) :: marbl_settings
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     ! local variables
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_post_tracers'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_tracer_dependent'
     character(len=char_len) :: log_message
 
     ! set default values for parameters
-    call marbl_settings_set_defaults_post_tracers(marbl_status_log)
+    call marbl_settings_set_defaults_tracer_dependent(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("marbl_settings_set_defaults_post_tracers()", subname)
+      call marbl_status_log%log_error_trace("marbl_settings_set_defaults_tracer_dependent()", subname)
       return
     end if
 
     ! construct parameters_type
-    call marbl_settings_define_post_tracers(marbl_settings, marbl_status_log)
+    call marbl_settings_define_tracer_dependent(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("marbl_settings_define_post_tracers()", subname)
+      call marbl_status_log%log_error_trace("marbl_settings_define_tracer_dependent()", subname)
       return
     end if
 
