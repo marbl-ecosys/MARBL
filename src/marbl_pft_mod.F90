@@ -209,19 +209,19 @@ contains
 
     select case (autotroph_id)
       case ('sp')
-        self%sname = 'sp'
-        self%lname = 'Small Phyto'
+        self%sname = 'sp'                        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%lname = 'Small Phyto'               ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%Nfixer = .false.
         self%imp_calcifier = .true.
         self%exp_calcifier = .false.
         self%silicifier = .false.
-        self%kFe             = 0.03e-3_r8
-        self%kPO4            = 0.005_r8
-        self%kDOP            = 0.3_r8
-        self%kNO3            = 0.25_r8
-        self%kNH4            = 0.01_r8
-        self%kSiO3           = 0.0_r8
-        self%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
+        self%kFe             = 0.03e-3_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kPO4            = 0.005_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kDOP            = 0.3_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kNO3            = 0.25_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kNH4            = 0.01_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kSiO3           = 0.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%Qp_fixed        =  Qp_zoo           ! only used for lvariable_PtoC=.false.
         self%gQfe_0          = 35.0e-6_r8
         self%gQfe_min        = 3.0e-6_r8
         self%alphaPI_per_day = 0.39_r8
@@ -236,19 +236,19 @@ contains
         self%agg_rate_min    = 0.01_r8
         self%loss_poc        = 0.0_r8
       case ('diat')
-        self%sname = 'diat'
-        self%lname = 'Diatom'
+        self%sname = 'diat'                      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%lname = 'Diatom'                    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%Nfixer = .false.
         self%imp_calcifier = .false.
         self%exp_calcifier = .false.
         self%silicifier = .true.
-        self%kFe             = 0.06e-3_r8
-        self%kPO4            = 0.05_r8
-        self%kDOP            = 0.5_r8
-        self%kNO3            = 0.5_r8
-        self%kNH4            = 0.05_r8
-        self%kSiO3           = 0.7_r8
-        self%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
+        self%kFe             = 0.06e-3_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kPO4            = 0.05_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kDOP            = 0.5_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kNO3            = 0.5_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kNH4            = 0.05_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kSiO3           = 0.7_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%Qp_fixed        =  Qp_zoo           ! only used for lvariable_PtoC=.false.
         self%gQfe_0          = 35.0e-6_r8
         self%gQfe_min        = 3.0e-6_r8
         self%alphaPI_per_day = 0.29_r8
@@ -263,19 +263,19 @@ contains
         self%agg_rate_min    = 0.02_r8
         self%loss_poc        = 0.0_r8
       case ('diaz')
-        self%sname = 'diaz'
-        self%lname = 'Diazotroph'
+        self%sname = 'diaz'                      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%lname = 'Diazotroph'                ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%Nfixer = .true.
         self%imp_calcifier = .false.
         self%exp_calcifier = .false.
         self%silicifier = .false.
-        self%kFe             = 0.045e-3_r8
-        self%kPO4            = 0.015_r8
-        self%kDOP            = 0.075_r8
-        self%kNO3            = 2.0_r8
-        self%kNH4            = 0.2_r8
-        self%kSiO3           = 0.0_r8
-        self%Qp_fixed        = 0.32_r8 * Qp_zoo   ! only used for lvariable_PtoC=.false.
+        self%kFe             = 0.045e-3_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kPO4            = 0.015_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kDOP            = 0.075_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kNO3            = 2.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kNH4            = 0.2_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%kSiO3           = 0.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%Qp_fixed        = 0.32_r8 * Qp_zoo  ! only used for lvariable_PtoC=.false.
         self%gQfe_0          = 70.0e-6_r8
         self%gQfe_min        = 6.0e-6_r8
         self%alphaPI_per_day = 0.39_r8
@@ -339,11 +339,11 @@ contains
 
     select case (zooplankton_id)
       case ('zoo')
-        self%sname = 'zoo'
-        self%lname = 'Zooplankton'
-        self%z_mort_0_per_day   = 0.1_r8
-        self%z_mort2_0_per_day  = 0.4_r8
-        self%loss_thres         = 0.075_r8
+        self%sname = 'zoo'                       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%lname = 'Zooplankton'               ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%z_mort_0_per_day   = 0.1_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%z_mort2_0_per_day  = 0.4_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%loss_thres         = 0.075_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
       case ('unset')
         local_nan = ieee_value(local_nan, ieee_quiet_nan)
         self%sname = 'unknown'
@@ -373,43 +373,43 @@ contains
 
     select case (grazing_id)
       case ('sp_zoo')
-        self%sname = 'grz_sp_zoo'
-        self%lname = 'Grazing of sp by zoo'
-        self%auto_ind_cnt = 1
-        self%zoo_ind_cnt = 0
-        self%z_umax_0_per_day = 3.3_r8
-        self%z_grz            = 1.2_r8
-        self%graze_zoo        = 0.3_r8
-        self%graze_poc        = 0.0_r8
-        self%graze_doc        = 0.06_r8
-        self%f_zoo_detr       = 0.12_r8
-        self%grazing_function = grz_fnc_michaelis_menten
-        self%auto_ind(1) = 1
+        self%sname = 'grz_sp_zoo'                         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%lname = 'Grazing of sp by zoo'               ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%auto_ind_cnt = 1                             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%zoo_ind_cnt = 0                              ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%z_umax_0_per_day = 3.3_r8                    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%z_grz            = 1.2_r8                    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%graze_zoo        = 0.3_r8                    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%graze_poc        = 0.0_r8                    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%graze_doc        = 0.06_r8                   ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%f_zoo_detr       = 0.12_r8                   ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%grazing_function = grz_fnc_michaelis_menten  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%auto_ind(1) = 1                              ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
       case ('diat_zoo')
-        self%sname = 'grz_diat_zoo'
-        self%lname = 'Grazing of diat by zoo'
-        self%auto_ind_cnt = 1
-        self%zoo_ind_cnt = 0
-        self%z_umax_0_per_day = 3.05_r8
-        self%z_grz            = 1.2_r8
-        self%graze_zoo        = 0.25_r8
-        self%graze_poc        = 0.38_r8
-        self%graze_doc        = 0.06_r8
-        self%f_zoo_detr       = 0.24_r8
-        self%grazing_function = grz_fnc_michaelis_menten
+        self%sname = 'grz_diat_zoo'                       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%lname = 'Grazing of diat by zoo'             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%auto_ind_cnt = 1                             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%zoo_ind_cnt = 0                              ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%z_umax_0_per_day = 3.05_r8                   ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%z_grz            = 1.2_r8                    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%graze_zoo        = 0.25_r8                   ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%graze_poc        = 0.38_r8                   ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%graze_doc        = 0.06_r8                   ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%f_zoo_detr       = 0.24_r8                   ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%grazing_function = grz_fnc_michaelis_menten  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%auto_ind(1) = 2
       case ('diaz_zoo')
-        self%sname = 'grz_diaz_zoo'
-        self%lname = 'Grazing of diaz by zoo'
-        self%auto_ind_cnt = 1
-        self%zoo_ind_cnt = 0
-        self%z_umax_0_per_day = 3.1_r8
-        self%z_grz            = 1.2_r8
-        self%graze_zoo        = 0.3_r8
-        self%graze_poc        = 0.1_r8
-        self%graze_doc        = 0.06_r8
-        self%f_zoo_detr       = 0.12_r8
-        self%grazing_function = grz_fnc_michaelis_menten
+        self%sname = 'grz_diaz_zoo'                       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%lname = 'Grazing of diaz by zoo'             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%auto_ind_cnt = 1                             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%zoo_ind_cnt = 0                              ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%z_umax_0_per_day = 3.1_r8                    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%z_grz            = 1.2_r8                    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%graze_zoo        = 0.3_r8                    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%graze_poc        = 0.1_r8                    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%graze_doc        = 0.06_r8                   ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%f_zoo_detr       = 0.12_r8                   ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%grazing_function = grz_fnc_michaelis_menten  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%auto_ind(1) = 3
       case ('unset')
         local_nan = ieee_value(local_nan, ieee_quiet_nan)
