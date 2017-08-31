@@ -3,9 +3,16 @@ module marbl_restore_mod
   ! Module to generalize restoring any non-autotroph tracer
   !
 
-  use marbl_kinds_mod      , only : r8, int_kind, char_len
-  use marbl_constants_mod  , only : p5, c0, c2, c1000
-  use marbl_interface_types, only : marbl_domain_type
+  use marbl_kinds_mod, only : r8
+  use marbl_kinds_mod, only : int_kind
+  use marbl_kinds_mod, only : char_len
+
+  use marbl_constants_mod, only : p5
+  use marbl_constants_mod, only : c0
+  use marbl_constants_mod, only : c2
+  use marbl_constants_mod, only : c1000
+
+  use marbl_interface_public_types, only : marbl_domain_type
 
   implicit none
   public
@@ -22,10 +29,8 @@ subroutine marbl_restore_compute_interior_restore(interior_tracers, km,       &
   !
   !  restore a variable if required
   !
-  use marbl_kinds_mod      , only : r8, int_kind
-  use marbl_constants_mod  , only : c0
-  use marbl_interface_types, only : marbl_forcing_fields_type
-  use marbl_internal_types , only : marbl_interior_forcing_indexing_type
+  use marbl_interface_public_types, only : marbl_forcing_fields_type
+  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
 
   !-----------------------------------------------------------------------
   !  input variables

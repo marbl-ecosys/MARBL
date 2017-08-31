@@ -12,37 +12,37 @@ module marbl_ciso_mod
   !  This module adds 7 carbon pools for 13C and another 7 for 14C
   !-----------------------------------------------------------------------
 
-  use marbl_kinds_mod       , only : r8
-  use marbl_kinds_mod       , only : int_kind
-  use marbl_kinds_mod       , only : log_kind
-  use marbl_kinds_mod       , only : char_len
+  use marbl_kinds_mod, only : r8
+  use marbl_kinds_mod, only : int_kind
+  use marbl_kinds_mod, only : log_kind
+  use marbl_kinds_mod, only : char_len
 
-  use marbl_constants_mod   , only : c0
-  use marbl_constants_mod   , only : c1
-  use marbl_constants_mod   , only : c2
-  use marbl_constants_mod   , only : c1000
-  use marbl_constants_mod   , only : mpercm
+  use marbl_constants_mod, only : c0
+  use marbl_constants_mod, only : c1
+  use marbl_constants_mod, only : c2
+  use marbl_constants_mod, only : c1000
+  use marbl_constants_mod, only : mpercm
 
-  use marbl_settings_mod    , only : autotroph_cnt
-  use marbl_settings_mod    , only : autotrophs
-  use marbl_settings_mod    , only : zooplankton
-  use marbl_settings_mod    , only : grazing
+  use marbl_settings_mod, only : autotroph_cnt
+  use marbl_settings_mod, only : autotrophs
+  use marbl_settings_mod, only : zooplankton
+  use marbl_settings_mod, only : grazing
 
-  use marbl_logging         , only : marbl_log_type
+  use marbl_logging, only : marbl_log_type
 
-  use marbl_interface_types , only : marbl_tracer_metadata_type
-  use marbl_interface_types , only : marbl_diagnostics_type
-  use marbl_interface_types , only : marbl_domain_type
+  use marbl_interface_public_types, only : marbl_tracer_metadata_type
+  use marbl_interface_public_types, only : marbl_diagnostics_type
+  use marbl_interface_public_types, only : marbl_domain_type
 
-  use marbl_internal_types  , only : column_sinking_particle_type
-  use marbl_internal_types  , only : marbl_interior_share_type
-  use marbl_internal_types  , only : marbl_particulate_share_type
-  use marbl_internal_types  , only : marbl_surface_forcing_share_type
-  use marbl_internal_types  , only : marbl_tracer_index_type
+  use marbl_interface_private_types, only : column_sinking_particle_type
+  use marbl_interface_private_types, only : marbl_interior_share_type
+  use marbl_interface_private_types, only : marbl_particulate_share_type
+  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types, only : marbl_tracer_index_type
 
-  use marbl_pft_mod         , only : autotroph_type
-  use marbl_pft_mod         , only : marbl_zooplankton_share_type
-  use marbl_pft_mod         , only : marbl_autotroph_share_type
+  use marbl_pft_mod, only : autotroph_type
+  use marbl_pft_mod, only : marbl_zooplankton_share_type
+  use marbl_pft_mod, only : marbl_autotroph_share_type
 
   implicit none
   private

@@ -154,24 +154,24 @@ module marbl_mod
   use marbl_settings_mod, only : caco3_bury_thres_depth
   use marbl_settings_mod, only : PON_bury_coeff
 
-  use marbl_internal_types  , only : carbonate_type
-  use marbl_internal_types  , only : dissolved_organic_matter_type
-  use marbl_internal_types  , only : column_sinking_particle_type
-  use marbl_internal_types  , only : marbl_PAR_type
-  use marbl_internal_types  , only : marbl_particulate_share_type
-  use marbl_internal_types  , only : marbl_interior_share_type
-  use marbl_internal_types  , only : marbl_surface_forcing_share_type
-  use marbl_internal_types  , only : marbl_surface_forcing_internal_type
-  use marbl_internal_types  , only : marbl_tracer_index_type
-  use marbl_internal_types  , only : marbl_surface_forcing_indexing_type
-  use marbl_internal_types  , only : marbl_interior_forcing_indexing_type
+  use marbl_interface_private_types, only : carbonate_type
+  use marbl_interface_private_types, only : dissolved_organic_matter_type
+  use marbl_interface_private_types, only : column_sinking_particle_type
+  use marbl_interface_private_types, only : marbl_PAR_type
+  use marbl_interface_private_types, only : marbl_particulate_share_type
+  use marbl_interface_private_types, only : marbl_interior_share_type
+  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
+  use marbl_interface_private_types, only : marbl_tracer_index_type
+  use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
+  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
 
-  use marbl_interface_types , only : marbl_domain_type
-  use marbl_interface_types , only : marbl_saved_state_type
-  use marbl_interface_types , only : marbl_surface_forcing_output_type
-  use marbl_interface_types , only : marbl_forcing_fields_type
-  use marbl_interface_types , only : marbl_diagnostics_type
-  use marbl_interface_types , only : marbl_running_mean_0d_type
+  use marbl_interface_public_types, only : marbl_domain_type
+  use marbl_interface_public_types, only : marbl_saved_state_type
+  use marbl_interface_public_types, only : marbl_surface_forcing_output_type
+  use marbl_interface_public_types, only : marbl_forcing_fields_type
+  use marbl_interface_public_types, only : marbl_diagnostics_type
+  use marbl_interface_public_types, only : marbl_running_mean_0d_type
 
   use marbl_pft_mod, only : autotroph_type
   use marbl_pft_mod, only : zooplankton_type
@@ -326,10 +326,10 @@ contains
        glo_scalar_rmean_interior, &
        glo_scalar_rmean_surface)
 
-    use marbl_interface_types, only : marbl_running_mean_0d_type
-    use marbl_settings_mod   , only : parm_init_POC_bury_coeff
-    use marbl_settings_mod   , only : parm_init_POP_bury_coeff
-    use marbl_settings_mod   , only : parm_init_bSi_bury_coeff
+    use marbl_interface_public_types, only : marbl_running_mean_0d_type
+    use marbl_settings_mod, only : parm_init_POC_bury_coeff
+    use marbl_settings_mod, only : parm_init_POP_bury_coeff
+    use marbl_settings_mod, only : parm_init_bSi_bury_coeff
 
     type(marbl_running_mean_0d_type), intent(out) :: glo_avg_rmean_interior(:)
     type(marbl_running_mean_0d_type), intent(out) :: glo_avg_rmean_surface(:)
@@ -472,11 +472,11 @@ contains
 
     !  Compute time derivatives for ecosystem state variables
 
-    use marbl_ciso_mod      , only : marbl_ciso_set_interior_forcing
-    use marbl_internal_types, only : marbl_internal_timers_type
-    use marbl_internal_types, only : marbl_timer_indexing_type
-    use marbl_internal_types, only : marbl_interior_saved_state_indexing_type
-    use marbl_restore_mod   , only : marbl_restore_compute_interior_restore
+    use marbl_ciso_mod, only : marbl_ciso_set_interior_forcing
+    use marbl_interface_private_types, only : marbl_internal_timers_type
+    use marbl_interface_private_types, only : marbl_timer_indexing_type
+    use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
+    use marbl_restore_mod, only : marbl_restore_compute_interior_restore
 
     type    (marbl_domain_type)                 , intent(in)    :: domain
     type(marbl_forcing_fields_type)             , intent(in)    :: interior_forcings(:)
@@ -1794,21 +1794,21 @@ contains
 
     !  Compute surface forcing fluxes
 
-    use marbl_interface_types    , only : sfo_ind
-    use marbl_internal_types     , only : marbl_surface_saved_state_indexing_type
-    use marbl_schmidt_number_mod , only : schmidt_co2_surf
-    use marbl_oxygen             , only : schmidt_o2_surf
-    use marbl_co2calc_mod        , only : marbl_co2calc_surf
-    use marbl_co2calc_mod        , only : co2calc_coeffs_type
-    use marbl_co2calc_mod        , only : co2calc_state_type
-    use marbl_oxygen             , only : o2sat_surf
-    use marbl_constants_mod      , only : molw_Fe
+    use marbl_interface_public_types, only : sfo_ind
+    use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
+    use marbl_schmidt_number_mod, only : schmidt_co2_surf
+    use marbl_oxygen, only : schmidt_o2_surf
+    use marbl_co2calc_mod, only : marbl_co2calc_surf
+    use marbl_co2calc_mod, only : co2calc_coeffs_type
+    use marbl_co2calc_mod, only : co2calc_state_type
+    use marbl_oxygen, only : o2sat_surf
+    use marbl_constants_mod, only : molw_Fe
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
-    use marbl_settings_mod        , only : lcompute_nhx_surface_emis
-    use marbl_settings_mod        , only : xkw_coeff
-    use marbl_settings_mod        , only : iron_frac_in_dust
-    use marbl_settings_mod        , only : iron_frac_in_bc
-    use marbl_ciso_mod           , only : marbl_ciso_set_surface_forcing
+    use marbl_settings_mod, only : lcompute_nhx_surface_emis
+    use marbl_settings_mod, only : xkw_coeff
+    use marbl_settings_mod, only : iron_frac_in_dust
+    use marbl_settings_mod, only : iron_frac_in_bc
+    use marbl_ciso_mod, only : marbl_ciso_set_surface_forcing
 
     implicit none
 

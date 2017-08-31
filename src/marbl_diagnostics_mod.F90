@@ -3,39 +3,39 @@
 
 module marbl_diagnostics_mod
 
-  use marbl_kinds_mod       , only : r8
-  use marbl_kinds_mod       , only : int_kind
-  use marbl_kinds_mod       , only : log_kind
-  use marbl_kinds_mod       , only : char_len
+  use marbl_kinds_mod, only : r8
+  use marbl_kinds_mod, only : int_kind
+  use marbl_kinds_mod, only : log_kind
+  use marbl_kinds_mod, only : char_len
 
-  use marbl_settings_mod    , only : autotroph_cnt
-  use marbl_settings_mod    , only : zooplankton_cnt
-  use marbl_settings_mod    , only : autotrophs
-  use marbl_settings_mod    , only : zooplankton
+  use marbl_settings_mod, only : autotroph_cnt
+  use marbl_settings_mod, only : zooplankton_cnt
+  use marbl_settings_mod, only : autotrophs
+  use marbl_settings_mod, only : zooplankton
 
-  use marbl_constants_mod   , only : c0
-  use marbl_constants_mod   , only : c1
+  use marbl_constants_mod, only : c0
+  use marbl_constants_mod, only : c1
 
-  use marbl_internal_types  , only : carbonate_type
-  use marbl_internal_types  , only : dissolved_organic_matter_type
-  use marbl_internal_types  , only : column_sinking_particle_type
-  use marbl_internal_types  , only : marbl_PAR_type
-  use marbl_internal_types  , only : marbl_particulate_share_type
-  use marbl_internal_types  , only : marbl_interior_share_type
-  use marbl_internal_types  , only : marbl_surface_forcing_share_type
-  use marbl_internal_types  , only : marbl_surface_forcing_internal_type
-  use marbl_internal_types  , only : marbl_tracer_index_type
+  use marbl_interface_private_types, only : carbonate_type
+  use marbl_interface_private_types, only : dissolved_organic_matter_type
+  use marbl_interface_private_types, only : column_sinking_particle_type
+  use marbl_interface_private_types, only : marbl_PAR_type
+  use marbl_interface_private_types, only : marbl_particulate_share_type
+  use marbl_interface_private_types, only : marbl_interior_share_type
+  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
+  use marbl_interface_private_types, only : marbl_tracer_index_type
 
-  use marbl_interface_types , only : marbl_domain_type
-  use marbl_interface_types , only : marbl_tracer_metadata_type
-  use marbl_interface_types , only : marbl_forcing_fields_type
-  use marbl_interface_types , only : marbl_saved_state_type
-  use marbl_interface_types , only : marbl_diagnostics_type
+  use marbl_interface_public_types, only : marbl_domain_type
+  use marbl_interface_public_types, only : marbl_tracer_metadata_type
+  use marbl_interface_public_types, only : marbl_forcing_fields_type
+  use marbl_interface_public_types, only : marbl_saved_state_type
+  use marbl_interface_public_types, only : marbl_diagnostics_type
 
-  use marbl_pft_mod         , only : marbl_autotroph_share_type
-  use marbl_pft_mod         , only : marbl_zooplankton_share_type
-  use marbl_pft_mod         , only : autotroph_secondary_species_type
-  use marbl_pft_mod         , only : zooplankton_secondary_species_type
+  use marbl_pft_mod, only : marbl_autotroph_share_type
+  use marbl_pft_mod, only : marbl_zooplankton_share_type
+  use marbl_pft_mod, only : autotroph_secondary_species_type
+  use marbl_pft_mod, only : zooplankton_secondary_species_type
 
   use marbl_logging,          only : marbl_log_type
 
@@ -3195,7 +3195,7 @@ contains
        marbl_interior_forcing_diags,                  &
        marbl_status_log)
 
-    use marbl_internal_types , only : marbl_interior_forcing_indexing_type
+    use marbl_interface_private_types , only : marbl_interior_forcing_indexing_type
 
     implicit none
 
@@ -3333,8 +3333,8 @@ contains
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
 
-    use marbl_internal_types , only : marbl_surface_forcing_indexing_type
-    use marbl_internal_types , only : marbl_surface_saved_state_indexing_type
+    use marbl_interface_private_types , only : marbl_surface_forcing_indexing_type
+    use marbl_interface_private_types , only : marbl_surface_saved_state_indexing_type
     use marbl_settings_mod   , only : lflux_gas_o2
     use marbl_settings_mod   , only : lflux_gas_co2
     use marbl_constants_mod  , only : mpercm

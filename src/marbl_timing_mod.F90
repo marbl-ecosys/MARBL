@@ -219,7 +219,7 @@ Contains
 
   subroutine extract_timer_data(self, interface_timers, marbl_status_log)
 
-    use marbl_interface_types, only : marbl_timers_type
+    use marbl_interface_public_types, only : marbl_timers_type
 
     class(marbl_internal_timers_type), intent(in)    :: self
     type(marbl_timers_type),           intent(inout) :: interface_timers
@@ -329,7 +329,7 @@ Contains
 
   subroutine shutdown_timers(self, timer_ids, interface_timers, marbl_status_log)
 
-    use marbl_interface_types, only : marbl_timers_type
+    use marbl_interface_public_types, only : marbl_timers_type
 
     class(marbl_internal_timers_type), intent(inout) :: self
     type(marbl_timer_indexing_type),   intent(inout) :: timer_ids

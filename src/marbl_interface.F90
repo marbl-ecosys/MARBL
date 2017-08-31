@@ -17,34 +17,34 @@ module marbl_interface
   !          column test system
   !-----------------------------------------------------------------------
 
-  use marbl_kinds_mod       , only : r8, log_kind, int_kind, log_kind, char_len
+  use marbl_kinds_mod, only : r8, log_kind, int_kind, log_kind, char_len
 
-  use marbl_settings_mod    , only : autotroph_cnt
-  use marbl_settings_mod    , only : zooplankton_cnt
-  use marbl_settings_mod    , only : marbl_settings_type
+  use marbl_settings_mod, only : autotroph_cnt
+  use marbl_settings_mod, only : zooplankton_cnt
+  use marbl_settings_mod, only : marbl_settings_type
 
-  use marbl_logging         , only : marbl_log_type
+  use marbl_logging, only : marbl_log_type
 
-  use marbl_interface_types , only : marbl_domain_type
-  use marbl_interface_types , only : marbl_tracer_metadata_type
-  use marbl_interface_types , only : marbl_surface_forcing_output_type
-  use marbl_interface_types , only : marbl_diagnostics_type
-  use marbl_interface_types , only : marbl_forcing_fields_type
-  use marbl_interface_types , only : marbl_saved_state_type
-  use marbl_interface_types , only : marbl_timers_type
-  use marbl_interface_types , only : marbl_running_mean_0d_type
+  use marbl_interface_public_types, only : marbl_domain_type
+  use marbl_interface_public_types, only : marbl_tracer_metadata_type
+  use marbl_interface_public_types, only : marbl_surface_forcing_output_type
+  use marbl_interface_public_types, only : marbl_diagnostics_type
+  use marbl_interface_public_types, only : marbl_forcing_fields_type
+  use marbl_interface_public_types, only : marbl_saved_state_type
+  use marbl_interface_public_types, only : marbl_timers_type
+  use marbl_interface_public_types, only : marbl_running_mean_0d_type
 
-  use marbl_internal_types  , only : marbl_surface_forcing_indexing_type
-  use marbl_internal_types  , only : marbl_surface_saved_state_indexing_type
-  use marbl_internal_types  , only : marbl_interior_forcing_indexing_type
-  use marbl_internal_types  , only : marbl_interior_saved_state_indexing_type
-  use marbl_internal_types  , only : marbl_PAR_type
-  use marbl_internal_types  , only : marbl_particulate_share_type
-  use marbl_internal_types  , only : marbl_surface_forcing_share_type
-  use marbl_internal_types  , only : marbl_surface_forcing_internal_type
-  use marbl_internal_types  , only : marbl_tracer_index_type
-  use marbl_internal_types  , only : marbl_internal_timers_type
-  use marbl_internal_types  , only : marbl_timer_indexing_type
+  use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
+  use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
+  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
+  use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
+  use marbl_interface_private_types, only : marbl_PAR_type
+  use marbl_interface_private_types, only : marbl_particulate_share_type
+  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
+  use marbl_interface_private_types, only : marbl_tracer_index_type
+  use marbl_interface_private_types, only : marbl_internal_timers_type
+  use marbl_interface_private_types, only : marbl_timer_indexing_type
 
   implicit none
 

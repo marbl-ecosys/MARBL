@@ -4,10 +4,10 @@ module marbl_init_mod
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : char_len
 
-  use marbl_interface_types, only : marbl_tracer_metadata_type
-  use marbl_interface_types, only : marbl_forcing_fields_type
+  use marbl_interface_public_types, only : marbl_tracer_metadata_type
+  use marbl_interface_public_types, only : marbl_forcing_fields_type
 
-  use marbl_internal_types, only : marbl_tracer_index_type
+  use marbl_interface_private_types, only : marbl_tracer_index_type
 
   use marbl_logging, only : marbl_log_type
 
@@ -38,8 +38,8 @@ contains
 
   subroutine marbl_init_log_and_timers(marbl_timers, timer_ids, marbl_status_log)
 
-    use marbl_internal_types  , only : marbl_internal_timers_type
-    use marbl_internal_types  , only : marbl_timer_indexing_type
+    use marbl_interface_private_types, only : marbl_internal_timers_type
+    use marbl_interface_private_types, only : marbl_timer_indexing_type
 
     type(marbl_internal_timers_type), intent(out)   :: marbl_timers
     type(marbl_timer_indexing_type),  intent(out)   :: timer_ids
@@ -348,7 +348,7 @@ contains
     use marbl_settings_mod, only : parm_init_POC_bury_coeff
     use marbl_settings_mod, only : parm_init_POP_bury_coeff
     use marbl_settings_mod, only : parm_init_bSi_bury_coeff
-    use marbl_internal_types, only : marbl_particulate_share_type
+    use marbl_interface_private_types, only : marbl_particulate_share_type
 
     type(marbl_particulate_share_type), intent(out)   :: marbl_particulate_share
     integer(int_kind),                  intent(in)    :: num_levels
@@ -391,11 +391,11 @@ contains
                                        interior_input_forcings, &
                                        marbl_status_log)
 
-    use marbl_interface_types, only : marbl_domain_type
-    use marbl_internal_types, only : marbl_surface_forcing_indexing_type
-    use marbl_internal_types, only : marbl_surface_forcing_share_type
-    use marbl_internal_types, only : marbl_surface_forcing_internal_type
-    use marbl_internal_types, only : marbl_interior_forcing_indexing_type
+    use marbl_interface_public_types, only : marbl_domain_type
+    use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_surface_forcing_share_type
+    use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
+    use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lflux_gas_o2
     use marbl_settings_mod, only : lflux_gas_co2
@@ -694,7 +694,7 @@ contains
     !  namelist read
     !
 
-    use marbl_internal_types, only : marbl_surface_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
 
     implicit none
 
@@ -865,7 +865,7 @@ contains
     !  Initialize the interior forcing_fields datatype with information from the
     !  namelist read
     !
-    use marbl_internal_types, only : marbl_interior_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
 
     implicit none
 
