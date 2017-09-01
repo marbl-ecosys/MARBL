@@ -367,7 +367,7 @@ contains
         autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
         autotrophs(n)%gQfe_0          = 15.0e-6_r8
         autotrophs(n)%gQfe_min        = 3.0e-6_r8
-        autotrophs(n)%alphaPI_per_day = 0.38_r8
+        autotrophs(n)%alphaPI_per_day = 0.4_r8
         autotrophs(n)%PCref_per_day   = 5.0_r8
         autotrophs(n)%thetaN_max      = 2.8_r8
         autotrophs(n)%loss_thres      = 0.01_r8
