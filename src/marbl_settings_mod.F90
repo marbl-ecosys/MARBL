@@ -1582,8 +1582,11 @@ contains
     character(len=*),  optional, intent(out)   :: sval
 
     character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_string_to_var'
+    character(len_trim(value))  :: val_loc
     character(len=char_len)     :: log_message
     integer :: ioerr, last_char
+
+    val_loc = adjustl(trim(value))
 
     ! Real value requested?
     if (present(rval)) then
@@ -1621,27 +1624,27 @@ contains
       ! (a) empty string not allowed
       ! (b) first character must be ' or "
       ! (c) first and last character must match
-      last_char = len_trim(value)
+      last_char = len_trim(val_loc)
       if (last_char .eq. 0) then
         log_message = "Empty string is not acceptable"
         call marbl_status_log%log_error(log_message, subname)
         return
       end if
 
-      if ((value(1:1) .ne. '"') .and. (value(1:1) .ne. "'")) then
+      if ((val_loc(1:1) .ne. '"') .and. (val_loc(1:1) .ne. "'")) then
         write(log_message,"(3A)") "String value must be in quotes ", &
-              trim(value), " is not acceptable"
+              trim(val_loc), " is not acceptable"
         call marbl_status_log%log_error(log_message, subname)
         return
       end if
 
-      if (value(1:1) .ne. value(last_char:last_char)) then
+      if (val_loc(1:1) .ne. val_loc(last_char:last_char)) then
         write(log_message,"(3A)") "String value must be in quotes ", &
-              trim(value), " is not acceptable"
+              trim(val_loc), " is not acceptable"
         call marbl_status_log%log_error(log_message, subname)
         return
       end if
-      sval = value(2:last_char-1)
+      sval = val_loc(2:last_char-1)
 
     end if
 

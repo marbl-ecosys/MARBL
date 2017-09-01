@@ -512,13 +512,15 @@ contains
 
   subroutine put_inputfile_line(this, line, pgi_bugfix_var)
 
-    ! This subroutine takes a single line from MARBL's default inputfile format
-    ! and returns the variable name, type of variable, and the value (all as
-    ! strings).
+    ! This subroutine takes a single line from MARBL's default inputfile format,
+    ! determines the variable name and whether the value is a scalar or an array,
+    ! and then calls put_setting (once for a scalar, per-element for an array).
     !
-    ! This is useful because the standard fortran parser treats commas as
-    ! delimiters, but some variable names have commas in them because they are
-    ! 2D arrays.
+    ! The put_setting() call forces the datatype to be "unknown", so when the
+    ! put list is traversed by add_var the datatype is assumed to match new_entry
+    ! (and error checking verifies that it is an appropriate value)
+
+    use marbl_utils_mod, only : marbl_utils_str_to_array
 
     class(marbl_interface_class), intent(inout) :: this
     character(len=*),             intent(in)    :: line
@@ -530,21 +532,14 @@ contains
     ! But adding another variable to the interface makes it okay
     logical, optional,            intent(in)    :: pgi_bugfix_var(0)
 
-    character(len=char_len) :: varname, value
-    character(len=char_len) :: line_loc, var_loc, val_loc
-    integer(int_kind) :: char_ind, elem_cnt, cur_pos
-    character :: quote_char
+    character(len=char_len), dimension(:), allocatable :: value, line_loc_arr
+    character(len=char_len) :: varname, var_loc, line_loc
+    integer(int_kind)       :: n, char_ind
 
-    varname = ''
-    value = ''
-    line_loc = adjustl(line)
-
-    ! Strip out comments (denoted by '!')
-    do char_ind = 1, len_trim(line_loc)
-      if (line_loc(char_ind:char_ind) .eq. '!') exit
-    end do
-    if (char_ind .le. len_trim(line_loc)) &
-      line_loc(char_ind:len_trim(line_loc)) = ' '
+    line_loc = ''
+    ! Strip out comments (denoted by '!'); line_loc_arr(1) is the line to be processed
+    call marbl_utils_str_to_array(line, '!', line_loc_arr)
+    line_loc = line_loc_arr(1)
 
     ! Return without processing if
     ! (a) line is empty / only contains spaces
@@ -555,6 +550,7 @@ contains
     if (trim(line_loc) .eq. '/') return
 
     ! Everything up to first '=' is varname
+    varname = ''
     do char_ind = 1, len_trim(line_loc)
       if (line_loc(char_ind:char_ind) .eq. '=') then
         line_loc(char_ind:char_ind) = ' '
@@ -563,60 +559,15 @@ contains
       varname(char_ind:char_ind) = line_loc(char_ind:char_ind)
       line_loc(char_ind:char_ind) = ' '
     end do
-    ! Everything else is value
-    value = adjustl(line_loc)
 
-    ! Input line might be an array; how many elements does it contain?
-    elem_cnt = 1
-    ! Arrays must be separated by commas
-    if (index(value, ',') .ne. 0) then
-      val_loc = ''
-      do char_ind = 1, len_trim(value)
-        ! Look for commas that do not appear between " or ' blocks
-        if (len_trim(val_loc) .eq. 0) then
-          if (len_trim(value(char_ind:char_ind)) .eq. 0) cycle
-          if ((value(char_ind:char_ind) .eq. '"') .or. (value(char_ind:char_ind) .eq. "'")) then
-            quote_char = value(char_ind:char_ind)
-          else
-            quote_char = ''
-          end if
-        end if
-
-        ! If found a , outside quotes then
-        ! (a) Call put_setting (with unknown datatype) for current array element
-        ! (b) increment elem_cnt
-        ! (c) empty val_loc
-        ! (d) ignore the comma
-        if ((len_trim(quote_char) .eq. 0) .and. (value(char_ind:char_ind) .eq. ",")) then
-          write(var_loc, "(A,'(',I0,')')") trim(varname), elem_cnt
-          call this%put_setting(var_loc, "unknown", val_loc)
-          elem_cnt = elem_cnt + 1
-          val_loc = ''
-          cycle
-        end if
-
-        ! Add character to val_loc
-        cur_pos = len_trim(val_loc) + 1
-        val_loc(cur_pos:cur_pos) = value(char_ind:char_ind)
-
-        ! If elem_cnt > 1 and this is last character, call put
-        if ((elem_cnt .gt. 1) .and. (char_ind .eq. len_trim(value))) then
-          write(var_loc, "(A,'(',I0,')')") trim(varname), elem_cnt
-          call this%put_setting(var_loc, "unknown", val_loc)
-          cycle
-        end if
-
-        ! If found a character = quote_char, empty quote_char (unless this is first char in val_loc)
-        if (len_trim(quote_char) .eq. 1) then
-          if (len_trim(val_loc) .eq. 1) cycle
-          if (value(char_ind:char_ind) .eq. quote_char) quote_char = ''
-        end if
-      end do ! loop through value
-    end if ! value contains at least 1 comma => might be array
-
-    ! not an array, put with "unknown" datatype
-    if (elem_cnt .eq. 1) &
-      call this%put_setting(varname, "unknown", value)
+    ! Everything to the right of the first '=' is the variable value, which might be an array
+    call marbl_utils_str_to_array(line_loc, ',', value)
+    var_loc = varname
+    do n=1, size(value)
+      if (size(value) .gt. 1) write(var_loc, "(2A,I0,A)") trim(varname), '(', n, ')'
+      call this%put_setting(var_loc, "unknown", value(n))
+    end do
+    deallocate(value)
 
   end subroutine put_inputfile_line
 
