@@ -43,8 +43,39 @@ contains
     end if
 
     ! (2) root between (5,0) and (7,3) is at x=5
-    ! (3) root between (5,3) and (7,0) is at x=7
+    test_cnt = test_cnt + 1
+    x = (/5.0_r8,7.0_r8/)
+    y = (/0.0_r8, 3.0_r8/)
+    expected_root = 5.0_r8
+    if (linear_root_test(x, y, expected_root, test_cnt, driver_status_log)) then
+      pass_cnt = pass_cnt + 1
+    else
+      fail_cnt = fail_cnt + 1
+    end if
 
+    ! (3) root between (5,3) and (7,0) is at x=7
+    test_cnt = test_cnt + 1
+    x = (/5.0_r8,7.0_r8/)
+    y = (/3.0_r8, 0.0_r8/)
+    expected_root = 7.0_r8
+    if (linear_root_test(x, y, expected_root, test_cnt, driver_status_log)) then
+      pass_cnt = pass_cnt + 1
+    else
+      fail_cnt = fail_cnt + 1
+    end if
+
+    ! (4) root between (5,0) and (7,0) is at x=7
+    test_cnt = test_cnt + 1
+    x = (/5.0_r8,7.0_r8/)
+    y = (/0.0_r8, 0.0_r8/)
+    expected_root = 7.0_r8
+    if (linear_root_test(x, y, expected_root, test_cnt, driver_status_log)) then
+      pass_cnt = pass_cnt + 1
+    else
+      fail_cnt = fail_cnt + 1
+    end if
+
+    ! Any failures above?
     if (fail_cnt .gt. 0) then
       write(log_message, "(A,I0,A)") "Failed ", fail_cnt, " linear root test(s)"
       call driver_status_log%log_error(log_message, subname)
