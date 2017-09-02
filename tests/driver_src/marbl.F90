@@ -36,6 +36,7 @@ Program marbl
   ! Driver modules for individual tests
   use marbl_init_drv,    only : marbl_init_test    => test
   use marbl_get_put_drv, only : marbl_get_put_test => test
+  use marbl_utils_drv,   only : marbl_utils_test => test
 
   ! MPI wrappers (will build without MPI as well)
   use marbl_mpi_mod, only : marbl_mpi_init
@@ -128,6 +129,10 @@ Program marbl
     case ('get_put')
       lprint_marbl_log = .false.
       call marbl_get_put_test(marbl_instance, driver_status_log)
+    case ('marbl_utils')
+      lprint_marbl_log = .false.
+      lsummarize_timers = .false.
+      call marbl_utils_test(driver_status_log)
     case ('request_tracers')
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
