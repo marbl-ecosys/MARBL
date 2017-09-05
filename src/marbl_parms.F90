@@ -360,7 +360,7 @@ contains
         autotrophs(n)%kFe             = 0.018e-3_r8         ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kPO4            = 0.005_r8           ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kDOP            = 0.1_r8             ! in marbl_parms framework, see NOTE above
-        autotrophs(n)%kNO3            = 0.20_r8            ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kNO3            = 0.18_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kNH4            = 0.012_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kCO2            = 0.5_r8             !!!! added Km for CO2 for coccos
