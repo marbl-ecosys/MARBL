@@ -464,7 +464,7 @@ contains
         grazing(m,n)%graze_poc        = 0.3_r8    ! in marbl_parms framework, see NOTE above
         grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_parms framework, see NOTE above
         grazing(m,n)%f_zoo_detr       = 0.18_r8   ! in marbl_parms framework, see NOTE above
-        grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_parms framework, see NOTE above
+        grazing(m,n)%grazing_function = grz_fnc_sigmoidal   ! in marbl_parms framework, see NOTE above
         else
           grazing(m,n)%z_umax_0_per_day = c0
           grazing(m,n)%z_grz            = c0
