@@ -1,8 +1,5 @@
 module marbl_pft_mod
 
-  use, intrinsic :: ieee_arithmetic, only : ieee_value
-  use ieee_arithmetic, only : ieee_quiet_nan
-
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : int_kind
@@ -14,6 +11,8 @@ module marbl_pft_mod
 
   implicit none
   private
+
+  real(r8), parameter :: UnsetValue = 1e34_r8
 
   !****************************************************************************
   ! derived types for autotrophs
@@ -205,7 +204,6 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_pft_mod:autotroph_set_to_default'
     character(len=char_len)     :: log_message
-    real(r8) :: local_nan
 
     select case (autotroph_id)
       case ('sp')
@@ -290,33 +288,32 @@ contains
         self%agg_rate_min    = 0.01_r8
         self%loss_poc        = 0.0_r8
       case ('unset')
-        local_nan = ieee_value(local_nan, ieee_quiet_nan)
         self%sname = 'unknown'
         self%lname = 'unknown'
         self%Nfixer        = .false.
         self%imp_calcifier = .false.
         self%exp_calcifier = .false.
         self%silicifier    = .false.
-        self%kFe             = local_nan
-        self%kPO4            = local_nan
-        self%kDOP            = local_nan
-        self%kNO3            = local_nan
-        self%kNH4            = local_nan
-        self%kSiO3           = local_nan
-        self%Qp_fixed        = local_nan
-        self%gQfe_0          = local_nan
-        self%gQfe_min        = local_nan
-        self%alphaPI_per_day = local_nan
-        self%PCref_per_day   = local_nan
-        self%thetaN_max      = local_nan
-        self%loss_thres      = local_nan
-        self%loss_thres2     = local_nan
-        self%temp_thres      = local_nan
-        self%mort_per_day    = local_nan
-        self%mort2_per_day   = local_nan
-        self%agg_rate_max    = local_nan
-        self%agg_rate_min    = local_nan
-        self%loss_poc        = local_nan
+        self%kFe             = UnsetValue
+        self%kPO4            = UnsetValue
+        self%kDOP            = UnsetValue
+        self%kNO3            = UnsetValue
+        self%kNH4            = UnsetValue
+        self%kSiO3           = UnsetValue
+        self%Qp_fixed        = UnsetValue
+        self%gQfe_0          = UnsetValue
+        self%gQfe_min        = UnsetValue
+        self%alphaPI_per_day = UnsetValue
+        self%PCref_per_day   = UnsetValue
+        self%thetaN_max      = UnsetValue
+        self%loss_thres      = UnsetValue
+        self%loss_thres2     = UnsetValue
+        self%temp_thres      = UnsetValue
+        self%mort_per_day    = UnsetValue
+        self%mort2_per_day   = UnsetValue
+        self%agg_rate_max    = UnsetValue
+        self%agg_rate_min    = UnsetValue
+        self%loss_poc        = UnsetValue
       case DEFAULT
         write(log_message, "(3A)") "'", autotroph_id, "' is not a valid autotroph ID"
         call marbl_status_log%log_error(log_message, subname)
@@ -335,7 +332,6 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_pft_mod:zooplankton_set_to_default'
     character(len=char_len)     :: log_message
-    real(r8) :: local_nan
 
     select case (zooplankton_id)
       case ('zoo')
@@ -345,12 +341,11 @@ contains
         self%z_mort2_0_per_day  = 0.4_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%loss_thres         = 0.075_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
       case ('unset')
-        local_nan = ieee_value(local_nan, ieee_quiet_nan)
         self%sname = 'unknown'
         self%lname = 'unknown'
-        self%z_mort_0_per_day   = local_nan
-        self%z_mort2_0_per_day  = local_nan
-        self%loss_thres         = local_nan
+        self%z_mort_0_per_day   = UnsetValue
+        self%z_mort2_0_per_day  = UnsetValue
+        self%loss_thres         = UnsetValue
       case DEFAULT
         write(log_message, "(3A)") "'", zooplankton_id, "' is not a valid zooplankton ID"
         call marbl_status_log%log_error(log_message, subname)
@@ -369,7 +364,6 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_pft_mod:grazing_set_to_default'
     character(len=char_len)     :: log_message
-    real(r8) :: local_nan
 
     select case (grazing_id)
       case ('sp_zoo')
@@ -412,19 +406,18 @@ contains
         self%grazing_function = grz_fnc_michaelis_menten  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%auto_ind(1) = 3
       case ('unset')
-        local_nan = ieee_value(local_nan, ieee_quiet_nan)
         self%sname = 'unknown'
         self%lname = 'unknown'
         self%auto_ind_cnt = 0
         self%zoo_ind_cnt  = 0
         self%auto_ind     = -1
         self%zoo_ind      = -1
-        self%z_umax_0_per_day = local_nan
-        self%z_grz            = local_nan
-        self%graze_zoo        = local_nan
-        self%graze_poc        = local_nan
-        self%graze_doc        = local_nan
-        self%f_zoo_detr       = local_nan
+        self%z_umax_0_per_day = UnsetValue
+        self%z_grz            = UnsetValue
+        self%graze_zoo        = UnsetValue
+        self%graze_poc        = UnsetValue
+        self%graze_doc        = UnsetValue
+        self%f_zoo_detr       = UnsetValue
         self%grazing_function = grz_fnc_michaelis_menten
       case DEFAULT
         write(log_message, "(3A)") "'", grazing_id, "' is not a valid grazing ID"

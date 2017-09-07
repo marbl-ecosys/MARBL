@@ -1572,8 +1572,6 @@ contains
 
   subroutine marbl_settings_string_to_var(value, marbl_status_log, rval, ival, lval, sval)
 
-    use ieee_arithmetic, only : ieee_is_nan
-
     character(len=*),            intent(in)    :: value
     type(marbl_log_type),        intent(inout) :: marbl_status_log
     real(r8),          optional, intent(out)   :: rval
@@ -1591,7 +1589,7 @@ contains
     ! Real value requested?
     if (present(rval)) then
       read(value, *, iostat=ioerr) rval
-      if ((ioerr .ne. 0) .or. (ieee_is_nan(rval))) then
+      if (ioerr .ne. 0) then
         write(log_message, "(2A)") trim(value), ' is not a valid real value'
         call marbl_status_log%log_error(log_message, subname)
         return
