@@ -2166,13 +2166,13 @@ contains
 
     call marbl_status_log%construct()
     if (this%init_called) then
-      write(log_message, "(3A)") "Can not put ", trim(var), ", init has already been called"
+      write(log_message, "(3A)") "Can not put ", trim(adjustl(var)), ", init has already been called"
       call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
     allocate(new_entry)
-    new_entry%short_name = var
+    new_entry%short_name = adjustl(var)
 
     if (present(rval)) then
       allocate(new_entry%rptr)
