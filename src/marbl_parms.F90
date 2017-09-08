@@ -357,10 +357,10 @@ contains
           autotrophs(n)%loss_poc        = 0.0_r8
 
         case ('cocco')
-        autotrophs(n)%kFe             = 0.032e-3_r8         ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kFe             = 0.024e-3_r8         ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kPO4            = 0.005_r8           ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kDOP            = 0.4_r8             ! in marbl_parms framework, see NOTE above
-        autotrophs(n)%kNO3            = 0.3_r8            ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kNO3            = 0.25_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kNH4            = 0.012_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kCO2            = 1.5_r8             !!!! added Km for CO2 for coccos
@@ -437,7 +437,7 @@ contains
           grazing(m,n)%graze_poc        = 0.0_r8    ! in marbl_parms framework, see NOTE above
           grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_parms framework, see NOTE above
           grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_parms framework, see NOTE above
-          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%grazing_function = grz_fnc_sigmoidal   ! in marbl_parms framework, see NOTE above
         elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
                 (trim(autotrophs_config(m)%sname).eq.'diat')) then
           grazing(m,n)%z_umax_0_per_day = 3.05_r8
