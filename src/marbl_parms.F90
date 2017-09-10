@@ -291,7 +291,7 @@ contains
           autotrophs(n)%kFe             = 0.03e-3_r8         ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kPO4            = 0.005_r8           ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kDOP            = 0.3_r8             ! in marbl_parms framework, see NOTE above
-          autotrophs(n)%kNO3            = 0.20_r8            ! in marbl_parms framework, see NOTE above
+          autotrophs(n)%kNO3            = 0.18_r8            ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kNH4            = 0.01_r8            ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
           autotrophs(n)%kCO2            = 0.0_r8             !!!! added
@@ -357,17 +357,17 @@ contains
           autotrophs(n)%loss_poc        = 0.0_r8
 
         case ('cocco')
-        autotrophs(n)%kFe             = 0.03e-3_r8         ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kFe             = 0.035e-3_r8         ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kPO4            = 0.005_r8           ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kDOP            = 0.4_r8             ! in marbl_parms framework, see NOTE above
-        autotrophs(n)%kNO3            = 0.25_r8            ! in marbl_parms framework, see NOTE above
-        autotrophs(n)%kNH4            = 0.012_r8            ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kNO3            = 0.28_r8            ! in marbl_parms framework, see NOTE above
+        autotrophs(n)%kNH4            = 0.014_r8            ! in marbl_parms framework, see NOTE above
         autotrophs(n)%kSiO3           = 0.0_r8             ! in marbl_parms framework, see NOTE above
-        autotrophs(n)%kCO2            = 1.5_r8             !!!! added Km for CO2 for coccos
+        autotrophs(n)%kCO2            = 2.0_r8             !!!! added Km for CO2 for coccos
         autotrophs(n)%Qp_fixed        =  Qp_zoo            ! only used for lvariable_PtoC=.false.
         autotrophs(n)%gQfe_0          = 25.0e-6_r8
         autotrophs(n)%gQfe_min        = 3.0e-6_r8
-        autotrophs(n)%alphaPI_per_day = 0.37_r8
+        autotrophs(n)%alphaPI_per_day = 0.34_r8
         autotrophs(n)%PCref_per_day   = 4.5_r8
         autotrophs(n)%thetaN_max      = 2.5_r8
         autotrophs(n)%loss_thres      = 0.01_r8
@@ -458,7 +458,7 @@ contains
           grazing(m,n)%grazing_function = grz_fnc_sigmoidal   ! in marbl_parms framework, see NOTE above
         elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
         (trim(autotrophs_config(m)%sname).eq.'cocco')) then
-        grazing(m,n)%z_umax_0_per_day = 3.1_r8    ! in marbl_parms framework, see NOTE above
+        grazing(m,n)%z_umax_0_per_day = 3.2_r8    ! in marbl_parms framework, see NOTE above
         grazing(m,n)%z_grz            = 1.2_r8    ! in marbl_parms framework, see NOTE above
         grazing(m,n)%graze_zoo        = 0.25_r8    ! in marbl_parms framework, see NOTE above
         grazing(m,n)%graze_poc        = 0.3_r8    ! in marbl_parms framework, see NOTE above
