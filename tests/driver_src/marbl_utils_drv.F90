@@ -164,8 +164,10 @@ contains
     ! Any failures above?
     call analyze_results('comment stripping', fail_cnt, tot_fail_cnt, driver_status_log)
 
-    if (tot_fail_cnt .ne. 0) then
-      call driver_status_log%log_noerror('', subname)
+    call driver_status_log%log_noerror('', subname)
+    if (tot_fail_cnt .eq. 0) then
+      call driver_status_log%log_noerror('All unit tests passed!', subname)
+    else
       write(log_message, "(A,I0,A)") "Failed ", tot_fail_cnt, " unit test(s)."
       call driver_status_log%log_error(log_message, subname)
     end if
@@ -348,7 +350,8 @@ contains
       call driver_status_log%log_error(log_message, subname)
       driver_status_log%labort_marbl = .false.
     else
-      call driver_status_log%log_noerror('** All tests pass! **', subname)
+      write(log_message, "(3A)") "** passed all ", trim(testname), " tests **"
+      call driver_status_log%log_noerror(log_message, subname)
     end if
     tot_fail_cnt = tot_fail_cnt + fail_cnt
 
