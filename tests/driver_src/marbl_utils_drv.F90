@@ -18,136 +18,155 @@ contains
 
     type(marbl_log_type),        intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_utils_drv:test'
-    character(len=char_len)     :: log_message
     real(kind=r8)               :: linear_root, expected_root
     real(kind=r8), dimension(2) :: x, y
-    character(len=char_len)     :: str, expected_str
-    character(len=char_len), allocatable :: array(:), expected_array(:)
-    integer                     :: test_cnt, fail_cnt
+    character(len=char_len)     :: str, expected_str, test_desc
+    character(len=char_len), allocatable :: substrs(:), expected_substrs(:)
+    integer                     :: test_cnt, fail_cnt, tot_fail_cnt
+    character(len=*), parameter :: subname = 'marbl_utils_drv:test'
+    character(len=char_len)     :: log_message
 
     ! Linear root tests
+    call driver_status_log%log_header("Linear Root Tests", subname)
     test_cnt = 0
     fail_cnt = 0
+    tot_fail_cnt = 0
 
     ! (1) root between (1,-1) and (2,1) is at x=2
+    test_desc = "(1,-1) -> (2,1)"
     test_cnt = test_cnt + 1
     x = (/ 1.0_r8, 2.0_r8/)
     y = (/-1.0_r8, 1.0_r8/)
     expected_root = 1.5_r8
-    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (2) root between (2,1) and (1,-1) is at x=2
+    test_desc = "(2,1) -> (1,-1)"
     test_cnt = test_cnt + 1
     x = (/2.0_r8,  1.0_r8/)
     y = (/1.0_r8, -1.0_r8/)
     expected_root = 1.5_r8
-    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (3) root between (1,1) and (2,-1) is at x=2
+    test_desc = "(1,1) -> (2,-1)"
     test_cnt = test_cnt + 1
     x = (/1.0_r8,  2.0_r8/)
     y = (/1.0_r8, -1.0_r8/)
     expected_root = 1.5_r8
-    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (4) root between (2,-1) and (1,1) is at x=2
+    test_desc = "(2,-1) -> (1,1)"
     test_cnt = test_cnt + 1
     x = (/ 2.0_r8, 1.0_r8/)
     y = (/-1.0_r8, 1.0_r8/)
     expected_root = 1.5_r8
-    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (5) root between (5,0) and (7,3) is at x=5
+    test_desc = "(5,0) -> (7,3)"
     test_cnt = test_cnt + 1
     x = (/5.0_r8, 7.0_r8/)
     y = (/0.0_r8, 3.0_r8/)
     expected_root = 5.0_r8
-    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (6) root between (5,3) and (7,0) is at x=7
+    test_desc = "(5,3) -> (7,0)"
     test_cnt = test_cnt + 1
     x = (/5.0_r8, 7.0_r8/)
     y = (/3.0_r8, 0.0_r8/)
     expected_root = 7.0_r8
-    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (7) root between (5,0) and (7,0) is at x=7
+    test_desc = "(5,0) -> (7,0)"
     test_cnt = test_cnt + 1
     x = (/5.0_r8, 7.0_r8/)
     y = (/0.0_r8, 0.0_r8/)
     expected_root = 7.0_r8
-    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (8) no root between (1,1) and (2,3)
+    test_desc = "(1,1) -> (2,3)"
     test_cnt = test_cnt + 1
     x = (/1.0_r8, 2.0_r8/)
     y = (/1.0_r8, 3.0_r8/)
-    if (.not. linear_root_test(x, y, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
 
     ! (9) no root between (1,-1) and (2,-3)
+    test_desc = "(1,-1) -> (2,-3)"
     test_cnt = test_cnt + 1
     x = (/ 1.0_r8,  2.0_r8/)
     y = (/-1.0_r8, -3.0_r8/)
-    if (.not. linear_root_test(x, y, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
 
     ! Any failures above?
-    if (fail_cnt .gt. 0) then
-      write(log_message, "(A,I0,A)") "Failed ", fail_cnt, " linear root test(s)"
-      call driver_status_log%log_error(log_message, subname)
-      driver_status_log%labort_marbl = .false.
-    end if
+    call analyze_results('linear root', fail_cnt, tot_fail_cnt, driver_status_log)
 
-    ! str_to_array tests
+    ! str_to_substrs tests
+    call driver_status_log%log_header("String -> Substrings Tests", subname)
     test_cnt = 0
     fail_cnt = 0
 
     ! (1) ".true." -> ".true."
+    test_desc = 'no delimiters in text'
     test_cnt = test_cnt + 1
     str = ".true."
-    allocate(expected_array(1))
-    expected_array(1) = ".true."
-    if (.not. str_to_array_test(str, expected_array, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
-    deallocate(expected_array)
+    allocate(expected_substrs(1))
+    expected_substrs(1) = ".true."
+    if (.not. str_to_substrs_test(str, expected_substrs, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
+    deallocate(expected_substrs)
 
     ! (2) "123, 456" -> "123", " 456"
+    test_desc = 'substrs without quotes'
     test_cnt = test_cnt + 1
     str = "123, 456"
-    allocate(expected_array(2))
-    expected_array(1) = "123"
-    expected_array(2) = " 456"
-    if (.not. str_to_array_test(str, expected_array, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
-    deallocate(expected_array)
+    allocate(expected_substrs(2))
+    expected_substrs(1) = "123"
+    expected_substrs(2) = " 456"
+    if (.not. str_to_substrs_test(str, expected_substrs, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
+    deallocate(expected_substrs)
 
     ! (3) "'ABC, DEF', 'GHI'" -> "'ABC, DEF', " 'GHI'"
+    test_desc = 'substrs, one element contains delimiter in quotes'
     test_cnt = test_cnt + 1
     str = "'ABC, DEF', 'GHI'"
-    allocate(expected_array(2))
-    expected_array(1) = "'ABC, DEF'"
-    expected_array(2) = " 'GHI'"
-    if (.not. str_to_array_test(str, expected_array, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
-    deallocate(expected_array)
-
+    allocate(expected_substrs(2))
+    expected_substrs(1) = "'ABC, DEF'"
+    expected_substrs(2) = " 'GHI'"
+    if (.not. str_to_substrs_test(str, expected_substrs, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
+    deallocate(expected_substrs)
 
     ! Any failures above?
-    if (fail_cnt .gt. 0) then
-      write(log_message, "(A,I0,A)") "Failed ", fail_cnt, " str_to_array test(s)"
-      call driver_status_log%log_error(log_message, subname)
-    end if
+    call analyze_results('string to substrings', fail_cnt, tot_fail_cnt, driver_status_log)
 
     ! strip_comment tests
+    call driver_status_log%log_header("Comment-Stripping Tests", subname)
     test_cnt = 0
     fail_cnt = 0
 
     ! (1) "ciso_on = .true.  ! Turn on ciso" -> "ciso_on = .true.  "
+    test_desc = "comment following variable declaration"
     test_cnt = test_cnt + 1
     str = "ciso_on = .true.  ! Turn on ciso"
     expected_str = "ciso_on = .true."
-    if (.not. strip_comments_test(str, expected_str, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
+    if (.not. strip_comments_test(str, expected_str, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
+
+    ! (2) "autotrophs(1)%lname='Small Phytoplankton!'" -> "autotrophs(1)%lname='Small Phytoplankton!'"
+    test_desc = "exclamation point inside text string, not a comment"
+    test_cnt = test_cnt + 1
+    str = "autotrophs(1)%lname='Small Phytoplankton!'"
+    expected_str = str
+    if (.not. strip_comments_test(str, expected_str, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
 
     ! Any failures above?
-    if (fail_cnt .gt. 0) then
-      write(log_message, "(A,I0,A)") "Failed ", fail_cnt, " str_to_array test(s)"
+    call analyze_results('comment stripping', fail_cnt, tot_fail_cnt, driver_status_log)
+
+    if (tot_fail_cnt .ne. 0) then
+      call driver_status_log%log_noerror('', subname)
+      write(log_message, "(A,I0,A)") "Failed ", tot_fail_cnt, " unit test(s)."
       call driver_status_log%log_error(log_message, subname)
     end if
 
@@ -155,13 +174,14 @@ contains
 
   !*****************************************************************************
 
-  function linear_root_test(x, y, test_cnt, driver_status_log, expected_root) result(ltest_pass)
+  function linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root) result(ltest_pass)
 
     use marbl_utils_mod, only : marbl_utils_linear_root
 
     real(r8), dimension(2), intent(in)    :: x
     real(r8), dimension(2), intent(in)    :: y
     integer,                intent(in)    :: test_cnt
+    character(len=*),       intent(in)    :: test_desc
     type(marbl_log_type),   intent(inout) :: driver_status_log
     real(r8), optional,     intent(in)    :: expected_root
     logical :: ltest_pass
@@ -185,14 +205,16 @@ contains
 
       if (abs(linear_root - expected_root) .le. tol) then
         ltest_pass = .true.
-        write(log_message, "(A,I0,A)") "PASS: Test ", test_cnt, " (linear root)"
+        write(log_message, "(A,I0,3A)") "PASS: Test ", test_cnt, " [linear root: ", trim(test_desc), "]"
+        call driver_status_log%log_noerror(log_message, subname)
+        write(log_message, "(6X,A,E24.16)") "Root at x = ", linear_root
         call driver_status_log%log_noerror(log_message, subname)
       else
-        write(log_message, "(A,I0,A)") "FAIL: Test ", test_cnt, " (linear root)"
+        write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " [linear root: ", trim(test_desc), "]"
         call driver_status_log%log_noerror(log_message, subname)
-        write(log_message, "(A, E24.16)") "       Expected ", expected_root
+        write(log_message, "(6X,A,E24.16)") "Expected ", expected_root
         call driver_status_log%log_noerror(log_message, subname)
-        write(log_message, "(A, E24.16)") "       Result   ", linear_root
+        write(log_message, "(6X,A,E24.16)") "Result   ", linear_root
         call driver_status_log%log_noerror(log_message, subname)
       end if
     else ! no expected real root => expect error
@@ -200,14 +222,16 @@ contains
       ltest_pass = driver_status_log%labort_marbl
       driver_status_log%labort_marbl = .false.
       if (ltest_pass) then
-        write(log_message, "(A,I0,A)") "PASS: Test ", test_cnt, " (linear root)"
+        write(log_message, "(A,I0,3A)") "PASS: Test ", test_cnt, " (linear root: ", trim(test_desc), "]"
+        call driver_status_log%log_noerror(log_message, subname)
+        write(log_message, "(6X,A)")   "No root found"
         call driver_status_log%log_noerror(log_message, subname)
       else
-        write(log_message, "(A,I0,A)") "FAIL: Test ", test_cnt, " (linear root)"
+        write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " (linear root: ", trim(test_desc), "]"
         call driver_status_log%log_noerror(log_message, subname)
-        write(log_message, "(A)")         "       Expected no root"
+        write(log_message, "(6X,A)") "Expected no root"
         call driver_status_log%log_noerror(log_message, subname)
-        write(log_message, "(A, E24.16)") "       Result   ", linear_root
+        write(log_message, "(6X,A,E24.16)") "Root found at x = ", linear_root
         call driver_status_log%log_noerror(log_message, subname)
       end if
     end if
@@ -216,92 +240,120 @@ contains
 
   !*****************************************************************************
 
-  function str_to_array_test(str, expected_array, test_cnt, driver_status_log) result(ltest_pass)
+  function str_to_substrs_test(str, expected_substrs, test_cnt, test_desc, driver_status_log) result(ltest_pass)
 
-    use marbl_utils_mod, only : marbl_utils_str_to_array
+    use marbl_utils_mod, only : marbl_utils_str_to_substrs
 
     character(len=*),               intent(in)    :: str
-    character(len=*), dimension(:), intent(in)    :: expected_array
+    character(len=*), dimension(:), intent(in)    :: expected_substrs
     integer,                        intent(in)    :: test_cnt
+    character(len=*),               intent(in)    :: test_desc
     type(marbl_log_type),           intent(inout) :: driver_status_log
     logical :: ltest_pass
 
-    character(len=*), parameter :: subname = 'marbl_utils_drv:str_to_array_test'
+    character(len=*), parameter :: subname = 'marbl_utils_drv:str_to_substrs_test'
     character(len=char_len)     :: log_message
 
-    character(len=char_len), allocatable :: array(:)
+    character(len=char_len), allocatable :: substrs(:)
     integer :: i
 
-    call marbl_utils_str_to_array(str, ",", array)
-    ltest_pass = (size(array) .eq. size(expected_array))
+    call marbl_utils_str_to_substrs(str, ",", substrs)
+    ltest_pass = (size(substrs) .eq. size(expected_substrs))
     if (.not. ltest_pass) then
-      write(log_message, "(A,I0,A)") "FAIL: Test ", test_cnt, " (str_to_array)"
+      write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " [str_to_substrs: ", trim(test_desc), "]"
       call driver_status_log%log_noerror(log_message, subname)
-      write(log_message, "(A,I0,A)") "      expected ", &
-                                     size(expected_array), &
-                                     " element(s) in array"
+      write(log_message, "(6X,A,I0,A)") "expected ", size(expected_substrs), " element(s) in substrs"
       call driver_status_log%log_noerror(log_message, subname)
-      write(log_message, "(A,I0,A)") "      result had ", &
-                                     size(array),         &
-                                     " element(s)"
+      write(log_message, "(6X,A,I0,A)") "result had ", size(substrs), " element(s)"
       call driver_status_log%log_noerror(log_message, subname)
-      deallocate(array)
+      deallocate(substrs)
       return
     end if
 
-    do i=1,size(array)
-      if (array(i) .ne. expected_array(i)) then
-        if (ltest_pass) then
-          ltest_pass = .false.
-          write(log_message, "(A,I0,A)") "FAIL: Test ", test_cnt, " (str_to_array)"
-          call driver_status_log%log_noerror(log_message, subname)
-        end if
-        write(log_message, "(2A)") "      Expected ", trim(expected_array(i))
+    do i=1,size(substrs)
+      if (substrs(i) .ne. expected_substrs(i)) then
+        ltest_pass = .false.
+        write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " (str_to_substrs: ", trim(test_desc), ")"
         call driver_status_log%log_noerror(log_message, subname)
-        write(log_message, "(2A)") "      Result   ", trim(array(i))
+        write(log_message, "(6X,A,I0,2A)") "Expected substr(", i, ") = ", trim(expected_substrs(i))
+        call driver_status_log%log_noerror(log_message, subname)
+        write(log_message, "(6X,A,I0,2A)") "Result substr(", i, ") = ", trim(substrs(i))
         call driver_status_log%log_noerror(log_message, subname)
       end if
     end do
-    deallocate(array)
+
     if (ltest_pass) then
-      write(log_message, "(A,I0,A)") "PASS: Test ", test_cnt, " (str_to_array)"
+      write(log_message, "(A,I0,3A)") "PASS: Test ", test_cnt, " (str_to_substrs: ", trim(test_desc), ")"
       call driver_status_log%log_noerror(log_message, subname)
+      do i=1,size(substrs)
+        write(log_message, "(6X,A,I0,2A)") "substr(", i, ") = ", trim(substrs(i))
+        call driver_status_log%log_noerror(log_message, subname)
+      end do
     end if
 
-  end function str_to_array_test
+    deallocate(substrs)
+
+  end function str_to_substrs_test
 
   !*****************************************************************************
 
-  function strip_comments_test(str, expected_str, test_cnt, driver_status_log) result(ltest_pass)
+  function strip_comments_test(str, expected_str, test_cnt, test_desc, driver_status_log) result(ltest_pass)
 
-    use marbl_utils_mod, only : marbl_utils_str_to_array
+    use marbl_utils_mod, only : marbl_utils_str_to_substrs
 
     character(len=*),     intent(in)    :: str
     character(len=*),     intent(in)    :: expected_str
     integer,              intent(in)    :: test_cnt
+    character(len=*),     intent(in)    :: test_desc
     type(marbl_log_type), intent(inout) :: driver_status_log
     logical :: ltest_pass
 
-    character(len=*), parameter :: subname = 'marbl_utils_drv:str_to_array_test'
+    character(len=*), parameter :: subname = 'marbl_utils_drv:str_to_substrs_test'
     character(len=char_len)     :: log_message
 
-    character(len=char_len), allocatable :: array(:)
+    character(len=char_len), allocatable :: substrs(:)
 
-    call marbl_utils_str_to_array(str, "!", array)
-    ltest_pass = trim(array(1)) .eq. trim(expected_str)
+    call marbl_utils_str_to_substrs(str, "!", substrs)
+    ltest_pass = trim(substrs(1)) .eq. trim(expected_str)
     if (ltest_pass) then
-      write(log_message, "(A,I0,A)") "PASS: Test ", test_cnt, " (strip_comments)"
+      write(log_message, "(A,I0,3A)") "PASS: Test ", test_cnt, " (strip_comments: ", trim(test_desc), ")"
+      call driver_status_log%log_noerror(log_message, subname)
+      write(log_message, "(6X,2A)") "string = ", trim(substrs(1))
       call driver_status_log%log_noerror(log_message, subname)
     else
-      write(log_message, "(A,I0,A)") "FAIL: Test ", test_cnt, " (strip_comments)"
+      write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " (strip_comments: ", trim(test_desc), ")"
       call driver_status_log%log_noerror(log_message, subname)
-      write(log_message, "(2A)") "      Expected ", trim(expected_str)
+      write(log_message, "(6X,2A)") "Expected ", trim(expected_str)
       call driver_status_log%log_noerror(log_message, subname)
-      write(log_message, "(2A)") "      Result   ", trim(array(1))
+      write(log_message, "(6X,2A)") "Result   ", trim(substrs(1))
       call driver_status_log%log_noerror(log_message, subname)
     end if
 
   end function strip_comments_test
+
+  !*****************************************************************************
+
+  subroutine analyze_results(testname, fail_cnt, tot_fail_cnt, driver_status_log)
+
+    character(len=*),     intent(in)    :: testname
+    integer,              intent(in)    :: fail_cnt
+    integer,              intent(inout) :: tot_fail_cnt
+    type(marbl_log_type), intent(inout) :: driver_status_log
+    character(len=char_len)     :: log_message
+
+    character(len=*), parameter :: subname = 'marbl_utils_drv:analyze_results'
+    call driver_status_log%log_noerror('', subname)
+    if (fail_cnt .gt. 0) then
+      write(log_message, "(A,I0,X,A,X,A)") "Failed ", fail_cnt, trim(testname), "test(s)"
+      call driver_status_log%log_error(log_message, subname)
+      driver_status_log%labort_marbl = .false.
+    else
+      call driver_status_log%log_noerror('** All tests pass! **', subname)
+    end if
+    tot_fail_cnt = tot_fail_cnt + fail_cnt
+
+  end subroutine analyze_results
+
   !*****************************************************************************
 
 end module marbl_utils_drv

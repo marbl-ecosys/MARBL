@@ -520,7 +520,7 @@ contains
     ! put list is traversed by add_var the datatype is assumed to match new_entry
     ! (and error checking verifies that it is an appropriate value)
 
-    use marbl_utils_mod, only : marbl_utils_str_to_array
+    use marbl_utils_mod, only : marbl_utils_str_to_substrs
 
     class(marbl_interface_class), intent(inout) :: this
     character(len=*),             intent(in)    :: line
@@ -538,7 +538,7 @@ contains
 
     line_loc = ''
     ! Strip out comments (denoted by '!'); line_loc_arr(1) is the line to be processed
-    call marbl_utils_str_to_array(line, '!', line_loc_arr)
+    call marbl_utils_str_to_substrs(line, '!', line_loc_arr)
     line_loc = line_loc_arr(1)
 
     ! Return without processing if
@@ -561,7 +561,7 @@ contains
     end do
 
     ! Everything to the right of the first '=' is the variable value, which might be an array
-    call marbl_utils_str_to_array(line_loc, ',', value)
+    call marbl_utils_str_to_substrs(line_loc, ',', value)
     var_loc = varname
     do n=1, size(value)
       if (size(value) .gt. 1) write(var_loc, "(2A,I0,A)") trim(varname), '(', n, ')'
