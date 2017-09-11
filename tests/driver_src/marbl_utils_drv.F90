@@ -20,7 +20,7 @@ contains
 
     real(kind=r8)               :: linear_root, expected_root
     real(kind=r8), dimension(2) :: x, y
-    character(len=char_len)     :: str, expected_str, test_desc
+    character(len=char_len)     :: str, expected_str
     character(len=char_len), allocatable :: substrs(:), expected_substrs(:)
     integer                     :: test_cnt, fail_cnt, tot_fail_cnt
     character(len=*), parameter :: subname = 'marbl_utils_drv:test'
@@ -33,74 +33,65 @@ contains
     tot_fail_cnt = 0
 
     ! (1) root between (1,-1) and (2,1) is at x=2
-    test_desc = "(1,-1) -> (2,1)"
     test_cnt = test_cnt + 1
     x = (/ 1.0_r8, 2.0_r8/)
     y = (/-1.0_r8, 1.0_r8/)
     expected_root = 1.5_r8
-    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (2) root between (2,1) and (1,-1) is at x=2
-    test_desc = "(2,1) -> (1,-1)"
     test_cnt = test_cnt + 1
     x = (/2.0_r8,  1.0_r8/)
     y = (/1.0_r8, -1.0_r8/)
     expected_root = 1.5_r8
-    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (3) root between (1,1) and (2,-1) is at x=2
-    test_desc = "(1,1) -> (2,-1)"
     test_cnt = test_cnt + 1
     x = (/1.0_r8,  2.0_r8/)
     y = (/1.0_r8, -1.0_r8/)
     expected_root = 1.5_r8
-    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (4) root between (2,-1) and (1,1) is at x=2
-    test_desc = "(2,-1) -> (1,1)"
     test_cnt = test_cnt + 1
     x = (/ 2.0_r8, 1.0_r8/)
     y = (/-1.0_r8, 1.0_r8/)
     expected_root = 1.5_r8
-    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (5) root between (5,0) and (7,3) is at x=5
-    test_desc = "(5,0) -> (7,3)"
     test_cnt = test_cnt + 1
     x = (/5.0_r8, 7.0_r8/)
     y = (/0.0_r8, 3.0_r8/)
     expected_root = 5.0_r8
-    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (6) root between (5,3) and (7,0) is at x=7
-    test_desc = "(5,3) -> (7,0)"
     test_cnt = test_cnt + 1
     x = (/5.0_r8, 7.0_r8/)
     y = (/3.0_r8, 0.0_r8/)
     expected_root = 7.0_r8
-    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (7) root between (5,0) and (7,0) is at x=7
-    test_desc = "(5,0) -> (7,0)"
     test_cnt = test_cnt + 1
     x = (/5.0_r8, 7.0_r8/)
     y = (/0.0_r8, 0.0_r8/)
     expected_root = 7.0_r8
-    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, driver_status_log, expected_root)) fail_cnt = fail_cnt + 1
 
     ! (8) no root between (1,1) and (2,3)
-    test_desc = "(1,1) -> (2,3)"
     test_cnt = test_cnt + 1
     x = (/1.0_r8, 2.0_r8/)
     y = (/1.0_r8, 3.0_r8/)
-    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
 
     ! (9) no root between (1,-1) and (2,-3)
-    test_desc = "(1,-1) -> (2,-3)"
     test_cnt = test_cnt + 1
     x = (/ 1.0_r8,  2.0_r8/)
     y = (/-1.0_r8, -3.0_r8/)
-    if (.not. linear_root_test(x, y, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
+    if (.not. linear_root_test(x, y, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
 
     ! Any failures above?
     call analyze_results('linear root', fail_cnt, tot_fail_cnt, driver_status_log)
@@ -171,26 +162,27 @@ contains
 
   !*****************************************************************************
 
-  function linear_root_test(x, y, test_cnt, test_desc, driver_status_log, expected_root) result(ltest_pass)
+  function linear_root_test(x, y, test_cnt, driver_status_log, expected_root) result(ltest_pass)
 
     use marbl_utils_mod, only : marbl_utils_linear_root
 
     real(r8), dimension(2), intent(in)    :: x
     real(r8), dimension(2), intent(in)    :: y
     integer,                intent(in)    :: test_cnt
-    character(len=*),       intent(in)    :: test_desc
     type(marbl_log_type),   intent(inout) :: driver_status_log
     real(r8), optional,     intent(in)    :: expected_root
     logical :: ltest_pass
 
     character(len=*), parameter :: subname = 'marbl_utils_drv:linear_root_test'
     character(len=char_len)     :: log_message
+    character(len=char_len)     :: test_desc
 
     real(r8) :: linear_root
     real(r8) :: tol
 
     tol = 1e-13_r8
     ltest_pass = .false.
+    write(test_desc, "(A,F0.1,A,F0.1,A,F0.1,A,F0.1,A)") "root between (", x(1), ", ", y(1), ") and (", x(2), ", ", y(2), ')' 
 
     if (.not. present(expected_root)) driver_status_log%OutputOptions%lLogError=.false.
     linear_root = marbl_utils_linear_root(x, y, driver_status_log)
@@ -204,14 +196,14 @@ contains
         ltest_pass = .true.
         write(log_message, "(A,I0,3A)") "PASS: Test ", test_cnt, " [linear root: ", trim(test_desc), "]"
         call driver_status_log%log_noerror(log_message, subname)
-        write(log_message, "(6X,A,E24.16)") "Root at x = ", linear_root
+        write(log_message, "(6X,A,F0.1)") "Root at x = ", linear_root
         call driver_status_log%log_noerror(log_message, subname)
       else
         write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " [linear root: ", trim(test_desc), "]"
         call driver_status_log%log_noerror(log_message, subname)
-        write(log_message, "(6X,A,E24.16)") "Expected ", expected_root
+        write(log_message, "(6X,A,F0.1)") "Expected root: ", expected_root
         call driver_status_log%log_noerror(log_message, subname)
-        write(log_message, "(6X,A,E24.16)") "Result   ", linear_root
+        write(log_message, "(6X,A,E24.16)") "Found root:   ", linear_root
         call driver_status_log%log_noerror(log_message, subname)
       end if
     else ! no expected real root => expect error
@@ -228,7 +220,7 @@ contains
         call driver_status_log%log_noerror(log_message, subname)
         write(log_message, "(6X,A)") "Expected no root"
         call driver_status_log%log_noerror(log_message, subname)
-        write(log_message, "(6X,A,E24.16)") "Root found at x = ", linear_root
+        write(log_message, "(6X,A,E24.16)") "fount root: ", linear_root
         call driver_status_log%log_noerror(log_message, subname)
       end if
     end if
