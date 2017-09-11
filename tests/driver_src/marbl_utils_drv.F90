@@ -111,32 +111,29 @@ contains
     fail_cnt = 0
 
     ! (1) ".true." -> ".true."
-    test_desc = 'no delimiters in text'
     test_cnt = test_cnt + 1
     str = ".true."
     allocate(expected_substrs(1))
     expected_substrs(1) = ".true."
-    if (.not. str_to_substrs_test(str, expected_substrs, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
+    if (.not. str_to_substrs_test(str, expected_substrs, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
     deallocate(expected_substrs)
 
     ! (2) "123, 456" -> "123", " 456"
-    test_desc = 'substrs without quotes'
     test_cnt = test_cnt + 1
     str = "123, 456"
     allocate(expected_substrs(2))
     expected_substrs(1) = "123"
     expected_substrs(2) = " 456"
-    if (.not. str_to_substrs_test(str, expected_substrs, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
+    if (.not. str_to_substrs_test(str, expected_substrs, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
     deallocate(expected_substrs)
 
     ! (3) "'ABC, DEF', 'GHI'" -> "'ABC, DEF', " 'GHI'"
-    test_desc = 'substrs, one element contains delimiter in quotes'
     test_cnt = test_cnt + 1
     str = "'ABC, DEF', 'GHI'"
     allocate(expected_substrs(2))
     expected_substrs(1) = "'ABC, DEF'"
     expected_substrs(2) = " 'GHI'"
-    if (.not. str_to_substrs_test(str, expected_substrs, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
+    if (.not. str_to_substrs_test(str, expected_substrs, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
     deallocate(expected_substrs)
 
     ! Any failures above?
@@ -148,18 +145,16 @@ contains
     fail_cnt = 0
 
     ! (1) "ciso_on = .true.  ! Turn on ciso" -> "ciso_on = .true.  "
-    test_desc = "comment following variable declaration"
     test_cnt = test_cnt + 1
     str = "ciso_on = .true.  ! Turn on ciso"
     expected_str = "ciso_on = .true."
-    if (.not. strip_comments_test(str, expected_str, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
+    if (.not. strip_comments_test(str, expected_str, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
 
     ! (2) "autotrophs(1)%lname='Small Phytoplankton!'" -> "autotrophs(1)%lname='Small Phytoplankton!'"
-    test_desc = "exclamation point inside text string, not a comment"
     test_cnt = test_cnt + 1
     str = "autotrophs(1)%lname='Small Phytoplankton!'"
     expected_str = str
-    if (.not. strip_comments_test(str, expected_str, test_cnt, test_desc, driver_status_log)) fail_cnt = fail_cnt + 1
+    if (.not. strip_comments_test(str, expected_str, test_cnt, driver_status_log)) fail_cnt = fail_cnt + 1
 
     ! Any failures above?
     call analyze_results('comment stripping', fail_cnt, tot_fail_cnt, driver_status_log)
@@ -242,14 +237,13 @@ contains
 
   !*****************************************************************************
 
-  function str_to_substrs_test(str, expected_substrs, test_cnt, test_desc, driver_status_log) result(ltest_pass)
+  function str_to_substrs_test(str, expected_substrs, test_cnt, driver_status_log) result(ltest_pass)
 
     use marbl_utils_mod, only : marbl_utils_str_to_substrs
 
     character(len=*),               intent(in)    :: str
     character(len=*), dimension(:), intent(in)    :: expected_substrs
     integer,                        intent(in)    :: test_cnt
-    character(len=*),               intent(in)    :: test_desc
     type(marbl_log_type),           intent(inout) :: driver_status_log
     logical :: ltest_pass
 
@@ -262,7 +256,7 @@ contains
     call marbl_utils_str_to_substrs(str, ",", substrs)
     ltest_pass = (size(substrs) .eq. size(expected_substrs))
     if (.not. ltest_pass) then
-      write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " [str_to_substrs: ", trim(test_desc), "]"
+      write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " [str_to_substrs: ", trim(str), "]"
       call driver_status_log%log_noerror(log_message, subname)
       write(log_message, "(6X,A,I0,A)") "expected ", size(expected_substrs), " element(s) in substrs"
       call driver_status_log%log_noerror(log_message, subname)
@@ -275,20 +269,20 @@ contains
     do i=1,size(substrs)
       if (substrs(i) .ne. expected_substrs(i)) then
         ltest_pass = .false.
-        write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " (str_to_substrs: ", trim(test_desc), ")"
+        write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " (str_to_substrs: ", trim(str), ")"
         call driver_status_log%log_noerror(log_message, subname)
-        write(log_message, "(6X,A,I0,2A)") "Expected substr(", i, ") = ", trim(expected_substrs(i))
+        write(log_message, "(6X,A,I0,2A)") "Expected substr(", i, "): ", trim(expected_substrs(i))
         call driver_status_log%log_noerror(log_message, subname)
-        write(log_message, "(6X,A,I0,2A)") "Result substr(", i, ") = ", trim(substrs(i))
+        write(log_message, "(6X,A,I0,2A)") "Result substr(", i, "): ", trim(substrs(i))
         call driver_status_log%log_noerror(log_message, subname)
       end if
     end do
 
     if (ltest_pass) then
-      write(log_message, "(A,I0,3A)") "PASS: Test ", test_cnt, " (str_to_substrs: ", trim(test_desc), ")"
+      write(log_message, "(A,I0,3A)") "PASS: Test ", test_cnt, " (str_to_substrs: ", trim(str), ")"
       call driver_status_log%log_noerror(log_message, subname)
       do i=1,size(substrs)
-        write(log_message, "(6X,A,I0,2A)") "substr(", i, ") = ", trim(substrs(i))
+        write(log_message, "(6X,A,I0,2A)") "substr(", i, "): ", trim(substrs(i))
         call driver_status_log%log_noerror(log_message, subname)
       end do
     end if
@@ -299,14 +293,13 @@ contains
 
   !*****************************************************************************
 
-  function strip_comments_test(str, expected_str, test_cnt, test_desc, driver_status_log) result(ltest_pass)
+  function strip_comments_test(str, expected_str, test_cnt, driver_status_log) result(ltest_pass)
 
     use marbl_utils_mod, only : marbl_utils_str_to_substrs
 
     character(len=*),     intent(in)    :: str
     character(len=*),     intent(in)    :: expected_str
     integer,              intent(in)    :: test_cnt
-    character(len=*),     intent(in)    :: test_desc
     type(marbl_log_type), intent(inout) :: driver_status_log
     logical :: ltest_pass
 
@@ -318,16 +311,16 @@ contains
     call marbl_utils_str_to_substrs(str, "!", substrs)
     ltest_pass = trim(substrs(1)) .eq. trim(expected_str)
     if (ltest_pass) then
-      write(log_message, "(A,I0,3A)") "PASS: Test ", test_cnt, " (strip_comments: ", trim(test_desc), ")"
+      write(log_message, "(A,I0,3A)") "PASS: Test ", test_cnt, " (strip_comments: ", trim(str), ")"
       call driver_status_log%log_noerror(log_message, subname)
-      write(log_message, "(6X,2A)") "string = ", trim(substrs(1))
+      write(log_message, "(6X,2A)") "string: ", trim(substrs(1))
       call driver_status_log%log_noerror(log_message, subname)
     else
-      write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " (strip_comments: ", trim(test_desc), ")"
+      write(log_message, "(A,I0,3A)") "FAIL: Test ", test_cnt, " (strip_comments: ", trim(str), ")"
       call driver_status_log%log_noerror(log_message, subname)
-      write(log_message, "(6X,2A)") "Expected ", trim(expected_str)
+      write(log_message, "(6X,2A)") "Expected: ", trim(expected_str)
       call driver_status_log%log_noerror(log_message, subname)
-      write(log_message, "(6X,2A)") "Result   ", trim(substrs(1))
+      write(log_message, "(6X,2A)") "Result:   ", trim(substrs(1))
       call driver_status_log%log_noerror(log_message, subname)
     end if
 
