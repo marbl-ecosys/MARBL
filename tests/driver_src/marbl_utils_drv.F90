@@ -344,7 +344,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_utils_drv:analyze_results'
     call driver_status_log%log_noerror('', subname)
     if (fail_cnt .gt. 0) then
-      write(log_message, "(A,I0,X,A,X,A)") "Failed ", fail_cnt, trim(testname), "test(s)"
+      write(log_message, "(A,I0,1X,A,1X,A)") "Failed ", fail_cnt, trim(testname), "test(s)"
       call driver_status_log%log_error(log_message, subname)
       driver_status_log%labort_marbl = .false.
     else
