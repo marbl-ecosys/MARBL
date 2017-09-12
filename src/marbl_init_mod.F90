@@ -49,7 +49,6 @@ contains
 
     ! Construct status log
     call marbl_status_log%construct()
-    call marbl_status_log%log_noerror('', subname)
 
     ! Set up timers
     call marbl_timers%setup(timer_ids, marbl_status_log)
