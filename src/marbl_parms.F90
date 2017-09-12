@@ -437,7 +437,7 @@ contains
           grazing(m,n)%graze_poc        = 0.0_r8    ! in marbl_parms framework, see NOTE above
           grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_parms framework, see NOTE above
           grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_parms framework, see NOTE above
-          grazing(m,n)%grazing_function = grz_fnc_sigmoidal   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_parms framework, see NOTE above
         elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
                 (trim(autotrophs_config(m)%sname).eq.'diat')) then
           grazing(m,n)%z_umax_0_per_day = 3.05_r8
@@ -446,7 +446,7 @@ contains
           grazing(m,n)%graze_poc        = 0.38_r8   ! in marbl_parms framework, see NOTE above
           grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_parms framework, see NOTE above
           grazing(m,n)%f_zoo_detr       = 0.24_r8   ! in marbl_parms framework, see NOTE above
-          grazing(m,n)%grazing_function = grz_fnc_sigmoidal   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_parms framework, see NOTE above
         elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
                 (trim(autotrophs_config(m)%sname).eq.'diaz')) then
           grazing(m,n)%z_umax_0_per_day = 3.2_r8    ! in marbl_parms framework, see NOTE above
@@ -455,7 +455,7 @@ contains
           grazing(m,n)%graze_poc        = 0.1_r8    ! in marbl_parms framework, see NOTE above
           grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_parms framework, see NOTE above
           grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_parms framework, see NOTE above
-          grazing(m,n)%grazing_function = grz_fnc_sigmoidal   ! in marbl_parms framework, see NOTE above
+          grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_parms framework, see NOTE above
         elseif ((trim(zooplankton_config(n)%sname).eq.'zoo').and.             &
         (trim(autotrophs_config(m)%sname).eq.'cocco')) then
         grazing(m,n)%z_umax_0_per_day = 3.2_r8    ! in marbl_parms framework, see NOTE above
@@ -464,7 +464,7 @@ contains
         grazing(m,n)%graze_poc        = 0.3_r8    ! in marbl_parms framework, see NOTE above
         grazing(m,n)%graze_doc        = 0.06_r8   ! in marbl_parms framework, see NOTE above
         grazing(m,n)%f_zoo_detr       = 0.12_r8   ! in marbl_parms framework, see NOTE above
-        grazing(m,n)%grazing_function = grz_fnc_sigmoidal   ! in marbl_parms framework, see NOTE above
+        grazing(m,n)%grazing_function = grz_fnc_michaelis_menten   ! in marbl_parms framework, see NOTE above
         else
           grazing(m,n)%z_umax_0_per_day = c0
           grazing(m,n)%z_grz            = c0
