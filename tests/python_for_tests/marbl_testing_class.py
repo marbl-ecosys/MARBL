@@ -122,7 +122,7 @@ class MARBL_testcase(object):
 
     src_dir = '%s/src' % self._marbl_dir
 
-    if self._machine is not 'local':
+    if self._machine != 'local':
       machs.load_module(self._machine, loc_compiler, self._module_names[loc_compiler])
 
     makecmd = 'make %s' % loc_compiler
@@ -140,7 +140,7 @@ class MARBL_testcase(object):
 
     drv_dir = '%s/tests/driver_src' % self._marbl_dir
 
-    if self._machine is not 'local':
+    if self._machine != 'local':
       machs.load_module(self._machine, loc_compiler, self._module_names[loc_compiler])
 
     makecmd = 'make %s' % loc_compiler
@@ -156,7 +156,7 @@ class MARBL_testcase(object):
     exe_dir = '%s/tests/driver_exe' % self._marbl_dir
 
     if self._mpitasks > 0:
-      if self._inputfile is not None:
+      if self._inputfile != None:
         execmd = '%s/marbl-mpi.exe < %s' % (exe_dir, self._inputfile)
       else:
         execmd = '%s/marbl-mpi.exe' % exe_dir
@@ -168,7 +168,7 @@ class MARBL_testcase(object):
       else:
         execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
     else:
-      if self._inputfile is not None:
+      if self._inputfile != None:
         execmd = '%s/marbl.exe < %s' % (exe_dir, self._inputfile)
       else:
         execmd = '%s/marbl.exe' % exe_dir
