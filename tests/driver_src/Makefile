@@ -88,7 +88,7 @@ else
   LFLAG = -lmarbl-$(COMP_NAME)
 endif
 
-LIBCPPDEFS=-DECOSYS_BASE_NT=32 -DZOOPLANKTON_CNT=1 -DAUTOTROPH_CNT=3 -DGRAZER_PREY_CNT=3
+LIBCPPDEFS=
 EXECPPDEFS=
 INCLUDES=-I$(INC_LOC)
 LINKS=-L$(LIB_DIR) $(LFLAG)
@@ -107,10 +107,10 @@ endif
 
 COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(LIBCPPDEFS)"
 
-OBJS = marbl_init_namelist_drv.o       \
-       marbl_init_no_namelist_drv.o    \
-       marbl_get_put_drv.o             \
-       marbl_mpi_mod.o                 \
+OBJS = marbl_mpi_mod.o       \
+       marbl_init_drv.o      \
+       marbl_get_put_drv.o   \
+       marbl_utils_drv.o     \
        marbl.o
 
 MODS = marbl_mpi_mod.mod
@@ -119,7 +119,6 @@ MODS = marbl_mpi_mod.mod
 # TARGETS #
 ###########
 
-.PHONY: intel pgi gnu nag cray clean clean_exe
 # default is to build with gnu
 .PHONY: all
 all: gnu
@@ -138,7 +137,7 @@ pgi:
 
 .PHONY: nag
 nag:
-	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-O2 -free -kind=byte" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-O2 -free -kind=byte -wmismatch=mpi_bcast" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
 
 .PHONY: cray
 cray:
@@ -149,7 +148,7 @@ $(LIB_DIR)/%.a: $(LIB_SRC_DIR)/*.F90
 	make -f $(LIB_SRC_DIR)/Makefile FC=$(FC) FCFLAGS="$(FCFLAGS) $(INC)" USE_DEPS=TRUE $(COMP_ARGS) $@
 
 # Driver object files
-$(OBJ_DIR)/%.o: $(EXE_SRC_DIR)/%.F90
+$(OBJ_DIR)/%.o: $(EXE_SRC_DIR)/%.F90 $(LIB_DIR)/$(LIB_NAME)
 	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(INC2) $(INCLUDES) -c $< -o $@
 
 # Executable

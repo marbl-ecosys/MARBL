@@ -3,11 +3,16 @@ module marbl_restore_mod
   ! Module to generalize restoring any non-autotroph tracer
   !
 
-  use marbl_kinds_mod      , only : r8, int_kind, char_len
-  use marbl_constants_mod  , only : p5, c0, c2, c1000
-  use marbl_interface_types, only : marbl_domain_type
-  use marbl_sizes          , only : marbl_total_tracer_cnt
-  use marbl_sizes          , only : tracer_restore_cnt
+  use marbl_kinds_mod, only : r8
+  use marbl_kinds_mod, only : int_kind
+  use marbl_kinds_mod, only : char_len
+
+  use marbl_constants_mod, only : p5
+  use marbl_constants_mod, only : c0
+  use marbl_constants_mod, only : c2
+  use marbl_constants_mod, only : c1000
+
+  use marbl_interface_public_types, only : marbl_domain_type
 
   implicit none
   public
@@ -24,10 +29,8 @@ subroutine marbl_restore_compute_interior_restore(interior_tracers, km,       &
   !
   !  restore a variable if required
   !
-  use marbl_kinds_mod      , only : r8, int_kind
-  use marbl_constants_mod  , only : c0
-  use marbl_interface_types, only : marbl_forcing_fields_type
-  use marbl_internal_types , only : marbl_interior_forcing_indexing_type
+  use marbl_interface_public_types, only : marbl_forcing_fields_type
+  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
 
   !-----------------------------------------------------------------------
   !  input variables
@@ -42,7 +45,7 @@ subroutine marbl_restore_compute_interior_restore(interior_tracers, km,       &
   !  output variables
   !-----------------------------------------------------------------------
 
-  real(kind=r8), dimension(marbl_total_tracer_cnt, km), intent(out) :: interior_restore
+  real(kind=r8), dimension(:, :), intent(out) :: interior_restore
 
   !-----------------------------------------------------------------------
   !  local variables
@@ -56,7 +59,7 @@ subroutine marbl_restore_compute_interior_restore(interior_tracers, km,       &
   restoring_inds => interior_forcing_ind%tracer_restore_id
   inv_tau_inds   => interior_forcing_ind%inv_tau_id
 
-  do m=1,tracer_restore_cnt
+  do m=1,size(interior_forcing_ind%tracer_id)
     n = interior_forcing_ind%tracer_id(m)
     associate(restore_field => interior_forcings(restoring_inds(n))%field_1d, &
               inv_tau       =>  interior_forcings(inv_tau_inds(n))%field_1d)

@@ -1,0 +1,4 @@
+&marbl_driver_nml
+testname = "get_put"
+lhas_inputfile = .false.
+/

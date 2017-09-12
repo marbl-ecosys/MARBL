@@ -10,7 +10,7 @@ mt = MARBL_testcase()
 mt.parse_args(desc='Set all configuration variables and parameters via put '
                    'statements and use get statements to ensure they are '
                    'correct. Also put different values to make sure nothing '
-                   'else changes.', HaveNamelist=False)
+                   'else changes.', HaveInputFile=False)
 
 mt.build_exe()
 

@@ -1,7 +1,3 @@
 &marbl_driver_nml
 testname="request_tracers"
 /
-&marbl_config_nml
-/
-&marbl_parms_nml
-/
