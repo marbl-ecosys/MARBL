@@ -1,4 +1,4 @@
-module marbl_interface_types
+module marbl_interface_public_types
   ! module for definitions of types that are shared between marbl interior and the driver.
 
   use marbl_kinds_mod           , only : r8, log_kind, int_kind, char_len
@@ -63,6 +63,7 @@ module marbl_interface_types
      real(r8), allocatable :: delta_z(:)                    ! (km) delta z - different values for partial bottom cells
    contains
      procedure, public :: construct => marbl_domain_constructor
+     procedure, public :: destruct => marbl_domain_destructor
   end type marbl_domain_type
 
   !*****************************************************************************
@@ -203,14 +204,14 @@ contains
        num_elements_surface_forcing, num_elements_interior_forcing, &
        delta_z, zw, zt)
 
-    class(marbl_domain_type), intent(inout) :: this
-    integer (int_kind) , intent(in) :: num_levels
-    integer (int_kind) , intent(in) :: num_PAR_subcols
-    integer (int_kind) , intent(in) :: num_elements_surface_forcing
-    integer (int_kind) , intent(in) :: num_elements_interior_forcing
-    real (r8)          , intent(in) :: delta_z(num_levels)
-    real (r8)          , intent(in) :: zw(num_levels)
-    real (r8)          , intent(in) :: zt(num_levels)
+    class(marbl_domain_type), intent(out) :: this
+    integer (int_kind),       intent(in)  :: num_levels
+    integer (int_kind),       intent(in)  :: num_PAR_subcols
+    integer (int_kind),       intent(in)  :: num_elements_surface_forcing
+    integer (int_kind),       intent(in)  :: num_elements_interior_forcing
+    real (r8),                intent(in)  :: delta_z(num_levels)
+    real (r8),                intent(in)  :: zw(num_levels)
+    real (r8),                intent(in)  :: zt(num_levels)
 
     integer :: k
 
@@ -233,6 +234,20 @@ contains
 
   !*****************************************************************************
 
+  subroutine marbl_domain_destructor(this)
+
+    class(marbl_domain_type), intent(inout) :: this
+
+    if (allocated(this%delta_z)) then
+      deallocate(this%delta_z)
+      deallocate(this%zw)
+      deallocate(this%zt)
+    end if
+
+  end subroutine marbl_domain_destructor
+
+  !*****************************************************************************
+
   subroutine marbl_single_saved_state_construct(this, lname, sname, units,    &
              vgrid, rank, num_elements, num_levels, marbl_status_log)
 
@@ -248,7 +263,7 @@ contains
     integer,          intent(in) :: num_levels
 
     character(len=*), parameter :: subname =                                  &
-                  'marbl_interface_types:marbl_single_saved_state_construct'
+                  'marbl_interface_public_types:marbl_single_saved_state_construct'
     character(len=char_len)     :: log_message
 
     select case (rank)
@@ -290,9 +305,9 @@ contains
 
   subroutine marbl_saved_state_constructor(this, num_elements, num_levels)
 
-    class(marbl_saved_state_type), intent(inout) :: this
-    integer (int_kind) , intent(in) :: num_elements
-    integer (int_kind) , intent(in) :: num_levels
+    class(marbl_saved_state_type), intent(out) :: this
+    integer (int_kind),            intent(in)  :: num_elements
+    integer (int_kind),            intent(in)  :: num_levels
 
     this%saved_state_cnt = 0
     this%num_elements    = num_elements
@@ -316,7 +331,7 @@ contains
     integer(int_kind), intent(in)  :: rank
     integer(int_kind), intent(out) :: id
 
-    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_saved_state_add'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_saved_state_add'
     character(len=char_len)     :: log_message
 
     type(marbl_single_saved_state_type), dimension(:), pointer :: new_state
@@ -383,7 +398,7 @@ contains
     integer                 , intent(in)    :: num_levels
     type(marbl_log_type)    , intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_single_diag_init'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_diag_init'
     character(len=char_len)     :: log_message
 
     ! Allocate column memory for 3D vars or num_elements memory for 2D vars
@@ -414,13 +429,14 @@ contains
 
   subroutine marbl_single_sfo_constructor(this, num_elements, field_name, id, &
                                           marbl_status_log)
-    class(marbl_single_sfo_type), intent(inout) :: this
+
+    class(marbl_single_sfo_type), intent(out)   :: this
     character(len=*),             intent(in)    :: field_name
     integer(int_kind),            intent(in)    :: num_elements
     integer(int_kind),            intent(in)    :: id
     type(marbl_log_type),         intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_single_sfo_constructor'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_sfo_constructor'
     character(len=char_len)     :: log_message
 
     select case (trim(field_name))
@@ -483,7 +499,7 @@ contains
     type(marbl_log_type), intent(inout) :: marbl_status_log
     integer(int_kind),    intent(out)   :: sfo_id
 
-    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_sfo_add'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_sfo_add'
 
     type(marbl_single_sfo_type), dimension(:), pointer :: new_sfo
     integer :: n, old_size
@@ -531,9 +547,9 @@ contains
 
   subroutine marbl_diagnostics_constructor(this, num_elements, num_levels)
 
-    class(marbl_diagnostics_type), intent(inout) :: this
-    integer (int_kind),            intent(in)    :: num_elements
-    integer (int_kind),            intent(in)    :: num_levels
+    class(marbl_diagnostics_type), intent(out) :: this
+    integer (int_kind),            intent(in)  :: num_elements
+    integer (int_kind),            intent(in)  :: num_levels
 
     allocate(this%diags(0))
     this%num_elements = num_elements
@@ -548,7 +564,7 @@ contains
     class(marbl_diagnostics_type), intent(inout) :: this
     type(marbl_log_type),          intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_diagnostics_set_to_zero'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_diagnostics_set_to_zero'
     character(len=char_len)     :: log_message
 
     integer (int_kind) :: n
@@ -582,7 +598,7 @@ contains
     integer (int_kind)            , intent(out)   :: id
     type(marbl_log_type)          , intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_diagnostics_add'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_diagnostics_add'
     character(len=char_len)     :: log_message
 
     type(marbl_single_diagnostic_type), dimension(:), pointer :: new_diags
@@ -669,7 +685,7 @@ contains
     type(marbl_log_type),             intent(inout) :: marbl_status_log
     integer, optional,                intent(in)    :: dim1
 
-    character(len=*), parameter :: subname = 'marbl_interface_types:marbl_forcing_fields_set_rank'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_forcing_fields_set_rank'
     character(len=char_len)     :: log_message
 
     this%metadata%rank = rank
@@ -696,8 +712,8 @@ contains
 
   subroutine marbl_timers_constructor(this, num_timers)
 
-    class(marbl_timers_type), intent(inout) :: this
-    integer,                  intent(in)    :: num_timers
+    class(marbl_timers_type), intent(out) :: this
+    integer,                  intent(in)  :: num_timers
 
     this%num_timers = num_timers
     allocate(this%names(num_timers))
@@ -729,4 +745,4 @@ contains
 
   !*****************************************************************************
 
-end module marbl_interface_types
+end module marbl_interface_public_types

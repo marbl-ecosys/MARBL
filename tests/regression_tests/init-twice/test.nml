@@ -1,0 +1,4 @@
+&marbl_driver_nml
+testname = "init-twice"
+lhas_inputfile = .false.
+/

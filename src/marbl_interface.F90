@@ -17,40 +17,34 @@ module marbl_interface
   !          column test system
   !-----------------------------------------------------------------------
 
-  use marbl_kinds_mod       , only : r8, log_kind, int_kind, log_kind, char_len
-  use marbl_logging         , only : marbl_log_type
+  use marbl_kinds_mod, only : r8, log_kind, int_kind, log_kind, char_len
 
-  use marbl_sizes           , only : marbl_total_tracer_cnt
-  use marbl_sizes           , only : autotroph_cnt
-  use marbl_sizes           , only : zooplankton_cnt
-  use marbl_sizes           , only : num_surface_forcing_fields
-  use marbl_sizes           , only : num_interior_forcing_fields
+  use marbl_settings_mod, only : autotroph_cnt
+  use marbl_settings_mod, only : zooplankton_cnt
+  use marbl_settings_mod, only : marbl_settings_type
 
-  use marbl_interface_types , only : marbl_domain_type
-  use marbl_interface_types , only : marbl_tracer_metadata_type
-  use marbl_interface_types , only : marbl_surface_forcing_output_type
-  use marbl_interface_types , only : marbl_diagnostics_type
-  use marbl_interface_types , only : marbl_forcing_fields_type
-  use marbl_interface_types , only : marbl_saved_state_type
-  use marbl_interface_types , only : marbl_timers_type
-  use marbl_interface_types , only : marbl_running_mean_0d_type
+  use marbl_logging, only : marbl_log_type
 
-  use marbl_internal_types  , only : marbl_surface_forcing_indexing_type
-  use marbl_internal_types  , only : marbl_surface_saved_state_indexing_type
-  use marbl_internal_types  , only : marbl_interior_forcing_indexing_type
-  use marbl_internal_types  , only : marbl_interior_saved_state_indexing_type
-  use marbl_internal_types  , only : marbl_PAR_type
-  use marbl_internal_types  , only : marbl_particulate_share_type
-  use marbl_internal_types  , only : marbl_surface_forcing_share_type
-  use marbl_internal_types  , only : marbl_surface_forcing_internal_type
-  use marbl_internal_types  , only : marbl_tracer_index_type
-  use marbl_internal_types  , only : marbl_internal_timers_type
-  use marbl_internal_types  , only : marbl_timer_indexing_type
+  use marbl_interface_public_types, only : marbl_domain_type
+  use marbl_interface_public_types, only : marbl_tracer_metadata_type
+  use marbl_interface_public_types, only : marbl_surface_forcing_output_type
+  use marbl_interface_public_types, only : marbl_diagnostics_type
+  use marbl_interface_public_types, only : marbl_forcing_fields_type
+  use marbl_interface_public_types, only : marbl_saved_state_type
+  use marbl_interface_public_types, only : marbl_timers_type
+  use marbl_interface_public_types, only : marbl_running_mean_0d_type
 
-
-  use marbl_config_mod, only : marbl_config_and_parms_type
-  use marbl_config_mod, only : ciso_on
-  use marbl_config_mod, only : lvariable_PtoC
+  use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
+  use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
+  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
+  use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
+  use marbl_interface_private_types, only : marbl_PAR_type
+  use marbl_interface_private_types, only : marbl_particulate_share_type
+  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
+  use marbl_interface_private_types, only : marbl_tracer_index_type
+  use marbl_interface_private_types, only : marbl_internal_timers_type
+  use marbl_interface_private_types, only : marbl_timer_indexing_type
 
   implicit none
 
@@ -66,12 +60,12 @@ module marbl_interface
   type, public :: marbl_interface_class
 
      ! public data - general
-     type(marbl_domain_type)                   , public               :: domain
-     type(marbl_tracer_metadata_type)          , public, allocatable  :: tracer_metadata(:)
-     type(marbl_tracer_index_type)             , public               :: tracer_indices
-     type(marbl_log_type)                      , public               :: StatusLog
-     type(marbl_config_and_parms_type)         , public               :: configuration
-     type(marbl_config_and_parms_type)         , public               :: parameters
+     type(marbl_domain_type)                        , public  :: domain
+     type(marbl_tracer_metadata_type)  , allocatable, public  :: tracer_metadata(:)
+     ! Pointer so that destructor doesn't need to reset all inds to 0
+     ! (that happens automatically when new tracer indexing type is allocated)
+     type(marbl_tracer_index_type)     , pointer    , public  :: tracer_indices => NULL()
+     type(marbl_log_type)                           , public  :: StatusLog
 
      type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
      type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
@@ -100,9 +94,8 @@ module marbl_interface
      real (r8)                                 , public, allocatable  :: glo_avg_fields_surface(:,:)  ! output (num_elements,nfields)
      real (r8)                                 , public, allocatable  :: glo_avg_averages_surface(:)  ! input (nfields)
 
-     ! FIXME
-     ! for now, running means are being computed in the driver
-     ! they will eventually be moved from the interface to inside MARBL
+     ! FIXME #77: for now, running means are being computed in the driver
+     !            they will eventually be moved from the interface to inside MARBL
      real (r8)                                 , public, allocatable  :: glo_scalar_interior(:)
      real (r8)                                 , public, allocatable  :: glo_scalar_surface(:)
 
@@ -119,12 +112,11 @@ module marbl_interface
      logical                                   , private              :: lallow_glo_ops
      type(marbl_internal_timers_type)          , private              :: timers
      type(marbl_timer_indexing_type)           , private              :: timer_ids
+     type(marbl_settings_type)                 , private              :: settings
 
    contains
 
-     procedure, public  :: config
      procedure, public  :: init
-     procedure, public  :: complete_config_and_init
      procedure, public  :: reset_timers
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
@@ -133,12 +125,35 @@ module marbl_interface
      procedure, public  :: set_surface_forcing
      procedure, public  :: set_global_scalars
      procedure, public  :: shutdown
+     generic            :: inquire_settings_metadata => inquire_settings_metadata_by_name, &
+                                                        inquire_settings_metadata_by_id
+     generic            :: put_setting => put_real,           &
+                                          put_integer,        &
+                                          put_logical,        &
+                                          put_string,         & ! This routine checks to see if string is actually an array
+                                          put_inputfile_line, & ! This line converts string "var = val" to proper put()
+                                          put_all_string
+     generic            :: get_setting => get_real,    &
+                                          get_integer, &
+                                          get_logical, &
+                                          get_string
+     procedure, public  :: get_settings_var_cnt
+     procedure, private :: inquire_settings_metadata_by_name
+     procedure, private :: inquire_settings_metadata_by_id
+     procedure, private :: put_real
+     procedure, private :: put_integer
+     procedure, private :: put_logical
+     procedure, private :: put_string
+     procedure, private :: put_inputfile_line
+     procedure, private :: put_all_string
+     procedure, private :: get_real
+     procedure, private :: get_integer
+     procedure, private :: get_logical
+     procedure, private :: get_string
 
   end type marbl_interface_class
 
-  private :: config
   private :: init
-  private :: complete_config_and_init
   private :: reset_timers
   private :: extract_timing
   private :: glo_vars_init
@@ -152,35 +167,46 @@ contains
 
   !***********************************************************************
 
-  subroutine config(this,                 &
+  subroutine init(this,                   &
+       gcm_num_levels,                    &
+       gcm_num_PAR_subcols,               &
+       gcm_num_elements_surface_forcing,  &
+       gcm_delta_z,                       &
+       gcm_zw,                            &
+       gcm_zt,                            &
        lgcm_has_global_ops,               &
-       gcm_nl_buffer)
+       marbl_tracer_cnt)
 
-    use marbl_config_mod  , only : marbl_config_set_defaults
-    use marbl_config_mod  , only : marbl_config_read_namelist
-    use marbl_config_mod  , only : marbl_define_config_vars
+    use marbl_init_mod, only : marbl_init_log_and_timers
+    use marbl_init_mod, only : marbl_init_parameters_pre_tracers
+    use marbl_init_mod, only : marbl_init_tracers
+    use marbl_init_mod, only : marbl_init_parameters_post_tracers
+    use marbl_init_mod, only : marbl_init_bury_coeff
+    use marbl_init_mod, only : marbl_init_forcing_fields
+    use marbl_settings_mod, only : marbl_settings_set_all_derived
+    use marbl_diagnostics_mod, only : marbl_diagnostics_init
+    use marbl_saved_state_mod, only : marbl_saved_state_init
 
     class(marbl_interface_class), intent(inout) :: this
-    character(len=*), optional,   intent(in)    :: gcm_nl_buffer(:)
-    logical,          optional,   intent(in)    :: lgcm_has_global_ops
+    integer(int_kind),            intent(in)    :: gcm_num_levels
+    integer(int_kind),            intent(in)    :: gcm_num_PAR_subcols
+    integer(int_kind),            intent(in)    :: gcm_num_elements_surface_forcing
+    real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
+    real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
+    real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
+    logical,           optional,  intent(in)    :: lgcm_has_global_ops
+    integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
-    character(len=*), parameter :: subname = 'marbl_interface:config'
-    character(len=char_len)     :: log_message
+    character(len=*), parameter :: subname = 'marbl_interface:init'
+    integer, parameter :: num_interior_elements = 1 ! FIXME #66: get this value from interface, let it vary
 
     !--------------------------------------------------------------------
-    ! initialize status log
+    ! initialize status log and timers
     !--------------------------------------------------------------------
 
-    call this%StatusLog%construct()
-    call this%StatusLog%log_noerror('', subname)
-
-    !-----------------------------------------------------------------------
-    !  Set up timers
-    !-----------------------------------------------------------------------
-
-    call this%timers%setup(this%timer_ids, this%StatusLog)
+    call marbl_init_log_and_timers(this%timers, this%timer_ids, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("setup_timers()", subname)
+      call this%StatusLog%log_error_trace("marbl_init_log_and_timers", subname)
       return
     end if
 
@@ -202,92 +228,12 @@ contains
     end if
 
     !---------------------------------------------------------------------------
-    ! set default values for configuration
+    ! Initialize parameters that do not depend on tracer count or PFT categories
     !---------------------------------------------------------------------------
 
-    call marbl_config_set_defaults()
-
-    !---------------------------------------------------------------------------
-    ! read configuration from namelist (if present)
-    !---------------------------------------------------------------------------
-
-    if (present(gcm_nl_buffer)) then
-      call marbl_config_read_namelist(gcm_nl_buffer, this%StatusLog)
-      if (this%StatusLog%labort_marbl) then
-        call this%StatusLog%log_error_trace('marbl_config_read_namelist', subname)
-        return
-      end if
-    else
-      write(log_message, "(2A)") '** No namelists were provided to config, ', &
-           'use put() and get() to change configuration variables'
-      call this%StatusLog%log_noerror(log_message, subname)
-    end if
-
-    !---------------------------------------------------------------------------
-    ! construct configuration_type
-    !---------------------------------------------------------------------------
-
-    call marbl_define_config_vars(this%configuration, this%StatusLog)
+    call marbl_init_parameters_pre_tracers(this%lallow_glo_ops, this%settings, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_define_config_vars()", subname)
-      return
-    end if
-
-    call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%timers%stop()", subname)
-      return
-    end if
-
-  end subroutine config
-
-  !***********************************************************************
-
-  subroutine init(this,                   &
-       gcm_num_levels,                    &
-       gcm_num_PAR_subcols,               &
-       gcm_num_elements_surface_forcing,  &
-       gcm_delta_z,                       &
-       gcm_zw,                            &
-       gcm_zt,                            &
-       gcm_nl_buffer,                     &
-       marbl_tracer_cnt)
-
-    use marbl_ciso_mod        , only : marbl_ciso_init_tracer_metadata
-    use marbl_mod             , only : marbl_init_tracer_metadata
-    use marbl_mod             , only : marbl_tracer_index_consistency_check
-    use marbl_diagnostics_mod , only : marbl_diagnostics_init
-    use marbl_config_mod      , only : ladjust_bury_coeff
-    use marbl_config_mod      , only : autotrophs_config
-    use marbl_config_mod      , only : zooplankton_config
-    use marbl_config_mod      , only : set_derived_config
-    use marbl_parms           , only : marbl_parms_set_defaults
-    use marbl_parms           , only : marbl_parms_read_namelist
-    use marbl_parms           , only : marbl_define_parameters
-    use marbl_saved_state_mod , only : marbl_saved_state_init
-
-    implicit none
-
-    class(marbl_interface_class), intent(inout) :: this
-    integer(int_kind),            intent(in)    :: gcm_num_levels
-    integer(int_kind),            intent(in)    :: gcm_num_PAR_subcols
-    integer(int_kind),            intent(in)    :: gcm_num_elements_surface_forcing
-    real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
-    real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
-    real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
-    character(len=*),  optional,  intent(in)    :: gcm_nl_buffer(:)
-    integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
-
-    character(len=*), parameter :: subname = 'marbl_interface:init'
-    character(len=char_len)     :: log_message
-
-    integer :: i
-    integer, parameter :: num_interior_elements = 1 ! FIXME #66: get this value from interface, let it vary
-    !--------------------------------------------------------------------
-
-    call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%timers%start()", subname)
+      call this%StatusLog%log_error_trace("marbl_init_parameters_pre_tracers", subname)
       return
     end if
 
@@ -298,48 +244,8 @@ contains
          )
 
     !-----------------------------------------------------------------------
-    !  Lock and log this%configuration
+    !  Set up domain type
     !-----------------------------------------------------------------------
-
-    call this%configuration%finalize_vars(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('configuration%finalize_vars', subname)
-      return
-    end if
-
-    call set_derived_config(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('set_derived_config', subname)
-      return
-    end if
-
-    !-----------------------------------------------------------------------
-    !  Abort if GCM doesn't support global ops but configuration requires them
-    !-----------------------------------------------------------------------
-
-    if (ladjust_bury_coeff .and. (.not.this%lallow_glo_ops)) then
-      write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
-             '.true. unless GCM can perform global operations'
-      call this%StatusLog%log_error(log_message, subname)
-      return
-    end if
-
-    !-----------------------------------------------------------------------
-    !  Set up tracer indices
-    !-----------------------------------------------------------------------
-
-    call this%tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs_config, &
-         zooplankton_config)
-    if (present(marbl_tracer_cnt)) &
-      marbl_tracer_cnt = marbl_total_tracer_cnt
-
-    !--------------------------------------------------------------------
-    ! call constructors and allocate memory
-    !--------------------------------------------------------------------
-
-    call this%PAR%construct(num_levels, num_PAR_subcols)
-
-    call this%particulate_share%construct(num_levels)
 
     call this%domain%construct(                                 &
          num_levels                    = num_levels,            &
@@ -350,13 +256,24 @@ contains
          zw                            = gcm_zw,                &
          zt                            = gcm_zt)
 
-    allocate(this%surface_vals(num_surface_elements, marbl_total_tracer_cnt))
+    !--------------------------------------------------------------------
+    ! call constructors and allocate memory
+    !--------------------------------------------------------------------
 
-    allocate(this%surface_tracer_fluxes(num_surface_elements, marbl_total_tracer_cnt))
+    call this%PAR%construct(num_levels, num_PAR_subcols)
 
-    allocate(this%column_tracers(marbl_total_tracer_cnt, num_levels))
+    !-----------------------------------------------------------------------
+    !  Set up tracers
+    !-----------------------------------------------------------------------
 
-    allocate(this%column_dtracers(marbl_total_tracer_cnt, num_levels))
+    call marbl_init_tracers(num_levels, num_surface_elements, &
+                            this%tracer_indices, this%surface_vals, this%surface_tracer_fluxes, &
+                            this%column_tracers, this%column_dtracers, this%tracer_metadata,    &
+                            this%StatusLog, marbl_tracer_cnt)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_init_tracers", subname)
+      return
+    end if
 
     !--------------------------------------------------------------------
     ! set up saved state variables
@@ -377,46 +294,6 @@ contains
     end if
 
     !--------------------------------------------------------------------
-    ! Initialize public data / general tracer metadata
-    ! And then update tracer input info based on namelist
-    !--------------------------------------------------------------------
-
-    allocate(this%tracer_metadata(marbl_total_tracer_cnt))
-
-    call marbl_init_tracer_metadata( &
-         this%tracer_metadata,       &
-         this%tracer_indices,        &
-         this%StatusLog)
-
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_init_tracer_metadata()", subname)
-      return
-    end if
-
-    if (ciso_on) then
-       call marbl_ciso_init_tracer_metadata(this%tracer_metadata,             &
-            this%tracer_indices)
-    end if
-
-    !--------------------------------------------------------------------
-    ! Report what tracers are being used, abort if count is not correct
-    !--------------------------------------------------------------------
-
-    call this%StatusLog%log_header('MARBL Tracer indices', subname)
-    do i=1,marbl_total_tracer_cnt
-      write(log_message, "(I3,2A)") i, '. ', &
-                                 trim(this%tracer_metadata(i)%short_name)
-      call this%StatusLog%log_noerror(log_message, subname)
-    end do
-
-    call marbl_tracer_index_consistency_check(this%tracer_indices, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_tracer_index_consistency_check', &
-           subname)
-      return
-    end if
-
-    !--------------------------------------------------------------------
     ! Initialize marbl diagnostics
     !--------------------------------------------------------------------
 
@@ -433,39 +310,63 @@ contains
     end if
 
     !---------------------------------------------------------------------------
-    ! set default values for parameters
+    ! Initialize parameters that depend on tracer count
     !---------------------------------------------------------------------------
+    call marbl_init_parameters_post_tracers(this%settings, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_init_parameters_post_tracers", subname)
+      return
+    end if
 
-    call marbl_parms_set_defaults(num_levels)
+    !-----------------------------------------------------------------------
+    !  Initialize bury coefficient
+    !-----------------------------------------------------------------------
 
-    !---------------------------------------------------------------------------
-    ! read parameters from namelist (if present)
-    !---------------------------------------------------------------------------
-
-    if (present(gcm_nl_buffer)) then
-      call marbl_parms_read_namelist(gcm_nl_buffer, this%StatusLog)
-      if (this%StatusLog%labort_marbl) then
-        call this%StatusLog%log_error_trace('marbl_parms_read_namelist', subname)
-        return
-      end if
-    else
-      write(log_message, "(2A)") '** No namelists were provided to init, ',   &
-           'use put() and get() to change parameters'
-      call this%StatusLog%log_noerror(log_message, subname)
+    call marbl_init_bury_coeff(this%particulate_share, num_levels, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
+      return
     end if
 
     end associate
 
-    !---------------------------------------------------------------------------
-    ! construct parameters_type
-    !---------------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  Initialize surface and interior forcing (including tracer restoring)
+    !-----------------------------------------------------------------------
 
-    call marbl_define_parameters(this%parameters, this%StatusLog)
+    call marbl_init_forcing_fields(this%domain, &
+                                   this%tracer_metadata, &
+                                   this%surface_forcing_ind, &
+                                   this%surface_forcing_share, &
+                                   this%surface_forcing_internal, &
+                                   this%surface_input_forcings, &
+                                   this%interior_forcing_ind, &
+                                   this%interior_input_forcings, &
+                                   this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_define_parameters()", subname)
+      call this%StatusLog%log_error_trace("marbl_init_forcing_fields", subname)
       return
     end if
 
+    ! Set up running mean variables (dependent on parms namelist)
+    call this%glo_vars_init()
+
+    !  Lock and log configuration variables and parameters
+    call this%settings%finalize_vars(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('parmeters%finalize_vars', subname)
+      return
+    end if
+
+    ! Set variables that depend on previously-set values
+    ! (Typically unit conversion or string -> int for easy comparison)
+    call marbl_settings_set_all_derived(this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('marbl_settings_set_all_derived', subname)
+      return
+    end if
+
+    ! End of initialization
     call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("this%timers%stop()", subname)
@@ -476,137 +377,383 @@ contains
 
   !***********************************************************************
 
-  subroutine complete_config_and_init(this)
+  subroutine put_real(this, varname, val)
 
-    use marbl_parms,       only : set_derived_parms
-    use marbl_parms,       only : tracer_restore_vars
-    use marbl_mod,         only : marbl_init_bury_coeff
-    use marbl_mod,         only : marbl_init_surface_forcing_fields
-    use marbl_mod,         only : marbl_init_interior_forcing_fields
-    use marbl_config_mod,  only : lflux_gas_o2
-    use marbl_config_mod,  only : lflux_gas_co2
-    use marbl_config_mod,  only : ladjust_bury_coeff
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    real(r8),                      intent(in)    :: val
 
-    class(marbl_interface_class), intent(inout) :: this
+    character(len=*), parameter :: subname = 'marbl_interface:put_real'
+    character(len=char_len) :: log_message
 
-    character(len=*), parameter :: subname = 'marbl_interface:complete_config_and_init'
+    call this%settings%put(varname, this%StatusLog, rval=val)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%put()', subname)
+      return
+    end if
+
+  end subroutine put_real
+
+  !***********************************************************************
+
+  subroutine put_integer(this, varname, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    integer(int_kind),             intent(in)    :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:put_integer'
+    character(len=char_len) :: log_message
+
+    call this%settings%put(varname, this%StatusLog, ival=val)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%put()', subname)
+      return
+    end if
+
+  end subroutine put_integer
+
+  !***********************************************************************
+
+  subroutine put_logical(this, varname, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    logical,                       intent(in)    :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:put_logical'
+    character(len=char_len) :: log_message
+
+    call this%settings%put(varname, this%StatusLog, lval=val)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%put()', subname)
+      return
+    end if
+
+  end subroutine put_logical
+
+  !***********************************************************************
+
+  subroutine put_string(this, varname, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    character(len=*),              intent(in)    :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:put_string'
+    character(len=char_len) :: log_message
+
+    call this%settings%put(varname, this%StatusLog, sval=val)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%put()', subname)
+      return
+    end if
+
+  end subroutine put_string
+
+  !***********************************************************************
+
+  subroutine put_all_string(this, varname, datatype, val)
+    ! This interface to put_setting() is called from put_inputfile_line()
+
+    use marbl_settings_mod, only : marbl_settings_string_to_var
+
+    class (marbl_interface_class),  intent(inout) :: this
+    character(len=*),               intent(in)    :: varname, datatype, val
+
+    character(len=*), parameter :: subname = 'marbl_interface:put_all_string'
     character(len=char_len)     :: log_message
 
-    integer :: i
+    real(r8)                :: rval
+    integer(int_kind)       :: ival
+    logical(log_kind)       :: lval
 
-    call this%timers%start(this%timer_ids%init_timer_id, this%StatusLog)
+    select case (trim(datatype))
+      case ('logical')
+        call marbl_settings_string_to_var(val, this%StatusLog, lval = lval)
+        if (this%StatusLog%labort_marbl) then
+          call this%StatusLog%log_error_trace('marbl_settings_string_to_var', subname)
+          return
+        end if
+        call this%settings%put(trim(varname), this%StatusLog, lval=lval)
+      case ('real')
+        call marbl_settings_string_to_var(val, this%StatusLog, rval = rval)
+        if (this%StatusLog%labort_marbl) then
+          call this%StatusLog%log_error_trace('marbl_settings_string_to_var', subname)
+          return
+        end if
+        call this%settings%put(trim(varname), this%StatusLog, rval=rval)
+      case ('integer')
+        call marbl_settings_string_to_var(val, this%StatusLog, ival = ival)
+        if (this%StatusLog%labort_marbl) then
+          call this%StatusLog%log_error_trace('marbl_settings_string_to_var', subname)
+          return
+        end if
+        call this%settings%put(trim(varname), this%StatusLog, ival=ival)
+      case ('string')
+        call this%settings%put(trim(varname), this%StatusLog, sval=val)
+      case('unknown')
+        ! Is val an array?
+        call this%settings%put(trim(varname), this%StatusLog, uval=val)
+      case DEFAULT
+        call this%StatusLog%construct()
+        write(log_message,"(2A)") trim(datatype), " is not a recognized type"
+        call this%StatusLog%log_error(log_message, subname)
+    end select
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%timers%start()", subname)
+      write(log_message, "(3A)") "string_to_var(", trim(val), ")"
+      call this%StatusLog%log_error_trace(log_message, subname)
       return
     end if
 
-    !-----------------------------------------------------------------------
-    !  Lock and log this%parameters
-    !-----------------------------------------------------------------------
+  end subroutine put_all_string
 
-    call this%parameters%finalize_vars(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('parmeters%finalize_list', &
-           subname)
-      return
-    end if
+  !***********************************************************************
 
-    call set_derived_parms(this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('set_derived_parms', subname)
-      return
-    end if
+  subroutine put_inputfile_line(this, line, pgi_bugfix_var)
 
-    !-----------------------------------------------------------------------
-    !  Initialize bury coefficient
-    !-----------------------------------------------------------------------
+    ! This subroutine takes a single line from MARBL's default inputfile format,
+    ! determines the variable name and whether the value is a scalar or an array,
+    ! and then calls put_setting (once for a scalar, per-element for an array).
+    !
+    ! The put_setting() call forces the datatype to be "unknown", so when the
+    ! put list is traversed by add_var the datatype is assumed to match new_entry
+    ! (and error checking verifies that it is an appropriate value)
 
-    call marbl_init_bury_coeff(this%particulate_share, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
-      return
-    end if
+    use marbl_utils_mod, only : marbl_utils_str_to_substrs
 
-    associate(&
-         num_surface_elements  => this%domain%num_elements_surface_forcing,   &
-         num_interior_elements => this%domain%num_elements_interior_forcing,  &
-         num_PAR_subcols       => this%domain%num_PAR_subcols,                &
-         num_levels            => this%domain%km                              &
-         )
+    class(marbl_interface_class), intent(inout) :: this
+    character(len=*),             intent(in)    :: line
+    ! For some reason PGI doesn't like this particular interface to put_setting()
+    ! --- Error from building stand-alone driver ---
+    ! PGF90-S-0155-cannot access PRIVATE type bound procedure
+    ! put_inputfile_line$tbp (/NO_BACKUP/codes/marbl/tests/driver_src/marbl.F90: 239)
+    !
+    ! But adding another variable to the interface makes it okay
+    logical, optional,            intent(in)    :: pgi_bugfix_var(0)
 
-    !-----------------------------------------------------------------------
-    !  Initialize surface and interior forcing (including tracer restoring)
-    !-----------------------------------------------------------------------
+    character(len=char_len), dimension(:), allocatable :: value, line_loc_arr
+    character(len=char_len) :: varname, var_loc, line_loc
+    integer(int_kind)       :: n, char_ind
 
-    call this%surface_forcing_ind%construct(ciso_on, lflux_gas_o2, lflux_gas_co2, ladjust_bury_coeff)
-    call this%interior_forcing_ind%construct(this%tracer_metadata%short_name, &
-                                   tracer_restore_vars, this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("interior_forcing_ind%construct",   &
-                                          subname)
-      return
-    end if
+    line_loc = ''
+    ! Strip out comments (denoted by '!'); line_loc_arr(1) is the line to be processed
+    call marbl_utils_str_to_substrs(line, '!', line_loc_arr)
+    line_loc = line_loc_arr(1)
 
-    call this%surface_forcing_share%construct(num_surface_elements)
-    call this%surface_forcing_internal%construct(num_surface_elements)
+    ! Return without processing if
+    ! (a) line is empty / only contains spaces
+    if (len_trim(line_loc) .eq. 0) return
+    ! (b) first non-space character is '&' (can use namelist files)
+    if (line_loc(1:1) .eq. '&') return
+    ! (c) line contains only '/' (can use namelist files)
+    if (trim(line_loc) .eq. '/') return
 
-    allocate(this%surface_input_forcings(num_surface_forcing_fields))
-    call marbl_init_surface_forcing_fields(                                   &
-         num_elements            = num_surface_elements,                      &
-         surface_forcing_indices = this%surface_forcing_ind,                  &
-         surface_forcings        = this%surface_input_forcings,               &
-         marbl_status_log        = this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_init_surface_forcing_fields()", subname)
-      return
-    end if
-
-    allocate(this%interior_input_forcings(num_interior_forcing_fields))
-    call marbl_init_interior_forcing_fields(                                  &
-         num_elements             = num_interior_elements,                    &
-         interior_forcing_indices = this%interior_forcing_ind,                &
-         tracer_metadata          = this%tracer_metadata,                     &
-         num_PAR_subcols          = this%domain%num_PAR_subcols,              &
-         num_levels               = this%domain%km,                           &
-         interior_forcings        = this%interior_input_forcings,             &
-         marbl_status_log         = this%StatusLog)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_init_interior_forcing_fields()", &
-                                          subname)
-      return
-    end if
-
-    end associate
-
-    !--------------------------------------------------------------------
-    ! Report what forcings are required from the driver
-    !--------------------------------------------------------------------
-
-    call this%StatusLog%log_header('MARBL-Required Forcing Fields', subname)
-    call this%StatusLog%log_noerror('Surface:', subname)
-    do i=1,num_surface_forcing_fields
-      write(log_message, "(2A)") '* ', trim(this%surface_input_forcings(i)%metadata%varname)
-      call this%StatusLog%log_noerror(log_message, subname)
+    ! Everything up to first '=' is varname
+    varname = ''
+    do char_ind = 1, len_trim(line_loc)
+      if (line_loc(char_ind:char_ind) .eq. '=') then
+        line_loc(char_ind:char_ind) = ' '
+        exit
+      end if
+      varname(char_ind:char_ind) = line_loc(char_ind:char_ind)
+      line_loc(char_ind:char_ind) = ' '
     end do
 
-    call this%StatusLog%log_noerror('', subname)
-    call this%StatusLog%log_noerror('Interior:', subname)
-    do i=1,num_interior_forcing_fields
-      write(log_message, "(2A)") '* ', trim(this%interior_input_forcings(i)%metadata%varname)
-      call this%StatusLog%log_noerror(log_message, subname)
+    ! Everything to the right of the first '=' is the variable value, which might be an array
+    call marbl_utils_str_to_substrs(line_loc, ',', value)
+    var_loc = varname
+    do n=1, size(value)
+      if (size(value) .gt. 1) write(var_loc, "(2A,I0,A)") trim(varname), '(', n, ')'
+      call this%put_setting(var_loc, "unknown", value(n))
     end do
+    deallocate(value)
 
-    ! Set up running mean variables (dependent on parms namelist)
-    call this%glo_vars_init()
+  end subroutine put_inputfile_line
 
-    ! End of initialization
-    call this%timers%stop(this%timer_ids%init_timer_id, this%StatusLog)
+  !***********************************************************************
+
+  subroutine get_real(this, varname, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    real(r8),                      intent(out)   :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:get_real'
+    character(len=char_len) :: log_message
+
+    call this%settings%get(varname, this%StatusLog, rval=val)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("this%timers%stop()", subname)
+      call this%StatusLog%log_error_trace('settings%get()', subname)
       return
     end if
 
-  end subroutine complete_config_and_init
+  end subroutine get_real
+
+  !***********************************************************************
+
+  subroutine get_integer(this, varname, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    integer(int_kind),             intent(out)   :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:get_integer'
+    character(len=char_len) :: log_message
+
+    call this%settings%get(varname, this%StatusLog, ival=val)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%get()', subname)
+      return
+    end if
+
+  end subroutine get_integer
+
+  !***********************************************************************
+
+  subroutine get_logical(this, varname, val)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    logical,                       intent(out)   :: val
+
+    character(len=*), parameter :: subname = 'marbl_interface:get_logical'
+    character(len=char_len) :: log_message
+
+    call this%settings%get(varname, this%StatusLog, lval=val)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%get()', subname)
+      return
+    end if
+
+  end subroutine get_logical
+
+  !***********************************************************************
+
+  subroutine get_string(this, varname, val, linputfile_format)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    character(len=*),              intent(out)   :: val
+    logical, optional,             intent(in)    :: linputfile_format
+
+    character(len=*), parameter :: subname = 'marbl_interface:get_string'
+    character(len=char_len) :: log_message
+
+    logical :: linputfile_format_loc
+    character(len=char_len) :: datatype
+    real(r8)                :: rval
+    integer                 :: ival
+    logical                 :: lval
+    character(len=char_len) :: sval
+
+    val = ''
+    if (present(linputfile_format)) then
+      linputfile_format_loc = linputfile_format
+    else
+      linputfile_format_loc = .false.
+    end if
+
+    if (linputfile_format_loc) then
+      ! Determine datatype
+      call this%inquire_settings_metadata(varname, datatype=datatype)
+      if (this%StatusLog%labort_marbl) then
+        call this%StatusLog%log_error_trace('inquire_settings_metadata', subname)
+        return
+      end if
+      select case (trim(datatype))
+        case ('real')
+          call this%settings%get(varname, this%StatusLog, rval=rval)
+          write(val, "(A,' = ', E24.16)") trim(varname), rval
+        case ('integer')
+          call this%settings%get(varname, this%StatusLog, ival=ival)
+          write(val, "(A, ' = ', I0)") trim(varname), ival
+        case ('logical')
+          call this%settings%get(varname, this%StatusLog, lval=lval)
+          write(val, "(A, ' = ', L1)") trim(varname), lval
+        case ('string')
+          call this%settings%get(varname, this%StatusLog, sval=sval)
+          write(val, "(A, ' = ', 3A)") trim(varname), "'", trim(sval), "'"
+        case DEFAULT
+          write(log_message, "(3A)") "Unknown datatype '", trim(datatype), &
+                                     "' returned from inquire_settings_metadata()"
+          call this%StatusLog%log_error(log_message, subname)
+          return
+      end select
+    else
+      call this%settings%get(varname, this%StatusLog, sval=val)
+    end if ! linputfile_format_loc
+
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%get()', subname)
+    end if
+
+  end subroutine get_string
+
+  !***********************************************************************
+
+  function get_settings_var_cnt(this) result(cnt)
+
+    class (marbl_interface_class), intent(in) :: this
+    integer :: cnt
+
+    cnt = this%settings%get_cnt()
+
+  end function get_settings_var_cnt
+
+  !***********************************************************************
+
+  subroutine inquire_settings_metadata_by_name(this, varname, id, lname, units, datatype)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),              intent(in)    :: varname
+    integer(int_kind), optional,   intent(out)   :: id
+    character(len=*),  optional,   intent(out)   :: lname, units, datatype
+
+    character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata_by_name'
+    integer :: id_loc
+
+    id_loc = this%settings%inquire_id(varname, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%inquire_id', subname)
+      return
+    end if
+    if (present(id)) id = id_loc
+    if (any((/present(lname), present(units), present(datatype)/))) then
+      call this%settings%inquire_metadata(id_loc, this%StatusLog,  &
+                                          lname    = lname,        &
+                                          units    = units,        &
+                                          datatype = datatype)
+      if (this%StatusLog%labort_marbl) then
+        call this%StatusLog%log_error_trace('settings%inquire_metadata', subname)
+        return
+      end if
+    end if
+
+  end subroutine inquire_settings_metadata_by_name
+
+  !***********************************************************************
+
+  subroutine inquire_settings_metadata_by_id(this, id, sname, lname, units, datatype)
+
+    class (marbl_interface_class), intent(inout) :: this
+    integer(int_kind),             intent(in)    :: id
+    character(len=*), optional,    intent(out)   :: sname, lname, units
+    character(len=*), optional,    intent(out)   :: datatype
+
+    character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata_by_id'
+
+    call this%settings%inquire_metadata(id, this%StatusLog,  &
+                                        sname    = sname,    &
+                                        lname    = lname,    &
+                                        units    = units,    &
+                                        datatype = datatype)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('settings%inquire_metadata', subname)
+      return
+    end if
+
+  end subroutine inquire_settings_metadata_by_id
 
   !***********************************************************************
 
@@ -806,13 +953,68 @@ contains
 
   subroutine shutdown(this)
 
+    use marbl_settings_mod, only : max_grazer_prey_cnt
+    use marbl_settings_mod, only : autotrophs
+    use marbl_settings_mod, only : zooplankton
+    use marbl_settings_mod, only : grazing
+    use marbl_settings_mod, only : tracer_restore_vars
+    use marbl_diagnostics_mod, only : marbl_interior_diag_ind
+
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
 
     character(len=*), parameter :: subname = 'marbl_interface:shutdown'
+    integer(int_kind) :: m,n
+
+    if (allocated(this%glo_avg_fields_interior)) then
+      deallocate(this%glo_avg_fields_interior)
+      deallocate(this%glo_avg_averages_interior)
+      deallocate(this%glo_avg_fields_surface)
+      deallocate(this%glo_avg_averages_surface)
+      deallocate(this%glo_scalar_interior)
+      deallocate(this%glo_scalar_surface)
+      deallocate(this%glo_avg_rmean_interior)
+      deallocate(this%glo_avg_rmean_surface)
+      deallocate(this%glo_scalar_rmean_interior)
+      deallocate(this%glo_scalar_rmean_surface)
+    end if
 
     ! free dynamically allocated memory, etc
+    ! FIXME #69: this is not ideal for threaded runs
+    if (allocated(autotrophs)) then
+      deallocate(autotrophs)
+      deallocate(zooplankton)
+      do m=1,max_grazer_prey_cnt
+        do n=1,zooplankton_cnt
+          deallocate(grazing(m,n)%auto_ind)
+          deallocate(grazing(m,n)%zoo_ind)
+        end do
+      end do
+      deallocate(grazing)
+    end if
+    call marbl_interior_diag_ind%destruct()
+
+    if (allocated(this%interior_input_forcings)) then
+      deallocate(this%interior_input_forcings)
+      deallocate(this%surface_input_forcings)
+    end if
+    call this%surface_forcing_internal%destruct()
+    call this%surface_forcing_share%destruct()
+    if (allocated(this%surface_vals)) then
+      deallocate(this%surface_vals)
+      deallocate(this%surface_tracer_fluxes)
+      deallocate(this%column_tracers)
+      deallocate(this%column_dtracers)
+      deallocate(this%tracer_metadata)
+      deallocate(tracer_restore_vars)
+    end if
+    call this%tracer_indices%destruct()
+    deallocate(this%tracer_indices)
+    call this%settings%destruct()
+    call this%particulate_share%destruct()
+    call this%PAR%destruct()
+    call this%domain%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -833,7 +1035,7 @@ contains
     integer :: n
 
     get_tracer_index = 0
-    do n=1,marbl_total_tracer_cnt
+    do n=1,this%tracer_indices%total_cnt
       if (trim(tracer_name).eq.trim(this%tracer_metadata(n)%short_name) .or.  &
           trim(tracer_name).eq.trim(this%tracer_metadata(n)%long_name)) then
         get_tracer_index = n

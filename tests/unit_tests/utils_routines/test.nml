@@ -1,0 +1,4 @@
+&marbl_driver_nml
+testname = "marbl_utils"
+lhas_inputfile = .false.
+/

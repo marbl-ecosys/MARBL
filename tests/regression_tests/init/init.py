@@ -7,7 +7,7 @@ from marbl_testing_class import MARBL_testcase
 
 mt = MARBL_testcase()
 
-mt.parse_args(desc='Run full MARBL setup (config, init, and complete), without reading configuration variables and parameters from namelist', HaveNamelist=False)
+mt.parse_args(desc='Run MARBL init')
 
 mt.build_exe()
 

@@ -29,15 +29,14 @@ Program marbl
 ! *****************************************************************************
 
   ! Use from libmarbl.a
-  use marbl_interface,    only : marbl_interface_class
-  use marbl_logging,      only : marbl_log_type
-  use marbl_namelist_mod, only : marbl_nl_split_string
-  use marbl_namelist_mod, only : marbl_namelist
+  use marbl_interface, only : marbl_interface_class
+  use marbl_logging,   only : marbl_log_type
+  use marbl_kinds_mod, only : r8
 
   ! Driver modules for individual tests
-  use marbl_init_namelist_drv,    only : marbl_init_namelist_test    => test
-  use marbl_init_no_namelist_drv, only : marbl_init_no_namelist_test => test
-  use marbl_get_put_drv,          only : marbl_get_put_test          => test
+  use marbl_init_drv,    only : marbl_init_test    => test
+  use marbl_get_put_drv, only : marbl_get_put_test => test
+  use marbl_utils_drv,   only : marbl_utils_test => test
 
   ! MPI wrappers (will build without MPI as well)
   use marbl_mpi_mod, only : marbl_mpi_init
@@ -52,21 +51,20 @@ Program marbl
   Implicit None
 
   character(len=256), parameter :: subname = 'Program Marbl'
-  integer,            parameter :: nl_buffer_size = 256
-  integer,            parameter :: nl_cnt = 4
-  integer,            parameter :: nl_in_size = 1024
 
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
-  character(len=nl_buffer_size) :: nl_buffer(nl_cnt)
-  character(len=nl_buffer_size) :: tmp_nl_buffer
-  character(len=nl_in_size)     :: nl_str, tmp_str
-  integer                       :: ioerr=0
   integer                       :: m, n, nt, cnt
-  character(len=256)            :: testname, varname, log_message
-  logical                       :: lprint_marbl_log
+  character(len=256)            :: input_line, testname, varname, log_message, log_out_file
+  logical                       :: lprint_marbl_log, lhas_inputfile
+  logical                       :: ldriver_log_to_file, lsummarize_timers
 
-  namelist /marbl_driver_nml/testname
+  ! Processing input file for put calls
+  integer  :: ioerr
+  integer  :: ival
+  real(r8) :: rval
+
+  namelist /marbl_driver_nml/testname, lhas_inputfile, log_out_file
 
   !****************************************************************************
 
@@ -75,65 +73,70 @@ Program marbl
   call marbl_mpi_init()
 
   !     Set up local variables
-  !       * Empty strings used to pass namelist file contents to MARBL
-  nl_buffer(:) = ''
-  nl_str       = ''
   !       * Some tests use a different status log than marbl_instance%StatusLog
   !         (default is to use marbl_instance%StatusLog)
   lprint_marbl_log = .true.
+  ldriver_log_to_file = .false.
+  lsummarize_timers = .true.
+  call driver_status_log%construct()
 
   ! (1) Set marbl_driver_nml defaults
-  testname     = ''
+  testname       = ''
+  lhas_inputfile = .true.
+  log_out_file   = 'marbl.out' ! only written if ldriver_log_to_file = .true.
 
-  ! Read namelist
-  if (my_task.eq.0) then
-    n = 0
-    m = 0
-    do while(ioerr.eq.0)
-      n = n+m+1
-      read(*, fmt="(A)", iostat=ioerr) tmp_str
-      m = len(trim(tmp_str))
-      nl_str(n:n+m-1) = trim(tmp_str)
-      if (ioerr.eq.0) nl_str(n+m:n+m) = achar(10)
-    end do
-    if (.not.is_iostat_end(ioerr)) then
-      write(*,"(A,I0)") "ioerr = ", ioerr
-      write(*,"(A)") "ERROR encountered when reading MARBL namelist from stdin"
-      call marbl_mpi_abort()
-    end if
-    write(*,"(A,I0,A)") "MARBL namelist file contained ", len_trim(nl_str),     &
-                        " characters"
-  end if
-  call marbl_mpi_bcast(nl_str, 0)
-  call marbl_nl_split_string(nl_str, nl_buffer)
-
-  ! (2) Read driver namelist to know what test to run
-  call driver_status_log%construct()
-  tmp_nl_buffer = marbl_namelist(nl_buffer, 'marbl_driver_nml',               &
-                                 driver_status_log)
-  if (driver_status_log%labort_marbl) then
-    call print_marbl_log(marbl_instance%StatusLog)
-  end if
-
-  read(tmp_nl_buffer, nml=marbl_driver_nml, iostat=ioerr)
+  ! (2a) Read driver namelist to know what test to run
+  open(8, file="test.nml", status="old")
+  read(8, nml=marbl_driver_nml, iostat=ioerr)
   if (ioerr.ne.0) then
     write(*,*) "ERROR reading &marbl_driver_nml"
     call marbl_mpi_abort()
+  end if
+  close(8)
+
+  ! (2b) Read inputfile
+  if (lhas_inputfile) then
+    call read_inputfile(marbl_instance)
   end if
 
   ! (3) Run proper test
   if (my_task.eq.0) write(*,"(3A)") "Beginning ", trim(testname), " test..."
   select case (trim(testname))
-    case ('init_from_namelist')
-      call marbl_init_namelist_test(marbl_instance, nl_buffer)
-    case ('init_without_namelist')
-      call marbl_init_no_namelist_test(marbl_instance)
+    case ('init')
+      call marbl_init_test(marbl_instance)
+    case ('init-twice')
+      call marbl_instance%put_setting('ciso_on = .false.')
+      call marbl_init_test(marbl_instance)
+      call summarize_timers(driver_status_log, header_text = 'Without the CISO Tracers')
+      call marbl_instance%put_setting('ciso_on = .true.')
+      call marbl_init_test(marbl_instance)
+      call summarize_timers(driver_status_log, header_text = 'With the CISO Tracers')
+      lsummarize_timers = .false.
+    case ('gen_inputfile')
+      lprint_marbl_log = .false.
+      ldriver_log_to_file = .true.
+      call marbl_init_test(marbl_instance, lshutdown=.false.)
+      if (.not. marbl_instance%StatusLog%labort_marbl) then
+        do n=1,marbl_instance%get_settings_var_cnt()
+          call marbl_instance%inquire_settings_metadata(n, sname=varname)
+          if (marbl_instance%StatusLog%labort_marbl) exit
+          call marbl_instance%get_setting(varname, input_line, linputfile_format=.true.)
+          if (marbl_instance%StatusLog%labort_marbl) exit
+          call driver_status_log%log_noerror(trim(input_line), subname)
+        end do
+        call marbl_instance%shutdown()
+      end if
     case ('get_put')
       lprint_marbl_log = .false.
       call marbl_get_put_test(marbl_instance, driver_status_log)
+    case ('marbl_utils')
+      lprint_marbl_log = .false.
+      lsummarize_timers = .false.
+      call marbl_utils_test(driver_status_log)
     case ('request_tracers')
       lprint_marbl_log = .false.
-      call marbl_init_namelist_test(marbl_instance, nl_buffer, nt)
+      call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
+
       ! Log tracers requested for initialization
       call driver_status_log%log_noerror('', subname)
       call driver_status_log%log_noerror('Requested tracers', subname)
@@ -143,9 +146,10 @@ Program marbl
           trim(marbl_instance%tracer_metadata(n)%short_name)
         call driver_status_log%log_noerror(log_message, subname)
       end do
+      call marbl_instance%shutdown()
     case ('request_forcings')
       lprint_marbl_log = .false.
-      call marbl_init_namelist_test(marbl_instance, nl_buffer)
+      call marbl_init_test(marbl_instance, lshutdown=.false.)
 
       ! Log requested surface forcing fields
       call driver_status_log%log_noerror('', subname)
@@ -166,9 +170,12 @@ Program marbl
              trim(marbl_instance%interior_input_forcings(n)%metadata%varname)
         call driver_status_log%log_noerror(log_message, subname)
       end do
+
+      call marbl_instance%shutdown()
+
     case ('request_restoring')
       lprint_marbl_log = .false.
-      call marbl_init_namelist_test(marbl_instance, nl_buffer, nt)
+      call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
 
       ! Log tracers requested for restoring
       call driver_status_log%log_noerror('', subname)
@@ -187,23 +194,27 @@ Program marbl
       if (cnt.eq.0) then
         call driver_status_log%log_noerror('No tracers to restore!', subname)
       end if
+      call marbl_instance%shutdown()
     case DEFAULT
       write(*,*) "ERROR: testname = ", trim(testname), " is not a valid option"
       call marbl_mpi_abort()
   end select
 
   ! (4) Print log(s)
-  ! (4a) If MARBL returns an error, print MARBL log
-  if (marbl_instance%StatusLog%labort_marbl) &
+  ! (4a) If MARBL returns an error (or MARBL log was requested), print MARBL log
+  if (marbl_instance%StatusLog%labort_marbl.or.lprint_marbl_log) &
       call print_marbl_log(marbl_instance%StatusLog)
 
-  ! (4b) If requested, print MARBL log
-  if (lprint_marbl_log) then
-    call print_marbl_log(marbl_instance%StatusLog)
+  ! (4b) If driver log should be written to file, do so
+  if (ldriver_log_to_file) then
+    call print_marbl_log(driver_status_log, outfile=log_out_file)
   end if
 
-  ! (5) Print timer results (and any other driver-logged output)
-  call summarize_timers()
+  ! (4c) Add timer information to driver log, then print driver log
+  !      note that if driver log was previously written to a file,
+  !      timers are all that will be written to screen
+  if (lsummarize_timers) &
+    call summarize_timers(driver_status_log)
   call print_marbl_log(driver_status_log)
 
 
@@ -215,25 +226,77 @@ Contains
 
   !****************************************************************************
 
-  subroutine print_marbl_log(log_to_print)
+  subroutine read_inputfile(marbl_instance)
+
+    type(marbl_interface_class), intent(inout) :: marbl_instance
+
+    character(len=256), parameter :: subname = 'marbl::read_inputfile'
+    character(len=256) :: input_line
+    integer :: ioerr
+
+    ioerr = 0
+    input_line = ''
+    do while(ioerr .eq. 0)
+      ! (i) call put_setting(); abort if error
+      !     calling with empty input_line on first entry to loop is okay, and
+      !     this ensures we don't call put_setting with a garbage line if
+      !     ioerr is non-zero
+      call marbl_instance%put_setting(input_line)
+      if (marbl_instance%StatusLog%labort_marbl) then
+        call marbl_instance%StatusLog%log_error_trace("put_setting(input_line)", subname)
+        call print_marbl_log(marbl_instance%StatusLog)
+      end if
+      ! (ii) master task reads next line in inputfile
+      if (my_task .eq. 0) read(*,"(A)", iostat=ioerr) input_line
+      ! (iii) broadcast inputfile line to all tasks (along with iostat)
+      call marbl_mpi_bcast(input_line, 0)
+      call marbl_mpi_bcast(ioerr, 0)
+    end do
+
+    if (.not.is_iostat_end(ioerr)) then
+      write(*,"(A,I0)") "ioerr = ", ioerr
+      write(*,"(A)") "ERROR encountered when reading MARBL input file from stdin"
+      call marbl_mpi_abort()
+    end if
+
+  end subroutine read_inputfile
+
+  !****************************************************************************
+
+  subroutine print_marbl_log(log_to_print, outfile)
 
     use marbl_logging, only : marbl_status_log_entry_type
 
-    class(marbl_log_type), intent(inout) :: log_to_print
+    class(marbl_log_type),      intent(inout) :: log_to_print
+    character(len=*), optional, intent(in)    :: outfile
     type(marbl_status_log_entry_type), pointer :: tmp
+    integer :: out_unit
+
+    ! write to stdout unless outfile is provided
+    out_unit = 6
+    if (present(outfile)) then
+      out_unit = 99
+      open(out_unit, file=outfile, action="write", status="replace")
+      if (my_task .eq. 0) write(6, "(3A)") "  Writing log to ", trim(outfile), "..."
+    end if
 
     tmp => log_to_print%FullLog
     do while (associated(tmp))
       if (mpi_on .and. (.not. tmp%lonly_master_writes)) then
         ! If running in parallel and all tasks are writing to the log, prefix
         ! the task # to log message
-        write(*,"(I0,': ',A)") my_task, trim(tmp%LogMessage)
+        write(out_unit, "(I0,': ',A)") my_task, trim(tmp%LogMessage)
       elseif (my_task.eq.0) then
         ! Otherwise only task 0 writes to the log and no prefix is necessary
-        write(*,"(A)") trim(tmp%LogMessage)
+        write(out_unit, "(A)") trim(tmp%LogMessage)
       end if
       tmp => tmp%next
     end do
+
+    if (present(outfile)) then
+      close(out_unit)
+      if (my_task .eq. 0) write(6, "(A)") "  ... Done writing to file!"
+    end if
 
     call log_to_print%erase()
 
@@ -243,9 +306,12 @@ Contains
 
   !****************************************************************************
 
-  subroutine summarize_timers()
+  subroutine summarize_timers(driver_status_log, header_text)
 
     use marbl_kinds_mod, only : r8
+
+    type(marbl_log_type),       intent(inout) :: driver_status_log
+    character(len=*), optional, intent(in)    :: header_text
 
     real(r8) :: min_runtime, ind_runtime, max_runtime, tot_runtime
     character(len=15) :: int_to_str
@@ -253,7 +319,11 @@ Contains
 100 format(A, ': ', F11.3, ' seconds',A)
 
     associate(timers =>marbl_instance%timer_summary)
-      call driver_status_log%log_header('Timer summary', subname)
+      if (present(header_text)) then
+        call driver_status_log%log_header(header_text, subname)
+      else
+        call driver_status_log%log_header('Timer summary', subname)
+      end if
       write(log_message, "(A, I0, A)") 'There are ', timers%num_timers,       &
                                        ' timers being returned'
       call driver_status_log%log_noerror(log_message, subname)

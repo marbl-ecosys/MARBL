@@ -1,4 +1,4 @@
-module marbl_internal_types
+module marbl_interface_private_types
 
   ! module definitions of types that are internal to marbl
 
@@ -6,10 +6,6 @@ module marbl_internal_types
   use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : char_len
-
-  use marbl_sizes, only : autotroph_cnt
-  use marbl_sizes, only : zooplankton_cnt
-  use marbl_sizes, only : max_prey_class_size
 
   use marbl_logging, only : marbl_log_type
 
@@ -19,84 +15,6 @@ module marbl_internal_types
   implicit none
 
   private
-
-  !****************************************************************************
-  ! derived types for zooplankton
-
-  type, public :: zooplankton_config_type
-     character(len=char_len)     :: sname
-     character(len=char_len)     :: lname
-  end type zooplankton_config_type
-
-  type, public :: zooplankton_parms_type
-     real    (KIND=r8)       :: z_mort_0_per_day   ! zoo linear mort rate (1/day)
-     real    (KIND=r8)       :: z_mort_0           ! zoo linear mort rate (1/sec) (derived from z_mort_0_per_day)
-     real    (KIND=r8)       :: z_mort2_0_per_day  ! zoo quad mort rate (1/day/((mmol C/m3))
-     real    (KIND=r8)       :: z_mort2_0          ! zoo quad mort rate (1/sec/((mmol C/m3)) (derived from z_mort2_0_per_day)
-     real    (KIND=r8)       :: loss_thres         ! zoo conc. where losses go to zero
-  end type zooplankton_parms_type
-
-  !****************************************************************************
-  ! derived types for autotrophs
-
-  type, public :: autotroph_config_type
-     character(len=char_len)     :: sname
-     character(len=char_len)     :: lname
-     logical (KIND=log_kind)     :: Nfixer                             ! flag set to true if this autotroph fixes N2
-     logical (KIND=log_kind)     :: imp_calcifier                      ! flag set to true if this autotroph implicitly handles calcification
-     logical (KIND=log_kind)     :: exp_calcifier                      ! flag set to true if this autotroph explicitly handles calcification
-     logical (KIND=log_kind)     :: silicifier                         ! flag set to true if this autotroph is a silicifier
-  end type autotroph_config_type
-
-  type, public :: autotroph_parms_type
-     real    (KIND=r8)       :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3, kCO2 ! nutrient uptake half-sat constants
-     real    (KIND=r8)       :: Qp_fixed                           ! P/C ratio for fixed P/C ratios
-     real    (KIND=r8)       :: gQfe_0, gQfe_min                   ! initial and minimum Fe/C ratio for growth
-     real    (KIND=r8)       :: alphaPI_per_day                    ! init slope of P_I curve (GD98) (mmol C m^2/(mg Chl W day))
-     real    (KIND=r8)       :: alphaPI                            ! init slope of P_I curve (GD98) (mmol C m^2/(mg Chl W sec))
-                                                                   !    (derived from alphaPI_per_day)
-     real    (KIND=r8)       :: PCref_per_day                      ! max C-spec. grth rate at tref (1/day)
-     real    (KIND=r8)       :: PCref                              ! max C-spec. grth rate at tref (1/sec) (derived from PCref_per_day)
-     real    (KIND=r8)       :: thetaN_max                         ! max thetaN (Chl/N) (mg Chl/mmol N)
-     real    (KIND=r8)       :: loss_thres, loss_thres2            ! conc. where losses go to zero
-     real    (KIND=r8)       :: temp_thres                         ! Temp. where concentration threshold and photosynth. rate drops
-     real    (KIND=r8)       :: mort_per_day, mort2_per_day        ! linear and quadratic mortality rates (1/day), (1/day/((mmol C/m3))
-     real    (KIND=r8)       :: mort, mort2                        ! linear and quadratic mortality rates (1/sec), (1/sec/((mmol C/m3))
-                                                                   !    (derived from mort_per_day and mort2_per_day)
-     real    (KIND=r8)       :: agg_rate_max, agg_rate_min         ! max and min agg. rate (1/d)
-     real    (KIND=r8)       :: loss_poc                           ! routing of loss term
-  end type autotroph_parms_type
-
-  !****************************************************************************
-  ! derived types for grazing
-
-  type, public :: grazing_config_type
-    character(len=char_len) :: sname
-    character(len=char_len) :: lname
-    integer (KIND=int_kind) :: auto_ind_cnt     ! number of autotrophs in prey-clase auto_ind
-    integer (KIND=int_kind) :: zoo_ind_cnt      ! number of zooplankton in prey-clase zoo_ind
-  end type grazing_config_type
-
-  type, public :: grazing_parms_type
-    integer (KIND=int_kind) :: grazing_function ! functional form of grazing parameterization
-    real    (KIND=r8)       :: z_umax_0_per_day ! max zoo growth rate at tref (1/day)
-    real    (KIND=r8)       :: z_umax_0         ! max zoo growth rate at tref (1/sec) (derived from z_umax_0_per_day)
-    real    (KIND=r8)       :: z_grz            ! grazing coef. (mmol C/m^3)^2
-    real    (KIND=r8)       :: graze_zoo        ! routing of grazed term, remainder goes to dic
-    real    (KIND=r8)       :: graze_poc        ! routing of grazed term, remainder goes to dic
-    real    (KIND=r8)       :: graze_doc        ! routing of grazed term, remainder goes to dic
-    real    (KIND=r8)       :: f_zoo_detr       ! fraction of zoo losses to detrital
-    ! FIXME #78: we want auto_ind and zoo_ind to be allocatable, but gfortran
-    !            does not support having derived types with allocatable components
-    !            in a namelist (at least as of 5.2.0). Eventually these two
-    !            components should be made allocatable and then we can
-    !             (1) remove max_prey_class_size from marbl_sizes
-    !             (2) uncomment the constructor for this class
-    integer (KIND=int_kind), dimension(max_prey_class_size) :: auto_ind
-    integer (KIND=int_kind), dimension(max_prey_class_size) :: zoo_ind
-!  contains
-!    procedure, public :: construct => grazing_parms_constructor
-  end type grazing_parms_type
 
   !****************************************************************************
 
@@ -154,6 +72,7 @@ module marbl_internal_types
      real (r8), allocatable, dimension(:)   :: nhx_surface_emis
    contains
      procedure, public :: construct => marbl_surface_forcing_internal_constructor
+     procedure, public :: destruct => marbl_surface_forcing_internal_destructor
   end type marbl_surface_forcing_internal_type
 
   !****************************************************************************
@@ -173,40 +92,6 @@ module marbl_internal_types
      real(r8) :: H2CO3_fields     ! carbonic acid
      real(r8) :: DOC_remin_fields ! remineralization of 13C DOC (mmol C/m^3/sec)
   end type marbl_interior_share_type
-
-  !***********************************************************************
-
-  type, public :: marbl_zooplankton_share_type
-     real(r8) :: zooC_loc_fields     ! local copy of model zooC
-     real(r8) :: zoo_loss_fields     ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_poc_fields ! zoo_loss routed to large detrital (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_doc_fields ! zoo_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_dic_fields ! zoo_loss routed to dic (mmol C/m^3/sec)
-  end type marbl_zooplankton_share_type
-
-  !***********************************************************************
-
-  type, public :: marbl_autotroph_share_type
-     real(r8) :: autotrophChl_loc_fields   ! local copy of model autotroph Chl
-     real(r8) :: autotrophC_loc_fields     ! local copy of model autotroph C
-     real(r8) :: autotrophFe_loc_fields    ! local copy of model autotroph Fe
-     real(r8) :: autotrophSi_loc_fields    ! local copy of model autotroph Si
-     real(r8) :: autotrophCaCO3_loc_fields ! local copy of model autotroph CaCO3
-     real(r8) :: QCaCO3_fields             ! small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
-     real(r8) :: auto_graze_fields         ! autotroph grazing rate (mmol C/m^3/sec)
-     real(r8) :: auto_graze_zoo_fields     ! auto_graze routed to zoo (mmol C/m^3/sec)
-     real(r8) :: auto_graze_poc_fields     ! auto_graze routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_doc_fields     ! auto_graze routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_dic_fields     ! auto_graze routed to dic (mmol C/m^3/sec)
-     real(r8) :: auto_loss_fields          ! autotroph non-grazing mort (mmol C/m^3/sec)
-     real(r8) :: auto_loss_poc_fields      ! auto_loss routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_doc_fields      ! auto_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_dic_fields      ! auto_loss routed to dic (mmol C/m^3/sec)
-     real(r8) :: auto_agg_fields           ! autotroph aggregation (mmol C/m^3/sec)
-     real(r8) :: photoC_fields             ! C-fixation (mmol C/m^3/sec)
-     real(r8) :: CaCO3_form_fields         ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-     real(r8) :: PCphoto_fields            ! C-specific rate of photosynth. (1/sec)
-  end type marbl_autotroph_share_type
 
   !***********************************************************************
 
@@ -257,73 +142,6 @@ module marbl_internal_types
 
   !*****************************************************************************
 
-  type, public :: autotroph_secondary_species_type
-     real (r8) :: thetaC          ! current Chl/C ratio (mg Chl/mmol C)
-     real (r8) :: QCaCO3          ! current CaCO3/C ratio (mmol CaCO3/mmol C)
-     real (r8) :: Qp              ! current P/C ratio (mmol P/mmol C)
-     real (r8) :: gQp             ! P/C for growth
-     real (r8) :: Qfe             ! current Fe/C ratio (mmol Fe/mmol C)
-     real (r8) :: gQfe            ! fe/C for growth
-     real (r8) :: Qsi             ! current Si/C ratio (mmol Si/mmol C)
-     real (r8) :: gQsi            ! diatom Si/C ratio for growth (new biomass)
-     real (r8) :: VNO3            ! NH4 uptake rate (non-dim)
-     real (r8) :: VNH4            ! NO3 uptake rate (non-dim)
-    real (r8) :: VCO2             ! CO2 uptake rate (non-dim)
-     real (r8) :: VNtot           ! total N uptake rate (non-dim)
-     real (r8) :: NO3_V           ! nitrate uptake (mmol NO3/m^3/sec)
-     real (r8) :: NH4_V           ! ammonium uptake (mmol NH4/m^3/sec)
-     real (r8) :: PO4_V           ! PO4 uptake (mmol PO4/m^3/sec)
-     real (r8) :: DOP_V           ! DOP uptake (mmol DOP/m^3/sec)
-     real (r8) :: VPO4            ! C-specific PO4 uptake (non-dim)
-     real (r8) :: VDOP            ! C-specific DOP uptake rate (non-dim)
-     real (r8) :: VPtot           ! total P uptake rate (non-dim)
-     real (r8) :: f_nut           ! nut limitation factor, modifies C fixation (non-dim)
-     real (r8) :: VFe             ! C-specific Fe uptake (non-dim)
-     real (r8) :: VSiO3           ! C-specific SiO3 uptake (non-dim)
-     real (r8) :: light_lim       ! light limitation factor
-     real (r8) :: PCphoto         ! C-specific rate of photosynth. (1/sec)
-     real (r8) :: photoC          ! C-fixation (mmol C/m^3/sec)
-     real (r8) :: photoFe         ! iron uptake
-     real (r8) :: photoSi         ! silicon uptake (mmol Si/m^3/sec)
-     real (r8) :: photoacc        ! Chl synth. term in photoadapt. (GD98) (mg Chl/m^3/sec)
-     real (r8) :: auto_loss       ! autotroph non-grazing mort (mmol C/m^3/sec)
-     real (r8) :: auto_loss_poc   ! auto_loss routed to poc (mmol C/m^3/sec)
-     real (r8) :: auto_loss_doc   ! auto_loss routed to doc (mmol C/m^3/sec)
-     real (r8) :: auto_loss_dic   ! auto_loss routed to dic (mmol C/m^3/sec)
-     real (r8) :: auto_agg        ! autotroph aggregation (mmol C/m^3/sec)
-     real (r8) :: auto_graze      ! autotroph grazing rate (mmol C/m^3/sec)
-     real (r8) :: auto_graze_zoo  ! auto_graze routed to zoo (mmol C/m^3/sec)
-     real (r8) :: auto_graze_poc  ! auto_graze routed to poc (mmol C/m^3/sec)
-     real (r8) :: auto_graze_doc  ! auto_graze routed to doc (mmol C/m^3/sec)
-     real (r8) :: auto_graze_dic  ! auto_graze routed to dic (mmol C/m^3/sec)
-     real (r8) :: Pprime          ! used to limit autotroph mort at low biomass (mmol C/m^3)
-     real (r8) :: CaCO3_form      ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-     real (r8) :: Nfix            ! total Nitrogen fixation (mmol N/m^3/sec)
-     real (r8) :: Nexcrete        ! fixed N excretion
-     real (r8) :: remaining_P_dop ! remaining_P from grazing routed to DOP pool
-     real (r8) :: remaining_P_pop ! remaining_P from grazing routed to POP pool
-     real (r8) :: remaining_P_dip ! remaining_P from grazing routed to remin
-  end type autotroph_secondary_species_type
-
-  !*****************************************************************************
-
-  type, public :: zooplankton_secondary_species_type
-     real (r8):: f_zoo_detr       ! frac of zoo losses into large detrital pool (non-dim)
-     real (r8):: x_graze_zoo      ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
-     real (r8):: zoo_graze        ! zooplankton losses due to grazing (mmol C/m^3/sec)
-     real (r8):: zoo_graze_zoo    ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
-     real (r8):: zoo_graze_poc    ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
-     real (r8):: zoo_graze_doc    ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
-     real (r8):: zoo_graze_dic    ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
-     real (r8):: zoo_loss         ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-     real (r8):: zoo_loss_poc     ! zoo_loss routed to poc (mmol C/m^3/sec)
-     real (r8):: zoo_loss_doc     ! zoo_loss routed to doc (mmol C/m^3/sec)
-     real (r8):: zoo_loss_dic     ! zoo_loss routed to dic (mmol C/m^3/sec)
-     real (r8):: Zprime           ! used to limit zoo mort at low biomass (mmol C/m^3)
-  end type zooplankton_secondary_species_type
-
-  !*****************************************************************************
-
   type, public :: dissolved_organic_matter_type
      real (r8) :: DOC_prod         ! production of DOC (mmol C/m^3/sec)
      real (r8) :: DOC_remin        ! remineralization of DOC (mmol C/m^3/sec)
@@ -366,12 +184,24 @@ module marbl_internal_types
 
   !*****************************************************************************
 
-  type, public :: marbl_tracer_index_type
+  type, private :: marbl_tracer_count_type
+    ! Total count
+    integer(int_kind) :: cnt = 0
     ! Index ranges
-    integer (int_kind) :: ecosys_base_ind_beg
-    integer (int_kind) :: ecosys_base_ind_end
-    integer (int_kind) :: ciso_ind_beg
-    integer (int_kind) :: ciso_ind_end
+    integer(int_kind) :: ind_beg = 0
+    integer(int_kind) :: ind_end = 0
+  contains
+    procedure, public :: update_count
+    procedure, public :: reset => tracer_count_reset
+  end type marbl_tracer_count_type
+
+  !*****************************************************************************
+
+  type, public :: marbl_tracer_index_type
+    ! Book-keeping (tracer count and index ranges)
+    integer (int_kind) :: total_cnt = 0
+    type (marbl_tracer_count_type) :: ecosys_base
+    type (marbl_tracer_count_type) :: ciso
 
     ! General tracers
     integer (int_kind) :: po4_ind         = 0 ! dissolved inorganic phosphate
@@ -399,8 +229,8 @@ module marbl_internal_types
     integer (int_kind) :: do14c_ind       = 0 ! dissolved organic carbon 14
 
     ! Living tracers
-    type(marbl_living_tracer_index_type), dimension(autotroph_cnt)   :: auto_inds
-    type(marbl_living_tracer_index_type), dimension(zooplankton_cnt) :: zoo_inds
+    type(marbl_living_tracer_index_type), allocatable :: auto_inds(:)
+    type(marbl_living_tracer_index_type), allocatable :: zoo_inds(:)
     ! For CISO, don't want individual C13 and C14 tracers for each zooplankton
     ! Instead we collect them into one tracer for each isotope, regardless of
     ! zooplankton_cnt
@@ -408,7 +238,9 @@ module marbl_internal_types
     integer (int_kind) :: zoo14C_ind      = 0 ! zooplankton carbon 14
 
   contains
+    procedure, public :: add_tracer_index
     procedure, public :: construct => tracer_index_constructor
+    procedure, public :: destruct => tracer_index_destructor
   end type marbl_tracer_index_type
 
   !****************************************************************************
@@ -487,7 +319,9 @@ contains
   !***********************************************************************
 
   subroutine column_sinking_particle_constructor(this, num_levels)
-    class(column_sinking_particle_type), intent(inout) :: this
+
+    class(column_sinking_particle_type), intent(out) :: this
+
     integer (int_kind) :: num_levels
 
     allocate(this%sflux_in (num_levels))
@@ -497,10 +331,15 @@ contains
     allocate(this%hflux_out(num_levels))
     allocate(this%sed_loss (num_levels))
     allocate(this%remin    (num_levels))
+
   end subroutine column_sinking_particle_constructor
 
+  !***********************************************************************
+
   subroutine column_sinking_particle_destructor(this)
+
     class(column_sinking_particle_type), intent(inout) :: this
+
     integer (int_kind) :: num_levels
 
     deallocate(this%sflux_in)
@@ -510,12 +349,15 @@ contains
     deallocate(this%hflux_out)
     deallocate(this%sed_loss)
     deallocate(this%remin)
+
   end subroutine column_sinking_particle_destructor
 
   !***********************************************************************
 
   subroutine marbl_particulate_share_constructor(this, num_levels)
-    class(marbl_particulate_share_type), intent(inout) :: this
+
+    class(marbl_particulate_share_type), intent(out) :: this
+
     integer (int_kind) :: num_levels
 
     allocate(this%decay_CaCO3_fields               (num_levels))
@@ -539,9 +381,13 @@ contains
     call this%P_SiO2%construct          (num_levels)
     call this%P_iron%construct          (num_levels)
     call this%dust%construct            (num_levels)
+
   end subroutine marbl_particulate_share_constructor
 
+  !***********************************************************************
+
   subroutine marbl_particulate_share_destructor(this)
+
     class(marbl_particulate_share_type), intent(inout) :: this
 
     deallocate(this%decay_CaCO3_fields)
@@ -565,12 +411,15 @@ contains
      call this%P_SiO2%destruct()
      call this%P_iron%destruct()
      call this%dust%destruct()
+
    end subroutine marbl_particulate_share_destructor
 
   !***********************************************************************
 
    subroutine marbl_surface_forcing_share_constructor(this, num_elements)
-     class(marbl_surface_forcing_share_type), intent(inout) :: this
+
+     class(marbl_surface_forcing_share_type), intent(out) :: this
+
      integer (int_kind) , intent(in) :: num_elements
 
      allocate(this%PV_SURF_fields       (num_elements)) ! piston velocity (cm/s)
@@ -578,46 +427,59 @@ contains
      allocate(this%CO2STAR_SURF_fields  (num_elements)) ! CO2STAR from solver
      allocate(this%DCO2STAR_SURF_fields (num_elements)) ! DCO2STAR from solver
      allocate(this%CO3_SURF_fields      (num_elements)) ! Surface carbonate ion
+
    end subroutine marbl_surface_forcing_share_constructor
 
-   subroutine marbl_surface_forcing_share_destructor(this, num_elements)
-     class(marbl_surface_forcing_share_type), intent(inout) :: this
-     integer (int_kind) , intent(in) :: num_elements
+   !***********************************************************************
 
-     deallocate(this%PV_SURF_fields      ) ! piston velocity (cm/s)
-     deallocate(this%DIC_SURF_fields     ) ! Surface values of DIC for solver
-     deallocate(this%CO2STAR_SURF_fields ) ! CO2STAR from solver
-     deallocate(this%DCO2STAR_SURF_fields) ! DCO2STAR from solver
-     deallocate(this%CO3_SURF_fields     ) ! Surface carbonate ion
-   end subroutine marbl_surface_forcing_share_destructor
+   subroutine marbl_surface_forcing_share_destructor(this)
+
+     class(marbl_surface_forcing_share_type), intent(inout) :: this
+
+     if (allocated(this%PV_SURF_fields)) then
+       deallocate(this%PV_SURF_fields      ) ! piston velocity (cm/s)
+       deallocate(this%DIC_SURF_fields     ) ! Surface values of DIC for solver
+       deallocate(this%CO2STAR_SURF_fields ) ! CO2STAR from solver
+       deallocate(this%DCO2STAR_SURF_fields) ! DCO2STAR from solver
+       deallocate(this%CO3_SURF_fields     ) ! Surface carbonate ion
+     end if
+
+   end subroutine
 
   !*****************************************************************************
 
   subroutine marbl_PAR_constructor(this, num_levels, num_PAR_subcols)
-    class(marbl_PAR_type) , intent(inout) :: this
-    integer               , intent(in)    :: num_levels
-    integer               , intent(in)    :: num_PAR_subcols
+
+    class(marbl_PAR_type), intent(out) :: this
+    integer,               intent(in)  :: num_levels
+    integer,               intent(in)  :: num_PAR_subcols
 
     allocate(this%interface(0:num_levels,num_PAR_subcols))
     allocate(this%avg      (  num_levels,num_PAR_subcols))
     allocate(this%KPARdz   (  num_levels                ))
     allocate(this%col_frac (             num_PAR_subcols))
+
   end subroutine marbl_PAR_constructor
 
+  !*****************************************************************************
+
   subroutine marbl_PAR_destructor(this)
+
     class(marbl_PAR_type) , intent(inout) :: this
 
     deallocate(this%interface)
     deallocate(this%avg      )
     deallocate(this%KPARdz   )
     deallocate(this%col_frac )
+
   end subroutine marbl_PAR_destructor
 
   !***********************************************************************
 
   subroutine marbl_surface_forcing_internal_constructor(this, num_elements)
-    class(marbl_surface_forcing_internal_type) , intent(inout) :: this
-    integer (int_kind)                         , intent(in)    :: num_elements
+
+    class(marbl_surface_forcing_internal_type), intent(out) :: this
+    integer (int_kind),                         intent(in)  :: num_elements
 
     allocate(this%piston_velocity (num_elements))
     allocate(this%flux_co2        (num_elements))
@@ -637,185 +499,278 @@ contains
     allocate(this%pv_co2          (num_elements))
     allocate(this%o2sat           (num_elements))
     allocate(this%nhx_surface_emis(num_elements))
+
   end subroutine marbl_surface_forcing_internal_constructor
+
+  !***********************************************************************
+
+  subroutine marbl_surface_forcing_internal_destructor(this)
+
+    class(marbl_surface_forcing_internal_type) , intent(inout) :: this
+
+    if (allocated(this%piston_velocity)) then
+      deallocate(this%piston_velocity )
+      deallocate(this%flux_co2        )
+      deallocate(this%flux_alt_co2    )
+      deallocate(this%co2star         )
+      deallocate(this%dco2star        )
+      deallocate(this%pco2surf        )
+      deallocate(this%dpco2           )
+      deallocate(this%co3             )
+      deallocate(this%co2star_alt     )
+      deallocate(this%dco2star_alt    )
+      deallocate(this%pco2surf_alt    )
+      deallocate(this%dpco2_alt       )
+      deallocate(this%schmidt_co2     )
+      deallocate(this%schmidt_o2      )
+      deallocate(this%pv_o2           )
+      deallocate(this%pv_co2          )
+      deallocate(this%o2sat           )
+      deallocate(this%nhx_surface_emis)
+    end if
+
+  end subroutine marbl_surface_forcing_internal_destructor
 
   !*****************************************************************************
 
-  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs_config, &
-             zooplankton_config)
+  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs, &
+             zooplankton, marbl_status_log, marbl_tracer_cnt)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
     ! tracer_cnt by 1 for each tracer that is included. Note that this gives an
     ! accurate count whether the carbon isotope tracers are included or not.
 
-    use marbl_sizes,         only : marbl_total_tracer_cnt
     use marbl_constants_mod, only : c0
+    use marbl_pft_mod, only : autotroph_type
+    use marbl_pft_mod, only : zooplankton_type
 
-    class(marbl_tracer_index_type), intent(inout) :: this
+    class(marbl_tracer_index_type), intent(out)   :: this
     logical,                        intent(in)    :: ciso_on
     logical,                        intent(in)    :: lvariable_PtoC
-    type(autotroph_config_type),    intent(in)    :: autotrophs_config(:)
-    type(zooplankton_config_type),  intent(in)    :: zooplankton_config(:)
+    type(autotroph_type),           intent(in)    :: autotrophs(:)
+    type(zooplankton_type),         intent(in)    :: zooplankton(:)
+    type(marbl_log_type),           intent(inout) :: marbl_status_log
+    integer(int_kind), optional,    intent(out)   :: marbl_tracer_cnt
 
-    integer :: n
+    character(len=*), parameter :: subname = 'marbl_interface_private_types:tracer_index_constructor'
+    character(len=char_len) :: ind_name
+    integer :: autotroph_cnt, zooplankton_cnt, n
 
-    associate(tracer_cnt      => marbl_total_tracer_cnt)
+    ! If marbl_tracer_cnt is requested, initialize to zero
+    ! (so that count is zero if an error is encountered)
+    autotroph_cnt = size(autotrophs)
+    zooplankton_cnt = size(zooplankton)
+    if (present(marbl_tracer_cnt)) marbl_tracer_cnt = 0
 
-      tracer_cnt = 0
-      this%ciso_ind_beg = 0
-      this%ciso_ind_end = 0
+    !Allocate memory
+    allocate(this%auto_inds(autotroph_cnt))
+    allocate(this%zoo_inds(zooplankton_cnt))
 
-      ! General ecosys tracers
-      this%ecosys_base_ind_beg = tracer_cnt + 1
+    ! General ecosys tracers
+    call this%add_tracer_index('po4', 'ecosys_base', this%po4_ind, marbl_status_log)
+    call this%add_tracer_index('no3', 'ecosys_base', this%no3_ind, marbl_status_log)
+    call this%add_tracer_index('sio3', 'ecosys_base', this%sio3_ind, marbl_status_log)
+    call this%add_tracer_index('nh4', 'ecosys_base', this%nh4_ind, marbl_status_log)
+    call this%add_tracer_index('fe', 'ecosys_base', this%fe_ind, marbl_status_log)
+    call this%add_tracer_index('lig', 'ecosys_base', this%lig_ind, marbl_status_log)
+    call this%add_tracer_index('o2', 'ecosys_base', this%o2_ind, marbl_status_log)
+    call this%add_tracer_index('dic', 'ecosys_base', this%dic_ind, marbl_status_log)
+    call this%add_tracer_index('dic_alt_co2', 'ecosys_base', this%dic_alt_co2_ind, marbl_status_log)
+    call this%add_tracer_index('alk', 'ecosys_base', this%alk_ind, marbl_status_log)
+    call this%add_tracer_index('alk_alt_co2', 'ecosys_base', this%alk_alt_co2_ind, marbl_status_log)
+    call this%add_tracer_index('doc', 'ecosys_base', this%doc_ind, marbl_status_log)
+    call this%add_tracer_index('don', 'ecosys_base', this%don_ind, marbl_status_log)
+    call this%add_tracer_index('dop', 'ecosys_base', this%dop_ind, marbl_status_log)
+    call this%add_tracer_index('dopr', 'ecosys_base', this%dopr_ind, marbl_status_log)
+    call this%add_tracer_index('donr', 'ecosys_base', this%donr_ind, marbl_status_log)
+    call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
 
-      tracer_cnt  = tracer_cnt + 1
-      this%po4_ind = tracer_cnt
+    do n=1,zooplankton_cnt
+      write(ind_name, "(2A)") trim(zooplankton(n)%sname), "C"
+      call this%add_tracer_index(ind_name, 'ecosys_base', this%zoo_inds(n)%C_ind, marbl_status_log)
+    end do
 
-      tracer_cnt   = tracer_cnt + 1
-      this%no3_ind = tracer_cnt
+    do n=1,autotroph_cnt
+      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Chl"
+      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Chl_ind, marbl_status_log)
 
-      tracer_cnt    = tracer_cnt + 1
-      this%sio3_ind = tracer_cnt
+      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C"
+      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%C_ind, marbl_status_log)
 
-      tracer_cnt    = tracer_cnt + 1
-      this%nh4_ind  = tracer_cnt
-
-      tracer_cnt  = tracer_cnt + 1
-      this%fe_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%lig_ind = tracer_cnt
-
-      tracer_cnt  = tracer_cnt + 1
-      this%o2_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%dic_ind = tracer_cnt
-
-      tracer_cnt           = tracer_cnt + 1
-      this%dic_alt_co2_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%alk_ind = tracer_cnt
-
-      tracer_cnt           = tracer_cnt + 1
-      this%alk_alt_co2_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%doc_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%don_ind = tracer_cnt
-
-      tracer_cnt   = tracer_cnt + 1
-      this%dop_ind = tracer_cnt
-
-      tracer_cnt    = tracer_cnt + 1
-      this%dopr_ind = tracer_cnt
-
-      tracer_cnt    = tracer_cnt + 1
-      this%donr_ind = tracer_cnt
-
-      tracer_cnt    = tracer_cnt + 1
-      this%docr_ind = tracer_cnt
-
-      do n=1,zooplankton_cnt
-        tracer_cnt    = tracer_cnt + 1
-        this%zoo_inds(n)%C_ind = tracer_cnt
-      end do
-
-      do n=1,autotroph_cnt
-        tracer_cnt                = tracer_cnt + 1
-        this%auto_inds(n)%Chl_ind = tracer_cnt
-
-        tracer_cnt              = tracer_cnt + 1
-        this%auto_inds(n)%C_ind = tracer_cnt
-
-        if (lvariable_PtoC) then
-          tracer_cnt              = tracer_cnt + 1
-          this%auto_inds(n)%P_ind = tracer_cnt
-        end if
-
-        tracer_cnt               = tracer_cnt + 1
-        this%auto_inds(n)%Fe_ind = tracer_cnt
-
-        if (autotrophs_config(n)%silicifier) then
-          tracer_cnt               = tracer_cnt + 1
-          this%auto_inds(n)%Si_ind = tracer_cnt
-        end if
-
-        if (autotrophs_config(n)%imp_calcifier.or.                            &
-            autotrophs_config(n)%exp_calcifier) then
-          tracer_cnt                  = tracer_cnt + 1
-          this%auto_inds(n)%CaCO3_ind = tracer_cnt
-        end if
-      end do
-      this%ecosys_base_ind_end = tracer_cnt
-
-      if (ciso_on) then
-        ! Next tracer is start of the CISO tracers
-        this%ciso_ind_beg = tracer_cnt + 1
-
-        tracer_cnt     = tracer_cnt + 1
-        this%di13c_ind = tracer_cnt
-
-        tracer_cnt     = tracer_cnt + 1
-        this%do13c_ind = tracer_cnt
-
-        tracer_cnt     = tracer_cnt + 1
-        this%di14c_ind = tracer_cnt
-
-        tracer_cnt     = tracer_cnt + 1
-        this%do14c_ind = tracer_cnt
-
-        tracer_cnt      = tracer_cnt + 1
-        this%zoo13C_ind = tracer_cnt
-
-        tracer_cnt      = tracer_cnt + 1
-        this%zoo14C_ind = tracer_cnt
-
-        do n=1,autotroph_cnt
-          tracer_cnt                = tracer_cnt + 1
-          this%auto_inds(n)%C13_ind = tracer_cnt
-
-          tracer_cnt                = tracer_cnt + 1
-          this%auto_inds(n)%C14_ind = tracer_cnt
-
-          if (autotrophs_config(n)%imp_calcifier .or. &
-              autotrophs_config(n)%exp_calcifier) then
-            tracer_cnt                    = tracer_cnt + 1
-            this%auto_inds(n)%Ca13CO3_ind = tracer_cnt
-
-            tracer_cnt                    = tracer_cnt + 1
-            this%auto_inds(n)%Ca14CO3_ind = tracer_cnt
-          end if
-
-        end do
-
-        this%ciso_ind_end = tracer_cnt
-
+      if (lvariable_PtoC) then
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "P"
+        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%P_ind, marbl_status_log)
       end if
 
-    end associate
+      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Fe"
+      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Fe_ind, marbl_status_log)
+
+      if (autotrophs(n)%silicifier) then
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Si"
+        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Si_ind, marbl_status_log)
+      end if
+
+      if (autotrophs(n)%imp_calcifier.or.                            &
+          autotrophs(n)%exp_calcifier) then
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "CaCO3"
+        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
+      end if
+    end do
+
+    if (ciso_on) then
+      call this%add_tracer_index('di13c', 'ciso', this%di13c_ind, marbl_status_log)
+      call this%add_tracer_index('do13c', 'ciso', this%do13c_ind, marbl_status_log)
+      call this%add_tracer_index('di14c', 'ciso', this%di14c_ind, marbl_status_log)
+      call this%add_tracer_index('do14c', 'ciso', this%do14c_ind, marbl_status_log)
+      call this%add_tracer_index('zoo13c', 'ciso', this%zoo13C_ind, marbl_status_log)
+      call this%add_tracer_index('zoo14c', 'ciso', this%zoo14C_ind, marbl_status_log)
+
+      do n=1,autotroph_cnt
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C13"
+        call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C13_ind, marbl_status_log)
+
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C14"
+        call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C14_ind, marbl_status_log)
+
+        if (autotrophs(n)%imp_calcifier .or. &
+            autotrophs(n)%exp_calcifier) then
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Ca13CO3"
+          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca13CO3_ind, marbl_status_log)
+
+        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Ca14CO3"
+          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca14CO3_ind, marbl_status_log)
+        end if
+      end do
+    end if
+
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("add_tracer_index", subname)
+      return
+    end if
+
+    ! If marbl_tracer_cnt is requested, provide before returning
+    if (present(marbl_tracer_cnt)) marbl_tracer_cnt = this%total_cnt
 
   end subroutine tracer_index_constructor
 
   !*****************************************************************************
 
+  subroutine tracer_index_destructor(this)
+
+    class(marbl_tracer_index_type), intent(inout) :: this
+
+    ! Zero out counts
+    this%total_cnt = 0
+    call this%ecosys_base%reset()
+    call this%ciso%reset()
+
+    ! Deallocate memory
+    if (allocated(this%auto_inds)) then
+      deallocate(this%auto_inds)
+      deallocate(this%zoo_inds)
+    end if
+
+  end subroutine tracer_index_destructor
+
+  !*****************************************************************************
+
+  subroutine tracer_count_reset(this)
+    class(marbl_tracer_count_type), intent(inout) :: this
+    this%cnt = 0
+    this%ind_beg = 0
+    this%ind_end = 0
+  end subroutine tracer_count_reset
+
+  !*****************************************************************************
+
+  subroutine add_tracer_index(this, ind_name, category, ind, marbl_status_log)
+
+    class(marbl_tracer_index_type), intent(inout) :: this
+    character(len=*),               intent(in)    :: ind_name
+    character(len=*),               intent(in)    :: category
+    integer(int_kind),              intent(out)   :: ind
+    type(marbl_log_type),           intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_interface_private_types:add_tracer_index'
+    character(len=char_len)     :: log_message
+
+    ! This routine may be called multiple times after an error has been logged
+    ! (tracer_index_constructor doesn't check log status until all indices have
+    ! been added)
+    if (marbl_status_log%labort_marbl) return
+
+    ind = this%total_cnt+1
+    select case (trim(category))
+      case ('ecosys_base')
+        call this%ecosys_base%update_count(ind, marbl_status_log)
+      case ('ciso')
+        call this%ciso%update_count(ind, marbl_status_log)
+      case DEFAULT
+        write(log_message, "(A,1X,A)") trim(category), &
+              'is not a recognized tracer module!'
+        call marbl_status_log%log_error(log_message, subname)
+        write(log_message, "(2A)") "Error triggered by ", trim(ind_name)
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      ! TO-DO add default case with "category not found" error
+    end select
+
+    if (marbl_status_log%labort_marbl) then
+      write(log_message, "(2A)") trim(category), "%update_count"
+      call marbl_status_log%log_error_trace(log_message, subname)
+      write(log_message, "(2A)") "Error triggered by ", trim(ind_name)
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    this%total_cnt = ind
+
+  end subroutine add_tracer_index
+
+  !*****************************************************************************
+
+  subroutine update_count(this, ind, marbl_status_log)
+
+    class(marbl_tracer_count_type), intent(inout) :: this
+    integer(int_kind),              intent(in)    :: ind
+    type(marbl_log_type),           intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_interface_private_types:update_count'
+    character(len=char_len)     :: log_message
+
+    ! (1) Make sure tracer modules have contiguous indices
+    if ((this%ind_end .ne. 0) .and. (this%ind_end .ne. ind-1)) then
+      write(log_message, "(2A,I0,A,I0)") "Can not add another tracer to this module", &
+            " current tracer index is ", ind, " and last tracer in module is ",       &
+            this%ind_end
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    ! (2) If this is first tracer in module, set ind_beg
+    if (this%ind_beg .eq. 0) this%ind_beg = ind
+
+    ! (3) Update ind_end and total count
+    this%ind_end = ind
+    this%cnt = this%cnt + 1
+
+  end subroutine update_count
+
+  !*****************************************************************************
+
   subroutine surface_forcing_index_constructor(this, ciso_on, lflux_gas_o2,   &
-             lflux_gas_co2, ladjust_bury_coeff)
+             lflux_gas_co2, ladjust_bury_coeff, num_surface_forcing_fields)
 
     ! This subroutine sets the surface forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
 
-    use marbl_sizes,         only : num_surface_forcing_fields
-
-    class(marbl_surface_forcing_indexing_type), intent(inout) :: this
-    logical,                                    intent(in)    :: ciso_on
-    logical,                                    intent(in)    :: lflux_gas_o2
-    logical,                                    intent(in)    :: lflux_gas_co2
-    logical,                                    intent(in)    :: ladjust_bury_coeff
+    class(marbl_surface_forcing_indexing_type), intent(out) :: this
+    logical,                                    intent(in)  :: ciso_on
+    logical,                                    intent(in)  :: lflux_gas_o2
+    logical,                                    intent(in)  :: lflux_gas_co2
+    logical,                                    intent(in)  :: ladjust_bury_coeff
+    integer,                                    intent(out) :: num_surface_forcing_fields
 
     associate(forcing_cnt => num_surface_forcing_fields)
 
@@ -920,34 +875,29 @@ contains
   subroutine interior_forcing_index_constructor(this,                         &
                                                 tracer_names,                 &
                                                 tracer_restore_vars,          &
+                                                num_interior_forcing_fields,  &
                                                 marbl_status_log)
 
     ! This subroutine sets the interior forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
 
-    use marbl_sizes, only : num_interior_forcing_fields
-    use marbl_sizes, only : marbl_total_tracer_cnt
-    use marbl_sizes, only : tracer_restore_cnt
-
-    class(marbl_interior_forcing_indexing_type), intent(inout) :: this
+    class(marbl_interior_forcing_indexing_type), intent(out)   :: this
     character(len=char_len), dimension(:),       intent(in)    :: tracer_names
     character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
+    integer(int_kind),                           intent(out)   :: num_interior_forcing_fields
     type(marbl_log_type),                        intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_internal_types:interior_forcing_index_constructor'
+    character(len=*), parameter :: subname = 'marbl_interface_private_types:interior_forcing_index_constructor'
     character(len=char_len)     :: log_message
 
+    integer :: tracer_restore_cnt, tracer_cnt
     integer :: m, n
 
     associate(forcing_cnt => num_interior_forcing_fields)
 
+      tracer_cnt = size(tracer_names)
+
       forcing_cnt = 0
-      allocate(this%tracer_restore_id(marbl_total_tracer_cnt))
-      this%tracer_restore_id = 0
-      allocate(this%inv_tau_id(marbl_total_tracer_cnt))
-      this%inv_tau_id = 0
-      allocate(this%tracer_id(marbl_total_tracer_cnt))
-      this%tracer_id = 0
 
       ! -------------------------------
       ! | Always request these fields |
@@ -983,15 +933,18 @@ contains
 
       ! Tracer restoring
       ! Note that this section
-      ! (1) sets tracer_restore_cnt
+      ! (1) sets tracer_restore_cnt and allocate memory for restoring
+      !     arrays
       ! (2) includes consistency check on the tracer_restore_vars array
       ! (3) writes all tracer restore fields to log
 
       tracer_restore_cnt = count((len_trim(tracer_restore_vars).gt.0))
-      if (tracer_restore_cnt .gt. 0) then
-        log_message = "Restoring the following tracers to data:"
-        call marbl_status_log%log_noerror(log_message, subname)
-      end if
+      allocate(this%tracer_restore_id(tracer_cnt))
+      this%tracer_restore_id = 0
+      allocate(this%inv_tau_id(tracer_cnt))
+      this%inv_tau_id = 0
+      allocate(this%tracer_id(tracer_restore_cnt))
+      this%tracer_id = 0
 
       do m=1,tracer_restore_cnt ! loop over tracer_restore_vars
         ! Check for empty strings in first tracer_restore_cnt elements of
@@ -1003,7 +956,7 @@ contains
         end if
 
         ! Check for duplicate tracers in tracer_restore_vars
-        if (m .lt. marbl_total_tracer_cnt) then
+        if (m .lt. tracer_cnt) then
           if (any(tracer_restore_vars(m).eq.tracer_restore_vars(m+1:))) then
             write(log_message,"(A,1X,A)") trim(tracer_restore_vars(m)),           &
                                   "appears in tracer_restore_vars more than once"
@@ -1013,7 +966,7 @@ contains
         end if
 
         ! For each element
-        do n=1,marbl_total_tracer_cnt ! loop over tracer_names
+        do n=1,tracer_cnt ! loop over tracer_names
           if (trim(tracer_restore_vars(m)).eq.trim(tracer_names(n))) then
             forcing_cnt = forcing_cnt + 1
             this%tracer_restore_id(n) = forcing_cnt
@@ -1024,11 +977,8 @@ contains
         end do
 
         ! Check to make sure match was found
-        if (n.le.marbl_total_tracer_cnt) then
+        if (n.le.tracer_cnt) then
           this%tracer_id(m) = n
-          write(log_message, "(2A,I0,A)") trim(tracer_names(n)),              &
-                                          " (tracer index: ", n, ')'
-          call marbl_status_log%log_noerror(log_message, subname)
         else
           write(log_message, "(2A)") "Can not find tracer named ",            &
                 trim(tracer_restore_vars(m))
@@ -1045,36 +995,5 @@ contains
 
   !*****************************************************************************
 
-#if 0
-  ! FIXME #78: commented because auto_ind and zoo_ind are not allocatable yet
-  subroutine grazing_parms_constructor(this, grazing_conf, marbl_status_log)
-
-    class(grazing_parms_type), intent(inout) :: this
-    type(grazing_config_type), intent(in)    :: grazing_conf
-    type(marbl_log_type),      intent(inout) :: marbl_status_log
-
-    character(len=*), parameter :: subname = 'marbl_internal_types:grazing_config_constructor'
-    character(len=char_len)     :: log_message
-
-    if (allocated(this%auto_ind)) then
-      log_message = 'grazing%auto_inds is already allocated!'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    if (allocated(this%zoo_ind)) then
-      log_message = 'grazing%zoo_inds is already allocated!'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    end if
-
-    allocate(this%auto_ind(grazing_conf%auto_ind_cnt))
-    allocate(this%zoo_ind(grazing_conf%zoo_ind_cnt))
-
-  end subroutine grazing_parms_constructor
-#endif
-
-  !*****************************************************************************
-
-end module marbl_internal_types
+end module marbl_interface_private_types
 
