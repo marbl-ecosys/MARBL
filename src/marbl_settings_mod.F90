@@ -149,7 +149,8 @@ module marbl_settings_mod
       gQsi_0        = 0.137_r8,           & !initial Si/C ratio for growth
       gQsi_max      = 0.685_r8,           & !max Si/C ratio for growth
       gQsi_min      = 0.0457_r8,          & !min Si/C ratio for growth
-      QCaCO3_max    = 0.4_r8,             & !max QCaCO3
+      QCaCO3_max    = 0.4_r8,             & !max QCaCO3 for implicit calcifiers
+      QCaCO3_max_exp    = 2.0_r8,             & !max QCaCO3 for explicit calcifiers
       ! parameters in GalbraithMartiny Pquota Model^M
       PquotaSlope     = 7.0_r8,        &
       PquotaIntercept = 5.571_r8,      &

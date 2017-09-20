@@ -2762,7 +2762,7 @@ contains
     !  growth, mort and grazing rates scaled by Tfunc where they are computed
     !-----------------------------------------------------------------------
 
-    use marbl_parms,         only : Q_10
+    use marbl_settings_mod,  only : Q_10
     use marbl_constants_mod, only : Tref
     use marbl_constants_mod, only : c10
 
