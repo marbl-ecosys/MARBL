@@ -147,7 +147,7 @@ Program marbl
       end associate
       ! Log interior forcing diagnostics passed back to driver
       associate(diags => marbl_instance%interior_forcing_diags%diags)
-        call driver_status_log%log_header('Surface forcing diagnostics', subname)
+        call driver_status_log%log_header('Interior forcing diagnostics', subname)
         do n=1, size(diags)
           write(log_message, "(I0,4A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name)
           call driver_status_log%log_noerror(log_message, subname)
