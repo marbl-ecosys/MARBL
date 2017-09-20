@@ -7,7 +7,8 @@ from marbl_testing_class import MARBL_testcase
 
 mt = MARBL_testcase()
 
-mt.parse_args(desc='Run MARBL init and print a list of all the tracers being used')
+mt.parse_args(desc='Run MARBL init and print a list of all the diagnostics being '
+                   'passed back to the driver')
 
 mt.build_exe()
 

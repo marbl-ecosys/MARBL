@@ -102,8 +102,12 @@ Program marbl
   ! (3) Run proper test
   if (my_task.eq.0) write(*,"(3A)") "Beginning ", trim(testname), " test..."
   select case (trim(testname))
+    !    REGRESSION TESTS
+    ! -- init regression test -- !
     case ('init')
       call marbl_init_test(marbl_instance)
+
+    ! -- init-twice test -- !
     case ('init-twice')
       call marbl_instance%put_setting('ciso_on = .false.')
       call marbl_init_test(marbl_instance)
@@ -112,6 +116,8 @@ Program marbl
       call marbl_init_test(marbl_instance)
       call summarize_timers(driver_status_log, header_text = 'With the CISO Tracers')
       lsummarize_timers = .false.
+
+    ! -- gen_inputfile test -- !
     case ('gen_inputfile')
       lprint_marbl_log = .false.
       ldriver_log_to_file = .true.
@@ -122,65 +128,73 @@ Program marbl
           if (marbl_instance%StatusLog%labort_marbl) exit
           call marbl_instance%get_setting(varname, input_line, linputfile_format=.true.)
           if (marbl_instance%StatusLog%labort_marbl) exit
-          call driver_status_log%log_noerror(trim(input_line), subname)
+          call driver_status_log%log_noerror(input_line, subname)
         end do
         call marbl_instance%shutdown()
       end if
-    case ('get_put')
+
+    ! -- request_diags test -- !
+    case ('request_diags')
       lprint_marbl_log = .false.
-      call marbl_get_put_test(marbl_instance, driver_status_log)
-    case ('marbl_utils')
-      lprint_marbl_log = .false.
-      lsummarize_timers = .false.
-      call marbl_utils_test(driver_status_log)
+      call marbl_init_test(marbl_instance, lshutdown = .false.)
+      ! Log surface forcing diagnostics passed back to driver
+      associate(diags => marbl_instance%surface_forcing_diags%diags)
+        call driver_status_log%log_header('Surface forcing diagnostics', subname)
+        do n=1, size(diags)
+          write(log_message, "(I0,4A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name)
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+      end associate
+      ! Log interior forcing diagnostics passed back to driver
+      associate(diags => marbl_instance%interior_forcing_diags%diags)
+        call driver_status_log%log_header('Interior forcing diagnostics', subname)
+        do n=1, size(diags)
+          write(log_message, "(I0,4A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name)
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+      end associate
+      call marbl_instance%shutdown()
+
+    ! -- request_tracers test -- !
     case ('request_tracers')
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
-
       ! Log tracers requested for initialization
-      call driver_status_log%log_noerror('', subname)
-      call driver_status_log%log_noerror('Requested tracers', subname)
-      call driver_status_log%log_noerror('---', subname)
+      call driver_status_log%log_header('Requested tracers', subname)
       do n=1,nt
         write(log_message, "(I0, 2A)") n, '. ',                               &
           trim(marbl_instance%tracer_metadata(n)%short_name)
         call driver_status_log%log_noerror(log_message, subname)
       end do
       call marbl_instance%shutdown()
+
+    ! -- request_forcings test -- !
     case ('request_forcings')
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instance, lshutdown=.false.)
-
       ! Log requested surface forcing fields
-      call driver_status_log%log_noerror('', subname)
-      call driver_status_log%log_noerror('Requested surface forcing fields', subname)
-      call driver_status_log%log_noerror('---', subname)
+      call driver_status_log%log_header('Requested surface forcing fields', subname)
       do n=1,size(marbl_instance%surface_input_forcings)
         write(log_message, "(I0, 2A)") n, '. ', &
               trim(marbl_instance%surface_input_forcings(n)%metadata%varname)
         call driver_status_log%log_noerror(log_message, subname)
       end do
-
       ! Log requested interior forcing fields
-      call driver_status_log%log_noerror('', subname)
-      call driver_status_log%log_noerror('Requested interior forcing fields', subname)
-      call driver_status_log%log_noerror('---', subname)
+      call driver_status_log%log_header('Requested interior forcing fields', subname)
       do n=1,size(marbl_instance%interior_input_forcings)
         write(log_message, "(I0, 2A)") n, '. ',                               &
              trim(marbl_instance%interior_input_forcings(n)%metadata%varname)
         call driver_status_log%log_noerror(log_message, subname)
       end do
-
       call marbl_instance%shutdown()
 
+    ! -- request_restoring test -- !
     case ('request_restoring')
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
 
       ! Log tracers requested for restoring
-      call driver_status_log%log_noerror('', subname)
-      call driver_status_log%log_noerror('Requested tracers to restore', subname)
-      call driver_status_log%log_noerror('---', subname)
+      call driver_status_log%log_header('Requested tracers to restore', subname)
       cnt = 0
       do n=1,size(marbl_instance%interior_input_forcings)
         varname = marbl_instance%interior_input_forcings(n)%metadata%varname
@@ -195,6 +209,20 @@ Program marbl
         call driver_status_log%log_noerror('No tracers to restore!', subname)
       end if
       call marbl_instance%shutdown()
+
+    !    UNIT TESTS
+    ! -- get_put test -- !
+    case ('get_put')
+      lprint_marbl_log = .false.
+      call marbl_get_put_test(marbl_instance, driver_status_log)
+
+    ! -- marbl_utils test -- !
+    case ('marbl_utils')
+      lprint_marbl_log = .false.
+      lsummarize_timers = .false.
+      call marbl_utils_test(driver_status_log)
+
+    !   UNRECOGNIZED TEST
     case DEFAULT
       write(*,*) "ERROR: testname = ", trim(testname), " is not a valid option"
       call marbl_mpi_abort()
