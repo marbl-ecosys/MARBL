@@ -4,6 +4,9 @@ Program marbl
 ! The driver for MARBL's stand-alone testing. When built, the executable will
 ! run one of several tests based on the value of testname in &marbl_driver_nml
 !
+! Usage:
+! $ marbl.exe NAMELIST [INPUTFILE]
+!
 ! In $MARBL/tests/ the actual tests are divided into the following categories:
 ! 1) Build tests ($MARBL/tests/bld_tests/)
 !    * Make sure the code provided compiles, but nothing is executed. Tests
@@ -52,6 +55,11 @@ Program marbl
 
   character(len=256), parameter :: subname = 'Program Marbl'
 
+  ! Variables for processing commandline arguments
+  character(256) :: progname, argstr
+  character(256) :: namelist_file, inputfile
+  integer        :: argcnt, argind
+
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
   integer                       :: m, n, nt, cnt
@@ -64,13 +72,37 @@ Program marbl
   integer  :: ival
   real(r8) :: rval
 
-  namelist /marbl_driver_nml/testname, lhas_inputfile, log_out_file
+  namelist /marbl_driver_nml/testname, log_out_file
 
   !****************************************************************************
 
   ! (0) Initialization
   !     MPI?
   call marbl_mpi_init()
+
+  !     Command line arguments?
+  call get_command_argument(0, progname)
+  argcnt = command_argument_count()
+  ! Program requires one command line argument (namelist)
+  ! and accepts and optional second argument (input file)
+  if (.not. any(argcnt .eq. (/1,2/))) then
+    if (my_task .eq. 0) then
+      write(*,"(3A)") "USAGE: ", trim(progname), " NAMELIST [INPUTFILE]"
+      write(*,"(A)") ''
+      write(*,"(7X,A)") 'NAMELIST    required argument, namelist tells driver what test to run'
+      write(*,"(7X,A)") 'INPUTFILE   optional inputfile to read and send to put_setting()'
+      write(*,"(A)") ''
+    end if
+    call marbl_mpi_abort()
+  end if
+  call get_command_argument(1, namelist_file)
+  if (argcnt .eq. 2) then
+    lhas_inputfile = .true.
+    call get_command_argument(2, inputfile)
+  else
+    lhas_inputfile = .false.
+    inputfile = ''
+  end if
 
   !     Set up local variables
   !       * Some tests use a different status log than marbl_instance%StatusLog
@@ -82,21 +114,20 @@ Program marbl
 
   ! (1) Set marbl_driver_nml defaults
   testname       = ''
-  lhas_inputfile = .true.
   log_out_file   = 'marbl.out' ! only written if ldriver_log_to_file = .true.
 
   ! (2a) Read driver namelist to know what test to run
-  open(8, file="test.nml", status="old")
-  read(8, nml=marbl_driver_nml, iostat=ioerr)
+  open(98, file=trim(namelist_file), status="old")
+  read(98, nml=marbl_driver_nml, iostat=ioerr)
   if (ioerr.ne.0) then
     write(*,*) "ERROR reading &marbl_driver_nml"
     call marbl_mpi_abort()
   end if
-  close(8)
+  close(98)
 
   ! (2b) Read inputfile
   if (lhas_inputfile) then
-    call read_inputfile(marbl_instance)
+    call read_inputfile(inputfile, marbl_instance)
   end if
 
   ! (3) Run proper test
@@ -254,15 +285,25 @@ Contains
 
   !****************************************************************************
 
-  subroutine read_inputfile(marbl_instance)
+  subroutine read_inputfile(inputfile, marbl_instance)
 
+    character(len=*),            intent(in)    :: inputfile
     type(marbl_interface_class), intent(inout) :: marbl_instance
 
     character(len=256), parameter :: subname = 'marbl::read_inputfile'
     character(len=256) :: input_line
     integer :: ioerr
 
-    ioerr = 0
+    if (my_task .eq. 0) open(97, file=trim(inputfile), status="old", iostat=ioerr)
+    call marbl_mpi_bcast(ioerr, 0)
+    if (ioerr .ne. 0) then
+      if (my_task .eq. 0) then
+        write(*,"(A,I0)") "ioerr = ", ioerr
+        write(*,"(2A)") "ERROR encountered when opening MARBL input file ", trim(inputfile)
+      end if
+      call marbl_mpi_abort()
+    end if
+
     input_line = ''
     do while(ioerr .eq. 0)
       ! (i) call put_setting(); abort if error
@@ -275,17 +316,21 @@ Contains
         call print_marbl_log(marbl_instance%StatusLog)
       end if
       ! (ii) master task reads next line in inputfile
-      if (my_task .eq. 0) read(*,"(A)", iostat=ioerr) input_line
+      if (my_task .eq. 0) read(97,"(A)", iostat=ioerr) input_line
       ! (iii) broadcast inputfile line to all tasks (along with iostat)
       call marbl_mpi_bcast(input_line, 0)
       call marbl_mpi_bcast(ioerr, 0)
     end do
 
     if (.not.is_iostat_end(ioerr)) then
-      write(*,"(A,I0)") "ioerr = ", ioerr
-      write(*,"(A)") "ERROR encountered when reading MARBL input file from stdin"
+      if (my_task .eq. 0) then
+        write(*,"(A,I0)") "ioerr = ", ioerr
+        write(*,"(2A)") "ERROR encountered when reading MARBL input file ", trim(inputfile)
+      end if
       call marbl_mpi_abort()
     end if
+
+    if (my_task .eq. 0) close(97)
 
   end subroutine read_inputfile
 

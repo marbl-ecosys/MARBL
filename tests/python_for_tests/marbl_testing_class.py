@@ -15,6 +15,7 @@ class MARBL_testcase(object):
     self._compiler = None
     self._machine = None
     self._hostname = None
+    self._namelistfile = None
     self._inputfile = None
     self._mpitasks = 0
     self._marbl_dir = path.abspath('%s/../..' % path.dirname(__file__))
@@ -36,7 +37,7 @@ class MARBL_testcase(object):
 
     if HaveInputFile:
       parser.add_argument('-i', '--input-file', action='store', dest='inputfile',
-                          help='input file to read', default='marbl.input')
+                          default='marbl.input', help='input file to read')
 
     if CleanLibOnly:
       parser.add_argument('--clean', action='store_true',
@@ -50,6 +51,9 @@ class MARBL_testcase(object):
 
     parser.add_argument('--mpitasks', action='store', dest='mpitasks',
                         default=0, help='Number of MPI tasks (default: 0 => no MPI)')
+
+    parser.add_argument('-n', '--namelist-file', action='store', dest='namelistfile',
+                        default='test.nml', help='namelist file for the marbl standalone driver')
 
     args = parser.parse_args()
 
@@ -101,6 +105,7 @@ class MARBL_testcase(object):
     if HaveInputFile:
       self._inputfile = args.inputfile
 
+    self._namelistfile = args.namelistfile
     self._mpitasks = int(args.mpitasks)
     print '----'
     sys.stdout.flush()
@@ -157,9 +162,9 @@ class MARBL_testcase(object):
 
     if self._mpitasks > 0:
       if self._inputfile != None:
-        execmd = '%s/marbl-mpi.exe < %s' % (exe_dir, self._inputfile)
+        execmd = '%s/marbl-mpi.exe %s %s' % (exe_dir, self._namelistfile, self._inputfile)
       else:
-        execmd = '%s/marbl-mpi.exe' % exe_dir
+        execmd = '%s/marbl-mpi.exe %s' % (exe_dir, self._namelistfile)
       if self._machine == 'yellowstone':
         execmd = 'mpirun.lsf %s' % execmd
         if 'yslogin' in self._hostname:
@@ -169,9 +174,9 @@ class MARBL_testcase(object):
         execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
     else:
       if self._inputfile != None:
-        execmd = '%s/marbl.exe < %s' % (exe_dir, self._inputfile)
+        execmd = '%s/marbl.exe %s %s' % (exe_dir, self._namelistfile, self._inputfile)
       else:
-        execmd = '%s/marbl.exe' % exe_dir
+        execmd = '%s/marbl.exe %s' % (exe_dir, self._namelistfile)
     print "Running following command:"
     print execmd
     print ''
