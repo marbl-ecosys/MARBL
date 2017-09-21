@@ -58,7 +58,7 @@ Program marbl
   ! Variables for processing commandline arguments
   character(256) :: progname, argstr
   character(256) :: namelist_file, inputfile
-  integer        :: argcnt, argind
+  integer        :: argcnt
 
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
@@ -117,13 +117,27 @@ Program marbl
   log_out_file   = 'marbl.out' ! only written if ldriver_log_to_file = .true.
 
   ! (2a) Read driver namelist to know what test to run
-  open(98, file=trim(namelist_file), status="old")
-  read(98, nml=marbl_driver_nml, iostat=ioerr)
+  if (my_task .eq. 0) open(98, file=trim(namelist_file), status="old", iostat=ioerr)
+  call marbl_mpi_bcast(ioerr, 0)
   if (ioerr.ne.0) then
-    write(*,*) "ERROR reading &marbl_driver_nml"
+    if (my_task.eq.0) &
+      write(*,*) "ERROR reading &marbl_driver_nml"
     call marbl_mpi_abort()
   end if
-  close(98)
+
+  if (my_task .eq. 0) read(98, nml=marbl_driver_nml, iostat=ioerr)
+  call marbl_mpi_bcast(ioerr, 0)
+  if (ioerr.ne.0) then
+    if (my_task.eq.0) &
+      write(*,*) "ERROR reading &marbl_driver_nml"
+    call marbl_mpi_abort()
+  else
+    ! Only read the file on master => broadcast contents
+    call marbl_mpi_bcast(testname, 0)
+    call marbl_mpi_bcast(log_out_file, 0)
+  end if
+
+  if (my_task .eq. 0) close(98)
 
   ! (2b) Read inputfile
   if (lhas_inputfile) then
@@ -345,12 +359,12 @@ Contains
     type(marbl_status_log_entry_type), pointer :: tmp
     integer :: out_unit
 
-    ! write to stdout unless outfile is provided
+    ! write to stdout unless outfile is provided (only task 0 writes to file)
     out_unit = 6
-    if (present(outfile)) then
+    if ((my_task .eq. 0) .and. (present(outfile))) then
       out_unit = 99
       open(out_unit, file=outfile, action="write", status="replace")
-      if (my_task .eq. 0) write(6, "(3A)") "  Writing log to ", trim(outfile), "..."
+      write(6, "(3A)") "  Writing log to ", trim(outfile), "..."
     end if
 
     tmp => log_to_print%FullLog
@@ -366,7 +380,7 @@ Contains
       tmp => tmp%next
     end do
 
-    if (present(outfile)) then
+    if ((my_task .eq. 0) .and. (present(outfile))) then
       close(out_unit)
       if (my_task .eq. 0) write(6, "(A)") "  ... Done writing to file!"
     end if
