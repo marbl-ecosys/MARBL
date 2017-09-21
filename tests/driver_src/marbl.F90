@@ -121,7 +121,7 @@ Program marbl
   call marbl_mpi_bcast(ioerr, 0)
   if (ioerr.ne.0) then
     if (my_task.eq.0) &
-      write(*,*) "ERROR reading &marbl_driver_nml"
+      write(*,'(2A)') "ERROR opening namelist file: ", trim(namelist_file)
     call marbl_mpi_abort()
   end if
 
@@ -129,7 +129,7 @@ Program marbl
   call marbl_mpi_bcast(ioerr, 0)
   if (ioerr.ne.0) then
     if (my_task.eq.0) &
-      write(*,*) "ERROR reading &marbl_driver_nml"
+      write(*,'(2A)') "ERROR reading &marbl_driver_nml from ", trim(namelist_file)
     call marbl_mpi_abort()
   else
     ! Only read the file on master => broadcast contents
