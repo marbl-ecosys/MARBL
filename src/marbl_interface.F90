@@ -121,6 +121,7 @@ module marbl_interface
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
      procedure, public  :: get_tracer_index
+     procedure, public  :: get_tracer_cnt
      procedure, public  :: set_interior_forcing
      procedure, public  :: set_surface_forcing
      procedure, public  :: set_global_scalars
@@ -1044,6 +1045,41 @@ contains
     end do
 
   end function get_tracer_index
+
+  !***********************************************************************
+
+  function get_tracer_cnt(this, module_name)
+
+    class(marbl_interface_class), intent(inout) :: this
+    character(len=*), optional,   intent(in)    :: module_name
+    integer :: get_tracer_cnt
+
+    character(len=*), parameter :: subname = 'marbl_interface:get_tracer_cnt'
+    character(len=char_len) :: log_message
+    character(len=char_len) :: module_name_loc
+
+    ! If module_name is not present, return total tracer count
+    if (present(module_name)) then
+      module_name_loc = module_name
+    else
+      module_name_loc = 'ALL TRACERS'
+    end if
+
+    get_tracer_cnt = 0
+    select case (trim(module_name_loc))
+      case ('ecosys_base')
+        get_tracer_cnt = this%tracer_indices%ecosys_base%cnt
+      case ('ciso')
+        get_tracer_cnt = this%tracer_indices%ciso%cnt
+      case ('ALL TRACERS')
+        get_tracer_cnt = this%tracer_indices%total_cnt
+      case DEFAULT
+        write(log_message,"(3A)") "Unrecognized tracer module: ", trim(module_name_loc), &
+                                  "; returning tracer count of 0"
+        call this%StatusLog%log_error(log_message, subname)
+    end select
+
+  end function get_tracer_cnt
 
   !*****************************************************************************
 

@@ -54,7 +54,8 @@ Program marbl
 
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
-  integer                       :: m, n, nt, cnt
+  integer                       :: m, n, cnt
+  integer                       :: base_nt, ciso_nt, nt
   character(len=256)            :: input_line, testname, varname, log_message, log_out_file
   logical                       :: lprint_marbl_log, lhas_inputfile
   logical                       :: ldriver_log_to_file, lsummarize_timers
@@ -209,6 +210,21 @@ Program marbl
         call driver_status_log%log_noerror('No tracers to restore!', subname)
       end if
       call marbl_instance%shutdown()
+
+    ! -- tracer_cnt test -- !
+  case ('tracer_cnt')
+    lprint_marbl_log = .false.
+    lsummarize_timers = .false.
+    call marbl_init_test(marbl_instance, lshutdown = .false.)
+    if (.not. marbl_instance%StatusLog%labort_marbl) then
+      call marbl_instance%StatusLog%erase()
+      base_nt = marbl_instance%get_tracer_cnt('ecosys_base')
+      ciso_nt = marbl_instance%get_tracer_cnt('ciso')
+      nt      = marbl_instance%get_tracer_cnt()
+      write(log_message,'(I0,1X,I0,1X,I0)')  base_nt, ciso_nt, nt
+      call driver_status_log%log_noerror(log_message, subname)
+      call marbl_instance%shutdown()
+    end if
 
     !    UNIT TESTS
     ! -- get_put test -- !
