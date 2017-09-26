@@ -7,7 +7,7 @@ from marbl_testing_class import MARBL_testcase
 
 mt = MARBL_testcase()
 
-mt.parse_args(desc='Generate an inputfile for MARBL')
+mt.parse_args(desc='Generate an input file for MARBL')
 
 mt.build_exe()
 
