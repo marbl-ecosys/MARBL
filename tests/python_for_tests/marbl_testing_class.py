@@ -37,7 +37,7 @@ class MARBL_testcase(object):
 
     if HaveInputFile:
       parser.add_argument('-i', '--input_file', action='store', dest='input_file',
-                          default='marbl.input', help='input file to read')
+                          default=None, help='input file to read')
 
     if CleanLibOnly:
       parser.add_argument('--clean', action='store_true',
