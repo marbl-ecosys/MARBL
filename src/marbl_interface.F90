@@ -127,11 +127,11 @@ module marbl_interface
      procedure, public  :: shutdown
      generic            :: inquire_settings_metadata => inquire_settings_metadata_by_name, &
                                                         inquire_settings_metadata_by_id
-     generic            :: put_setting => put_real,           &
-                                          put_integer,        &
-                                          put_logical,        &
-                                          put_string,         & ! This routine checks to see if string is actually an array
-                                          put_inputfile_line, & ! This line converts string "var = val" to proper put()
+     generic            :: put_setting => put_real,            &
+                                          put_integer,         &
+                                          put_logical,         &
+                                          put_string,          & ! This routine checks to see if string is actually an array
+                                          put_input_file_line, & ! This line converts string "var = val" to proper put()
                                           put_all_string
      generic            :: get_setting => get_real,    &
                                           get_integer, &
@@ -144,7 +144,7 @@ module marbl_interface
      procedure, private :: put_integer
      procedure, private :: put_logical
      procedure, private :: put_string
-     procedure, private :: put_inputfile_line
+     procedure, private :: put_input_file_line
      procedure, private :: put_all_string
      procedure, private :: get_real
      procedure, private :: get_integer
@@ -454,7 +454,7 @@ contains
   !***********************************************************************
 
   subroutine put_all_string(this, varname, datatype, val)
-    ! This interface to put_setting() is called from put_inputfile_line()
+    ! This interface to put_setting() is called from put_input_file_line()
 
     use marbl_settings_mod, only : marbl_settings_string_to_var
 
@@ -510,9 +510,9 @@ contains
 
   !***********************************************************************
 
-  subroutine put_inputfile_line(this, line, pgi_bugfix_var)
+  subroutine put_input_file_line(this, line, pgi_bugfix_var)
 
-    ! This subroutine takes a single line from MARBL's default inputfile format,
+    ! This subroutine takes a single line from MARBL's default input file format,
     ! determines the variable name and whether the value is a scalar or an array,
     ! and then calls put_setting (once for a scalar, per-element for an array).
     !
@@ -527,7 +527,7 @@ contains
     ! For some reason PGI doesn't like this particular interface to put_setting()
     ! --- Error from building stand-alone driver ---
     ! PGF90-S-0155-cannot access PRIVATE type bound procedure
-    ! put_inputfile_line$tbp (/NO_BACKUP/codes/marbl/tests/driver_src/marbl.F90: 239)
+    ! put_input_file_line$tbp (/NO_BACKUP/codes/marbl/tests/driver_src/marbl.F90: 239)
     !
     ! But adding another variable to the interface makes it okay
     logical, optional,            intent(in)    :: pgi_bugfix_var(0)
@@ -569,7 +569,7 @@ contains
     end do
     deallocate(value)
 
-  end subroutine put_inputfile_line
+  end subroutine put_input_file_line
 
   !***********************************************************************
 
@@ -630,17 +630,17 @@ contains
 
   !***********************************************************************
 
-  subroutine get_string(this, varname, val, linputfile_format)
+  subroutine get_string(this, varname, val, linput_file_format)
 
     class (marbl_interface_class), intent(inout) :: this
     character(len=*),              intent(in)    :: varname
     character(len=*),              intent(out)   :: val
-    logical, optional,             intent(in)    :: linputfile_format
+    logical, optional,             intent(in)    :: linput_file_format
 
     character(len=*), parameter :: subname = 'marbl_interface:get_string'
     character(len=char_len) :: log_message
 
-    logical :: linputfile_format_loc
+    logical :: linput_file_format_loc
     character(len=char_len) :: datatype
     real(r8)                :: rval
     integer                 :: ival
@@ -648,13 +648,13 @@ contains
     character(len=char_len) :: sval
 
     val = ''
-    if (present(linputfile_format)) then
-      linputfile_format_loc = linputfile_format
+    if (present(linput_file_format)) then
+      linput_file_format_loc = linput_file_format
     else
-      linputfile_format_loc = .false.
+      linput_file_format_loc = .false.
     end if
 
-    if (linputfile_format_loc) then
+    if (linput_file_format_loc) then
       ! Determine datatype
       call this%inquire_settings_metadata(varname, datatype=datatype)
       if (this%StatusLog%labort_marbl) then
@@ -682,7 +682,7 @@ contains
       end select
     else
       call this%settings%get(varname, this%StatusLog, sval=val)
-    end if ! linputfile_format_loc
+    end if ! linput_file_format_loc
 
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%get()', subname)

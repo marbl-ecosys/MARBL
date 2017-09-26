@@ -15,8 +15,8 @@ class MARBL_testcase(object):
     self._compiler = None
     self._machine = None
     self._hostname = None
-    self._namelistfile = None
-    self._inputfile = None
+    self._namelist_file = None
+    self._input_file = None
     self._mpitasks = 0
     self._marbl_dir = path.abspath('%s/../..' % path.dirname(__file__))
 
@@ -36,7 +36,7 @@ class MARBL_testcase(object):
                           dest='compiler', help='compiler to build with')
 
     if HaveInputFile:
-      parser.add_argument('-i', '--input-file', action='store', dest='inputfile',
+      parser.add_argument('-i', '--input_file', action='store', dest='input_file',
                           default='marbl.input', help='input file to read')
 
     if CleanLibOnly:
@@ -52,7 +52,7 @@ class MARBL_testcase(object):
     parser.add_argument('--mpitasks', action='store', dest='mpitasks',
                         default=0, help='Number of MPI tasks (default: 0 => no MPI)')
 
-    parser.add_argument('-n', '--namelist-file', action='store', dest='namelistfile',
+    parser.add_argument('-n', '--namelist_file', action='store', dest='namelist_file',
                         default='test.nml', help='namelist file for the marbl standalone driver')
 
     args = parser.parse_args()
@@ -103,9 +103,9 @@ class MARBL_testcase(object):
         print 'Testing with %s' % self._compiler
 
     if HaveInputFile:
-      self._inputfile = args.inputfile
+      self._input_file = args.input_file
 
-    self._namelistfile = args.namelistfile
+    self._namelist_file = args.namelist_file
     self._mpitasks = int(args.mpitasks)
     print '----'
     sys.stdout.flush()
@@ -161,10 +161,11 @@ class MARBL_testcase(object):
     exe_dir = '%s/tests/driver_exe' % self._marbl_dir
 
     if self._mpitasks > 0:
-      if self._inputfile != None:
-        execmd = '%s/marbl-mpi.exe %s %s' % (exe_dir, self._namelistfile, self._inputfile)
+      if self._input_file != None:
+        input_file = self._input_file
       else:
-        execmd = '%s/marbl-mpi.exe %s' % (exe_dir, self._namelistfile)
+        input_file = ''
+      execmd = '%s/marbl-mpi.exe %s %s' % (exe_dir, self._namelist_file, input_file)
       if self._machine == 'yellowstone':
         execmd = 'mpirun.lsf %s' % execmd
         if 'yslogin' in self._hostname:
@@ -173,10 +174,11 @@ class MARBL_testcase(object):
       else:
         execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
     else:
-      if self._inputfile != None:
-        execmd = '%s/marbl.exe %s %s' % (exe_dir, self._namelistfile, self._inputfile)
+      if self._input_file != None:
+        input_file = self._input_file
       else:
-        execmd = '%s/marbl.exe %s' % (exe_dir, self._namelistfile)
+        input_file = ''
+      execmd = '%s/marbl.exe %s %s' % (exe_dir, self._namelist_file, input_file)
     print "Running following command:"
     print execmd
     print ''

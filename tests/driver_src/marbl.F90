@@ -5,7 +5,7 @@ Program marbl
 ! run one of several tests based on the value of testname in &marbl_driver_nml
 !
 ! Usage:
-! $ marbl.exe NAMELIST [INPUTFILE]
+! $ marbl.exe NAMELIST_FILE [INPUT_FILE]
 !
 ! In $MARBL/tests/ the actual tests are divided into the following categories:
 ! 1) Build tests ($MARBL/tests/bld_tests/)
@@ -57,14 +57,14 @@ Program marbl
 
   ! Variables for processing commandline arguments
   character(256) :: progname, argstr
-  character(256) :: namelist_file, inputfile
+  character(256) :: namelist_file, input_file
   integer        :: argcnt
 
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
   integer                       :: m, n, nt, cnt
   character(len=256)            :: input_line, testname, varname, log_message, log_out_file
-  logical                       :: lprint_marbl_log, lhas_inputfile
+  logical                       :: lprint_marbl_log, lhas_input_file
   logical                       :: ldriver_log_to_file, lsummarize_timers
 
   ! Processing input file for put calls
@@ -87,21 +87,21 @@ Program marbl
   ! and accepts and optional second argument (input file)
   if (.not. any(argcnt .eq. (/1,2/))) then
     if (my_task .eq. 0) then
-      write(*,"(3A)") "USAGE: ", trim(progname), " NAMELIST [INPUTFILE]"
+      write(*,"(3A)") "USAGE: ", trim(progname), " NAMELIST_FILE [INPUT_FILE]"
       write(*,"(A)") ''
-      write(*,"(7X,A)") 'NAMELIST    required argument, namelist tells driver what test to run'
-      write(*,"(7X,A)") 'INPUTFILE   optional inputfile to read and send to put_setting()'
+      write(*,"(7X,A)") 'NAMELIST_FILE  required argument, &marbl_driver_nml namelist tells driver what test to run'
+      write(*,"(7X,A)") 'INPUT_FILE     optional input file to read and send to put_setting()'
       write(*,"(A)") ''
     end if
     call marbl_mpi_abort()
   end if
   call get_command_argument(1, namelist_file)
   if (argcnt .eq. 2) then
-    lhas_inputfile = .true.
-    call get_command_argument(2, inputfile)
+    lhas_input_file = .true.
+    call get_command_argument(2, input_file)
   else
-    lhas_inputfile = .false.
-    inputfile = ''
+    lhas_input_file = .false.
+    input_file = ''
   end if
 
   !     Set up local variables
@@ -139,9 +139,9 @@ Program marbl
 
   if (my_task .eq. 0) close(98)
 
-  ! (2b) Read inputfile
-  if (lhas_inputfile) then
-    call read_inputfile(inputfile, marbl_instance)
+  ! (2b) Read input file
+  if (lhas_input_file) then
+    call read_input_file(input_file, marbl_instance)
   end if
 
   ! (3) Run proper test
@@ -162,8 +162,8 @@ Program marbl
       call summarize_timers(driver_status_log, header_text = 'With the CISO Tracers')
       lsummarize_timers = .false.
 
-    ! -- gen_inputfile test -- !
-    case ('gen_inputfile')
+    ! -- gen_input_file test -- !
+    case ('gen_input_file')
       lprint_marbl_log = .false.
       ldriver_log_to_file = .true.
       call marbl_init_test(marbl_instance, lshutdown=.false.)
@@ -171,7 +171,7 @@ Program marbl
         do n=1,marbl_instance%get_settings_var_cnt()
           call marbl_instance%inquire_settings_metadata(n, sname=varname)
           if (marbl_instance%StatusLog%labort_marbl) exit
-          call marbl_instance%get_setting(varname, input_line, linputfile_format=.true.)
+          call marbl_instance%get_setting(varname, input_line, linput_file_format=.true.)
           if (marbl_instance%StatusLog%labort_marbl) exit
           call driver_status_log%log_noerror(input_line, subname)
         end do
@@ -299,21 +299,21 @@ Contains
 
   !****************************************************************************
 
-  subroutine read_inputfile(inputfile, marbl_instance)
+  subroutine read_input_file(input_file, marbl_instance)
 
-    character(len=*),            intent(in)    :: inputfile
+    character(len=*),            intent(in)    :: input_file
     type(marbl_interface_class), intent(inout) :: marbl_instance
 
-    character(len=256), parameter :: subname = 'marbl::read_inputfile'
+    character(len=256), parameter :: subname = 'marbl::read_input_file'
     character(len=256) :: input_line
     integer :: ioerr
 
-    if (my_task .eq. 0) open(97, file=trim(inputfile), status="old", iostat=ioerr)
+    if (my_task .eq. 0) open(97, file=trim(input_file), status="old", iostat=ioerr)
     call marbl_mpi_bcast(ioerr, 0)
     if (ioerr .ne. 0) then
       if (my_task .eq. 0) then
         write(*,"(A,I0)") "ioerr = ", ioerr
-        write(*,"(2A)") "ERROR encountered when opening MARBL input file ", trim(inputfile)
+        write(*,"(2A)") "ERROR encountered when opening MARBL input file ", trim(input_file)
       end if
       call marbl_mpi_abort()
     end if
@@ -329,9 +329,9 @@ Contains
         call marbl_instance%StatusLog%log_error_trace("put_setting(input_line)", subname)
         call print_marbl_log(marbl_instance%StatusLog)
       end if
-      ! (ii) master task reads next line in inputfile
+      ! (ii) master task reads next line in input file
       if (my_task .eq. 0) read(97,"(A)", iostat=ioerr) input_line
-      ! (iii) broadcast inputfile line to all tasks (along with iostat)
+      ! (iii) broadcast input file line to all tasks (along with iostat)
       call marbl_mpi_bcast(input_line, 0)
       call marbl_mpi_bcast(ioerr, 0)
     end do
@@ -339,14 +339,14 @@ Contains
     if (.not.is_iostat_end(ioerr)) then
       if (my_task .eq. 0) then
         write(*,"(A,I0)") "ioerr = ", ioerr
-        write(*,"(2A)") "ERROR encountered when reading MARBL input file ", trim(inputfile)
+        write(*,"(2A)") "ERROR encountered when reading MARBL input file ", trim(input_file)
       end if
       call marbl_mpi_abort()
     end if
 
     if (my_task .eq. 0) close(97)
 
-  end subroutine read_inputfile
+  end subroutine read_input_file
 
   !****************************************************************************
 
