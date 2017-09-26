@@ -320,19 +320,21 @@ Contains
 
     input_line = ''
     do while(ioerr .eq. 0)
-      ! (i) call put_setting(); abort if error
+      ! (i) broadcast input_line and call put_setting(); abort if error
       !     calling with empty input_line on first entry to loop is okay, and
       !     this ensures we don't call put_setting with a garbage line if
       !     ioerr is non-zero
+      call marbl_mpi_bcast(input_line, 0)
       call marbl_instance%put_setting(input_line)
       if (marbl_instance%StatusLog%labort_marbl) then
         call marbl_instance%StatusLog%log_error_trace("put_setting(input_line)", subname)
         call print_marbl_log(marbl_instance%StatusLog)
       end if
+
       ! (ii) master task reads next line in input file
       if (my_task .eq. 0) read(97,"(A)", iostat=ioerr) input_line
+
       ! (iii) broadcast input file line to all tasks (along with iostat)
-      call marbl_mpi_bcast(input_line, 0)
       call marbl_mpi_bcast(ioerr, 0)
     end do
 
