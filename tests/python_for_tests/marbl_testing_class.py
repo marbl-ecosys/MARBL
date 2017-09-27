@@ -181,11 +181,11 @@ class MARBL_testcase(object):
       execmd += "marbl.exe"
 
     # First argument is the file containing &marbl_driver_nml namelist
-    execmd += " %s" % self._namelist_file
+    execmd += " -n %s" % self._namelist_file
 
     # If an input file was specified, it should be the second argument
     if self._input_file != None:
-      execmd += " %s" % self._input_file
+      execmd += " -i %s" % self._input_file
 
     # Log executable command
     print "Running following command:"

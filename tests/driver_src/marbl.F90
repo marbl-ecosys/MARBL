@@ -4,8 +4,13 @@ Program marbl
 ! The driver for MARBL's stand-alone testing. When built, the executable will
 ! run one of several tests based on the value of testname in &marbl_driver_nml
 !
-! Usage:
-! $ marbl.exe NAMELIST_FILE [INPUT_FILE]
+! usage: marbl.exe -n NAMELIST_FILE [-i INPUT_FILE]
+!   required argument:
+!      -n NAMELIST_FILE, --namelist_file NAMELIST_FILE
+!                     File containing &marbl_driver_nml
+!   optional argument:
+!      -i INPUT_FILE, --input_file INPUT_FILE
+!                     File containing MARBL input file
 !
 ! In $MARBL/tests/ the actual tests are divided into the following categories:
 ! 1) Build tests ($MARBL/tests/bld_tests/)
@@ -49,7 +54,7 @@ Program marbl
   use marbl_mpi_mod, only : marbl_mpi_send
   use marbl_mpi_mod, only : marbl_mpi_recv
   ! MPI-related variables (if .not.mpi_on, my_task = 0 and num_tasks = 1)
-  use marbl_mpi_mod, only : mpi_on, my_task, num_tasks
+  use marbl_mpi_mod, only : mpi_on, my_task, num_tasks, marbl_mpi_return_val
 
   Implicit None
 
@@ -59,12 +64,13 @@ Program marbl
   character(256) :: progname, argstr
   character(256) :: namelist_file, input_file
   integer        :: argcnt
+  logical        :: labort_after_argparse, lshow_usage, lfound_file
 
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
   integer                       :: m, n, nt, cnt
   character(len=256)            :: input_line, testname, varname, log_message, log_out_file
-  logical                       :: lprint_marbl_log, lhas_input_file
+  logical                       :: lprint_marbl_log, lhas_namelist_file, lhas_input_file
   logical                       :: ldriver_log_to_file, lsummarize_timers
 
   ! Processing input file for put calls
@@ -81,28 +87,130 @@ Program marbl
   call marbl_mpi_init()
 
   !     Command line arguments?
+  !     (a) set default values
+  labort_after_argparse = .false.
+  lhas_namelist_file = .false.
+  lhas_input_file = .false.
+  input_file = ''
+  namelist_file = ''
+
+  !     (b) get program name and argument count
   call get_command_argument(0, progname)
   argcnt = command_argument_count()
+  lshow_usage = (argcnt .eq. 0)
+
+  !     (c) process command line arguments
+  n = 1
+  do while (n .le. argcnt)
+    call get_command_argument(n, argstr)
+    select case (argstr)
+      case ('-n', '--namelist_file')
+        lhas_namelist_file = .true.
+
+        ! Error checking: is this the second occurance of the '--namelist_file' argument?
+        if (len_trim(namelist_file) .ne. 0) then
+          labort_after_argparse = .true.
+          if (my_task .eq. 0) &
+            write(*, "(A)") "ERROR: Namelist file specified multiple times on command line"
+          exit
+        end if
+
+        ! Error checking: is this the last commandline argument (i.e. no file was specified?)
+        if (n .eq. argcnt) then
+          labort_after_argparse = .true.
+          lshow_usage = .true.
+          if (my_task .eq. 0) &
+            write(*, "(A)") "ERROR: -n argument requires namelist file as well"
+          exit
+        end if
+
+        n = n+1
+        call get_command_argument(n, namelist_file)
+
+        ! Error checking: does the file exist?
+        inquire( file=trim(namelist_file), exist=lfound_file)
+        if (.not. lfound_file) then
+          labort_after_argparse = .true.
+          if (my_task .eq. 0) &
+            write(*, "(2A)") "ERROR: Namelist file not found: ", trim(namelist_file)
+          exit
+        end if
+
+      case ('-i', '--input_file')
+        lhas_input_file = .true.
+
+        ! Error checking: is this the second occurance of the '--input_file' argument?
+        if (len_trim(input_file) .ne. 0) then
+          labort_after_argparse = .true.
+          if (my_task .eq. 0) &
+            write(*, "(A)") "ERROR: Input file specified multiple times on command line"
+          exit
+        end if
+
+        ! Error checking: is this the last commandline argument (i.e. no file was specified?)
+        if (n .eq. argcnt) then
+          labort_after_argparse = .true.
+          lshow_usage = .true.
+          if (my_task .eq. 0) &
+            write(*, "(A)") "ERROR: -i argument requires input file as well"
+          exit
+        end if
+
+        n = n+1
+        call get_command_argument(n, input_file)
+
+        ! Error checking: does the file exist?
+        inquire( file=trim(input_file), exist=lfound_file)
+        if (.not. lfound_file) then
+          labort_after_argparse = .true.
+          if (my_task .eq. 0) &
+            write(*, "(2A)") "ERROR: Input file not found: ", trim(input_file)
+          exit
+        end if
+
+      case ('-h', '--help')
+        lshow_usage = .true.
+        ! suppress "no namelist" error message
+        lhas_namelist_file = .true.
+        ! call mpi_abort after parsing arguments rather than running driver
+        labort_after_argparse = .true.
+        ! Do not return error status code
+        marbl_mpi_return_val= 0
+        ! no need to parse additonal arguments
+        exit
+      case DEFAULT
+        labort_after_argparse = .true.
+        if(my_task .eq. 0) &
+          write(*, "(2A)") "ERROR: Unknown command line argument: ", trim(argstr)
+        exit
+    end select
+    n = n+1
+  end do
+
+  ! Namelist file is required:
+  if (.not. lhas_namelist_file) then
+    labort_after_argparse = .true.
+    if (my_task .eq. 0) &
+      write(*,"(A)") "ERROR: namelist file is required!"
+  end if
+
   ! Program requires one command line argument (namelist)
   ! and accepts and optional second argument (input file)
-  if (.not. any(argcnt .eq. (/1,2/))) then
+  if (lshow_usage) then
+    labort_after_argparse = .true.
     if (my_task .eq. 0) then
-      write(*,"(3A)") "USAGE: ", trim(progname), " NAMELIST_FILE [INPUT_FILE]"
-      write(*,"(A)") ''
-      write(*,"(7X,A)") 'NAMELIST_FILE  required argument, &marbl_driver_nml namelist tells driver what test to run'
-      write(*,"(7X,A)") 'INPUT_FILE     optional input file to read and send to put_setting()'
-      write(*,"(A)") ''
+      write(*,"(3A)") "usage: ", trim(progname), " -n NAMELIST_FILE [-i INPUT_FILE]"
+      write(*,"(A)") "required argument:"
+      write(*,"(A)") "  -n NAMELIST_FILE, --namelist_file NAMELIST_FILE"
+      write(*,"(A)") "                        File containing &marbl_driver_nml"
+      write(*,"(A)") "optional argument:"
+      write(*,"(A)") "  -i INPUT_FILE, --input_file INPUT_FILE"
+      write(*,"(A)") "                        File containing MARBL input file"
     end if
-    call marbl_mpi_abort()
   end if
-  call get_command_argument(1, namelist_file)
-  if (argcnt .eq. 2) then
-    lhas_input_file = .true.
-    call get_command_argument(2, input_file)
-  else
-    lhas_input_file = .false.
-    input_file = ''
-  end if
+
+  ! Abort if error processing command line arguments
+  if (labort_after_argparse) call marbl_mpi_abort()
 
   !     Set up local variables
   !       * Some tests use a different status log than marbl_instance%StatusLog

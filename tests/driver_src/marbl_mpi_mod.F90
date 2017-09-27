@@ -20,6 +20,7 @@ module marbl_mpi_mod
 
   integer :: my_task
   integer :: num_tasks
+  integer :: marbl_mpi_return_val = 1
 
   interface marbl_mpi_send
     module procedure marbl_mpi_send_dbl
@@ -182,10 +183,9 @@ contains
     integer :: ierr
 
     call marbl_mpi_barrier()
-    call MPI_Abort(MPI_COMM_WORLD, ierr)
-#else
-    stop 1
+    call marbl_mpi_finalize()
 #endif
+    stop marbl_mpi_return_val
 
   !****************************************************************************
 
