@@ -54,7 +54,7 @@ Program marbl
   use marbl_mpi_mod, only : marbl_mpi_send
   use marbl_mpi_mod, only : marbl_mpi_recv
   ! MPI-related variables (if .not.mpi_on, my_task = 0 and num_tasks = 1)
-  use marbl_mpi_mod, only : mpi_on, my_task, num_tasks, marbl_mpi_return_val
+  use marbl_mpi_mod, only : mpi_on, my_task, num_tasks, marbl_mpi_return_error
 
   Implicit None
 
@@ -175,7 +175,7 @@ Program marbl
         ! call mpi_abort after parsing arguments rather than running driver
         labort_after_argparse = .true.
         ! Do not return error status code
-        marbl_mpi_return_val= 0
+        marbl_mpi_return_error = .false.
         ! no need to parse additonal arguments
         exit
       case DEFAULT

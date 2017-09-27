@@ -20,7 +20,7 @@ module marbl_mpi_mod
 
   integer :: my_task
   integer :: num_tasks
-  integer :: marbl_mpi_return_val = 1
+  logical :: marbl_mpi_return_error = .true.
 
   interface marbl_mpi_send
     module procedure marbl_mpi_send_dbl
@@ -185,7 +185,8 @@ contains
     call marbl_mpi_barrier()
     call marbl_mpi_finalize()
 #endif
-    stop marbl_mpi_return_val
+    if (marbl_mpi_return_error) stop 1
+    stop
 
   !****************************************************************************
 
