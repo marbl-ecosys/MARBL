@@ -158,14 +158,16 @@ class MARBL_testcase(object):
   # Execute marbl.exe
   def run_exe(self):
 
-    exe_dir = '%s/tests/driver_exe' % self._marbl_dir
+    # build the executable command string
+    execmd = '%s/tests/driver_exe/' % self._marbl_dir
 
+    # if running in parallel, executable is marbl-mpi.exe
     if self._mpitasks > 0:
-      if self._input_file != None:
-        input_file = self._input_file
-      else:
-        input_file = ''
-      execmd = '%s/marbl-mpi.exe %s %s' % (exe_dir, self._namelist_file, input_file)
+      execmd += "marbl-mpi.exe"
+
+      # need to launch with mpirun
+      # Note that yellowstone actually uses mpirun.lsf
+      # (and we want to avoid running on a login node)
       if self._machine == 'yellowstone':
         execmd = 'mpirun.lsf %s' % execmd
         if 'yslogin' in self._hostname:
@@ -173,12 +175,19 @@ class MARBL_testcase(object):
           execmd = 'execca %s' % execmd
       else:
         execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
+
+    # if running in serial, executable is marbl.exe
     else:
-      if self._input_file != None:
-        input_file = self._input_file
-      else:
-        input_file = ''
-      execmd = '%s/marbl.exe %s %s' % (exe_dir, self._namelist_file, input_file)
+      execmd += "marbl.exe"
+
+    # First argument is the file containing &marbl_driver_nml namelist
+    execmd += " %s" % self._namelist_file
+
+    # If an input file was specified, it should be the second argument
+    if self._input_file != None:
+      execmd += " %s" % self._input_file
+
+    # Log executable command
     print "Running following command:"
     print execmd
     print ''
