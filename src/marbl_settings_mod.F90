@@ -253,8 +253,6 @@ module marbl_settings_mod
        parm_scalelen_z,       & ! depths of prescribed scalelen values
        parm_scalelen_vals       ! prescribed scalelen values
 
-  real(r8),                target :: iron_frac_in_dust            ! fraction by weight of iron in dust
-  real(r8),                target :: iron_frac_in_bc              ! fraction by weight of iron in black carbon
   character(len=char_len), target :: caco3_bury_thres_opt         ! option of threshold of caco3 burial ['fixed_depth', 'omega_calc']
   real(r8),                target :: caco3_bury_thres_depth       ! threshold depth for caco3_bury_thres_opt='fixed_depth'
   ! -----------
@@ -368,8 +366,6 @@ contains
     parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8, 1000.0e2_r8 /)  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_scalelen_vals = (/     1.0_r8,     2.2_r8,     4.0_r8,      5.0_r8 /)  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
 
-    iron_frac_in_dust      = 0.035_r8 * 0.01_r8  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    iron_frac_in_bc        = 0.06_r8             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     caco3_bury_thres_opt   = 'omega_calc'        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     caco3_bury_thres_depth = 3000.0e2            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     PON_bury_coeff         = 0.5_r8              ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -819,24 +815,6 @@ contains
     ! -----------------------------
     category  = 'general parmeters'
     ! -----------------------------
-
-    sname     = 'iron_frac_in_dust'
-    lname     = 'Fraction by weight of iron in dust'
-    units     = 'unitless (kg/kg)'
-    datatype  = 'real'
-    rptr      => iron_frac_in_dust
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'iron_frac_in_bc'
-    lname     = 'Fraction by weight of iron in black carbon'
-    units     = 'unitless (kg/kg)'
-    datatype  = 'real'
-    rptr      => iron_frac_in_bc
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'caco3_bury_thres_opt'
     lname     = 'Option for CaCO3 burial threshold'

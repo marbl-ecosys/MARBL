@@ -1806,8 +1806,6 @@ contains
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
     use marbl_settings_mod, only : xkw_coeff
-    use marbl_settings_mod, only : iron_frac_in_dust
-    use marbl_settings_mod, only : iron_frac_in_bc
     use marbl_ciso_mod, only : marbl_ciso_set_surface_forcing
 
     implicit none
