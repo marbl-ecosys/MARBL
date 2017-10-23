@@ -43,9 +43,9 @@ for src_file in files_in_src_dir:
   file_name, file_ext = os.path.splitext(src_file)
   if file_ext == '.F90':
     try:
-      fin = open(src_dir+'/'+src_file,"r")
+      fin = open(os.path.join(src_dir, src_file),"r")
     except:
-      fin = open(src_dir2+'/'+src_file,"r")
+      fin = open(os.path.join(src_dir2, src_file),"r")
 
     # (1) dependency list from current file should be empty
     depends = ['']

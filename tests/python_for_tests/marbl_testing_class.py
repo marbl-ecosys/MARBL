@@ -1,12 +1,11 @@
 import sys
 import machines as machs
+import os
 from os import system as sh_command
 
 class MARBL_testcase(object):
 
   def __init__(self):
-    from os import path
-
     # supported_compilers is public, needed by the build tests
     self.supported_compilers = []
 
@@ -18,7 +17,7 @@ class MARBL_testcase(object):
     self._namelist_file = None
     self._input_file = None
     self._mpitasks = 0
-    self._marbl_dir = path.abspath('%s/../..' % path.dirname(__file__))
+    self._marbl_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
   # -----------------------------------------------
 
@@ -125,7 +124,7 @@ class MARBL_testcase(object):
     if loc_compiler == None:
       loc_compiler = self._compiler
 
-    src_dir = '%s/src' % self._marbl_dir
+    src_dir = os.path.join(self._marbl_dir, 'src')
 
     if self._machine != 'local':
       machs.load_module(self._machine, loc_compiler, self._module_names[loc_compiler])
@@ -143,7 +142,7 @@ class MARBL_testcase(object):
     if loc_compiler == None:
       loc_compiler = self._compiler
 
-    drv_dir = '%s/tests/driver_src' % self._marbl_dir
+    drv_dir = os.path.join(self._marbl_dir, 'tests', 'driver_src')
 
     if self._machine != 'local':
       machs.load_module(self._machine, loc_compiler, self._module_names[loc_compiler])
@@ -159,7 +158,7 @@ class MARBL_testcase(object):
   def run_exe(self):
 
     # build the executable command string
-    execmd = '%s/tests/driver_exe/' % self._marbl_dir
+    execmd = os.path.join(self._marbl_dir, 'tests', 'driver_exe') + os.sep
 
     # if running in parallel, executable is marbl-mpi.exe
     if self._mpitasks > 0:
@@ -201,7 +200,7 @@ class MARBL_testcase(object):
   # clean libmarbl.a
   def _clean_lib(self):
 
-    src_dir = '%s/src' % self._marbl_dir
+    src_dir = os.path.join(self._marbl_dir, 'src')
     sh_command('cd %s; make clean' % src_dir)
 
   # -----------------------------------------------
@@ -209,6 +208,6 @@ class MARBL_testcase(object):
   # Clean marbl.exe
   def _clean_exe(self):
 
-    drv_dir = '%s/tests/driver_src' % self._marbl_dir
+    drv_dir = os.path.join(self._marbl_dir, 'tests', 'driver_src')
     sh_command('cd %s; make clean' % drv_dir)
 

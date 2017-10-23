@@ -22,7 +22,7 @@ def load_module(mach, compiler, module_name):
   print "Loading module %s..." % module_name
 
   if mach == 'yellowstone':
-    sys.path.insert(0,'/glade/apps/opt/lmod/lmod/init')
+    sys.path.insert(0, os.path.join(os.sep, 'glade', 'apps', 'opt', 'lmod', 'lmod', 'init'))
     from env_modules_python import module
     module('purge')
     module('load', module_name)
@@ -30,7 +30,7 @@ def load_module(mach, compiler, module_name):
     module('load', 'ncarbinlibs')
 
   if mach == 'cheyenne':
-    sys.path.insert(0,'/glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init')
+    sys.path.insert(0, os.path.join(os.sep, 'glade', 'u', 'apps', 'ch', 'opt', 'lmod', '7.2.1', 'lmod', 'lmod', 'init'))
     from env_modules_python import module
     module('purge')
     module('load', module_name)
@@ -38,13 +38,13 @@ def load_module(mach, compiler, module_name):
     module('load', 'mpt/2.15')
 
   if mach == 'hobart':
-    sys.path.insert(0,'/usr/share/Modules/init')
+    sys.path.insert(0, os.path.join(os.sep, 'usr', 'share', 'Modules', 'init'))
     from python import module
     module('purge')
     module(['load', module_name])
 
   if mach == 'edison':
-    sys.path.insert(0,'/opt/modules/default/init')
+    sys.path.insert(0, os.path.join('opt', 'modules', 'default', 'init'))
     from python import module
     module('purge')
     module(['load', module_name])
