@@ -71,7 +71,7 @@ def machine_specific(mach, supported_compilers, module_names):
     supported_compilers.append('gnu')
     supported_compilers.append('pgi')
     module_names['intel'] = 'intel/17.0.1'
-    module_names['gnu'] = 'gnu/7.1.0'
+    module_names['gnu'] = 'gnu/6.1.0'
     module_names['pgi'] = 'pgi/17.5'
     return
 
