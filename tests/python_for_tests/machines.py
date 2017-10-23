@@ -44,12 +44,11 @@ def load_module(mach, compiler, module_name):
     module(['load', module_name])
 
   if mach == 'edison':
-    sys.path.insert(0, os.path.join('opt', 'modules', 'default', 'init'))
+    sys.path.insert(0, os.path.join(os.sep, 'opt', 'modules', 'default', 'init'))
     from python import module
     module('purge')
+    module(['load', 'craype/2.5.12'])
     module(['load', module_name])
-    if compiler == 'cray':
-      module(['swap', 'cce', 'cce/8.5.0.4664'])
 
 # -----------------------------------------------
 
