@@ -1,27 +1,4 @@
 ---------
-| ABOUT |
----------
-
-* driver_src/ -- Code to build the stand-alone driver used by the tests
-* driver_exe/ -- Location of marbl.exe after it is built
-* obj/ -- object files (with subdirectories for each supported compiler). Each
-          compiler subdirectory also has a separate directory for object files
-          created from the driver build. E.g.
-          obj/gnu/ contains objects from the library build with gfortran
-          obj/gnu/driver/ contains objects from building marbl.exe with gfortran
-* python_for_tests/ -- Python modules for code that is used by multiple test
-                       scripts. E.g. routines to parse command line arguments,
-                       build the library, or load modules on supported machines
-* bld_tests/ -- scripts to build either just the library or both the library and
-                marbl.exe with every supported compiler on a supported machine.
-* regression_tests/ -- Tests that produce output with various MARBL
-                       configurations so developers can quickly check the effect
-                       of new code
-* unit_tests/ -- Tests that check the functionality of small pieces of the code
-
-All the tests are launched via python script (*.py files).
-
----------
 | USAGE |
 ---------
 
@@ -31,8 +8,10 @@ $ ./[name].py -h
 
 To see proper usage. The typical options are
 
-usage: *.py [-h] [-c COMPILER] [-n NAMELIST] [--clean]
-            [-m {local-gnu,yellowstone,hobart,edison}]
+usage: *.py [-h] [-c COMPILER] [-i INPUT_FILE] [--clean]
+            [-m {local,yellowstone,cheyenne,hobart,edison}]
+            [--mpitasks MPITASKS] [-n NAMELIST_FILE]
+
 
 [Description of test]
 
@@ -40,18 +19,22 @@ optional arguments:
   -h, --help            show this help message and exit
   -c COMPILER, --compiler COMPILER
                         compiler to build with
-  -n NAMELIST, --namelist NAMELIST
-                        namelist file to read
+  -i INPUT_FILE, --input_file INPUT_FILE
+                        input file to read
   --clean               remove object, module, and library files for MARBL
                         driver
-  -m {local-gnu,yellowstone,hobart,edison}, --mach {local-gnu,yellowstone,hobart,edison}
+  -m {local,yellowstone,cheyenne,hobart,edison}, --mach {local,yellowstone,cheyenne,hobart,edison}, --machine {local,yellowstone,cheyenne,hobart,edison}
                         machine to build on
+  --mpitasks MPITASKS   Number of MPI tasks (default: 0 => no MPI)
+  -n NAMELIST_FILE, --namelist_file NAMELIST_FILE
+                        namelist file for the marbl standalone driver
 
 But some tests only require a subset of these. For example, bld_tests/bld_lib.py
-and bld_tests/bld_exe.py do not accept the --compiler option (these particular
-tests build with very compiler supported by the specified machine) or the
---namelist option (these tests do not read a namelist so there is no need to
-specify one)
+and bld_tests/bld_exe.py do not accept the following options:
+    --compiler option    Tests build with every compiler supported by the specified machine
+    --input_file         No executable is run => no need for input file
+    --namelist option    No executable is run => no need for namelist file
+
 
 -------------------------------
 | SUPPORTED / DEFAULT OPTIONS |
@@ -59,32 +42,30 @@ specify one)
 
 The supported machines are the only valid values for the --mach option:
 
-* local-gnu -- Assumes you are running on a machine where gfortran is installed
+* local -- Assumes you are running on a machine where compiler(s) are available
+           in the path
 * yellowstone -- NCAR supercomputer
+* cheyenne -- NCAR supercomputer
 * hobart -- smaller NCAR cluster (managed by CGD)
 * edison -- NERSC supercomputer
 
 If you do not specify a machine, the script will try to recognize one of the
-supercomputers based on your hostname, otherwise the default is 'local-gnu'
+supercomputers based on your hostname, otherwise the default is 'local'
 
 The supported compilers depend on the machine. For the --compiler option we use
-the following shorthand
+the following shorthand (listed in order such that first one encountered if
+machine is 'local' is the default)
 
-* gnu -- the GNU compiler, gfortran (default on local-gnu, also supported on
-         yellowstone and hobart)
-* intel -- the Intel compiler, ifort (default on yellowstone, also supported on
-           hobart)
-* nag -- the NAG compiler, nagfor (default on hobart)
-* cray -- the Cray compiler, ftn (default on edison)
-* pgi -- the PGI compiler, pgf90 (as of version 16.5, MARBL uses some Fortran
-         2003 constructs that are still not available in PGI; as we develop
-         workarounds and the compiler improves, this will be available on both
-         yellowstone and hobart but for now it is not supported at all)
+* gnu   -- the GNU compiler, gfortran (requires v4.8 or later; supported on yellowstone and hobart)
+* pgi   -- the PGI compiler, pgf90 (requires v17.4 or later; supported on yellowstone and hobart)
+* intel -- the Intel compiler, ifort (default on yellowstone, also supported on hobart)
+* nag   -- the NAG compiler, nagfor (default on hobart)
+* cray  -- the Cray compiler, ftn (currently not supported on local, default on edison)
 
 For tests that read MARBL configuration variables and parameters from namelists,
 the default namelist file is marbl_in.
 
-The last available option is --clean: this does NOT run the test, instead
+The --clean does NOT run the test, instead
 
 $ make clean
 
