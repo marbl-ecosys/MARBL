@@ -1,6 +1,6 @@
 import logging
 
-class MARBL_parameters_class(object):
+class MARBL_settings_class(object):
     """ This class contains methods to allow python to interact with the YAML file that
         defines the MARBL parameters and sets default values.
 
