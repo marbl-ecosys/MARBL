@@ -229,7 +229,10 @@ class MARBL_settings_class(object):
                 full_name = var_name + elem_index
                 var_value = _get_var_value(full_name, this_var, self._config_keyword, self._input_dict)
                 if isinstance(var_value, list):
-                    self.parm_dict[full_name] = var_value[n]
+                    if this_var["datatype"] == "string" and n>=len(var_value):
+                        self.parm_dict[full_name] = '""'
+                    else:
+                        self.parm_dict[full_name] = _translate_YAML_value(var_value[n], this_var["datatype"])
                 else:
                     self.parm_dict[full_name] = var_value
                 this_var['_list_of_parm_names'].append(full_name)
@@ -379,17 +382,36 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
 
     # Append to config keywords if YAML wants it
 
+    # if default value is a list, return the whole thing
+    if isinstance(def_value, list):
+        return def_value
+
+    if "_append_to_config_keywords" in var_dict.keys():
+        append_to_config = var_dict["_append_to_config_keywords"]
+    else:
+        append_to_config = False
+    return _translate_YAML_value(def_value, var_dict["datatype"], append_to_config, varname, provided_keys)
+
+################################################################################
+
+def _translate_YAML_value(value, datatype, append_to_config=False, varname=None, provided_keys=None):
+    """ The value provided in the YAML file needs to be adjusted depending on the datatype
+        of the variable. Strings need to be wrapped in "", and numbers written in
+        scientific notation need to be formatted consistently.
+
+        Also, some values need to added to the "provided_keys" list (by default assume that
+        is not the case)
+    """
     # if variable is a string, put quotes around the default value
-    if var_dict["datatype"] == "string":
-        if "_append_to_config_keywords" in var_dict.keys():
-            if var_dict["_append_to_config_keywords"]:
-                provided_keys.append('%s = "%s"' % (varname, def_value))
-        return '"%s"' % def_value
-    if var_dict["datatype"] == "real" and isinstance(def_value, str):
-        return "%20.15e" % eval(def_value)
-    if var_dict["datatype"] == "integer" and isinstance(def_value, str):
-        return int(def_value)
-    return def_value
+    if datatype == "string":
+        if append_to_config:
+            provided_keys.append('%s = "%s"' % (varname, value))
+        return '"%s"' % value
+    if datatype == "real" and isinstance(value, str):
+        return "%20.15e" % eval(value)
+    if datatype == "integer" and isinstance(value, str):
+        return int(value)
+    return value
 
 ################################################################################
 

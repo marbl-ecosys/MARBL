@@ -257,7 +257,9 @@ general_parms :
       subcategory : 4. general parameters
       units : unitless
       datatype : real
-      default_value : 1
+      default_value :
+         default : 1
+         grid = CESM_x3 : 1.4
    bury_coeff_rmean_timescale_years :
       longname : Running mean time scale for bury coefficients
       subcategory : 4. general parameters
@@ -282,10 +284,16 @@ general_parms :
       datatype : real
       _array_size : 4
       default_value :
-         - 1
-         - 2.2
-         - 4
-         - 5
+         default :
+            - 1
+            - 2.2
+            - 4
+            - 5
+         grid = CESM_x3 :
+            - 1
+            - 3.3
+            - 4.2
+            - 4.4
    caco3_bury_thres_opt :
       longname : Option of threshold of CaCO3 burial
       subcategory : 4. general parameters
@@ -312,7 +320,7 @@ general_parms :
       subcategory : 4. general parameters
       units : non-numeric
       datatype : string
-      default_value : Rau
+      default_value : Laws
 
 ################################################################################
 #                            Category 2: PFT_counts                            #
@@ -426,7 +434,7 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.005
+               autotrophs = "sp" : 0.01
                autotrophs = "diat" : 0.05
                autotrophs = "diaz" : 0.015
          kDOP :
@@ -799,4 +807,12 @@ tracer_dependent :
       datatype : string
       _array_size : *TRACER_CNT
       _is_allocatable : true
-      default_value : ''
+      default_value :
+         default : ''
+         GCM = CESM : &CESM_TRACER_RESTORE
+            - 'PO4'
+            - 'NO3'
+            - 'SiO3'
+            - 'ALK'
+         grid = CESM_x3 : *CESM_TRACER_RESTORE
+         grid = CESM_x1 : *CESM_TRACER_RESTORE
