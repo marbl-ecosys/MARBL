@@ -3867,9 +3867,9 @@ contains
              call marbl_status_log%log_error(log_message, subname)
              write(log_message, "(A,1x,I0)") 'k =', k
              call marbl_status_log%log_error(log_message, subname)
-             write(log_message, "(A,1x,E24.16)") 'Fe_loc =', Fe_loc
+             write(log_message, "(A,1x,E25.17)") 'Fe_loc =', Fe_loc
              call marbl_status_log%log_error(log_message, subname)
-             write(log_message, "(A,1x,E24.16)") 'Lig_loc =', Lig_loc
+             write(log_message, "(A,1x,E25.17)") 'Lig_loc =', Lig_loc
              call marbl_status_log%log_error(log_message, subname)
              return
           end if

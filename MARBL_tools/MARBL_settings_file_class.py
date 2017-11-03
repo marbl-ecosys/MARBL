@@ -408,7 +408,7 @@ def _translate_YAML_value(value, datatype, append_to_config=False, varname=None,
             provided_keys.append('%s = "%s"' % (varname, value))
         return '"%s"' % value
     if datatype == "real" and isinstance(value, str):
-        return "%20.15e" % eval(value)
+        return "%24.16e" % eval(value)
     if datatype == "integer" and isinstance(value, str):
         return int(value)
     return value

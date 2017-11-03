@@ -2068,7 +2068,7 @@ contains
               write(log_message, "(4A)") trim(ll_ptr%short_name), " = '",  &
                                          trim(ll_ptr%sptr), "'"
             case ('real')
-              write(log_message, "(2A,E24.16)") trim(ll_ptr%short_name),   &
+              write(log_message, "(2A,E25.17)") trim(ll_ptr%short_name),   &
                                                 " = ", ll_ptr%rptr
             case ('integer')
               write(log_message, "(2A,I0)") trim(ll_ptr%short_name), " = ", &
@@ -2442,7 +2442,7 @@ contains
     !---------------------------------------------------------------------------
     character(len=char_len) :: log_message
 
-    write(log_message, "(2A,E24.16,3A)") &
+    write(log_message, "(2A,E25.17,3A)") &
          trim(sname_out), ' = ', val_out, ' (value computed from ', trim(sname_in), ')'
     call marbl_status_log%log_noerror(log_message, subname)
 

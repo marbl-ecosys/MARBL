@@ -486,7 +486,7 @@ PFT_derived_types :
                default : 1e34
                autotrophs = "sp" : 1.0/117
                autotrophs = "diat" : 1.0/117
-               autotrophs = "diaz" : 0.32/117
+               autotrophs = "diaz" : 0.32*(1.0/117)
          gQfe_0 :
             longname : Initial Fe/C ratio for growth
             subcategory : 10. autotrophs

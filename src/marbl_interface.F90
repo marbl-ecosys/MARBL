@@ -664,7 +664,7 @@ contains
       select case (trim(datatype))
         case ('real')
           call this%settings%get(varname, this%StatusLog, rval=rval)
-          write(val, "(A,' = ', E24.16)") trim(varname), rval
+          write(val, "(A,' = ', E25.17)") trim(varname), rval
         case ('integer')
           call this%settings%get(varname, this%StatusLog, ival=ival)
           write(val, "(A, ' = ', I0)") trim(varname), ival
