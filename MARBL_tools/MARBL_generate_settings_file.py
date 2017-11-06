@@ -7,14 +7,16 @@ in a YAML file (and optional additional settings file).
 This file can be run as a command line script or imported as part of the MARBL_tools module.
 To use from a module, all arguments are required in the call
 
-generate_settings_file(yaml_file, settings_file_in, grid, settings_file_out)
+generate_settings_file(default_settings_file, settings_file_in, grid, settings_file_out)
 
 To run from a command line, the following arguments are all optional otherwise default values are used:
 
-  -y YAML_FILE, --yaml_file YAML_FILE
+  -f DEFAULT_SETTINGS_FILE, --default_settings_file DEFAULT_SETTINGS_FILE
                         Location of YAML-formatted MARBL configuration file
                         (default:
-                        /home/mlevy/codes/marbl/src/default_settings.yaml)
+                        /NO_BACKUP/codes/marbl/src/default_settings.yaml)
+  -j, --is_JSON         Is DEFAULT_SETTINGS_FILE in JSON format (False =>
+                        YAML) (default: False)
   -g GRID, --grid GRID  Some default values are grid-dependent (default:
                         CESM_x1)
   -i SETTINGS_FILE_IN, --settings_file_in SETTINGS_FILE_IN
@@ -29,7 +31,7 @@ To run from a command line, the following arguments are all optional otherwise d
 
 #######################################
 
-def generate_settings_file(yaml_file, settings_file_in, grid, settings_file_out, settings_class_dir=None):
+def generate_settings_file(default_settings_file, settings_file_in, grid, settings_file_out, file_is_JSON=True, settings_class_dir=None):
     """ Produce a valid MARBL input file from a YAML parameter file
     """
 
@@ -49,7 +51,7 @@ def generate_settings_file(yaml_file, settings_file_in, grid, settings_file_out,
             logger.error('Can not find %s' % settings_class_module)
             sys.exit(1)
 
-    DefaultParms = MARBL_settings_file_class.MARBL_settings_class(yaml_file, grid, settings_file_in)
+    DefaultParms = MARBL_settings_file_class.MARBL_settings_class(default_settings_file, grid, settings_file_in, file_is_JSON=file_is_JSON)
 
     fout = open(settings_file_out,"w")
     # Sort variables by subcategory
@@ -73,9 +75,12 @@ def _parse_args(marbl_root):
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Command line argument to point to YAML file (default is $MARBLROOT/src/default_settings.yaml)
-    parser.add_argument('-y', '--yaml_file', action='store', dest='yaml_file',
+    parser.add_argument('-f', '--default_settings_file', action='store', dest='default_settings_file',
                         default=os.path.join(marbl_root, 'src', 'default_settings.yaml'),
                         help='Location of YAML-formatted MARBL configuration file')
+
+    parser.add_argument('-j', '--is_JSON', action='store_true', dest='is_JSON',
+                        help="Is DEFAULT_SETTINGS_FILE in JSON format (False => YAML)")
 
     # Command line argument to specify resolution (default is CESM_x1)
     parser.add_argument('-g', '--grid', action='store', dest='grid', default='CESM_x1',
@@ -111,4 +116,4 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
 
     # Write the input file
-    generate_settings_file(args.yaml_file, args.settings_file_in, args.grid, args.settings_file_out, args.settings_class_dir)
+    generate_settings_file(args.default_settings_file, args.settings_file_in, args.grid, args.settings_file_out, args.is_JSON, args.settings_class_dir)

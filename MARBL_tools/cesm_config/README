@@ -1,0 +1,4 @@
+CIME, as found in CESM 2.0, does not support python libraries beyond the
+standard libraries... so PyYAML is not necessarily available on CESM-supported
+machines. Until CESM requires YAML support, we are offering this tool to
+convert YAML -> JSON, and CESM will read the JSON configuration file.

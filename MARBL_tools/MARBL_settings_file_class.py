@@ -12,7 +12,7 @@ class MARBL_settings_class(object):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, yaml_file, grid, input_file):
+    def __init__(self, default_settings_file, grid, input_file, file_is_JSON=False):
         """ Class constructor: set up a dictionary of config keywords for when multiple
             default values are provided, and then read the YAML file.
         """
@@ -23,22 +23,27 @@ class MARBL_settings_class(object):
         self._config_keyword = []
         self._config_keyword.append("grid = " + grid)
 
-        # 2. Read YAML file
-        try:
-            import yaml
-        except:
-            logger.error("Can not find PyYAML library")
-            _abort(1)
-        try:
-            with open(yaml_file) as parmsfile:
-                self._parms = yaml.safe_load(parmsfile)
-        except:
-            logger.error("Can not find %s" % yaml_file)
-            _abort(1)
+        # 2. Read settings file
+        if (file_is_JSON):
+            import json
+            with open(default_settings_file) as parmsfile:
+                self._parms = json.load(parmsfile)
+        else:
+            try:
+                import yaml
+            except:
+                logger.error("Can not find PyYAML library")
+                _abort(1)
+            try:
+                with open(default_settings_file) as parmsfile:
+                    self._parms = yaml.safe_load(parmsfile)
+            except:
+                logger.error("Can not find %s" % default_settings_file)
+                _abort(1)
 
         # 3 Make sure YAML file adheres to MARBL parameter file schema
         if _invalid_parms_file(self._parms):
-            logger.error("%s is not a valid MARBL parameter file" % yaml_file)
+            logger.error("%s is not a valid MARBL parameter file" % default_settings_file)
             _abort(1)
 
         # 4. Read input file
@@ -402,14 +407,16 @@ def _translate_YAML_value(value, datatype, append_to_config=False, varname=None,
         Also, some values need to added to the "provided_keys" list (by default assume that
         is not the case)
     """
+    if isinstance(value, str):
+        value = value.decode('utf-8')
     # if variable is a string, put quotes around the default value
     if datatype == "string":
         if append_to_config:
             provided_keys.append('%s = "%s"' % (varname, value))
-        return '"%s"' % value
-    if datatype == "real" and isinstance(value, str):
+        return '"%s"' % value.encode('utf-8')
+    if datatype == "real" and isinstance(value, unicode):
         return "%24.16e" % eval(value)
-    if datatype == "integer" and isinstance(value, str):
+    if datatype == "integer" and isinstance(value, unicode):
         return int(value)
     return value
 
