@@ -31,7 +31,7 @@ To run from a command line, the following arguments are all optional otherwise d
 
 #######################################
 
-def generate_settings_file(default_settings_file, settings_file_in, grid, settings_file_out, file_is_JSON=True, settings_class_dir=None):
+def generate_settings_file(default_settings_file, settings_file_in, grid, settings_file_out, file_is_JSON=False, settings_class_dir=None):
     """ Produce a valid MARBL input file from a YAML parameter file
     """
 
