@@ -12,7 +12,7 @@ class MARBL_settings_class(object):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, default_settings_file, grid, input_file, file_is_JSON=False):
+    def __init__(self, default_settings_file, file_is_JSON=False, grid=None, input_file=None):
         """ Class constructor: set up a dictionary of config keywords for when multiple
             default values are provided, and then read the YAML file.
         """
@@ -21,7 +21,8 @@ class MARBL_settings_class(object):
 
         # 1. List of configuration keywords to match in YAML if default_default is a dictionary
         self._config_keyword = []
-        self._config_keyword.append("grid = " + grid)
+        if grid != None:
+            self._config_keyword.append("grid = " + grid)
 
         # 2. Read settings file
         if (file_is_JSON):
@@ -42,7 +43,7 @@ class MARBL_settings_class(object):
                 _abort(1)
 
         # 3 Make sure YAML file adheres to MARBL parameter file schema
-        if _invalid_parms_file(self._parms):
+        if invalid_parms_file(self._parms):
             logger.error("%s is not a valid MARBL parameter file" % default_settings_file)
             _abort(1)
 
@@ -248,18 +249,12 @@ class MARBL_settings_class(object):
             this_var['_list_of_parm_names'].append(var_name)
 
 ################################################################################
-#                            PRIVATE MODULE METHODS                            #
-################################################################################
-
-def _abort(err_code=0):
-    """ This routine imports sys and calls exit
-    """
-    import sys
-    sys.exit(err_code)
 
 ################################################################################
+#                            PUBLIC MODULE METHODS                             #
+################################################################################
 
-def _invalid_parms_file(YAMLdict):
+def invalid_parms_file(YAMLdict):
     """ Read a YAML file, make sure it conforms to MARBL parameter file standards
         1. _order is a top-level key
         2. Everything listed in _order is a top-level key
@@ -319,6 +314,16 @@ def _invalid_parms_file(YAMLdict):
     return invalid_file
 
 ################################################################################
+#                            PRIVATE MODULE METHODS                            #
+################################################################################
+
+def _abort(err_code=0):
+    """ This routine imports sys and calls exit
+    """
+    import sys
+    sys.exit(err_code)
+
+################################################################################
 
 def _valid_variable_dict(var_dict, var_name):
     """ Return False if dictionary does not contain any of the following:
@@ -372,7 +377,7 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
         # is default value a dictionary? If so, it depends on self._config_keyword
         # Otherwise we're interested in default value
         if isinstance(var_dict["default_value"], dict):
-            # NOTE: _invalid_parms_file() has ensured that this dictionary has a "default" key
+            # NOTE: invalid_parms_file() has ensured that this dictionary has a "default" key
             use_key = "default"
             for key in provided_keys:
                 # return "default" entry in default_values dictionary unless one of the keys

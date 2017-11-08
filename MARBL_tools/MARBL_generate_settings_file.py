@@ -51,7 +51,7 @@ def generate_settings_file(default_settings_file, settings_file_in, grid, settin
             logger.error('Can not find %s' % settings_class_module)
             sys.exit(1)
 
-    DefaultParms = MARBL_settings_file_class.MARBL_settings_class(default_settings_file, grid, settings_file_in, file_is_JSON=file_is_JSON)
+    DefaultParms = MARBL_settings_file_class.MARBL_settings_class(default_settings_file, file_is_JSON, grid, settings_file_in)
 
     fout = open(settings_file_out,"w")
     # Sort variables by subcategory
@@ -82,8 +82,8 @@ def _parse_args(marbl_root):
     parser.add_argument('-j', '--is_JSON', action='store_true', dest='is_JSON',
                         help="Is DEFAULT_SETTINGS_FILE in JSON format (False => YAML)")
 
-    # Command line argument to specify resolution (default is CESM_x1)
-    parser.add_argument('-g', '--grid', action='store', dest='grid', default='CESM_x1',
+    # Command line argument to specify resolution (default is None)
+    parser.add_argument('-g', '--grid', action='store', dest='grid',
                         help='Some default values are grid-dependent')
 
     # Command line argument to specify an input file which would override the YAML
