@@ -31,35 +31,17 @@ To run from a command line, the following arguments are all optional otherwise d
 
 #######################################
 
-def generate_settings_file(default_settings_file, settings_file_in, grid, settings_file_out, file_is_JSON=False, settings_class_dir=None):
+def generate_settings_file(MARBL_settings, settings_file_out):
     """ Produce a valid MARBL input file from a YAML parameter file
     """
 
-    if settings_class_dir == None:
-        from MARBL_tools import MARBL_settings_file_class
-    else:
-        import imp
-        import os
-        import sys
-        import logging
-        logger = logging.getLogger(__name__)
-        logging.info('Importing MARBL_settings_file_class.py from %s' % settings_class_dir)
-        settings_class_module = settings_class_dir+'/MARBL_settings_file_class.py'
-        if os.path.isfile(settings_class_module):
-            MARBL_settings_file_class = imp.load_source('MARBL_settings_file_class', settings_class_module)
-        else:
-            logger.error('Can not find %s' % settings_class_module)
-            sys.exit(1)
-
-    DefaultParms = MARBL_settings_file_class.MARBL_settings_class(default_settings_file, file_is_JSON, grid, settings_file_in)
-
     fout = open(settings_file_out,"w")
     # Sort variables by subcategory
-    for subcat_name in DefaultParms.get_subcategory_names():
+    for subcat_name in MARBL_settings.get_subcategory_names():
         fout.write("! %s\n" % subcat_name.split('. ')[1])
-        for varname in DefaultParms.get_parm_dict_variable_names(subcat_name):
-            fout.write("%s = %s\n" % (varname, DefaultParms.parm_dict[varname]))
-        if subcat_name != DefaultParms.get_subcategory_names()[-1]:
+        for varname in MARBL_settings.get_parm_dict_variable_names(subcat_name):
+            fout.write("%s = %s\n" % (varname, MARBL_settings.parm_dict[varname]))
+        if subcat_name != MARBL_settings.get_subcategory_names()[-1]:
             fout.write("\n")
     fout.close()
 
@@ -94,10 +76,6 @@ def _parse_args(marbl_root):
     parser.add_argument('-o', '--settings_file_out', action='store', dest='settings_file_out', default='marbl.input',
                         help='Name of file to be written')
 
-    # Path to directory containing MARBL_defaults.py
-    parser.add_argument('-d', '--MARBL_settings_class_override_dir', action='store', dest='settings_class_dir',
-                        default=None, help='Alternate location of MARBL_settings_file_class.py')
-
     return parser.parse_args()
 
 #######################################
@@ -115,5 +93,9 @@ if __name__ == "__main__":
     import logging
     logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
 
+    from MARBL_settings_file_class import MARBL_settings_class
+    DefaultParms = MARBL_settings_class(args.default_settings_file, args.is_JSON, args.grid, args.settings_file_in)
+
+
     # Write the input file
-    generate_settings_file(args.default_settings_file, args.settings_file_in, args.grid, args.settings_file_out, args.is_JSON, args.settings_class_dir)
+    generate_settings_file(DefaultParms, args.settings_file_out)
