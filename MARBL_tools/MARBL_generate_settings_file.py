@@ -39,8 +39,8 @@ def generate_settings_file(MARBL_settings, settings_file_out):
     # Sort variables by subcategory
     for subcat_name in MARBL_settings.get_subcategory_names():
         fout.write("! %s\n" % subcat_name.split('. ')[1])
-        for varname in MARBL_settings.get_parm_dict_variable_names(subcat_name):
-            fout.write("%s = %s\n" % (varname, MARBL_settings.parm_dict[varname]))
+        for varname in MARBL_settings.get_settings_dict_variable_names(subcat_name):
+            fout.write("%s = %s\n" % (varname, MARBL_settings.settings_dict[varname]))
         if subcat_name != MARBL_settings.get_subcategory_names()[-1]:
             fout.write("\n")
     fout.close()
@@ -93,9 +93,9 @@ if __name__ == "__main__":
     import logging
     logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
 
-    from MARBL_settings_file_class import MARBL_settings_class
-    DefaultParms = MARBL_settings_class(args.default_settings_file, args.is_JSON, args.grid, args.settings_file_in)
+    from MARBL_tools import MARBL_settings_class
+    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.is_JSON, args.grid, args.settings_file_in)
 
 
     # Write the input file
-    generate_settings_file(DefaultParms, args.settings_file_out)
+    generate_settings_file(DefaultSettings, args.settings_file_out)

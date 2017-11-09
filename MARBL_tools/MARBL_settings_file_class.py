@@ -27,8 +27,8 @@ class MARBL_settings_class(object):
         # 2. Read settings file
         if (file_is_JSON):
             import json
-            with open(default_settings_file) as parmsfile:
-                self._parms = json.load(parmsfile)
+            with open(default_settings_file) as settings_file:
+                self._settings = json.load(settings_file)
         else:
             try:
                 import yaml
@@ -36,14 +36,15 @@ class MARBL_settings_class(object):
                 logger.error("Can not find PyYAML library")
                 _abort(1)
             try:
-                with open(default_settings_file) as parmsfile:
-                    self._parms = yaml.safe_load(parmsfile)
+                with open(default_settings_file) as settings_file:
+                    self._settings = yaml.safe_load(settings_file)
             except:
                 logger.error("Can not find %s" % default_settings_file)
                 _abort(1)
 
         # 3 Make sure YAML file adheres to MARBL parameter file schema
-        if invalid_parms_file(self._parms):
+        from MARBL_tools import settings_file_is_consistent
+        if not settings_file_is_consistent(self._settings):
             logger.error("%s is not a valid MARBL parameter file" % default_settings_file)
             _abort(1)
 
@@ -52,7 +53,7 @@ class MARBL_settings_class(object):
 
         # 5. Use an ordered dictionary for keeping variable, value pairs
         from collections import OrderedDict
-        self.parm_dict = OrderedDict()
+        self.settings_dict = OrderedDict()
         for cat_name in self.get_category_names():
             for var_name in self.get_variable_names(cat_name):
                 self._process_variable_value(cat_name, var_name)
@@ -74,8 +75,8 @@ class MARBL_settings_class(object):
         """ Return the number of tracers MARBL is running with.
         """
 
-        return (self._parms['_tracer_cnt']['default'] +
-                _add_increments(self._parms['_tracer_cnt']['increments'], self.parm_dict))
+        return (self._settings['_tracer_cnt']['default'] +
+                _add_increments(self._settings['_tracer_cnt']['increments'], self.settings_dict))
 
     ################################################################################
 
@@ -84,28 +85,28 @@ class MARBL_settings_class(object):
         """
 
         # Consistency checks:
-        # 1. All keys listed in self._parms["_order"] should also be in self._parms.keys()
-        for key in self._parms["_order"]:
-            if key not in self._parms.keys():
+        # 1. All keys listed in self._settings["_order"] should also be in self._settings.keys()
+        for key in self._settings["_order"]:
+            if key not in self._settings.keys():
                 msg = "ERROR: can not find '" + key + "' in YAML file"
                 _abort(msg)
 
-        # 2. All keys listed in self._parms.keys() should also be in self._parms["_order"]
+        # 2. All keys listed in self._settings.keys() should also be in self._settings["_order"]
         #    (except _order itself)
-        for key in self._parms.keys():
-            if key not in ["_order", "_tracer_cnt"] and key not in self._parms["_order"]:
+        for key in self._settings.keys():
+            if key not in ["_order", "_tracer_cnt"] and key not in self._settings["_order"]:
                 msg = "ERROR: '" + key + "' is not listed in '_order' and won't be processed"
                 _abort(msg)
 
         # 3. No duplicates in _order
         unique_keys = []
-        for key in self._parms["_order"]:
+        for key in self._settings["_order"]:
             if key in unique_keys:
                 msg = "ERROR: '" + key + "' appears in '_order' multiple times"
                 _abort(msg)
             unique_keys.append(key)
 
-        return self._parms["_order"]
+        return self._settings["_order"]
 
     ################################################################################
 
@@ -116,16 +117,16 @@ class MARBL_settings_class(object):
             Optional: only return variables in a specific subcategory
         """
         subcat_list = []
-        for cat_name in self._parms['_order']:
-            for var_name in _sort(self._parms[cat_name].keys()):
-                if isinstance(self._parms[cat_name][var_name]['datatype'], dict):
-                    for subvar_name in _sort(self._parms[cat_name][var_name]['datatype'].keys()):
+        for cat_name in self._settings['_order']:
+            for var_name in _sort(self._settings[cat_name].keys()):
+                if isinstance(self._settings[cat_name][var_name]['datatype'], dict):
+                    for subvar_name in _sort(self._settings[cat_name][var_name]['datatype'].keys()):
                         if subvar_name[0] != '_':
-                            this_subcat = self._parms[cat_name][var_name]['datatype'][subvar_name]['subcategory']
+                            this_subcat = self._settings[cat_name][var_name]['datatype'][subvar_name]['subcategory']
                             if this_subcat not in subcat_list:
                                 subcat_list.append(this_subcat)
                 else:
-                    this_subcat = self._parms[cat_name][var_name]['subcategory']
+                    this_subcat = self._settings[cat_name][var_name]['subcategory']
                     if this_subcat not in subcat_list:
                         subcat_list.append(this_subcat)
         return _sort(subcat_list, sort_key=_natural_sort_key)
@@ -136,30 +137,30 @@ class MARBL_settings_class(object):
         """ Returns a sorted list of variables in a specific category.
             For now, the list is sorted alphabetically.
         """
-        return _sort(self._parms[category_name].keys(), sort_key)
+        return _sort(self._settings[category_name].keys(), sort_key)
 
     ################################################################################
 
-    def get_parm_dict_variable_names(self, subcategory):
+    def get_settings_dict_variable_names(self, subcategory):
         """ Returns a sorted list of variables in a specific category
             and subcategory, expanding variable names if they are arrays
             or derived types
         """
         varlist = []
-        for cat_name in self._parms['_order']:
-            for var_name in _sort(self._parms[cat_name].keys()):
-                if isinstance(self._parms[cat_name][var_name]['datatype'], dict):
-                    for subvar_name in _sort(self._parms[cat_name][var_name]['datatype'].keys()):
+        for cat_name in self._settings['_order']:
+            for var_name in _sort(self._settings[cat_name].keys()):
+                if isinstance(self._settings[cat_name][var_name]['datatype'], dict):
+                    for subvar_name in _sort(self._settings[cat_name][var_name]['datatype'].keys()):
                         if subvar_name[0] != '_':
-                            this_var = self._parms[cat_name][var_name]['datatype'][subvar_name]
+                            this_var = self._settings[cat_name][var_name]['datatype'][subvar_name]
                             if this_var['subcategory'] == subcategory:
-                                for parm_key in this_var['_list_of_parm_names']:
-                                    varlist.append(parm_key)
+                                for settings_name in this_var['_list_of_settings_names']:
+                                    varlist.append(settings_name)
                 else:
-                    this_var = self._parms[cat_name][var_name]
+                    this_var = self._settings[cat_name][var_name]
                     if this_var['subcategory'] == subcategory:
-                        for parm_key in this_var['_list_of_parm_names']:
-                            varlist.append(parm_key)
+                        for settings_name in this_var['_list_of_settings_names']:
+                            varlist.append(settings_name)
         return _sort(varlist, sort_key=_natural_sort_key)
 
     ################################################################################
@@ -171,26 +172,26 @@ class MARBL_settings_class(object):
     #       ii. optional valid_value key check
 
     def _process_variable_value(self, category_name, variable_name):
-        """ For a given variable in a given category, call _update_parm_dict()
-            * If variable is a derived type, _update_parm_dict() needs to be called element by element
+        """ For a given variable in a given category, call _update_settings_dict()
+            * If variable is a derived type, _update_settings_dict() needs to be called element by element
 
             NOTE: At this time, the only derived types in the YAML file are also arrays
         """
-        this_var = self._parms[category_name][variable_name]
+        this_var = self._settings[category_name][variable_name]
 
         if not isinstance(this_var["datatype"], dict):
-            this_var['_list_of_parm_names'] = []
-            self._update_parm_dict(this_var, variable_name)
+            this_var['_list_of_settings_names'] = []
+            self._update_settings_dict(this_var, variable_name)
             return
 
         # Process derived type!
         append_to_keys = (('PFT_defaults = "CESM2"' in self._config_keyword) and
                           (category_name == "PFT_derived_types"))
         if append_to_keys:
-            PFT_keys = self._parms['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][variable_name]
+            PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][variable_name]
         # Is the derived type an array? If so, treat each entry separately
         if ("_array_size" in this_var.keys()):
-            for n, elem_index in enumerate(_get_array_info(this_var["_array_size"], self.parm_dict)):
+            for n, elem_index in enumerate(_get_array_info(this_var["_array_size"], self.settings_dict)):
                 # Append "(index)" to variable name
                 base_name = "%s%s%%" % (variable_name, elem_index)
 
@@ -200,13 +201,13 @@ class MARBL_settings_class(object):
 
                 for key in _sort_with_specific_suffix_first(this_var["datatype"].keys(),'_cnt'):
                     if key[0] != '_':
-                        # Call _update_parm_dict() for each variable in derived type
+                        # Call _update_settings_dict() for each variable in derived type
                         this_component = this_var["datatype"][key]
                         try:
-                            this_component['_list_of_parm_names']
+                            this_component['_list_of_settings_names']
                         except:
-                            this_component['_list_of_parm_names'] = []
-                        self._update_parm_dict(this_component, base_name+key, base_name)
+                            this_component['_list_of_settings_names'] = []
+                        self._update_settings_dict(this_component, base_name+key, base_name)
 
                 if append_to_keys:
                     # Remove PFT-specific key
@@ -214,13 +215,13 @@ class MARBL_settings_class(object):
 
     ################################################################################
 
-    def _update_parm_dict(self, this_var, var_name, base_name=''):
-        """ For a given variable in a given category, add to the self.parm_dict dictionary
+    def _update_settings_dict(self, this_var, var_name, base_name=''):
+        """ For a given variable in a given category, add to the self.settings_dict dictionary
             * For derived types, user passes in component as well as base_name ("variable_name%")
-            * For arrays, multiple entries will be added to self.parm_dict
+            * For arrays, multiple entries will be added to self.settings_dict
 
-            Also introduce a new key to the variable dictionary, '_list_of_parm_names', that
-            is populated with a list of all the keys added to self.parm_dict for this variable
+            Also introduce a new key to the variable dictionary, '_list_of_settings_names', that
+            is populated with a list of all the keys added to self.settings_dict for this variable
             (just varname for scalars, but multiple keys for arrays)
         """
         if ("_array_size" in this_var.keys()):
@@ -231,87 +232,24 @@ class MARBL_settings_class(object):
                 array_len = this_var["_array_size"]
 
             # For each element, get value from either input file or YAML
-            for n, elem_index in enumerate(_get_array_info(array_len, self.parm_dict, base_name)):
+            for n, elem_index in enumerate(_get_array_info(array_len, self.settings_dict, base_name)):
                 full_name = var_name + elem_index
                 var_value = _get_var_value(full_name, this_var, self._config_keyword, self._input_dict)
                 if isinstance(var_value, list):
                     if this_var["datatype"] == "string" and n>=len(var_value):
-                        self.parm_dict[full_name] = '""'
+                        self.settings_dict[full_name] = '""'
                     else:
-                        self.parm_dict[full_name] = _translate_YAML_value(var_value[n], this_var["datatype"])
+                        self.settings_dict[full_name] = _translate_YAML_value(var_value[n], this_var["datatype"])
                 else:
-                    self.parm_dict[full_name] = var_value
-                this_var['_list_of_parm_names'].append(full_name)
+                    self.settings_dict[full_name] = var_value
+                this_var['_list_of_settings_names'].append(full_name)
 
         else:
             # get value from either input file or YAML
-            self.parm_dict[var_name] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict)
-            this_var['_list_of_parm_names'].append(var_name)
+            self.settings_dict[var_name] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict)
+            this_var['_list_of_settings_names'].append(var_name)
 
 ################################################################################
-
-################################################################################
-#                            PUBLIC MODULE METHODS                             #
-################################################################################
-
-def invalid_parms_file(YAMLdict):
-    """ Read a YAML file, make sure it conforms to MARBL parameter file standards
-        1. _order is a top-level key
-        2. Everything listed in _order is a top-level key
-        3. All top-level keys that do not begin with '_' are listed in _order
-        4. All second-level dictionaries (variable names) contain datatype key
-        5. If datatype is not a dictionary, variable dictionary keys also included
-           longname, subcategory, units, default_value
-        6. If datatype is a dictionary, all keys in the datatype are variables per (5)
-        7. In a variable (or datatype entry) where default_value is a dictionary,
-           "default" is a key
-        NOTE: (7) is checked explicitly along with (5) and (6) in _valid_variable_dict()
-    """
-
-    invalid_file = False
-    logger = logging.getLogger(__name__)
-
-    # 1. _order is a top-level key
-    if "_order" not in YAMLdict.keys():
-        logger.error("Can not find _order key")
-        return True
-
-    # 2. Everything listed in _order is a top-level key
-    for cat_name in YAMLdict["_order"]:
-        if cat_name not in YAMLdict.keys():
-            logger.error("Can not find %s category that is listed in _order" % cat_name)
-            invalid_file = True
-
-    for cat_name in YAMLdict.keys():
-        if cat_name[0] != '_':
-        # 3. All top-level keys that do not begin with '_' are listed in _order
-            if cat_name not in YAMLdict["_order"]:
-                logger.error("Category %s not included in _order" % cat_name)
-                invalid_file = True
-
-            # 4. All second-level dictionaries (variable names) contain datatype key
-            #    If the variable is of a derived type, then datatype is a dictionary itself
-            for var_name in YAMLdict[cat_name].keys():
-                if "datatype" not in YAMLdict[cat_name][var_name].keys():
-                    logger.error("Variable %s does not contain a key for datatype" % var_name)
-                    invalid_file = True
-                    continue
-
-                if not isinstance(YAMLdict[cat_name][var_name]["datatype"], dict):
-                    # 5. If datatype is not a dictionary, variable dictionary keys should include
-                    #    longname, subcategory, units, datatype, default_value
-                    #    Also, if default_value is a dictionary, that dictionary needs to contain "default" key
-                    if not _valid_variable_dict(YAMLdict[cat_name][var_name], var_name):
-                        invalid_file = True
-                else:
-                    # 6. If datatype is a dictionary, all keys in the datatype are variables per (5)
-                    for subvar_name in YAMLdict[cat_name][var_name]["datatype"].keys():
-                        if subvar_name[0] != '_':
-                            if not _valid_variable_dict(YAMLdict[cat_name][var_name]["datatype"][subvar_name],
-                                                        "%s%%%s"  % (var_name, subvar_name)):
-                                invalid_file = True
-
-    return invalid_file
 
 ################################################################################
 #                            PRIVATE MODULE METHODS                            #
@@ -322,32 +260,6 @@ def _abort(err_code=0):
     """
     import sys
     sys.exit(err_code)
-
-################################################################################
-
-def _valid_variable_dict(var_dict, var_name):
-    """ Return False if dictionary does not contain any of the following:
-        * longname
-        * subcategory
-        * units
-        * datatype
-        * default_value
-    """
-
-    logger = logging.getLogger(__name__)
-    for key_check in ["longname", "subcategory", "units", "datatype", "default_value"]:
-        if key_check not in var_dict.keys():
-            message = "Variable %s is not well-defined in YAML" % var_name
-            message = message + "\n     * Expecting %s as a key" % key_check
-            logger.error(message)
-            return False
-    if isinstance(var_dict["default_value"], dict):
-        # Make sure "default" is a valid key if default_value is a dictionary
-        if "default" not in var_dict["default_value"].keys():
-            logger.error("default_value dictionary in variable %s must have 'default' key" % var_name)
-            logger.info("Keys in default_value are %s" % var_dict["default_value"].keys())
-            return False
-    return True
 
 ################################################################################
 
@@ -377,7 +289,7 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
         # is default value a dictionary? If so, it depends on self._config_keyword
         # Otherwise we're interested in default value
         if isinstance(var_dict["default_value"], dict):
-            # NOTE: invalid_parms_file() has ensured that this dictionary has a "default" key
+            # NOTE: settings_file_is_consistent() has ensured that this dictionary has a "default" key
             use_key = "default"
             for key in provided_keys:
                 # return "default" entry in default_values dictionary unless one of the keys
@@ -466,21 +378,21 @@ def _natural_sort_key(string_):
 
 ################################################################################
 
-def _add_increments(increments, parm_dict):
-    """ Some values need to be adjusted depending on values in parm_dict
+def _add_increments(increments, settings_dict):
+    """ Some values need to be adjusted depending on values in settings_dict
     """
     change = 0
     for key_check in increments.keys():
         checklist = key_check.split(" = ")
-        if parm_dict[checklist[0]] == checklist[1]:
+        if settings_dict[checklist[0]] == checklist[1]:
             change = change + increments[key_check]
     return change
 
 ################################################################################
 
-def _get_dim_size(dim_in, parm_dict, dict_prefix=''):
+def _get_dim_size(dim_in, settings_dict, dict_prefix=''):
     """ If dim_in is an integer, it is the dimension size. Otherwise we need to
-        look up the dim_in key in parm_dict.
+        look up the dim_in key in settings_dict.
     """
 
     if isinstance(dim_in, dict):
@@ -497,21 +409,21 @@ def _get_dim_size(dim_in, parm_dict, dict_prefix=''):
         # Otherwise, dim_start must refer to a variable that could be
         # in the dictionary with or without the prefix
         try:
-            dim_out = parm_dict[dict_prefix+dim_start]
+            dim_out = settings_dict[dict_prefix+dim_start]
         except:
-            dim_out = parm_dict[dim_start]
+            dim_out = settings_dict[dim_start]
 
     if check_increment:
-        dim_out = dim_out + _add_increments(dim_in['increments'], parm_dict)
+        dim_out = dim_out + _add_increments(dim_in['increments'], settings_dict)
 
     return dim_out
 ################################################################################
 
-def _get_array_info(array_size_in, parm_dict, dict_prefix=''):
+def _get_array_info(array_size_in, settings_dict, dict_prefix=''):
     """ Return a list of the proper formatting for array elements, e.g.
             ['(1)', '(2)'] for 1D array or
             ['(1,1)', '(2,1)'] for 2D array
-        If array_size_in is not an integer, check to see if it is in parm_dict
+        If array_size_in is not an integer, check to see if it is in settings_dict
     """
 
     logger = logging.getLogger(__name__)
@@ -528,13 +440,13 @@ def _get_array_info(array_size_in, parm_dict, dict_prefix=''):
             logger.error("_get_array_info() only supports 1D and 2D arrays")
             _abort(1)
 
-        for i in range(0, _get_dim_size(array_size_in[0], parm_dict, dict_prefix)):
-            for j in range(0, _get_dim_size(array_size_in[1], parm_dict, dict_prefix)):
+        for i in range(0, _get_dim_size(array_size_in[0], settings_dict, dict_prefix)):
+            for j in range(0, _get_dim_size(array_size_in[1], settings_dict, dict_prefix)):
                 str_index.append("(%d,%d)" % (i+1,j+1))
         return str_index
 
-    # How many elements? May be an integer or an entry in self.parm_dict
-    for i in range(0, _get_dim_size(array_size_in, parm_dict, dict_prefix)):
+    # How many elements? May be an integer or an entry in self.settings_dict
+    for i in range(0, _get_dim_size(array_size_in, settings_dict, dict_prefix)):
         str_index.append("(%d)" % (i+1))
     return str_index
 
