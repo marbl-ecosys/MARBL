@@ -101,7 +101,6 @@ module marbl_mod
   use marbl_settings_mod, only : ladjust_bury_coeff
   use marbl_settings_mod, only : autotrophs
   use marbl_settings_mod, only : zooplankton
-  use marbl_settings_mod, only : f_qsw_par
   use marbl_settings_mod, only : parm_Fe_bioavail
   use marbl_settings_mod, only : dust_to_Fe
   use marbl_settings_mod, only : denitrif_C_N
@@ -2499,6 +2498,8 @@ contains
     !  0.45   fraction of incoming SW -> PAR (non-dim)
     !-----------------------------------------------------------------------
 
+    use marbl_settings_mod, only : f_qsw_par
+
     ! PAR is intent(inout) because it components, while entirely set here, are allocated elsewhere
 
     integer(int_kind)                         , intent(in)    :: auto_cnt
@@ -2538,6 +2539,10 @@ contains
        PAR%interface(0,:) = f_qsw_par *                                       &
               interior_forcings(interior_forcing_ind%surf_shortwave_id)%field_1d(1,:)
     elsewhere
+       PAR%interface(0,:) = c0
+    endwhere
+
+    where (PAR%interface(0,:) < PAR_threshold)
        PAR%interface(0,:) = c0
     endwhere
 
