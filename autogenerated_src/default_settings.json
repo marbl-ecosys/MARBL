@@ -561,6 +561,7 @@
    },
    "_order": [
       "general_parms",
+      "general_parms2",
       "PFT_counts",
       "PFT_derived_types",
       "tracer_dependent"
@@ -660,14 +661,8 @@
          "subcategory": "2. config flags",
          "units": "unitless"
       },
-      "init_bury_coeff_opt": {
-         "datatype": "string",
-         "default_value": "nml",
-         "longname": "Source of initial burial coefficient",
-         "subcategory": "3. config strings",
-         "units": "unitless"
-      },
       "ladjust_bury_coeff": {
+         "_append_to_config_keywords": true,
          "datatype": "logical",
          "default_value": ".false.",
          "longname": "Control if bury coefficients are adjusted (rather than constant)",
@@ -896,6 +891,19 @@
          },
          "longname": "Global scaling factor for sed_denitrif",
          "subcategory": "4. general parameters",
+         "units": "unitless"
+      }
+   },
+   "general_parms2": {
+      "init_bury_coeff_opt": {
+         "datatype": "string",
+         "default_value": {
+            "SAVED_STATE_INIT = True": "restfile",
+            "default": "nml",
+            "ladjust_bury_coeff = \".false.\"": "nml"
+         },
+         "longname": "Source of initial burial coefficient",
+         "subcategory": "3. config strings",
          "units": "unitless"
       }
    },

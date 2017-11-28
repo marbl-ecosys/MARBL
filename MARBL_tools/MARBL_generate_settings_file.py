@@ -13,19 +13,17 @@ To run from a command line, the following arguments are all optional otherwise d
 
   -f DEFAULT_SETTINGS_FILE, --default_settings_file DEFAULT_SETTINGS_FILE
                         Location of YAML-formatted MARBL configuration file
-                        (default:
-                        /NO_BACKUP/codes/marbl/src/default_settings.yaml)
+                        (default: MARBLROOT/src/default_settings.yaml)
   -j, --is_JSON         Is DEFAULT_SETTINGS_FILE in JSON format (False =>
                         YAML) (default: False)
-  -g GRID, --grid GRID  Some default values are grid-dependent (default:
-                        CESM_x1)
+  -s, --saved_state_bury_coeff
+                        Are bury coefficients initialized via saved state
+                        (False => settings file) (default: False)
+  -g GRID, --grid GRID  Some default values are grid-dependent (default: None)
   -i SETTINGS_FILE_IN, --settings_file_in SETTINGS_FILE_IN
                         A file that overrides values in YAML (default: None)
   -o SETTINGS_FILE_OUT, --settings_file_out SETTINGS_FILE_OUT
                         Name of file to be written (default: marbl.input)
-  -d SETTINGS_CLASS_DIR, --MARBL_settings_class_override_dir SETTINGS_CLASS_DIR
-                        Alternate location of MARBL_settings_file_class.py
-                        (default: None)
 
 """
 
@@ -61,8 +59,13 @@ def _parse_args(marbl_root):
                         default=os.path.join(marbl_root, 'src', 'default_settings.yaml'),
                         help='Location of YAML-formatted MARBL configuration file')
 
+    # Is the settings file actually a JSON file rather than YAML?
     parser.add_argument('-j', '--is_JSON', action='store_true', dest='is_JSON',
                         help="Is DEFAULT_SETTINGS_FILE in JSON format (False => YAML)")
+
+    # Is the GCM providing initial bury coefficients via saved state?
+    parser.add_argument('-s', '--saved_state_bury_coeff', action='store_true', dest='saved_state',
+                        help="Are bury coefficients initialized via saved state (False => settings file)")
 
     # Command line argument to specify resolution (default is None)
     parser.add_argument('-g', '--grid', action='store', dest='grid',
@@ -94,7 +97,7 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
 
     from MARBL_tools import MARBL_settings_class
-    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.is_JSON, args.grid, args.settings_file_in)
+    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.is_JSON, args.saved_state, args.grid, args.settings_file_in)
 
 
     # Write the input file

@@ -12,7 +12,7 @@ class MARBL_settings_class(object):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, default_settings_file, file_is_JSON=False, grid=None, input_file=None):
+    def __init__(self, default_settings_file, file_is_JSON=False, saved_state=False, grid=None, input_file=None):
         """ Class constructor: set up a dictionary of config keywords for when multiple
             default values are provided, and then read the YAML file.
         """
@@ -23,6 +23,8 @@ class MARBL_settings_class(object):
         self._config_keyword = []
         if grid != None:
             self._config_keyword.append("grid = " + grid)
+        if saved_state:
+            self._config_keyword.append("SAVED_STATE_INIT = True")
 
         # 2. Read settings file
         if (file_is_JSON):
@@ -326,10 +328,14 @@ def _translate_YAML_value(value, datatype, append_to_config=False, varname=None,
     """
     if isinstance(value, str):
         value = value.decode('utf-8')
+    if append_to_config:
+        if isinstance(value, unicode):
+            provided_keys.append('%s = "%s"' % (varname, value.encode('utf-8')))
+        else:
+            provided_keys.append('%s = %s' % (varname, value))
+
     # if variable is a string, put quotes around the default value
     if datatype == "string":
-        if append_to_config:
-            provided_keys.append('%s = "%s"' % (varname, value))
         return '"%s"' % value.encode('utf-8')
     if datatype == "real" and isinstance(value, unicode):
         return "%24.16e" % eval(value)

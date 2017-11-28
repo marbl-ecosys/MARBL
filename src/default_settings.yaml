@@ -33,6 +33,7 @@
 # Order in which the categories are parsed
 _order :
    - general_parms
+   - general_parms2
    - PFT_counts
    - PFT_derived_types
    - tracer_dependent
@@ -130,12 +131,7 @@ general_parms :
       units : unitless
       datatype : logical
       default_value : .false.
-   init_bury_coeff_opt :
-      longname : Source of initial burial coefficient
-      subcategory : 3. config strings
-      units : unitless
-      datatype : string
-      default_value : nml
+      _append_to_config_keywords : true
    parm_Fe_bioavail :
       longname : Fraction of Fe flux that is bioavailable
       subcategory : 4. general parameters
@@ -321,6 +317,22 @@ general_parms :
       units : non-numeric
       datatype : string
       default_value : Laws
+
+################################################################################
+#                    Category 1.5: General Parameters (cont)                   #
+################################################################################
+
+general_parms2 :
+   init_bury_coeff_opt :
+      longname : Source of initial burial coefficient
+      subcategory : 3. config strings
+      units : unitless
+      datatype : string
+      default_value :
+         default : nml
+         ladjust_bury_coeff = ".false." : nml
+         SAVED_STATE_INIT = True : restfile # Note that precedence => this is actually
+                                            # SAVED_STATE_INIT = True & ladjust_bury_coeff = .true.
 
 ################################################################################
 #                            Category 2: PFT_counts                            #
