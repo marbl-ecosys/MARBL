@@ -898,9 +898,9 @@
       "init_bury_coeff_opt": {
          "datatype": "string",
          "default_value": {
-            "SAVED_STATE_VARS_SOURCE = GCM": "restfile",
-            "default": "nml",
-            "ladjust_bury_coeff = \".false.\"": "nml"
+            "SAVED_STATE_VARS_SOURCE = GCM": "GCM",
+            "default": "settings_file",
+            "ladjust_bury_coeff = \".false.\"": "settings_file"
          },
          "longname": "Source of initial burial coefficient",
          "subcategory": "3. config strings",

@@ -361,20 +361,21 @@ contains
        bury_coeff_rmean_timescale_sec = bury_coeff_rmean_timescale_years * 365.0_r8 * spd
 
        glo_avg_rmean_interior(:)%timescale       = bury_coeff_rmean_timescale_sec
-       glo_avg_rmean_interior(:)%linit_by_val    = (init_bury_coeff_opt == 'nml')
+       glo_avg_rmean_interior(:)%linit_by_val    = (init_bury_coeff_opt == 'settings_file')
 
        glo_avg_rmean_surface(:)%timescale        = bury_coeff_rmean_timescale_sec
-       glo_avg_rmean_surface(:)%linit_by_val     = (init_bury_coeff_opt == 'nml')
+       glo_avg_rmean_surface(:)%linit_by_val     = (init_bury_coeff_opt == 'settings_file')
 
        glo_scalar_rmean_interior(:)%timescale    = bury_coeff_rmean_timescale_sec
-       glo_scalar_rmean_interior(:)%linit_by_val = (init_bury_coeff_opt == 'nml')
+       glo_scalar_rmean_interior(:)%linit_by_val = (init_bury_coeff_opt == 'settings_file')
 
        glo_scalar_rmean_surface(:)%timescale     = bury_coeff_rmean_timescale_sec
-       glo_scalar_rmean_surface(:)%linit_by_val  = (init_bury_coeff_opt == 'nml')
+       glo_scalar_rmean_surface(:)%linit_by_val  = (init_bury_coeff_opt == 'settings_file')
 
 
-       ! these initial values are only used if linit_by_val is .true. (i.e., if init_bury_coeff_opt == 'nml')
-       ! always set them, for simpler code
+       ! these initial values are only used if linit_by_val is .true.
+       ! (i.e., if init_bury_coeff_opt == 'settings_file')
+       ! However, for simpler code we always set them
 
 !      rmean_ALK_nonN_input_integral = 1.62e-4_r8 ! GNEWS2000 value on gx1v6 grid [neq/cm^2/s]
        rmean_CaCO3_bury_integral     = 1.62e-4_r8 ! matches rmean_ALK_nonN_input_integral

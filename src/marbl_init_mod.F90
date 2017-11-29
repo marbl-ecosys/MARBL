@@ -366,12 +366,12 @@ contains
     ! so they do not need to be initialized here
 
     if (.not. ladjust_bury_coeff) then
-       if (init_bury_coeff_opt == 'nml') then
+       if (init_bury_coeff_opt == 'settings_file') then
           marbl_particulate_share%POC_bury_coeff = parm_init_POC_bury_coeff
           marbl_particulate_share%POP_bury_coeff = parm_init_POP_bury_coeff
           marbl_particulate_share%bSi_bury_coeff = parm_init_bSi_bury_coeff
        else
-          call marbl_status_log%log_error("ladjust_bury_coeff=.false., init_bury_coeff_opt='restfile' not implemented", subname)
+          call marbl_status_log%log_error("ladjust_bury_coeff=.false., init_bury_coeff_opt='GCM' not implemented", subname)
           return
        end if
     end if

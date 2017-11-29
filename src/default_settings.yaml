@@ -338,10 +338,10 @@ general_parms2 :
       units : unitless
       datatype : string
       default_value :
-         default : nml
-         ladjust_bury_coeff = ".false." : nml
-         SAVED_STATE_VARS_SOURCE = GCM : restfile # Note that precedence => this is actually
-                                                  # SAVED_STATE_VARS_SOURCE = GCM & ladjust_bury_coeff = .true.
+         default : settings_file
+         ladjust_bury_coeff = ".false." : settings_file
+         SAVED_STATE_VARS_SOURCE = GCM : GCM # Note that precedence => this is actually
+                                             # SAVED_STATE_VARS_SOURCE = GCM & ladjust_bury_coeff = .true.
 
 ################################################################################
 #                            Category 2: PFT_counts                            #
