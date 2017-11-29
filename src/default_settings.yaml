@@ -1,7 +1,14 @@
 # ABOUT THIS FILE
 # ---------------
+# MARBL users can change settings values for runtime-configurable variables via a settings
+# input file. MARBL provides a python script that can generate an input file by reading a
+# JSON file containing the configurable variables and default values, but JSON does not allow
+# comments in the file format so the workflow is to edit this YAML file and then generate
+# the JSON file via $MARBL/MARBL_tools/yaml_to_json.py
+#
 # Parameters in MARBL are divided into four different stages, based on the order in which they are set
 # 1. General Parameters: variables that have no dependencies on other stages
+#    (note that init_bury_coeff_opt is alone in general_parms2 because it depends on ladjust_bury_coeff)
 # 2. PFT Counts: variables that can not be set until after PFT_defaults (in General Parameters) is known
 # 3. PFT Derived Types: variables that can not be set until PFT Counts are known
 #                       (autotroph_cnt, zooplankton_cnt, and max_grazer_prey_cnt)
@@ -27,7 +34,9 @@
 # 1. valid_values: only values that MARBL will accept (default_value must be in valid_values!)
 # 2. cannot change:
 # 3. must set:
-# 4. _append_to_config_keywords:
+# 4. _append_to_config_keywords: if default values of variables processed later depend on the
+#                                value of another variable, then that variable needs to have
+#                                _append_to_config_keywords = True
 #
 
 # Order in which the categories are parsed

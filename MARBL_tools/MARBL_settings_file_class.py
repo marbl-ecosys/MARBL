@@ -2,7 +2,7 @@
 import logging
 
 class MARBL_settings_class(object):
-    """ This class contains methods to allow python to interact with the YAML file that
+    """ This class contains methods to allow python to interact with the JSON file that
         defines the MARBL parameters and sets default values.
 
         This file also contains several subroutines that are not part of the class but are
@@ -13,38 +13,25 @@ class MARBL_settings_class(object):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, default_settings_file, file_is_JSON=False, saved_state_vars_source="settings_file", grid=None, input_file=None):
+    def __init__(self, default_settings_file, saved_state_vars_source="settings_file", grid=None, input_file=None):
         """ Class constructor: set up a dictionary of config keywords for when multiple
-            default values are provided, and then read the YAML file.
+            default values are provided, and then read the JSON file.
         """
 
         logger = logging.getLogger(__name__)
 
-        # 1. List of configuration keywords to match in YAML if default_default is a dictionary
+        # 1. List of configuration keywords to match in JSON if default_default is a dictionary
         self._config_keyword = []
         if grid != None:
             self._config_keyword.append("GRID = " + grid)
         self._config_keyword.append("SAVED_STATE_VARS_SOURCE = " + saved_state_vars_source)
 
         # 2. Read settings file
-        if (file_is_JSON):
-            import json
-            with open(default_settings_file) as settings_file:
-                self._settings = json.load(settings_file)
-        else:
-            try:
-                import yaml
-            except:
-                logger.error("Can not find PyYAML library")
-                _abort(1)
-            try:
-                with open(default_settings_file) as settings_file:
-                    self._settings = yaml.safe_load(settings_file)
-            except:
-                logger.error("Can not find %s" % default_settings_file)
-                _abort(1)
+        import json
+        with open(default_settings_file) as settings_file:
+            self._settings = json.load(settings_file)
 
-        # 3 Make sure YAML file adheres to MARBL parameter file schema
+        # 3 Make sure JSON file adheres to MARBL parameter file schema
         from MARBL_tools import settings_file_is_consistent
         if not settings_file_is_consistent(self._settings):
             logger.error("%s is not a valid MARBL parameter file" % default_settings_file)
@@ -65,7 +52,7 @@ class MARBL_settings_class(object):
         if (self._input_dict):
             message = "Did not fully parse input file:"
             for varname in self._input_dict.keys():
-                message = message + "\n     * Variable %s not found in YAML" % varname
+                message = message + "\n     * Variable %s not found in JSON file" % varname
             logger.error(message)
             _abort(1)
 
@@ -83,14 +70,14 @@ class MARBL_settings_class(object):
     ################################################################################
 
     def get_category_names(self):
-        """ Returns category names as determined by the '_order' key in YAML
+        """ Returns category names as determined by the '_order' key in JSON file
         """
 
         # Consistency checks:
         # 1. All keys listed in self._settings["_order"] should also be in self._settings.keys()
         for key in self._settings["_order"]:
             if key not in self._settings.keys():
-                msg = "ERROR: can not find '" + key + "' in YAML file"
+                msg = "ERROR: can not find '" + key + "' in JSON file"
                 _abort(msg)
 
         # 2. All keys listed in self._settings.keys() should also be in self._settings["_order"]
@@ -177,7 +164,7 @@ class MARBL_settings_class(object):
         """ For a given variable in a given category, call _update_settings_dict()
             * If variable is a derived type, _update_settings_dict() needs to be called element by element
 
-            NOTE: At this time, the only derived types in the YAML file are also arrays
+            NOTE: At this time, the only derived types in the JSON file are also arrays
         """
         this_var = self._settings[category_name][variable_name]
 
@@ -233,7 +220,7 @@ class MARBL_settings_class(object):
             except:
                 array_len = this_var["_array_size"]
 
-            # For each element, get value from either input file or YAML
+            # For each element, get value from either input file or JSON
             for n, elem_index in enumerate(_get_array_info(array_len, self.settings_dict, base_name)):
                 full_name = var_name + elem_index
                 var_value = _get_var_value(full_name, this_var, self._config_keyword, self._input_dict)
@@ -241,13 +228,13 @@ class MARBL_settings_class(object):
                     if this_var["datatype"] == "string" and n>=len(var_value):
                         self.settings_dict[full_name] = '""'
                     else:
-                        self.settings_dict[full_name] = _translate_YAML_value(var_value[n], this_var["datatype"])
+                        self.settings_dict[full_name] = _translate_JSON_value(var_value[n], this_var["datatype"])
                 else:
                     self.settings_dict[full_name] = var_value
                 this_var['_list_of_settings_names'].append(full_name)
 
         else:
-            # get value from either input file or YAML
+            # get value from either input file or JSON
             self.settings_dict[var_name] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict)
             this_var['_list_of_settings_names'].append(var_name)
 
@@ -266,14 +253,14 @@ def _abort(err_code=0):
 ################################################################################
 
 def _get_var_value(varname, var_dict, provided_keys, input_dict):
-    """ Return the correct default value for a variable in the MARBL YAML parameter
+    """ Return the correct default value for a variable in the MARBL JSON parameter
         file INPUTS:
             * dictionary containing variable information (req: longname, datatype
               and default_value keys)
             * list of keys to try to match in default_value
             * dictionary containing values from input file
     """
-    # Either get value from input file or from the YAML
+    # Either get value from input file or from the JSON
     if varname in input_dict.keys():
         # Ignore ' and " from strings
         def_value = input_dict[varname].strip('"').strip("'")
@@ -304,7 +291,7 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
 
     # call value validation check
 
-    # Append to config keywords if YAML wants it
+    # Append to config keywords if JSON wants it
 
     # if default value is a list, return the whole thing
     if isinstance(def_value, list):
@@ -314,12 +301,12 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
         append_to_config = var_dict["_append_to_config_keywords"]
     else:
         append_to_config = False
-    return _translate_YAML_value(def_value, var_dict["datatype"], append_to_config, varname, provided_keys)
+    return _translate_JSON_value(def_value, var_dict["datatype"], append_to_config, varname, provided_keys)
 
 ################################################################################
 
-def _translate_YAML_value(value, datatype, append_to_config=False, varname=None, provided_keys=None):
-    """ The value provided in the YAML file needs to be adjusted depending on the datatype
+def _translate_JSON_value(value, datatype, append_to_config=False, varname=None, provided_keys=None):
+    """ The value provided in the JSON file needs to be adjusted depending on the datatype
         of the variable. Strings need to be wrapped in "", and numbers written in
         scientific notation need to be formatted consistently.
 
