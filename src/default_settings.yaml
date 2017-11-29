@@ -175,7 +175,7 @@ general_parms :
       datatype : real
       default_value : # default value is resolution dependent!
          default : 1.1
-         grid = CESM_x3 : 5.0
+         GRID = CESM_x3 : 5.0
    parm_init_POP_bury_coeff :
       longname : Initial scale factor for burial of POP
       subcategory : 4. general parameters (bury coeffs)
@@ -183,7 +183,7 @@ general_parms :
       datatype : real
       default_value : # default value is resolution dependent!
          default : 1.1
-         grid = CESM_x3 : 5.0
+         GRID = CESM_x3 : 5.0
    parm_init_bSi_bury_coeff :
       longname : Initial scale factor for burial of bSi
       subcategory : 4. general parameters (bury coeffs)
@@ -191,7 +191,7 @@ general_parms :
       datatype : real
       default_value : # default value is resolution dependent!
          default : 1.0
-         grid = CESM_x3 : 1.1
+         GRID = CESM_x3 : 1.1
    parm_Fe_scavenge_rate0 :
       longname : Scavenging base rate for Fe
       subcategory : 4. general parameters (scavenging)
@@ -229,7 +229,7 @@ general_parms :
       datatype : real
       default_value : # default value is resolution dependent!
          default : 0.07
-         grid = CESM_x3 : 0.075
+         GRID = CESM_x3 : 0.075
    parm_POC_diss :
       longname : Base POC dissipation length scale
       subcategory : 4. general parameters (dissipation)
@@ -255,7 +255,7 @@ general_parms :
       datatype : real
       default_value :
          default : 1
-         grid = CESM_x3 : 1.4
+         GRID = CESM_x3 : 1.4
    bury_coeff_rmean_timescale_years :
       longname : Running mean time scale for bury coefficients
       subcategory : 4. general parameters
@@ -285,7 +285,7 @@ general_parms :
             - 2.2
             - 4
             - 5
-         grid = CESM_x3 :
+         GRID = CESM_x3 :
             - 1
             - 3.3
             - 4.2
@@ -331,8 +331,8 @@ general_parms2 :
       default_value :
          default : nml
          ladjust_bury_coeff = ".false." : nml
-         SAVED_STATE_INIT = True : restfile # Note that precedence => this is actually
-                                            # SAVED_STATE_INIT = True & ladjust_bury_coeff = .true.
+         SAVED_STATE_VARS_SOURCE = GCM : restfile # Note that precedence => this is actually
+                                                  # SAVED_STATE_VARS_SOURCE = GCM & ladjust_bury_coeff = .true.
 
 ################################################################################
 #                            Category 2: PFT_counts                            #
@@ -826,5 +826,5 @@ tracer_dependent :
             - 'NO3'
             - 'SiO3'
             - 'ALK'
-         grid = CESM_x3 : *CESM_TRACER_RESTORE
-         grid = CESM_x1 : *CESM_TRACER_RESTORE
+         GRID = CESM_x3 : *CESM_TRACER_RESTORE
+         GRID = CESM_x1 : *CESM_TRACER_RESTORE

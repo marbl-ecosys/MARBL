@@ -13,12 +13,14 @@ To run from a command line, the following arguments are all optional otherwise d
 
   -f DEFAULT_SETTINGS_FILE, --default_settings_file DEFAULT_SETTINGS_FILE
                         Location of YAML-formatted MARBL configuration file
-                        (default: MARBLROOT/src/default_settings.yaml)
+                        (default:
+                        /home/mlevy/codes/marbl/src/default_settings.yaml)
   -j, --is_JSON         Is DEFAULT_SETTINGS_FILE in JSON format (False =>
                         YAML) (default: False)
-  -s, --saved_state_bury_coeff
-                        Are bury coefficients initialized via saved state
-                        (False => settings file) (default: False)
+  -s {GCM,settings_file}, --saved_state_vars_source {GCM,settings_file}
+                        Source of initial value for saved state vars that can
+                        come from GCM or settings file (default:
+                        settings_file)
   -g GRID, --grid GRID  Some default values are grid-dependent (default: None)
   -i SETTINGS_FILE_IN, --settings_file_in SETTINGS_FILE_IN
                         A file that overrides values in YAML (default: None)
@@ -64,8 +66,9 @@ def _parse_args(marbl_root):
                         help="Is DEFAULT_SETTINGS_FILE in JSON format (False => YAML)")
 
     # Is the GCM providing initial bury coefficients via saved state?
-    parser.add_argument('-s', '--saved_state_bury_coeff', action='store_true', dest='saved_state',
-                        help="Are bury coefficients initialized via saved state (False => settings file)")
+    parser.add_argument('-s', '--saved_state_vars_source', action='store', dest='saved_state_vars_source',
+                        default='settings_file', choices = set(('settings_file', 'GCM')),
+                        help="Source of initial value for saved state vars that can come from GCM or settings file")
 
     # Command line argument to specify resolution (default is None)
     parser.add_argument('-g', '--grid', action='store', dest='grid',
@@ -97,7 +100,7 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
 
     from MARBL_tools import MARBL_settings_class
-    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.is_JSON, args.saved_state, args.grid, args.settings_file_in)
+    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.is_JSON, args.saved_state_vars_source, args.grid, args.settings_file_in)
 
 
     # Write the input file

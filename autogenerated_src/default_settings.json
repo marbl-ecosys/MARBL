@@ -777,8 +777,8 @@
       "parm_f_prod_sp_CaCO3": {
          "datatype": "real",
          "default_value": {
-            "default": 0.07,
-            "grid = CESM_x3": 0.075
+            "GRID = CESM_x3": 0.075,
+            "default": 0.07
          },
          "longname": "Fraction of sp production as CaCO3 production",
          "subcategory": "4. general parameters",
@@ -787,8 +787,8 @@
       "parm_init_POC_bury_coeff": {
          "datatype": "real",
          "default_value": {
-            "default": 1.1,
-            "grid = CESM_x3": 5.0
+            "GRID = CESM_x3": 5.0,
+            "default": 1.1
          },
          "longname": "Initial scale factor for burial of POC, PON",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -797,8 +797,8 @@
       "parm_init_POP_bury_coeff": {
          "datatype": "real",
          "default_value": {
-            "default": 1.1,
-            "grid = CESM_x3": 5.0
+            "GRID = CESM_x3": 5.0,
+            "default": 1.1
          },
          "longname": "Initial scale factor for burial of POP",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -807,8 +807,8 @@
       "parm_init_bSi_bury_coeff": {
          "datatype": "real",
          "default_value": {
-            "default": 1.0,
-            "grid = CESM_x3": 1.1
+            "GRID = CESM_x3": 1.1,
+            "default": 1.0
          },
          "longname": "Initial scale factor for burial of bSi",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -853,17 +853,17 @@
          "_array_size": 4,
          "datatype": "real",
          "default_value": {
+            "GRID = CESM_x3": [
+               1,
+               3.3,
+               4.2,
+               4.4
+            ],
             "default": [
                1,
                2.2,
                4,
                5
-            ],
-            "grid = CESM_x3": [
-               1,
-               3.3,
-               4.2,
-               4.4
             ]
          },
          "longname": "Prescribed scalelen values",
@@ -886,8 +886,8 @@
       "parm_sed_denitrif_coeff": {
          "datatype": "real",
          "default_value": {
-            "default": 1,
-            "grid = CESM_x3": 1.4
+            "GRID = CESM_x3": 1.4,
+            "default": 1
          },
          "longname": "Global scaling factor for sed_denitrif",
          "subcategory": "4. general parameters",
@@ -898,7 +898,7 @@
       "init_bury_coeff_opt": {
          "datatype": "string",
          "default_value": {
-            "SAVED_STATE_INIT = True": "restfile",
+            "SAVED_STATE_VARS_SOURCE = GCM": "restfile",
             "default": "nml",
             "ladjust_bury_coeff = \".false.\"": "nml"
          },
@@ -925,19 +925,19 @@
                "SiO3",
                "ALK"
             ],
-            "default": "",
-            "grid = CESM_x1": [
+            "GRID = CESM_x1": [
                "PO4",
                "NO3",
                "SiO3",
                "ALK"
             ],
-            "grid = CESM_x3": [
+            "GRID = CESM_x3": [
                "PO4",
                "NO3",
                "SiO3",
                "ALK"
-            ]
+            ],
+            "default": ""
          },
          "longname": "Tracer names for tracers that are restored",
          "subcategory": "20. tracer restoring",

@@ -1,3 +1,4 @@
+
 import logging
 
 class MARBL_settings_class(object):
@@ -12,7 +13,7 @@ class MARBL_settings_class(object):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, default_settings_file, file_is_JSON=False, saved_state=False, grid=None, input_file=None):
+    def __init__(self, default_settings_file, file_is_JSON=False, saved_state_vars_source="settings_file", grid=None, input_file=None):
         """ Class constructor: set up a dictionary of config keywords for when multiple
             default values are provided, and then read the YAML file.
         """
@@ -22,9 +23,8 @@ class MARBL_settings_class(object):
         # 1. List of configuration keywords to match in YAML if default_default is a dictionary
         self._config_keyword = []
         if grid != None:
-            self._config_keyword.append("grid = " + grid)
-        if saved_state:
-            self._config_keyword.append("SAVED_STATE_INIT = True")
+            self._config_keyword.append("GRID = " + grid)
+        self._config_keyword.append("SAVED_STATE_VARS_SOURCE = " + saved_state_vars_source)
 
         # 2. Read settings file
         if (file_is_JSON):
