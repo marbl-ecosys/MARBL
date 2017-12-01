@@ -338,10 +338,15 @@ general_parms2 :
       units : unitless
       datatype : string
       default_value :
+         # Note: this relies on SAVED_STATE_VARS_SOURCE appearing in _config_keyword
+         #       before ladjust_bury_coeff because matching the keyword in
+         #       MARBL_settings_file_class::_get_var_value relies on the last entry
+         #       in _config_keyword that matches a key below; for this variable, if
+         #       ladjust_bury_coeff = .false. and SAVED_STATE_VARS_SOURCE = GCM we
+         #       want init_bury_coeff_opt = settings_file
          default : settings_file
          ladjust_bury_coeff = ".false." : settings_file
-         SAVED_STATE_VARS_SOURCE = GCM : GCM # Note that precedence => this is actually
-                                             # SAVED_STATE_VARS_SOURCE = GCM & ladjust_bury_coeff = .true.
+         SAVED_STATE_VARS_SOURCE = GCM : GCM
 
 ################################################################################
 #                            Category 2: PFT_counts                            #
