@@ -1,4 +1,3 @@
-
 import logging
 
 class MARBL_settings_class(object):
@@ -53,6 +52,7 @@ class MARBL_settings_class(object):
             message = "Did not fully parse input file:"
             for varname in self._input_dict.keys():
                 message = message + "\n     * Variable %s not found in JSON file" % varname
+                message = message + "\n       (this was a case-insensitive lookup)"
             logger.error(message)
             _abort(1)
 
@@ -261,19 +261,21 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
             * dictionary containing values from input file
     """
     # Either get value from input file or from the JSON
-    if varname in input_dict.keys():
+    # Note that all keys in input file are converted to lower-case
+    # (Fortran vars are case-insensitive)
+    if varname.lower() in input_dict.keys():
         # Ignore ' and " from strings
-        def_value = input_dict[varname].strip('"').strip("'")
+        def_value = input_dict[varname.lower()].strip('"').strip("'")
         # Remove from input file dictionary; if dictionary is not empty after processing
         # all input file lines, then it included a bad variable in it
-        del input_dict[varname]
+        del input_dict[varname.lower()]
     # Note that if variable foo is an array, then foo = bar in the input file
     # should be treated as foo(1) = bar
-    elif varname[-3:] == "(1)" and varname[:-3] in input_dict.keys():
-        def_value = input_dict[varname[:-3]].strip('"').strip("'")
+    elif varname[-3:] == "(1)" and varname.lower()[:-3] in input_dict.keys():
+        def_value = input_dict[varname.lower()[:-3]].strip('"').strip("'")
         # Remove from input file dictionary; if dictionary is not empty after processing
         # all input file lines, then it included a bad variable in it
-        del input_dict[varname[:-3]]
+        del input_dict[varname.lower()[:-3]]
     else:
         # is default value a dictionary? If so, it depends on self._config_keyword
         # Otherwise we're interested in default value
@@ -483,7 +485,8 @@ def _parse_input_file(input_file):
                 continue
 
             line_list = line_loc.strip().split('=')
-            var_name = line_list[0].strip()
+            # keys in input_dict are all lowercase to allow case-insensitive match
+            var_name = line_list[0].strip().lower()
             value = line_list[1].strip()
             val_array = _string_to_substring(value, ',')
             if len(val_array) > 1:
