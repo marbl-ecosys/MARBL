@@ -76,10 +76,10 @@ with open(args.yaml_file) as file_in:
     yaml_in = yaml.safe_load(file_in)
 
 # Verify YAML file is consistent with MARBL-defined schema
-from MARBL_tools import settings_file_is_consistent
-if not settings_file_is_consistent(yaml_in):
-    logger.error("Formatting error in %s" % args.yaml_file)
-    sys.exit(1)
+#from MARBL_tools import settings_file_is_consistent
+#if not settings_file_is_consistent(yaml_in):
+#    logger.error("Formatting error in %s" % args.yaml_file)
+#    sys.exit(1)
 
 # Write JSON file
 with open(args.json_file, "w") as file_out:

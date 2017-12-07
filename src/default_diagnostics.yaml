@@ -1,0 +1,139 @@
+# ABOUT THIS FILE
+# ---------------
+
+################################################################################
+#                          Surface forcing diagnostics                         #
+################################################################################
+
+ECOSYS_IFRAC :
+   longname : Ice Fraction for ecosys fluxes # Want more consistent capitalization
+   units : fraction
+   vertical_grid : none
+   frequency :
+      - medium
+      - high
+ECOSYS_XKW :
+   longname : XKW for ecosys fluxes # Want more consistent capitalization
+   units : cm/s
+   vertical_grid : none
+   frequency :
+      - medium
+      - high
+ECOSYS_ATM_PRESS :
+   longname : Atmospheric Pressure for ecosys fluxes # Want more consistent capitalization
+   units : atmospheres
+   vertical_grid : none
+   frequency : medium
+PV_O2 :
+   longname : PV_O2 # Should be "O2 Piston Velocity" to match PV_CO2?
+   units : cm/s
+   vertical_grid : none
+   frequency : never
+SCHMIDT_O2 :
+   longname : O2 Schmidt Number
+   units : none
+   vertical_grid : none
+   frequency : medium
+O2SAT :
+   longname : O2 Saturation
+   units : mmol/m^3
+   vertical_grid : none
+   frequency : medium
+STF_O2 :
+   longname : Dissolved Oxygen Surface Flux
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency :
+      - medium
+      - high
+CO2STAR : &CO2STAR
+   longname : CO2 Star
+   units : mmol/m^3
+   vertical_grid : none
+   frequency : medium
+#CO2STAR_ALT_CO2 : *CO2STAR
+#   longname : CO2 Star, Alternate CO2
+DCO2STAR : &DCO2STAR
+   longname : D CO2 Star
+   units : mmol/m^3
+   vertical_grid : none
+   frequency : medium
+#DCO2STAR_ALT_CO2 : *DCO2STAR
+   longname : D CO2 Star, Alternative CO2
+pCO2SURF : &pCO2SURF
+   longname : surface pCO2
+   units : ppmv
+   vertical_grid : none
+   frequency : medium
+#pCO2SURF_ALT_CO2 : *pCO2SURF
+#   longname : surface pCO2, Alternative CO2
+#   frequency : never
+DpCO2 : &DpCO2
+   longname : D pCO2
+   units : ppmv
+   vertical_grid : none
+   frequency :
+      - medium
+      - high
+#DpCO2_ALT_CO2 : *DpCO2
+#   longname : D pCO2, Alternative CO2
+#   frequency : medium
+PV_CO2 :
+   longname : CO2 Piston Velocity
+   units : cm/s
+   vertical_grid : none
+   frequency : never
+SCHMIDT_CO2 :
+   longname : CO2 Schmidt Number
+   units : none
+   vertical_grid : none
+   frequency : medium
+FG_CO2 : # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
+   longname : DIC Surface Gas Flux
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency :
+      - medium
+      - high
+FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
+   longname : DIC Surface Gas Flux, Alternative CO2
+   frequency : medium
+PH : &PH
+   longname : Surface pH
+   units : none
+   vertical_grid : none
+   frequency : medium
+#PH_ALT_CO2 : *PH
+#   longname : Surface pH, Alternative CO2
+ATM_CO2 : &ATM_CO2
+   longname : Atomspheric CO2
+   units : ppmv
+   vertical_grid : none
+   frequency : medium
+#ATM_CO2 : *ATM_CO2
+#   longname : Atomspheric CO2
+IRON_FLUX :
+   longname : Atmospheric Iron Flux
+   units : mmol/m^2/s
+   vertical_grid : none
+   frequency : medium
+DUST_FLUX :
+   longname : Dust Flux # Should be "Atmospheric Dust Flux?"
+   units : g/cm^2/s
+   vertical_grid : none
+   frequency : never
+NOx_FLUX :
+   longname : Flux of NOx from Atmosphere
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : medium
+NHy_FLUX :
+   longname : Flux of NHy from Atmosphere
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : medium
+NHx_SURFACE_EMIS :
+   longname : Emission of NHx to Atmosphere
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : medium
