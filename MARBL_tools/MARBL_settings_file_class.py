@@ -32,8 +32,8 @@ class MARBL_settings_class(object):
             self._settings = json.load(settings_file)
 
         # 3 Make sure JSON file adheres to MARBL parameter file schema
-        from MARBL_tools import settings_file_is_consistent
-        if not settings_file_is_consistent(self._settings):
+        from MARBL_tools import settings_dictionary_is_consistent
+        if not settings_dictionary_is_consistent(self._settings):
             logger.error("%s is not a valid MARBL parameter file" % default_settings_file)
             _abort(1)
 
@@ -278,7 +278,8 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
         # is default value a dictionary? If so, it depends on self._config_keyword
         # Otherwise we're interested in default value
         if isinstance(var_dict["default_value"], dict):
-            # NOTE: settings_file_is_consistent() has ensured that this dictionary has a "default" key
+            # NOTE: settings_dictionary_is_consistent() has ensured that this dictionary has
+            #       a "default" key
             use_key = "default"
             for key in provided_keys:
                 # return "default" entry in default_values dictionary unless one of the keys

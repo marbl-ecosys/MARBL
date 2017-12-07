@@ -7,8 +7,9 @@
 #                            PUBLIC MODULE METHODS                             #
 ################################################################################
 
-def settings_file_is_consistent(YAMLdict):
-    """ Read a YAML file, make sure it conforms to MARBL parameter file standards
+def settings_dictionary_is_consistent(SettingsDict):
+    """ Make sure dictionary generated from JSON settings file conforms to MARBL
+        parameter file standards:
         1. _order is a top-level key
         2. Everything listed in _order is a top-level key
         3. All top-level keys that do not begin with '_' are listed in _order
@@ -26,46 +27,54 @@ def settings_file_is_consistent(YAMLdict):
     invalid_file = False
 
     # 1. _order is a top-level key
-    if "_order" not in YAMLdict.keys():
+    if "_order" not in SettingsDict.keys():
         logger.error("Can not find _order key")
         return True
 
     # 2. Everything listed in _order is a top-level key
-    for cat_name in YAMLdict["_order"]:
-        if cat_name not in YAMLdict.keys():
+    for cat_name in SettingsDict["_order"]:
+        if cat_name not in SettingsDict.keys():
             logger.error("Can not find %s category that is listed in _order" % cat_name)
             invalid_file = True
 
-    for cat_name in YAMLdict.keys():
+    for cat_name in SettingsDict.keys():
         if cat_name[0] != '_':
         # 3. All top-level keys that do not begin with '_' are listed in _order
-            if cat_name not in YAMLdict["_order"]:
+            if cat_name not in SettingsDict["_order"]:
                 logger.error("Category %s not included in _order" % cat_name)
                 invalid_file = True
 
             # 4. All second-level dictionaries (variable names) contain datatype key
             #    If the variable is of a derived type, then datatype is a dictionary itself
-            for var_name in YAMLdict[cat_name].keys():
-                if "datatype" not in YAMLdict[cat_name][var_name].keys():
+            for var_name in SettingsDict[cat_name].keys():
+                if "datatype" not in SettingsDict[cat_name][var_name].keys():
                     logger.error("Variable %s does not contain a key for datatype" % var_name)
                     invalid_file = True
                     continue
 
-                if not isinstance(YAMLdict[cat_name][var_name]["datatype"], dict):
+                if not isinstance(SettingsDict[cat_name][var_name]["datatype"], dict):
                     # 5. If datatype is not a dictionary, variable dictionary keys should include
                     #    longname, subcategory, units, datatype, default_value
                     #    Also, if default_value is a dictionary, that dictionary needs to contain "default" key
-                    if not _valid_variable_dict(YAMLdict[cat_name][var_name], var_name):
+                    if not _valid_variable_dict(SettingsDict[cat_name][var_name], var_name):
                         invalid_file = True
                 else:
                     # 6. If datatype is a dictionary, all keys in the datatype are variables per (5)
-                    for subvar_name in YAMLdict[cat_name][var_name]["datatype"].keys():
+                    for subvar_name in SettingsDict[cat_name][var_name]["datatype"].keys():
                         if subvar_name[0] != '_':
-                            if not _valid_variable_dict(YAMLdict[cat_name][var_name]["datatype"][subvar_name],
+                            if not _valid_variable_dict(SettingsDict[cat_name][var_name]["datatype"][subvar_name],
                                                         "%s%%%s"  % (var_name, subvar_name)):
                                 invalid_file = True
 
     return (not invalid_file)
+
+################################################################################
+
+def diagnostics_dictionary_is_consistent(DiagsDict):
+    """ Note: need to define schema in header of default_diagnostics.yaml and thetaN
+              make sure it is enforced here.
+    """
+    return True
 
 ################################################################################
 #                            PRIVATE MODULE METHODS                            #
