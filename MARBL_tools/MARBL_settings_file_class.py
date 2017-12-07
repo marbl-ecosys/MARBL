@@ -315,20 +315,20 @@ def _translate_JSON_value(value, datatype, append_to_config=False, varname=None,
         Also, some values need to added to the "provided_keys" list (by default assume that
         is not the case)
     """
-    if isinstance(value, str):
+    if isinstance(value, type(b'')):
         value = value.decode('utf-8')
     if append_to_config:
-        if isinstance(value, unicode):
-            provided_keys.append('%s = "%s"' % (varname, value.encode('utf-8')))
+        if isinstance(value, type(u'')):
+            provided_keys.append('%s = "%s"' % (varname, value))
         else:
             provided_keys.append('%s = %s' % (varname, value))
 
     # if variable is a string, put quotes around the default value
     if datatype == "string":
-        return '"%s"' % value.encode('utf-8')
-    if datatype == "real" and isinstance(value, unicode):
+        return '"%s"' % value
+    if datatype == "real" and isinstance(value, type(u'')):
         return "%24.16e" % eval(value)
-    if datatype == "integer" and isinstance(value, unicode):
+    if datatype == "integer" and isinstance(value, type(u'')):
         return int(value)
     return value
 
