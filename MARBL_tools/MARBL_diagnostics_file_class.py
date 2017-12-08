@@ -19,12 +19,40 @@ class MARBL_diagnostics_class(object):
 
         logger = logging.getLogger(__name__)
 
-        # 1. Initialize settings file
-        print(MARBL_settings.settings_dict['ciso_on'])
+        # 1. Read diagnostics JSON file
+        import json
+        with open(default_diagnostics_file) as diagnostics_file:
+            self._diagnostics = json.load(diagnostics_file)
 
-        # 2. Read diagnostics input file
+        # 2. Make sure JSON file adheres to MARBL diagnostics file schema
+        from MARBL_tools import diagnostics_dictionary_is_consistent
+        if not diagnostics_dictionary_is_consistent(self._diagnostics):
+            logger.error("%s is not a valid MARBL diagnostics file" % default_diagnostics_file)
+            _abort(1)
+
+        # 3. Read diagnostics input file
         self._input_dict = _parse_input_file(input_diagnostics_file)
-        print(self._input_dict)
+
+        # 4. Dictionary for keeping diagnostic, frequency pairs
+        self.diagnostics_dict = dict()
+        for diag_name in self._diagnostics.keys():
+            self._process_diagnostic_frequency(diag_name)
+
+        # 5.
+
+    ################################################################################
+    #                            PRIVATE CLASS METHODS                             #
+    ################################################################################
+
+    # TODO: define _value_is_valid()
+    #       i.  datatype match?
+    #       ii. optional valid_value key check
+
+    def _process_diagnostic_frequency(self, diag_name):
+        if isinstance(self._diagnostics[diag_name]['frequency'], list):
+            self.diagnostics_dict[diag_name] = ", ".join(self._diagnostics[diag_name]['frequency'])
+        else:
+            self.diagnostics_dict[diag_name] = self._diagnostics[diag_name]['frequency']
 
 ################################################################################
 

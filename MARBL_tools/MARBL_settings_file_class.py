@@ -26,18 +26,18 @@ class MARBL_settings_class(object):
             self._config_keyword.append("GRID = " + grid)
         self._config_keyword.append("SAVED_STATE_VARS_SOURCE = " + saved_state_vars_source)
 
-        # 2. Read settings file
+        # 2. Read settings JSON file
         import json
         with open(default_settings_file) as settings_file:
             self._settings = json.load(settings_file)
 
-        # 3 Make sure JSON file adheres to MARBL parameter file schema
+        # 3 Make sure JSON file adheres to MARBL settings file schema
         from MARBL_tools import settings_dictionary_is_consistent
         if not settings_dictionary_is_consistent(self._settings):
-            logger.error("%s is not a valid MARBL parameter file" % default_settings_file)
+            logger.error("%s is not a valid MARBL settings file" % default_settings_file)
             _abort(1)
 
-        # 4. Read input file
+        # 4. Read settings input file
         self._input_dict = _parse_input_file(input_file)
 
         # 5. Use an ordered dictionary for keeping variable, value pairs
