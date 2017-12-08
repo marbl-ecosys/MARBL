@@ -7,7 +7,7 @@ available from a particular MARBL_settings_class object (as defined in a JSON fi
 This file can be run as a command line script or imported as part of the MARBL_tools module.
 To use from a module, all arguments are required in the call
 
-generate_diagnostics_file(MARBL_settings, diagnostics_file_in, diagnostics_file_out)
+generate_diagnostics_file(MARBL_settings, diagnostics_file_out)
 
 From the command line
 ---------------------
@@ -16,7 +16,6 @@ usage: MARBL_generate_diagnostics_file.py [-h] [-f DEFAULT_SETTINGS_FILE]
                                           [-j DEFAULT_DIAGNOSTICS_FILE]
                                           [-s {GCM,settings_file}] [-g GRID]
                                           [-i SETTINGS_FILE_IN]
-                                          [-d DIAGNOSTICS_FILE_IN]
                                           [-o DIAGNOSTICS_FILE_OUT]
 
 Generate a MARBL settings file from a JSON file
@@ -39,9 +38,6 @@ optional arguments:
   -i SETTINGS_FILE_IN, --settings_file_in SETTINGS_FILE_IN
                         A file that overrides values in settings JSON file
                         (default: None)
-  -d DIAGNOSTICS_FILE_IN, --diagnostics_file_in DIAGNOSTICS_FILE_IN
-                        A file that overrides values in diagnostics JSON file
-                        (default: None)
   -o DIAGNOSTICS_FILE_OUT, --diagnostics_file_out DIAGNOSTICS_FILE_OUT
                         Name of file to be written (default: marbl.diags)
 
@@ -49,15 +45,24 @@ optional arguments:
 
 #######################################
 
-def generate_diagnostics_file(default_diagnostics_file, MARBL_settings, diagnostics_file_in, diagnostics_file_out):
+def generate_diagnostics_file(default_diagnostics_file, MARBL_settings, diagnostics_file_out):
     """ Produce a list of MARBL diagnostic frequencies from a JSON parameter file
     """
 
     from MARBL_tools import MARBL_diagnostics_class
-    MARBL_diagnostics = MARBL_diagnostics_class(default_diagnostics_file, MARBL_settings, diagnostics_file_in)
+    MARBL_diagnostics = MARBL_diagnostics_class(default_diagnostics_file, MARBL_settings)
 
     fout = open(diagnostics_file_out,"w")
     # Sort variables by subcategory
+    fout.write("# This file contains list of all diagnostics MARBL can compute for a given configuration,\n")
+    fout.write("# as well a recommended frequency for outputting each diagnostic. The format of this file is:\n")
+    fout.write("#\n")
+    fout.write("# DIAGNOSTIC_NAME : frequency\n")
+    fout.write("#\n")
+    fout.write("# And fields that should be output at multiple different frequencies will be comma-separated:\n")
+    fout.write("#\n")
+    fout.write("# DIAGNOSTIC_NAME : frequency1, frequency2, ..., frequencyN\n")
+    fout.write("#\n")
     for diag_name in MARBL_diagnostics.diagnostics_dict.keys():
         fout.write("%s : %s\n" % (diag_name, MARBL_diagnostics.diagnostics_dict[diag_name]))
     fout.close()
@@ -96,10 +101,6 @@ def _parse_args(marbl_root):
     parser.add_argument('-i', '--settings_file_in', action='store', dest='settings_file_in', default=None,
                         help='A file that overrides values in settings JSON file')
 
-    # Command line argument to specify an input diagnostics file which would override the JSON
-    parser.add_argument('-d', '--diagnostics_file_in', action='store', dest='diagnostics_file_in', default=None,
-                        help='A file that overrides values in diagnostics JSON file')
-
     # Command line argument to where to write the input file being generated
     parser.add_argument('-o', '--diagnostics_file_out', action='store', dest='diagnostics_file_out', default='marbl.diags',
                         help='Name of file to be written')
@@ -126,4 +127,4 @@ if __name__ == "__main__":
 
 
     # Write the input file
-    generate_diagnostics_file(args.default_diagnostics_file, DefaultSettings, args.diagnostics_file_in, args.diagnostics_file_out)
+    generate_diagnostics_file(args.default_diagnostics_file, DefaultSettings, args.diagnostics_file_out)

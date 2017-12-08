@@ -12,7 +12,7 @@ class MARBL_diagnostics_class(object):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, default_diagnostics_file, MARBL_settings, input_diagnostics_file=None):
+    def __init__(self, default_diagnostics_file, MARBL_settings):
         """ Class constructor: set up a dictionary of config keywords for when multiple
             default values are provided, and then read the JSON file.
         """
@@ -30,12 +30,10 @@ class MARBL_diagnostics_class(object):
             logger.error("%s is not a valid MARBL diagnostics file" % default_diagnostics_file)
             _abort(1)
 
-        # 3. Read diagnostics input file
-        self._input_dict = _parse_input_file(input_diagnostics_file)
-
-        # 4. Dictionary for keeping diagnostic, frequency pairs
-        self.diagnostics_dict = dict()
-        for diag_name in self._diagnostics.keys():
+        # 3. Dictionary for keeping diagnostic, frequency pairs
+        from collections import OrderedDict
+        self.diagnostics_dict = OrderedDict()
+        for diag_name in _sort(self._diagnostics.keys()):
             self._process_diagnostic_frequency(diag_name)
 
         # 5.
@@ -43,10 +41,6 @@ class MARBL_diagnostics_class(object):
     ################################################################################
     #                            PRIVATE CLASS METHODS                             #
     ################################################################################
-
-    # TODO: define _value_is_valid()
-    #       i.  datatype match?
-    #       ii. optional valid_value key check
 
     def _process_diagnostic_frequency(self, diag_name):
         if isinstance(self._diagnostics[diag_name]['frequency'], list):
@@ -65,6 +59,16 @@ def _abort(err_code=0):
     """
     import sys
     sys.exit(err_code)
+
+################################################################################
+
+def _sort(list_in, sort_key=None):
+    """ Sort a list; default is alphabetical (case-insensitive), but that
+        can be overridden with the sort_key argument
+    """
+    if sort_key is None:
+        sort_key = lambda s: s.lower()
+    return sorted(list_in, key=sort_key)
 
 ################################################################################
 
