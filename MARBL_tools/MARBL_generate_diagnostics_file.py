@@ -45,12 +45,9 @@ optional arguments:
 
 #######################################
 
-def generate_diagnostics_file(default_diagnostics_file, MARBL_settings, diagnostics_file_out):
+def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out):
     """ Produce a list of MARBL diagnostic frequencies from a JSON parameter file
     """
-
-    from MARBL_tools import MARBL_diagnostics_class
-    MARBL_diagnostics = MARBL_diagnostics_class(default_diagnostics_file, MARBL_settings)
 
     fout = open(diagnostics_file_out,"w")
     # Sort variables by subcategory
@@ -123,8 +120,9 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
 
     from MARBL_tools import MARBL_settings_class
+    from MARBL_tools import MARBL_diagnostics_class
     DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in)
-
+    MARBL_diagnostics = MARBL_diagnostics_class(args.default_diagnostics_file, DefaultSettings)
 
     # Write the input file
-    generate_diagnostics_file(args.default_diagnostics_file, DefaultSettings, args.diagnostics_file_out)
+    generate_diagnostics_file(MARBL_diagnostics, args.diagnostics_file_out)

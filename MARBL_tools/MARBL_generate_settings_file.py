@@ -105,6 +105,5 @@ if __name__ == "__main__":
     from MARBL_tools import MARBL_settings_class
     DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in)
 
-
     # Write the input file
     generate_settings_file(DefaultSettings, args.settings_file_out)
