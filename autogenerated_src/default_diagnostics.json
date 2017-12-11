@@ -56,10 +56,6 @@
       "units": "cm/s",
       "vertical_grid": "none"
    },
-   "FG_ALT_CO2": {
-      "frequency": "medium",
-      "longname": "DIC Surface Gas Flux, Alternative CO2"
-   },
    "FG_CO2": {
       "frequency": [
          "medium",
@@ -127,15 +123,6 @@
       "frequency": "medium",
       "longname": "O2 Schmidt Number",
       "units": "none",
-      "vertical_grid": "none"
-   },
-   "STF_O2": {
-      "frequency": [
-         "medium",
-         "high"
-      ],
-      "longname": "Dissolved Oxygen Surface Flux",
-      "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "pCO2SURF": {

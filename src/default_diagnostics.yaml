@@ -39,13 +39,14 @@ O2SAT :
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
-STF_O2 :
-   longname : Dissolved Oxygen Surface Flux
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency :
-      - medium
-      - high
+# Does STF_O2 belong in MARBL?
+#STF_O2 :
+#   longname : Dissolved Oxygen Surface Flux
+#   units : mmol/m^3 cm/s
+#   vertical_grid : none
+#   frequency :
+#      - medium
+#      - high
 CO2STAR : &CO2STAR
    longname : CO2 Star
    units : mmol/m^3
@@ -95,9 +96,9 @@ FG_CO2 : # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
    frequency :
       - medium
       - high
-FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
-   longname : DIC Surface Gas Flux, Alternative CO2
-   frequency : medium
+#FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
+#   longname : DIC Surface Gas Flux, Alternative CO2
+#   frequency : medium
 PH : &PH
    longname : Surface pH
    units : none
