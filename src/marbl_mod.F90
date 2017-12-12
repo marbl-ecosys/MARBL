@@ -2155,7 +2155,6 @@ contains
          surface_forcing_ind      = ind,                      &
          surface_input_forcings   = surface_input_forcings,   &
          surface_forcing_internal = surface_forcing_internal, &
-         surface_tracer_fluxes    = stf,                      &
          marbl_tracer_indices     = marbl_tracer_indices,     &
          saved_state              = saved_state,              &
          saved_state_ind          = saved_state_ind,          &
