@@ -2,24 +2,28 @@
    "ATM_CO2": {
       "frequency": "medium",
       "longname": "Atomspheric CO2",
+      "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
    },
    "CO2STAR": {
       "frequency": "medium",
       "longname": "CO2 Star",
+      "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
    },
    "DCO2STAR": {
       "frequency": "medium",
       "longname": "D CO2 Star, Alternative CO2",
+      "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
    },
    "DUST_FLUX": {
       "frequency": "never",
       "longname": "Dust Flux",
+      "operator": "none",
       "units": "g/cm^2/s",
       "vertical_grid": "none"
    },
@@ -29,12 +33,17 @@
          "high"
       ],
       "longname": "D pCO2",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "ppmv",
       "vertical_grid": "none"
    },
    "ECOSYS_ATM_PRESS": {
       "frequency": "medium",
       "longname": "Atmospheric Pressure for ecosys fluxes",
+      "operator": "average",
       "units": "atmospheres",
       "vertical_grid": "none"
    },
@@ -44,6 +53,10 @@
          "high"
       ],
       "longname": "Ice Fraction for ecosys fluxes",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "fraction",
       "vertical_grid": "none"
    },
@@ -53,6 +66,10 @@
          "high"
       ],
       "longname": "XKW for ecosys fluxes",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "cm/s",
       "vertical_grid": "none"
    },
@@ -62,72 +79,87 @@
          "high"
       ],
       "longname": "DIC Surface Gas Flux",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "IRON_FLUX": {
       "frequency": "medium",
       "longname": "Atmospheric Iron Flux",
+      "operator": "average",
       "units": "mmol/m^2/s",
       "vertical_grid": "none"
    },
    "NHx_SURFACE_EMIS": {
       "frequency": "medium",
       "longname": "Emission of NHx to Atmosphere",
+      "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "NHy_FLUX": {
       "frequency": "medium",
       "longname": "Flux of NHy from Atmosphere",
+      "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "NOx_FLUX": {
       "frequency": "medium",
       "longname": "Flux of NOx from Atmosphere",
+      "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "O2SAT": {
       "frequency": "medium",
       "longname": "O2 Saturation",
+      "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
    },
    "PH": {
       "frequency": "medium",
       "longname": "Surface pH",
+      "operator": "average",
       "units": "none",
       "vertical_grid": "none"
    },
    "PV_CO2": {
       "frequency": "never",
       "longname": "CO2 Piston Velocity",
+      "operator": "none",
       "units": "cm/s",
       "vertical_grid": "none"
    },
    "PV_O2": {
       "frequency": "never",
       "longname": "PV_O2",
+      "operator": "none",
       "units": "cm/s",
       "vertical_grid": "none"
    },
    "SCHMIDT_CO2": {
       "frequency": "medium",
       "longname": "CO2 Schmidt Number",
+      "operator": "average",
       "units": "none",
       "vertical_grid": "none"
    },
    "SCHMIDT_O2": {
       "frequency": "medium",
       "longname": "O2 Schmidt Number",
+      "operator": "average",
       "units": "none",
       "vertical_grid": "none"
    },
    "pCO2SURF": {
       "frequency": "medium",
       "longname": "surface pCO2",
+      "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
    }

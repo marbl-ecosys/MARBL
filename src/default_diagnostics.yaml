@@ -12,6 +12,9 @@ ECOSYS_IFRAC :
    frequency :
       - medium
       - high
+   operator :
+      - average
+      - average
 ECOSYS_XKW :
    longname : XKW for ecosys fluxes # Want more consistent capitalization
    units : cm/s
@@ -19,39 +22,39 @@ ECOSYS_XKW :
    frequency :
       - medium
       - high
+   operator :
+      - average
+      - average
 ECOSYS_ATM_PRESS :
    longname : Atmospheric Pressure for ecosys fluxes # Want more consistent capitalization
    units : atmospheres
    vertical_grid : none
    frequency : medium
+   operator : average
 PV_O2 :
    longname : PV_O2 # Should be "O2 Piston Velocity" to match PV_CO2?
    units : cm/s
    vertical_grid : none
    frequency : never
+   operator : none
 SCHMIDT_O2 :
    longname : O2 Schmidt Number
    units : none
    vertical_grid : none
    frequency : medium
+   operator : average
 O2SAT :
    longname : O2 Saturation
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
-# Does STF_O2 belong in MARBL?
-#STF_O2 :
-#   longname : Dissolved Oxygen Surface Flux
-#   units : mmol/m^3 cm/s
-#   vertical_grid : none
-#   frequency :
-#      - medium
-#      - high
+   operator : average
 CO2STAR : &CO2STAR
    longname : CO2 Star
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
+   operator : average
 #CO2STAR_ALT_CO2 : *CO2STAR
 #   longname : CO2 Star, Alternate CO2
 DCO2STAR : &DCO2STAR
@@ -59,6 +62,7 @@ DCO2STAR : &DCO2STAR
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
+   operator : average
 #DCO2STAR_ALT_CO2 : *DCO2STAR
    longname : D CO2 Star, Alternative CO2
 pCO2SURF : &pCO2SURF
@@ -66,6 +70,7 @@ pCO2SURF : &pCO2SURF
    units : ppmv
    vertical_grid : none
    frequency : medium
+   operator : average
 #pCO2SURF_ALT_CO2 : *pCO2SURF
 #   longname : surface pCO2, Alternative CO2
 #   frequency : never
@@ -76,19 +81,25 @@ DpCO2 : &DpCO2
    frequency :
       - medium
       - high
+   operator :
+      - average
+      - average
 #DpCO2_ALT_CO2 : *DpCO2
 #   longname : D pCO2, Alternative CO2
 #   frequency : medium
+#   operator : average
 PV_CO2 :
    longname : CO2 Piston Velocity
    units : cm/s
    vertical_grid : none
    frequency : never
+   operator : none
 SCHMIDT_CO2 :
    longname : CO2 Schmidt Number
    units : none
    vertical_grid : none
    frequency : medium
+   operator : average
 FG_CO2 : # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
    longname : DIC Surface Gas Flux
    units : mmol/m^3 cm/s
@@ -96,14 +107,19 @@ FG_CO2 : # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
    frequency :
       - medium
       - high
+   operator :
+      - average
+      - average
 #FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
 #   longname : DIC Surface Gas Flux, Alternative CO2
 #   frequency : medium
+#   operator : average
 PH : &PH
    longname : Surface pH
    units : none
    vertical_grid : none
    frequency : medium
+   operator : average
 #PH_ALT_CO2 : *PH
 #   longname : Surface pH, Alternative CO2
 ATM_CO2 : &ATM_CO2
@@ -111,6 +127,7 @@ ATM_CO2 : &ATM_CO2
    units : ppmv
    vertical_grid : none
    frequency : medium
+   operator : average
 #ATM_CO2 : *ATM_CO2
 #   longname : Atomspheric CO2
 IRON_FLUX :
@@ -118,23 +135,28 @@ IRON_FLUX :
    units : mmol/m^2/s
    vertical_grid : none
    frequency : medium
+   operator : average
 DUST_FLUX :
    longname : Dust Flux # Should be "Atmospheric Dust Flux?"
    units : g/cm^2/s
    vertical_grid : none
    frequency : never
+   operator : none
 NOx_FLUX :
    longname : Flux of NOx from Atmosphere
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
+   operator : average
 NHy_FLUX :
    longname : Flux of NHy from Atmosphere
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
+   operator : average
 NHx_SURFACE_EMIS :
    longname : Emission of NHx to Atmosphere
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
+   operator : average

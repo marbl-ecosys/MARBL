@@ -1,3 +1,4 @@
+
 import logging
 
 class MARBL_diagnostics_class(object):
@@ -44,9 +45,13 @@ class MARBL_diagnostics_class(object):
 
     def _process_diagnostic_frequency(self, diag_name):
         if isinstance(self._diagnostics[diag_name]['frequency'], list):
-            self.diagnostics_dict[diag_name] = ", ".join(self._diagnostics[diag_name]['frequency'])
+            freq_op = self._diagnostics[diag_name]['frequency']
+            for n, freq in enumerate(freq_op):
+                freq_op[n] = freq + '_' + self._diagnostics[diag_name]['operator'][n]
+            self.diagnostics_dict[diag_name] = ", ".join(freq_op)
         else:
-            self.diagnostics_dict[diag_name] = self._diagnostics[diag_name]['frequency']
+            self.diagnostics_dict[diag_name] = self._diagnostics[diag_name]['frequency'] + '_' + \
+                                               self._diagnostics[diag_name]['operator']
 
 ################################################################################
 

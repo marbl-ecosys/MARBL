@@ -51,15 +51,18 @@ def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out):
 
     fout = open(diagnostics_file_out,"w")
     # Sort variables by subcategory
-    fout.write("# This file contains list of all diagnostics MARBL can compute for a given configuration,\n")
-    fout.write("# as well a recommended frequency for outputting each diagnostic. The format of this file is:\n")
+    fout.write("# This file contains a list of all diagnostics MARBL can compute for a given configuration,\n")
+    fout.write("# as well as the recommended frequency and operator for outputting each diagnostic.\n")
+    fout.write("# The format of this file is:\n")
     fout.write("#\n")
-    fout.write("# DIAGNOSTIC_NAME : frequency\n")
+    fout.write("# DIAGNOSTIC_NAME : frequency_operator\n")
     fout.write("#\n")
     fout.write("# And fields that should be output at multiple different frequencies will be comma-separated:\n")
     fout.write("#\n")
-    fout.write("# DIAGNOSTIC_NAME : frequency1, frequency2, ..., frequencyN\n")
+    fout.write("# DIAGNOSTIC_NAME : frequency1_operator1, frequency2_operator2, ..., frequencyN_operatorN\n")
     fout.write("#\n")
+    fout.write("# Frequencies are never, low, medium, and high.\n")
+    fout.write("# Operators are none, instantaneous, average, minimum, and maximum.\n")
     for diag_name in MARBL_diagnostics.diagnostics_dict.keys():
         fout.write("%s : %s\n" % (diag_name, MARBL_diagnostics.diagnostics_dict[diag_name]))
     fout.close()
