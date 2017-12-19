@@ -13,7 +13,21 @@
       "units": "mmol/m^3",
       "vertical_grid": "none"
    },
+   "CO2STAR_ALT_CO2": {
+      "frequency": "medium",
+      "longname": "CO2 Star, Alternate CO2",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "none"
+   },
    "DCO2STAR": {
+      "frequency": "medium",
+      "longname": "D CO2 Star",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "none"
+   },
+   "DCO2STAR_ALT_CO2": {
       "frequency": "medium",
       "longname": "D CO2 Star, Alternative CO2",
       "operator": "average",
@@ -37,6 +51,13 @@
          "average",
          "average"
       ],
+      "units": "ppmv",
+      "vertical_grid": "none"
+   },
+   "DpCO2_ALT_CO2": {
+      "frequency": "medium",
+      "longname": "D pCO2, Alternative CO2",
+      "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
    },
@@ -71,6 +92,13 @@
          "average"
       ],
       "units": "cm/s",
+      "vertical_grid": "none"
+   },
+   "FG_ALT_CO2": {
+      "frequency": "medium",
+      "longname": "DIC Surface Gas Flux, Alternative CO2",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "FG_CO2": {
@@ -128,6 +156,13 @@
       "units": "none",
       "vertical_grid": "none"
    },
+   "PH_ALT_CO2": {
+      "frequency": "medium",
+      "longname": "Surface pH, Alternative CO2",
+      "operator": "average",
+      "units": "none",
+      "vertical_grid": "none"
+   },
    "PV_CO2": {
       "frequency": "never",
       "longname": "CO2 Piston Velocity",
@@ -160,6 +195,13 @@
       "frequency": "medium",
       "longname": "surface pCO2",
       "operator": "average",
+      "units": "ppmv",
+      "vertical_grid": "none"
+   },
+   "pCO2SURF_ALT_CO2": {
+      "frequency": "never",
+      "longname": "surface pCO2, Alternative CO2",
+      "operator": "none",
       "units": "ppmv",
       "vertical_grid": "none"
    }

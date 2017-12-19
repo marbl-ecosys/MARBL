@@ -55,15 +55,17 @@ CO2STAR : &CO2STAR
    vertical_grid : none
    frequency : medium
    operator : average
-#CO2STAR_ALT_CO2 : *CO2STAR
-#   longname : CO2 Star, Alternate CO2
+CO2STAR_ALT_CO2 :
+   << : *CO2STAR
+   longname : CO2 Star, Alternate CO2
 DCO2STAR : &DCO2STAR
    longname : D CO2 Star
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
    operator : average
-#DCO2STAR_ALT_CO2 : *DCO2STAR
+DCO2STAR_ALT_CO2 :
+   << : *DCO2STAR
    longname : D CO2 Star, Alternative CO2
 pCO2SURF : &pCO2SURF
    longname : surface pCO2
@@ -71,9 +73,11 @@ pCO2SURF : &pCO2SURF
    vertical_grid : none
    frequency : medium
    operator : average
-#pCO2SURF_ALT_CO2 : *pCO2SURF
-#   longname : surface pCO2, Alternative CO2
-#   frequency : never
+pCO2SURF_ALT_CO2 :
+   << : *pCO2SURF
+   longname : surface pCO2, Alternative CO2
+   frequency : never
+   operator : none
 DpCO2 : &DpCO2
    longname : D pCO2
    units : ppmv
@@ -84,10 +88,11 @@ DpCO2 : &DpCO2
    operator :
       - average
       - average
-#DpCO2_ALT_CO2 : *DpCO2
-#   longname : D pCO2, Alternative CO2
-#   frequency : medium
-#   operator : average
+DpCO2_ALT_CO2 :
+   << : *DpCO2
+   longname : D pCO2, Alternative CO2
+   frequency : medium
+   operator : average
 PV_CO2 :
    longname : CO2 Piston Velocity
    units : cm/s
@@ -100,7 +105,7 @@ SCHMIDT_CO2 :
    vertical_grid : none
    frequency : medium
    operator : average
-FG_CO2 : # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
+FG_CO2 : &FG_CO2 # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
    longname : DIC Surface Gas Flux
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -110,26 +115,29 @@ FG_CO2 : # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
    operator :
       - average
       - average
-#FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
-#   longname : DIC Surface Gas Flux, Alternative CO2
-#   frequency : medium
-#   operator : average
+FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
+   << : *FG_CO2
+   longname : DIC Surface Gas Flux, Alternative CO2
+   frequency : medium
+   operator : average
 PH : &PH
    longname : Surface pH
    units : none
    vertical_grid : none
    frequency : medium
    operator : average
-#PH_ALT_CO2 : *PH
-#   longname : Surface pH, Alternative CO2
+PH_ALT_CO2 :
+   << : *PH
+   longname : Surface pH, Alternative CO2
 ATM_CO2 : &ATM_CO2
    longname : Atomspheric CO2
    units : ppmv
    vertical_grid : none
    frequency : medium
    operator : average
-#ATM_CO2 : *ATM_CO2
-#   longname : Atomspheric CO2
+ATM_CO2 :
+   << : *ATM_CO2
+   longname : Atomspheric CO2
 IRON_FLUX :
    longname : Atmospheric Iron Flux
    units : mmol/m^2/s
