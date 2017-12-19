@@ -5,7 +5,12 @@
 #                          Surface forcing diagnostics                         #
 ################################################################################
 
+###############
+# Base module #
+###############
+
 ECOSYS_IFRAC :
+   module : ecosys_base
    longname : Ice Fraction for ecosys fluxes # Want more consistent capitalization
    units : fraction
    vertical_grid : none
@@ -16,6 +21,7 @@ ECOSYS_IFRAC :
       - average
       - average
 ECOSYS_XKW :
+   module : ecosys_base
    longname : XKW for ecosys fluxes # Want more consistent capitalization
    units : cm/s
    vertical_grid : none
@@ -26,30 +32,35 @@ ECOSYS_XKW :
       - average
       - average
 ECOSYS_ATM_PRESS :
+   module : ecosys_base
    longname : Atmospheric Pressure for ecosys fluxes # Want more consistent capitalization
    units : atmospheres
    vertical_grid : none
    frequency : medium
    operator : average
 PV_O2 :
+   module : ecosys_base
    longname : PV_O2 # Should be "O2 Piston Velocity" to match PV_CO2?
    units : cm/s
    vertical_grid : none
    frequency : never
    operator : none
 SCHMIDT_O2 :
+   module : ecosys_base
    longname : O2 Schmidt Number
    units : none
    vertical_grid : none
    frequency : medium
    operator : average
 O2SAT :
+   module : ecosys_base
    longname : O2 Saturation
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
    operator : average
 CO2STAR : &CO2STAR
+   module : ecosys_base
    longname : CO2 Star
    units : mmol/m^3
    vertical_grid : none
@@ -59,6 +70,7 @@ CO2STAR_ALT_CO2 :
    << : *CO2STAR
    longname : CO2 Star, Alternate CO2
 DCO2STAR : &DCO2STAR
+   module : ecosys_base
    longname : D CO2 Star
    units : mmol/m^3
    vertical_grid : none
@@ -68,6 +80,7 @@ DCO2STAR_ALT_CO2 :
    << : *DCO2STAR
    longname : D CO2 Star, Alternative CO2
 pCO2SURF : &pCO2SURF
+   module : ecosys_base
    longname : surface pCO2
    units : ppmv
    vertical_grid : none
@@ -79,6 +92,7 @@ pCO2SURF_ALT_CO2 :
    frequency : never
    operator : none
 DpCO2 : &DpCO2
+   module : ecosys_base
    longname : D pCO2
    units : ppmv
    vertical_grid : none
@@ -94,18 +108,21 @@ DpCO2_ALT_CO2 :
    frequency : medium
    operator : average
 PV_CO2 :
+   module : ecosys_base
    longname : CO2 Piston Velocity
    units : cm/s
    vertical_grid : none
    frequency : never
    operator : none
 SCHMIDT_CO2 :
+   module : ecosys_base
    longname : CO2 Schmidt Number
    units : none
    vertical_grid : none
    frequency : medium
    operator : average
 FG_CO2 : &FG_CO2 # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
+   module : ecosys_base
    longname : DIC Surface Gas Flux
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -121,6 +138,7 @@ FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
    frequency : medium
    operator : average
 PH : &PH
+   module : ecosys_base
    longname : Surface pH
    units : none
    vertical_grid : none
@@ -130,41 +148,108 @@ PH_ALT_CO2 :
    << : *PH
    longname : Surface pH, Alternative CO2
 ATM_CO2 : &ATM_CO2
+   module : ecosys_base
    longname : Atomspheric CO2
    units : ppmv
    vertical_grid : none
    frequency : medium
    operator : average
-ATM_CO2 :
+ATM_ALT_CO2 :
    << : *ATM_CO2
    longname : Atomspheric CO2
 IRON_FLUX :
+   module : ecosys_base
    longname : Atmospheric Iron Flux
    units : mmol/m^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 DUST_FLUX :
+   module : ecosys_base
    longname : Dust Flux # Should be "Atmospheric Dust Flux?"
    units : g/cm^2/s
    vertical_grid : none
    frequency : never
    operator : none
 NOx_FLUX :
+   module : ecosys_base
    longname : Flux of NOx from Atmosphere
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 NHy_FLUX :
+   module : ecosys_base
    longname : Flux of NHy from Atmosphere
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 NHx_SURFACE_EMIS :
+   module : ecosys_base
    longname : Emission of NHx to Atmosphere
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
+
+###############
+# ciso module #
+###############
+
+CISO_FG_13CO2 :
+   module : ciso
+   longname : DI13C Surface Gas Flux
+   units: mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CISO_FG_as_13CO2 :
+   module : ciso
+   longname : DI13C Surface Air-Sea Gas Flux
+   units: mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CISO_FG_sa_13CO2 :
+   module : ciso
+   longname : DI13C Surface Sea-Air Gas Flux
+   units: mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CISO_FG_d13C :
+   module : ciso
+   longname : D13C Surface GAS FLUX
+   units: permil
+   vertical_grid : none
+   frequency : never
+   operator : none
+CISO_D13C_atm :
+   module : ciso
+   longname : Atmospheric Delta 13C in permil
+   units: permil
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CISO_R13C_DIC_surf :
+   module : ciso
+   longname : 13C/12C ratio in total DIC
+   units: permil
+   vertical_grid : none
+   frequency : never
+   operator : none
+CISO_R13C_atm :
+   module : ciso
+   longname : 13C/12C ratio in atmosphere
+   units: permil
+   vertical_grid : none
+   frequency : never
+   operator : none
+CISO_eps_aq_g_surf :
+   module : ciso
+   longname : Surface equilibrium fractionation (CO2_gaseous <-> CO2_aq)
+   units: permil
+   vertical_grid : none
+   frequency : never
+   operator : none

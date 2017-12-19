@@ -1,14 +1,88 @@
 {
+   "ATM_ALT_CO2": {
+      "frequency": "medium",
+      "longname": "Atomspheric CO2",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "ppmv",
+      "vertical_grid": "none"
+   },
    "ATM_CO2": {
       "frequency": "medium",
       "longname": "Atomspheric CO2",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "ppmv",
+      "vertical_grid": "none"
+   },
+   "CISO_D13C_atm": {
+      "frequency": "medium",
+      "longname": "Atmospheric Delta 13C in permil",
+      "module": "ciso",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "none"
+   },
+   "CISO_FG_13CO2": {
+      "frequency": "medium",
+      "longname": "DI13C Surface Gas Flux",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_FG_as_13CO2": {
+      "frequency": "medium",
+      "longname": "DI13C Surface Air-Sea Gas Flux",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_FG_d13C": {
+      "frequency": "never",
+      "longname": "D13C Surface GAS FLUX",
+      "module": "ciso",
+      "operator": "none",
+      "units": "permil",
+      "vertical_grid": "none"
+   },
+   "CISO_FG_sa_13CO2": {
+      "frequency": "medium",
+      "longname": "DI13C Surface Sea-Air Gas Flux",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_R13C_DIC_surf": {
+      "frequency": "never",
+      "longname": "13C/12C ratio in total DIC",
+      "module": "ciso",
+      "operator": "none",
+      "units": "permil",
+      "vertical_grid": "none"
+   },
+   "CISO_R13C_atm": {
+      "frequency": "never",
+      "longname": "13C/12C ratio in atmosphere",
+      "module": "ciso",
+      "operator": "none",
+      "units": "permil",
+      "vertical_grid": "none"
+   },
+   "CISO_eps_aq_g_surf": {
+      "frequency": "never",
+      "longname": "Surface equilibrium fractionation (CO2_gaseous <-> CO2_aq)",
+      "module": "ciso",
+      "operator": "none",
+      "units": "permil",
       "vertical_grid": "none"
    },
    "CO2STAR": {
       "frequency": "medium",
       "longname": "CO2 Star",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -16,6 +90,7 @@
    "CO2STAR_ALT_CO2": {
       "frequency": "medium",
       "longname": "CO2 Star, Alternate CO2",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -23,6 +98,7 @@
    "DCO2STAR": {
       "frequency": "medium",
       "longname": "D CO2 Star",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -30,6 +106,7 @@
    "DCO2STAR_ALT_CO2": {
       "frequency": "medium",
       "longname": "D CO2 Star, Alternative CO2",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -37,6 +114,7 @@
    "DUST_FLUX": {
       "frequency": "never",
       "longname": "Dust Flux",
+      "module": "ecosys_base",
       "operator": "none",
       "units": "g/cm^2/s",
       "vertical_grid": "none"
@@ -47,6 +125,7 @@
          "high"
       ],
       "longname": "D pCO2",
+      "module": "ecosys_base",
       "operator": [
          "average",
          "average"
@@ -57,6 +136,7 @@
    "DpCO2_ALT_CO2": {
       "frequency": "medium",
       "longname": "D pCO2, Alternative CO2",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
@@ -64,6 +144,7 @@
    "ECOSYS_ATM_PRESS": {
       "frequency": "medium",
       "longname": "Atmospheric Pressure for ecosys fluxes",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "atmospheres",
       "vertical_grid": "none"
@@ -74,6 +155,7 @@
          "high"
       ],
       "longname": "Ice Fraction for ecosys fluxes",
+      "module": "ecosys_base",
       "operator": [
          "average",
          "average"
@@ -87,6 +169,7 @@
          "high"
       ],
       "longname": "XKW for ecosys fluxes",
+      "module": "ecosys_base",
       "operator": [
          "average",
          "average"
@@ -97,6 +180,7 @@
    "FG_ALT_CO2": {
       "frequency": "medium",
       "longname": "DIC Surface Gas Flux, Alternative CO2",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -107,6 +191,7 @@
          "high"
       ],
       "longname": "DIC Surface Gas Flux",
+      "module": "ecosys_base",
       "operator": [
          "average",
          "average"
@@ -117,6 +202,7 @@
    "IRON_FLUX": {
       "frequency": "medium",
       "longname": "Atmospheric Iron Flux",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^2/s",
       "vertical_grid": "none"
@@ -124,6 +210,7 @@
    "NHx_SURFACE_EMIS": {
       "frequency": "medium",
       "longname": "Emission of NHx to Atmosphere",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
@@ -131,6 +218,7 @@
    "NHy_FLUX": {
       "frequency": "medium",
       "longname": "Flux of NHy from Atmosphere",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
@@ -138,6 +226,7 @@
    "NOx_FLUX": {
       "frequency": "medium",
       "longname": "Flux of NOx from Atmosphere",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
@@ -145,6 +234,7 @@
    "O2SAT": {
       "frequency": "medium",
       "longname": "O2 Saturation",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -152,6 +242,7 @@
    "PH": {
       "frequency": "medium",
       "longname": "Surface pH",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "none",
       "vertical_grid": "none"
@@ -159,6 +250,7 @@
    "PH_ALT_CO2": {
       "frequency": "medium",
       "longname": "Surface pH, Alternative CO2",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "none",
       "vertical_grid": "none"
@@ -166,6 +258,7 @@
    "PV_CO2": {
       "frequency": "never",
       "longname": "CO2 Piston Velocity",
+      "module": "ecosys_base",
       "operator": "none",
       "units": "cm/s",
       "vertical_grid": "none"
@@ -173,6 +266,7 @@
    "PV_O2": {
       "frequency": "never",
       "longname": "PV_O2",
+      "module": "ecosys_base",
       "operator": "none",
       "units": "cm/s",
       "vertical_grid": "none"
@@ -180,6 +274,7 @@
    "SCHMIDT_CO2": {
       "frequency": "medium",
       "longname": "CO2 Schmidt Number",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "none",
       "vertical_grid": "none"
@@ -187,6 +282,7 @@
    "SCHMIDT_O2": {
       "frequency": "medium",
       "longname": "O2 Schmidt Number",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "none",
       "vertical_grid": "none"
@@ -194,6 +290,7 @@
    "pCO2SURF": {
       "frequency": "medium",
       "longname": "surface pCO2",
+      "module": "ecosys_base",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
@@ -201,6 +298,7 @@
    "pCO2SURF_ALT_CO2": {
       "frequency": "never",
       "longname": "surface pCO2, Alternative CO2",
+      "module": "ecosys_base",
       "operator": "none",
       "units": "ppmv",
       "vertical_grid": "none"

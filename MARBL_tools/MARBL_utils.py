@@ -75,11 +75,12 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
         diagnostics file standards:
         1. All top-level keys refer to diagnostic variable
         2. All diagnostic variable dictionaries contain the following keys:
-           i.   longname
-           ii.  units
-           iii. vertical_grid (2D vars should explicitly list "none")
-           iv.  frequency
-           v.   operator
+           i.   module
+           ii.  longname
+           iii. units
+           iv.  vertical_grid (2D vars should explicitly list "none")
+           v.   frequency
+           vi.  operator
         3. Consistency between frequency and operator
            i.   frequency and operator are both lists, or neither are
            ii.  If they are both lists, must be same size
@@ -105,7 +106,7 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
 
         diag_subkeys = DiagsDict[diag_name].keys()
         bad_diag_name_dict = False
-        for required_field in ['longname', 'units', 'vertical_grid', 'frequency', 'operator']:
+        for required_field in ['module', 'longname', 'units', 'vertical_grid', 'frequency', 'operator']:
             if required_field not in diag_subkeys:
                 logger.error("%s not a key in DiagsDict['%s']" % (required_field, diag_name))
                 invalid_file = True

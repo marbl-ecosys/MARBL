@@ -19,6 +19,9 @@ class MARBL_diagnostics_class(object):
         """
 
         logger = logging.getLogger(__name__)
+        active_modules = ["ecosys_base"]
+        if MARBL_settings.settings_dict["ciso_on"] == ".true.":
+            active_modules.append("ciso")
 
         # 1. Read diagnostics JSON file
         import json
@@ -35,9 +38,10 @@ class MARBL_diagnostics_class(object):
         from collections import OrderedDict
         self.diagnostics_dict = OrderedDict()
         for diag_name in _sort(self._diagnostics.keys()):
-            self._process_diagnostic_frequency(diag_name)
+            # Skip diagnostics if module is inactive
+            if self._diagnostics[diag_name]["module"] in active_modules:
+                self._process_diagnostic_frequency(diag_name)
 
-        # 5.
 
     ################################################################################
     #                            PRIVATE CLASS METHODS                             #
