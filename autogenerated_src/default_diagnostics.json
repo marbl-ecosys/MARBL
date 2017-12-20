@@ -23,9 +23,25 @@
       "units": "permil",
       "vertical_grid": "none"
    },
+   "CISO_D14C_atm": {
+      "frequency": "medium",
+      "longname": "Atmospheric Delta 14C in permil",
+      "module": "ciso",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "none"
+   },
    "CISO_FG_13CO2": {
       "frequency": "medium",
       "longname": "DI13C Surface Gas Flux",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_FG_14CO2": {
+      "frequency": "medium",
+      "longname": "DI14C Surface Gas Flux",
       "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
@@ -39,6 +55,14 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "CISO_FG_as_14CO2": {
+      "frequency": "medium",
+      "longname": "DI14C Surface Air-Sea Gas Flux",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "CISO_FG_d13C": {
       "frequency": "never",
       "longname": "D13C Surface GAS FLUX",
@@ -47,9 +71,25 @@
       "units": "permil",
       "vertical_grid": "none"
    },
+   "CISO_FG_d14C": {
+      "frequency": "never",
+      "longname": "D14C Surface GAS FLUX",
+      "module": "ciso",
+      "operator": "none",
+      "units": "permil",
+      "vertical_grid": "none"
+   },
    "CISO_FG_sa_13CO2": {
       "frequency": "medium",
       "longname": "DI13C Surface Sea-Air Gas Flux",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_FG_sa_14CO2": {
+      "frequency": "medium",
+      "longname": "DI14C Surface Sea-Air Gas Flux",
       "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
@@ -71,9 +111,33 @@
       "units": "permil",
       "vertical_grid": "none"
    },
+   "CISO_R14C_DIC_surf": {
+      "frequency": "never",
+      "longname": "14C/12C ratio in total DIC",
+      "module": "ciso",
+      "operator": "none",
+      "units": "permil",
+      "vertical_grid": "none"
+   },
+   "CISO_R14C_atm": {
+      "frequency": "never",
+      "longname": "14C/12C ratio in atmosphere",
+      "module": "ciso",
+      "operator": "none",
+      "units": "permil",
+      "vertical_grid": "none"
+   },
    "CISO_eps_aq_g_surf": {
       "frequency": "never",
       "longname": "Surface equilibrium fractionation (CO2_gaseous <-> CO2_aq)",
+      "module": "ciso",
+      "operator": "none",
+      "units": "permil",
+      "vertical_grid": "none"
+   },
+   "CISO_eps_dic_g_surf": {
+      "frequency": "never",
+      "longname": "Surface equilibrium fractionation between total DIC and gaseous CO2",
       "module": "ciso",
       "operator": "none",
       "units": "permil",
@@ -301,6 +365,14 @@
       "module": "ecosys_base",
       "operator": "none",
       "units": "ppmv",
+      "vertical_grid": "none"
+   },
+   "zsatcalc": {
+      "frequency": "medium",
+      "longname": "Calcite Saturation Depth",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "cm",
       "vertical_grid": "none"
    }
 }

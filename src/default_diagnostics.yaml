@@ -200,56 +200,131 @@ NHx_SURFACE_EMIS :
 CISO_FG_13CO2 :
    module : ciso
    longname : DI13C Surface Gas Flux
-   units: mmol/m^3 cm/s
+   units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_FG_as_13CO2 :
    module : ciso
    longname : DI13C Surface Air-Sea Gas Flux
-   units: mmol/m^3 cm/s
+   units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_FG_sa_13CO2 :
    module : ciso
    longname : DI13C Surface Sea-Air Gas Flux
-   units: mmol/m^3 cm/s
+   units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_FG_d13C :
    module : ciso
    longname : D13C Surface GAS FLUX
-   units: permil
+   units : permil
    vertical_grid : none
    frequency : never
    operator : none
 CISO_D13C_atm :
    module : ciso
    longname : Atmospheric Delta 13C in permil
-   units: permil
+   units : permil
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_R13C_DIC_surf :
    module : ciso
    longname : 13C/12C ratio in total DIC
-   units: permil
+   units : permil
    vertical_grid : none
    frequency : never
    operator : none
 CISO_R13C_atm :
    module : ciso
    longname : 13C/12C ratio in atmosphere
-   units: permil
+   units : permil
    vertical_grid : none
    frequency : never
    operator : none
 CISO_eps_aq_g_surf :
    module : ciso
    longname : Surface equilibrium fractionation (CO2_gaseous <-> CO2_aq)
-   units: permil
+   units : permil
    vertical_grid : none
    frequency : never
    operator : none
+CISO_eps_dic_g_surf :
+   module : ciso
+   longname : Surface equilibrium fractionation between total DIC and gaseous CO2
+   units : permil
+   vertical_grid : none
+   frequency : never
+   operator : none
+CISO_FG_14CO2 :
+   module : ciso
+   longname : DI14C Surface Gas Flux
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CISO_FG_as_14CO2 :
+   module : ciso
+   longname : DI14C Surface Air-Sea Gas Flux
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CISO_FG_sa_14CO2 :
+   module : ciso
+   longname : DI14C Surface Sea-Air Gas Flux
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CISO_FG_d14C :
+   module : ciso
+   longname : D14C Surface GAS FLUX
+   units : permil
+   vertical_grid : none
+   frequency : never
+   operator : none
+CISO_D14C_atm :
+   module : ciso
+   longname : Atmospheric Delta 14C in permil
+   units : permil
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CISO_R14C_DIC_surf :
+   module : ciso
+   longname : 14C/12C ratio in total DIC
+   units : permil
+   vertical_grid : none
+   frequency : never
+   operator : none
+CISO_R14C_atm :
+   module : ciso
+   longname : 14C/12C ratio in atmosphere
+   units : permil
+   vertical_grid : none
+   frequency : never
+   operator : none
+
+################################################################################
+#                         Interior forcing diagnostics                         #
+################################################################################
+
+###############
+# Base module #
+###############
+
+zsatcalc :
+   module : ecosys_base
+   longname : Calcite Saturation Depth
+   units : cm
+   vertical_grid : none
+   frequency : medium
+   operator : average
+
+
+
