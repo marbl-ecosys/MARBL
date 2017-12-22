@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 
 """ General tools that are used by multiple python files in this package
@@ -84,9 +85,8 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
         3. Consistency between frequency and operator
            i.   frequency and operator are both lists, or neither are
            ii.  If they are both lists, must be same size
-           iii. If frequency = never, operator must = none (and vice versa)
         4. Allowable frequencies are never, low, medium, and high
-        5. Allowable operators are none, instantaneous, average, minimum, and maximum
+        5. Allowable operators are instantaneous, average, minimum, and maximum
     """
 
     import logging
@@ -133,37 +133,26 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
             invalid_file = True
             continue
 
-        #   iii. If frequency = never, operator must = none (and vice versa)
-        if isinstance(DiagsDict[diag_name]['frequency'], list):
-            for n, freq in enumerate(DiagsDict[diag_name]['frequency']):
-                op = DiagsDict[diag_name]['operator'][n]
-                if not _freq_and_op_are_consistent(freq, op):
-                    logger.error("%s frequency = 'never' iff operator = 'none'" % err_prefix)
-                    invalid_file = True
-        else:
-            if not _freq_and_op_are_consistent(DiagsDict[diag_name]['frequency'], DiagsDict[diag_name]['operator']):
-                logger.error("%s frequency = 'never' iff operator = 'none'" % err_prefix)
-                invalid_file = True
-
-
         # 4. Allowable frequencies are never, low, medium, and high
-        # 5. Allowable operators are none, instantaneous, average, minimum, and maximum
+        # 5. Allowable operators are instantaneous, average, minimum, and maximum
+        ok_freqs = ['never', 'low', 'medium', 'high']
+        ok_ops = ['instantaneous', 'average', 'minimum', 'maximum']
         if isinstance(DiagsDict[diag_name]['frequency'], list):
             for n, freq in enumerate(DiagsDict[diag_name]['frequency']):
                 op = DiagsDict[diag_name]['operator'][n]
-                if freq not in ['never', 'low', 'medium', 'high']:
+                if freq not in ok_freqs:
                     logger.error("%s '%s' is not a valid frequency" % (err_prefix, freq))
                     invalid_file = True
-                if op not in ['none', 'instantaneous', 'average', 'minimum', 'maximum']:
+                if op not in ok_ops:
                     logger.error("%s '%s' is not a valid operator" % (err_prefix, op))
                     invalid_file = True
         else:
             freq = DiagsDict[diag_name]['frequency']
             op = DiagsDict[diag_name]['operator']
-            if freq not in ['never', 'low', 'medium', 'high']:
+            if freq not in ok_freqs:
                 logger.error("%s '%s' is not a valid frequency" % (err_prefix, freq))
                 invalid_file = True
-            if op not in ['none', 'instantaneous', 'average', 'minimum', 'maximum']:
+            if op not in ok_ops:
                 logger.error("%s '%s' is not a valid operator" % (err_prefix, op))
                 invalid_file = True
 
@@ -197,21 +186,5 @@ def _valid_variable_dict(var_dict, var_name):
             logger.info("Keys in default_value are %s" % var_dict["default_value"].keys())
             return False
     return True
-
-################################################################################
-
-def _freq_and_op_are_consistent(freq, op):
-    """ A diagnostic that is never output should have operator 'none' and a
-        diagnostic with operator 'none' should never be output. So this routine
-        returns True if either:
-           i.  freq = 'never' and op = 'none'
-           ii. freq != 'never' and op != 'none'
-        and return False if either:
-           i.  freq = 'never' and op != 'none'
-           ii. freq != 'never' and op = 'none'
-    """
-    freq_is_never = (freq == 'never')
-    op_is_none = (op == 'none')
-    return (freq_is_never == op_is_none)
 
 ################################################################################

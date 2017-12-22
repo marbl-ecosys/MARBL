@@ -1,3 +1,4 @@
+
 # ABOUT THIS FILE
 # ---------------
 
@@ -44,7 +45,7 @@ PV_O2 :
    units : cm/s
    vertical_grid : none
    frequency : never
-   operator : none
+   operator : average
 SCHMIDT_O2 :
    module : ecosys_base
    longname : O2 Schmidt Number
@@ -90,7 +91,7 @@ pCO2SURF_ALT_CO2 :
    << : *pCO2SURF
    longname : surface pCO2, Alternative CO2
    frequency : never
-   operator : none
+   operator : average
 DpCO2 : &DpCO2
    module : ecosys_base
    longname : D pCO2
@@ -113,7 +114,7 @@ PV_CO2 :
    units : cm/s
    vertical_grid : none
    frequency : never
-   operator : none
+   operator : average
 SCHMIDT_CO2 :
    module : ecosys_base
    longname : CO2 Schmidt Number
@@ -170,7 +171,7 @@ DUST_FLUX :
    units : g/cm^2/s
    vertical_grid : none
    frequency : never
-   operator : none
+   operator : average
 NOx_FLUX :
    module : ecosys_base
    longname : Flux of NOx from Atmosphere
@@ -224,7 +225,7 @@ CISO_FG_d13C :
    units : permil
    vertical_grid : none
    frequency : never
-   operator : none
+   operator : average
 CISO_D13C_atm :
    module : ciso
    longname : Atmospheric Delta 13C in permil
@@ -238,28 +239,28 @@ CISO_R13C_DIC_surf :
    units : permil
    vertical_grid : none
    frequency : never
-   operator : none
+   operator : average
 CISO_R13C_atm :
    module : ciso
    longname : 13C/12C ratio in atmosphere
    units : permil
    vertical_grid : none
    frequency : never
-   operator : none
+   operator : average
 CISO_eps_aq_g_surf :
    module : ciso
    longname : Surface equilibrium fractionation (CO2_gaseous <-> CO2_aq)
    units : permil
    vertical_grid : none
    frequency : never
-   operator : none
+   operator : average
 CISO_eps_dic_g_surf :
    module : ciso
    longname : Surface equilibrium fractionation between total DIC and gaseous CO2
    units : permil
    vertical_grid : none
    frequency : never
-   operator : none
+   operator : average
 CISO_FG_14CO2 :
    module : ciso
    longname : DI14C Surface Gas Flux
@@ -287,7 +288,7 @@ CISO_FG_d14C :
    units : permil
    vertical_grid : none
    frequency : never
-   operator : none
+   operator : average
 CISO_D14C_atm :
    module : ciso
    longname : Atmospheric Delta 14C in permil
@@ -301,14 +302,14 @@ CISO_R14C_DIC_surf :
    units : permil
    vertical_grid : none
    frequency : never
-   operator : none
+   operator : average
 CISO_R14C_atm :
    module : ciso
    longname : 14C/12C ratio in atmosphere
    units : permil
    vertical_grid : none
    frequency : never
-   operator : none
+   operator : average
 
 ################################################################################
 #                         Interior forcing diagnostics                         #
@@ -325,6 +326,5 @@ zsatcalc :
    vertical_grid : none
    frequency : medium
    operator : average
-
 
 

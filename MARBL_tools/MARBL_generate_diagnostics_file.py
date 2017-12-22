@@ -62,7 +62,7 @@ def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out):
     fout.write("# DIAGNOSTIC_NAME : frequency1_operator1, frequency2_operator2, ..., frequencyN_operatorN\n")
     fout.write("#\n")
     fout.write("# Frequencies are never, low, medium, and high.\n")
-    fout.write("# Operators are none, instantaneous, average, minimum, and maximum.\n")
+    fout.write("# Operators are instantaneous, average, minimum, and maximum.\n")
     for diag_name in MARBL_diagnostics.diagnostics_dict.keys():
         fout.write("%s : %s\n" % (diag_name, MARBL_diagnostics.diagnostics_dict[diag_name]))
     fout.close()
