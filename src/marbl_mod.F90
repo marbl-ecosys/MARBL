@@ -4317,7 +4317,7 @@ contains
     !  nitrate & ammonium
     !-----------------------------------------------------------------------
 
-    dtracers(no3_ind) = interior_restore(no3_ind) + nitrif - denitrif - sed_denitrif - sum(NO3_V(:))
+    dtracers(no3_ind) = nitrif - denitrif - sed_denitrif - sum(NO3_V(:))
 
     dtracers(nh4_ind) = -sum(NH4_V(:)) - nitrif + DON_remin + DONr_remin  &
          + Q * (sum(zoo_loss_dic(:)) + sum(zoo_graze_dic(:)) + sum(auto_loss_dic(:)) + sum(auto_graze_dic(:)) &
@@ -4354,7 +4354,7 @@ contains
     !  dissolved SiO3
     !-----------------------------------------------------------------------
 
-    dtracers(sio3_ind) = interior_restore(sio3_ind) + P_SiO2_remin
+    dtracers(sio3_ind) = P_SiO2_remin
 
     do auto_ind = 1, auto_cnt
        if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
@@ -4368,9 +4368,9 @@ contains
     !  phosphate
     !-----------------------------------------------------------------------
 
-    dtracers(po4_ind) = interior_restore(po4_ind) + DOP_remin + DOPr_remin - sum(PO4_V(:)) &
-         + (c1 - POPremin_refract) * POP_remin + sum(remaining_P_dip(:)) &
-         + Qp_zoo * ( sum(zoo_loss_dic(:)) + sum(zoo_graze_dic(:)) )
+    dtracers(po4_ind) = DOP_remin + DOPr_remin - sum(PO4_V(:)) +           &
+           (c1 - POPremin_refract) * POP_remin + sum(remaining_P_dip(:)) + &
+           Qp_zoo * ( sum(zoo_loss_dic(:)) + sum(zoo_graze_dic(:)) )
 
     !-----------------------------------------------------------------------
     !  zoo Carbon
@@ -4498,6 +4498,9 @@ contains
          / parm_Remin_D_C_O2 + (c2 * nitrif))
 
     dtracers(o2_ind) = o2_production - o2_consumption
+
+    ! ADD RESTORING
+    dtracers(:) = dtracers(:) + interior_restore(:)
 
     end associate
   end subroutine marbl_compute_dtracer_local
