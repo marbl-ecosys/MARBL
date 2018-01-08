@@ -1,4 +1,12 @@
 {
+   "AOU": {
+      "frequency": "medium",
+      "longname": "Apparent O2 Utilization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
+   },
    "ATM_ALT_CO2": {
       "frequency": "medium",
       "longname": "Atomspheric CO2",
@@ -159,6 +167,30 @@
       "units": "mmol/m^3",
       "vertical_grid": "none"
    },
+   "CO3": {
+      "frequency": "medium",
+      "longname": "Carbonate Ion Concentration",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
+   },
+   "CO3_ALT_CO2": {
+      "frequency": "never",
+      "longname": "Carbonate Ion Concentration, Alternative CO2",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
+   },
+   "CaCO3_form_zint": {
+      "frequency": "high",
+      "longname": "Total CaCO3 Formation Vertical Integral",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "DCO2STAR": {
       "frequency": "medium",
       "longname": "D CO2 Star",
@@ -174,6 +206,86 @@
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
+   },
+   "DENITRIF": {
+      "frequency": "medium",
+      "longname": "Denitrification",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DOC_prod": {
+      "frequency": "medium",
+      "longname": "DOC Production",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DOC_remin": {
+      "frequency": "medium",
+      "longname": "DOC Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DOCr_remin": {
+      "frequency": "medium",
+      "longname": "DOCr Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DON_prod": {
+      "frequency": "medium",
+      "longname": "DON Production",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DON_remin": {
+      "frequency": "medium",
+      "longname": "DON Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DONr_remin": {
+      "frequency": "medium",
+      "longname": "DONr Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DOP_prod": {
+      "frequency": "medium",
+      "longname": "DOP Production",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DOP_remin": {
+      "frequency": "medium",
+      "longname": "DOP Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DOPr_remin": {
+      "frequency": "medium",
+      "longname": "DOPr Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
    },
    "DUST_FLUX": {
       "frequency": "never",
@@ -263,6 +375,62 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "Fe_scavenge": {
+      "frequency": "medium",
+      "longname": "Iron Scavenging",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "Fe_scavenge_rate": {
+      "frequency": "medium",
+      "longname": "Iron Scavenging Rate",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "1/y",
+      "vertical_grid": "layer_avg"
+   },
+   "Fefree": {
+      "frequency": "medium",
+      "longname": "Fe not bound to Ligand",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
+   },
+   "H2CO3": {
+      "frequency": "medium",
+      "longname": "Carbonic Acid Concentration",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
+   },
+   "H2CO3_ALT_CO2": {
+      "frequency": "never",
+      "longname": "Carbonic Acid Concentration, Alternative CO2",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
+   },
+   "HCO3": {
+      "frequency": "medium",
+      "longname": "Bicarbonate Ion Concentration",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
+   },
+   "HCO3_ALT_CO2": {
+      "frequency": "never",
+      "longname": "Bicarbonate Ion Concentration, Alternative CO2",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
+   },
    "IRON_FLUX": {
       "frequency": "medium",
       "longname": "Atmospheric Iron Flux",
@@ -270,6 +438,126 @@
       "operator": "average",
       "units": "mmol/m^2/s",
       "vertical_grid": "none"
+   },
+   "Jint_100m_Ctot": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ctot, 0-100m",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "Jint_100m_Fetot": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Fetot, 0-100m",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "Jint_100m_Ntot": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ntot, 0-100m",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "Jint_100m_Ptot": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ptot, 0-100m",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "Jint_100m_Sitot": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Sitot, 0-100m",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "Jint_Ctot": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ctot",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "Jint_Fetot": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Fetot",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "Jint_Ntot": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ntot",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "Jint_Ptot": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ptot",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "Jint_Sitot": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Sitot",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "Lig_deg": {
+      "frequency": "medium",
+      "longname": "Loss of Fe-binding Ligand from Bacterial Degradation",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "Lig_loss": {
+      "frequency": "medium",
+      "longname": "Loss of Fe-binding Ligand",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "Lig_photochem": {
+      "frequency": "medium",
+      "longname": "Loss of Fe-binding Ligand from UV radiation",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "Lig_prod": {
+      "frequency": "medium",
+      "longname": "Production of Fe-binding Ligand",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "Lig_scavenge": {
+      "frequency": "medium",
+      "longname": "Fe not bound to Ligand",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
    },
    "NHx_SURFACE_EMIS": {
       "frequency": "medium",
@@ -287,6 +575,14 @@
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
+   "NITRIF": {
+      "frequency": "medium",
+      "longname": "Nitrification",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "NOx_FLUX": {
       "frequency": "medium",
       "longname": "Flux of NOx from Atmosphere",
@@ -302,6 +598,54 @@
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
+   },
+   "O2_CONSUMPTION": {
+      "frequency": "medium",
+      "longname": "O2 Consumption",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "O2_PRODUCTION": {
+      "frequency": "medium",
+      "longname": "O2 Production",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "O2_ZMIN": {
+      "frequency": "medium",
+      "longname": "Vertical Minimum of O2",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "none"
+   },
+   "O2_ZMIN_DEPTH": {
+      "frequency": "medium",
+      "longname": "Vertical Minimum of O2",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "cm",
+      "vertical_grid": "none"
+   },
+   "OtherRemin": {
+      "frequency": "never",
+      "longname": "non-oxic,non-dentr remin in Sediments",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "nmolC/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "PAR_avg": {
+      "frequency": "medium",
+      "longname": "PAR Average over Model Cell",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "W/m^2",
+      "vertical_grid": "layer_avg"
    },
    "PH": {
       "frequency": "medium",
@@ -351,6 +695,70 @@
       "units": "none",
       "vertical_grid": "none"
    },
+   "SedDenitrif": {
+      "frequency": "medium",
+      "longname": "nitrogen loss in Sediments",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "nmolN/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "bsiToSed": {
+      "frequency": "medium",
+      "longname": "biogenic Si Flux to Sediments",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "nmolSi/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "calcToSed": {
+      "frequency": "medium",
+      "longname": "CaCO3 Flux to Sediments",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "nmolC/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "calcToSed_ALT_CO2": {
+      "frequency": "medium",
+      "longname": "CaCO3 Flux to Sediments, Alternative CO2",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "calcToSed_ALT_CO2",
+      "vertical_grid": "none"
+   },
+   "co3_sat_arag": {
+      "frequency": "medium",
+      "longname": "CO3 concentration at aragonite saturation",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
+   },
+   "co3_sat_calc": {
+      "frequency": "medium",
+      "longname": "CO3 concentration at calcite saturation",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
+   },
+   "dustToSed": {
+      "frequency": "medium",
+      "longname": "dust Flux to Sediments",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "g/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "graze_auto_TOT": {
+      "frequency": "never",
+      "longname": "Total Autotroph Grazing",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "pCO2SURF": {
       "frequency": "medium",
       "longname": "surface pCO2",
@@ -365,6 +773,94 @@
       "module": "ecosys_base",
       "operator": "average",
       "units": "ppmv",
+      "vertical_grid": "none"
+   },
+   "pH_3D": {
+      "frequency": "medium",
+      "longname": "pH",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "none",
+      "vertical_grid": "layer_avg"
+   },
+   "pH_3D_ALT_CO2": {
+      "frequency": "never",
+      "longname": "pH, Alternative CO2",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "none",
+      "vertical_grid": "layer_avg"
+   },
+   "pfeToSed": {
+      "frequency": "medium",
+      "longname": "pFe Flux to Sediments",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "nmolFe/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "photoC_NO3_TOT": {
+      "frequency": "never",
+      "longname": "Total C Fixation from NO3",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "photoC_NO3_TOT_zint": {
+      "frequency": "never",
+      "longname": "Total C Fixation from NO3 Vertical Integral",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "photoC_TOT": {
+      "frequency": "never",
+      "longname": "Total C Fixation",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "photoC_TOT_zint": {
+      "frequency": "never",
+      "longname": "Total C Fixation Vertical Integral",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "pocToSed": {
+      "frequency": "medium",
+      "longname": "POC Flux to Sediments",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "nmolC/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "ponToSed": {
+      "frequency": "medium",
+      "longname": "nitrogen burial Flux to Sediments",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "nmolN/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "popToSed": {
+      "frequency": "medium",
+      "longname": "phosphorus Flux to Sediments",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "nmolP/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "zsatarag": {
+      "frequency": "medium",
+      "longname": "Aragonite Saturation Depth",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "cm",
       "vertical_grid": "none"
    },
    "zsatcalc": {

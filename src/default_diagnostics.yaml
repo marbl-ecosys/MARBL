@@ -326,5 +326,442 @@ zsatcalc :
    vertical_grid : none
    frequency : medium
    operator : average
+zsatarag :
+   module : ecosys_base
+   longname : Aragonite Saturation Depth
+   units : cm
+   vertical_grid : none
+   frequency : medium
+   operator : average
+O2_ZMIN :
+   module : ecosys_base
+   longname : Vertical Minimum of O2
+   units : mmol/m^3
+   vertical_grid : none
+   frequency : medium
+   operator : average
+O2_ZMIN_DEPTH :
+   module : ecosys_base
+   longname : Vertical Minimum of O2
+   units : cm
+   vertical_grid : none
+   frequency : medium
+   operator : average
+photoC_TOT_zint :
+   module : ecosys_base
+   longname : Total C Fixation Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+photoC_NO3_TOT_zint :
+   module : ecosys_base
+   longname : Total C Fixation from NO3 Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+Jint_Ctot :
+   module : ecosys_base
+   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+Jint_100m_Ctot :
+   module : ecosys_base
+   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+Jint_Ntot :
+   module : ecosys_base
+   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ntot
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+Jint_100m_Ntot :
+   module : ecosys_base
+   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ntot, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+Jint_Ptot :
+   module : ecosys_base
+   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ptot
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+Jint_100m_Ptot :
+   module : ecosys_base
+   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ptot, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+Jint_Sitot :
+   module : ecosys_base
+   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Sitot
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+Jint_100m_Sitot :
+   module : ecosys_base
+   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Sitot, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+Jint_Fetot :
+   module : ecosys_base
+   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Fetot
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+Jint_100m_Fetot :
+   module : ecosys_base
+   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Fetot, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
 
+# Particulate 2D diags
+calcToSed :
+   module : ecosys_base
+   longname : CaCO3 Flux to Sediments
+   units : nmolC/cm^2/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+calcToSed_ALT_CO2 :
+   module : ecosys_base
+   longname : CaCO3 Flux to Sediments, Alternative CO2
+   units : calcToSed_ALT_CO2
+   vertical_grid : none
+   frequency : medium
+   operator : average
+pocToSed :
+   module : ecosys_base
+   longname : POC Flux to Sediments
+   units : nmolC/cm^2/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ponToSed :
+   module : ecosys_base
+   longname : nitrogen burial Flux to Sediments
+   units : nmolN/cm^2/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+SedDenitrif :
+   module : ecosys_base
+   longname : nitrogen loss in Sediments
+   units : nmolN/cm^2/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+OtherRemin :
+   module : ecosys_base
+   longname : non-oxic,non-dentr remin in Sediments
+   units : nmolC/cm^2/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+popToSed :
+   module : ecosys_base
+   longname : phosphorus Flux to Sediments
+   units : nmolP/cm^2/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+bsiToSed :
+   module : ecosys_base
+   longname : biogenic Si Flux to Sediments
+   units : nmolSi/cm^2/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+dustToSed :
+   module : ecosys_base
+   longname : dust Flux to Sediments
+   units : g/cm^2/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+pfeToSed :
+   module : ecosys_base
+   longname : pFe Flux to Sediments
+   units : nmolFe/cm^2/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CaCO3_form_zint :
+   module : ecosys_base
+   longname : Total CaCO3 Formation Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : high
+   operator : average
+
+# General 3D diags
+CO3 :
+   module : ecosys_base
+   longname : Carbonate Ion Concentration
+   units : mmol/m^3
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+HCO3 :
+   module : ecosys_base
+   longname : Bicarbonate Ion Concentration
+   units : mmol/m^3
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+H2CO3 :
+   module : ecosys_base
+   longname : Carbonic Acid Concentration
+   units : mmol/m^3
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+pH_3D :
+   module : ecosys_base
+   longname : pH
+   units : none
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+CO3_ALT_CO2 :
+   module : ecosys_base
+   longname : Carbonate Ion Concentration, Alternative CO2
+   units : mmol/m^3
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
+HCO3_ALT_CO2 :
+   module : ecosys_base
+   longname : Bicarbonate Ion Concentration, Alternative CO2
+   units : mmol/m^3
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
+H2CO3_ALT_CO2 :
+   module : ecosys_base
+   longname : Carbonic Acid Concentration, Alternative CO2
+   units : mmol/m^3
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
+pH_3D_ALT_CO2 :
+   module : ecosys_base
+   longname : pH, Alternative CO2
+   units : none
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
+co3_sat_calc :
+   module : ecosys_base
+   longname : CO3 concentration at calcite saturation
+   units : mmol/m^3
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+co3_sat_arag :
+   module : ecosys_base
+   longname : CO3 concentration at aragonite saturation
+   units : mmol/m^3
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+NITRIF :
+   module : ecosys_base
+   longname : Nitrification
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DENITRIF :
+   module : ecosys_base
+   longname : Denitrification
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+O2_PRODUCTION :
+   module : ecosys_base
+   longname : O2 Production
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+O2_CONSUMPTION :
+   module : ecosys_base
+   longname : O2 Consumption
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+AOU :
+   module : ecosys_base
+   longname : Apparent O2 Utilization
+   units : mmol/m^3
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+PAR_avg :
+   module : ecosys_base
+   longname : PAR Average over Model Cell
+   units : W/m^2
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+graze_auto_TOT :
+   module : ecosys_base
+   longname : Total Autotroph Grazing
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
+photoC_TOT :
+   module : ecosys_base
+   longname : Total C Fixation
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
+photoC_NO3_TOT :
+   module : ecosys_base
+   longname : Total C Fixation from NO3
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
+DOC_prod :
+   module : ecosys_base
+   longname : DOC Production
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DOC_remin :
+   module : ecosys_base
+   longname : DOC Remineralization
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DOCr_remin :
+   module : ecosys_base
+   longname : DOCr Remineralization
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DON_prod :
+   module : ecosys_base
+   longname : DON Production
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DON_remin :
+   module : ecosys_base
+   longname : DON Remineralization
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DONr_remin :
+   module : ecosys_base
+   longname : DONr Remineralization
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DOP_prod :
+   module : ecosys_base
+   longname : DOP Production
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DOP_remin :
+   module : ecosys_base
+   longname : DOP Remineralization
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DOPr_remin :
+   module : ecosys_base
+   longname : DOPr Remineralization
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+Fe_scavenge :
+   module : ecosys_base
+   longname : Iron Scavenging
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+Fe_scavenge_rate :
+   module : ecosys_base
+   longname : Iron Scavenging Rate
+   units : 1/y
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+Lig_prod :
+   module : ecosys_base
+   longname : Production of Fe-binding Ligand
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+Lig_loss :
+   module : ecosys_base
+   longname : Loss of Fe-binding Ligand
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+Lig_scavenge :
+   module : ecosys_base
+   longname : Fe not bound to Ligand
+   units : mmol/m^3
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+Fefree :
+   module : ecosys_base
+   longname : Fe not bound to Ligand
+   units : mmol/m^3
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+Lig_photochem :
+   module : ecosys_base
+   longname : Loss of Fe-binding Ligand from UV radiation
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+Lig_deg :
+   module : ecosys_base
+   longname : Loss of Fe-binding Ligand from Bacterial Degradation
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
 
