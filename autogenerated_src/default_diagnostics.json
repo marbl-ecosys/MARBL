@@ -23,6 +23,54 @@
       "units": "ppmv",
       "vertical_grid": "none"
    },
+   "CISO_Ca13CO3_FLUX_IN": {
+      "frequency": "medium",
+      "longname": "Ca13CO3 flux into cell",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_Ca13CO3_PROD": {
+      "frequency": "medium",
+      "longname": "Ca13CO3 Production",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_Ca13CO3_REMIN": {
+      "frequency": "medium",
+      "longname": "Ca13CO3 Remineralization",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_Ca14CO3_FLUX_IN": {
+      "frequency": "medium",
+      "longname": "Ca14CO3 flux into cell",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_Ca14CO3_PROD": {
+      "frequency": "medium",
+      "longname": "Ca14CO3 Production",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_Ca14CO3_REMIN": {
+      "frequency": "medium",
+      "longname": "Ca14CO3 Remineralization",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "CISO_D13C_atm": {
       "frequency": "medium",
       "longname": "Atmospheric Delta 13C in permil",
@@ -38,6 +86,70 @@
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
+   },
+   "CISO_DIC_d13C": {
+      "frequency": "medium",
+      "longname": "d13C of DIC",
+      "module": "ciso",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_DIC_d14C": {
+      "frequency": "medium",
+      "longname": "d14C of DIC",
+      "module": "ciso",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_DO13C_prod": {
+      "frequency": "medium",
+      "longname": "DO13C Production",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_DO13C_remin": {
+      "frequency": "medium",
+      "longname": "DO13C Remineralization",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_DO14C_prod": {
+      "frequency": "medium",
+      "longname": "DO14C Production",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_DO14C_remin": {
+      "frequency": "medium",
+      "longname": "DO14C Remineralization",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_DOC_d13C": {
+      "frequency": "medium",
+      "longname": "d13C of DOC",
+      "module": "ciso",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_DOC_d14C": {
+      "frequency": "medium",
+      "longname": "d14C of DOC",
+      "module": "ciso",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
    },
    "CISO_FG_13CO2": {
       "frequency": "medium",
@@ -103,6 +215,86 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "CISO_Jint_100m_13Ctot": {
+      "frequency": "medium",
+      "longname": "13Ctot Source Sink Term Vertical Integral, 0-100m",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_Jint_100m_14Ctot": {
+      "frequency": "medium",
+      "longname": "14Ctot Source Sink Term Vertical Integral, 0-100m",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_Jint_13Ctot": {
+      "frequency": "medium",
+      "longname": "13Ctot Source Sink Term Vertical Integral",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_Jint_14Ctot": {
+      "frequency": "medium",
+      "longname": "14Ctot Source Sink Term Vertical Integral",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_PO13C_FLUX_IN": {
+      "frequency": "medium",
+      "longname": "PO13C Flux into Cell",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_PO13C_PROD": {
+      "frequency": "medium",
+      "longname": "PO13C Production",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_PO13C_REMIN": {
+      "frequency": "medium",
+      "longname": "PO13C Remineralization",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_PO14C_FLUX_IN": {
+      "frequency": "medium",
+      "longname": "PO14C Flux into Cell",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_PO14C_PROD": {
+      "frequency": "medium",
+      "longname": "PO14C Production",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_PO14C_REMIN": {
+      "frequency": "medium",
+      "longname": "PO14C Remineralization",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "CISO_R13C_DIC_surf": {
       "frequency": "never",
       "longname": "13C/12C ratio in total DIC",
@@ -135,6 +327,14 @@
       "units": "permil",
       "vertical_grid": "none"
    },
+   "CISO_eps_aq_g": {
+      "frequency": "medium",
+      "longname": "Equilibrium fractionation (CO2_gaseous <-> CO2_aq)",
+      "module": "ciso",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
+   },
    "CISO_eps_aq_g_surf": {
       "frequency": "never",
       "longname": "Surface equilibrium fractionation (CO2_gaseous <-> CO2_aq)",
@@ -143,6 +343,14 @@
       "units": "permil",
       "vertical_grid": "none"
    },
+   "CISO_eps_dic_g": {
+      "frequency": "medium",
+      "longname": "Equilibrium fractionation between total DIC and gaseous CO2",
+      "module": "ciso",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
+   },
    "CISO_eps_dic_g_surf": {
       "frequency": "never",
       "longname": "Surface equilibrium fractionation between total DIC and gaseous CO2",
@@ -150,6 +358,54 @@
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
+   },
+   "CISO_photo13C_TOT": {
+      "frequency": "medium",
+      "longname": "Total 13C Fixation",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_photo13C_TOT_zint": {
+      "frequency": "medium",
+      "longname": "Total 13C Fixation Vertical Integral",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_photo14C_TOT": {
+      "frequency": "medium",
+      "longname": "Total 14C Fixation",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_photo14C_TOT_zint": {
+      "frequency": "medium",
+      "longname": "Total 14C Fixation Vertical Integral",
+      "module": "ciso",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_zooC_d13C": {
+      "frequency": "medium",
+      "longname": "d13C of zooC",
+      "module": "ciso",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_zooC_d14C": {
+      "frequency": "medium",
+      "longname": "d14C of zooC",
+      "module": "ciso",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
    },
    "CO2STAR": {
       "frequency": "medium",
@@ -181,6 +437,62 @@
       "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
+      "vertical_grid": "layer_avg"
+   },
+   "CaCO3_ALT_CO2_FLUX_IN": {
+      "frequency": "medium",
+      "longname": "CaCO3 Flux into Cell, Alternative CO2",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CaCO3_ALT_CO2_PROD": {
+      "frequency": "never",
+      "longname": "CaCO3 Production, Alternative CO2",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CaCO3_ALT_CO2_REMIN": {
+      "frequency": "medium",
+      "longname": "CaCO3 Remineralization, Alternative CO2",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CaCO3_FLUX_IN": {
+      "frequency": "medium",
+      "longname": "CaCO3 Flux into Cell",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CaCO3_PROD": {
+      "frequency": "medium",
+      "longname": "CaCO3 Production",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CaCO3_REMIN": {
+      "frequency": "medium",
+      "longname": "CaCO3 Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CaCO3_form": {
+      "frequency": "medium",
+      "longname": "Total CaCO3 Formation",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CaCO3_form_zint": {
@@ -591,6 +903,14 @@
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
+   "Nfix": {
+      "frequency": "never",
+      "longname": "Total N Fixation",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "O2SAT": {
       "frequency": "medium",
       "longname": "O2 Saturation",
@@ -663,6 +983,78 @@
       "units": "none",
       "vertical_grid": "none"
    },
+   "POC_FLUX_IN": {
+      "frequency": "medium",
+      "longname": "POC Flux into Cell",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "POC_PROD": {
+      "frequency": "medium",
+      "longname": "POC Production",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "POC_REMIN": {
+      "frequency": "medium",
+      "longname": "POC Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "POC_REMIN_DIC": {
+      "frequency": "medium",
+      "longname": "POC Remineralization routed to DIC",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "PON_REMIN_NH4": {
+      "frequency": "medium",
+      "longname": "PON Remineralization routed to NH4",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "POP_FLUX_IN": {
+      "frequency": "medium",
+      "longname": "POP Flux into Cell",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "POP_PROD": {
+      "frequency": "medium",
+      "longname": "POP Production",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "POP_REMIN": {
+      "frequency": "medium",
+      "longname": "POP Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "POP_REMIN_PO4": {
+      "frequency": "medium",
+      "longname": "POP Remineralization routed to PO4",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "PV_CO2": {
       "frequency": "never",
       "longname": "CO2 Piston Velocity",
@@ -678,6 +1070,30 @@
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
+   },
+   "P_iron_FLUX_IN": {
+      "frequency": "medium",
+      "longname": "P_iron Flux into Cell",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "P_iron_PROD": {
+      "frequency": "medium",
+      "longname": "P_iron Production",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "P_iron_REMIN": {
+      "frequency": "medium",
+      "longname": "P_iron Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
    },
    "SCHMIDT_CO2": {
       "frequency": "medium",
@@ -703,6 +1119,38 @@
       "units": "nmolN/cm^2/s",
       "vertical_grid": "none"
    },
+   "SiO2_FLUX_IN": {
+      "frequency": "medium",
+      "longname": "SiO2 Flux into Cell",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "SiO2_PROD": {
+      "frequency": "medium",
+      "longname": "SiO2 Production",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "SiO2_REMIN": {
+      "frequency": "never",
+      "longname": "SiO2 Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "bSi_form": {
+      "frequency": "medium",
+      "longname": "Total Si Uptake",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "bsiToSed": {
       "frequency": "medium",
       "longname": "biogenic Si Flux to Sediments",
@@ -715,6 +1163,22 @@
       "frequency": "medium",
       "longname": "CaCO3 Flux to Sediments",
       "module": "ecosys_base",
+      "operator": "average",
+      "units": "nmolC/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "calcToSed_13C": {
+      "frequency": "medium",
+      "longname": "Ca13CO3 Flux to Sediments",
+      "module": "ciso",
+      "operator": "average",
+      "units": "nmolC/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "calcToSed_14C": {
+      "frequency": "medium",
+      "longname": "Ca14CO3 Flux to Sediments",
+      "module": "ciso",
       "operator": "average",
       "units": "nmolC/cm^2/s",
       "vertical_grid": "none"
@@ -750,6 +1214,22 @@
       "operator": "average",
       "units": "g/cm^2/s",
       "vertical_grid": "none"
+   },
+   "dust_FLUX_IN": {
+      "frequency": "medium",
+      "longname": "Dust Flux into Cell",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "ng/s/m^2",
+      "vertical_grid": "layer_avg"
+   },
+   "dust_REMIN": {
+      "frequency": "medium",
+      "longname": "Dust Remineralization",
+      "module": "ecosys_base",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
    },
    "graze_auto_TOT": {
       "frequency": "never",
@@ -835,6 +1315,22 @@
       "frequency": "medium",
       "longname": "POC Flux to Sediments",
       "module": "ecosys_base",
+      "operator": "average",
+      "units": "nmolC/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "pocToSed_13C": {
+      "frequency": "medium",
+      "longname": "PO13C Flux to Sediments",
+      "module": "ciso",
+      "operator": "average",
+      "units": "nmolC/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "pocToSed_14C": {
+      "frequency": "medium",
+      "longname": "PO14C Flux to Sediments",
+      "module": "ciso",
       "operator": "average",
       "units": "nmolC/cm^2/s",
       "vertical_grid": "none"
