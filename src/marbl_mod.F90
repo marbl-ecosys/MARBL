@@ -1,3 +1,4 @@
+
 ! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
@@ -833,6 +834,9 @@ contains
     end if
 
     end associate
+
+    ! ADD RESTORING
+    dtracers = dtracers + interior_restore
 
   end subroutine marbl_set_interior_forcing
 
@@ -4368,9 +4372,9 @@ contains
     !  phosphate
     !-----------------------------------------------------------------------
 
-    dtracers(po4_ind) = DOP_remin + DOPr_remin - sum(PO4_V(:)) +           &
-           (c1 - POPremin_refract) * POP_remin + sum(remaining_P_dip(:)) + &
-           Qp_zoo * ( sum(zoo_loss_dic(:)) + sum(zoo_graze_dic(:)) )
+    dtracers(po4_ind) = DOP_remin + DOPr_remin - sum(PO4_V(:)) &
+         + (c1 - POPremin_refract) * POP_remin + sum(remaining_P_dip(:)) &
+         + Qp_zoo * ( sum(zoo_loss_dic(:)) + sum(zoo_graze_dic(:)) )
 
     !-----------------------------------------------------------------------
     !  zoo Carbon
@@ -4498,9 +4502,6 @@ contains
          / parm_Remin_D_C_O2 + (c2 * nitrif))
 
     dtracers(o2_ind) = o2_production - o2_consumption
-
-    ! ADD RESTORING
-    dtracers(:) = dtracers(:) + interior_restore(:)
 
     end associate
   end subroutine marbl_compute_dtracer_local
