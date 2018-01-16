@@ -607,7 +607,6 @@ contains
     !-----------------------------------------------------------------------
     !  Compute in situ temp
     !  displace surface parcel with temp potemp to pressure
-    !  treat the surface layer as having pressure 0
     !-----------------------------------------------------------------------
 
     surf_press(1:kmt) = c0
@@ -638,7 +637,7 @@ contains
 
     call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
                             marbl_status_log)
-    call marbl_compute_carbonate_chemistry(domain, potemp, pressure,     &
+    call marbl_compute_carbonate_chemistry(domain, temperature, pressure,     &
          salinity, tracer_local(:, :), marbl_tracer_indices, carbonate(:),    &
          ph_prev_col(:), ph_prev_alt_co2_col(:), zsat_calcite(:),             &
          zsat_aragonite(:), marbl_status_log)
@@ -660,10 +659,10 @@ contains
             autotrophs, autotroph_local(:, k), tracer_local(:, k),      &
             marbl_tracer_indices, autotroph_secondary_species(:, k))
 
-       call marbl_compute_function_scaling(potemp(k), Tfunc(k))
+       call marbl_compute_function_scaling(temperature(k), Tfunc(k))
 
        call marbl_compute_Pprime(k, domain, autotroph_cnt, autotrophs, &
-            autotroph_local(:, k), potemp(k), autotroph_secondary_species(:, k))
+            autotroph_local(:, k), temperature(k), autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_uptake(autotroph_cnt, autotrophs,  &
             tracer_local(:, k), marbl_tracer_indices,                  &
@@ -671,7 +670,7 @@ contains
 
        call marbl_compute_autotroph_photosynthesis(autotroph_cnt,       &
             num_PAR_subcols, autotrophs, autotroph_local(:, k),         &
-            potemp(k), Tfunc(k), PAR%col_frac(:), &
+            temperature(k), Tfunc(k), PAR%col_frac(:), &
             PAR%avg(k,:), autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_phyto_diatoms (autotroph_cnt, &
@@ -679,7 +678,7 @@ contains
             autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_calcification(autotroph_cnt,              &
-            autotrophs, autotroph_local(:, k), potemp(k),                &
+            autotrophs, autotroph_local(:, k), temperature(k),                &
             autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_nfixation(autotroph_cnt, autotrophs,      &
@@ -728,7 +727,7 @@ contains
        call marbl_compute_particulate_terms(k, domain,                   &
             marbl_particulate_share, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, &
             P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),         &
-            QA_dust_def(k), potemp(k),                              &
+            QA_dust_def(k), temperature(k),                              &
             tracer_local(:, k), carbonate(k), sed_denitrif(k),           &
             other_remin(k), fesedflux(k), marbl_tracer_indices,          &
             glo_avg_fields_interior, marbl_status_log)
@@ -832,7 +831,7 @@ contains
             marbl_zooplankton_share      = marbl_zooplankton_share, &
             marbl_autotroph_share        = marbl_autotroph_share,   &
             marbl_particulate_share      = marbl_particulate_share, &
-            temperature                  = potemp,             &
+            temperature                  = temperature,             &
             column_tracer                = tracers,                 &
             column_dtracer               = dtracers,                &
             marbl_tracer_indices         = marbl_tracer_indices,    &
@@ -2701,9 +2700,8 @@ contains
          )
 
     pressure_correct = .TRUE.
-    pressure_correct(1) = .FALSE.
-    do k=1,dkm
 
+    do k=1,dkm
        if (ph_prev_col(k)  /= c0) then
           ph_lower_bound(k) = ph_prev_col(k) - del_ph
           ph_upper_bound(k) = ph_prev_col(k) + del_ph
@@ -2711,7 +2709,6 @@ contains
           ph_lower_bound(k) = phlo_3d_init
           ph_upper_bound(k) = phhi_3d_init
        end if
-
     enddo
 
     call marbl_comp_CO3terms(&
