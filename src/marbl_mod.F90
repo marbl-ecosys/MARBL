@@ -472,6 +472,7 @@ contains
 
     !  Compute time derivatives for ecosystem state variables
 
+    use marbl_temperature, only : marbl_temperature_potemp
     use marbl_ciso_mod, only : marbl_ciso_set_interior_forcing
     use marbl_interface_private_types, only : marbl_internal_timers_type
     use marbl_interface_private_types, only : marbl_timer_indexing_type
@@ -509,6 +510,8 @@ contains
     integer (int_kind) :: n         ! tracer index
     integer (int_kind) :: k         ! vertical level index
 
+    real (r8) :: surf_press(domain%km)       ! pressure in surface layer
+    real (r8) :: temperature(domain%km)      ! in situ temperature
     real (r8) :: O2_production(domain%km)    ! O2 production
     real (r8) :: O2_consumption(domain%km)   ! O2 consumption
     real (r8) :: nitrif(domain%km)           ! nitrification (NH4 -> NO3) (mmol N/m^3/sec)
@@ -579,7 +582,7 @@ contains
 
          ! Hard-coding in that there is only 1 column passed in at a time!
          dust_flux_in        => interior_forcings(interior_forcing_indices%dustflux_id)%field_0d(1),   &
-         temperature         => interior_forcings(interior_forcing_indices%temperature_id)%field_1d(1,:),   &
+         potemp              => interior_forcings(interior_forcing_indices%potemp_id)%field_1d(1,:),   &
          pressure            => interior_forcings(interior_forcing_indices%pressure_id)%field_1d(1,:),   &
          salinity            => interior_forcings(interior_forcing_indices%salinity_id)%field_1d(1,:),   &
          fesedflux           => interior_forcings(interior_forcing_indices%fesedflux_id)%field_1d(1,:),   &
@@ -600,6 +603,16 @@ contains
          donr_ind          => marbl_tracer_indices%donr_ind,        &
          docr_ind          => marbl_tracer_indices%docr_ind         &
          )
+
+    !-----------------------------------------------------------------------
+    !  Compute in situ temp
+    !  displace surface parcel with temp potemp to pressure
+    !  treat the surface layer as having pressure 0
+    !-----------------------------------------------------------------------
+
+    surf_press(1:kmt) = c0
+    temperature(1:kmt) = marbl_temperature_potemp(kmt, salinity, potemp, surf_press, pressure)
+    temperature(kmt+1:km) = c0
 
     !-----------------------------------------------------------------------
     !  Compute adjustment to tendencies due to tracer restoring
@@ -625,7 +638,7 @@ contains
 
     call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
                             marbl_status_log)
-    call marbl_compute_carbonate_chemistry(domain, temperature, pressure,     &
+    call marbl_compute_carbonate_chemistry(domain, potemp, pressure,     &
          salinity, tracer_local(:, :), marbl_tracer_indices, carbonate(:),    &
          ph_prev_col(:), ph_prev_alt_co2_col(:), zsat_calcite(:),             &
          zsat_aragonite(:), marbl_status_log)
@@ -647,10 +660,10 @@ contains
             autotrophs, autotroph_local(:, k), tracer_local(:, k),      &
             marbl_tracer_indices, autotroph_secondary_species(:, k))
 
-       call marbl_compute_function_scaling(temperature(k), Tfunc(k))
+       call marbl_compute_function_scaling(potemp(k), Tfunc(k))
 
        call marbl_compute_Pprime(k, domain, autotroph_cnt, autotrophs, &
-            autotroph_local(:, k), temperature(k), autotroph_secondary_species(:, k))
+            autotroph_local(:, k), potemp(k), autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_uptake(autotroph_cnt, autotrophs,  &
             tracer_local(:, k), marbl_tracer_indices,                  &
@@ -658,7 +671,7 @@ contains
 
        call marbl_compute_autotroph_photosynthesis(autotroph_cnt,       &
             num_PAR_subcols, autotrophs, autotroph_local(:, k),         &
-            temperature(k), Tfunc(k), PAR%col_frac(:), &
+            potemp(k), Tfunc(k), PAR%col_frac(:), &
             PAR%avg(k,:), autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_phyto_diatoms (autotroph_cnt, &
@@ -666,7 +679,7 @@ contains
             autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_calcification(autotroph_cnt,              &
-            autotrophs, autotroph_local(:, k), temperature(k),                &
+            autotrophs, autotroph_local(:, k), potemp(k),                &
             autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_nfixation(autotroph_cnt, autotrophs,      &
@@ -715,7 +728,7 @@ contains
        call marbl_compute_particulate_terms(k, domain,                   &
             marbl_particulate_share, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, &
             P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),         &
-            QA_dust_def(k), temperature(k),                              &
+            QA_dust_def(k), potemp(k),                              &
             tracer_local(:, k), carbonate(k), sed_denitrif(k),           &
             other_remin(k), fesedflux(k), marbl_tracer_indices,          &
             glo_avg_fields_interior, marbl_status_log)
@@ -787,6 +800,7 @@ contains
          domain,                                            &
          interior_forcing_indices,                          &
          interior_forcings,                                 &
+         temperature,                                       &
          dtracers,                                          &
          marbl_tracer_indices,                              &
          carbonate,                                         &
@@ -818,7 +832,7 @@ contains
             marbl_zooplankton_share      = marbl_zooplankton_share, &
             marbl_autotroph_share        = marbl_autotroph_share,   &
             marbl_particulate_share      = marbl_particulate_share, &
-            temperature                  = temperature,             &
+            temperature                  = potemp,             &
             column_tracer                = tracers,                 &
             column_dtracer               = dtracers,                &
             marbl_tracer_indices         = marbl_tracer_indices,    &
@@ -2748,7 +2762,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_function_scaling(column_temperature, Tfunc )
+  subroutine marbl_compute_function_scaling(temperature, Tfunc)
 
     !-----------------------------------------------------------------------
     !  Tref = 30.0 reference temperature (deg. C)
@@ -2760,17 +2774,17 @@ contains
     use marbl_constants_mod, only : Tref
     use marbl_constants_mod, only : c10
 
-    real(r8), intent(in)  :: column_temperature
+    real(r8), intent(in)  :: temperature
     real(r8), intent(out) :: Tfunc
 
-    Tfunc = Q_10**(((column_temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
+    Tfunc = Q_10**(((temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
 
   end subroutine marbl_compute_function_scaling
 
   !***********************************************************************
 
   subroutine marbl_compute_Pprime(k, domain, auto_cnt, autotrophs, &
-       autotroph_local, column_temperature, autotroph_secondary_species)
+       autotroph_local, temperature, autotroph_secondary_species)
 
     use marbl_settings_mod, only : thres_z1_auto
     use marbl_settings_mod, only : thres_z2_auto
@@ -2780,7 +2794,7 @@ contains
     integer(int_kind)                      , intent(in)  :: auto_cnt
     type(autotroph_type)             , intent(in)  :: autotrophs(auto_cnt)
     type(autotroph_local_type)             , intent(in)  :: autotroph_local(auto_cnt)
-    real(r8)                               , intent(in)  :: column_temperature
+    real(r8)                               , intent(in)  :: temperature
     type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(auto_cnt)
 
     !-----------------------------------------------------------------------
@@ -2809,7 +2823,7 @@ contains
 
     !  Compute Pprime for all autotrophs, used for loss terms
     do auto_ind = 1, auto_cnt
-       if (column_temperature < autotrophs(auto_ind)%temp_thres) then
+       if (temperature < autotrophs(auto_ind)%temp_thres) then
           C_loss_thres = f_loss_thres * autotrophs(auto_ind)%loss_thres2
        else
           C_loss_thres = f_loss_thres * autotrophs(auto_ind)%loss_thres

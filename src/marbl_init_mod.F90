@@ -923,7 +923,7 @@ contains
 
 
         ! Temperature
-        if (id .eq. ind%temperature_id) then
+        if (id .eq. ind%potemp_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Temperature'
           interior_forcings(id)%metadata%field_units = 'Degrees C'

@@ -275,7 +275,7 @@ module marbl_interface_private_types
      integer(int_kind) :: surf_shortwave_id  = 0
 
      ! Column fields
-     integer(int_kind) :: temperature_id = 0
+     integer(int_kind) :: potemp_id      = 0
      integer(int_kind) :: salinity_id    = 0
      integer(int_kind) :: pressure_id    = 0
      integer(int_kind) :: fesedflux_id   = 0
@@ -915,9 +915,9 @@ contains
       forcing_cnt = forcing_cnt + 1
       this%surf_shortwave_id = forcing_cnt
 
-      ! Temperature
+      ! Potential Temperature
       forcing_cnt = forcing_cnt + 1
-      this%temperature_id = forcing_cnt
+      this%potemp_id = forcing_cnt
 
       ! Salinity
       forcing_cnt = forcing_cnt + 1
