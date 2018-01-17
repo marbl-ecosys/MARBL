@@ -191,7 +191,10 @@ class MARBL_testcase(object):
     print execmd
     print ''
     sys.stdout.flush()
-    sh_command(execmd)
+    status_code = sh_command(execmd)
+    if status_code != 0:
+        print "ERROR in executable"
+        sys.exit(status_code)
 
   # -----------------------------------------------
   # PRIVATE ROUTINES
