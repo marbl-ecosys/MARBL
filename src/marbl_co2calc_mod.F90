@@ -728,7 +728,7 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_co2calc_mod:marbl_comp_htotal'
+    character(len=*), parameter :: subname = 'marbl_co2calc_mod:comp_htotal'
 
     integer(kind=int_kind)   :: c
     real(kind=r8)            :: mass_to_vol                          ! (mol/kg) -> (mmol/m^3)

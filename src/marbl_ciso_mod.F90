@@ -244,7 +244,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_interior forcing'
+    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_interior_forcing'
 
     logical (log_kind) :: zero_mask
 

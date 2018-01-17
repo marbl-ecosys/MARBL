@@ -318,7 +318,7 @@ contains
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     ! local variables
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_tracer_dependent'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_post_tracers'
     character(len=char_len) :: log_message
 
     ! set default values for parameters
