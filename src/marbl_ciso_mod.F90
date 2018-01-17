@@ -1759,8 +1759,9 @@ contains
          alpha_k,          & ! eps = ( alpa -1 ) * 1000
          alpha_k_14c         ! for 14C, with fractionation being twice as large for 14C than for 13C
 
-    ! kinetic fraction during gas transfert (per mil) (air-sea CO2 exchange) at 21C, Zhang et al 1995,
-    real(r8), parameter :: eps_k = -0.81_r8  ! eps_k = -0.95 at 5C
+    ! kinetic fraction during gas transfer (per mil) (air-sea CO2 exchange)
+    ! average of Zhang et al 1995 values of -0.81 at 21C and -0.95 at 5C
+    real(r8), parameter :: eps_k = -0.88_r8
     !-----------------------------------------------------------------------
 
     associate(                                                                     &
