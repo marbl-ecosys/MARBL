@@ -923,19 +923,22 @@
                "PO4",
                "NO3",
                "SiO3",
-               "ALK"
+               "ALK",
+               "ALK_ALT_CO2"
             ],
             "GRID = CESM_x1": [
                "PO4",
                "NO3",
                "SiO3",
-               "ALK"
+               "ALK",
+               "ALK_ALT_CO2"
             ],
             "GRID = CESM_x3": [
                "PO4",
                "NO3",
                "SiO3",
-               "ALK"
+               "ALK",
+               "ALK_ALT_CO2"
             ],
             "default": ""
          },

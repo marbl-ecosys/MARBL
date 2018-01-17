@@ -840,5 +840,6 @@ tracer_dependent :
             - 'NO3'
             - 'SiO3'
             - 'ALK'
+            - 'ALK_ALT_CO2'
          GRID = CESM_x3 : *CESM_TRACER_RESTORE
          GRID = CESM_x1 : *CESM_TRACER_RESTORE
