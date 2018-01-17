@@ -925,7 +925,7 @@ contains
         ! Temperature
         if (id .eq. ind%potemp_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Temperature'
+          interior_forcings(id)%metadata%varname     = 'Potential Temperature'
           interior_forcings(id)%metadata%field_units = 'Degrees C'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_levels)
