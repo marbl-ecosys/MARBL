@@ -18,9 +18,9 @@ module marbl_co2calc_mod
   !   public/private declarations
   !-----------------------------------------------------------------------------
 
-  public  :: marbl_co2calc_surf
-  public  :: marbl_comp_CO3terms
-  public  :: marbl_comp_co3_sat_vals
+  public  :: marbl_co2calc_surface
+  public  :: marbl_co2calc_interior
+  public  :: marbl_co2calc_co3_sat_vals
 
   private :: comp_htotal
   private :: comp_co2calc_coeffs
@@ -82,27 +82,27 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_co2calc_surf( &
-       num_elements,             &
-       lcomp_co2calc_coeffs,     &
-       dic_in,                   &
-       xco2_in,                  &
-       ta_in,                    &
-       pt_in,                    &
-       sit_in,                   &
-       temp,                     &
-       salt,                     &
-       atmpres,                  &
-       co2calc_coeffs,           &
-       co2calc_state,            &
-       co3,                      &
-       co2star,                  &
-       dco2star,                 &
-       pco2surf,                 &
-       dpco2,                    &
-       phlo,                     &
-       phhi,                     &
-       ph,                       &
+  subroutine marbl_co2calc_surface( &
+       num_elements,                &
+       lcomp_co2calc_coeffs,        &
+       dic_in,                      &
+       xco2_in,                     &
+       ta_in,                       &
+       pt_in,                       &
+       sit_in,                      &
+       temp,                        &
+       salt,                        &
+       atmpres,                     &
+       co2calc_coeffs,              &
+       co2calc_state,               &
+       co3,                         &
+       co2star,                     &
+       dco2star,                    &
+       pco2surf,                    &
+       dpco2,                       &
+       phlo,                        &
+       phhi,                        &
+       ph,                          &
        marbl_status_log)
 
     !---------------------------------------------------------------------------
@@ -137,19 +137,16 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_co2calc_mod:marbl_co2calc_surf'
+    character(len=*), parameter :: subname = 'marbl_co2calc_mod:marbl_co2calc_surface'
 
     type(co2calc_state_type) :: co2calc_state_in(num_elements)
     integer(kind=int_kind)   :: n
-    integer(kind=int_kind)   :: k
     real(kind=r8)            :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
     real(kind=r8)            :: vol_to_mass          ! (mmol/m^3) -> (mol/kg)
     real(kind=r8)            :: co2starair           ! co2star saturation
     real(kind=r8)            :: htotal2, denom
     real(kind=r8)            :: xco2(num_elements)   ! atmospheric CO2 (atm)
     real(kind=r8)            :: htotal(num_elements) ! free concentration of H ion
-    real(kind=r8)            :: press_bar(num_elements)
-    logical(kind=log_kind)   :: pressure_correct(num_elements)
     !---------------------------------------------------------------------------
 
     ! temp and salt are not used out of co2calc_state at this time but are
@@ -178,18 +175,12 @@ contains
     mass_to_vol = 1e6_r8 * rho_sw
     vol_to_mass = c1 / mass_to_vol
 
-    ! all surface points:
-    k = 1
-    pressure_correct = .false.
-    press_bar = 0.0
-
     !---------------------------------------------------------------------------
     !   compute thermodynamic CO3 coefficients
     !---------------------------------------------------------------------------
 
     if (lcomp_co2calc_coeffs) then
-       call comp_co2calc_coeffs(num_elements, pressure_correct, press_bar,    &
-                                co2calc_state_in, co2calc_coeffs)
+       call comp_co2calc_coeffs(num_elements, co2calc_state_in, co2calc_coeffs)
     end if
 
     !---------------------------------------------------------------------------
@@ -252,12 +243,12 @@ contains
 
     end associate
 
-  end subroutine marbl_co2calc_surf
+  end subroutine marbl_co2calc_surface
 
   !***********************************************************************
 
-  subroutine marbl_comp_CO3terms(&
-       num_elements, num_active_elements, pressure_correct, lcomp_co2calc_coeffs,   &
+  subroutine marbl_co2calc_interior(&
+       num_elements, num_active_elements, lcomp_co2calc_coeffs,   &
        co2calc_coeffs,  co2calc_state, temp, salt, press_bar, dic_in, ta_in, pt_in, &
        sit_in, phlo, phhi, ph, H2CO3, HCO3, CO3, marbl_status_log)
 
@@ -269,7 +260,6 @@ contains
 
     integer(kind=int_kind)    , intent(in)    :: num_elements
     integer(kind=int_kind)    , intent(in)    :: num_active_elements
-    logical(kind=log_kind)    , intent(in)    :: pressure_correct(num_elements)
     logical(kind=log_kind)    , intent(in)    :: lcomp_co2calc_coeffs
     real(kind=r8)             , intent(in)    :: temp(num_elements)      ! temperature (degrees C)
     real(kind=r8)             , intent(in)    :: salt(num_elements)      ! salinity (PSU)
@@ -291,7 +281,7 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_co2calc_mod:marbl_comp_CO3terms'
+    character(len=*), parameter :: subname = 'marbl_co2calc_mod:marbl_co2calc_interior'
 
     type(co2calc_state_type) :: co2calc_state_in(num_elements)
     integer(kind=int_kind)   :: c
@@ -346,8 +336,7 @@ contains
     !------------------------------------------------------------------------
 
     if (lcomp_co2calc_coeffs) then
-       call comp_co2calc_coeffs(num_elements, pressure_correct, press_bar,    &
-                                co2calc_state_in, co2calc_coeffs)
+       call comp_co2calc_coeffs(num_elements, co2calc_state_in, co2calc_coeffs, press_bar)
     end if
 
     !------------------------------------------------------------------------
@@ -392,12 +381,11 @@ contains
 
     end associate
 
-  end subroutine marbl_comp_CO3terms
+  end subroutine marbl_co2calc_interior
 
   !*****************************************************************************
 
-  subroutine comp_co2calc_coeffs(num_elements, pressure_correct, press_bar,   &
-                                 co2calc_state_in, co2calc_coeffs)
+  subroutine comp_co2calc_coeffs(num_elements, co2calc_state_in, co2calc_coeffs, press_bar)
 
     !---------------------------------------------------------------------------
     ! FIXME #20: the computations for the individual constants need to
@@ -407,10 +395,9 @@ contains
     implicit none
 
     integer(kind=int_kind)    , intent(in)  :: num_elements
-    logical(kind=log_kind)    , intent(in)  :: pressure_correct(num_elements)
-    real(kind=r8)             , intent(in)  :: press_bar(num_elements) ! pressure at level (bars)
     type(co2calc_state_type)  , intent(in)  :: co2calc_state_in(num_elements)
     type(co2calc_coeffs_type) , intent(out) :: co2calc_coeffs(num_elements)
+    real(kind=r8), optional   , intent(in)  :: press_bar(num_elements) ! pressure at level (bars)
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -524,11 +511,11 @@ contains
     arg = -log(c10) * arg
     k1 = exp(arg)
 
-    call apply_pressure_correction(num_elements, pressure_correct, temp,      &
-         press_bar, invRtk,                                    &
-         deltaV_coefs = (/-25.5_r8, 0.1271_r8, c0/),           &
-         Kappa_coefs = (/-3.08_r8, 0.0877_r8, c0/),            &
-         therm_coef = k1)
+    call apply_pressure_correction(num_elements, temp, invRtk, &
+         deltaV_coefs = (/-25.5_r8, 0.1271_r8, c0/), &
+         Kappa_coefs = (/-3.08_r8, 0.0877_r8, c0/), &
+         therm_coef = k1, &
+         press_bar = press_bar)
 
     ! total pH scale
     arg = 471.78_r8 * invtk + 25.9290_r8 - &
@@ -536,11 +523,11 @@ contains
     arg = -log(c10) * arg
     k2 = exp(arg)
 
-    call apply_pressure_correction(num_elements, pressure_correct, temp,      &
-         press_bar, invRtk,                                    &
-         deltaV_coefs = (/-15.82_r8, -0.0219_r8, c0/),         &
-         Kappa_coefs = (/1.13_r8, -0.1475_r8, c0/),            &
-         therm_coef = k2)
+    call apply_pressure_correction(num_elements, temp, invRtk, &
+         deltaV_coefs = (/-15.82_r8, -0.0219_r8, c0/), &
+         Kappa_coefs = (/1.13_r8, -0.1475_r8, c0/), &
+         therm_coef = k2, &
+         press_bar = press_bar)
 
     !---------------------------------------------------------------------------
     !   kb = [H][BO2]/[HBO2]
@@ -558,11 +545,11 @@ contains
          0.053105_r8 * sqrts * tk
     kb = exp(arg)
 
-    call apply_pressure_correction(num_elements, pressure_correct, temp,      &
-         press_bar, invRtk,                                    &
-         deltaV_coefs = (/-29.48_r8, 0.1622_r8, -0.002608_r8/),&
-         Kappa_coefs = (/-2.84_r8, c0, c0/),                   &
-         therm_coef = kb)
+    call apply_pressure_correction(num_elements, temp, invRtk, &
+         deltaV_coefs = (/-29.48_r8, 0.1622_r8, -0.002608_r8/), &
+         Kappa_coefs = (/-2.84_r8, c0, c0/), &
+         therm_coef = kb, &
+         press_bar = press_bar)
 
     !---------------------------------------------------------------------------
     !   k1p = [H][H2PO4]/[H3PO4]
@@ -577,11 +564,11 @@ contains
          (-0.65643_r8 * invtk - 0.01844_r8) * salt_lim
     k1p = exp(arg)
 
-    call apply_pressure_correction(num_elements, pressure_correct, temp,      &
-         press_bar, invRtk,                                    &
-         deltaV_coefs = (/-14.51_r8, 0.1211_r8, -0.000321_r8/),&
-         Kappa_coefs = (/-2.67_r8, 0.0427_r8, c0/),            &
-         therm_coef = k1p)
+    call apply_pressure_correction(num_elements, temp, invRtk, &
+         deltaV_coefs = (/-14.51_r8, 0.1211_r8, -0.000321_r8/), &
+         Kappa_coefs = (/-2.67_r8, 0.0427_r8, c0/), &
+         therm_coef = k1p, &
+         press_bar = press_bar)
 
     !---------------------------------------------------------------------------
     !   k2p = [H][HPO4]/[H2PO4]
@@ -596,11 +583,11 @@ contains
          (0.37335_r8 * invtk - 0.05778_r8) * salt_lim
     k2p = exp(arg)
 
-    call apply_pressure_correction(num_elements, pressure_correct, temp,      &
-         press_bar, invRtk,                                    &
-         deltaV_coefs = (/-23.12_r8, 0.1758_r8, -0.002647_r8/),&
-         Kappa_coefs = (/-5.15_r8, 0.09_r8, c0/),              &
-         therm_coef = k2p)
+    call apply_pressure_correction(num_elements, temp, invRtk, &
+         deltaV_coefs = (/-23.12_r8, 0.1758_r8, -0.002647_r8/), &
+         Kappa_coefs = (/-5.15_r8, 0.09_r8, c0/), &
+         therm_coef = k2p, &
+         press_bar = press_bar)
 
     !---------------------------------------------------------------------------
     !   k3p = [H][PO4]/[HPO4]
@@ -614,11 +601,11 @@ contains
          (-44.99486_r8 * invtk - 0.09984_r8) * salt_lim
     k3p = exp(arg)
 
-    call apply_pressure_correction(num_elements, pressure_correct, temp,      &
-         press_bar, invRtk,                                    &
+    call apply_pressure_correction(num_elements, temp, invRtk, &
          deltaV_coefs = (/-26.57_r8, 0.202_r8, -0.003042_r8/), &
-         Kappa_coefs = (/-4.08_r8, 0.0714_r8, c0/),            &
-         therm_coef = k3p)
+         Kappa_coefs = (/-4.08_r8, 0.0714_r8, c0/), &
+         therm_coef = k3p, &
+         press_bar = press_bar)
 
     !---------------------------------------------------------------------------
     !   ksi = [H][SiO(OH)3]/[Si(OH)4]
@@ -636,11 +623,11 @@ contains
          log_1_m_1p005em3_s
     ksi = exp(arg)
 
-    call apply_pressure_correction(num_elements, pressure_correct, temp,      &
-         press_bar, invRtk,                                    &
-         deltaV_coefs = (/-29.48_r8, 0.1622_r8, -0.002608_r8/),&
-         Kappa_coefs = (/-2.84_r8, c0, c0/),                   &
-         therm_coef = ksi)
+    call apply_pressure_correction(num_elements, temp, invRtk, &
+         deltaV_coefs = (/-29.48_r8, 0.1622_r8, -0.002608_r8/), &
+         Kappa_coefs = (/-2.84_r8, c0, c0/), &
+         therm_coef = ksi, &
+         press_bar = press_bar)
 
     !---------------------------------------------------------------------------
     !   kw = [H][OH]
@@ -657,11 +644,11 @@ contains
          0.01615_r8 * salt_lim
     kw = exp(arg)
 
-    call apply_pressure_correction(num_elements, pressure_correct, temp,      &
-         press_bar, invRtk,                                    &
-         deltaV_coefs = (/-20.02_r8, 0.1119_r8, -0.001409_r8/),&
-         Kappa_coefs = (/-5.13_r8, 0.0794_r8, c0/),            &
-         therm_coef = kw)
+    call apply_pressure_correction(num_elements, temp, invRtk, &
+         deltaV_coefs = (/-20.02_r8, 0.1119_r8, -0.001409_r8/), &
+         Kappa_coefs = (/-5.13_r8, 0.0794_r8, c0/), &
+         therm_coef = kw, &
+         press_bar = press_bar)
 
     !---------------------------------------------------------------------------
     !   ks = [H][SO4]/[HSO4], free pH scale
@@ -678,11 +665,11 @@ contains
          log_1_m_1p005em3_s
     ks  = exp(arg)
 
-    call apply_pressure_correction(num_elements, pressure_correct, temp,      &
-         press_bar, invRtk,                                    &
+    call apply_pressure_correction(num_elements, temp, invRtk, &
          deltaV_coefs = (/-18.03_r8, 0.0466_r8, 0.000316_r8/), &
-         Kappa_coefs = (/-4.53_r8, 0.09_r8, c0/),              &
-         therm_coef = ks)
+         Kappa_coefs = (/-4.53_r8, 0.09_r8, c0/), &
+         therm_coef = ks, &
+         press_bar = press_bar)
 
     !---------------------------------------------------------------------
     !   kf = [H][F]/[HF]
@@ -697,11 +684,11 @@ contains
          log_1_m_1p005em3_s + log_1_p_tot_sulfate_div_ks
     kf  = exp(arg)
 
-    call apply_pressure_correction(num_elements, pressure_correct, temp,      &
-         press_bar, invRtk,                                    &
+    call apply_pressure_correction(num_elements, temp, invRtk, &
          deltaV_coefs = (/-9.78_r8, -0.009_r8, -0.000942_r8/), &
-         Kappa_coefs = (/-3.91_r8, 0.054_r8, c0/),             &
-         therm_coef = kf)
+         Kappa_coefs = (/-3.91_r8, 0.054_r8, c0/), &
+         therm_coef = kf, &
+         press_bar = press_bar)
 
     !---------------------------------------------------------------------
     !   Calculate concentrations for borate, sulfate, and fluoride
@@ -1155,8 +1142,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_comp_co3_sat_vals(&
-       num_elements, num_active_elements, pressure_correct, temp, salt, press_bar, &
+  subroutine marbl_co2calc_co3_sat_vals(&
+       num_elements, num_active_elements, temp, salt, press_bar, &
        co3_sat_calc, co3_sat_arag)
 
     !---------------------------------------------------------------------------
@@ -1168,7 +1155,6 @@ contains
 
     integer(kind=int_kind)                           , intent(in)  :: num_elements
     integer(kind=int_kind)                           , intent(in)  :: num_active_elements
-    logical(kind=log_kind) , dimension(num_elements) , intent(in)  :: pressure_correct
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: temp         ! temperature (degrees c)
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: salt         ! salinity (psu)
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: press_bar    ! pressure at level k (bars)
@@ -1187,8 +1173,6 @@ contains
          log10tk,invtk,sqrts,s15,invRtk,arg,  &
          K_calc,                              & ! thermodynamic constant for calcite
          K_arag,                              & ! thermodynamic constant for aragonite
-         deltaV,Kappa,                        & ! pressure correction terms
-         lnKfac,Kfac,                         & ! pressure correction terms
          inv_Ca                                 ! inverse of Calcium concentration (mol/kg)
 
     integer(kind=int_kind) :: n
@@ -1214,24 +1198,17 @@ contains
     !   Mucci, Amer. J. of Science 283:781-799, 1983 & Millero 1979
     !------------------------------------------------------------------------
 
-    ! Initialize to zero because this variable is not set where pressure_correct = .false.
-    lnKfac = c0
-
     arg = -171.9065_r8 - 0.077993_r8 * tk + 2839.319_r8 * invtk + 71.595_r8 * log10tk + &
          (-0.77712_r8 + 0.0028426_r8 * tk + 178.34_r8 * invtk) * sqrts - &
          0.07711_r8 * salt_lim + 0.0041249_r8 * s15
     arg = log(c10) * arg
     K_calc = exp(arg)
 
-    where (pressure_correct)
-       deltaV = -48.76_r8 + 0.5304_r8 * temp(:)
-       Kappa  = (-11.76_r8 + 0.3692_r8 * temp(:)) * p001
-       lnKfac = (-deltaV + p5 * Kappa * press_bar) * press_bar * invRtk
-    endwhere
-    Kfac = exp(lnKfac)
-    where (pressure_correct)
-       K_calc = K_calc * Kfac
-    endwhere
+    call apply_pressure_correction(num_elements, temp, invRtk, &
+         deltaV_coefs = (/-48.76_r8, 0.5304_r8, c0/), &
+         Kappa_coefs = (/-11.76_r8, 0.3692_r8, c0/), &
+         therm_coef = K_calc, &
+         press_bar = press_bar)
 
     arg = -171.945_r8 - 0.077993_r8 * tk + 2903.293_r8 * invtk + 71.595_r8 * log10tk + &
          (-0.068393_r8 + 0.0017276_r8 * tk + 88.135_r8 * invtk) * sqrts - &
@@ -1239,14 +1216,11 @@ contains
     arg = log(c10) * arg
     K_arag = exp(arg)
 
-    where (pressure_correct)
-       deltaV = deltaV + 2.8_r8
-       lnKfac = (-deltaV + p5 * Kappa * press_bar) * press_bar * invRtk
-    endwhere
-    Kfac = exp(lnKfac)
-    where (pressure_correct)
-       K_arag = K_arag * Kfac
-    endwhere
+    call apply_pressure_correction(num_elements, temp, invRtk, &
+         deltaV_coefs = (/-45.96_r8, 0.5304_r8, c0/), &
+         Kappa_coefs = (/-11.76_r8, 0.3692_r8, c0/), &
+         therm_coef = K_arag, &
+         press_bar = press_bar)
 
     do n=1,num_active_elements
 
@@ -1270,24 +1244,22 @@ contains
     co3_sat_calc(num_active_elements+1:num_elements) = c0
     co3_sat_arag(num_active_elements+1:num_elements) = c0
 
-  end subroutine marbl_comp_co3_sat_vals
+  end subroutine marbl_co2calc_co3_sat_vals
 
   !*****************************************************************************
 
-  subroutine apply_pressure_correction(num_elements, pressure_correct, temp,  &
-       press_bar, invRtk, deltaV_coefs, Kappa_coefs,     &
-       therm_coef)
+  subroutine apply_pressure_correction(num_elements, temp, invRtk, &
+       deltaV_coefs, Kappa_coefs, therm_coef, press_bar)
 
     implicit none
 
     integer,       intent(in)    :: num_elements
-    logical,       intent(in)    :: pressure_correct(:)
-    real(kind=r8), intent(in)    :: temp(:)
-    real(kind=r8), intent(in)    :: press_bar(:)
-    real(kind=r8), intent(in)    :: invRtk(:)
+    real(kind=r8), intent(in)    :: temp(num_elements)
+    real(kind=r8), intent(in)    :: invRtk(num_elements)
     real(kind=r8), intent(in)    :: deltaV_coefs(0:2)
     real(kind=r8), intent(in)    :: Kappa_coefs(0:2)
-    real(kind=r8), intent(inout) :: therm_coef(:)
+    real(kind=r8), intent(inout) :: therm_coef(num_elements)
+    real(kind=r8), optional, intent(in) :: press_bar(num_elements)
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -1295,19 +1267,13 @@ contains
     real(kind=r8), dimension(num_elements) :: deltaV, Kappa, lnKfac, Kfac
     !---------------------------------------------------------------------------
 
-    if (.not.any(pressure_correct)) return
+    if (.not. present(press_bar)) return
 
-    where (pressure_correct)
-       deltaV = deltaV_coefs(0) + (deltaV_coefs(1) + deltaV_coefs(2) * temp) * temp
-       Kappa  = (Kappa_coefs(0) + (Kappa_coefs(1) + Kappa_coefs(2) * temp) * temp) * p001
-       lnKfac = (-deltaV + p5 * Kappa * press_bar) * press_bar * invRtk
-    elsewhere
-       lnKfac = c0
-    endwhere
+    deltaV = deltaV_coefs(0) + (deltaV_coefs(1) + deltaV_coefs(2) * temp) * temp
+    Kappa  = (Kappa_coefs(0) + (Kappa_coefs(1) + Kappa_coefs(2) * temp) * temp) * p001
+    lnKfac = (-deltaV + p5 * Kappa * press_bar) * press_bar * invRtk
     Kfac = exp(lnKfac)
-    where (pressure_correct)
-       therm_coef = therm_coef * Kfac
-    endwhere
+    therm_coef = therm_coef * Kfac
 
   end subroutine apply_pressure_correction
 

@@ -1811,7 +1811,7 @@ contains
     use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
     use marbl_schmidt_number_mod, only : schmidt_co2_surf
     use marbl_oxygen, only : schmidt_o2_surf
-    use marbl_co2calc_mod, only : marbl_co2calc_surf
+    use marbl_co2calc_mod, only : marbl_co2calc_surface
     use marbl_co2calc_mod, only : co2calc_coeffs_type
     use marbl_co2calc_mod, only : co2calc_state_type
     use marbl_oxygen, only : o2sat_surf
@@ -1995,7 +1995,7 @@ contains
 
           ! Note the following computes a new ph_prev_surf
           ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
-          call marbl_co2calc_surf(                                         &
+          call marbl_co2calc_surface(                                      &
                num_elements     = num_elements,                            &
                lcomp_co2calc_coeffs = .true.,                              &
                dic_in     = surface_vals(:,dic_ind),                       &
@@ -2055,7 +2055,7 @@ contains
 
           ! Note the following computes a new ph_prev_alt_co2
           ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
-          call marbl_co2calc_surf(                                         &
+          call marbl_co2calc_surface(                                      &
                num_elements     = num_elements,                            &
                lcomp_co2calc_coeffs = .false.,                             &
                dic_in     = surface_vals(:,dic_alt_co2_ind),               &
@@ -2637,8 +2637,8 @@ contains
        salinity, tracer_local, marbl_tracer_indices, carbonate, ph_prev_col,   &
        ph_prev_alt_co2_col, zsat_calcite, zsat_aragonite, marbl_status_log)
 
-    use marbl_co2calc_mod, only : marbl_comp_co3terms
-    use marbl_co2calc_mod, only : marbl_comp_co3_sat_vals
+    use marbl_co2calc_mod, only : marbl_co2calc_interior
+    use marbl_co2calc_mod, only : marbl_co2calc_co3_sat_vals
     use marbl_co2calc_mod, only : co2calc_coeffs_type
     use marbl_co2calc_mod, only : co2calc_state_type
 
@@ -2663,7 +2663,6 @@ contains
     integer :: k
     type(co2calc_coeffs_type), dimension(domain%km) :: co2calc_coeffs
     type(co2calc_state_type) , dimension(domain%km) :: co2calc_state
-    logical(log_kind)        , dimension(domain%km) :: pressure_correct
     real(r8)                 , dimension(domain%km) :: ph_lower_bound
     real(r8)                 , dimension(domain%km) :: ph_upper_bound
     real(r8)                 , dimension(domain%km) :: dic_loc
@@ -2699,8 +2698,6 @@ contains
          ph_alt_co2        => carbonate(:)%pH_ALT_CO2             &
          )
 
-    pressure_correct = .TRUE.
-
     do k=1,dkm
        if (ph_prev_col(k)  /= c0) then
           ph_lower_bound(k) = ph_prev_col(k) - del_ph
@@ -2711,13 +2708,13 @@ contains
        end if
     enddo
 
-    call marbl_comp_CO3terms(&
-         dkm, column_kmt, pressure_correct, .true., co2calc_coeffs, co2calc_state, &
+    call marbl_co2calc_interior(&
+         dkm, column_kmt, .true., co2calc_coeffs, co2calc_state, &
          temperature, salinity, press_bar, dic_loc, alk_loc, po4_loc, sio3_loc,    &
          ph_lower_bound, ph_upper_bound, ph, h2co3, hco3, co3, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('marbl_comp_CO3terms()', subname)
+      call marbl_status_log%log_error_trace('marbl_co2calc_interior()', subname)
       return
     end if
 
@@ -2736,21 +2733,21 @@ contains
 
     enddo
 
-    call marbl_comp_CO3terms(&
-         dkm, column_kmt, pressure_correct, .false., co2calc_coeffs, co2calc_state,     &
+    call marbl_co2calc_interior(&
+         dkm, column_kmt, .false., co2calc_coeffs, co2calc_state,     &
          temperature, salinity, press_bar, dic_alt_co2_loc, alk_alt_co2_loc, po4_loc,   &
          sio3_loc, ph_lower_bound, ph_upper_bound, ph_alt_co2, h2co3_alt_co2,           &
          hco3_alt_co2, co3_alt_co2, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('marbl_comp_CO3terms()', subname)
+      call marbl_status_log%log_error_trace('marbl_co2calc_interior()', subname)
       return
     end if
 
     ph_prev_alt_co2_col = ph_alt_co2
 
-    call marbl_comp_co3_sat_vals(&
-         dkm, column_kmt, pressure_correct, temperature, salinity, &
+    call marbl_co2calc_co3_sat_vals(&
+         dkm, column_kmt, temperature, salinity, &
          press_bar, co3_sat_calcite, co3_sat_aragonite)
 
     end associate
