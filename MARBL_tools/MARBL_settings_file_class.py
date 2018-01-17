@@ -46,6 +46,10 @@ class MARBL_settings_class(object):
         for cat_name in self.get_category_names():
             for var_name in self.get_variable_names(cat_name):
                 self._process_variable_value(cat_name, var_name)
+            if cat_name == "PFT_derived_types":
+                self.settings_dict['_tracer_list'] = self._tracers_in_module('ecosys_base')
+                if self.settings_dict['ciso_on'] == '.true.':
+                    self.settings_dict['_tracer_list'].extend(self._tracers_in_module('ciso'))
 
         # 6. Abort if not all values from input file were processed
         #    (That implies at least one variable from input file was not recognized)
@@ -60,12 +64,18 @@ class MARBL_settings_class(object):
     #                             PUBLIC CLASS METHODS                             #
     ################################################################################
 
+    def get_tracer_list(self):
+        """ Returns a list of all tracers in current configuration
+        """
+        return self.settings_dict['_tracer_list']
+
+    ################################################################################
+
     def get_tracer_cnt(self):
-        """ Return the number of tracers MARBL is running with.
+        """ Returns the number of tracers MARBL is running with.
         """
 
-        return (self._settings['_tracer_cnt']['default'] +
-                _add_increments(self._settings['_tracer_cnt']['increments'], self.settings_dict))
+        return len(self.settings_dict['_tracer_list'])
 
     ################################################################################
 
@@ -83,7 +93,7 @@ class MARBL_settings_class(object):
         # 2. All keys listed in self._settings.keys() should also be in self._settings["_order"]
         #    (except _order itself)
         for key in self._settings.keys():
-            if key not in ["_order", "_tracer_cnt"] and key not in self._settings["_order"]:
+            if key not in ["_order", "_tracer_list"] and key not in self._settings["_order"]:
                 msg = "ERROR: '" + key + "' is not listed in '_order' and won't be processed"
                 _abort(msg)
 
@@ -159,6 +169,53 @@ class MARBL_settings_class(object):
     # TODO: define _value_is_valid()
     #       i.  datatype match?
     #       ii. optional valid_value key check
+
+    ################################################################################
+
+    def _tracers_in_module(self, module_name):
+        """ Parses self._settings['_tracer_list'][module_name] to determine
+            what tracers in a given module are enabled
+        """
+        tracer_list = []
+        tracer_list.extend(self._settings['_tracer_list'][module_name]['default'])
+
+        # per-autotroph tracers
+        for auto_ind in range(1, self.settings_dict['autotroph_cnt']+1):
+            # need autotroph short name:
+            auto_name = self.settings_dict['autotrophs(%d)%%sname' % auto_ind].strip('"')
+
+            # tracers associated with ALL autotrophs
+            if 'default' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
+                tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['default']])
+
+            # tracers only enabled if running with variable P to C
+            if 'variable_PtoC' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
+                if self.settings_dict['lvariable_PtoC'] == '.true.':
+                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['variable_PtoC']])
+
+            # tracers associated with silicifiers
+            if 'silicifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
+                if self.settings_dict['autotrophs(%d)%%silicifier' % auto_ind] == '.true.':
+                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['silicifier']])
+
+            # tracers associated with calcifiers
+            if 'calcifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
+                if '.true.' in [self.settings_dict['autotrophs(%d)%%exp_calcifier' % auto_ind],
+                                self.settings_dict['autotrophs(%d)%%imp_calcifier' % auto_ind]]:
+                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['calcifier']])
+
+        # per-zooplankton tracers
+        for zoo_ind in range(1, self.settings_dict['zooplankton_cnt']+1):
+            # need zooplankton short name
+            zoo_name = self.settings_dict['zooplankton(%d)%%sname' % zoo_ind].strip('"')
+
+            # tracers associated with ALL zooplankton
+            if 'default' in self._settings['_tracer_list'][module_name]['zooplankton'].keys():
+                tracer_list.extend([zoo_name+tracer for tracer in self._settings['_tracer_list'][module_name]['zooplankton']['default']])
+
+        return tracer_list
+
+    ################################################################################
 
     def _process_variable_value(self, category_name, variable_name):
         """ For a given variable in a given category, call _update_settings_dict()
@@ -389,28 +446,35 @@ def _get_dim_size(dim_in, settings_dict, dict_prefix=''):
         look up the dim_in key in settings_dict.
     """
 
-    if isinstance(dim_in, dict):
-        dim_start = dim_in['default']
-        check_increment = ('increments' in dim_in.keys())
-    else:
-        dim_start = dim_in
-        check_increment = False
+    logger = logging.getLogger(__name__)
 
-    if isinstance(dim_start, int):
-        # If dim_start is an integer, use it as dim_out
-        dim_out = dim_start
-    else:
+    # If dim_in is an integer, then it is the dimension size and should be returned
+    if isinstance(dim_in, int):
+        return dim_in
+
+    # If dim_in is a string, then it is a variable name that should be in
+    # settings_dict already
+    if isinstance(dim_in, unicode):
+        # If dim_in = _tracer_list, that's a special case where we want
+        # to find a list of tracers according to current settings
+        if dim_in == '_tracer_list':
+            return len(settings_dict['_tracer_list'])
+
         # Otherwise, dim_start must refer to a variable that could be
         # in the dictionary with or without the prefix
         try:
-            dim_out = settings_dict[dict_prefix+dim_start]
+            dim_out = settings_dict[dict_prefix+dim_in]
         except:
-            dim_out = settings_dict[dim_start]
+            try:
+                dim_out = settings_dict[dim_in]
+            except:
+                logger.error('Unknown variable name in _get_dim_size: %s' % dim_in)
+        return dim_out
 
-    if check_increment:
-        dim_out = dim_out + _add_increments(dim_in['increments'], settings_dict)
+    # Otherwise this is not a well-defined variable request
+    logger.error('_get_dim_size() requires integer or string argument')
+    _abort(1)
 
-    return dim_out
 ################################################################################
 
 def _get_array_info(array_size_in, settings_dict, dict_prefix=''):

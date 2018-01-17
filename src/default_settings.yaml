@@ -48,11 +48,57 @@ _order :
    - tracer_dependent
 
 # Tracer count
-_tracer_cnt : &TRACER_CNT
-   default : 32
-   increments :
-      lvariable_PtoC = .false. : -3
-      ciso_on = .true. : 14
+_tracer_list :
+   ecosys_base:
+      default:
+      - PO4
+      - NO3
+      - SiO3
+      - NH4
+      - Fe
+      - Lig
+      - O2
+      - DIC
+      - DIC_ALT_CO2
+      - ALK
+      - ALK_ALT_CO2
+      - DOC
+      - DON
+      - DOP
+      - DOPr
+      - DONr
+      - DOCr
+      autotrophs:
+         default:
+            - Chl
+            - C
+            - Fe
+         silicifier:
+            - Si
+         calcifier:
+            - CaCO3
+         variable_PtoC:
+            - P
+      zooplankton:
+         default:
+            - C
+   ciso:
+      default:
+         - DI13C
+         - DO13C
+         - DI14C
+         - DO14C
+      autotrophs:
+         default:
+            - C13
+            - C14
+         calcifier:
+            - Ca13CO3
+            - Ca14CO3
+      zooplankton:
+         default:
+            - 13C
+            - 14C
 
 ################################################################################
 #                        Category 1: General Parameters                        #
@@ -831,7 +877,7 @@ tracer_dependent :
       subcategory : 20. tracer restoring
       units : non-numeric
       datatype : string
-      _array_size : *TRACER_CNT
+      _array_size : _tracer_list
       _is_allocatable : true
       default_value :
          default : ''

@@ -566,11 +566,72 @@
       "PFT_derived_types",
       "tracer_dependent"
    ],
-   "_tracer_cnt": {
-      "default": 32,
-      "increments": {
-         "ciso_on = .true.": 14,
-         "lvariable_PtoC = .false.": -3
+   "_tracer_list": {
+      "ciso": {
+         "autotrophs": {
+            "calcifier": [
+               "Ca13CO3",
+               "Ca14CO3"
+            ],
+            "default": [
+               "C13",
+               "C14"
+            ]
+         },
+         "default": [
+            "DI13C",
+            "DO13C",
+            "DI14C",
+            "DO14C"
+         ],
+         "zooplankton": {
+            "default": [
+               "13C",
+               "14C"
+            ]
+         }
+      },
+      "ecosys_base": {
+         "autotrophs": {
+            "calcifier": [
+               "CaCO3"
+            ],
+            "default": [
+               "Chl",
+               "C",
+               "Fe"
+            ],
+            "silicifier": [
+               "Si"
+            ],
+            "variable_PtoC": [
+               "P"
+            ]
+         },
+         "default": [
+            "PO4",
+            "NO3",
+            "SiO3",
+            "NH4",
+            "Fe",
+            "Lig",
+            "O2",
+            "DIC",
+            "DIC_ALT_CO2",
+            "ALK",
+            "ALK_ALT_CO2",
+            "DOC",
+            "DON",
+            "DOP",
+            "DOPr",
+            "DONr",
+            "DOCr"
+         ],
+         "zooplankton": {
+            "default": [
+               "C"
+            ]
+         }
       }
    },
    "general_parms": {
@@ -909,13 +970,7 @@
    },
    "tracer_dependent": {
       "tracer_restore_vars": {
-         "_array_size": {
-            "default": 32,
-            "increments": {
-               "ciso_on = .true.": 14,
-               "lvariable_PtoC = .false.": -3
-            }
-         },
+         "_array_size": "_tracer_list",
          "_is_allocatable": true,
          "datatype": "string",
          "default_value": {
