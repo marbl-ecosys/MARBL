@@ -1760,7 +1760,7 @@ contains
     ! Newton's method for POP_bury(coeff) - P_input = 0
 
     POP_bury_coeff = rmean_POP_bury_coeff &
-       - (rmean_POP_bury_avg - rmean_P_input_avg) / rmean_POP_bury_coeff
+       - (rmean_POP_bury_avg - rmean_P_input_avg) / rmean_POP_bury_deriv_avg
 
     ! Newton's method for bSi_bury(coeff) - Si_input = 0
 
