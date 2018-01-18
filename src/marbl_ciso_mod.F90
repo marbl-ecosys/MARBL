@@ -244,7 +244,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_interior forcing'
+    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_interior_forcing'
 
     logical (log_kind) :: zero_mask
 
@@ -459,6 +459,7 @@ contains
        !-----------------------------------------------------------------------
        !  set local 13C/12C ratios, assuming ecosystem carries 12C (C=C12+C13+C14)
        !  If any Carbon boxes are zero, set corresponding 13C to zeros.
+       !  Calculate fraction of CO3
        !-----------------------------------------------------------------------
 
        if (DOC_loc(k) > c0) then
@@ -472,9 +473,11 @@ contains
        if (DIC_loc(k) > c0) then
           R13C_DIC(k) = DI13C_loc(k) / DIC_loc(k)
           R14C_DIC(k) = DI14C_loc(k) / DIC_loc(k)
+          frac_co3(k) = CO3(k) / DIC_loc(k)
        else
           R13C_DIC(k) = c0
           R14C_DIC(k) = c0
+          frac_co3(k) = c0
        end if
 
        work1 = sum(zooC_loc(:,k),dim=1)
@@ -503,16 +506,6 @@ contains
              R14C_autotrophCaCO3(auto_ind,k) = c0
           end if
        end do
-
-       !-----------------------------------------------------------------------
-       ! Calculate fraction of CO3
-       !-----------------------------------------------------------------------
-
-       if (k > column_kmt) then
-          frac_co3(k) = c0
-       else
-          frac_co3(k) = CO3(k) / DIC_loc(k)
-       end if
 
        !-----------------------------------------------------------------------
        !   discrimination factors of carbone chemistry based on
@@ -1804,9 +1797,11 @@ contains
     where ( dic(:) /= c0 ) 
        R13C_dic(:) = surface_vals(:,di13c_ind) / dic(:)
        R14C_dic(:) = surface_vals(:,di14c_ind) / dic(:)
+       frac_co3(:) = CO3_SURF_fields(:) / dic(:)
     elsewhere
        R13C_dic(:) = c0
        R14C_dic(:) = c0
+       frac_co3(:) = c0
     end where
 
     !-----------------------------------------------------------------------
@@ -1833,8 +1828,6 @@ contains
     !     Using this one, which is based on the empirical relationship from
     !     the measured e_dic_g_surf of Zhang et al. 1995
     !---------------------------------------------------------------------
-
-    frac_co3(:) = CO3_SURF_fields(:) / dic(:)
 
     eps_dic_g_surf(:) = 0.014_r8 * sst(:) * frac_co3(:) - 0.105_r8 * sst(:) + 10.53_r8
 

@@ -2197,7 +2197,7 @@ contains
     character(len=*), optional, intent(out)   :: sval
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_settings_mod%get'
+    character(len=*), parameter :: subname = 'marbl_settings_mod:get'
     character(len=char_len)     :: log_message
 
     type(marbl_single_setting_ll_type), pointer :: ll_ptr
