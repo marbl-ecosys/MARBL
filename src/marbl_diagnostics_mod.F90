@@ -113,6 +113,7 @@ module marbl_diagnostics_mod
     integer(int_kind) :: tot_CaCO3_form_zint
 
     ! General 3D diags
+    integer(int_kind) :: insitu_temp
     integer(int_kind) :: CO3
     integer(int_kind) :: HCO3
     integer(int_kind) :: H2CO3
@@ -1301,6 +1302,18 @@ contains
       end if
 
       ! General 3D diags
+      lname = 'in situ temperature'
+      sname = 'insitu_temp'
+      units = 'degC'
+      vgrid = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%insitu_temp, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
       lname = 'Carbonate Ion Concentration'
       sname = 'CO3'
       units = 'mmol/m^3'
@@ -3176,6 +3189,7 @@ contains
        domain,                                        &
        interior_forcing_ind,                          &
        interior_forcings,                             &
+       temperature,                                   &
        dtracers,                                      &
        marbl_tracer_indices,                          &
        carbonate,                                     &
@@ -3202,6 +3216,7 @@ contains
     type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
 
     type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
+    real (r8)                                 , intent(in) :: temperature(domain%km) ! in situ temperature
     real(r8), intent(in) :: dtracers(:,:) ! (tracer_cnt, km) computed source/sink terms
 
     type(marbl_tracer_index_type)             , intent(in) :: marbl_tracer_indices
@@ -3236,21 +3251,20 @@ contains
 
     !-----------------------------------------------------------------
 
-    associate(                                                                &
-         POC              => marbl_particulate_share%POC,                     &
-         POP              => marbl_particulate_share%POP,                     &
-         P_CaCO3          => marbl_particulate_share%P_CaCO3,                 &
-         P_SiO2           => marbl_particulate_share%P_SiO2,                  &
-         dust             => marbl_particulate_share%dust,                    &
-         P_iron           => marbl_particulate_share%P_iron                   &
-         )
-
     call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace(&
            'marbl_interior_forcing_diags%set_to_zero', subname)
       return
     end if
+
+    associate( &
+         kmt   => domain%kmt, &
+         diags => marbl_interior_forcing_diags%diags, &
+         ind   => marbl_interior_diag_ind &
+         )
+    diags(ind%insitu_temp)%field_3d(1:kmt, 1) = temperature(1:kmt)
+    end associate
 
     call store_diagnostics_carbonate(domain, carbonate,                       &
          marbl_interior_forcing_diags, marbl_status_log)
@@ -3274,14 +3288,18 @@ contains
          PON_remin, PON_sed_loss, &
          sed_denitrif, other_remin, marbl_interior_forcing_diags)
 
+    associate( POC     => marbl_particulate_share%POC, &
+               P_CaCO3 => marbl_particulate_share%P_CaCO3 )
     call store_diagnostics_carbon_fluxes(domain, POC, P_CaCO3, dtracers,      &
          marbl_tracer_indices, marbl_interior_forcing_diags)
+
+    end associate
 
     call store_diagnostics_nitrification(&
          nitrif, denitrif, marbl_interior_forcing_diags)
 
     call store_diagnostics_oxygen(domain, &
-         interior_forcings(interior_forcing_ind%temperature_id)%field_1d(1,:), &
+         interior_forcings(interior_forcing_ind%potemp_id)%field_1d(1,:), &
          interior_forcings(interior_forcing_ind%salinity_id)%field_1d(1,:), &
          column_o2, o2_production, o2_consumption, marbl_interior_forcing_diags)
 
@@ -3299,21 +3317,26 @@ contains
          PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracers, &
          marbl_tracer_indices, marbl_interior_forcing_diags)
 
+    associate( POP => marbl_particulate_share%POP )
     call store_diagnostics_phosphorus_fluxes(domain, POP, &
          autotroph_secondary_species, dtracers, &
          marbl_tracer_indices, marbl_interior_forcing_diags)
+    end associate
 
+    associate( P_SiO2 => marbl_particulate_share%P_SiO2 )
     call store_diagnostics_silicon_fluxes(domain, P_SiO2, dtracers,           &
          marbl_tracer_indices, marbl_interior_forcing_diags)
+    end associate
 
+    associate( dust   => marbl_particulate_share%dust, &
+               P_iron => marbl_particulate_share%P_iron )
     call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
          interior_forcings(interior_forcing_ind%fesedflux_id)%field_1d(1,:),  &
          dtracers, marbl_tracer_indices, marbl_interior_forcing_diags)
+    end associate
 
     call store_diagnostics_interior_restore(interior_restore,                 &
                                             marbl_interior_forcing_diags)
-
-    end associate
 
   end subroutine marbl_diagnostics_set_interior_forcing
 
@@ -3846,13 +3869,13 @@ contains
 
    !***********************************************************************
 
-  subroutine store_diagnostics_oxygen(marbl_domain, temperature, salinity, &
+  subroutine store_diagnostics_oxygen(marbl_domain, potemp, salinity, &
        column_o2, o2_production, o2_consumption, marbl_interior_diags)
 
     use marbl_oxygen, only : o2sat_scalar
 
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain
-    real(r8)                                , intent(in)    :: temperature(:)
+    real(r8)                                , intent(in)    :: potemp(:)
     real(r8)                                , intent(in)    :: salinity(:)
     real(r8)                                , intent(in)    :: column_o2(:)
     real(r8)                                , intent(in)    :: o2_production(:)
@@ -3882,7 +3905,7 @@ contains
     diags(ind%O2_CONSUMPTION)%field_3d(:, 1) = o2_consumption
 
     do k=1,kmt
-       diags(ind%AOU)%field_3d(k, 1) = O2SAT_scalar(temperature(k), salinity(k)) - column_o2(k)
+       diags(ind%AOU)%field_3d(k, 1) = O2SAT_scalar(potemp(k), salinity(k)) - column_o2(k)
     end do
 
     end associate
