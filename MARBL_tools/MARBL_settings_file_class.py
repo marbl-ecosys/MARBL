@@ -177,7 +177,7 @@ class MARBL_settings_class(object):
             what tracers in a given module are enabled
         """
         tracer_list = []
-        tracer_list.extend(self._settings['_tracer_list'][module_name]['default'])
+        tracer_list.extend(self._settings['_tracer_list'][module_name]['default'].keys())
 
         # per-autotroph tracers
         for auto_ind in range(1, self.settings_dict['autotroph_cnt']+1):
@@ -186,23 +186,23 @@ class MARBL_settings_class(object):
 
             # tracers associated with ALL autotrophs
             if 'default' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
-                tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['default']])
+                tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['default'].keys()])
 
             # tracers only enabled if running with variable P to C
             if 'variable_PtoC' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
                 if self.settings_dict['lvariable_PtoC'] == '.true.':
-                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['variable_PtoC']])
+                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['variable_PtoC'].keys()])
 
             # tracers associated with silicifiers
             if 'silicifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
                 if self.settings_dict['autotrophs(%d)%%silicifier' % auto_ind] == '.true.':
-                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['silicifier']])
+                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['silicifier'].keys()])
 
             # tracers associated with calcifiers
             if 'calcifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
                 if '.true.' in [self.settings_dict['autotrophs(%d)%%exp_calcifier' % auto_ind],
                                 self.settings_dict['autotrophs(%d)%%imp_calcifier' % auto_ind]]:
-                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['calcifier']])
+                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['calcifier'].keys()])
 
         # per-zooplankton tracers
         for zoo_ind in range(1, self.settings_dict['zooplankton_cnt']+1):
@@ -211,7 +211,7 @@ class MARBL_settings_class(object):
 
             # tracers associated with ALL zooplankton
             if 'default' in self._settings['_tracer_list'][module_name]['zooplankton'].keys():
-                tracer_list.extend([zoo_name+tracer for tracer in self._settings['_tracer_list'][module_name]['zooplankton']['default']])
+                tracer_list.extend([zoo_name+tracer for tracer in self._settings['_tracer_list'][module_name]['zooplankton']['default'].keys()])
 
         return tracer_list
 

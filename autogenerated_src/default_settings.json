@@ -569,68 +569,170 @@
    "_tracer_list": {
       "ciso": {
          "autotrophs": {
-            "calcifier": [
-               "Ca13CO3",
-               "Ca14CO3"
-            ],
-            "default": [
-               "C13",
-               "C14"
-            ]
+            "calcifier": {
+               "Ca13CO3": {
+                  "long_name": "//lname// Ca13CO3",
+                  "units": "mmol/m^3"
+               },
+               "Ca14CO3": {
+                  "long_name": "//lname// Ca14CO3",
+                  "units": "mmol/m^3"
+               }
+            },
+            "default": {
+               "C13": {
+                  "long_name": "//lname// Carbon-13",
+                  "units": "mmol/m^3"
+               },
+               "C14": {
+                  "long_name": "//lname// Carbon-14",
+                  "units": "mmol/m^3"
+               }
+            }
          },
-         "default": [
-            "DI13C",
-            "DO13C",
-            "DI14C",
-            "DO14C"
-         ],
+         "default": {
+            "DI13C": {
+               "long_name": "Dissolved Inorganic Carbon-13",
+               "units": "mmol/m^3"
+            },
+            "DI14C": {
+               "long_name": "Dissolved Inorganic Carbon-14",
+               "units": "mmol/m^3"
+            },
+            "DO13C": {
+               "long_name": "Dissolved Organic Carbon-13",
+               "units": "mmol/m^3"
+            },
+            "DO14C": {
+               "long_name": "Dissolved Organic Carbon-14",
+               "units": "mmol/m^3"
+            }
+         },
          "zooplankton": {
-            "default": [
-               "13C",
-               "14C"
-            ]
+            "default": {
+               "13C": {
+                  "long_name": "//lname// Carbon-13",
+                  "units": "mmol/m^3"
+               },
+               "14C": {
+                  "long_name": "//lname// Carbon-14",
+                  "units": "mmol/m^3"
+               }
+            }
          }
       },
       "ecosys_base": {
          "autotrophs": {
-            "calcifier": [
-               "CaCO3"
-            ],
-            "default": [
-               "Chl",
-               "C",
-               "Fe"
-            ],
-            "silicifier": [
-               "Si"
-            ],
-            "variable_PtoC": [
-               "P"
-            ]
+            "calcifier": {
+               "CaCO3": {
+                  "long_name": "//lname// CaCO3",
+                  "units": "mmol/m^3"
+               }
+            },
+            "default": {
+               "C": {
+                  "long_name": "//lname// Carbon",
+                  "units": "mmol/m^3"
+               },
+               "Chl": {
+                  "long_name": "//lname// Chlorophyll",
+                  "units": "mmol/m^3"
+               },
+               "Fe": {
+                  "long_name": "//lname// Iron",
+                  "units": "mmol/m^3"
+               }
+            },
+            "silicifier": {
+               "Si": {
+                  "long_name": "//lname// Silicon",
+                  "units": "mmol/m^3"
+               }
+            },
+            "variable_PtoC": {
+               "P": {
+                  "long_name": "//lname// Phosphorus",
+                  "units": "mmol/m^3"
+               }
+            }
          },
-         "default": [
-            "PO4",
-            "NO3",
-            "SiO3",
-            "NH4",
-            "Fe",
-            "Lig",
-            "O2",
-            "DIC",
-            "DIC_ALT_CO2",
-            "ALK",
-            "ALK_ALT_CO2",
-            "DOC",
-            "DON",
-            "DOP",
-            "DOPr",
-            "DONr",
-            "DOCr"
-         ],
+         "default": {
+            "ALK": {
+               "long_name": "Alkalinity",
+               "units": "meq/m^3"
+            },
+            "ALK_ALT_CO2": {
+               "long_name": "Alkalinity, Alternative CO2",
+               "units": "meq/m^3"
+            },
+            "DIC": {
+               "long_name": "Dissolved Inorganic Carbon",
+               "units": "mmol/m^3"
+            },
+            "DIC_ALT_CO2": {
+               "long_name": "Dissolved Inorganic Carbon, Alternative CO2",
+               "units": "mmol/m^3"
+            },
+            "DOC": {
+               "long_name": "Dissolved Organic Carbon",
+               "units": "mmol/m^3"
+            },
+            "DOCr": {
+               "long_name": "Refractory DOC",
+               "units": "mmol/m^3"
+            },
+            "DON": {
+               "long_name": "Dissolved Organic Nitrogen",
+               "units": "mmol/m^3"
+            },
+            "DONr": {
+               "long_name": "Refractory DON",
+               "units": "mmol/m^3"
+            },
+            "DOP": {
+               "long_name": "Dissolved Organic Phosphorus",
+               "units": "mmol/m^3"
+            },
+            "DOPr": {
+               "long_name": "Refractory DOP",
+               "units": "mmol/m^3"
+            },
+            "Fe": {
+               "long_name": "Dissolved Inorganic Iron",
+               "units": "mmol/m^3"
+            },
+            "Lig": {
+               "long_name": "Iron Binding Ligand",
+               "units": "mmol/m^3"
+            },
+            "NH4": {
+               "long_name": "Dissolved Ammonia",
+               "units": "mmol/m^3"
+            },
+            "NO3": {
+               "long_name": "Dissolved Inorganic Nitrate",
+               "units": "mmol/m^3"
+            },
+            "O2": {
+               "long_name": "Dissolved Oxygen",
+               "units": "mmol/m^3"
+            },
+            "PO4": {
+               "long_name": "Dissolved Inorganic Phosphate",
+               "units": "mmol/m^3"
+            },
+            "SiO3": {
+               "long_name": "Dissolved Inorganic Silicate",
+               "units": "mmol/m^3"
+            }
+         },
          "zooplankton": {
-            "default": [
-               "C"
-            ]
+            "default": {
+               "C": {
+                  "long_name": "//lname// Carbon",
+                  "units": "mmol/m^3"
+               }
+            }
          }
       }
    },
