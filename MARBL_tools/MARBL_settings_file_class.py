@@ -46,10 +46,12 @@ class MARBL_settings_class(object):
         for cat_name in self.get_category_names():
             for var_name in self.get_variable_names(cat_name):
                 self._process_variable_value(cat_name, var_name)
+            # 5b. Need tracer count after determining PFT_derived_types, which means
+            #     determining which tracers are active
             if cat_name == "PFT_derived_types":
-                self.settings_dict['_tracer_list'] = self._tracers_in_module('ecosys_base')
+                self.settings_dict['_tracer_dict'] = self._tracers_in_module('ecosys_base')
                 if self.settings_dict['ciso_on'] == '.true.':
-                    self.settings_dict['_tracer_list'].extend(self._tracers_in_module('ciso'))
+                    self.settings_dict['_tracer_dict'].update(self._tracers_in_module('ciso'))
 
         # 6. Abort if not all values from input file were processed
         #    (That implies at least one variable from input file was not recognized)
@@ -64,10 +66,10 @@ class MARBL_settings_class(object):
     #                             PUBLIC CLASS METHODS                             #
     ################################################################################
 
-    def get_tracer_list(self):
+    def get_tracer_names(self):
         """ Returns a list of all tracers in current configuration
         """
-        return self.settings_dict['_tracer_list']
+        return self.settings_dict['_tracer_dict'].keys()
 
     ################################################################################
 
@@ -75,7 +77,7 @@ class MARBL_settings_class(object):
         """ Returns the number of tracers MARBL is running with.
         """
 
-        return len(self.settings_dict['_tracer_list'])
+        return len(self.get_tracer_names())
 
     ################################################################################
 
@@ -176,44 +178,69 @@ class MARBL_settings_class(object):
         """ Parses self._settings['_tracer_list'][module_name] to determine
             what tracers in a given module are enabled
         """
-        tracer_list = []
-        tracer_list.extend(self._settings['_tracer_list'][module_name]['default'].keys())
+        tracer_dict = {}
+        module_tracers = self._settings['_tracer_list'][module_name]
+        for tracer in self._settings['_tracer_list'][module_name]['default'].keys():
+            tracer_dict[tracer] = module_tracers['default'][tracer]
 
         # per-autotroph tracers
-        for auto_ind in range(1, self.settings_dict['autotroph_cnt']+1):
-            # need autotroph short name:
-            auto_name = self.settings_dict['autotrophs(%d)%%sname' % auto_ind].strip('"')
+        if 'autotrophs' in module_tracers.keys():
+            auto_tracers = module_tracers['autotrophs']
+            for auto_ind in range(1, self.settings_dict['autotroph_cnt']+1):
+                # need autotroph short name:
+                auto_sname = self.settings_dict['autotrophs(%d)%%sname' % auto_ind].strip('"')
+                auto_lname = self.settings_dict['autotrophs(%d)%%lname' % auto_ind].strip('"')
 
-            # tracers associated with ALL autotrophs
-            if 'default' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
-                tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['default'].keys()])
+                # tracers associated with ALL autotrophs
+                if 'default' in auto_tracers.keys():
+                    for tracer in auto_tracers['default'].keys():
+                        tracer_dict[auto_sname+tracer] = dict(auto_tracers['default'][tracer])
+                        # Replace //lname// in long_name with auto_lname
+                        tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('//lname//', auto_lname)
 
-            # tracers only enabled if running with variable P to C
-            if 'variable_PtoC' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
-                if self.settings_dict['lvariable_PtoC'] == '.true.':
-                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['variable_PtoC'].keys()])
+                # tracers only enabled if running with variable P to C
+                if 'variable_PtoC' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
+                    if self.settings_dict['lvariable_PtoC'] == '.true.':
+                        for tracer in auto_tracers['variable_PtoC'].keys():
+                            tracer_dict[auto_sname+tracer] = dict(auto_tracers['variable_PtoC'][tracer])
+                            # Replace //lname// in long_name with auto_lname
+                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('//lname//', auto_lname)
 
-            # tracers associated with silicifiers
-            if 'silicifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
-                if self.settings_dict['autotrophs(%d)%%silicifier' % auto_ind] == '.true.':
-                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['silicifier'].keys()])
+                # tracers associated with silicifiers
+                if 'silicifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
+                    if self.settings_dict['autotrophs(%d)%%silicifier' % auto_ind] == '.true.':
+                        for tracer in auto_tracers['silicifier'].keys():
+                            tracer_dict[auto_sname+tracer] = dict(auto_tracers['silicifier'][tracer])
+                            # Replace //lname// in long_name with auto_lname
+                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('//lname//', auto_lname)
 
-            # tracers associated with calcifiers
-            if 'calcifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
-                if '.true.' in [self.settings_dict['autotrophs(%d)%%exp_calcifier' % auto_ind],
-                                self.settings_dict['autotrophs(%d)%%imp_calcifier' % auto_ind]]:
-                    tracer_list.extend([auto_name+tracer for tracer in self._settings['_tracer_list'][module_name]['autotrophs']['calcifier'].keys()])
+                # tracers associated with calcifiers
+                if 'calcifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
+                    if '.true.' in [self.settings_dict['autotrophs(%d)%%exp_calcifier' % auto_ind],
+                                    self.settings_dict['autotrophs(%d)%%imp_calcifier' % auto_ind]]:
+                        for tracer in auto_tracers['calcifier'].keys():
+                            tracer_dict[auto_sname+tracer] = dict(auto_tracers['calcifier'][tracer])
+                            # Replace //lname// in long_name with auto_lname
+                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('//lname//', auto_lname)
+
+                del auto_sname, auto_lname
 
         # per-zooplankton tracers
-        for zoo_ind in range(1, self.settings_dict['zooplankton_cnt']+1):
-            # need zooplankton short name
-            zoo_name = self.settings_dict['zooplankton(%d)%%sname' % zoo_ind].strip('"')
+        if 'zooplankton' in module_tracers.keys():
+            zoo_tracers = module_tracers['zooplankton']
+            for zoo_ind in range(1, self.settings_dict['zooplankton_cnt']+1):
+                # need zooplankton short name
+                zoo_sname = self.settings_dict['zooplankton(%d)%%sname' % zoo_ind].strip('"')
+                zoo_lname = self.settings_dict['zooplankton(%d)%%lname' % zoo_ind].strip('"')
 
-            # tracers associated with ALL zooplankton
-            if 'default' in self._settings['_tracer_list'][module_name]['zooplankton'].keys():
-                tracer_list.extend([zoo_name+tracer for tracer in self._settings['_tracer_list'][module_name]['zooplankton']['default'].keys()])
+                # tracers associated with ALL zooplankton
+                if 'default' in zoo_tracers.keys():
+                    for tracer in zoo_tracers['default'].keys():
+                        tracer_dict[zoo_sname+tracer] = dict(zoo_tracers['default'][tracer])
+                        # Replace //lname// in long_name with zoo_lname
+                        tracer_dict[zoo_sname+tracer]['long_name'] = tracer_dict[zoo_sname+tracer]['long_name'].replace('//lname//', zoo_lname)
 
-        return tracer_list
+        return tracer_dict
 
     ################################################################################
 
@@ -458,7 +485,7 @@ def _get_dim_size(dim_in, settings_dict, dict_prefix=''):
         # If dim_in = _tracer_list, that's a special case where we want
         # to find a list of tracers according to current settings
         if dim_in == '_tracer_list':
-            return len(settings_dict['_tracer_list'])
+            return len(settings_dict['_tracer_dict'])
 
         # Otherwise, dim_start must refer to a variable that could be
         # in the dictionary with or without the prefix
