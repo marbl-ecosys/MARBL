@@ -15,12 +15,16 @@ def settings_dictionary_is_consistent(SettingsDict):
         2. Everything listed in _order is a top-level key
         3. All top-level keys that do not begin with '_' are listed in _order
         4. All second-level dictionaries (variable names) contain datatype key
-        5. If datatype is not a dictionary, variable dictionary keys also included
-           longname, subcategory, units, default_value
-        6. If datatype is a dictionary, all keys in the datatype are variables per (5)
-        7. In a variable (or datatype entry) where default_value is a dictionary,
+        5a.  If datatype is not a dictionary, variable dictionary contain the following keys:
+             i.   longname
+             ii.  subcategory
+             iii. units
+             iv.  datatype [checked in 4.]
+             v.   default_value
+        5b. If datatype is a dictionary, all keys in the datatype are variables per (5a)
+        6. In a variable (or datatype entry) where default_value is a dictionary,
            "default" is a key
-        NOTE: (7) is checked explicitly along with (5) and (6) in _valid_variable_dict()
+        NOTE: (5) and (6) are checked in _valid_variable_dict()
     """
 
     import logging
@@ -53,14 +57,11 @@ def settings_dictionary_is_consistent(SettingsDict):
                     invalid_file = True
                     continue
 
+                # Rest of checks
                 if not isinstance(SettingsDict[cat_name][var_name]["datatype"], dict):
-                    # 5. If datatype is not a dictionary, variable dictionary keys should include
-                    #    longname, subcategory, units, datatype, default_value
-                    #    Also, if default_value is a dictionary, that dictionary needs to contain "default" key
                     if not _valid_variable_dict(SettingsDict[cat_name][var_name], var_name):
                         invalid_file = True
                 else:
-                    # 6. If datatype is a dictionary, all keys in the datatype are variables per (5)
                     for subvar_name in SettingsDict[cat_name][var_name]["datatype"].keys():
                         if subvar_name[0] != '_':
                             if not _valid_variable_dict(SettingsDict[cat_name][var_name]["datatype"][subvar_name],
@@ -74,7 +75,7 @@ def settings_dictionary_is_consistent(SettingsDict):
 def diagnostics_dictionary_is_consistent(DiagsDict):
     """ Make sure dictionary generated from JSON settings file conforms to MARBL
         diagnostics file standards:
-        1. All top-level keys refer to diagnostic variable
+        1. All top-level keys that do not begin with '_' refer to diagnostic variable
         2. All diagnostic variable dictionaries contain the following keys:
            i.   module
            ii.  longname
@@ -87,6 +88,7 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
            ii.  If they are both lists, must be same size
         4. Allowable frequencies are never, low, medium, and high
         5. Allowable operators are instantaneous, average, minimum, and maximum
+        NOTE: (2), (3), (4), and (5) are checked in _valid_diagnostic_dict()
     """
 
     import logging
@@ -97,64 +99,24 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
         logger.error("Argument must be a dictionary")
         return False
 
-    # 2. All diagnostic variable dictionaries contain the following keys:
-    for diag_name in DiagsDict.keys():
-        if not isinstance(DiagsDict[diag_name], dict):
-            logger.error("DiagsDict['%s'] must be a dictionary" % diag_name)
+    # 1. Top-level keys that begin with '_' must be one of the following:
+    #    _tracers
+    for diag_name in [diag_keys for diag_keys in DiagsDict.keys() if diag_keys[0:1] == '_']:
+        if diag_name not in ['_tracers']:
+            logger.error("'%s' is not a valid key in the diagnostics dictionary" % diag_name)
+            invalid_file = True
+        # Tracer-specific diags
+        if diag_name == '_tracers':
+            for tracer_diags in DiagsDict['_tracers'].keys():
+                if not _valid_diagnostic_dict(DiagsDict['_tracers'][tracer_diags], tracer_diags, has_module=False, check_freq=False):
+                    invalid_file = True
+                    continue
+
+    # Rest of checks
+    for diag_name in [diag_keys for diag_keys in DiagsDict.keys() if diag_keys[0:1] != '_']:
+        if not _valid_diagnostic_dict(DiagsDict[diag_name], diag_name):
             invalid_file = True
             continue
-
-        diag_subkeys = DiagsDict[diag_name].keys()
-        bad_diag_name_dict = False
-        for required_field in ['module', 'longname', 'units', 'vertical_grid', 'frequency', 'operator']:
-            if required_field not in diag_subkeys:
-                logger.error("%s not a key in DiagsDict['%s']" % (required_field, diag_name))
-                invalid_file = True
-                bad_diag_name_dict = True
-        if bad_diag_name_dict:
-            continue
-
-        # 3. Consistency between frequency and operator
-        err_prefix = "Inconsistency in DiagsDict['%s']:" % diag_name
-        #    i.   frequency and operator are both lists, or neither are
-        if isinstance(DiagsDict[diag_name]['frequency'], list) != isinstance(DiagsDict[diag_name]['operator'], list):
-            logger.error("%s either both frequency and operator must be lists or neither can be" % err_prefix)
-
-        #    ii.  If they are both lists, must be same size
-        if isinstance(DiagsDict[diag_name]['frequency'], list):
-            freq_len = len(DiagsDict[diag_name]['frequency'])
-            op_len = len(DiagsDict[diag_name]['operator'])
-        else:
-            freq_len = 1
-            op_len = 1
-        if freq_len != op_len:
-            logger.error("%s frequency is length %d but operator is length %d" %
-                         (err_prefix, diag_name, freq_len, op_len))
-            invalid_file = True
-            continue
-
-        # 4. Allowable frequencies are never, low, medium, and high
-        # 5. Allowable operators are instantaneous, average, minimum, and maximum
-        ok_freqs = ['never', 'low', 'medium', 'high']
-        ok_ops = ['instantaneous', 'average', 'minimum', 'maximum']
-        if isinstance(DiagsDict[diag_name]['frequency'], list):
-            for n, freq in enumerate(DiagsDict[diag_name]['frequency']):
-                op = DiagsDict[diag_name]['operator'][n]
-                if freq not in ok_freqs:
-                    logger.error("%s '%s' is not a valid frequency" % (err_prefix, freq))
-                    invalid_file = True
-                if op not in ok_ops:
-                    logger.error("%s '%s' is not a valid operator" % (err_prefix, op))
-                    invalid_file = True
-        else:
-            freq = DiagsDict[diag_name]['frequency']
-            op = DiagsDict[diag_name]['operator']
-            if freq not in ok_freqs:
-                logger.error("%s '%s' is not a valid frequency" % (err_prefix, freq))
-                invalid_file = True
-            if op not in ok_ops:
-                logger.error("%s '%s' is not a valid operator" % (err_prefix, op))
-                invalid_file = True
 
     return (not invalid_file)
 
@@ -186,5 +148,86 @@ def _valid_variable_dict(var_dict, var_name):
             logger.info("Keys in default_value are %s" % var_dict["default_value"].keys())
             return False
     return True
+
+################################################################################
+
+def _valid_diagnostic_dict(diag_dict, diag_name, has_module=True, check_freq=True):
+    """ Return False if any of the following:
+        1. diag_dict is not a dictionary
+        2. diag_dict does not contain any of the following:
+           * longname
+           * units
+           * vertical_grid
+           * frequency
+           * operator
+           Diagnostics that are not tracer-specific should also include
+           * module
+        3. Consistency between frequency and operator
+        4. Allowable frequencies are never, low, medium, and high
+        5. Allowable operators are instantaneous, average, minimum, and maximum
+
+        TODO: parse frequency defaults when tracer-dependent and then remove check_freq flag
+    """
+
+    import logging
+    logger = logging.getLogger(__name__)
+
+    # 1. diag_dict must be dictionary
+    if not isinstance(diag_dict, dict):
+        logger.error("DiagsDict['%s'] must be a dictionary" % diag_name)
+        return False
+
+    # 2. diag_dict must have the following keys:
+    valid_keys = ["longname", "units", "vertical_grid", "frequency", "operator"]
+    if has_module:
+        valid_keys.append("module")
+    for key_check in valid_keys:
+        if key_check not in diag_dict.keys():
+            message = "Diagnostic %s is not well-defined in YAML" % diag_name
+            message = message + "\n     * Expecting %s as a key" % key_check
+            logger.error(message)
+            return False
+
+    # 3. Consistency between frequency and operator
+    err_prefix = "Inconsistency in DiagsDict['%s']:" % diag_name
+    #    i.   frequency and operator are both lists, or neither are
+    if isinstance(diag_dict['frequency'], list) != isinstance(diag_dict['operator'], list):
+        logger.error("%s either both frequency and operator must be lists or neither can be" % err_prefix)
+
+    #    ii.  If they are both lists, must be same size
+    if isinstance(diag_dict['frequency'], list):
+        freq_len = len(diag_dict['frequency'])
+        op_len = len(diag_dict['operator'])
+        if freq_len != op_len:
+            logger.error("%s frequency is length %d but operator is length %d" %
+                         (err_prefix, diag_name, freq_len, op_len))
+            return False
+
+    # 4. Allowable frequencies are never, low, medium, and high
+    # 5. Allowable operators are instantaneous, average, minimum, and maximum
+    ok_freqs = ['never', 'low', 'medium', 'high']
+    ok_ops = ['instantaneous', 'average', 'minimum', 'maximum']
+    invalid_freq_op = False
+    if check_freq:
+        if isinstance(diag_dict['frequency'], list):
+            for n, freq in enumerate(diag_dict['frequency']):
+                op = diag_dict['operator'][n]
+                if freq not in ok_freqs:
+                    logger.error("%s '%s' is not a valid frequency" % (err_prefix, freq))
+                    invalid_freq_op = True
+                if op not in ok_ops:
+                    logger.error("%s '%s' is not a valid operator" % (err_prefix, op))
+                    invalid_freq_op = True
+        else:
+            freq = diag_dict['frequency']
+            op = diag_dict['operator']
+            if freq not in ok_freqs:
+                logger.error("%s '%s' is not a valid frequency" % (err_prefix, freq))
+                invalid_freq_op = True
+            if op not in ok_ops:
+                logger.error("%s '%s' is not a valid operator" % (err_prefix, op))
+                invalid_freq_op = True
+
+    return (not invalid_freq_op)
 
 ################################################################################

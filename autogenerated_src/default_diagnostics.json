@@ -1143,6 +1143,18 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "_tracers": {
+      "_RESTORE_TEND": {
+         "frequency": {
+            "\\\\long_name\\\\ in \\\\tracer_restore_vars\\\\": "monthly",
+            "default": "never"
+         },
+         "longname": "\\\\long_name\\\\ Restoring Tendency",
+         "operator": "average",
+         "units": "\\\\tend_units\\\\",
+         "vertical_grid": "layer_avg"
+      }
+   },
    "bSi_form": {
       "frequency": "medium",
       "longname": "Total Si Uptake",

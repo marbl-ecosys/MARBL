@@ -1,4 +1,3 @@
-
 # ABOUT THIS FILE
 # ---------------
 
@@ -1209,3 +1208,16 @@ CISO_eps_dic_g :
    frequency : medium
    operator : average
 
+##########################
+# Per-tracer Diagnostics #
+##########################
+
+_tracers :
+   _RESTORE_TEND :
+      longname : \\long_name\\ Restoring Tendency
+      units : \\tend_units\\
+      vertical_grid : layer_avg
+      frequency :
+         default : never
+         \\long_name\\ in \\tracer_restore_vars\\ : monthly
+      operator : average
