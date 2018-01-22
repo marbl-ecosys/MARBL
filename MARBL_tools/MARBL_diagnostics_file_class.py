@@ -38,24 +38,44 @@ class MARBL_diagnostics_class(object):
         from collections import OrderedDict
         self.diagnostics_dict = OrderedDict()
         for diag_name in _sort(self._diagnostics.keys()):
-            # Skip diagnostics if module is inactive
-            if self._diagnostics[diag_name]["module"] in active_modules:
-                self._process_diagnostic_frequency(diag_name)
+            if diag_name[0:1] != '_':
+                # Skip diagnostics if module is inactive
+                if self._diagnostics[diag_name]["module"] in active_modules:
+                    self._process_diagnostic_frequency(diag_name)
+            else:
+                # Special treatment for tracers, PFTs, etc
+                if diag_name == '_tracers':
+                    for tracer_diag in self._diagnostics[diag_name].keys():
+                        for tracer in MARBL_settings.settings_dict["_tracer_dict"].keys():
+                            tracer_restore = False
+                            for n in range(1,MARBL_settings.get_tracer_cnt()+1):
+                                if tracer == MARBL_settings.settings_dict["tracer_restore_vars(%d)" % n].strip('"'):
+                                    tracer_restore = True
+                                    break
+                            self._process_diagnostic_frequency(tracer+tracer_diag, diag_dict=self._diagnostics[diag_name][tracer_diag], tracer_restore=tracer_restore)
 
 
     ################################################################################
     #                            PRIVATE CLASS METHODS                             #
     ################################################################################
 
-    def _process_diagnostic_frequency(self, diag_name):
-        if isinstance(self._diagnostics[diag_name]['frequency'], list):
-            freq_op = self._diagnostics[diag_name]['frequency']
-            for n, freq in enumerate(freq_op):
-                freq_op[n] = freq + '_' + self._diagnostics[diag_name]['operator'][n]
+    def _process_diagnostic_frequency(self, diag_name, diag_dict=None, tracer_restore=False):
+        if diag_dict == None:
+            diag_dict = self._diagnostics[diag_name]
+        freq_loc = diag_dict['frequency']
+        if isinstance(freq_loc, dict):
+            # Better option than hard-coding possible dictionary values?
+            freq_loc = freq_loc['default']
+            if '\\\\short_name\\\\ in \\\\tracer_restore_vars\\\\' in diag_dict['frequency'].keys():
+                if tracer_restore:
+                    freq_loc = diag_dict['frequency']['\\\\short_name\\\\ in \\\\tracer_restore_vars\\\\']
+        if isinstance(freq_loc, list):
+            freq_op = []
+            for n, freq in enumerate(freq_loc):
+                freq_op.append(freq + '_' + diag_dict['operator'][n])
             self.diagnostics_dict[diag_name] = ", ".join(freq_op)
         else:
-            self.diagnostics_dict[diag_name] = self._diagnostics[diag_name]['frequency'] + '_' + \
-                                               self._diagnostics[diag_name]['operator']
+            self.diagnostics_dict[diag_name] = freq_loc + '_' + diag_dict['operator']
 
 ################################################################################
 

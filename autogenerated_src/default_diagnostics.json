@@ -1146,7 +1146,7 @@
    "_tracers": {
       "_RESTORE_TEND": {
          "frequency": {
-            "\\\\long_name\\\\ in \\\\tracer_restore_vars\\\\": "monthly",
+            "\\\\short_name\\\\ in \\\\tracer_restore_vars\\\\": "medium",
             "default": "never"
          },
          "longname": "\\\\long_name\\\\ Restoring Tendency",

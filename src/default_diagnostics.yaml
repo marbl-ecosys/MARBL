@@ -1219,5 +1219,5 @@ _tracers :
       vertical_grid : layer_avg
       frequency :
          default : never
-         \\long_name\\ in \\tracer_restore_vars\\ : monthly
+         \\short_name\\ in \\tracer_restore_vars\\ : medium
       operator : average

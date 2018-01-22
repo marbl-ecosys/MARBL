@@ -240,6 +240,10 @@ class MARBL_settings_class(object):
                         # Replace //lname// in long_name with zoo_lname
                         tracer_dict[zoo_sname+tracer]['long_name'] = tracer_dict[zoo_sname+tracer]['long_name'].replace('//lname//', zoo_lname)
 
+        for tracer in tracer_dict.keys():
+            tracer_dict[tracer][u'tend_units'] = tracer_dict[tracer]['units'] + '/s'
+            tracer_dict[tracer][u'flux_units'] = tracer_dict[tracer]['units'] + ' cm/s'
+
         return tracer_dict
 
     ################################################################################
