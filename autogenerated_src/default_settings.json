@@ -580,11 +580,11 @@
                }
             },
             "default": {
-               "C13": {
+               "13C": {
                   "long_name": "//lname// Carbon-13",
                   "units": "mmol/m^3"
                },
-               "C14": {
+               "14C": {
                   "long_name": "//lname// Carbon-14",
                   "units": "mmol/m^3"
                }
