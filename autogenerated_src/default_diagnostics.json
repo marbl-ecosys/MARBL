@@ -1,8 +1,17 @@
 {
+   "((tracer_short_name))_RESTORE_TEND": {
+      "frequency": {
+         "((restore_this_tracer))": "medium",
+         "default": "never"
+      },
+      "longname": "((tracer_long_name)) Restoring Tendency",
+      "operator": "average",
+      "units": "((tracer_tend_units))",
+      "vertical_grid": "layer_avg"
+   },
    "AOU": {
       "frequency": "medium",
       "longname": "Apparent O2 Utilization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
@@ -10,7 +19,6 @@
    "ATM_ALT_CO2": {
       "frequency": "medium",
       "longname": "Atomspheric CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
@@ -18,391 +26,486 @@
    "ATM_CO2": {
       "frequency": "medium",
       "longname": "Atomspheric CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
    },
    "CISO_Ca13CO3_FLUX_IN": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Ca13CO3 flux into cell",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_Ca13CO3_PROD": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Ca13CO3 Production",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_Ca13CO3_REMIN": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Ca13CO3 Remineralization",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_Ca14CO3_FLUX_IN": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Ca14CO3 flux into cell",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_Ca14CO3_PROD": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Ca14CO3 Production",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_Ca14CO3_REMIN": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Ca14CO3 Remineralization",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_D13C_atm": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Atmospheric Delta 13C in permil",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
    },
    "CISO_D14C_atm": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Atmospheric Delta 14C in permil",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
    },
    "CISO_DIC_d13C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "d13C of DIC",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
    "CISO_DIC_d14C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "d14C of DIC",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
    "CISO_DO13C_prod": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DO13C Production",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_DO13C_remin": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DO13C Remineralization",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_DO14C_prod": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DO14C Production",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_DO14C_remin": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DO14C Remineralization",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_DOC_d13C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "d13C of DOC",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
    "CISO_DOC_d14C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "d14C of DOC",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
    "CISO_FG_13CO2": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DI13C Surface Gas Flux",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_FG_14CO2": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DI14C Surface Gas Flux",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_FG_as_13CO2": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DI13C Surface Air-Sea Gas Flux",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_FG_as_14CO2": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DI14C Surface Air-Sea Gas Flux",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_FG_d13C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "never",
       "longname": "D13C Surface GAS FLUX",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
    },
    "CISO_FG_d14C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "never",
       "longname": "D14C Surface GAS FLUX",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
    },
    "CISO_FG_sa_13CO2": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DI13C Surface Sea-Air Gas Flux",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_FG_sa_14CO2": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DI14C Surface Sea-Air Gas Flux",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_Jint_100m_13Ctot": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "13Ctot Source Sink Term Vertical Integral, 0-100m",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_Jint_100m_14Ctot": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "14Ctot Source Sink Term Vertical Integral, 0-100m",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_Jint_13Ctot": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "13Ctot Source Sink Term Vertical Integral",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_Jint_14Ctot": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "14Ctot Source Sink Term Vertical Integral",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_PO13C_FLUX_IN": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "PO13C Flux into Cell",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_PO13C_PROD": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "PO13C Production",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_PO13C_REMIN": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "PO13C Remineralization",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_PO14C_FLUX_IN": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "PO14C Flux into Cell",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_PO14C_PROD": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "PO14C Production",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_PO14C_REMIN": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "PO14C Remineralization",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_R13C_DIC_surf": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "never",
       "longname": "13C/12C ratio in total DIC",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
    },
    "CISO_R13C_atm": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "never",
       "longname": "13C/12C ratio in atmosphere",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
    },
    "CISO_R14C_DIC_surf": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "never",
       "longname": "14C/12C ratio in total DIC",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
    },
    "CISO_R14C_atm": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "never",
       "longname": "14C/12C ratio in atmosphere",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
    },
    "CISO_eps_aq_g": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Equilibrium fractionation (CO2_gaseous <-> CO2_aq)",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
    "CISO_eps_aq_g_surf": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "never",
       "longname": "Surface equilibrium fractionation (CO2_gaseous <-> CO2_aq)",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
    },
    "CISO_eps_dic_g": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Equilibrium fractionation between total DIC and gaseous CO2",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
    "CISO_eps_dic_g_surf": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "never",
       "longname": "Surface equilibrium fractionation between total DIC and gaseous CO2",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
    },
    "CISO_photo13C_TOT": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total 13C Fixation",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_photo13C_TOT_zint": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total 13C Fixation Vertical Integral",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_photo14C_TOT": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total 14C Fixation",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_photo14C_TOT_zint": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total 14C Fixation Vertical Integral",
-      "module": "ciso",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "CISO_zooC_d13C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "d13C of zooC",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
    "CISO_zooC_d14C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "d14C of zooC",
-      "module": "ciso",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
@@ -410,7 +513,6 @@
    "CO2STAR": {
       "frequency": "medium",
       "longname": "CO2 Star",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -418,7 +520,6 @@
    "CO2STAR_ALT_CO2": {
       "frequency": "medium",
       "longname": "CO2 Star, Alternate CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -426,7 +527,6 @@
    "CO3": {
       "frequency": "medium",
       "longname": "Carbonate Ion Concentration",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
@@ -434,7 +534,6 @@
    "CO3_ALT_CO2": {
       "frequency": "never",
       "longname": "Carbonate Ion Concentration, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
@@ -442,7 +541,6 @@
    "CaCO3_ALT_CO2_FLUX_IN": {
       "frequency": "medium",
       "longname": "CaCO3 Flux into Cell, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
@@ -450,7 +548,6 @@
    "CaCO3_ALT_CO2_PROD": {
       "frequency": "never",
       "longname": "CaCO3 Production, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -458,7 +555,6 @@
    "CaCO3_ALT_CO2_REMIN": {
       "frequency": "medium",
       "longname": "CaCO3 Remineralization, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -466,7 +562,6 @@
    "CaCO3_FLUX_IN": {
       "frequency": "medium",
       "longname": "CaCO3 Flux into Cell",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
@@ -474,7 +569,6 @@
    "CaCO3_PROD": {
       "frequency": "medium",
       "longname": "CaCO3 Production",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -482,7 +576,6 @@
    "CaCO3_REMIN": {
       "frequency": "medium",
       "longname": "CaCO3 Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -490,7 +583,6 @@
    "CaCO3_form": {
       "frequency": "medium",
       "longname": "Total CaCO3 Formation",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -498,7 +590,6 @@
    "CaCO3_form_zint": {
       "frequency": "high",
       "longname": "Total CaCO3 Formation Vertical Integral",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -506,7 +597,6 @@
    "DCO2STAR": {
       "frequency": "medium",
       "longname": "D CO2 Star",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -514,7 +604,6 @@
    "DCO2STAR_ALT_CO2": {
       "frequency": "medium",
       "longname": "D CO2 Star, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -522,7 +611,6 @@
    "DENITRIF": {
       "frequency": "medium",
       "longname": "Denitrification",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -530,7 +618,6 @@
    "DOC_prod": {
       "frequency": "medium",
       "longname": "DOC Production",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -538,7 +625,6 @@
    "DOC_remin": {
       "frequency": "medium",
       "longname": "DOC Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -546,7 +632,6 @@
    "DOCr_remin": {
       "frequency": "medium",
       "longname": "DOCr Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -554,7 +639,6 @@
    "DON_prod": {
       "frequency": "medium",
       "longname": "DON Production",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -562,7 +646,6 @@
    "DON_remin": {
       "frequency": "medium",
       "longname": "DON Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -570,7 +653,6 @@
    "DONr_remin": {
       "frequency": "medium",
       "longname": "DONr Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -578,7 +660,6 @@
    "DOP_prod": {
       "frequency": "medium",
       "longname": "DOP Production",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -586,7 +667,6 @@
    "DOP_remin": {
       "frequency": "medium",
       "longname": "DOP Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -594,7 +674,6 @@
    "DOPr_remin": {
       "frequency": "medium",
       "longname": "DOPr Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -602,7 +681,6 @@
    "DUST_FLUX": {
       "frequency": "never",
       "longname": "Dust Flux",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "g/cm^2/s",
       "vertical_grid": "none"
@@ -613,7 +691,6 @@
          "high"
       ],
       "longname": "D pCO2",
-      "module": "ecosys_base",
       "operator": [
          "average",
          "average"
@@ -624,7 +701,6 @@
    "DpCO2_ALT_CO2": {
       "frequency": "medium",
       "longname": "D pCO2, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
@@ -632,7 +708,6 @@
    "ECOSYS_ATM_PRESS": {
       "frequency": "medium",
       "longname": "Atmospheric Pressure for ecosys fluxes",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "atmospheres",
       "vertical_grid": "none"
@@ -643,7 +718,6 @@
          "high"
       ],
       "longname": "Ice Fraction for ecosys fluxes",
-      "module": "ecosys_base",
       "operator": [
          "average",
          "average"
@@ -657,7 +731,6 @@
          "high"
       ],
       "longname": "XKW for ecosys fluxes",
-      "module": "ecosys_base",
       "operator": [
          "average",
          "average"
@@ -668,7 +741,6 @@
    "FG_ALT_CO2": {
       "frequency": "medium",
       "longname": "DIC Surface Gas Flux, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -679,7 +751,6 @@
          "high"
       ],
       "longname": "DIC Surface Gas Flux",
-      "module": "ecosys_base",
       "operator": [
          "average",
          "average"
@@ -690,7 +761,6 @@
    "Fe_scavenge": {
       "frequency": "medium",
       "longname": "Iron Scavenging",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -698,7 +768,6 @@
    "Fe_scavenge_rate": {
       "frequency": "medium",
       "longname": "Iron Scavenging Rate",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "1/y",
       "vertical_grid": "layer_avg"
@@ -706,7 +775,6 @@
    "Fefree": {
       "frequency": "medium",
       "longname": "Fe not bound to Ligand",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
@@ -714,7 +782,6 @@
    "H2CO3": {
       "frequency": "medium",
       "longname": "Carbonic Acid Concentration",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
@@ -722,7 +789,6 @@
    "H2CO3_ALT_CO2": {
       "frequency": "never",
       "longname": "Carbonic Acid Concentration, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
@@ -730,7 +796,6 @@
    "HCO3": {
       "frequency": "medium",
       "longname": "Bicarbonate Ion Concentration",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
@@ -738,7 +803,6 @@
    "HCO3_ALT_CO2": {
       "frequency": "never",
       "longname": "Bicarbonate Ion Concentration, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
@@ -746,7 +810,6 @@
    "IRON_FLUX": {
       "frequency": "medium",
       "longname": "Atmospheric Iron Flux",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^2/s",
       "vertical_grid": "none"
@@ -754,7 +817,6 @@
    "Jint_100m_Ctot": {
       "frequency": "medium",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ctot, 0-100m",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -762,7 +824,6 @@
    "Jint_100m_Fetot": {
       "frequency": "medium",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Fetot, 0-100m",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -770,7 +831,6 @@
    "Jint_100m_Ntot": {
       "frequency": "medium",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ntot, 0-100m",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -778,7 +838,6 @@
    "Jint_100m_Ptot": {
       "frequency": "medium",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ptot, 0-100m",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -786,7 +845,6 @@
    "Jint_100m_Sitot": {
       "frequency": "medium",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Sitot, 0-100m",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -794,7 +852,6 @@
    "Jint_Ctot": {
       "frequency": "medium",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ctot",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -802,7 +859,6 @@
    "Jint_Fetot": {
       "frequency": "medium",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Fetot",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -810,7 +866,6 @@
    "Jint_Ntot": {
       "frequency": "medium",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ntot",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -818,7 +873,6 @@
    "Jint_Ptot": {
       "frequency": "medium",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ptot",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -826,7 +880,6 @@
    "Jint_Sitot": {
       "frequency": "medium",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Sitot",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -834,7 +887,6 @@
    "Lig_deg": {
       "frequency": "medium",
       "longname": "Loss of Fe-binding Ligand from Bacterial Degradation",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -842,7 +894,6 @@
    "Lig_loss": {
       "frequency": "medium",
       "longname": "Loss of Fe-binding Ligand",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -850,7 +901,6 @@
    "Lig_photochem": {
       "frequency": "medium",
       "longname": "Loss of Fe-binding Ligand from UV radiation",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -858,7 +908,6 @@
    "Lig_prod": {
       "frequency": "medium",
       "longname": "Production of Fe-binding Ligand",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -866,7 +915,6 @@
    "Lig_scavenge": {
       "frequency": "medium",
       "longname": "Fe not bound to Ligand",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
@@ -874,7 +922,6 @@
    "NHx_SURFACE_EMIS": {
       "frequency": "medium",
       "longname": "Emission of NHx to Atmosphere",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
@@ -882,7 +929,6 @@
    "NHy_FLUX": {
       "frequency": "medium",
       "longname": "Flux of NHy from Atmosphere",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
@@ -890,7 +936,6 @@
    "NITRIF": {
       "frequency": "medium",
       "longname": "Nitrification",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -898,7 +943,6 @@
    "NOx_FLUX": {
       "frequency": "medium",
       "longname": "Flux of NOx from Atmosphere",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
@@ -906,7 +950,6 @@
    "Nfix": {
       "frequency": "never",
       "longname": "Total N Fixation",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -914,7 +957,6 @@
    "O2SAT": {
       "frequency": "medium",
       "longname": "O2 Saturation",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -922,7 +964,6 @@
    "O2_CONSUMPTION": {
       "frequency": "medium",
       "longname": "O2 Consumption",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -930,7 +971,6 @@
    "O2_PRODUCTION": {
       "frequency": "medium",
       "longname": "O2 Production",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -938,7 +978,6 @@
    "O2_ZMIN": {
       "frequency": "medium",
       "longname": "Vertical Minimum of O2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -946,7 +985,6 @@
    "O2_ZMIN_DEPTH": {
       "frequency": "medium",
       "longname": "Vertical Minimum of O2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "cm",
       "vertical_grid": "none"
@@ -954,7 +992,6 @@
    "OtherRemin": {
       "frequency": "never",
       "longname": "non-oxic,non-dentr remin in Sediments",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "nmolC/cm^2/s",
       "vertical_grid": "none"
@@ -962,7 +999,6 @@
    "PAR_avg": {
       "frequency": "medium",
       "longname": "PAR Average over Model Cell",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "W/m^2",
       "vertical_grid": "layer_avg"
@@ -970,7 +1006,6 @@
    "PH": {
       "frequency": "medium",
       "longname": "Surface pH",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "none",
       "vertical_grid": "none"
@@ -978,7 +1013,6 @@
    "PH_ALT_CO2": {
       "frequency": "medium",
       "longname": "Surface pH, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "none",
       "vertical_grid": "none"
@@ -986,7 +1020,6 @@
    "POC_FLUX_IN": {
       "frequency": "medium",
       "longname": "POC Flux into Cell",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
@@ -994,7 +1027,6 @@
    "POC_PROD": {
       "frequency": "medium",
       "longname": "POC Production",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1002,7 +1034,6 @@
    "POC_REMIN": {
       "frequency": "medium",
       "longname": "POC Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1010,7 +1041,6 @@
    "POC_REMIN_DIC": {
       "frequency": "medium",
       "longname": "POC Remineralization routed to DIC",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1018,7 +1048,6 @@
    "PON_REMIN_NH4": {
       "frequency": "medium",
       "longname": "PON Remineralization routed to NH4",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1026,7 +1055,6 @@
    "POP_FLUX_IN": {
       "frequency": "medium",
       "longname": "POP Flux into Cell",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
@@ -1034,7 +1062,6 @@
    "POP_PROD": {
       "frequency": "medium",
       "longname": "POP Production",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1042,7 +1069,6 @@
    "POP_REMIN": {
       "frequency": "medium",
       "longname": "POP Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1050,7 +1076,6 @@
    "POP_REMIN_PO4": {
       "frequency": "medium",
       "longname": "POP Remineralization routed to PO4",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1058,7 +1083,6 @@
    "PV_CO2": {
       "frequency": "never",
       "longname": "CO2 Piston Velocity",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
@@ -1066,7 +1090,6 @@
    "PV_O2": {
       "frequency": "never",
       "longname": "PV_O2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
@@ -1074,7 +1097,6 @@
    "P_iron_FLUX_IN": {
       "frequency": "medium",
       "longname": "P_iron Flux into Cell",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
@@ -1082,7 +1104,6 @@
    "P_iron_PROD": {
       "frequency": "medium",
       "longname": "P_iron Production",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1090,7 +1111,6 @@
    "P_iron_REMIN": {
       "frequency": "medium",
       "longname": "P_iron Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1098,7 +1118,6 @@
    "SCHMIDT_CO2": {
       "frequency": "medium",
       "longname": "CO2 Schmidt Number",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "none",
       "vertical_grid": "none"
@@ -1106,7 +1125,6 @@
    "SCHMIDT_O2": {
       "frequency": "medium",
       "longname": "O2 Schmidt Number",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "none",
       "vertical_grid": "none"
@@ -1114,7 +1132,6 @@
    "SedDenitrif": {
       "frequency": "medium",
       "longname": "nitrogen loss in Sediments",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "nmolN/cm^2/s",
       "vertical_grid": "none"
@@ -1122,7 +1139,6 @@
    "SiO2_FLUX_IN": {
       "frequency": "medium",
       "longname": "SiO2 Flux into Cell",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
@@ -1130,7 +1146,6 @@
    "SiO2_PROD": {
       "frequency": "medium",
       "longname": "SiO2 Production",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1138,27 +1153,13 @@
    "SiO2_REMIN": {
       "frequency": "never",
       "longname": "SiO2 Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "_tracers": {
-      "_RESTORE_TEND": {
-         "frequency": {
-            "\\\\short_name\\\\ in \\\\tracer_restore_vars\\\\": "medium",
-            "default": "never"
-         },
-         "longname": "\\\\long_name\\\\ Restoring Tendency",
-         "operator": "average",
-         "units": "\\\\tend_units\\\\",
-         "vertical_grid": "layer_avg"
-      }
-   },
    "bSi_form": {
       "frequency": "medium",
       "longname": "Total Si Uptake",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1166,7 +1167,6 @@
    "bsiToSed": {
       "frequency": "medium",
       "longname": "biogenic Si Flux to Sediments",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "nmolSi/cm^2/s",
       "vertical_grid": "none"
@@ -1174,23 +1174,26 @@
    "calcToSed": {
       "frequency": "medium",
       "longname": "CaCO3 Flux to Sediments",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "nmolC/cm^2/s",
       "vertical_grid": "none"
    },
    "calcToSed_13C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Ca13CO3 Flux to Sediments",
-      "module": "ciso",
       "operator": "average",
       "units": "nmolC/cm^2/s",
       "vertical_grid": "none"
    },
    "calcToSed_14C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Ca14CO3 Flux to Sediments",
-      "module": "ciso",
       "operator": "average",
       "units": "nmolC/cm^2/s",
       "vertical_grid": "none"
@@ -1198,7 +1201,6 @@
    "calcToSed_ALT_CO2": {
       "frequency": "medium",
       "longname": "CaCO3 Flux to Sediments, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "calcToSed_ALT_CO2",
       "vertical_grid": "none"
@@ -1206,7 +1208,6 @@
    "co3_sat_arag": {
       "frequency": "medium",
       "longname": "CO3 concentration at aragonite saturation",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
@@ -1214,7 +1215,6 @@
    "co3_sat_calc": {
       "frequency": "medium",
       "longname": "CO3 concentration at calcite saturation",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
@@ -1222,7 +1222,6 @@
    "dustToSed": {
       "frequency": "medium",
       "longname": "dust Flux to Sediments",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "g/cm^2/s",
       "vertical_grid": "none"
@@ -1230,7 +1229,6 @@
    "dust_FLUX_IN": {
       "frequency": "medium",
       "longname": "Dust Flux into Cell",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "ng/s/m^2",
       "vertical_grid": "layer_avg"
@@ -1238,7 +1236,6 @@
    "dust_REMIN": {
       "frequency": "medium",
       "longname": "Dust Remineralization",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1246,7 +1243,6 @@
    "graze_auto_TOT": {
       "frequency": "never",
       "longname": "Total Autotroph Grazing",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1254,7 +1250,6 @@
    "pCO2SURF": {
       "frequency": "medium",
       "longname": "surface pCO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
@@ -1262,7 +1257,6 @@
    "pCO2SURF_ALT_CO2": {
       "frequency": "never",
       "longname": "surface pCO2, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
@@ -1270,7 +1264,6 @@
    "pH_3D": {
       "frequency": "medium",
       "longname": "pH",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "none",
       "vertical_grid": "layer_avg"
@@ -1278,7 +1271,6 @@
    "pH_3D_ALT_CO2": {
       "frequency": "never",
       "longname": "pH, Alternative CO2",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "none",
       "vertical_grid": "layer_avg"
@@ -1286,7 +1278,6 @@
    "pfeToSed": {
       "frequency": "medium",
       "longname": "pFe Flux to Sediments",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "nmolFe/cm^2/s",
       "vertical_grid": "none"
@@ -1294,7 +1285,6 @@
    "photoC_NO3_TOT": {
       "frequency": "never",
       "longname": "Total C Fixation from NO3",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1302,7 +1292,6 @@
    "photoC_NO3_TOT_zint": {
       "frequency": "never",
       "longname": "Total C Fixation from NO3 Vertical Integral",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -1310,7 +1299,6 @@
    "photoC_TOT": {
       "frequency": "never",
       "longname": "Total C Fixation",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
@@ -1318,7 +1306,6 @@
    "photoC_TOT_zint": {
       "frequency": "never",
       "longname": "Total C Fixation Vertical Integral",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -1326,23 +1313,26 @@
    "pocToSed": {
       "frequency": "medium",
       "longname": "POC Flux to Sediments",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "nmolC/cm^2/s",
       "vertical_grid": "none"
    },
    "pocToSed_13C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "PO13C Flux to Sediments",
-      "module": "ciso",
       "operator": "average",
       "units": "nmolC/cm^2/s",
       "vertical_grid": "none"
    },
    "pocToSed_14C": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
       "frequency": "medium",
       "longname": "PO14C Flux to Sediments",
-      "module": "ciso",
       "operator": "average",
       "units": "nmolC/cm^2/s",
       "vertical_grid": "none"
@@ -1350,7 +1340,6 @@
    "ponToSed": {
       "frequency": "medium",
       "longname": "nitrogen burial Flux to Sediments",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "nmolN/cm^2/s",
       "vertical_grid": "none"
@@ -1358,7 +1347,6 @@
    "popToSed": {
       "frequency": "medium",
       "longname": "phosphorus Flux to Sediments",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "nmolP/cm^2/s",
       "vertical_grid": "none"
@@ -1366,7 +1354,6 @@
    "zsatarag": {
       "frequency": "medium",
       "longname": "Aragonite Saturation Depth",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "cm",
       "vertical_grid": "none"
@@ -1374,7 +1361,6 @@
    "zsatcalc": {
       "frequency": "medium",
       "longname": "Calcite Saturation Depth",
-      "module": "ecosys_base",
       "operator": "average",
       "units": "cm",
       "vertical_grid": "none"

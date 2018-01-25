@@ -19,9 +19,6 @@ class MARBL_diagnostics_class(object):
         """
 
         logger = logging.getLogger(__name__)
-        active_modules = ["ecosys_base"]
-        if MARBL_settings.settings_dict["ciso_on"] == ".true.":
-            active_modules.append("ciso")
 
         # 1. Read diagnostics JSON file
         import json
@@ -34,48 +31,60 @@ class MARBL_diagnostics_class(object):
             logger.error("%s is not a valid MARBL diagnostics file" % default_diagnostics_file)
             _abort(1)
 
-        # 3. Dictionary for keeping diagnostic, frequency pairs
+        # 3. Generate processed version of self._diagnostics
+        self._resolved_diagnostics = self._process_diagnostics(MARBL_settings)
+
+        # 4. Dictionary for keeping diagnostic, frequency pairs (based on self._processed_diagnostics)
         from collections import OrderedDict
         self.diagnostics_dict = OrderedDict()
-        for diag_name in _sort(self._diagnostics.keys()):
-            if diag_name[0:1] != '_':
-                # Skip diagnostics if module is inactive
-                if self._diagnostics[diag_name]["module"] in active_modules:
-                    self._process_diagnostic_frequency(diag_name)
-            else:
-                # Special treatment for tracers, PFTs, etc
-                if diag_name == '_tracers':
-                    for tracer_diag in self._diagnostics[diag_name].keys():
-                        for tracer in MARBL_settings.settings_dict["_tracer_dict"].keys():
-                            tracer_restore = False
-                            for n in range(1,MARBL_settings.get_tracer_cnt()+1):
-                                if tracer == MARBL_settings.settings_dict["tracer_restore_vars(%d)" % n].strip('"'):
-                                    tracer_restore = True
-                                    break
-                            self._process_diagnostic_frequency(tracer+tracer_diag, diag_dict=self._diagnostics[diag_name][tracer_diag], tracer_restore=tracer_restore)
+        for diag_name in _sort(self._resolved_diagnostics.keys()):
+            freq_op = []
+            # enumerate -> for op, freq in zip(operator, self._resolved_diagnostics['frequency'])
+            for freq, op in zip(self._resolved_diagnostics[diag_name]['frequency'], self._resolved_diagnostics[diag_name]['operator']):
+                freq_op.append(freq + '_' + op)
+            self.diagnostics_dict[diag_name] = ", ".join(freq_op)
 
 
     ################################################################################
     #                            PRIVATE CLASS METHODS                             #
     ################################################################################
 
-    def _process_diagnostic_frequency(self, diag_name, diag_dict=None, tracer_restore=False):
-        if diag_dict == None:
-            diag_dict = self._diagnostics[diag_name]
-        freq_loc = diag_dict['frequency']
-        if isinstance(freq_loc, dict):
-            # Better option than hard-coding possible dictionary values?
-            freq_loc = freq_loc['default']
-            if '\\\\short_name\\\\ in \\\\tracer_restore_vars\\\\' in diag_dict['frequency'].keys():
-                if tracer_restore:
-                    freq_loc = diag_dict['frequency']['\\\\short_name\\\\ in \\\\tracer_restore_vars\\\\']
-        if isinstance(freq_loc, list):
-            freq_op = []
-            for n, freq in enumerate(freq_loc):
-                freq_op.append(freq + '_' + diag_dict['operator'][n])
-            self.diagnostics_dict[diag_name] = ", ".join(freq_op)
-        else:
-            self.diagnostics_dict[diag_name] = freq_loc + '_' + diag_dict['operator']
+    def _process_diagnostics(self, MARBL_settings):
+        """ This subroutine processes the dictionary read in from JSON.
+            1. expand per-tracer / per-PFT diagnostics
+            2. ignore diags where dependencies are not met
+            3. single freq / op should be converted to list with single entry
+        """
+        # use regular expressions to find substrings wrapped in '(())'
+        import re
+
+        processed_dict = dict()
+        for diag_name in self._diagnostics.keys():
+            # 1. Expand per-tracer / per-PFT diagnostics
+            #    [Look for keywords in (()) to signify need for string replacement]
+            if re.search('\(\(.*\)\)', diag_name) == None:
+                processed_dict[diag_name] = dict(self._diagnostics[diag_name])
+            else:
+                # (Also determine correct frequency if 'frequency' is a dict)
+                _expand_template_value(diag_name, MARBL_settings, self._diagnostics[diag_name], processed_dict)
+        for diag_name in processed_dict.keys():
+            # 2. Delete diagnostics where dependencies are not met
+            remove_diag = False
+            if 'dependencies' in processed_dict[diag_name].keys():
+                for dependency in processed_dict[diag_name]['dependencies'].keys():
+                    if dependency in MARBL_settings.settings_dict.keys():
+                        if processed_dict[diag_name]['dependencies'][dependency] != MARBL_settings.settings_dict[dependency]:
+                            remove_diag = True
+            if remove_diag:
+                del processed_dict[diag_name]
+                continue
+
+            # 3. frequency and operator should always be lists
+            if not isinstance(processed_dict[diag_name]['frequency'], list):
+                processed_dict[diag_name]['frequency'] = [processed_dict[diag_name]['frequency']]
+                processed_dict[diag_name]['operator'] = [processed_dict[diag_name]['operator']]
+
+        return processed_dict
 
 ################################################################################
 
@@ -88,6 +97,59 @@ def _abort(err_code=0):
     """
     import sys
     sys.exit(err_code)
+
+################################################################################
+
+def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, processed_dict):
+    """ unprocessed_entry is a dictionary whose keys / values may have templated strings
+        (e.g. strings that depend on tracer name or PFT name). This subroutine replaces
+        the templated values and adds the appropriate entry / entries to processed_dict
+
+        Also, if 'frequency' is a dictionary, determine correct default value!
+    """
+
+    import re
+
+    logger = logging.getLogger(__name__)
+
+    template = re.search('\(\(.*\)\)', diag_name).group()
+    if template == '((tracer_short_name))':
+        template_fill_dict = MARBL_settings.settings_dict["_tracer_dict"]
+    else:
+        logger.error("%s is not a valid template value" % template)
+        _abort(1)
+    for key_fill_val in template_fill_dict.keys():
+        new_diag_name = diag_name.replace(template, key_fill_val)
+        processed_dict[new_diag_name] = dict()
+        for key in unprocessed_entry.keys():
+            if not isinstance(unprocessed_entry[key], dict):
+                # look for templates in values
+                if re.search('\(\(.*\)\)', unprocessed_entry[key]) == None:
+                    processed_dict[new_diag_name][key] = unprocessed_entry[key]
+                else:
+                    template2 = re.search('\(\(.*\)\)', unprocessed_entry[key]).group()
+                    if template2 == '((tracer_long_name))':
+                        replacement_text = template_fill_dict[key_fill_val]['long_name']
+                    elif template2 == '((tracer_tend_units))':
+                        replacement_text = template_fill_dict[key_fill_val]['tend_units']
+                    else:
+                        logger.error("Can not replace '%s'" % template2)
+                        _abort(1)
+                    processed_dict[new_diag_name][key] = unprocessed_entry[key].replace(template2, replacement_text)
+            else:
+                if key == 'frequency':
+                    dict_key = 'default'
+                    for new_key in unprocessed_entry[key].keys():
+                        if new_key == '((restore_this_tracer))':
+                            # Check to see if tracer is in tracer_restore_vars(:)
+                            for n in range(1,MARBL_settings.get_tracer_cnt()+1):
+                                if key_fill_val == MARBL_settings.settings_dict["tracer_restore_vars(%d)" % n].strip('"'):
+                                    dict_key = new_key
+                                    break
+                    processed_dict[new_diag_name][key] = unprocessed_entry[key][dict_key]
+                else:
+                    logger.error("Not expecting '%s' key to be a dictionary" % key)
+                    _abort(1)
 
 ################################################################################
 

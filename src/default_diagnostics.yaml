@@ -10,7 +10,6 @@
 ###############
 
 ECOSYS_IFRAC :
-   module : ecosys_base
    longname : Ice Fraction for ecosys fluxes # Want more consistent capitalization
    units : fraction
    vertical_grid : none
@@ -21,7 +20,6 @@ ECOSYS_IFRAC :
       - average
       - average
 ECOSYS_XKW :
-   module : ecosys_base
    longname : XKW for ecosys fluxes # Want more consistent capitalization
    units : cm/s
    vertical_grid : none
@@ -32,35 +30,30 @@ ECOSYS_XKW :
       - average
       - average
 ECOSYS_ATM_PRESS :
-   module : ecosys_base
    longname : Atmospheric Pressure for ecosys fluxes # Want more consistent capitalization
    units : atmospheres
    vertical_grid : none
    frequency : medium
    operator : average
 PV_O2 :
-   module : ecosys_base
    longname : PV_O2 # Should be "O2 Piston Velocity" to match PV_CO2?
    units : cm/s
    vertical_grid : none
    frequency : never
    operator : average
 SCHMIDT_O2 :
-   module : ecosys_base
    longname : O2 Schmidt Number
    units : none
    vertical_grid : none
    frequency : medium
    operator : average
 O2SAT :
-   module : ecosys_base
    longname : O2 Saturation
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
    operator : average
 CO2STAR : &CO2STAR
-   module : ecosys_base
    longname : CO2 Star
    units : mmol/m^3
    vertical_grid : none
@@ -70,7 +63,6 @@ CO2STAR_ALT_CO2 :
    << : *CO2STAR
    longname : CO2 Star, Alternate CO2
 DCO2STAR : &DCO2STAR
-   module : ecosys_base
    longname : D CO2 Star
    units : mmol/m^3
    vertical_grid : none
@@ -80,7 +72,6 @@ DCO2STAR_ALT_CO2 :
    << : *DCO2STAR
    longname : D CO2 Star, Alternative CO2
 pCO2SURF : &pCO2SURF
-   module : ecosys_base
    longname : surface pCO2
    units : ppmv
    vertical_grid : none
@@ -92,7 +83,6 @@ pCO2SURF_ALT_CO2 :
    frequency : never
    operator : average
 DpCO2 : &DpCO2
-   module : ecosys_base
    longname : D pCO2
    units : ppmv
    vertical_grid : none
@@ -108,21 +98,18 @@ DpCO2_ALT_CO2 :
    frequency : medium
    operator : average
 PV_CO2 :
-   module : ecosys_base
    longname : CO2 Piston Velocity
    units : cm/s
    vertical_grid : none
    frequency : never
    operator : average
 SCHMIDT_CO2 :
-   module : ecosys_base
    longname : CO2 Schmidt Number
    units : none
    vertical_grid : none
    frequency : medium
    operator : average
 FG_CO2 : &FG_CO2 # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
-   module : ecosys_base
    longname : DIC Surface Gas Flux
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -138,7 +125,6 @@ FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
    frequency : medium
    operator : average
 PH : &PH
-   module : ecosys_base
    longname : Surface pH
    units : none
    vertical_grid : none
@@ -148,7 +134,6 @@ PH_ALT_CO2 :
    << : *PH
    longname : Surface pH, Alternative CO2
 ATM_CO2 : &ATM_CO2
-   module : ecosys_base
    longname : Atomspheric CO2
    units : ppmv
    vertical_grid : none
@@ -158,35 +143,30 @@ ATM_ALT_CO2 :
    << : *ATM_CO2
    longname : Atomspheric CO2
 IRON_FLUX :
-   module : ecosys_base
    longname : Atmospheric Iron Flux
    units : mmol/m^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 DUST_FLUX :
-   module : ecosys_base
    longname : Dust Flux # Should be "Atmospheric Dust Flux?"
    units : g/cm^2/s
    vertical_grid : none
    frequency : never
    operator : average
 NOx_FLUX :
-   module : ecosys_base
    longname : Flux of NOx from Atmosphere
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 NHy_FLUX :
-   module : ecosys_base
    longname : Flux of NHy from Atmosphere
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 NHx_SURFACE_EMIS :
-   module : ecosys_base
    longname : Emission of NHx to Atmosphere
    units : nmol/cm^2/s
    vertical_grid : none
@@ -198,112 +178,128 @@ NHx_SURFACE_EMIS :
 ###############
 
 CISO_FG_13CO2 :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : DI13C Surface Gas Flux
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_FG_as_13CO2 :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : DI13C Surface Air-Sea Gas Flux
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_FG_sa_13CO2 :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : DI13C Surface Sea-Air Gas Flux
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_FG_d13C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : D13C Surface GAS FLUX
    units : permil
    vertical_grid : none
    frequency : never
    operator : average
 CISO_D13C_atm :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Atmospheric Delta 13C in permil
    units : permil
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_R13C_DIC_surf :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : 13C/12C ratio in total DIC
    units : permil
    vertical_grid : none
    frequency : never
    operator : average
 CISO_R13C_atm :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : 13C/12C ratio in atmosphere
    units : permil
    vertical_grid : none
    frequency : never
    operator : average
 CISO_eps_aq_g_surf :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Surface equilibrium fractionation (CO2_gaseous <-> CO2_aq)
    units : permil
    vertical_grid : none
    frequency : never
    operator : average
 CISO_eps_dic_g_surf :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Surface equilibrium fractionation between total DIC and gaseous CO2
    units : permil
    vertical_grid : none
    frequency : never
    operator : average
 CISO_FG_14CO2 :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : DI14C Surface Gas Flux
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_FG_as_14CO2 :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : DI14C Surface Air-Sea Gas Flux
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_FG_sa_14CO2 :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : DI14C Surface Sea-Air Gas Flux
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_FG_d14C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : D14C Surface GAS FLUX
    units : permil
    vertical_grid : none
    frequency : never
    operator : average
 CISO_D14C_atm :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Atmospheric Delta 14C in permil
    units : permil
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_R14C_DIC_surf :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : 14C/12C ratio in total DIC
    units : permil
    vertical_grid : none
    frequency : never
    operator : average
 CISO_R14C_atm :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : 14C/12C ratio in atmosphere
    units : permil
    vertical_grid : none
@@ -319,112 +315,96 @@ CISO_R14C_atm :
 ###############
 
 zsatcalc :
-   module : ecosys_base
    longname : Calcite Saturation Depth
    units : cm
    vertical_grid : none
    frequency : medium
    operator : average
 zsatarag :
-   module : ecosys_base
    longname : Aragonite Saturation Depth
    units : cm
    vertical_grid : none
    frequency : medium
    operator : average
 O2_ZMIN :
-   module : ecosys_base
    longname : Vertical Minimum of O2
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
    operator : average
 O2_ZMIN_DEPTH :
-   module : ecosys_base
    longname : Vertical Minimum of O2
    units : cm
    vertical_grid : none
    frequency : medium
    operator : average
 photoC_TOT_zint :
-   module : ecosys_base
    longname : Total C Fixation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never
    operator : average
 photoC_NO3_TOT_zint :
-   module : ecosys_base
    longname : Total C Fixation from NO3 Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never
    operator : average
 Jint_Ctot :
-   module : ecosys_base
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 Jint_100m_Ctot :
-   module : ecosys_base
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 Jint_Ntot :
-   module : ecosys_base
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ntot
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 Jint_100m_Ntot :
-   module : ecosys_base
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ntot, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 Jint_Ptot :
-   module : ecosys_base
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ptot
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 Jint_100m_Ptot :
-   module : ecosys_base
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ptot, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 Jint_Sitot :
-   module : ecosys_base
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Sitot
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 Jint_100m_Sitot :
-   module : ecosys_base
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Sitot, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 Jint_Fetot :
-   module : ecosys_base
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Fetot
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 Jint_100m_Fetot :
-   module : ecosys_base
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Fetot, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -433,77 +413,66 @@ Jint_100m_Fetot :
 
 # Particulate 2D diags
 calcToSed :
-   module : ecosys_base
    longname : CaCO3 Flux to Sediments
    units : nmolC/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 calcToSed_ALT_CO2 :
-   module : ecosys_base
    longname : CaCO3 Flux to Sediments, Alternative CO2
    units : calcToSed_ALT_CO2
    vertical_grid : none
    frequency : medium
    operator : average
 pocToSed :
-   module : ecosys_base
    longname : POC Flux to Sediments
    units : nmolC/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 ponToSed :
-   module : ecosys_base
    longname : nitrogen burial Flux to Sediments
    units : nmolN/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 SedDenitrif :
-   module : ecosys_base
    longname : nitrogen loss in Sediments
    units : nmolN/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 OtherRemin :
-   module : ecosys_base
    longname : non-oxic,non-dentr remin in Sediments
    units : nmolC/cm^2/s
    vertical_grid : none
    frequency : never
    operator : average
 popToSed :
-   module : ecosys_base
    longname : phosphorus Flux to Sediments
    units : nmolP/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 bsiToSed :
-   module : ecosys_base
    longname : biogenic Si Flux to Sediments
    units : nmolSi/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 dustToSed :
-   module : ecosys_base
    longname : dust Flux to Sediments
    units : g/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 pfeToSed :
-   module : ecosys_base
    longname : pFe Flux to Sediments
    units : nmolFe/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 CaCO3_form_zint :
-   module : ecosys_base
    longname : Total CaCO3 Formation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -512,252 +481,216 @@ CaCO3_form_zint :
 
 # General 3D diags
 CO3 :
-   module : ecosys_base
    longname : Carbonate Ion Concentration
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 HCO3 :
-   module : ecosys_base
    longname : Bicarbonate Ion Concentration
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 H2CO3 :
-   module : ecosys_base
    longname : Carbonic Acid Concentration
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 pH_3D :
-   module : ecosys_base
    longname : pH
    units : none
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CO3_ALT_CO2 :
-   module : ecosys_base
    longname : Carbonate Ion Concentration, Alternative CO2
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : never
    operator : average
 HCO3_ALT_CO2 :
-   module : ecosys_base
    longname : Bicarbonate Ion Concentration, Alternative CO2
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : never
    operator : average
 H2CO3_ALT_CO2 :
-   module : ecosys_base
    longname : Carbonic Acid Concentration, Alternative CO2
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : never
    operator : average
 pH_3D_ALT_CO2 :
-   module : ecosys_base
    longname : pH, Alternative CO2
    units : none
    vertical_grid : layer_avg
    frequency : never
    operator : average
 co3_sat_calc :
-   module : ecosys_base
    longname : CO3 concentration at calcite saturation
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 co3_sat_arag :
-   module : ecosys_base
    longname : CO3 concentration at aragonite saturation
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 NITRIF :
-   module : ecosys_base
    longname : Nitrification
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DENITRIF :
-   module : ecosys_base
    longname : Denitrification
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 O2_PRODUCTION :
-   module : ecosys_base
    longname : O2 Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 O2_CONSUMPTION :
-   module : ecosys_base
    longname : O2 Consumption
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 AOU :
-   module : ecosys_base
    longname : Apparent O2 Utilization
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 PAR_avg :
-   module : ecosys_base
    longname : PAR Average over Model Cell
    units : W/m^2
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 graze_auto_TOT :
-   module : ecosys_base
    longname : Total Autotroph Grazing
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : never
    operator : average
 photoC_TOT :
-   module : ecosys_base
    longname : Total C Fixation
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : never
    operator : average
 photoC_NO3_TOT :
-   module : ecosys_base
    longname : Total C Fixation from NO3
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : never
    operator : average
 DOC_prod :
-   module : ecosys_base
    longname : DOC Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DOC_remin :
-   module : ecosys_base
    longname : DOC Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DOCr_remin :
-   module : ecosys_base
    longname : DOCr Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DON_prod :
-   module : ecosys_base
    longname : DON Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DON_remin :
-   module : ecosys_base
    longname : DON Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DONr_remin :
-   module : ecosys_base
    longname : DONr Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DOP_prod :
-   module : ecosys_base
    longname : DOP Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DOP_remin :
-   module : ecosys_base
    longname : DOP Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DOPr_remin :
-   module : ecosys_base
    longname : DOPr Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Fe_scavenge :
-   module : ecosys_base
    longname : Iron Scavenging
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Fe_scavenge_rate :
-   module : ecosys_base
    longname : Iron Scavenging Rate
    units : 1/y
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Lig_prod :
-   module : ecosys_base
    longname : Production of Fe-binding Ligand
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Lig_loss :
-   module : ecosys_base
    longname : Loss of Fe-binding Ligand
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Lig_scavenge :
-   module : ecosys_base
    longname : Fe not bound to Ligand
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Fefree :
-   module : ecosys_base
    longname : Fe not bound to Ligand
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Lig_photochem :
-   module : ecosys_base
    longname : Loss of Fe-binding Ligand from UV radiation
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Lig_deg :
-   module : ecosys_base
    longname : Loss of Fe-binding Ligand from Bacterial Degradation
    units : mmol/m^3/s
    vertical_grid : layer_avg
@@ -766,182 +699,156 @@ Lig_deg :
 
 # Particulate 3D diags
 POC_FLUX_IN :
-   module : ecosys_base
    longname : POC Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 POC_PROD :
-   module : ecosys_base
    longname : POC Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 POC_REMIN :
-   module : ecosys_base
    longname : POC Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 POC_REMIN_DIC :
-   module : ecosys_base
    longname : POC Remineralization routed to DIC
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 POP_FLUX_IN :
-   module : ecosys_base
    longname : POP Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 POP_PROD :
-   module : ecosys_base
    longname : POP Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 POP_REMIN :
-   module : ecosys_base
    longname : POP Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 POP_REMIN_PO4 :
-   module : ecosys_base
    longname : POP Remineralization routed to PO4
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 PON_REMIN_NH4 :
-   module : ecosys_base
    longname : PON Remineralization routed to NH4
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CaCO3_FLUX_IN :
-   module : ecosys_base
    longname : CaCO3 Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CaCO3_PROD :
-   module : ecosys_base
    longname : CaCO3 Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CaCO3_REMIN :
-   module : ecosys_base
    longname : CaCO3 Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CaCO3_ALT_CO2_FLUX_IN :
-   module : ecosys_base
    longname : CaCO3 Flux into Cell, Alternative CO2
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CaCO3_ALT_CO2_PROD :
-   module : ecosys_base
    longname : CaCO3 Production, Alternative CO2
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : never
    operator : average
 CaCO3_ALT_CO2_REMIN :
-   module : ecosys_base
    longname : CaCO3 Remineralization, Alternative CO2
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 SiO2_FLUX_IN :
-   module : ecosys_base
    longname : SiO2 Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 SiO2_PROD :
-   module : ecosys_base
    longname : SiO2 Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 SiO2_REMIN :
-   module : ecosys_base
    longname : SiO2 Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : never
    operator : average
 dust_FLUX_IN :
-   module : ecosys_base
    longname : Dust Flux into Cell
    units : ng/s/m^2
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 dust_REMIN :
-   module : ecosys_base
    longname : Dust Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 P_iron_FLUX_IN :
-   module : ecosys_base
    longname : P_iron Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 P_iron_PROD :
-   module : ecosys_base
    longname : P_iron Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 P_iron_REMIN :
-   module : ecosys_base
    longname : P_iron Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 bSi_form :
-   module : ecosys_base
    longname : Total Si Uptake
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CaCO3_form :
-   module : ecosys_base
    longname : Total CaCO3 Formation
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Nfix :
-   module : ecosys_base
    longname : Total N Fixation
    units : mmol/m^3/s
    vertical_grid : layer_avg
@@ -954,70 +861,80 @@ Nfix :
 
 # 2D fields
 CISO_photo13C_TOT_zint :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Total 13C Fixation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_photo14C_TOT_zint :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Total 14C Fixation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_Jint_13Ctot :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : 13Ctot Source Sink Term Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_Jint_14Ctot :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : 14Ctot Source Sink Term Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_Jint_100m_13Ctot :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : 13Ctot Source Sink Term Vertical Integral, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CISO_Jint_100m_14Ctot :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : 14Ctot Source Sink Term Vertical Integral, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 calcToSed_13C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Ca13CO3 Flux to Sediments
    units : nmolC/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 pocToSed_13C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : PO13C Flux to Sediments
    units : nmolC/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 calcToSed_14C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Ca14CO3 Flux to Sediments
    units : nmolC/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 pocToSed_14C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : PO14C Flux to Sediments
    units : nmolC/cm^2/s
    vertical_grid : none
@@ -1026,182 +943,208 @@ pocToSed_14C :
 
 # 3D fields
 CISO_PO13C_FLUX_IN :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : PO13C Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_PO13C_PROD :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : PO13C Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_PO13C_REMIN :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : PO13C Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_DO13C_prod :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : DO13C Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_DO13C_remin :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : DO13C Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_Ca13CO3_FLUX_IN :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Ca13CO3 flux into cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_Ca13CO3_PROD :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Ca13CO3 Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_Ca13CO3_REMIN :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Ca13CO3 Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_photo13C_TOT :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Total 13C Fixation
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_DIC_d13C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : d13C of DIC
    units : permil
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_DOC_d13C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : d13C of DOC
    units : permil
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_zooC_d13C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : d13C of zooC
    units : permil
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_PO14C_FLUX_IN :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : PO14C Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_PO14C_PROD :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : PO14C Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_PO14C_REMIN :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : PO14C Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_DO14C_prod :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : DO14C Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_DO14C_remin :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : DO14C Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_Ca14CO3_FLUX_IN :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Ca14CO3 flux into cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_Ca14CO3_PROD :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Ca14CO3 Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_Ca14CO3_REMIN :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Ca14CO3 Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_photo14C_TOT :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Total 14C Fixation
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_DIC_d14C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : d14C of DIC
    units : permil
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_DOC_d14C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : d14C of DOC
    units : permil
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_zooC_d14C :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : d14C of zooC
    units : permil
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_eps_aq_g :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Equilibrium fractionation (CO2_gaseous <-> CO2_aq)
    units : permil
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CISO_eps_dic_g :
-   module : ciso
+   dependencies :
+      ciso_on : .true.
    longname : Equilibrium fractionation between total DIC and gaseous CO2
    units : permil
    vertical_grid : layer_avg
@@ -1212,12 +1155,19 @@ CISO_eps_dic_g :
 # Per-tracer Diagnostics #
 ##########################
 
-_tracers :
-   _RESTORE_TEND :
-      longname : \\long_name\\ Restoring Tendency
-      units : \\tend_units\\
-      vertical_grid : layer_avg
-      frequency :
-         default : never
-         \\short_name\\ in \\tracer_restore_vars\\ : medium
-      operator : average
+((tracer_short_name))_RESTORE_TEND :
+   longname : ((tracer_long_name)) Restoring Tendency
+   units : ((tracer_tend_units))
+   vertical_grid : layer_avg
+   frequency :
+      default : never
+      ((restore_this_tracer)) : medium
+   operator : average
+
+#############################
+# Per-autotroph Diagnostics #
+#############################
+
+# ((autotroph_sname))_CaCO3_form :
+#    dependencies :
+#       silicifier : True
