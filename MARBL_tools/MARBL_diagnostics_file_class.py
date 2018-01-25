@@ -32,18 +32,7 @@ class MARBL_diagnostics_class(object):
             _abort(1)
 
         # 3. Generate processed version of self._diagnostics
-        self._resolved_diagnostics = self._process_diagnostics(MARBL_settings)
-
-        # 4. Dictionary for keeping diagnostic, frequency pairs (based on self._processed_diagnostics)
-        from collections import OrderedDict
-        self.diagnostics_dict = OrderedDict()
-        for diag_name in _sort(self._resolved_diagnostics.keys()):
-            freq_op = []
-            # enumerate -> for op, freq in zip(operator, self._resolved_diagnostics['frequency'])
-            for freq, op in zip(self._resolved_diagnostics[diag_name]['frequency'], self._resolved_diagnostics[diag_name]['operator']):
-                freq_op.append(freq + '_' + op)
-            self.diagnostics_dict[diag_name] = ", ".join(freq_op)
-
+        self.diagnostics_dict = self._process_diagnostics(MARBL_settings)
 
     ################################################################################
     #                            PRIVATE CLASS METHODS                             #

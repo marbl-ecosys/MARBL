@@ -64,7 +64,12 @@ def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out):
     fout.write("# Frequencies are never, low, medium, and high.\n")
     fout.write("# Operators are instantaneous, average, minimum, and maximum.\n")
     for diag_name in MARBL_diagnostics.diagnostics_dict.keys():
-        fout.write("%s : %s\n" % (diag_name, MARBL_diagnostics.diagnostics_dict[diag_name]))
+        frequencies = MARBL_diagnostics.diagnostics_dict[diag_name]['frequency']
+        operators = MARBL_diagnostics.diagnostics_dict[diag_name]['operator']
+        freq_op = []
+        for freq, op in zip(frequencies, operators):
+            freq_op.append(freq + '_' + op)
+        fout.write("%s : %s\n" % (diag_name, ", ".join(freq_op)))
     fout.close()
 
 #######################################
