@@ -1168,6 +1168,10 @@ CISO_eps_dic_g :
 # Per-autotroph Diagnostics #
 #############################
 
-# ((autotroph_sname))_CaCO3_form :
-#    dependencies :
-#       silicifier : True
+photoC_((autotroph_sname))_zint :
+   longname : ((autotroph_lname)) C Fixation Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+

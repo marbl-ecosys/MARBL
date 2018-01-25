@@ -102,12 +102,27 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
     logger = logging.getLogger(__name__)
 
     template = re.search('\(\(.*\)\)', diag_name).group()
+    template_fill_dict = dict()
     if template == '((tracer_short_name))':
-        template_fill_dict = MARBL_settings.settings_dict["_tracer_dict"]
+        fill_source = 'tracers'
+        # diag name will replace template with key_fill_vals
+        loop_for_replacement = MARBL_settings.settings_dict["_tracer_dict"].keys()
+    elif template == '((autotroph_sname))':
+        fill_source = 'autotrophs'
+        loop_for_replacement = range(1,MARBL_settings.settings_dict['autotroph_cnt']+1)
     else:
         logger.error("%s is not a valid template value" % template)
         _abort(1)
-    for key_fill_val in template_fill_dict.keys():
+    for item in loop_for_replacement:
+        if fill_source == 'tracers':
+            key_fill_val = item
+            # more metadata will be available in template_fill_dict
+            template_fill_dict['((tracer_long_name))'] = MARBL_settings.settings_dict["_tracer_dict"][key_fill_val]["long_name"]
+            template_fill_dict['((tracer_tend_units))'] = MARBL_settings.settings_dict["_tracer_dict"][key_fill_val]["tend_units"]
+        elif fill_source == 'autotrophs':
+            key_fill_val = MARBL_settings.settings_dict["autotrophs(%d)%%sname" % item].strip('"')
+            template_fill_dict['((autotroph_lname))'] = MARBL_settings.settings_dict["autotrophs(%d)%%lname" % item].strip('"')
+            #silicifier = MARBL_settings.settings_dict["autotrophs(%d)%%silicifier" % item]
         new_diag_name = diag_name.replace(template, key_fill_val)
         processed_dict[new_diag_name] = dict()
         for key in unprocessed_entry.keys():
@@ -117,16 +132,17 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
                     processed_dict[new_diag_name][key] = unprocessed_entry[key]
                 else:
                     template2 = re.search('\(\(.*\)\)', unprocessed_entry[key]).group()
-                    if template2 == '((tracer_long_name))':
-                        replacement_text = template_fill_dict[key_fill_val]['long_name']
-                    elif template2 == '((tracer_tend_units))':
-                        replacement_text = template_fill_dict[key_fill_val]['tend_units']
-                    else:
+                    try:
+                        replacement_text = template_fill_dict[template2]
+                    except:
                         logger.error("Can not replace '%s'" % template2)
                         _abort(1)
                     processed_dict[new_diag_name][key] = unprocessed_entry[key].replace(template2, replacement_text)
             else:
-                if key == 'frequency':
+                if key == 'dependencies':
+                    # need to check dependencies on a per-diagnostic basis
+                    pass
+                elif key == 'frequency':
                     dict_key = 'default'
                     for new_key in unprocessed_entry[key].keys():
                         if new_key == '((restore_this_tracer))':

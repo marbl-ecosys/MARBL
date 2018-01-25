@@ -1282,6 +1282,16 @@
       "units": "nmolFe/cm^2/s",
       "vertical_grid": "none"
    },
+   "photoC_((autotroph_sname))_zint": {
+      "dependencies": {
+         "silicifier": true
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) C Fixation Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "photoC_NO3_TOT": {
       "frequency": "never",
       "longname": "Total C Fixation from NO3",
