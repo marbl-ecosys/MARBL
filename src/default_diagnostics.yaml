@@ -1,3 +1,4 @@
+
 # ABOUT THIS FILE
 # ---------------
 
@@ -1172,6 +1173,44 @@ photoC_((autotroph_sname))_zint :
    longname : ((autotroph_lname)) C Fixation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
+   frequency : high
+   operator : average
+photoC_NO3_((autotroph_sname))_zint :
+   longname : ((autotroph_lname)) C Fixation from NO3 Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
    frequency : medium
    operator : average
-
+((autotroph_sname))_CaCO3_form_zint :
+   dependencies :
+      ((autotroph_calcifier)) : true
+   longname : ((autotroph_lname)) CaCO3 Formation Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+((autotroph_sname))_Qp :
+   dependencies:
+      lvariable_PtoC : .true.
+   longname : ((autotroph_lname))
+   units : none
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+((autotroph_sname))_N_lim :
+   longname : ((autotroph_lname)) N Limitation
+   units : none
+   vertical_grid : layer_avg
+   truncate : true
+   frequency :
+      default : medium
+      ((autotroph_Nfixer)) : never
+   operator : average
+((autotroph_sname))_P_lim :
+   longname : ((autotroph_lname)) P Limitation
+   units : none
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average

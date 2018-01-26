@@ -2024,7 +2024,7 @@ contains
         allocate(ind%CaCO3_form(autotroph_cnt))
         allocate(ind%Nfix(autotroph_cnt))
       end if
-      do n= 1,autotroph_cnt
+      do n=1,autotroph_cnt
         lname = trim(autotrophs(n)%lname) // ' P:C ratio'
         sname = trim(autotrophs(n)%sname) // '_Qp'
         units = 'none'

@@ -1,4 +1,44 @@
 {
+   "((autotroph_sname))_CaCO3_form_zint": {
+      "dependencies": {
+         "((autotroph_calcifier))": true
+      },
+      "frequency": "never",
+      "longname": "((autotroph_lname)) CaCO3 Formation Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_N_lim": {
+      "frequency": {
+         "((autotroph_Nfixer))": "never",
+         "default": "medium"
+      },
+      "longname": "((autotroph_lname)) N Limitation",
+      "operator": "average",
+      "truncate": true,
+      "units": "none",
+      "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_P_lim": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) P Limitation",
+      "operator": "average",
+      "truncate": true,
+      "units": "none",
+      "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_Qp": {
+      "dependencies": {
+         "lvariable_PtoC": ".true."
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname))",
+      "operator": "average",
+      "truncate": true,
+      "units": "none",
+      "vertical_grid": "layer_avg"
+   },
    "((tracer_short_name))_RESTORE_TEND": {
       "frequency": {
          "((restore_this_tracer))": "medium",
@@ -1283,11 +1323,15 @@
       "vertical_grid": "none"
    },
    "photoC_((autotroph_sname))_zint": {
-      "dependencies": {
-         "silicifier": true
-      },
-      "frequency": "medium",
+      "frequency": "high",
       "longname": "((autotroph_lname)) C Fixation Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "photoC_NO3_((autotroph_sname))_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) C Fixation from NO3 Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"

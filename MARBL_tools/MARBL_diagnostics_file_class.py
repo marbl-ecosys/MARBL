@@ -56,6 +56,7 @@ class MARBL_diagnostics_class(object):
             else:
                 # (Also determine correct frequency if 'frequency' is a dict)
                 _expand_template_value(diag_name, MARBL_settings, self._diagnostics[diag_name], processed_dict)
+
         for diag_name in processed_dict.keys():
             # 2. Delete diagnostics where dependencies are not met
             remove_diag = False
@@ -113,44 +114,73 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
     else:
         logger.error("%s is not a valid template value" % template)
         _abort(1)
+
     for item in loop_for_replacement:
         if fill_source == 'tracers':
             key_fill_val = item
             # more metadata will be available in template_fill_dict
             template_fill_dict['((tracer_long_name))'] = MARBL_settings.settings_dict["_tracer_dict"][key_fill_val]["long_name"]
             template_fill_dict['((tracer_tend_units))'] = MARBL_settings.settings_dict["_tracer_dict"][key_fill_val]["tend_units"]
+            # Check to see if tracer is in tracer_restore_vars(:)
+            template_fill_dict['((restore_this_tracer))'] = False
+            for n in range(1,MARBL_settings.get_tracer_cnt()+1):
+                if key_fill_val == MARBL_settings.settings_dict["tracer_restore_vars(%d)" % n].strip('"'):
+                    template_fill_dict['((restore_this_tracer))'] = True
+                    break
         elif fill_source == 'autotrophs':
             key_fill_val = MARBL_settings.settings_dict["autotrophs(%d)%%sname" % item].strip('"')
             template_fill_dict['((autotroph_lname))'] = MARBL_settings.settings_dict["autotrophs(%d)%%lname" % item].strip('"')
+            # Autotroph properties
+            imp_calcifier = (MARBL_settings.settings_dict["autotrophs(%d)%%imp_calcifier" % item].strip('"'))
+            exp_calcifier = (MARBL_settings.settings_dict["autotrophs(%d)%%exp_calcifier" % item].strip('"'))
+            silicifier = (MARBL_settings.settings_dict["autotrophs(%d)%%silicifier" % item].strip('"'))
+            Nfixer = (MARBL_settings.settings_dict["autotrophs(%d)%%Nfixer" % item].strip('"'))
+            template_fill_dict['((autotroph_calcifier))'] = ".true." in [imp_calcifier, exp_calcifier]
+            template_fill_dict['((autotroph_silicifier))'] = (silicifier == ".true.")
+            template_fill_dict['((autotroph_Nfixer))'] = (Nfixer == ".true.")
             #silicifier = MARBL_settings.settings_dict["autotrophs(%d)%%silicifier" % item]
         new_diag_name = diag_name.replace(template, key_fill_val)
         processed_dict[new_diag_name] = dict()
         for key in unprocessed_entry.keys():
             if not isinstance(unprocessed_entry[key], dict):
                 # look for templates in values
-                if re.search('\(\(.*\)\)', unprocessed_entry[key]) == None:
-                    processed_dict[new_diag_name][key] = unprocessed_entry[key]
+                if isinstance(unprocessed_entry[key], type(u'')):
+                    if re.search('\(\(.*\)\)', unprocessed_entry[key]) == None:
+                        processed_dict[new_diag_name][key] = unprocessed_entry[key]
+                    else:
+                        template2 = re.search('\(\(.*\)\)', unprocessed_entry[key]).group()
+                        try:
+                            replacement_text = template_fill_dict[template2]
+                        except:
+                            logger.error("Can not replace '%s'" % template2)
+                            _abort(1)
+                        processed_dict[new_diag_name][key] = unprocessed_entry[key].replace(template2, replacement_text)
                 else:
-                    template2 = re.search('\(\(.*\)\)', unprocessed_entry[key]).group()
-                    try:
-                        replacement_text = template_fill_dict[template2]
-                    except:
-                        logger.error("Can not replace '%s'" % template2)
-                        _abort(1)
-                    processed_dict[new_diag_name][key] = unprocessed_entry[key].replace(template2, replacement_text)
+                    processed_dict[new_diag_name][key] = unprocessed_entry[key]
             else:
                 if key == 'dependencies':
                     # need to check dependencies on a per-diagnostic basis
-                    pass
+                    for dependency in unprocessed_entry['dependencies'].keys():
+                        if dependency in template_fill_dict.keys():
+                            check_val = template_fill_dict[dependency]
+                        else:
+                            try:
+                                check_val = MARBL_settings.settings_dict[dependency]
+                            except:
+                                logger.error("Unknown dependency '%s'" % dependency)
+                                _abort(1)
+                        if unprocessed_entry['dependencies'][dependency] != check_val:
+                            del processed_dict[new_diag_name]
+                            return
+
                 elif key == 'frequency':
                     dict_key = 'default'
                     for new_key in unprocessed_entry[key].keys():
-                        if new_key == '((restore_this_tracer))':
-                            # Check to see if tracer is in tracer_restore_vars(:)
-                            for n in range(1,MARBL_settings.get_tracer_cnt()+1):
-                                if key_fill_val == MARBL_settings.settings_dict["tracer_restore_vars(%d)" % n].strip('"'):
-                                    dict_key = new_key
-                                    break
+                        #if new_key == '((restore_this_tracer))':
+                        if new_key in template_fill_dict.keys():
+                            if template_fill_dict[new_key]:
+                                dict_key = new_key
+                                break
                     processed_dict[new_diag_name][key] = unprocessed_entry[key][dict_key]
                 else:
                     logger.error("Not expecting '%s' key to be a dictionary" % key)
