@@ -111,10 +111,14 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
     elif template == '((autotroph_sname))':
         fill_source = 'autotrophs'
         loop_for_replacement = range(1,MARBL_settings.settings_dict['autotroph_cnt']+1)
+    elif template == '((zooplankton_sname))':
+        fill_source = 'zooplankton'
+        loop_for_replacement = range(1,MARBL_settings.settings_dict['zooplankton_cnt']+1)
     else:
         logger.error("%s is not a valid template value" % template)
         _abort(1)
 
+    # Loop over every tracer or autotroph
     for item in loop_for_replacement:
         if fill_source == 'tracers':
             key_fill_val = item
@@ -139,8 +143,13 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
             template_fill_dict['((autotroph_silicifier))'] = (silicifier == ".true.")
             template_fill_dict['((autotroph_Nfixer))'] = (Nfixer == ".true.")
             #silicifier = MARBL_settings.settings_dict["autotrophs(%d)%%silicifier" % item]
+        elif fill_source == 'zooplankton':
+            key_fill_val = MARBL_settings.settings_dict["zooplankton(%d)%%sname" % item].strip('"')
+            template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict["zooplankton(%d)%%lname" % item].strip('"')
         new_diag_name = diag_name.replace(template, key_fill_val)
+        remove_entry = False
         processed_dict[new_diag_name] = dict()
+        # Loop over every key in the unprocessed diagnostic dictionary
         for key in unprocessed_entry.keys():
             if not isinstance(unprocessed_entry[key], dict):
                 # look for templates in values
@@ -170,9 +179,8 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
                                 logger.error("Unknown dependency '%s'" % dependency)
                                 _abort(1)
                         if unprocessed_entry['dependencies'][dependency] != check_val:
-                            del processed_dict[new_diag_name]
-                            return
-
+                            remove_entry = True
+                            break
                 elif key == 'frequency':
                     dict_key = 'default'
                     for new_key in unprocessed_entry[key].keys():
@@ -185,6 +193,8 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
                 else:
                     logger.error("Not expecting '%s' key to be a dictionary" % key)
                     _abort(1)
+        if remove_entry:
+            del processed_dict[new_diag_name]
 
 ################################################################################
 

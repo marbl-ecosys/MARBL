@@ -1190,7 +1190,10 @@ photoC_NO3_((autotroph_sname))_zint :
    frequency : never
    operator : average
 ((autotroph_sname))_Qp :
-   dependencies:
+   dependencies: # NOTE: POP treats this as a dependency, though MARBL defines
+                 #       these diagnostics independent of lvariable_PtoC; my
+                 #       thought is that we don't need these diagnostics with
+                 #       fixed P:C so I'd like to update the fortran as well
       lvariable_PtoC : .true.
    longname : ((autotroph_lname))
    units : none
@@ -1213,4 +1216,185 @@ photoC_NO3_((autotroph_sname))_zint :
    vertical_grid : layer_avg
    truncate : true
    frequency : medium
+   operator : average
+((autotroph_sname))_Fe_lim :
+   longname : ((autotroph_lname)) Fe Limitation
+   units : none
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+((autotroph_sname))_SiO3_lim :
+   dependencies :
+      ((autotroph_silicifier)) : true
+   longname : ((autotroph_lname)) SiO3 Limitation
+   units : none
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+((autotroph_sname))_light_lim :
+   longname : ((autotroph_lname)) Light Limitation
+   units : none
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+photoC_((autotroph_sname)) :
+   longname : ((autotroph_lname)) C Fixation
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+photoC_NO3_((autotroph_sname)) :
+   longname : ((autotroph_lname)) C Fixation from NO3
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+photoFe_((autotroph_sname)) :
+   longname : ((autotroph_lname)) Fe Uptake
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+photoNO3_((autotroph_sname)) :
+   longname : ((autotroph_lname)) NO3 Uptake
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+photoNH4_((autotroph_sname)) :
+   longname : ((autotroph_lname)) NH4 Uptake
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+DOP_((autotroph_sname))_uptake :
+   longname : ((autotroph_lname)) DOP Uptake
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+PO4_((autotroph_sname))_uptake :
+   longname : ((autotroph_lname)) PO4 Uptake
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+graze_((autotroph_sname)) :
+   longname : ((autotroph_lname)) Grazing
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+graze_((autotroph_sname))_poc :
+   longname : ((autotroph_lname)) Grazing to POC
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+graze_((autotroph_sname))_doc :
+   longname : ((autotroph_lname)) Grazing to DOC
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+graze_((autotroph_sname))_zoo :
+   longname : ((autotroph_lname)) Grazing to ZOO
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+((autotroph_sname))_loss :
+   longname : ((autotroph_lname)) Loss
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+((autotroph_sname))_loss_poc :
+   longname : ((autotroph_lname)) Loss to POC
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+((autotroph_sname))_loss_doc :
+   longname : ((autotroph_lname)) Loss to DOC
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+((autotroph_sname))_agg :
+   longname : ((autotroph_lname)) Aggregate
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+((autotroph_sname))_bSi_form :
+   dependencies :
+      ((autotroph_silicifier)) : true
+   longname : ((autotroph_lname)) Si Uptake
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+((autotroph_sname))_CaCO3_form :
+   dependencies :
+      ((autotroph_calcifier)) : true
+   longname : ((autotroph_lname)) CaCO3 Formation
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+((autotroph_sname))_Nfix :
+   dependencies :
+      ((autotroph_Nfixer)) : true
+   longname : ((autotroph_lname)) N Fixation
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+
+###############################
+# Per-zooplankton Diagnostics #
+###############################
+
+((zooplankton_sname))_loss :
+   longname : ((zooplankton_lname)) Loss
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+((zooplankton_sname))_loss_poc :
+   longname : ((zooplankton_lname)) Loss to POC
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+((zooplankton_sname))_loss_doc :
+   longname : ((zooplankton_lname)) Loss to DOC
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
    operator : average

@@ -1,4 +1,15 @@
 {
+   "((autotroph_sname))_CaCO3_form": {
+      "dependencies": {
+         "((autotroph_calcifier))": true
+      },
+      "frequency": "never",
+      "longname": "((autotroph_lname)) CaCO3 Formation",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "((autotroph_sname))_CaCO3_form_zint": {
       "dependencies": {
          "((autotroph_calcifier))": true
@@ -9,6 +20,14 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "((autotroph_sname))_Fe_lim": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Fe Limitation",
+      "operator": "average",
+      "truncate": true,
+      "units": "none",
+      "vertical_grid": "layer_avg"
+   },
    "((autotroph_sname))_N_lim": {
       "frequency": {
          "((autotroph_Nfixer))": "never",
@@ -18,6 +37,17 @@
       "operator": "average",
       "truncate": true,
       "units": "none",
+      "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_Nfix": {
+      "dependencies": {
+         "((autotroph_Nfixer))": true
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) N Fixation",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "((autotroph_sname))_P_lim": {
@@ -39,6 +69,68 @@
       "units": "none",
       "vertical_grid": "layer_avg"
    },
+   "((autotroph_sname))_SiO3_lim": {
+      "dependencies": {
+         "((autotroph_silicifier))": true
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) SiO3 Limitation",
+      "operator": "average",
+      "truncate": true,
+      "units": "none",
+      "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_agg": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Aggregate",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_bSi_form": {
+      "dependencies": {
+         "((autotroph_silicifier))": true
+      },
+      "frequency": "never",
+      "longname": "((autotroph_lname)) Si Uptake",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_light_lim": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Light Limitation",
+      "operator": "average",
+      "truncate": true,
+      "units": "none",
+      "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_loss": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_loss_doc": {
+      "frequency": "never",
+      "longname": "((autotroph_lname)) Loss to DOC",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_loss_poc": {
+      "frequency": "never",
+      "longname": "((autotroph_lname)) Loss to POC",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "((tracer_short_name))_RESTORE_TEND": {
       "frequency": {
          "((restore_this_tracer))": "medium",
@@ -47,6 +139,30 @@
       "longname": "((tracer_long_name)) Restoring Tendency",
       "operator": "average",
       "units": "((tracer_tend_units))",
+      "vertical_grid": "layer_avg"
+   },
+   "((zooplankton_sname))_loss": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "((zooplankton_sname))_loss_doc": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Loss to DOC",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "((zooplankton_sname))_loss_poc": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Loss to POC",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "AOU": {
@@ -697,6 +813,14 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "DOP_((autotroph_sname))_uptake": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) DOP Uptake",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "DOP_prod": {
       "frequency": "medium",
       "longname": "DOP Production",
@@ -1057,6 +1181,14 @@
       "units": "none",
       "vertical_grid": "none"
    },
+   "PO4_((autotroph_sname))_uptake": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) PO4 Uptake",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "POC_FLUX_IN": {
       "frequency": "medium",
       "longname": "POC Flux into Cell",
@@ -1280,6 +1412,38 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "graze_((autotroph_sname))": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "graze_((autotroph_sname))_doc": {
+      "frequency": "never",
+      "longname": "((autotroph_lname)) Grazing to DOC",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "graze_((autotroph_sname))_poc": {
+      "frequency": "never",
+      "longname": "((autotroph_lname)) Grazing to POC",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "graze_((autotroph_sname))_zoo": {
+      "frequency": "never",
+      "longname": "((autotroph_lname)) Grazing to ZOO",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "graze_auto_TOT": {
       "frequency": "never",
       "longname": "Total Autotroph Grazing",
@@ -1322,12 +1486,28 @@
       "units": "nmolFe/cm^2/s",
       "vertical_grid": "none"
    },
+   "photoC_((autotroph_sname))": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) C Fixation",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "photoC_((autotroph_sname))_zint": {
       "frequency": "high",
       "longname": "((autotroph_lname)) C Fixation Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
+   },
+   "photoC_NO3_((autotroph_sname))": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) C Fixation from NO3",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
    },
    "photoC_NO3_((autotroph_sname))_zint": {
       "frequency": "medium",
@@ -1363,6 +1543,30 @@
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
+   },
+   "photoFe_((autotroph_sname))": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Fe Uptake",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "photoNH4_((autotroph_sname))": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) NH4 Uptake",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "photoNO3_((autotroph_sname))": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) NO3 Uptake",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
    },
    "pocToSed": {
       "frequency": "medium",
