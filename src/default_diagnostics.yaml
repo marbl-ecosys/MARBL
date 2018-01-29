@@ -1373,6 +1373,131 @@ graze_((autotroph_sname))_zoo :
    frequency : medium
    operator : average
 
+# ciso module
+CISO_((autotroph_sname))_Ca13CO3_form :
+   dependencies :
+      ciso_on : .true.
+      ((autotroph_calcifier)) : true
+   longname : ((autotroph_lname)) Ca13CO3 Formation
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+CISO_((autotroph_sname))_Ca13CO3_form_zint :
+   dependencies :
+      ciso_on : .true.
+      ((autotroph_calcifier)) : true
+   longname : ((autotroph_lname)) Ca13CO3 Formation Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CISO_((autotroph_sname))_Ca14CO3_form :
+   dependencies :
+      ciso_on : .true.
+      ((autotroph_calcifier)) : true
+   longname : ((autotroph_lname)) Ca14CO3 Formation
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+CISO_((autotroph_sname))_Ca14CO3_form_zint :
+   dependencies :
+      ciso_on : .true.
+      ((autotroph_calcifier)) : true
+   longname : ((autotroph_lname)) Ca14CO3 Formation Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CISO_autotrophCaCO3_d13C_((autotroph_sname)) :
+   dependencies :
+      ciso_on : .true.
+      ((autotroph_calcifier)) : true
+   longname : ((autotroph_lname)) d13C of CaCO3
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+CISO_autotrophCaCO3_d14C_((autotroph_sname)) :
+   dependencies :
+      ciso_on : .true.
+      ((autotroph_calcifier)) : true
+   longname : ((autotroph_lname)) d14C of CaCO3
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+CISO_photo13C_((autotroph_sname)) :
+   dependencies :
+      ciso_on : .true.
+   longname : ((autotroph_lname)) 13C Fixation
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+CISO_photo14C_((autotroph_sname)) :
+   dependencies :
+      ciso_on : .true.
+   longname : ((autotroph_lname)) 14C Fixation
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+CISO_photo13C_((autotroph_sname))_zint :
+   dependencies :
+      ciso_on : .true.
+   longname : ((autotroph_lname)) 13C Fixation Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+CISO_photo14C_((autotroph_sname))_zint :
+   dependencies :
+      ciso_on : .true.
+   longname : ((autotroph_lname)) 14C Fixation Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+CISO_eps_autotroph_((autotroph_sname)) :
+   dependencies :
+      ciso_on : .true.
+   longname : ((autotroph_lname)) discrimination factor (eps)
+   units : permil
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+CISO_d13C_((autotroph_sname)) :
+   dependencies :
+      ciso_on : .true.
+   longname : ((autotroph_lname)) d13C
+   units : permil
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+CISO_d14C_((autotroph_sname)) :
+   dependencies :
+      ciso_on : .true.
+   longname : ((autotroph_lname)) d14C
+   units : permil
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+CISO_mui_to_co2star_((autotroph_sname)) :
+   dependencies :
+      ciso_on : .true.
+   longname : ((autotroph_lname)) instanteous growth rate over [CO2*]
+   units : m^3/mmol C/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+
+
 ###############################
 # Per-zooplankton Diagnostics #
 ###############################
@@ -1393,6 +1518,41 @@ graze_((autotroph_sname))_zoo :
    operator : average
 ((zooplankton_sname))_loss_doc :
    longname : ((zooplankton_lname)) Loss to DOC
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+graze_((zooplankton_sname)) :
+   longname : ((zooplankton_lname)) grazing loss
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+graze_((zooplankton_sname))_poc :
+   longname : ((zooplankton_lname)) grazing loss to POC
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+graze_((zooplankton_sname))_doc :
+   longname : ((zooplankton_lname)) grazing loss to DOC
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+graze_((zooplankton_sname))_zoo :
+   longname : ((zooplankton_lname)) grazing loss to ZOO
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+x_graze_((zooplankton_sname)) :
+   longname : ((zooplankton_lname)) grazing gain
    units : mmol/m^3/s
    vertical_grid : layer_avg
    truncate : true

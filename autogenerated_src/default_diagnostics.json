@@ -186,6 +186,52 @@
       "units": "ppmv",
       "vertical_grid": "none"
    },
+   "CISO_((autotroph_sname))_Ca13CO3_form": {
+      "dependencies": {
+         "((autotroph_calcifier))": true,
+         "ciso_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Ca13CO3 Formation",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_((autotroph_sname))_Ca13CO3_form_zint": {
+      "dependencies": {
+         "((autotroph_calcifier))": true,
+         "ciso_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Ca13CO3 Formation Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_((autotroph_sname))_Ca14CO3_form": {
+      "dependencies": {
+         "((autotroph_calcifier))": true,
+         "ciso_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Ca14CO3 Formation",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_((autotroph_sname))_Ca14CO3_form_zint": {
+      "dependencies": {
+         "((autotroph_calcifier))": true,
+         "ciso_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Ca14CO3 Formation Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "CISO_Ca13CO3_FLUX_IN": {
       "dependencies": {
          "ciso_on": ".true."
@@ -566,6 +612,48 @@
       "units": "permil",
       "vertical_grid": "none"
    },
+   "CISO_autotrophCaCO3_d13C_((autotroph_sname))": {
+      "dependencies": {
+         "((autotroph_calcifier))": true,
+         "ciso_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) d13C of CaCO3",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_autotrophCaCO3_d14C_((autotroph_sname))": {
+      "dependencies": {
+         "((autotroph_calcifier))": true,
+         "ciso_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) d14C of CaCO3",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_d13C_((autotroph_sname))": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) d13C",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_d14C_((autotroph_sname))": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) d14C",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
+   },
    "CISO_eps_aq_g": {
       "dependencies": {
          "ciso_on": ".true."
@@ -585,6 +673,16 @@
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
+   },
+   "CISO_eps_autotroph_((autotroph_sname))": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) discrimination factor (eps)",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
    },
    "CISO_eps_dic_g": {
       "dependencies": {
@@ -606,6 +704,37 @@
       "units": "permil",
       "vertical_grid": "none"
    },
+   "CISO_mui_to_co2star_((autotroph_sname))": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) instanteous growth rate over [CO2*]",
+      "operator": "average",
+      "units": "m^3/mmol C/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_photo13C_((autotroph_sname))": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
+      "frequency": "never",
+      "longname": "((autotroph_lname)) 13C Fixation",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_photo13C_((autotroph_sname))_zint": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
+      "frequency": "never",
+      "longname": "((autotroph_lname)) 13C Fixation Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "CISO_photo13C_TOT": {
       "dependencies": {
          "ciso_on": ".true."
@@ -622,6 +751,27 @@
       },
       "frequency": "medium",
       "longname": "Total 13C Fixation Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CISO_photo14C_((autotroph_sname))": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
+      "frequency": "never",
+      "longname": "((autotroph_lname)) 14C Fixation",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "CISO_photo14C_((autotroph_sname))_zint": {
+      "dependencies": {
+         "ciso_on": ".true."
+      },
+      "frequency": "never",
+      "longname": "((autotroph_lname)) 14C Fixation Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -1444,6 +1594,38 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "graze_((zooplankton_sname))": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) grazing loss",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "graze_((zooplankton_sname))_doc": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) grazing loss to DOC",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "graze_((zooplankton_sname))_poc": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) grazing loss to POC",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "graze_((zooplankton_sname))_zoo": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) grazing loss to ZOO",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "graze_auto_TOT": {
       "frequency": "never",
       "longname": "Total Autotroph Grazing",
@@ -1608,6 +1790,14 @@
       "operator": "average",
       "units": "nmolP/cm^2/s",
       "vertical_grid": "none"
+   },
+   "x_graze_((zooplankton_sname))": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) grazing gain",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
    },
    "zsatarag": {
       "frequency": "medium",
