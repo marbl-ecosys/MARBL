@@ -195,24 +195,24 @@ class MARBL_settings_class(object):
                 if 'default' in auto_tracers.keys():
                     for tracer in auto_tracers['default'].keys():
                         tracer_dict[auto_sname+tracer] = dict(auto_tracers['default'][tracer])
-                        # Replace //lname// in long_name with auto_lname
-                        tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('//lname//', auto_lname)
+                        # Replace ((autotroph_lname)) in long_name with auto_lname
+                        tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('((autotroph_lname))', auto_lname)
 
                 # tracers only enabled if running with variable P to C
                 if 'variable_PtoC' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
                     if self.settings_dict['lvariable_PtoC'] == '.true.':
                         for tracer in auto_tracers['variable_PtoC'].keys():
                             tracer_dict[auto_sname+tracer] = dict(auto_tracers['variable_PtoC'][tracer])
-                            # Replace //lname// in long_name with auto_lname
-                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('//lname//', auto_lname)
+                            # Replace ((autotroph_lname)) in long_name with auto_lname
+                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('((autotroph_lname))', auto_lname)
 
                 # tracers associated with silicifiers
                 if 'silicifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
                     if self.settings_dict['autotrophs(%d)%%silicifier' % auto_ind] == '.true.':
                         for tracer in auto_tracers['silicifier'].keys():
                             tracer_dict[auto_sname+tracer] = dict(auto_tracers['silicifier'][tracer])
-                            # Replace //lname// in long_name with auto_lname
-                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('//lname//', auto_lname)
+                            # Replace ((autotroph_lname)) in long_name with auto_lname
+                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('((autotroph_lname))', auto_lname)
 
                 # tracers associated with calcifiers
                 if 'calcifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
@@ -220,8 +220,8 @@ class MARBL_settings_class(object):
                                     self.settings_dict['autotrophs(%d)%%imp_calcifier' % auto_ind]]:
                         for tracer in auto_tracers['calcifier'].keys():
                             tracer_dict[auto_sname+tracer] = dict(auto_tracers['calcifier'][tracer])
-                            # Replace //lname// in long_name with auto_lname
-                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('//lname//', auto_lname)
+                            # Replace ((autotroph_lname)) in long_name with auto_lname
+                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('((autotroph_lname))', auto_lname)
 
                 del auto_sname, auto_lname
 
@@ -237,8 +237,8 @@ class MARBL_settings_class(object):
                 if 'default' in zoo_tracers.keys():
                     for tracer in zoo_tracers['default'].keys():
                         tracer_dict[zoo_sname+tracer] = dict(zoo_tracers['default'][tracer])
-                        # Replace //lname// in long_name with zoo_lname
-                        tracer_dict[zoo_sname+tracer]['long_name'] = tracer_dict[zoo_sname+tracer]['long_name'].replace('//lname//', zoo_lname)
+                        # Replace ((zooplankton_lname)) in long_name with zoo_lname
+                        tracer_dict[zoo_sname+tracer]['long_name'] = tracer_dict[zoo_sname+tracer]['long_name'].replace('((zooplankton_lname))', zoo_lname)
 
         for tracer in tracer_dict.keys():
             tracer_dict[tracer][u'tend_units'] = tracer_dict[tracer]['units'] + '/s'

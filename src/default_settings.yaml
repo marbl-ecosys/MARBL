@@ -105,30 +105,30 @@ _tracer_list :
       autotrophs :
          default :
             Chl :
-               long_name : //lname// Chlorophyll
+               long_name : ((autotroph_lname)) Chlorophyll
                units : mmol/m^3
             C :
-               long_name : //lname// Carbon
+               long_name : ((autotroph_lname)) Carbon
                units : mmol/m^3
             Fe :
-               long_name : //lname// Iron
+               long_name : ((autotroph_lname)) Iron
                units : mmol/m^3
          silicifier :
             Si :
-               long_name : //lname// Silicon
+               long_name : ((autotroph_lname)) Silicon
                units : mmol/m^3
          calcifier :
             CaCO3 :
-               long_name : //lname// CaCO3
+               long_name : ((autotroph_lname)) CaCO3
                units : mmol/m^3
          variable_PtoC :
             P :
-               long_name : //lname// Phosphorus
+               long_name : ((autotroph_lname)) Phosphorus
                units : mmol/m^3
       zooplankton :
          default :
             C :
-               long_name : //lname// Carbon
+               long_name : ((zooplankton_lname)) Carbon
                units : mmol/m^3
    ciso :
       default :
@@ -147,25 +147,25 @@ _tracer_list :
       autotrophs :
          default :
             13C :
-               long_name : //lname// Carbon-13
+               long_name : ((autotroph_lname)) Carbon-13
                units : mmol/m^3
             14C :
-               long_name : //lname// Carbon-14
+               long_name : ((autotroph_lname)) Carbon-14
                units : mmol/m^3
          calcifier :
             Ca13CO3 :
-               long_name : //lname// Ca13CO3
+               long_name : ((autotroph_lname)) Ca13CO3
                units : mmol/m^3
             Ca14CO3 :
-               long_name : //lname// Ca14CO3
+               long_name : ((autotroph_lname)) Ca14CO3
                units : mmol/m^3
       zooplankton :
          default :
             13C :
-               long_name : //lname// Carbon-13
+               long_name : ((zooplankton_lname)) Carbon-13
                units : mmol/m^3
             14C :
-               long_name : //lname// Carbon-14
+               long_name : ((zooplankton_lname)) Carbon-14
                units : mmol/m^3
 
 ################################################################################
