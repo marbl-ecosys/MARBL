@@ -45,24 +45,37 @@ optional arguments:
 
 #######################################
 
-def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out):
+def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, append=False):
     """ Produce a list of MARBL diagnostic frequencies from a JSON parameter file
     """
 
-    fout = open(diagnostics_file_out,"w")
-    # Sort variables by subcategory
-    fout.write("# This file contains a list of all diagnostics MARBL can compute for a given configuration,\n")
-    fout.write("# as well as the recommended frequency and operator for outputting each diagnostic.\n")
-    fout.write("# The format of this file is:\n")
-    fout.write("#\n")
-    fout.write("# DIAGNOSTIC_NAME : frequency_operator\n")
-    fout.write("#\n")
-    fout.write("# And fields that should be output at multiple different frequencies will be comma-separated:\n")
-    fout.write("#\n")
-    fout.write("# DIAGNOSTIC_NAME : frequency1_operator1, frequency2_operator2, ..., frequencyN_operatorN\n")
-    fout.write("#\n")
-    fout.write("# Frequencies are never, low, medium, and high.\n")
-    fout.write("# Operators are instantaneous, average, minimum, and maximum.\n")
+    import logging
+    logger = logging.getLogger(__name__)
+    if not append:
+        try:
+            fout = open(diagnostics_file_out,"w")
+        except:
+            logger.error("Unable to open %s for writing" % diagnostics_file_out)
+
+        # Only write header to file if not appending
+        fout.write("# This file contains a list of all diagnostics MARBL can compute for a given configuration,\n")
+        fout.write("# as well as the recommended frequency and operator for outputting each diagnostic.\n")
+        fout.write("# The format of this file is:\n")
+        fout.write("#\n")
+        fout.write("# DIAGNOSTIC_NAME : frequency_operator\n")
+        fout.write("#\n")
+        fout.write("# And fields that should be output at multiple different frequencies will be comma-separated:\n")
+        fout.write("#\n")
+        fout.write("# DIAGNOSTIC_NAME : frequency1_operator1, frequency2_operator2, ..., frequencyN_operatorN\n")
+        fout.write("#\n")
+        fout.write("# Frequencies are never, low, medium, and high.\n")
+        fout.write("# Operators are instantaneous, average, minimum, and maximum.\n")
+    else:
+        try:
+            fout = open(diagnostics_file_out,"a")
+        except:
+            logger.error("Unable to append to %s" % diagnostics_file_out)
+
     for diag_name in MARBL_diagnostics.diagnostics_dict.keys():
         frequencies = MARBL_diagnostics.diagnostics_dict[diag_name]['frequency']
         operators = MARBL_diagnostics.diagnostics_dict[diag_name]['operator']
@@ -110,6 +123,9 @@ def _parse_args(marbl_root):
     parser.add_argument('-o', '--diagnostics_file_out', action='store', dest='diagnostics_file_out', default='marbl.diags',
                         help='Name of file to be written')
 
+    # Append to existing diagnostics file?
+    parser.add_argument('-a', '--append', action='store_true', dest='append',
+                        help='Append to existing diagnostics file')
     return parser.parse_args()
 
 #######################################
@@ -133,4 +149,4 @@ if __name__ == "__main__":
     MARBL_diagnostics = MARBL_diagnostics_class(args.default_diagnostics_file, DefaultSettings)
 
     # Write the input file
-    generate_diagnostics_file(MARBL_diagnostics, args.diagnostics_file_out)
+    generate_diagnostics_file(MARBL_diagnostics, args.diagnostics_file_out, args.append)
