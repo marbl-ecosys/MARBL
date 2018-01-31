@@ -1,4 +1,3 @@
-
 import logging
 
 class MARBL_settings_class(object):
@@ -413,11 +412,31 @@ def _translate_JSON_value(value, datatype, append_to_config=False, varname=None,
     # if variable is a string, put quotes around the default value
     if datatype == "string":
         return '"%s"' % value.encode('utf-8')
+    if datatype == "logical":
+        return _get_F90_logical(value)
     if datatype == "real" and isinstance(value, unicode):
         return "%24.16e" % eval(value)
     if datatype == "integer" and isinstance(value, unicode):
         return int(value)
     return value
+
+################################################################################
+
+def _get_F90_logical(value):
+    """ Return '.true.' if value is a valid Fortran logical = .true.
+        Return '.false.' if value is a valid Fortran logical = .false.
+        Abort if unregonized value.
+    """
+    valid_true = ['.true.', 't', 'true']
+    valid_false = ['.false.', 'f', 'false']
+    if value.lower() in valid_true:
+        return '.true.'
+    if value.lower() in valid_false:
+        return '.false.'
+
+    # Otherwise abort
+    logger = logging.getLogger(__name__)
+    logger.error("%s is not a valid Fortran logical" % value.encode('utf-8'))
 
 ################################################################################
 
