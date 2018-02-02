@@ -46,11 +46,12 @@ optional arguments:
 #######################################
 
 def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, append=False):
-    """ Produce a list of MARBL diagnostic frequencies from a JSON parameter file
+    """ Produce a list of MARBL diagnostic frequencies and operators from a JSON parameter file
     """
 
     import logging
     logger = logging.getLogger(__name__)
+
     if not append:
         try:
             fout = open(diagnostics_file_out,"w")
@@ -70,12 +71,17 @@ def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, append=Fa
         fout.write("#\n")
         fout.write("# Frequencies are never, low, medium, and high.\n")
         fout.write("# Operators are instantaneous, average, minimum, and maximum.\n")
+
     else:
         try:
             fout = open(diagnostics_file_out,"a")
         except:
             logger.error("Unable to append to %s" % diagnostics_file_out)
 
+    # Keys in diagnostics_dict are diagnostic short name, and diagnostic_dict[diag_name]
+    # is also a dictionary containing frequency and operator information. Note that
+    # string values of frequency and operator are converted to lists of len 1 when the
+    # JSON file that generates this list is processed
     for diag_name in MARBL_diagnostics.diagnostics_dict.keys():
         frequencies = MARBL_diagnostics.diagnostics_dict[diag_name]['frequency']
         operators = MARBL_diagnostics.diagnostics_dict[diag_name]['operator']

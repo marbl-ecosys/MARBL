@@ -1,4 +1,3 @@
-
 import logging
 
 class MARBL_diagnostics_class(object):
@@ -91,9 +90,9 @@ def _abort(err_code=0):
 ################################################################################
 
 def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, processed_dict):
-    """ unprocessed_entry is a dictionary whose keys / values may have templated strings
-        (e.g. strings that depend on tracer name or PFT name). This subroutine replaces
-        the templated values and adds the appropriate entry / entries to processed_dict
+    """ unprocessed_entry is a dictionary whose keys / values have templated strings (e.g.
+        strings that depend on tracer name or PFT name). This subroutine replaces the
+        templated values and adds the appropriate entry / entries to processed_dict
 
         Also, if 'frequency' is a dictionary, determine correct default value!
     """
@@ -120,11 +119,14 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
 
     # Loop over every tracer or autotroph
     for item in loop_for_replacement:
+        # i. populate template_fill_dict
         if fill_source == 'tracers':
             key_fill_val = item
+            tracer_dict = MARBL_settings.settings_dict["_tracer_dict"][key_fill_val]
             # more metadata will be available in template_fill_dict
-            template_fill_dict['((tracer_long_name))'] = MARBL_settings.settings_dict["_tracer_dict"][key_fill_val]["long_name"]
-            template_fill_dict['((tracer_tend_units))'] = MARBL_settings.settings_dict["_tracer_dict"][key_fill_val]["tend_units"]
+            template_fill_dict['((tracer_long_name))'] = tracer_dict["long_name"]
+            template_fill_dict['((tracer_tend_units))'] = tracer_dict["tend_units"]
+            del tracer_dict
             # Check to see if tracer is in tracer_restore_vars(:)
             template_fill_dict['((restore_this_tracer))'] = False
             for n in range(1,MARBL_settings.get_tracer_cnt()+1):
@@ -132,25 +134,31 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
                     template_fill_dict['((restore_this_tracer))'] = True
                     break
         elif fill_source == 'autotrophs':
-            key_fill_val = MARBL_settings.settings_dict["autotrophs(%d)%%sname" % item].strip('"')
-            template_fill_dict['((autotroph_lname))'] = MARBL_settings.settings_dict["autotrophs(%d)%%lname" % item].strip('"')
+            auto_prefix = "autotrophs(%d)%%" % item
+            key_fill_val = MARBL_settings.settings_dict[auto_prefix + "sname"].strip('"')
             # Autotroph properties
-            imp_calcifier = (MARBL_settings.settings_dict["autotrophs(%d)%%imp_calcifier" % item].strip('"'))
-            exp_calcifier = (MARBL_settings.settings_dict["autotrophs(%d)%%exp_calcifier" % item].strip('"'))
-            silicifier = (MARBL_settings.settings_dict["autotrophs(%d)%%silicifier" % item].strip('"'))
-            Nfixer = (MARBL_settings.settings_dict["autotrophs(%d)%%Nfixer" % item].strip('"'))
+            imp_calcifier = (MARBL_settings.settings_dict[auto_prefix + "imp_calcifier"].strip('"'))
+            exp_calcifier = (MARBL_settings.settings_dict[auto_prefix + "exp_calcifier"].strip('"'))
+            silicifier = (MARBL_settings.settings_dict[auto_prefix + "silicifier"].strip('"'))
+            Nfixer = (MARBL_settings.settings_dict[auto_prefix + "Nfixer"].strip('"'))
+            # Add values to template_fill_dict
+            template_fill_dict['((autotroph_lname))'] = MARBL_settings.settings_dict[auto_prefix + "lname"].strip('"')
             template_fill_dict['((autotroph_calcifier))'] = ".true." in [imp_calcifier, exp_calcifier]
             template_fill_dict['((autotroph_silicifier))'] = (silicifier == ".true.")
             template_fill_dict['((autotroph_Nfixer))'] = (Nfixer == ".true.")
-            #silicifier = MARBL_settings.settings_dict["autotrophs(%d)%%silicifier" % item]
         elif fill_source == 'zooplankton':
-            key_fill_val = MARBL_settings.settings_dict["zooplankton(%d)%%sname" % item].strip('"')
-            template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict["zooplankton(%d)%%lname" % item].strip('"')
+            zoo_prefix = "zooplankton(%d)%%" % item
+            key_fill_val = MARBL_settings.settings_dict[zoo_prefix + "sname"].strip('"')
+            template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict[zoo_prefix + "lname"].strip('"')
+
+        # ii. Determine name of new diagnostic
         new_diag_name = diag_name.replace(template, key_fill_val)
         remove_entry = False
         processed_dict[new_diag_name] = dict()
-        # Loop over every key in the unprocessed diagnostic dictionary
+
+        # iii. Loop over every key in the unprocessed diagnostic dictionary, replace templated values
         for key in unprocessed_entry.keys():
+            # Keys that are dictionaries should be treated differently
             if not isinstance(unprocessed_entry[key], dict):
                 # look for templates in values
                 if isinstance(unprocessed_entry[key], type(u'')):
@@ -167,6 +175,7 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
                 else:
                     processed_dict[new_diag_name][key] = unprocessed_entry[key]
             else:
+                # Only "dependencies" and "frequency" can be dictionaries
                 if key == 'dependencies':
                     # need to check dependencies on a per-diagnostic basis
                     for dependency in unprocessed_entry['dependencies'].keys():
@@ -193,6 +202,8 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
                 else:
                     logger.error("Not expecting '%s' key to be a dictionary" % key)
                     _abort(1)
+
+        # If dependencies prevent diagnostic from being used, remove it from processed_dict
         if remove_entry:
             del processed_dict[new_diag_name]
 
@@ -262,5 +273,3 @@ def _parse_input_file(input_file):
         logger.error("input_file '%s' was not found" % input_file)
         _abort(1)
     return input_dict
-
-################################################################################
