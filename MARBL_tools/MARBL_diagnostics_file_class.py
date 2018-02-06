@@ -106,7 +106,7 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
     if template == '((tracer_short_name))':
         fill_source = 'tracers'
         # diag name will replace template with key_fill_vals
-        loop_for_replacement = MARBL_settings.settings_dict["_tracer_dict"].keys()
+        loop_for_replacement = MARBL_settings.tracers_dict.keys()
     elif template == '((autotroph_sname))':
         fill_source = 'autotrophs'
         loop_for_replacement = range(1,MARBL_settings.settings_dict['autotroph_cnt']+1)
@@ -117,12 +117,12 @@ def _expand_template_value(diag_name, MARBL_settings, unprocessed_entry, process
         logger.error("%s is not a valid template value" % template)
         _abort(1)
 
-    # Loop over every tracer or autotroph
+    # Loop over every tracer, autotroph, or zooplankton
     for item in loop_for_replacement:
         # i. populate template_fill_dict
         if fill_source == 'tracers':
             key_fill_val = item
-            tracer_dict = MARBL_settings.settings_dict["_tracer_dict"][key_fill_val]
+            tracer_dict = MARBL_settings.tracers_dict[key_fill_val]
             # more metadata will be available in template_fill_dict
             template_fill_dict['((tracer_long_name))'] = tracer_dict["long_name"]
             template_fill_dict['((tracer_tend_units))'] = tracer_dict["tend_units"]

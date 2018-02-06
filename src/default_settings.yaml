@@ -1,3 +1,4 @@
+
 # ABOUT THIS FILE
 # ---------------
 # MARBL users can change settings values for runtime-configurable variables via a settings
@@ -49,124 +50,144 @@ _order :
 
 # Tracer count
 _tracer_list :
-   ecosys_base :
-      default :
-         PO4 :
-            long_name : Dissolved Inorganic Phosphate
-            units : mmol/m^3
-         NO3 :
-            long_name : Dissolved Inorganic Nitrate
-            units : mmol/m^3
-         SiO3 :
-            long_name : Dissolved Inorganic Silicate
-            units : mmol/m^3
-         NH4 :
-            long_name : Dissolved Ammonia
-            units : mmol/m^3
-         Fe :
-            long_name : Dissolved Inorganic Iron
-            units : mmol/m^3
-         Lig :
-            long_name : Iron Binding Ligand
-            units : mmol/m^3
-         O2 :
-            long_name : Dissolved Oxygen
-            units : mmol/m^3
-         DIC :
-            long_name : Dissolved Inorganic Carbon
-            units : mmol/m^3
-         DIC_ALT_CO2 :
-            long_name : Dissolved Inorganic Carbon, Alternative CO2
-            units : mmol/m^3
-         ALK :
-            long_name : Alkalinity
-            units : meq/m^3
-         ALK_ALT_CO2 :
-            long_name : Alkalinity, Alternative CO2
-            units : meq/m^3
-         DOC :
-            long_name : Dissolved Organic Carbon
-            units : mmol/m^3
-         DON :
-            long_name : Dissolved Organic Nitrogen
-            units : mmol/m^3
-         DOP :
-            long_name : Dissolved Organic Phosphorus
-            units : mmol/m^3
-         DOPr :
-            long_name : Refractory DOP
-            units : mmol/m^3
-         DONr :
-            long_name : Refractory DON
-            units : mmol/m^3
-         DOCr :
-            long_name : Refractory DOC
-            units : mmol/m^3
-      autotrophs :
-         default :
-            Chl :
-               long_name : ((autotroph_lname)) Chlorophyll
-               units : mmol/m^3
-            C :
-               long_name : ((autotroph_lname)) Carbon
-               units : mmol/m^3
-            Fe :
-               long_name : ((autotroph_lname)) Iron
-               units : mmol/m^3
-         silicifier :
-            Si :
-               long_name : ((autotroph_lname)) Silicon
-               units : mmol/m^3
-         calcifier :
-            CaCO3 :
-               long_name : ((autotroph_lname)) CaCO3
-               units : mmol/m^3
-         variable_PtoC :
-            P :
-               long_name : ((autotroph_lname)) Phosphorus
-               units : mmol/m^3
-      zooplankton :
-         default :
-            C :
-               long_name : ((zooplankton_lname)) Carbon
-               units : mmol/m^3
-   ciso :
-      default :
-         DI13C :
-            long_name : Dissolved Inorganic Carbon-13
-            units : mmol/m^3
-         DO13C :
-            long_name : Dissolved Organic Carbon-13
-            units : mmol/m^3
-         DI14C :
-            long_name : Dissolved Inorganic Carbon-14
-            units : mmol/m^3
-         DO14C :
-            long_name : Dissolved Organic Carbon-14
-            units : mmol/m^3
-      autotrophs :
-         default :
-            13C :
-               long_name : ((autotroph_lname)) Carbon-13
-               units : mmol/m^3
-            14C :
-               long_name : ((autotroph_lname)) Carbon-14
-               units : mmol/m^3
-         calcifier :
-            Ca13CO3 :
-               long_name : ((autotroph_lname)) Ca13CO3
-               units : mmol/m^3
-            Ca14CO3 :
-               long_name : ((autotroph_lname)) Ca14CO3
-               units : mmol/m^3
-      zooplankton :
-         default :
-            13C :
-               long_name : ((zooplankton_lname)) Carbon-13
-               units : mmol/m^3
-            14C :
-               long_name : ((zooplankton_lname)) Carbon-14
-               units : mmol/m^3
+   # Non-living tracers
+   PO4 :
+      long_name : Dissolved Inorganic Phosphate
+      units : mmol/m^3
+   NO3 :
+      long_name : Dissolved Inorganic Nitrate
+      units : mmol/m^3
+   SiO3 :
+      long_name : Dissolved Inorganic Silicate
+      units : mmol/m^3
+   NH4 :
+      long_name : Dissolved Ammonia
+      units : mmol/m^3
+   Fe :
+      long_name : Dissolved Inorganic Iron
+      units : mmol/m^3
+   Lig :
+      long_name : Iron Binding Ligand
+      units : mmol/m^3
+   O2 :
+      long_name : Dissolved Oxygen
+      units : mmol/m^3
+   DIC :
+      long_name : Dissolved Inorganic Carbon
+      units : mmol/m^3
+   DIC_ALT_CO2 :
+      long_name : Dissolved Inorganic Carbon, Alternative CO2
+      units : mmol/m^3
+   ALK :
+      long_name : Alkalinity
+      units : meq/m^3
+   ALK_ALT_CO2 :
+      long_name : Alkalinity, Alternative CO2
+      units : meq/m^3
+   DOC :
+      long_name : Dissolved Organic Carbon
+      units : mmol/m^3
+   DON :
+      long_name : Dissolved Organic Nitrogen
+      units : mmol/m^3
+   DOP :
+      long_name : Dissolved Organic Phosphorus
+      units : mmol/m^3
+   DOPr :
+      long_name : Refractory DOP
+      units : mmol/m^3
+   DONr :
+      long_name : Refractory DON
+      units : mmol/m^3
+   DOCr :
+      long_name : Refractory DOC
+      units : mmol/m^3
+   # Non-living (ciso only)
+   DI13C :
+      dependencies :
+         ciso_on : .true.
+      long_name : Dissolved Inorganic Carbon-13
+      units : mmol/m^3
+   DO13C :
+      dependencies :
+         ciso_on : .true.
+      long_name : Dissolved Organic Carbon-13
+      units : mmol/m^3
+   DI14C :
+      dependencies :
+         ciso_on : .true.
+      long_name : Dissolved Inorganic Carbon-14
+      units : mmol/m^3
+   DO14C :
+      dependencies :
+         ciso_on : .true.
+      long_name : Dissolved Organic Carbon-14
+      units : mmol/m^3
+
+   # Per-autotroph tracers
+   ((autotroph_sname))Chl :
+      long_name : ((autotroph_lname)) Chlorophyll
+      units : mmol/m^3
+   ((autotroph_sname))C :
+      long_name : ((autotroph_lname)) Carbon
+      units : mmol/m^3
+   ((autotroph_sname))Fe :
+      long_name : ((autotroph_lname)) Iron
+      units : mmol/m^3
+   ((autotroph_sname))Si :
+      dependencies :
+         ((autotroph_silicifier)) : True
+      long_name : ((autotroph_lname)) Silicon
+      units : mmol/m^3
+   ((autotroph_sname))CaCO3 :
+      dependencies :
+         ((autotroph_calcifier)) : True
+      long_name : ((autotroph_lname)) CaCO3
+      units : mmol/m^3
+   ((autotroph_sname))P :
+      dependencies :
+         lvariable_PtoC : .true.
+      long_name : ((autotroph_lname)) Phosphorus
+      units : mmol/m^3
+   # Per-autotroph (ciso only)
+   ((autotroph_sname))13C :
+      dependencies :
+         ciso_on : .true.
+      long_name : ((autotroph_lname)) Carbon-13
+      units : mmol/m^3
+   ((autotroph_sname))14C :
+      dependencies :
+         ciso_on : .true.
+      long_name : ((autotroph_lname)) Carbon-14
+      units : mmol/m^3
+   ((autotroph_sname))Ca13CO3 :
+      dependencies :
+         ciso_on : .true.
+         ((autotroph_calcifier)) : True
+      long_name : ((autotroph_lname)) Ca13CO3
+      units : mmol/m^3
+   ((autotroph_sname))Ca14CO3 :
+      dependencies :
+         ciso_on : .true.
+         ((autotroph_calcifier)) : True
+      long_name : ((autotroph_lname)) Ca14CO3
+      units : mmol/m^3
+
+   # Per-zooplankton tracers
+   ((zooplankton_sname))C :
+      long_name : ((zooplankton_lname)) Carbon
+      units : mmol/m^3
+   # Per-zooplankton (ciso only)
+   ((zooplankton_sname))13C :
+      dependencies :
+         ciso_on : .true.
+      long_name : ((zooplankton_lname)) Carbon-13
+      units : mmol/m^3
+   ((zooplankton_sname))14C :
+      dependencies :
+         ciso_on : .true.
+      long_name : ((zooplankton_lname)) Carbon-14
+      units : mmol/m^3
 
 ################################################################################
 #                        Category 1: General Parameters                        #

@@ -40,17 +40,17 @@ class MARBL_settings_class(object):
         self._input_dict = _parse_input_file(input_file)
 
         # 5. Use an ordered dictionary for keeping variable, value pairs
+        #    Also, tracer information is in its own dictionary (initialized to None)
         from collections import OrderedDict
         self.settings_dict = OrderedDict()
+        self.tracers_dict = None
         for cat_name in self.get_category_names():
             for var_name in self.get_variable_names(cat_name):
                 self._process_variable_value(cat_name, var_name)
             # 5b. Need tracer count after determining PFT_derived_types, which means
             #     determining which tracers are active
             if cat_name == "PFT_derived_types":
-                self.settings_dict['_tracer_dict'] = self._tracers_in_module('ecosys_base')
-                if self.settings_dict['ciso_on'] == '.true.':
-                    self.settings_dict['_tracer_dict'].update(self._tracers_in_module('ciso'))
+                self.tracers_dict = self._get_tracers()
 
         # 6. Abort if not all values from input file were processed
         #    (That implies at least one variable from input file was not recognized)
@@ -68,7 +68,7 @@ class MARBL_settings_class(object):
     def get_tracer_names(self):
         """ Returns a list of all tracers in current configuration
         """
-        return self.settings_dict['_tracer_dict'].keys()
+        return self.tracers_dict.keys()
 
     ################################################################################
 
@@ -173,72 +173,36 @@ class MARBL_settings_class(object):
 
     ################################################################################
 
-    def _tracers_in_module(self, module_name):
-        """ Parses self._settings['_tracer_list'][module_name] to determine
-            what tracers in a given module are enabled
+    def _get_tracers(self):
+        """ Parses self._settings['_tracer_list'] to determine what tracers
+            are enabled given other MARBL settings
         """
-        tracer_dict = {}
-        module_tracers = self._settings['_tracer_list'][module_name]
-        for tracer in self._settings['_tracer_list'][module_name]['default'].keys():
-            tracer_dict[tracer] = module_tracers['default'][tracer]
 
-        # per-autotroph tracers
-        if 'autotrophs' in module_tracers.keys():
-            auto_tracers = module_tracers['autotrophs']
-            for auto_ind in range(1, self.settings_dict['autotroph_cnt']+1):
-                # need autotroph short name:
-                auto_sname = self.settings_dict['autotrophs(%d)%%sname' % auto_ind].strip('"')
-                auto_lname = self.settings_dict['autotrophs(%d)%%lname' % auto_ind].strip('"')
+        import re
 
-                # tracers associated with ALL autotrophs
-                if 'default' in auto_tracers.keys():
-                    for tracer in auto_tracers['default'].keys():
-                        tracer_dict[auto_sname+tracer] = dict(auto_tracers['default'][tracer])
-                        # Replace ((autotroph_lname)) in long_name with auto_lname
-                        tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('((autotroph_lname))', auto_lname)
+        # 1. tracer_dict should be identical to self._settings['_tracer_list'] except
+        #    we expand any templated values such as ((autotroph_sname))
+        tracer_dict = dict()
+        for tracer_name in self._settings['_tracer_list'].keys():
+            if re.search('\(\(.*\)\)', tracer_name) == None:
+                tracer_dict[tracer_name] = dict(self._settings['_tracer_list'][tracer_name])
+            else:
+                # This subroutine will skip tracers where dependencies are templated and
+                # not applicable (such as tracers that need ((autotroph_silicifier)) to
+                # be True but the autotroph is not a silicifier); dependencies that are
+                # settings-based (such as "lvariable_PtoC = .true.") are not checked until
+                # step 2.
+                tracer_dict.update(_expand_template_value(tracer_name, self._settings['_tracer_list'][tracer_name], self.settings_dict))
 
-                # tracers only enabled if running with variable P to C
-                if 'variable_PtoC' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
-                    if self.settings_dict['lvariable_PtoC'] == '.true.':
-                        for tracer in auto_tracers['variable_PtoC'].keys():
-                            tracer_dict[auto_sname+tracer] = dict(auto_tracers['variable_PtoC'][tracer])
-                            # Replace ((autotroph_lname)) in long_name with auto_lname
-                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('((autotroph_lname))', auto_lname)
+        # 2. Check dependencies
+        for tracer_name in tracer_dict.keys():
+            if "dependencies" in tracer_dict[tracer_name].keys():
+                for dependency in tracer_dict[tracer_name]["dependencies"].keys():
+                    if self.settings_dict[dependency] != tracer_dict[tracer_name]["dependencies"][dependency]:
+                        del tracer_dict[tracer_name]
+                        break
 
-                # tracers associated with silicifiers
-                if 'silicifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
-                    if self.settings_dict['autotrophs(%d)%%silicifier' % auto_ind] == '.true.':
-                        for tracer in auto_tracers['silicifier'].keys():
-                            tracer_dict[auto_sname+tracer] = dict(auto_tracers['silicifier'][tracer])
-                            # Replace ((autotroph_lname)) in long_name with auto_lname
-                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('((autotroph_lname))', auto_lname)
-
-                # tracers associated with calcifiers
-                if 'calcifier' in self._settings['_tracer_list'][module_name]['autotrophs'].keys():
-                    if '.true.' in [self.settings_dict['autotrophs(%d)%%exp_calcifier' % auto_ind],
-                                    self.settings_dict['autotrophs(%d)%%imp_calcifier' % auto_ind]]:
-                        for tracer in auto_tracers['calcifier'].keys():
-                            tracer_dict[auto_sname+tracer] = dict(auto_tracers['calcifier'][tracer])
-                            # Replace ((autotroph_lname)) in long_name with auto_lname
-                            tracer_dict[auto_sname+tracer]['long_name'] = tracer_dict[auto_sname+tracer]['long_name'].replace('((autotroph_lname))', auto_lname)
-
-                del auto_sname, auto_lname
-
-        # per-zooplankton tracers
-        if 'zooplankton' in module_tracers.keys():
-            zoo_tracers = module_tracers['zooplankton']
-            for zoo_ind in range(1, self.settings_dict['zooplankton_cnt']+1):
-                # need zooplankton short name
-                zoo_sname = self.settings_dict['zooplankton(%d)%%sname' % zoo_ind].strip('"')
-                zoo_lname = self.settings_dict['zooplankton(%d)%%lname' % zoo_ind].strip('"')
-
-                # tracers associated with ALL zooplankton
-                if 'default' in zoo_tracers.keys():
-                    for tracer in zoo_tracers['default'].keys():
-                        tracer_dict[zoo_sname+tracer] = dict(zoo_tracers['default'][tracer])
-                        # Replace ((zooplankton_lname)) in long_name with zoo_lname
-                        tracer_dict[zoo_sname+tracer]['long_name'] = tracer_dict[zoo_sname+tracer]['long_name'].replace('((zooplankton_lname))', zoo_lname)
-
+        # 3. Add tend_units and flux_units to dictionary
         for tracer in tracer_dict.keys():
             tracer_dict[tracer][u'tend_units'] = tracer_dict[tracer]['units'] + '/s'
             tracer_dict[tracer][u'flux_units'] = tracer_dict[tracer]['units'] + ' cm/s'
@@ -267,7 +231,7 @@ class MARBL_settings_class(object):
             PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][variable_name]
         # Is the derived type an array? If so, treat each entry separately
         if ("_array_size" in this_var.keys()):
-            for n, elem_index in enumerate(_get_array_info(this_var["_array_size"], self.settings_dict)):
+            for n, elem_index in enumerate(_get_array_info(this_var["_array_size"], self.settings_dict, self.tracers_dict)):
                 # Append "(index)" to variable name
                 base_name = "%s%s%%" % (variable_name, elem_index)
 
@@ -308,7 +272,7 @@ class MARBL_settings_class(object):
                 array_len = this_var["_array_size"]
 
             # For each element, get value from either input file or JSON
-            for n, elem_index in enumerate(_get_array_info(array_len, self.settings_dict, base_name)):
+            for n, elem_index in enumerate(_get_array_info(array_len, self.settings_dict, self.tracers_dict, base_name)):
                 full_name = var_name + elem_index
                 var_value = _get_var_value(full_name, this_var, self._config_keyword, self._input_dict)
                 if isinstance(var_value, list):
@@ -336,6 +300,99 @@ def _abort(err_code=0):
     """
     import sys
     sys.exit(err_code)
+
+################################################################################
+
+def _expand_template_value(tracer_name, unprocessed_entry, settings_dict):
+    """ unprocessed_entry is a dictionary whose keys / values have templated strings
+        (e.g. strings that depend on PFT settings). This subroutine replaces the
+        templated values and returns the appropriate entry / entries
+    """
+
+    tracers_dict = dict()
+
+    import re
+
+    logger = logging.getLogger(__name__)
+
+    template = re.search('\(\(.*\)\)', tracer_name).group()
+    template_fill_dict = dict()
+    if template == '((autotroph_sname))':
+        fill_source = 'autotrophs'
+        loop_for_replacement = range(1,settings_dict['autotroph_cnt']+1)
+    elif template == '((zooplankton_sname))':
+        fill_source = 'zooplankton'
+        loop_for_replacement = range(1,settings_dict['zooplankton_cnt']+1)
+    else:
+        logger.error("%s is not a valid template value" % template)
+        _abort(1)
+
+    # Loop over every tracer, autotroph, or zooplankton
+    for item in loop_for_replacement:
+        # i. populate template_fill_dict
+        if fill_source == 'autotrophs':
+            auto_prefix = "autotrophs(%d)%%" % item
+            key_fill_val = settings_dict[auto_prefix + "sname"].strip('"')
+            # Autotroph properties
+            imp_calcifier = (settings_dict[auto_prefix + "imp_calcifier"].strip('"'))
+            exp_calcifier = (settings_dict[auto_prefix + "exp_calcifier"].strip('"'))
+            silicifier = (settings_dict[auto_prefix + "silicifier"].strip('"'))
+            Nfixer = (settings_dict[auto_prefix + "Nfixer"].strip('"'))
+            # Add values to template_fill_dict
+            template_fill_dict['((autotroph_lname))'] = settings_dict[auto_prefix + "lname"].strip('"')
+            template_fill_dict['((autotroph_calcifier))'] = ".true." in [imp_calcifier, exp_calcifier]
+            template_fill_dict['((autotroph_silicifier))'] = (silicifier == ".true.")
+            template_fill_dict['((autotroph_Nfixer))'] = (Nfixer == ".true.")
+        elif fill_source == 'zooplankton':
+            zoo_prefix = "zooplankton(%d)%%" % item
+            key_fill_val = settings_dict[zoo_prefix + "sname"].strip('"')
+            template_fill_dict['((zooplankton_lname))'] = settings_dict[zoo_prefix + "lname"].strip('"')
+
+        # ii. Determine name of new tracer
+        new_tracer_name = tracer_name.replace(template, key_fill_val)
+        remove_entry = False
+        tracers_dict[new_tracer_name] = dict()
+
+        # iii. Loop over every key in the unprocessed diagnostic dictionary, replace templated values
+        for key in unprocessed_entry.keys():
+            # Keys that are dictionaries should be treated differently
+            if not isinstance(unprocessed_entry[key], dict):
+                # look for templates in values
+                if isinstance(unprocessed_entry[key], type(u'')):
+                    if re.search('\(\(.*\)\)', unprocessed_entry[key]) == None:
+                        tracers_dict[new_tracer_name][key] = unprocessed_entry[key]
+                    else:
+                        template2 = re.search('\(\(.*\)\)', unprocessed_entry[key]).group()
+                        try:
+                            replacement_text = template_fill_dict[template2]
+                        except:
+                            logger.error("Can not replace '%s'" % template2)
+                            _abort(1)
+                        tracers_dict[new_tracer_name][key] = unprocessed_entry[key].replace(template2, replacement_text)
+                else:
+                    tracers_dict[new_tracer_name][key] = unprocessed_entry[key]
+            else:
+                # Only "dependencies" can be dictionary
+                if key == 'dependencies':
+                    tracers_dict[new_tracer_name]['dependencies'] = dict()
+                    # need to check dependencies on a per-diagnostic basis
+                    for dependency in unprocessed_entry['dependencies'].keys():
+                        if dependency in template_fill_dict.keys():
+                            check_val = template_fill_dict[dependency]
+                            if unprocessed_entry['dependencies'][dependency] != check_val:
+                                remove_entry = True
+                                break
+                        else:
+                            tracers_dict[new_tracer_name]['dependencies'][dependency] = unprocessed_entry['dependencies'][dependency]
+                else:
+                    logger.error("Not expecting '%s' key to be a dictionary" % key)
+                    _abort(1)
+
+        # If dependencies prevent diagnostic from being used, remove it from tracers_dict
+        if remove_entry:
+            del tracers_dict[new_tracer_name]
+
+    return dict(tracers_dict)
 
 ################################################################################
 
@@ -491,7 +548,7 @@ def _add_increments(increments, settings_dict):
 
 ################################################################################
 
-def _get_dim_size(dim_in, settings_dict, dict_prefix=''):
+def _get_dim_size(dim_in, settings_dict, tracers_dict, dict_prefix=''):
     """ If dim_in is an integer, it is the dimension size. Otherwise we need to
         look up the dim_in key in settings_dict.
     """
@@ -508,7 +565,7 @@ def _get_dim_size(dim_in, settings_dict, dict_prefix=''):
         # If dim_in = _tracer_list, that's a special case where we want
         # to find a list of tracers according to current settings
         if dim_in == '_tracer_list':
-            return len(settings_dict['_tracer_dict'])
+            return len(tracers_dict.keys())
 
         # Otherwise, dim_start must refer to a variable that could be
         # in the dictionary with or without the prefix
@@ -527,7 +584,7 @@ def _get_dim_size(dim_in, settings_dict, dict_prefix=''):
 
 ################################################################################
 
-def _get_array_info(array_size_in, settings_dict, dict_prefix=''):
+def _get_array_info(array_size_in, settings_dict, tracers_dict, dict_prefix=''):
     """ Return a list of the proper formatting for array elements, e.g.
             ['(1)', '(2)'] for 1D array or
             ['(1,1)', '(2,1)'] for 2D array
@@ -548,13 +605,13 @@ def _get_array_info(array_size_in, settings_dict, dict_prefix=''):
             logger.error("_get_array_info() only supports 1D and 2D arrays")
             _abort(1)
 
-        for i in range(0, _get_dim_size(array_size_in[0], settings_dict, dict_prefix)):
-            for j in range(0, _get_dim_size(array_size_in[1], settings_dict, dict_prefix)):
+        for i in range(0, _get_dim_size(array_size_in[0], settings_dict, tracers_dict, dict_prefix)):
+            for j in range(0, _get_dim_size(array_size_in[1], settings_dict, tracers_dict, dict_prefix)):
                 str_index.append("(%d,%d)" % (i+1,j+1))
         return str_index
 
     # How many elements? May be an integer or an entry in self.settings_dict
-    for i in range(0, _get_dim_size(array_size_in, settings_dict, dict_prefix)):
+    for i in range(0, _get_dim_size(array_size_in, settings_dict, tracers_dict, dict_prefix)):
         str_index.append("(%d)" % (i+1))
     return str_index
 
