@@ -342,6 +342,7 @@ contains
        marbl_status_log)
 
     use marbl_settings_mod, only : ciso_on
+    use marbl_settings_mod, only : lvariable_PtoC
 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
@@ -2025,16 +2026,20 @@ contains
         allocate(ind%Nfix(autotroph_cnt))
       end if
       do n=1,autotroph_cnt
-        lname = trim(autotrophs(n)%lname) // ' P:C ratio'
-        sname = trim(autotrophs(n)%sname) // '_Qp'
-        units = 'none'
-        vgrid = 'layer_avg'
-        truncate = .true.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%Qp(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
+        if (lvariable_PtoC) then
+          lname = trim(autotrophs(n)%lname) // ' P:C ratio'
+          sname = trim(autotrophs(n)%sname) // '_Qp'
+          units = 'none'
+          vgrid = 'layer_avg'
+          truncate = .true.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+               ind%Qp(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+        else
+          ind%Qp(n) = -1
         end if
 
         lname = trim(autotrophs(n)%lname) // ' N Limitation'
@@ -3631,7 +3636,9 @@ contains
     diags(ind%tot_Nfix)%field_3d(:, 1) = c0
     diags(ind%tot_CaCO3_form)%field_3d(:, 1) = c0
     do n = 1, autotroph_cnt
-       diags(ind%Qp(n))%field_3d(:, 1)          = autotroph_secondary_species(n,:)%Qp
+       if (ind%Qp(n).ne.-1) then
+         diags(ind%Qp(n))%field_3d(:, 1)          = autotroph_secondary_species(n,:)%Qp
+       end if
 
        diags(ind%N_lim(n))%field_3d(:, 1)       = autotroph_secondary_species(n,:)%VNtot
        diags(ind%Fe_lim(n))%field_3d(:, 1)      = autotroph_secondary_species(n,:)%VFe

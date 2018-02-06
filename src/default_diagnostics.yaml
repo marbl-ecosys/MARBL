@@ -1,6 +1,18 @@
 
 # ABOUT THIS FILE
 # ---------------
+# This file contains a list of all diagnostics that MARBL can compute. It is used
+# to generate a text file listing the diagnostics in the format
+#
+#     DIAGNOSTIC_NAME : frequency_operator[,frequency2_operator2, ..., frequencyN_operatorN]
+#
+# Ultimately it is up to the GCM to decide how frequently to output the MARBL
+# diagnostics, but MARBL provides this list as a suggestion.
+#
+# Besides the recommended frequency (and what operation to perform over that time period),
+# MARBL also stores the diagnostic long name, units, and information about its vertical
+# grid. That is not necessary for the GCM, but will be used in a future version of MARBL
+# to auto-generate the Fortran code that defines these diagnostics.
 
 ################################################################################
 #                          Surface forcing diagnostics                         #
