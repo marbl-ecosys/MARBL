@@ -35,7 +35,7 @@
    },
    "PFT_derived_types": {
       "autotrophs": {
-         "_array_size": "autotroph_cnt",
+         "_array_shape": "autotroph_cnt",
          "_is_allocatable": true,
          "datatype": {
             "Nfixer": {
@@ -345,7 +345,7 @@
          }
       },
       "grazing": {
-         "_array_size": [
+         "_array_shape": [
             "max_grazer_prey_cnt",
             "zooplankton_cnt"
          ],
@@ -354,7 +354,7 @@
             "_type_name": "grazing_type",
             "auto_ind": {
                "_array_len_to_print": "auto_ind_cnt",
-               "_array_size": "autotroph_cnt",
+               "_array_shape": "autotroph_cnt",
                "_is_allocatable": true,
                "datatype": "integer",
                "default_value": {
@@ -482,7 +482,7 @@
             },
             "zoo_ind": {
                "_array_len_to_print": "zoo_ind_cnt",
-               "_array_size": "zooplankton_cnt",
+               "_array_shape": "zooplankton_cnt",
                "_is_allocatable": true,
                "datatype": "integer",
                "default_value": 0,
@@ -502,7 +502,7 @@
          }
       },
       "zooplankton": {
-         "_array_size": "zooplankton_cnt",
+         "_array_shape": "zooplankton_cnt",
          "_is_allocatable": true,
          "datatype": {
             "_type_name": "zooplankton_type",
@@ -1022,7 +1022,7 @@
          "units": "nmol/cm^3"
       },
       "parm_scalelen_vals": {
-         "_array_size": 4,
+         "_array_shape": 4,
          "datatype": "real",
          "default_value": {
             "GRID = CESM_x3": [
@@ -1043,7 +1043,7 @@
          "units": "unitless"
       },
       "parm_scalelen_z": {
-         "_array_size": 4,
+         "_array_shape": 4,
          "datatype": "real",
          "default_value": [
             "100.0e2",
@@ -1081,7 +1081,7 @@
    },
    "tracer_dependent": {
       "tracer_restore_vars": {
-         "_array_size": "_tracer_list",
+         "_array_shape": "_tracer_list",
          "_is_allocatable": true,
          "datatype": "string",
          "default_value": {

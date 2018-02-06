@@ -411,7 +411,7 @@ general_parms :
       subcategory : 5. Scale lengths
       units : cm
       datatype : real
-      _array_size : 4
+      _array_shape : 4
       default_value :
          - 100.0e2
          - 250.0e2
@@ -422,7 +422,7 @@ general_parms :
       subcategory : 5. Scale lengths
       units : unitless
       datatype : real
-      _array_size : 4
+      _array_shape : 4
       default_value :
          default :
             - 1
@@ -521,7 +521,7 @@ PFT_counts :
 
 PFT_derived_types :
    autotrophs :
-      _array_size : autotroph_cnt
+      _array_shape : autotroph_cnt
       _is_allocatable : true
       datatype :
          # Components of the derived type
@@ -779,7 +779,7 @@ PFT_derived_types :
                autotrophs = "diat" : 0
                autotrophs = "diaz" : 0
    zooplankton :
-      _array_size : zooplankton_cnt
+      _array_shape : zooplankton_cnt
       _is_allocatable : true
       datatype :
          # Components of the derived type
@@ -826,7 +826,7 @@ PFT_derived_types :
                default : 1e34
                zooplankton = "zoo" : 0.075
    grazing :
-      _array_size :
+      _array_shape :
          - max_grazer_prey_cnt
          - zooplankton_cnt
       _is_allocatable : true
@@ -934,7 +934,7 @@ PFT_derived_types :
                grazing = "diat_zoo" : 0.24
                grazing = "diaz_zoo" : 0.12
          auto_ind :
-            _array_size : autotroph_cnt
+            _array_shape : autotroph_cnt
             _array_len_to_print : auto_ind_cnt
             _is_allocatable : true
             longname : Indices of autotrophs being grazed
@@ -947,7 +947,7 @@ PFT_derived_types :
                grazing = "diat_zoo" : 2 # index where autotroph_name = diat
                grazing = "diaz_zoo" : 3 # index where autotroph_name = diaz
          zoo_ind :
-            _array_size : zooplankton_cnt
+            _array_shape : zooplankton_cnt
             _array_len_to_print : zoo_ind_cnt
             _is_allocatable : true
             longname : Indices of zooplankton being grazed
@@ -966,7 +966,7 @@ tracer_dependent :
       subcategory : 20. tracer restoring
       units : non-numeric
       datatype : string
-      _array_size : _tracer_list
+      _array_shape : _tracer_list
       _is_allocatable : true
       default_value :
          default : ''

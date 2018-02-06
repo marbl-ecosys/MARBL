@@ -149,8 +149,7 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
         invalid_freq_op = False
         if not isinstance(diag_dict['frequency'], dict):
             if isinstance(diag_dict['frequency'], list):
-                for n, freq in enumerate(diag_dict['frequency']):
-                    op = diag_dict['operator'][n]
+                for freq, op in zip(diag_dict['frequency'], diag_dict['operator']):
                     if freq not in ok_freqs:
                         logger.error("%s '%s' is not a valid frequency" % (err_prefix, freq))
                         invalid_freq_op = True

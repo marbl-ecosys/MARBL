@@ -230,8 +230,8 @@ class MARBL_settings_class(object):
         if append_to_keys:
             PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][variable_name]
         # Is the derived type an array? If so, treat each entry separately
-        if ("_array_size" in this_var.keys()):
-            for n, elem_index in enumerate(_get_array_info(this_var["_array_size"], self.settings_dict, self.tracers_dict)):
+        if ("_array_shape" in this_var.keys()):
+            for n, elem_index in enumerate(_get_array_info(this_var["_array_shape"], self.settings_dict, self.tracers_dict)):
                 # Append "(index)" to variable name
                 base_name = "%s%s%%" % (variable_name, elem_index)
 
@@ -264,12 +264,12 @@ class MARBL_settings_class(object):
             is populated with a list of all the keys added to self.settings_dict for this variable
             (just varname for scalars, but multiple keys for arrays)
         """
-        if ("_array_size" in this_var.keys()):
+        if ("_array_shape" in this_var.keys()):
             # Get length of array
             try:
                 array_len = this_var["_array_len_to_print"]
             except:
-                array_len = this_var["_array_size"]
+                array_len = this_var["_array_shape"]
 
             # For each element, get value from either input file or JSON
             for n, elem_index in enumerate(_get_array_info(array_len, self.settings_dict, self.tracers_dict, base_name)):
@@ -461,7 +461,7 @@ def _translate_JSON_value(value, datatype, append_to_config=False, varname=None,
     if isinstance(value, str):
         value = value.decode('utf-8')
     if append_to_config:
-        if isinstance(value, unicode):
+        if isinstance(value, type(u'')):
             provided_keys.append('%s = "%s"' % (varname, value.encode('utf-8')))
         else:
             provided_keys.append('%s = %s' % (varname, value))
@@ -471,9 +471,9 @@ def _translate_JSON_value(value, datatype, append_to_config=False, varname=None,
         return '"%s"' % value.encode('utf-8')
     if datatype == "logical":
         return _get_F90_logical(value)
-    if datatype == "real" and isinstance(value, unicode):
+    if datatype == "real" and isinstance(value, type(u'')):
         return "%24.16e" % eval(value)
-    if datatype == "integer" and isinstance(value, unicode):
+    if datatype == "integer" and isinstance(value, type(u'')):
         return int(value)
     return value
 
@@ -548,44 +548,43 @@ def _add_increments(increments, settings_dict):
 
 ################################################################################
 
-def _get_dim_size(dim_in, settings_dict, tracers_dict, dict_prefix=''):
-    """ If dim_in is an integer, it is the dimension size. Otherwise we need to
-        look up the dim_in key in settings_dict.
+def _get_value(val_in, settings_dict, tracers_dict, dict_prefix=''):
+    """ Translate val_in (which may be a variable name) to an integer value
     """
 
     logger = logging.getLogger(__name__)
 
-    # If dim_in is an integer, then it is the dimension size and should be returned
-    if isinstance(dim_in, int):
-        return dim_in
+    # If val_in is an integer, then it is the dimension size and should be returned
+    if isinstance(val_in, int):
+        return val_in
 
-    # If dim_in is a string, then it is a variable name that should be in
+    # If val_in is a string, then it is a variable name that should be in
     # settings_dict already
-    if isinstance(dim_in, unicode):
-        # If dim_in = _tracer_list, that's a special case where we want
+    if isinstance(val_in, type(u'')):
+        # If val_in = _tracer_list, that's a special case where we want
         # to find a list of tracers according to current settings
-        if dim_in == '_tracer_list':
+        if val_in == '_tracer_list':
             return len(tracers_dict.keys())
 
         # Otherwise, dim_start must refer to a variable that could be
         # in the dictionary with or without the prefix
         try:
-            dim_out = settings_dict[dict_prefix+dim_in]
+            dim_out = settings_dict[dict_prefix+val_in]
         except:
             try:
-                dim_out = settings_dict[dim_in]
+                dim_out = settings_dict[val_in]
             except:
-                logger.error('Unknown variable name in _get_dim_size: %s' % dim_in)
+                logger.error('Unknown variable name in _get_value: %s' % val_in)
         return dim_out
 
     # Otherwise this is not a well-defined variable request
-    logger.error('_get_dim_size() requires integer or string argument')
+    logger.error('_get_value() requires integer or string argument')
     _abort(1)
 
 ################################################################################
 
 def _get_array_info(array_size_in, settings_dict, tracers_dict, dict_prefix=''):
-    """ Return a list of the proper formatting for array elements, e.g.
+    """ Return a list of the proper indexing for array elements, e.g.
             ['(1)', '(2)'] for 1D array or
             ['(1,1)', '(2,1)'] for 2D array
         If array_size_in is not an integer, check to see if it is in settings_dict
@@ -605,13 +604,13 @@ def _get_array_info(array_size_in, settings_dict, tracers_dict, dict_prefix=''):
             logger.error("_get_array_info() only supports 1D and 2D arrays")
             _abort(1)
 
-        for i in range(0, _get_dim_size(array_size_in[0], settings_dict, tracers_dict, dict_prefix)):
-            for j in range(0, _get_dim_size(array_size_in[1], settings_dict, tracers_dict, dict_prefix)):
+        for i in range(0, _get_value(array_size_in[0], settings_dict, tracers_dict, dict_prefix)):
+            for j in range(0, _get_value(array_size_in[1], settings_dict, tracers_dict, dict_prefix)):
                 str_index.append("(%d,%d)" % (i+1,j+1))
         return str_index
 
     # How many elements? May be an integer or an entry in self.settings_dict
-    for i in range(0, _get_dim_size(array_size_in, settings_dict, tracers_dict, dict_prefix)):
+    for i in range(0, _get_value(array_size_in, settings_dict, tracers_dict, dict_prefix)):
         str_index.append("(%d)" % (i+1))
     return str_index
 

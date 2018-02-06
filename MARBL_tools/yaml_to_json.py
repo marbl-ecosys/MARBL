@@ -70,7 +70,7 @@ args = _parse_args(marbl_root)
 
 # Set up logging
 import logging
-logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger("__name__")
 
 # This tool requires PyYAML, error if it is not available
@@ -78,6 +78,7 @@ try:
     import yaml
 except:
     logger.error("Can not find PyYAML library")
+    sys.exit(1)
 
 # Routines to verify that YAML files meet MARBL formatting requirements
 from MARBL_tools import settings_dictionary_is_consistent, diagnostics_dictionary_is_consistent
