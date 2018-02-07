@@ -1,4 +1,5 @@
 import logging
+import MARBL_tools
 
 class MARBL_settings_class(object):
     """ This class contains methods to allow python to interact with the JSON file that
@@ -31,10 +32,9 @@ class MARBL_settings_class(object):
             self._settings = json.load(settings_file)
 
         # 3 Make sure JSON file adheres to MARBL settings file schema
-        from MARBL_tools import settings_dictionary_is_consistent
-        if not settings_dictionary_is_consistent(self._settings):
+        if not MARBL_tools.settings_dictionary_is_consistent(self._settings):
             logger.error("%s is not a valid MARBL settings file" % default_settings_file)
-            _abort(1)
+            MARBL_tools.abort(1)
 
         # 4. Read settings input file
         self._input_dict = _parse_input_file(input_file)
@@ -59,7 +59,7 @@ class MARBL_settings_class(object):
             for varname in self._input_dict.keys():
                 message = message + "\n     * Variable %s not found in JSON file" % varname
             logger.error(message)
-            _abort(1)
+            MARBL_tools.abort(1)
 
     ################################################################################
     #                             PUBLIC CLASS METHODS                             #
@@ -89,21 +89,21 @@ class MARBL_settings_class(object):
         for key in self._settings["_order"]:
             if key not in self._settings.keys():
                 msg = "ERROR: can not find '" + key + "' in JSON file"
-                _abort(msg)
+                MARBL_tools.abort(msg)
 
         # 2. All keys listed in self._settings.keys() should also be in self._settings["_order"]
         #    (except _order itself)
         for key in self._settings.keys():
             if key not in ["_order", "_tracer_list"] and key not in self._settings["_order"]:
                 msg = "ERROR: '" + key + "' is not listed in '_order' and won't be processed"
-                _abort(msg)
+                MARBL_tools.abort(msg)
 
         # 3. No duplicates in _order
         unique_keys = []
         for key in self._settings["_order"]:
             if key in unique_keys:
                 msg = "ERROR: '" + key + "' appears in '_order' multiple times"
-                _abort(msg)
+                MARBL_tools.abort(msg)
             unique_keys.append(key)
 
         return self._settings["_order"]
@@ -118,9 +118,9 @@ class MARBL_settings_class(object):
         """
         subcat_list = []
         for cat_name in self._settings['_order']:
-            for var_name in _sort(self._settings[cat_name].keys()):
+            for var_name in MARBL_tools.sort(self._settings[cat_name].keys()):
                 if isinstance(self._settings[cat_name][var_name]['datatype'], dict):
-                    for subvar_name in _sort(self._settings[cat_name][var_name]['datatype'].keys()):
+                    for subvar_name in MARBL_tools.sort(self._settings[cat_name][var_name]['datatype'].keys()):
                         if subvar_name[0] != '_':
                             this_subcat = self._settings[cat_name][var_name]['datatype'][subvar_name]['subcategory']
                             if this_subcat not in subcat_list:
@@ -129,15 +129,15 @@ class MARBL_settings_class(object):
                     this_subcat = self._settings[cat_name][var_name]['subcategory']
                     if this_subcat not in subcat_list:
                         subcat_list.append(this_subcat)
-        return _sort(subcat_list, sort_key=_natural_sort_key)
+        return MARBL_tools.sort(subcat_list, sort_key=MARBL_tools.natural_sort_key)
 
     ################################################################################
 
-    def get_variable_names(self, category_name, sort_key=None):
+    def get_variable_names(self, category_name, sort_key=lambda s: s.lower()):
         """ Returns a sorted list of variables in a specific category.
             For now, the list is sorted alphabetically.
         """
-        return _sort(self._settings[category_name].keys(), sort_key)
+        return MARBL_tools.sort(self._settings[category_name].keys(), sort_key)
 
     ################################################################################
 
@@ -148,9 +148,9 @@ class MARBL_settings_class(object):
         """
         varlist = []
         for cat_name in self._settings['_order']:
-            for var_name in _sort(self._settings[cat_name].keys()):
+            for var_name in MARBL_tools.sort(self._settings[cat_name].keys()):
                 if isinstance(self._settings[cat_name][var_name]['datatype'], dict):
-                    for subvar_name in _sort(self._settings[cat_name][var_name]['datatype'].keys()):
+                    for subvar_name in MARBL_tools.sort(self._settings[cat_name][var_name]['datatype'].keys()):
                         if subvar_name[0] != '_':
                             this_var = self._settings[cat_name][var_name]['datatype'][subvar_name]
                             if this_var['subcategory'] == subcategory:
@@ -161,7 +161,7 @@ class MARBL_settings_class(object):
                     if this_var['subcategory'] == subcategory:
                         for settings_name in this_var['_list_of_settings_names']:
                             varlist.append(settings_name)
-        return _sort(varlist, sort_key=_natural_sort_key)
+        return MARBL_tools.sort(varlist, sort_key=MARBL_tools.natural_sort_key)
 
     ################################################################################
     #                            PRIVATE CLASS METHODS                             #
@@ -180,32 +180,26 @@ class MARBL_settings_class(object):
 
         import re
 
+        tracer_dict = dict()
+
         # 1. tracer_dict should be identical to self._settings['_tracer_list'] except
         #    we expand any templated values such as ((autotroph_sname))
-        tracer_dict = dict()
         for tracer_name in self._settings['_tracer_list'].keys():
             if re.search('\(\(.*\)\)', tracer_name) == None:
                 tracer_dict[tracer_name] = dict(self._settings['_tracer_list'][tracer_name])
             else:
-                # This subroutine will skip tracers where dependencies are templated and
-                # not applicable (such as tracers that need ((autotroph_silicifier)) to
-                # be True but the autotroph is not a silicifier); dependencies that are
-                # settings-based (such as "lvariable_PtoC = .true.") are not checked until
-                # step 2.
-                tracer_dict.update(_expand_template_value(tracer_name, self._settings['_tracer_list'][tracer_name], self.settings_dict))
+                tracer_dict.update(MARBL_tools.expand_template_value(tracer_name, self, self._settings['_tracer_list'][tracer_name]))
 
-        # 2. Check dependencies
+        # 2. Delete tracers where dependencies are not met
+        #    (Some tracers have already been removed via expand_template_value())
         for tracer_name in tracer_dict.keys():
-            if "dependencies" in tracer_dict[tracer_name].keys():
-                for dependency in tracer_dict[tracer_name]["dependencies"].keys():
-                    if self.settings_dict[dependency] != tracer_dict[tracer_name]["dependencies"][dependency]:
-                        del tracer_dict[tracer_name]
-                        break
+            if not MARBL_tools.meet_dependencies(tracer_dict[tracer_name], self):
+                del tracer_dict[tracer_name]
+                continue
 
-        # 3. Add tend_units and flux_units to dictionary
-        for tracer in tracer_dict.keys():
-            tracer_dict[tracer][u'tend_units'] = tracer_dict[tracer]['units'] + '/s'
-            tracer_dict[tracer][u'flux_units'] = tracer_dict[tracer]['units'] + ' cm/s'
+            # 3. Add tend_units and flux_units to dictionary
+            tracer_dict[tracer_name][u'tend_units'] = tracer_dict[tracer_name]['units'] + '/s'
+            tracer_dict[tracer_name][u'flux_units'] = tracer_dict[tracer_name]['units'] + ' cm/s'
 
         return tracer_dict
 
@@ -290,110 +284,7 @@ class MARBL_settings_class(object):
             this_var['_list_of_settings_names'].append(var_name)
 
 ################################################################################
-
-################################################################################
 #                            PRIVATE MODULE METHODS                            #
-################################################################################
-
-def _abort(err_code=0):
-    """ This routine imports sys and calls exit
-    """
-    import sys
-    sys.exit(err_code)
-
-################################################################################
-
-def _expand_template_value(tracer_name, unprocessed_entry, settings_dict):
-    """ unprocessed_entry is a dictionary whose keys / values have templated strings
-        (e.g. strings that depend on PFT settings). This subroutine replaces the
-        templated values and returns the appropriate entry / entries
-    """
-
-    tracers_dict = dict()
-
-    import re
-
-    logger = logging.getLogger(__name__)
-
-    template = re.search('\(\(.*\)\)', tracer_name).group()
-    template_fill_dict = dict()
-    if template == '((autotroph_sname))':
-        fill_source = 'autotrophs'
-        loop_for_replacement = range(1,settings_dict['autotroph_cnt']+1)
-    elif template == '((zooplankton_sname))':
-        fill_source = 'zooplankton'
-        loop_for_replacement = range(1,settings_dict['zooplankton_cnt']+1)
-    else:
-        logger.error("%s is not a valid template value" % template)
-        _abort(1)
-
-    # Loop over every tracer, autotroph, or zooplankton
-    for item in loop_for_replacement:
-        # i. populate template_fill_dict
-        if fill_source == 'autotrophs':
-            auto_prefix = "autotrophs(%d)%%" % item
-            key_fill_val = settings_dict[auto_prefix + "sname"].strip('"')
-            # Autotroph properties
-            imp_calcifier = (settings_dict[auto_prefix + "imp_calcifier"].strip('"'))
-            exp_calcifier = (settings_dict[auto_prefix + "exp_calcifier"].strip('"'))
-            silicifier = (settings_dict[auto_prefix + "silicifier"].strip('"'))
-            Nfixer = (settings_dict[auto_prefix + "Nfixer"].strip('"'))
-            # Add values to template_fill_dict
-            template_fill_dict['((autotroph_lname))'] = settings_dict[auto_prefix + "lname"].strip('"')
-            template_fill_dict['((autotroph_calcifier))'] = ".true." in [imp_calcifier, exp_calcifier]
-            template_fill_dict['((autotroph_silicifier))'] = (silicifier == ".true.")
-            template_fill_dict['((autotroph_Nfixer))'] = (Nfixer == ".true.")
-        elif fill_source == 'zooplankton':
-            zoo_prefix = "zooplankton(%d)%%" % item
-            key_fill_val = settings_dict[zoo_prefix + "sname"].strip('"')
-            template_fill_dict['((zooplankton_lname))'] = settings_dict[zoo_prefix + "lname"].strip('"')
-
-        # ii. Determine name of new tracer
-        new_tracer_name = tracer_name.replace(template, key_fill_val)
-        remove_entry = False
-        tracers_dict[new_tracer_name] = dict()
-
-        # iii. Loop over every key in the unprocessed diagnostic dictionary, replace templated values
-        for key in unprocessed_entry.keys():
-            # Keys that are dictionaries should be treated differently
-            if not isinstance(unprocessed_entry[key], dict):
-                # look for templates in values
-                if isinstance(unprocessed_entry[key], type(u'')):
-                    if re.search('\(\(.*\)\)', unprocessed_entry[key]) == None:
-                        tracers_dict[new_tracer_name][key] = unprocessed_entry[key]
-                    else:
-                        template2 = re.search('\(\(.*\)\)', unprocessed_entry[key]).group()
-                        try:
-                            replacement_text = template_fill_dict[template2]
-                        except:
-                            logger.error("Can not replace '%s'" % template2)
-                            _abort(1)
-                        tracers_dict[new_tracer_name][key] = unprocessed_entry[key].replace(template2, replacement_text)
-                else:
-                    tracers_dict[new_tracer_name][key] = unprocessed_entry[key]
-            else:
-                # Only "dependencies" can be dictionary
-                if key == 'dependencies':
-                    tracers_dict[new_tracer_name]['dependencies'] = dict()
-                    # need to check dependencies on a per-diagnostic basis
-                    for dependency in unprocessed_entry['dependencies'].keys():
-                        if dependency in template_fill_dict.keys():
-                            check_val = template_fill_dict[dependency]
-                            if unprocessed_entry['dependencies'][dependency] != check_val:
-                                remove_entry = True
-                                break
-                        else:
-                            tracers_dict[new_tracer_name]['dependencies'][dependency] = unprocessed_entry['dependencies'][dependency]
-                else:
-                    logger.error("Not expecting '%s' key to be a dictionary" % key)
-                    _abort(1)
-
-        # If dependencies prevent diagnostic from being used, remove it from tracers_dict
-        if remove_entry:
-            del tracers_dict[new_tracer_name]
-
-    return dict(tracers_dict)
-
 ################################################################################
 
 def _get_var_value(varname, var_dict, provided_keys, input_dict):
@@ -497,17 +388,7 @@ def _get_F90_logical(value):
 
 ################################################################################
 
-def _sort(list_in, sort_key=None):
-    """ Sort a list; default is alphabetical (case-insensitive), but that
-        can be overridden with the sort_key argument
-    """
-    if sort_key is None:
-        sort_key = lambda s: s.lower()
-    return sorted(list_in, key=sort_key)
-
-################################################################################
-
-def _sort_with_specific_suffix_first(list_in, suffix=None, sort_key=None):
+def _sort_with_specific_suffix_first(list_in, suffix=None, sort_key=lambda s: s.lower()):
     """ Sort, but make sure entries that end in a specified suffix are listed first
     """
 
@@ -516,35 +397,15 @@ def _sort_with_specific_suffix_first(list_in, suffix=None, sort_key=None):
 
     # 2. Anything that ends in suffix gets appended to list_out first
     if suffix is not None:
-        for list_entry in _sort(list_in, sort_key):
+        for list_entry in MARBL_tools.sort(list_in, sort_key):
             if list_entry.endswith(suffix):
                 list_out.append(list_entry)
 
     # 3. Sort everything else
-    for list_entry in _sort(list_in, sort_key):
+    for list_entry in MARBL_tools.sort(list_in, sort_key):
         if list_entry not in list_out:
             list_out.append(list_entry)
     return list_out
-
-################################################################################
-
-def _natural_sort_key(string_):
-    """ From https://stackoverflow.com/questions/2545532/python-analog-of-natsort-function-sort-a-list-using-a-natural-order-algorithm/3033342#3033342
-    """
-    import re
-    return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
-
-################################################################################
-
-def _add_increments(increments, settings_dict):
-    """ Some values need to be adjusted depending on values in settings_dict
-    """
-    change = 0
-    for key_check in increments.keys():
-        checklist = key_check.split(" = ")
-        if settings_dict[checklist[0]] == checklist[1]:
-            change = change + increments[key_check]
-    return change
 
 ################################################################################
 
@@ -566,20 +427,21 @@ def _get_value(val_in, settings_dict, tracers_dict, dict_prefix=''):
         if val_in == '_tracer_list':
             return len(tracers_dict.keys())
 
-        # Otherwise, dim_start must refer to a variable that could be
+        # Otherwise, val_in must refer to a variable that could be
         # in the dictionary with or without the prefix
         try:
-            dim_out = settings_dict[dict_prefix+val_in]
+            val_out = settings_dict[dict_prefix+val_in]
         except:
             try:
-                dim_out = settings_dict[val_in]
+                val_out = settings_dict[val_in]
             except:
                 logger.error('Unknown variable name in _get_value: %s' % val_in)
-        return dim_out
+                MARBL_tools.abort(1)
+        return val_out
 
     # Otherwise this is not a well-defined variable request
     logger.error('_get_value() requires integer or string argument')
-    _abort(1)
+    MARBL_tools.abort(1)
 
 ################################################################################
 
@@ -602,7 +464,7 @@ def _get_array_info(array_size_in, settings_dict, tracers_dict, dict_prefix=''):
         # (and assumes array_size_in is not a list for 1D arrays)
         if len(array_size_in) > 2:
             logger.error("_get_array_info() only supports 1D and 2D arrays")
-            _abort(1)
+            MARBL_tools.abort(1)
 
         for i in range(0, _get_value(array_size_in[0], settings_dict, tracers_dict, dict_prefix)):
             for j in range(0, _get_value(array_size_in[1], settings_dict, tracers_dict, dict_prefix)):
@@ -671,7 +533,5 @@ def _parse_input_file(input_file):
         pass
     except:
         logger.error("input_file '%s' was not found" % input_file)
-        _abort(1)
+        MARBL_tools.abort(1)
     return input_dict
-
-################################################################################
