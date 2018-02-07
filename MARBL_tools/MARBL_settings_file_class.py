@@ -15,7 +15,8 @@ class MARBL_settings_class(object):
 
     def __init__(self, default_settings_file, saved_state_vars_source="settings_file", grid=None, input_file=None):
         """ Class constructor: set up a dictionary of config keywords for when multiple
-            default values are provided, and then read the JSON file.
+            default values are provided, read the JSON file, and then populate
+            self.settings_dict and self.tracers_dict.
         """
 
         logger = logging.getLogger(__name__)

@@ -6,7 +6,9 @@ class MARBL_diagnostics_class(object):
         defines the MARBL diagnostics and sets default values. It requires a
         MARBL_settings_class object upon construction because some diagnostics are only
         available with specific settings (for example, there are several carbon isotope
-        diagnostics but MARBL will only compute them if ciso_on = .true.)
+        diagnostics but MARBL will only compute them if ciso_on = .true.) and other
+        diagnostics are defined on a per-tracer basis (MARBL_settings.tracer_dict.keys()
+        is a list of all tracers active given MARBL_settings).
     """
 
     ###############
@@ -14,8 +16,7 @@ class MARBL_diagnostics_class(object):
     ###############
 
     def __init__(self, default_diagnostics_file, MARBL_settings):
-        """ Class constructor: set up a dictionary of config keywords for when multiple
-            default values are provided, and then read the JSON file.
+        """ Class constructor: read the JSON file and then construct self.diagnostics_dict
         """
 
         logger = logging.getLogger(__name__)
