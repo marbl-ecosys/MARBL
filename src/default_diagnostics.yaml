@@ -492,6 +492,12 @@ CaCO3_form_zint :
    operator : average
 
 # General 3D diags
+insitu_temp :
+   longname : in situ temperature
+   units : degC
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
 CO3 :
    longname : Carbonate Ion Concentration
    units : mmol/m^3

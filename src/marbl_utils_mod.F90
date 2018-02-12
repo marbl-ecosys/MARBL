@@ -26,7 +26,7 @@ contains
     type(marbl_log_type),        intent(inout) :: marbl_status_log
     real(kind=r8) :: linear_root
 
-    character(len=*), parameter :: subname = 'marbl_utils_mod:linear_root'
+    character(len=*), parameter :: subname = 'marbl_utils_mod:marbl_utils_linear_root'
 
     real(kind=r8) :: m_inv
 

@@ -1633,6 +1633,13 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "insitu_temp": {
+      "frequency": "medium",
+      "longname": "in situ temperature",
+      "operator": "average",
+      "units": "degC",
+      "vertical_grid": "layer_avg"
+   },
    "pCO2SURF": {
       "frequency": "medium",
       "longname": "surface pCO2",
