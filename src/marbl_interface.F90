@@ -174,8 +174,7 @@ contains
        gcm_delta_z,                       &
        gcm_zw,                            &
        gcm_zt,                            &
-       lgcm_has_global_ops,               &
-       marbl_tracer_cnt)
+       lgcm_has_global_ops)
 
     use marbl_init_mod, only : marbl_init_log_and_timers
     use marbl_init_mod, only : marbl_init_parameters_pre_tracers
@@ -195,7 +194,6 @@ contains
     real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
     logical,           optional,  intent(in)    :: lgcm_has_global_ops
-    integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
     character(len=*), parameter :: subname = 'marbl_interface:init'
     integer, parameter :: num_interior_elements = 1 ! FIXME #66: get this value from interface, let it vary
@@ -269,7 +267,7 @@ contains
     call marbl_init_tracers(num_levels, num_surface_elements, &
                             this%tracer_indices, this%surface_vals, this%surface_tracer_fluxes, &
                             this%column_tracers, this%column_dtracers, this%tracer_metadata,    &
-                            this%StatusLog, marbl_tracer_cnt)
+                            this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_tracers", subname)
       return

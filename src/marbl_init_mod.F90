@@ -148,8 +148,7 @@ contains
                                 column_tracers, &
                                 column_dtracers, &
                                 tracer_metadata, &
-                                marbl_status_log, &
-                                marbl_tracer_cnt)
+                                marbl_status_log)
 
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lvariable_PtoC
@@ -167,7 +166,6 @@ contains
     real(r8),                         allocatable, intent(out)   :: column_dtracers(:,:)
     type(marbl_tracer_metadata_type), allocatable, intent(out)   :: tracer_metadata(:)
     type(marbl_log_type),                          intent(inout) :: marbl_status_log
-    integer(int_kind), optional,                   intent(out)   :: marbl_tracer_cnt
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_tracers'
@@ -177,7 +175,7 @@ contains
     ! Construct tracer indices
     allocate(tracer_indices)
     call tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs, zooplankton, &
-                                  marbl_status_log, marbl_tracer_cnt)
+                                  marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
       return
