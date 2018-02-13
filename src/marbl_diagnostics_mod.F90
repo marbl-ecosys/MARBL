@@ -4660,7 +4660,8 @@ contains
   !*****************************************************************************
 
   subroutine compute_vertical_integrals(integrand, delta_z, kmt, &
-       full_depth_integral, near_surface_integral, integrated_terms)
+       full_depth_integral, near_surface_integral, integrated_terms, &
+       shallow_depth)
 
     real(kind=r8) , intent(in)             :: integrand(:)
     real(kind=r8) , intent(in)             :: delta_z(:)
@@ -4669,6 +4670,7 @@ contains
     ! that have already been integrated, so they are separated from the
     ! integrand
     real(kind=r8) , intent(in)  , optional :: integrated_terms(:)
+    real(kind=r8) , intent(in)  , optional :: shallow_depth
     real(kind=r8) , intent(out) , optional :: full_depth_integral
     real(kind=r8) , intent(out) , optional :: near_surface_integral
 
@@ -4679,13 +4681,19 @@ contains
     real(kind=r8)      :: integrated_terms_used(size(integrand))
     real(kind=r8)      :: zw
     real(kind=r8)      :: ztop
-    real(kind=r8)      :: shallow_depth = 100.0e2_r8
+    real(kind=r8)      :: shallow_depth_used
     !-----------------------------------------------------------------------
 
     if (present(integrated_terms)) then
        integrated_terms_used = integrated_terms
     else
        integrated_terms_used = c0
+    end if
+
+    if (present(shallow_depth)) then
+      shallow_depth_used = shallow_depth
+    else
+      shallow_depth_used = 100.0e2_r8
     end if
 
     if (present(full_depth_integral)) then
@@ -4700,8 +4708,8 @@ contains
        do k=1,kmt
           zw = zw + delta_z(k)
           near_surface_integral = near_surface_integral +                     &
-                              min(shallow_depth-ztop,delta_z(k))*integrand(k)
-          if (zw.le.shallow_depth) then
+                              min(shallow_depth_used-ztop,delta_z(k))*integrand(k)
+          if (zw.le.shallow_depth_used) then
              near_surface_integral = near_surface_integral + integrated_terms_used(k)
           else
              exit
