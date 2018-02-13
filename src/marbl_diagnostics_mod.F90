@@ -2879,77 +2879,86 @@ contains
           allocate(ind%CISO_autotrophCaCO3_d14C(autotroph_cnt))
         end if
         do n = 1, autotroph_cnt
-          lname    = trim(autotrophs(n)%lname) // ' Ca13CO3 Formation'
-          sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca13CO3_form'
-          units    = 'mmol/m^3/s'
-          vgrid    = 'layer_avg'
-          truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%CISO_Ca13CO3_form(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
+          if ((autotrophs(n)%imp_calcifier) .or. (autotrophs(n)%exp_calcifier)) then
+            lname    = trim(autotrophs(n)%lname) // ' Ca13CO3 Formation'
+            sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca13CO3_form'
+            units    = 'mmol/m^3/s'
+            vgrid    = 'layer_avg'
+            truncate = .true.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                 ind%CISO_Ca13CO3_form(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call log_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
 
-          lname    = trim(autotrophs(n)%lname) // ' Ca13CO3 Formation Vertical Integral'
-          sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca13CO3_form_zint'
-          units    = 'mmol/m^3 cm/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%CISO_Ca13CO3_form_zint(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
+            lname    = trim(autotrophs(n)%lname) // ' Ca13CO3 Formation Vertical Integral'
+            sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca13CO3_form_zint'
+            units    = 'mmol/m^3 cm/s'
+            vgrid    = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                 ind%CISO_Ca13CO3_form_zint(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call log_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
 
-          lname    = trim(autotrophs(n)%lname) // ' Ca14CO3 Formation'
-          sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca14CO3_form'
-          units    = 'mmol/m^3/s'
-          vgrid    = 'layer_avg'
-          truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%CISO_Ca14CO3_form(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
+            lname    = trim(autotrophs(n)%lname) // ' Ca14CO3 Formation'
+            sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca14CO3_form'
+            units    = 'mmol/m^3/s'
+            vgrid    = 'layer_avg'
+            truncate = .true.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                 ind%CISO_Ca14CO3_form(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call log_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
 
-          lname    = trim(autotrophs(n)%lname) // ' Ca14CO3 Formation Vertical Integral'
-          sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca14CO3_form_zint'
-          units    = 'mmol/m^3 cm/s'
-          vgrid    = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%CISO_Ca14CO3_form_zint(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
+            lname    = trim(autotrophs(n)%lname) // ' Ca14CO3 Formation Vertical Integral'
+            sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca14CO3_form_zint'
+            units    = 'mmol/m^3 cm/s'
+            vgrid    = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                 ind%CISO_Ca14CO3_form_zint(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call log_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
 
-          lname    = trim(autotrophs(n)%lname) // ' d13C of CaCO3'
-          sname    = 'CISO_autotrophCaCO3_d13C_' // trim(autotrophs(n)%sname)
-          units    = 'mmol/m^3/s'
-          vgrid    = 'layer_avg'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%CISO_autotrophCaCO3_d13C(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
+            lname    = trim(autotrophs(n)%lname) // ' d13C of CaCO3'
+            sname    = 'CISO_autotrophCaCO3_d13C_' // trim(autotrophs(n)%sname)
+            units    = 'mmol/m^3/s'
+            vgrid    = 'layer_avg'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                 ind%CISO_autotrophCaCO3_d13C(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call log_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
 
-          lname    = trim(autotrophs(n)%lname) // ' d14C of CaCO3'
-          sname    = 'CISO_autotrophCaCO3_d14C_' // trim(autotrophs(n)%sname)
-          units    = 'mmol/m^3/s'
-          vgrid    = 'layer_avg'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%CISO_autotrophCaCO3_d14C(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
+            lname    = trim(autotrophs(n)%lname) // ' d14C of CaCO3'
+            sname    = 'CISO_autotrophCaCO3_d14C_' // trim(autotrophs(n)%sname)
+            units    = 'mmol/m^3/s'
+            vgrid    = 'layer_avg'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                 ind%CISO_autotrophCaCO3_d14C(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call log_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
+          else
+            ind%CISO_Ca13CO3_form(n) = 0
+            ind%CISO_Ca13CO3_form_zint(n) = 0
+            ind%CISO_Ca14CO3_form(n) = 0
+            ind%CISO_Ca14CO3_form_zint(n) = 0
+            ind%CISO_autotrophCaCO3_d13C(n) = 0
+            ind%CISO_autotrophCaCO3_d14C(n) = 0
+          end if ! calcifier
 
           lname    = trim(autotrophs(n)%lname) // ' 13C Fixation'
           sname    = 'CISO_photo13C_' // trim(autotrophs(n)%sname)
@@ -4471,15 +4480,17 @@ contains
     do n = 1,autotroph_cnt
        call compute_vertical_integrals(photo13C(n,:), delta_z, kmt,           &
             full_depth_integral=diags(ind%CISO_photo13C_zint(n))%field_2d(1))
-       
+
        call compute_vertical_integrals(photo14C(n,:), delta_z, kmt,           &
             full_depth_integral=diags(ind%CISO_photo14C_zint(n))%field_2d(1))
-       
-       call compute_vertical_integrals(Ca13CO3_prod(n,:), delta_z, kmt,       &
-            full_depth_integral=diags(ind%CISO_Ca13CO3_form_zint(n))%field_2d(1))
-       
-       call compute_vertical_integrals(Ca14CO3_prod(n,:), delta_z, kmt,       &
-            full_depth_integral=diags(ind%CISO_Ca14CO3_form_zint(n))%field_2d(1))
+
+       if ((autotrophs(n)%imp_calcifier) .or. (autotrophs(n)%exp_calcifier)) then
+         call compute_vertical_integrals(Ca13CO3_prod(n,:), delta_z, kmt,       &
+              full_depth_integral=diags(ind%CISO_Ca13CO3_form_zint(n))%field_2d(1))
+
+         call compute_vertical_integrals(Ca14CO3_prod(n,:), delta_z, kmt,       &
+              full_depth_integral=diags(ind%CISO_Ca14CO3_form_zint(n))%field_2d(1))
+       end if
     end do
 
     do k = 1,km
@@ -4487,8 +4498,10 @@ contains
           diags(ind%CISO_d13C(n))%field_3d(k, 1)                = autotroph_d13C(n,k)
           diags(ind%CISO_d14C(n))%field_3d(k, 1)                = autotroph_d14C(n,k)
 
-          diags(ind%CISO_autotrophCaCO3_d13C(n))%field_3d(k, 1) = autotrophCaCO3_d13C(n,k)
-          diags(ind%CISO_autotrophCaCO3_d14C(n))%field_3d(k, 1) = autotrophCaCO3_d14C(n,k)
+          if ((autotrophs(n)%imp_calcifier) .or. (autotrophs(n)%exp_calcifier)) then
+            diags(ind%CISO_autotrophCaCO3_d13C(n))%field_3d(k, 1) = autotrophCaCO3_d13C(n,k)
+            diags(ind%CISO_autotrophCaCO3_d14C(n))%field_3d(k, 1) = autotrophCaCO3_d14C(n,k)
+          end if
 
           diags(ind%CISO_photo13C(n))%field_3d(k, 1)            = photo13C(n,k)
           diags(ind%CISO_photo14C(n))%field_3d(k, 1)            = photo14C(n,k)
@@ -4503,7 +4516,7 @@ contains
           end if
        end do  ! end loop over autotrophs
     end do  ! end loop over k
-    
+
     do k = 1,km
        diags(ind%CISO_DIC_d13C)%field_3d(k, 1)        = DIC_d13C(k)
        diags(ind%CISO_DIC_d14C)%field_3d(k, 1)        = DIC_d14C(k)
@@ -4511,17 +4524,17 @@ contains
        diags(ind%CISO_DOC_d13C)%field_3d(k, 1)        = DOC_d13C(k)
        diags(ind%CISO_DOC_d14C)%field_3d(k, 1)        = DOC_d14C(k)
 
-       diags(ind%CISO_DO13C_prod)%field_3d(k, 1)      = DO13C_prod(k)   
-       diags(ind%CISO_DO14C_prod)%field_3d(k, 1)      = DO14C_prod(k)      
+       diags(ind%CISO_DO13C_prod)%field_3d(k, 1)      = DO13C_prod(k)
+       diags(ind%CISO_DO14C_prod)%field_3d(k, 1)      = DO14C_prod(k)
 
-       diags(ind%CISO_DO13C_remin)%field_3d(k, 1)     = DO13C_remin(k)     
-       diags(ind%CISO_DO14C_remin)%field_3d(k, 1)     = DO14C_remin(k)     
+       diags(ind%CISO_DO13C_remin)%field_3d(k, 1)     = DO13C_remin(k)
+       diags(ind%CISO_DO14C_remin)%field_3d(k, 1)     = DO14C_remin(k)
 
        diags(ind%CISO_zooC_d13C)%field_3d(k, 1)       = zooC_d13C(k)
        diags(ind%CISO_zooC_d14C)%field_3d(k, 1)       = zooC_d14C(k)
 
-       diags(ind%CISO_eps_aq_g)%field_3d(k, 1)        = eps_aq_g(k)        
-       diags(ind%CISO_eps_dic_g)%field_3d(k, 1)       = eps_dic_g(k)       
+       diags(ind%CISO_eps_aq_g)%field_3d(k, 1)        = eps_aq_g(k)
+       diags(ind%CISO_eps_dic_g)%field_3d(k, 1)       = eps_dic_g(k)
 
        diags(ind%CISO_Ca13CO3_flux_in)%field_3d(k, 1) = P_Ca13CO3%sflux_in(k) + P_Ca13CO3%hflux_in(k)
        diags(ind%CISO_Ca14CO3_flux_in)%field_3d(k, 1) = P_Ca14CO3%sflux_in(k) + P_Ca14CO3%hflux_in(k)
