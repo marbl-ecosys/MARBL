@@ -106,7 +106,7 @@ contains
        marbl_status_log)
 
     !---------------------------------------------------------------------------
-    ! Calculate delta co2*, etc. from total alkalinity, total CO2, temp, 
+    ! Calculate delta co2*, etc. from total alkalinity, total CO2, temp,
     ! salinity (s), etc.
     !---------------------------------------------------------------------------
 

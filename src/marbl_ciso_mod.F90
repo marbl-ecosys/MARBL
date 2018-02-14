@@ -853,7 +853,7 @@ contains
 
     end associate
 
-    ! update carbon isotope diagnostics 
+    ! update carbon isotope diagnostics
     ! FIXME #18: the following arguments need to be group into a derived type
 
     call store_diagnostics_ciso_interior(&
@@ -1031,7 +1031,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer :: k 
+    integer :: k
     !-----------------------------------------------------------------------
 
     associate(di13c_ind  => marbl_tracer_indices%di13c_ind,                   &
@@ -1086,7 +1086,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer (int_kind) :: k 
+    integer (int_kind) :: k
     integer (int_kind) :: auto_ind
     integer (int_kind) :: tracer_ind ! tracer index
     !-----------------------------------------------------------------------
@@ -1224,7 +1224,7 @@ contains
     if ( mui_to_co2star /= c0 ) then
 
        var = mui_to_co2star * Qc / ( cell_permea * Surf )
-       
+
        theta = c1 + ( cell_active_C_uptake - c1 ) * var
        theta = theta / ( c1 + cell_active_C_uptake * var )
 
@@ -1648,16 +1648,16 @@ contains
     !-----------------------------------------------------------------------
 
     associate(&
-         autotrophC_loc     => autotroph_share%autotrophC_loc_fields     , & ! local copy of model autotroph C  
+         autotrophC_loc     => autotroph_share%autotrophC_loc_fields     , & ! local copy of model autotroph C
          autotrophChl_loc   => autotroph_share%autotrophChl_loc_fields   , & ! local copy of model autotroph Chl
-         autotrophFe_loc    => autotroph_share%autotrophFe_loc_fields    , & ! local copy of model autotroph Fe 
-         autotrophSi_loc    => autotroph_share%autotrophSi_loc_fields      & ! local copy of model autotroph Si 
+         autotrophFe_loc    => autotroph_share%autotrophFe_loc_fields    , & ! local copy of model autotroph Fe
+         autotrophSi_loc    => autotroph_share%autotrophSi_loc_fields      & ! local copy of model autotroph Si
          )
 
     do k = 1, column_km
        do auto_ind = 1, autotroph_cnt
 
-          ! Zero_mask=true for any zero in Chl, C, Fe, 
+          ! Zero_mask=true for any zero in Chl, C, Fe,
           ! It is false only if all are false
           ! Add si to zero mask... if it is present (ind > 0)
 
@@ -1793,7 +1793,7 @@ contains
     !-----------------------------------------------------------------------
     !     initialize R13C_atm  and R14C_atm
     !-----------------------------------------------------------------------
-    
+
     R13C_atm(:) = R13C_std * ( c1 + d13c(:) / c1000 )
     R14C_atm(:) = R14C_std * ( c1 + d14c(:) / c1000 )
 
@@ -1806,7 +1806,7 @@ contains
     !     compute R13C_DIC in surface ocean (assuming that DIC is 12C)
     !-----------------------------------------------------------------------
 
-    where ( dic(:) /= c0 ) 
+    where ( dic(:) /= c0 )
        R13C_dic(:) = surface_vals(:,di13c_ind) / dic(:)
        R14C_dic(:) = surface_vals(:,di14c_ind) / dic(:)
        frac_co3(:) = CO3_SURF_fields(:) / dic(:)
@@ -1891,7 +1891,7 @@ contains
 
     end associate
 
-    ! update carbon isotope diagnostics 
+    ! update carbon isotope diagnostics
     ! FIXME #18: the following arguments need to be group into a derived type
 
     call store_diagnostics_ciso_surface_forcing( &

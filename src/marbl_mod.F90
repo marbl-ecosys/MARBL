@@ -1513,7 +1513,7 @@ contains
     !  POC burial from Dunne et al. 2007 (doi:10.1029/2006GB002907), maximum of 80% burial efficiency imposed
     !  Bsi preservation in sediments based on
     !     Ragueneau et al. 2000 (doi:10.1016/S0921-8181(00)00052-7)
-    !  Calcite is preserved in sediments above a threshold depth, 
+    !  Calcite is preserved in sediments above a threshold depth,
     !     which is based on caco3_bury_thres_opt.
     !-----------------------------------------------------------------------
 
@@ -2030,7 +2030,7 @@ contains
           if (sfo_ind%flux_co2_id.ne.0) then
             surface_forcing_output%sfo(sfo_ind%flux_co2_id)%forcing_field = flux_co2
           end if
- 
+
           !-------------------------------------------------------------------
           !  The following variables need to be shared with other modules,
           !  and are now defined in marbl_share as targets.
@@ -3942,7 +3942,7 @@ contains
     use marbl_settings_mod, only : Qfe_zoo
 
     ! Note (mvertens, 2016-02), all the column_sinking_partiles must be intent(inout)
-    ! rather than intent(out), since if they were intent(out) they would be automatically 
+    ! rather than intent(out), since if they were intent(out) they would be automatically
     ! deallocated on entry in this routine (this is not required behavior - but is
     ! standard)
 

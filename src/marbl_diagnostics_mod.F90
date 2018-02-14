@@ -3525,7 +3525,7 @@ contains
 
     integer(int_kind) :: k
     !-----------------------------------------------------------------------
-    
+
     associate(                                               &
          km                => marbl_domain%km,               &
          diags             => marbl_interior_diags%diags,    &
@@ -4365,7 +4365,7 @@ contains
 
     !---------------------------------------------------------------------
     ! !DESCRIPTION:
-    !  Update marbl_interior_ciso_diags data type 
+    !  Update marbl_interior_ciso_diags data type
     !---------------------------------------------------------------------
 
     implicit none
@@ -4648,7 +4648,7 @@ contains
     diags(ind%ciso_r14c_atm)%field_2d(:) = R14C_atm(:)
 
     diags(ind%ciso_d13c_atm)%field_2d(:) = d13c(:)
-    diags(ind%ciso_d14c_atm)%field_2d(:) = d14c(:)        
+    diags(ind%ciso_d14c_atm)%field_2d(:) = d14c(:)
 
     diags(ind%CISO_eps_aq_g_surf)%field_2d(:)  = eps_aq_g_surf(:)
     diags(ind%CISO_eps_dic_g_surf)%field_2d(:) = eps_dic_g_surf(:)
