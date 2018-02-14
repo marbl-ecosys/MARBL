@@ -182,7 +182,7 @@ contains
 
     tol = 1e-13_r8
     ltest_pass = .false.
-    write(test_desc, "(A,F0.1,A,F0.1,A,F0.1,A,F0.1,A)") "root between (", x(1), ", ", y(1), ") and (", x(2), ", ", y(2), ')' 
+    write(test_desc, "(A,F0.1,A,F0.1,A,F0.1,A,F0.1,A)") "root between (", x(1), ", ", y(1), ") and (", x(2), ", ", y(2), ')'
 
     if (.not. present(expected_root)) driver_status_log%OutputOptions%lLogError=.false.
     linear_root = marbl_utils_linear_root(x, y, driver_status_log)
