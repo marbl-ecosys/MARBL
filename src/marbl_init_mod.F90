@@ -431,6 +431,7 @@ contains
                                          num_surface_forcing_fields)
       call interior_forcing_ind%construct(tracer_metadata%short_name,         &
                                           tracer_restore_vars,                &
+                                          domain%num_PAR_subcols,             &
                                           num_interior_forcing_fields,        &
                                           marbl_status_log)
       if (marbl_status_log%labort_marbl) then

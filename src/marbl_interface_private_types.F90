@@ -868,6 +868,7 @@ contains
   subroutine interior_forcing_index_constructor(this,                         &
                                                 tracer_names,                 &
                                                 tracer_restore_vars,          &
+                                                num_PAR_subcols,              &
                                                 num_interior_forcing_fields,  &
                                                 marbl_status_log)
 
@@ -877,6 +878,7 @@ contains
     class(marbl_interior_forcing_indexing_type), intent(out)   :: this
     character(len=char_len), dimension(:),       intent(in)    :: tracer_names
     character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
+    integer(int_kind),                           intent(in)    :: num_PAR_subcols
     integer(int_kind),                           intent(out)   :: num_interior_forcing_fields
     type(marbl_log_type),                        intent(inout) :: marbl_status_log
 
@@ -892,17 +894,15 @@ contains
 
       forcing_cnt = 0
 
-      ! -------------------------------
-      ! | Always request these fields |
-      ! -------------------------------
-
       ! Dust Flux
       forcing_cnt = forcing_cnt + 1
       this%dustflux_id = forcing_cnt
 
-      ! PAR column fraction
-      forcing_cnt = forcing_cnt + 1
-      this%PAR_col_frac_id = forcing_cnt
+      ! PAR column fraction (not needed if num_PAR_subcols = 1)
+      if (num_PAR_subcols .gt. 1) then
+        forcing_cnt = forcing_cnt + 1
+        this%PAR_col_frac_id = forcing_cnt
+      end if
 
       ! PAR column shortwave
       forcing_cnt = forcing_cnt + 1

@@ -2549,7 +2549,11 @@ contains
     ! ignore provided shortwave where col_frac == 0
     !-----------------------------------------------------------------------
 
-    PAR%col_frac(:) = interior_forcings(interior_forcing_ind%PAR_col_frac_id)%field_1d(1,:)
+    if (interior_forcing_ind%PAR_col_frac_id .ne. 0) then
+      PAR%col_frac(:) = interior_forcings(interior_forcing_ind%PAR_col_frac_id)%field_1d(1,:)
+    else
+      PAR%col_frac(:) = c1
+    end if
 
     where (PAR%col_frac(:) > c0)
        PAR%interface(0,:) = f_qsw_par *                                       &
