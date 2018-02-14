@@ -149,7 +149,6 @@ module marbl_mod
   use marbl_settings_mod, only : grazing
   use marbl_settings_mod, only : caco3_bury_thres_iopt
   use marbl_settings_mod, only : caco3_bury_thres_iopt_fixed_depth
-  use marbl_settings_mod, only : caco3_bury_thres_iopt_omega_calc
   use marbl_settings_mod, only : caco3_bury_thres_depth
   use marbl_settings_mod, only : PON_bury_coeff
 
@@ -551,7 +550,7 @@ contains
     ! NOTE(bja, 2015-07) dtracers=0 must come before the "not
     ! lsource_sink check to ensure correct answer when not doing
     ! computations.
-    ! NOTE(mvertens, 2015-12) the following includes carbon isotopes if 
+    ! NOTE(mvertens, 2015-12) the following includes carbon isotopes if
     ! ciso_on is true
 
     dtracers(:, :) = c0
@@ -832,6 +831,7 @@ contains
             marbl_autotroph_share        = marbl_autotroph_share,   &
             marbl_particulate_share      = marbl_particulate_share, &
             temperature                  = temperature,             &
+            carbonate                    = carbonate,               &
             column_tracer                = tracers,                 &
             column_dtracer               = dtracers,                &
             marbl_tracer_indices         = marbl_tracer_indices,    &
@@ -1158,7 +1158,7 @@ contains
     associate(                                                                         &
          column_kmt               => domain%kmt,                                       &
          delta_z                  => domain%delta_z,                                   &
-         zw                       => domain%zw,                                        & 
+         zw                       => domain%zw,                                        &
          O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind),        &
          NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind),       &
          POC_PROD_avail_fields    => marbl_particulate_share%POC_PROD_avail_fields,    & ! IN/OUT

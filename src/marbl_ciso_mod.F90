@@ -27,6 +27,9 @@ module marbl_ciso_mod
   use marbl_settings_mod, only : autotrophs
   use marbl_settings_mod, only : zooplankton
   use marbl_settings_mod, only : grazing
+  use marbl_settings_mod, only : caco3_bury_thres_iopt
+  use marbl_settings_mod, only : caco3_bury_thres_iopt_fixed_depth
+  use marbl_settings_mod, only : caco3_bury_thres_depth
 
   use marbl_logging, only : marbl_log_type
 
@@ -39,6 +42,7 @@ module marbl_ciso_mod
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_surface_forcing_share_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
+  use marbl_interface_private_types, only : carbonate_type
 
   use marbl_pft_mod, only : autotroph_type
   use marbl_pft_mod, only : marbl_zooplankton_share_type
@@ -208,6 +212,7 @@ contains
        marbl_autotroph_share,                 &
        marbl_particulate_share,               &
        temperature,                           &
+       carbonate,                             &
        column_tracer,                         &
        column_dtracer,                        &
        marbl_tracer_indices,                  &
@@ -229,17 +234,18 @@ contains
 
     implicit none
 
-    type(marbl_domain_type)                 , intent(in)    :: marbl_domain
-    type(marbl_interior_share_type)         , intent(in)    :: marbl_interior_share(:)
-    type(marbl_zooplankton_share_type)      , intent(in)    :: marbl_zooplankton_share(:, :)
-    type(marbl_autotroph_share_type)        , intent(in)    :: marbl_autotroph_share(:, :)
-    type(marbl_particulate_share_type)      , intent(in)    :: marbl_particulate_share
-    real (r8)                               , intent(in)    :: temperature(:)
-    real (r8)                               , intent(in)    :: column_tracer(:,:)
-    real (r8)                               , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
-    type(marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
-    type(marbl_diagnostics_type)            , intent(inout) :: marbl_interior_diags
-    type(marbl_log_type)                    , intent(inout) :: marbl_status_log
+    type(marbl_domain_type)           , intent(in)    :: marbl_domain
+    type(marbl_interior_share_type)   , intent(in)    :: marbl_interior_share(:)
+    type(marbl_zooplankton_share_type), intent(in)    :: marbl_zooplankton_share(:, :)
+    type(marbl_autotroph_share_type)  , intent(in)    :: marbl_autotroph_share(:, :)
+    type(marbl_particulate_share_type), intent(in)    :: marbl_particulate_share
+    real (r8)                         , intent(in)    :: temperature(:)
+    type(carbonate_type)              , intent(in)    :: carbonate(:)
+    real (r8)                         , intent(in)    :: column_tracer(:,:)
+    real (r8)                         , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
+    type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
+    type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_diags
+    type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -350,37 +356,37 @@ contains
          column_delta_z     => marbl_domain%delta_z                            , &
          column_zw          => marbl_domain%zw                                 , &
 
-         DIC_loc            => marbl_interior_share%DIC_loc_fields             , & ! INPUT local copy of model DIC                                                       
-         DOC_loc            => marbl_interior_share%DOC_loc_fields             , & ! INPUT local copy of model DOC                                                       
-         O2_loc             => marbl_interior_share%O2_loc_fields              , & ! INPUT local copy of model O2                                                        
-         NO3_loc            => marbl_interior_share%NO3_loc_fields             , & ! INPUT local copy of model NO3                                                       
-         CO3                => marbl_interior_share%CO3_fields                 , & ! INPUT carbonate ion                                                                 
-         HCO3               => marbl_interior_share%HCO3_fields                , & ! INPUT bicarbonate ion                                                               
-         H2CO3              => marbl_interior_share%H2CO3_fields               , & ! INPUT carbonic acid                                                                 
+         DIC_loc            => marbl_interior_share%DIC_loc_fields             , & ! INPUT local copy of model DIC
+         DOC_loc            => marbl_interior_share%DOC_loc_fields             , & ! INPUT local copy of model DOC
+         O2_loc             => marbl_interior_share%O2_loc_fields              , & ! INPUT local copy of model O2
+         NO3_loc            => marbl_interior_share%NO3_loc_fields             , & ! INPUT local copy of model NO3
+         CO3                => marbl_interior_share%CO3_fields                 , & ! INPUT carbonate ion
+         HCO3               => marbl_interior_share%HCO3_fields                , & ! INPUT bicarbonate ion
+         H2CO3              => marbl_interior_share%H2CO3_fields               , & ! INPUT carbonic acid
          DOC_remin          => marbl_interior_share%DOC_remin_fields           , & ! INPUT remineralization of 13C DOC (mmol C/m^3/sec)
 
-         autotrophCaCO3_loc => marbl_autotroph_share%autotrophCaCO3_loc_fields , & ! INPUT local copy of model autotroph CaCO3                                           
+         autotrophCaCO3_loc => marbl_autotroph_share%autotrophCaCO3_loc_fields , & ! INPUT local copy of model autotroph CaCO3
          autotrophC_loc     => marbl_autotroph_share%autotrophC_loc_fields     , & ! INPUT local copy of model autotroph C
-         QCaCO3             => marbl_autotroph_share%QCaCO3_fields             , & ! INPUT small phyto CaCO3/C ratio (mmol CaCO3/mmol C)                                 
-         auto_graze         => marbl_autotroph_share%auto_graze_fields         , & ! INPUT autotroph grazing rate (mmol C/m^3/sec)                                       
-         auto_graze_zoo     => marbl_autotroph_share%auto_graze_zoo_fields     , & ! INPUT auto_graze routed to zoo (mmol C/m^3/sec)                                     
-         auto_graze_poc     => marbl_autotroph_share%auto_graze_poc_fields     , & ! INPUT auto_graze routed to poc (mmol C/m^3/sec)                                     
-         auto_graze_doc     => marbl_autotroph_share%auto_graze_doc_fields     , & ! INPUT auto_graze routed to doc (mmol C/m^3/sec)                                     
-         auto_graze_dic     => marbl_autotroph_share%auto_graze_dic_fields     , & ! INPUT auto_graze routed to dic (mmol C/m^3/sec)                                     
-         auto_loss          => marbl_autotroph_share%auto_loss_fields          , & ! INPUT autotroph non-grazing mort (mmol C/m^3/sec)                                   
-         auto_loss_poc      => marbl_autotroph_share%auto_loss_poc_fields      , & ! INPUT auto_loss routed to poc (mmol C/m^3/sec)                                      
-         auto_loss_doc      => marbl_autotroph_share%auto_loss_doc_fields      , & ! INPUT auto_loss routed to doc (mmol C/m^3/sec)                                      
-         auto_loss_dic      => marbl_autotroph_share%auto_loss_dic_fields      , & ! INPUT auto_loss routed to dic (mmol C/m^3/sec)                                      
-         auto_agg           => marbl_autotroph_share%auto_agg_fields           , & ! INPUT autotroph aggregation (mmol C/m^3/sec)                                        
-         photoC             => marbl_autotroph_share%photoC_fields             , & ! INPUT C-fixation (mmol C/m^3/sec)                                                   
-         CaCO3_form         => marbl_autotroph_share%CaCO3_form_fields         , & ! INPUT prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)                            
-         PCphoto            => marbl_autotroph_share%PCphoto_fields            , & ! INPUT C-specific rate of photosynth. (1/sec)                                        
+         QCaCO3             => marbl_autotroph_share%QCaCO3_fields             , & ! INPUT small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
+         auto_graze         => marbl_autotroph_share%auto_graze_fields         , & ! INPUT autotroph grazing rate (mmol C/m^3/sec)
+         auto_graze_zoo     => marbl_autotroph_share%auto_graze_zoo_fields     , & ! INPUT auto_graze routed to zoo (mmol C/m^3/sec)
+         auto_graze_poc     => marbl_autotroph_share%auto_graze_poc_fields     , & ! INPUT auto_graze routed to poc (mmol C/m^3/sec)
+         auto_graze_doc     => marbl_autotroph_share%auto_graze_doc_fields     , & ! INPUT auto_graze routed to doc (mmol C/m^3/sec)
+         auto_graze_dic     => marbl_autotroph_share%auto_graze_dic_fields     , & ! INPUT auto_graze routed to dic (mmol C/m^3/sec)
+         auto_loss          => marbl_autotroph_share%auto_loss_fields          , & ! INPUT autotroph non-grazing mort (mmol C/m^3/sec)
+         auto_loss_poc      => marbl_autotroph_share%auto_loss_poc_fields      , & ! INPUT auto_loss routed to poc (mmol C/m^3/sec)
+         auto_loss_doc      => marbl_autotroph_share%auto_loss_doc_fields      , & ! INPUT auto_loss routed to doc (mmol C/m^3/sec)
+         auto_loss_dic      => marbl_autotroph_share%auto_loss_dic_fields      , & ! INPUT auto_loss routed to dic (mmol C/m^3/sec)
+         auto_agg           => marbl_autotroph_share%auto_agg_fields           , & ! INPUT autotroph aggregation (mmol C/m^3/sec)
+         photoC             => marbl_autotroph_share%photoC_fields             , & ! INPUT C-fixation (mmol C/m^3/sec)
+         CaCO3_form         => marbl_autotroph_share%CaCO3_form_fields         , & ! INPUT prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
+         PCphoto            => marbl_autotroph_share%PCphoto_fields            , & ! INPUT C-specific rate of photosynth. (1/sec)
 
-         zooC_loc           => marbl_zooplankton_share%zooC_loc_fields         , & ! INPUT local copy of model zooC                                                      
-         zoo_loss           => marbl_zooplankton_share%zoo_loss_fields         , & ! INPUT mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)            
-         zoo_loss_poc       => marbl_zooplankton_share%zoo_loss_poc_fields     , & ! INPUT zoo_loss routed to large detrital pool (mmol C/m^3/sec)                       
-         zoo_loss_doc       => marbl_zooplankton_share%zoo_loss_doc_fields     , & ! INPUT zoo_loss routed to doc (mmol C/m^3/sec)                                       
-         zoo_loss_dic       => marbl_zooplankton_share%zoo_loss_dic_fields     , & ! INPUT zoo_loss routed to dic (mmol C/m^3/sec)                                       
+         zooC_loc           => marbl_zooplankton_share%zooC_loc_fields         , & ! INPUT local copy of model zooC
+         zoo_loss           => marbl_zooplankton_share%zoo_loss_fields         , & ! INPUT mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+         zoo_loss_poc       => marbl_zooplankton_share%zoo_loss_poc_fields     , & ! INPUT zoo_loss routed to large detrital pool (mmol C/m^3/sec)
+         zoo_loss_doc       => marbl_zooplankton_share%zoo_loss_doc_fields     , & ! INPUT zoo_loss routed to doc (mmol C/m^3/sec)
+         zoo_loss_dic       => marbl_zooplankton_share%zoo_loss_dic_fields     , & ! INPUT zoo_loss routed to dic (mmol C/m^3/sec)
 
          POC                => marbl_particulate_share%POC                     , & ! INPUT
          P_CaCO3            => marbl_particulate_share%P_CaCO3                 , & ! INPUT
@@ -394,7 +400,7 @@ contains
          )
 
     !-----------------------------------------------------------------------
-    ! Allocate memory for column_sinking_particle data types 
+    ! Allocate memory for column_sinking_particle data types
     !-----------------------------------------------------------------------
     call PO13C%construct(num_levels=column_km)
     call PO14C%construct(num_levels=column_km)
@@ -424,7 +430,7 @@ contains
     !-----------------------------------------------------------------------
     !  Create local copies of model column_tracer, treat negative values as zero
     !-----------------------------------------------------------------------
-    
+
     call setup_local_column_tracers(column_km, column_kmt, column_tracer,     &
            marbl_tracer_indices, DI13C_loc, DO13c_loc, zoo13C_loc, DI14C_loc, &
            DO14C_loc, zoo14C_loc)
@@ -675,7 +681,7 @@ contains
        !-----------------------------------------------------------------------
        !  compute terms for DO13C and DO14C
        !-----------------------------------------------------------------------
-       
+
        DO13C_prod(k) = &
             sum(zoo_loss_doc(:,k),dim=1)*R13C_zooC(k) + &
             sum((auto_loss_doc(:,k) + auto_graze_doc(:,k)) * R13C_autotroph(:,k),dim=1)
@@ -683,14 +689,14 @@ contains
        DO14C_prod(k) = &
             sum(zoo_loss_doc(:,k),dim=1)*R14C_zooC(k) + &
             sum((auto_loss_doc(:,k) + auto_graze_doc(:,k)) * R14C_autotroph(:,k),dim=1)
-       
+
        DO13C_remin(k) = DOC_remin(k) * R13C_DOC(k)
        DO14C_remin(k) = DOC_remin(k) * R14C_DOC(k)
-       
+
        !-----------------------------------------------------------------------
        !  large detritus 13C and 14C
        !-----------------------------------------------------------------------
-       
+
        PO13C%prod(k) = &
             sum(zoo_loss_poc(:,k),dim=1)*R13C_zooC(k) + &
             sum((auto_graze_poc(:,k) + auto_agg(:,k) + auto_loss_poc(:,k)) * R13C_autotroph(:,k),dim=1)
@@ -698,18 +704,18 @@ contains
        PO14C%prod(k) = &
             sum(zoo_loss_poc(:,k),dim=1)*R14C_zooC(k) + &
             sum((auto_graze_poc(:,k) + auto_agg(:,k) + auto_loss_poc(:,k)) * R14C_autotroph(:,k),dim=1)
-       
+
        !-----------------------------------------------------------------------
        !  large detrital Ca13CO3 and Ca14CCO3
        !-----------------------------------------------------------------------
-       
+
        do auto_ind = 1, autotroph_cnt
           if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
              P_Ca13CO3%prod(k) = P_CaCO3%prod(k) * R13C_autotrophCaCO3(auto_ind,k)
              P_Ca14CO3%prod(k) = P_CaCO3%prod(k) * R14C_autotrophCaCO3(auto_ind,k)
           endif
        end do
-       
+
        !-----------------------------------------------------------------------
        !   Calculate oceanic D14C and D13C of carbon pools
        !-----------------------------------------------------------------------
@@ -737,14 +743,14 @@ contains
        end do ! end loop over auto_ind
 
        !-----------------------------------------------------------------------
-       ! Compute carbon isotope particulate terms 
+       ! Compute carbon isotope particulate terms
        !-----------------------------------------------------------------------
 
-       call compute_particulate_terms(k, column_km, column_kmt, column_delta_z(k), column_zw(k), &
-            O2_loc(k), NO3_loc(k), POC, P_CaCO3, marbl_particulate_share, PO13C, P_Ca13CO3)
+       call compute_particulate_terms(k, marbl_domain, O2_loc(k), NO3_loc(k), POC, P_CaCO3, &
+            carbonate(k), marbl_particulate_share, PO13C, P_Ca13CO3)
 
-       call compute_particulate_terms(k, column_km, column_kmt, column_delta_z(k), column_zw(k), &
-            O2_loc(k), NO3_loc(k), POC, P_CaCO3, marbl_particulate_share, PO14C, P_Ca14CO3)
+       call compute_particulate_terms(k, marbl_domain, O2_loc(k), NO3_loc(k), POC, P_CaCO3, &
+            carbonate(k), marbl_particulate_share, PO14C, P_Ca14CO3)
 
        !-----------------------------------------------------------------------
        ! Update column_dtracer for the 7 carbon pools for each Carbon isotope
@@ -753,7 +759,7 @@ contains
        !-----------------------------------------------------------------------
        !  dtracrs: autotroph Carbon (3 carbon pools), autotroph Ca13CO3 and Ca14CO3
        !-----------------------------------------------------------------------
-       
+
        do auto_ind = 1, autotroph_cnt
           work1 = auto_graze(auto_ind,k) + auto_loss(auto_ind,k) + auto_agg(auto_ind,k)
 
@@ -1270,8 +1276,8 @@ contains
 
     P_CaCO3_ciso%sflux_out(k) = c0
     P_CaCO3_ciso%hflux_out(k) = c0
-    P_CaCO3_ciso%sflux_in(k)  = P_CaCO3_ciso%sflux_out(k) 
-    P_CaCO3_ciso%hflux_in(k)  = P_CaCO3_ciso%hflux_out(k) 
+    P_CaCO3_ciso%sflux_in(k)  = P_CaCO3_ciso%sflux_out(k)
+    P_CaCO3_ciso%hflux_in(k)  = P_CaCO3_ciso%hflux_out(k)
 
     !-----------------------------------------------------------------------
     !  Hard POC is QA flux and soft POC is excess POC.
@@ -1279,8 +1285,8 @@ contains
 
     POC_ciso%sflux_out(k) = c0
     POC_ciso%hflux_out(k) = c0
-    POC_ciso%sflux_in(k)  = POC_ciso%sflux_out(k) 
-    POC_ciso%hflux_in(k)  = POC_ciso%hflux_out(k) 
+    POC_ciso%sflux_in(k)  = POC_ciso%sflux_out(k)
+    POC_ciso%hflux_in(k)  = POC_ciso%hflux_out(k)
 
   end subroutine init_particulate_terms
 
@@ -1294,7 +1300,7 @@ contains
     ! Assume that k == 1 condition was handled by call to init_particulate_terms()
     !-----------------------------------------------------------------------
 
-    implicit none 
+    implicit none
 
     integer (int_kind)                 , intent(in)    :: k ! vertical model level
     type(column_sinking_particle_type) , intent(inout) :: POC_ciso
@@ -1312,7 +1318,7 @@ contains
 
   subroutine marbl_update_sinking_particle_from_prior_level(k, sinking_particle)
 
-    implicit none 
+    implicit none
 
     integer (int_kind), intent(in) :: k
     type(column_sinking_particle_type), intent(inout) :: sinking_particle
@@ -1328,8 +1334,8 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_particulate_terms(k, column_km, column_kmt, column_delta_z, column_zw, &
-       O2_loc, NO3_loc, POC, P_CaCO3, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
+  subroutine compute_particulate_terms(k, domain, O2_loc, NO3_loc, POC, P_CaCO3, &
+             carbonate, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
 
     !----------------------------------------------------------------------------------------
     !  Compute outgoing fluxes and remineralization terms for Carbon isotopes.
@@ -1345,19 +1351,16 @@ contains
 
     implicit none
 
-    integer (int_kind)                 , intent(in)    :: k                 ! vertical model level
-    integer (int_kind)                 , intent(in)    :: column_km
-    integer (int_kind)                 , intent(in)    :: column_kmt
-    real (r8)                          , intent(in)    :: column_delta_z
-    real (r8)                          , intent(in)    :: column_zw
-    real (r8)                          , intent(in)    :: O2_loc            ! dissolved oxygen used to modify POC%diss, Sed fluxes
-    real (r8)                          , intent(in)    :: NO3_loc           ! dissolved nitrate used to modify sed fluxes
-    type(column_sinking_particle_type) , intent(in)    :: POC               ! base units = nmol C
-    type(column_sinking_particle_type) , intent(in)    :: P_CaCO3           ! base units = nmol CaCO3
-    type(marbl_particulate_share_type) , intent(in)    :: marbl_particulate_share
-
-    type(column_sinking_particle_type) , intent(inout) :: POC_ciso          ! base units = nmol particulate organic Carbon isotope
-    type(column_sinking_particle_type) , intent(inout) :: P_CaCO3_ciso      ! base units = nmol CaCO3 Carbon isotope
+    integer (int_kind)                , intent(in)    :: k                 ! vertical model level
+    type(marbl_domain_type)           , intent(in)    :: domain
+    type(marbl_particulate_share_type), intent(in)    :: marbl_particulate_share
+    real (r8)                         , intent(in)    :: O2_loc            ! dissolved oxygen used to modify POC%diss, Sed fluxes
+    real (r8)                         , intent(in)    :: NO3_loc           ! dissolved nitrate used to modify sed fluxes
+    type(column_sinking_particle_type), intent(in)    :: POC               ! base units = nmol C
+    type(column_sinking_particle_type), intent(in)    :: P_CaCO3           ! base units = nmol CaCO3
+    type(carbonate_type)              , intent(in)    :: carbonate
+    type(column_sinking_particle_type), intent(inout) :: POC_ciso          ! base units = nmol particulate organic Carbon isotope
+    type(column_sinking_particle_type), intent(inout) :: P_CaCO3_ciso      ! base units = nmol CaCO3 Carbon isotope
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -1378,6 +1381,10 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                &
+         column_km         => domain%km                                     , & ! IN
+         column_kmt        => domain%kmt                                    , & ! IN
+         column_delta_z    => domain%delta_z(k)                             , & ! IN
+         column_zw         => domain%zw(k)                                  , & ! IN
          decay_CaCO3       => marbl_particulate_share%decay_CaCO3_fields    , & ! IN
          DECAY_Hard        => marbl_particulate_share%DECAY_Hard_fields     , & ! IN
          decay_POC_E       => marbl_particulate_share%decay_POC_E_fields    , & ! IN
@@ -1419,31 +1426,31 @@ contains
        !-----------------------------------------------------------------------
        !  P_CaCO3_ciso sflux and hflux out
        !-----------------------------------------------------------------------
-       
+
        P_CaCO3_ciso%sflux_out(k) = P_CaCO3_ciso%sflux_in(k) * decay_CaCO3(k) + &
             P_CaCO3_ciso%prod(k) * ((c1 - P_CaCO3%gamma) * (c1 - decay_CaCO3(k)) * caco3_diss(k))
-       
+
        P_CaCO3_ciso%hflux_out(k) = P_CaCO3_ciso%hflux_in(k) * DECAY_Hard(k) + &
             P_CaCO3_ciso%prod(k) * (P_CaCO3%gamma * dz_loc)
-       
+
        !-----------------------------------------------------------------
        !   Compute how much 13C POC_PROD is available for deficit
        !   reduction and excess POC flux
        !-----------------------------------------------------------------
-       
+
        if (POC%prod(k) > c0 ) then
           POC_ciso_PROD_avail = POC_PROD_avail(k) * POC_ciso%prod(k) / POC%prod(k)
        else
           POC_ciso_PROD_avail = c0
        endif
-       
+
        !-----------------------------------------------------------------
        !   Compute outgoing isotope POC fluxes of soft POC
        !-----------------------------------------------------------------
-       
+
        POC_ciso%sflux_out(k) = POC_ciso%sflux_in(k) * decay_POC_E(k) + &
                                POC_ciso_PROD_avail * ((c1 - decay_POC_E(k)) * (poc_diss(k)))
-       
+
        !-----------------------------------------------------------------
        !   Compute outgoing isotope POC fluxes of hard POC
        !-----------------------------------------------------------------
@@ -1451,16 +1458,16 @@ contains
        if (POC_ciso%hflux_in(k) == c0 .and. POC_ciso%prod(k) == c0) then
           POC_ciso%hflux_out(k) = c0
        else
-          
+
           Rciso_POC_hflux_out = POC%prod(k) + ( POC%sflux_in(k) - POC_sflux_out(k) + POC%hflux_in(k) ) * dzr_loc
-          
+
           if (Rciso_POC_hflux_out /= c0) then
              Rciso_POC_hflux_out = ( POC_ciso%prod(k) + ( POC_ciso%sflux_in(k) - &
                   POC_ciso%sflux_out(k) + POC_ciso%hflux_in(k) ) * dzr_loc ) / Rciso_POC_hflux_out
           else
              Rciso_POC_hflux_out = c0
           endif
-          
+
           POC_ciso%hflux_out(k) = POC_hflux_out(k) * Rciso_POC_hflux_out
           POC_ciso%hflux_out(k) = max(POC_ciso%hflux_out(k), c0)
 
@@ -1553,7 +1560,7 @@ contains
     if (k == column_kmt) then
 
        flux = POC_ciso%sflux_out(k) + POC_ciso%hflux_out(k)
-       
+
        if (flux > c0) then
           flux_alt = flux * mpercm * spd ! convert to mmol/m^2/day
 
@@ -1574,10 +1581,15 @@ contains
           endif
        endif
 
-       if (column_zw < 3300.0e2_r8) then
-          flux = P_CaCO3_ciso%sflux_out(k) + P_CaCO3_ciso%hflux_out(k)
-          P_CaCO3_ciso%sed_loss(k) = flux
-       endif
+       if (caco3_bury_thres_iopt == caco3_bury_thres_iopt_fixed_depth) then
+          if (column_zw < caco3_bury_thres_depth) then
+            P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%sflux_out(k) + P_CaCO3_ciso%hflux_out(k)
+         endif
+       else ! caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
+         if (carbonate%CO3 > carbonate%CO3_sat_calcite) then
+            P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%sflux_out(k) + P_CaCO3_ciso%hflux_out(k)
+         endif
+       end if
 
        !----------------------------------------------------------------------------------
        ! Update sinking fluxes and remin fluxes, accounting for sediments.
