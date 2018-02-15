@@ -35,7 +35,7 @@
    },
    "PFT_derived_types": {
       "autotrophs": {
-         "_array_size": "autotroph_cnt",
+         "_array_shape": "autotroph_cnt",
          "_is_allocatable": true,
          "datatype": {
             "Nfixer": {
@@ -345,7 +345,7 @@
          }
       },
       "grazing": {
-         "_array_size": [
+         "_array_shape": [
             "max_grazer_prey_cnt",
             "zooplankton_cnt"
          ],
@@ -354,7 +354,7 @@
             "_type_name": "grazing_type",
             "auto_ind": {
                "_array_len_to_print": "auto_ind_cnt",
-               "_array_size": "autotroph_cnt",
+               "_array_shape": "autotroph_cnt",
                "_is_allocatable": true,
                "datatype": "integer",
                "default_value": {
@@ -482,7 +482,7 @@
             },
             "zoo_ind": {
                "_array_len_to_print": "zoo_ind_cnt",
-               "_array_size": "zooplankton_cnt",
+               "_array_shape": "zooplankton_cnt",
                "_is_allocatable": true,
                "datatype": "integer",
                "default_value": 0,
@@ -502,7 +502,7 @@
          }
       },
       "zooplankton": {
-         "_array_size": "zooplankton_cnt",
+         "_array_shape": "zooplankton_cnt",
          "_is_allocatable": true,
          "datatype": {
             "_type_name": "zooplankton_type",
@@ -566,11 +566,183 @@
       "PFT_derived_types",
       "tracer_dependent"
    ],
-   "_tracer_cnt": {
-      "default": 32,
-      "increments": {
-         "ciso_on = .true.": 14,
-         "lvariable_PtoC = .false.": -3
+   "_tracer_list": {
+      "((autotroph_sname))13C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Carbon-13",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))14C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Carbon-14",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))C": {
+         "long_name": "((autotroph_lname)) Carbon",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))Ca13CO3": {
+         "dependencies": {
+            "((autotroph_calcifier))": true,
+            "ciso_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Ca13CO3",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))Ca14CO3": {
+         "dependencies": {
+            "((autotroph_calcifier))": true,
+            "ciso_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Ca14CO3",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))CaCO3": {
+         "dependencies": {
+            "((autotroph_calcifier))": true
+         },
+         "long_name": "((autotroph_lname)) CaCO3",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))Chl": {
+         "long_name": "((autotroph_lname)) Chlorophyll",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))Fe": {
+         "long_name": "((autotroph_lname)) Iron",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))P": {
+         "dependencies": {
+            "lvariable_PtoC": ".true."
+         },
+         "long_name": "((autotroph_lname)) Phosphorus",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))Si": {
+         "dependencies": {
+            "((autotroph_silicifier))": true
+         },
+         "long_name": "((autotroph_lname)) Silicon",
+         "units": "mmol/m^3"
+      },
+      "((zooplankton_sname))13C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "((zooplankton_lname)) Carbon-13",
+         "units": "mmol/m^3"
+      },
+      "((zooplankton_sname))14C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "((zooplankton_lname)) Carbon-14",
+         "units": "mmol/m^3"
+      },
+      "((zooplankton_sname))C": {
+         "long_name": "((zooplankton_lname)) Carbon",
+         "units": "mmol/m^3"
+      },
+      "ALK": {
+         "long_name": "Alkalinity",
+         "units": "meq/m^3"
+      },
+      "ALK_ALT_CO2": {
+         "long_name": "Alkalinity, Alternative CO2",
+         "units": "meq/m^3"
+      },
+      "DI13C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Dissolved Inorganic Carbon-13",
+         "units": "mmol/m^3"
+      },
+      "DI14C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Dissolved Inorganic Carbon-14",
+         "units": "mmol/m^3"
+      },
+      "DIC": {
+         "long_name": "Dissolved Inorganic Carbon",
+         "units": "mmol/m^3"
+      },
+      "DIC_ALT_CO2": {
+         "long_name": "Dissolved Inorganic Carbon, Alternative CO2",
+         "units": "mmol/m^3"
+      },
+      "DO13C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Dissolved Organic Carbon-13",
+         "units": "mmol/m^3"
+      },
+      "DO14C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Dissolved Organic Carbon-14",
+         "units": "mmol/m^3"
+      },
+      "DOC": {
+         "long_name": "Dissolved Organic Carbon",
+         "units": "mmol/m^3"
+      },
+      "DOCr": {
+         "long_name": "Refractory DOC",
+         "units": "mmol/m^3"
+      },
+      "DON": {
+         "long_name": "Dissolved Organic Nitrogen",
+         "units": "mmol/m^3"
+      },
+      "DONr": {
+         "long_name": "Refractory DON",
+         "units": "mmol/m^3"
+      },
+      "DOP": {
+         "long_name": "Dissolved Organic Phosphorus",
+         "units": "mmol/m^3"
+      },
+      "DOPr": {
+         "long_name": "Refractory DOP",
+         "units": "mmol/m^3"
+      },
+      "Fe": {
+         "long_name": "Dissolved Inorganic Iron",
+         "units": "mmol/m^3"
+      },
+      "Lig": {
+         "long_name": "Iron Binding Ligand",
+         "units": "mmol/m^3"
+      },
+      "NH4": {
+         "long_name": "Dissolved Ammonia",
+         "units": "mmol/m^3"
+      },
+      "NO3": {
+         "long_name": "Dissolved Inorganic Nitrate",
+         "units": "mmol/m^3"
+      },
+      "O2": {
+         "long_name": "Dissolved Oxygen",
+         "units": "mmol/m^3"
+      },
+      "PO4": {
+         "long_name": "Dissolved Inorganic Phosphate",
+         "units": "mmol/m^3"
+      },
+      "SiO3": {
+         "long_name": "Dissolved Inorganic Silicate",
+         "units": "mmol/m^3"
       }
    },
    "general_parms": {
@@ -850,7 +1022,7 @@
          "units": "nmol/cm^3"
       },
       "parm_scalelen_vals": {
-         "_array_size": 4,
+         "_array_shape": 4,
          "datatype": "real",
          "default_value": {
             "GRID = CESM_x3": [
@@ -871,7 +1043,7 @@
          "units": "unitless"
       },
       "parm_scalelen_z": {
-         "_array_size": 4,
+         "_array_shape": 4,
          "datatype": "real",
          "default_value": [
             "100.0e2",
@@ -909,13 +1081,7 @@
    },
    "tracer_dependent": {
       "tracer_restore_vars": {
-         "_array_size": {
-            "default": 32,
-            "increments": {
-               "ciso_on = .true.": 14,
-               "lvariable_PtoC = .false.": -3
-            }
-         },
+         "_array_shape": "_tracer_list",
          "_is_allocatable": true,
          "datatype": "string",
          "default_value": {
@@ -923,19 +1089,22 @@
                "PO4",
                "NO3",
                "SiO3",
-               "ALK"
+               "ALK",
+               "ALK_ALT_CO2"
             ],
             "GRID = CESM_x1": [
                "PO4",
                "NO3",
                "SiO3",
-               "ALK"
+               "ALK",
+               "ALK_ALT_CO2"
             ],
             "GRID = CESM_x3": [
                "PO4",
                "NO3",
                "SiO3",
-               "ALK"
+               "ALK",
+               "ALK_ALT_CO2"
             ],
             "default": ""
          },

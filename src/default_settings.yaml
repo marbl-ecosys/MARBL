@@ -48,11 +48,145 @@ _order :
    - tracer_dependent
 
 # Tracer count
-_tracer_cnt : &TRACER_CNT
-   default : 32
-   increments :
-      lvariable_PtoC = .false. : -3
-      ciso_on = .true. : 14
+_tracer_list :
+   # Non-living tracers
+   PO4 :
+      long_name : Dissolved Inorganic Phosphate
+      units : mmol/m^3
+   NO3 :
+      long_name : Dissolved Inorganic Nitrate
+      units : mmol/m^3
+   SiO3 :
+      long_name : Dissolved Inorganic Silicate
+      units : mmol/m^3
+   NH4 :
+      long_name : Dissolved Ammonia
+      units : mmol/m^3
+   Fe :
+      long_name : Dissolved Inorganic Iron
+      units : mmol/m^3
+   Lig :
+      long_name : Iron Binding Ligand
+      units : mmol/m^3
+   O2 :
+      long_name : Dissolved Oxygen
+      units : mmol/m^3
+   DIC :
+      long_name : Dissolved Inorganic Carbon
+      units : mmol/m^3
+   DIC_ALT_CO2 :
+      long_name : Dissolved Inorganic Carbon, Alternative CO2
+      units : mmol/m^3
+   ALK :
+      long_name : Alkalinity
+      units : meq/m^3
+   ALK_ALT_CO2 :
+      long_name : Alkalinity, Alternative CO2
+      units : meq/m^3
+   DOC :
+      long_name : Dissolved Organic Carbon
+      units : mmol/m^3
+   DON :
+      long_name : Dissolved Organic Nitrogen
+      units : mmol/m^3
+   DOP :
+      long_name : Dissolved Organic Phosphorus
+      units : mmol/m^3
+   DOPr :
+      long_name : Refractory DOP
+      units : mmol/m^3
+   DONr :
+      long_name : Refractory DON
+      units : mmol/m^3
+   DOCr :
+      long_name : Refractory DOC
+      units : mmol/m^3
+   # Non-living (ciso only)
+   DI13C :
+      dependencies :
+         ciso_on : .true.
+      long_name : Dissolved Inorganic Carbon-13
+      units : mmol/m^3
+   DO13C :
+      dependencies :
+         ciso_on : .true.
+      long_name : Dissolved Organic Carbon-13
+      units : mmol/m^3
+   DI14C :
+      dependencies :
+         ciso_on : .true.
+      long_name : Dissolved Inorganic Carbon-14
+      units : mmol/m^3
+   DO14C :
+      dependencies :
+         ciso_on : .true.
+      long_name : Dissolved Organic Carbon-14
+      units : mmol/m^3
+
+   # Per-autotroph tracers
+   ((autotroph_sname))Chl :
+      long_name : ((autotroph_lname)) Chlorophyll
+      units : mmol/m^3
+   ((autotroph_sname))C :
+      long_name : ((autotroph_lname)) Carbon
+      units : mmol/m^3
+   ((autotroph_sname))Fe :
+      long_name : ((autotroph_lname)) Iron
+      units : mmol/m^3
+   ((autotroph_sname))Si :
+      dependencies :
+         ((autotroph_silicifier)) : True
+      long_name : ((autotroph_lname)) Silicon
+      units : mmol/m^3
+   ((autotroph_sname))CaCO3 :
+      dependencies :
+         ((autotroph_calcifier)) : True
+      long_name : ((autotroph_lname)) CaCO3
+      units : mmol/m^3
+   ((autotroph_sname))P :
+      dependencies :
+         lvariable_PtoC : .true.
+      long_name : ((autotroph_lname)) Phosphorus
+      units : mmol/m^3
+   # Per-autotroph (ciso only)
+   ((autotroph_sname))13C :
+      dependencies :
+         ciso_on : .true.
+      long_name : ((autotroph_lname)) Carbon-13
+      units : mmol/m^3
+   ((autotroph_sname))14C :
+      dependencies :
+         ciso_on : .true.
+      long_name : ((autotroph_lname)) Carbon-14
+      units : mmol/m^3
+   ((autotroph_sname))Ca13CO3 :
+      dependencies :
+         ciso_on : .true.
+         ((autotroph_calcifier)) : True
+      long_name : ((autotroph_lname)) Ca13CO3
+      units : mmol/m^3
+   ((autotroph_sname))Ca14CO3 :
+      dependencies :
+         ciso_on : .true.
+         ((autotroph_calcifier)) : True
+      long_name : ((autotroph_lname)) Ca14CO3
+      units : mmol/m^3
+
+   # Per-zooplankton tracers
+   ((zooplankton_sname))C :
+      long_name : ((zooplankton_lname)) Carbon
+      units : mmol/m^3
+   # Per-zooplankton (ciso only)
+   ((zooplankton_sname))13C :
+      dependencies :
+         ciso_on : .true.
+      long_name : ((zooplankton_lname)) Carbon-13
+      units : mmol/m^3
+   ((zooplankton_sname))14C :
+      dependencies :
+         ciso_on : .true.
+      long_name : ((zooplankton_lname)) Carbon-14
+      units : mmol/m^3
 
 ################################################################################
 #                        Category 1: General Parameters                        #
@@ -276,7 +410,7 @@ general_parms :
       subcategory : 5. Scale lengths
       units : cm
       datatype : real
-      _array_size : 4
+      _array_shape : 4
       default_value :
          - 100.0e2
          - 250.0e2
@@ -287,7 +421,7 @@ general_parms :
       subcategory : 5. Scale lengths
       units : unitless
       datatype : real
-      _array_size : 4
+      _array_shape : 4
       default_value :
          default :
             - 1
@@ -386,7 +520,7 @@ PFT_counts :
 
 PFT_derived_types :
    autotrophs :
-      _array_size : autotroph_cnt
+      _array_shape : autotroph_cnt
       _is_allocatable : true
       datatype :
          # Components of the derived type
@@ -644,7 +778,7 @@ PFT_derived_types :
                autotrophs = "diat" : 0
                autotrophs = "diaz" : 0
    zooplankton :
-      _array_size : zooplankton_cnt
+      _array_shape : zooplankton_cnt
       _is_allocatable : true
       datatype :
          # Components of the derived type
@@ -691,7 +825,7 @@ PFT_derived_types :
                default : 1e34
                zooplankton = "zoo" : 0.075
    grazing :
-      _array_size :
+      _array_shape :
          - max_grazer_prey_cnt
          - zooplankton_cnt
       _is_allocatable : true
@@ -799,7 +933,7 @@ PFT_derived_types :
                grazing = "diat_zoo" : 0.24
                grazing = "diaz_zoo" : 0.12
          auto_ind :
-            _array_size : autotroph_cnt
+            _array_shape : autotroph_cnt
             _array_len_to_print : auto_ind_cnt
             _is_allocatable : true
             longname : Indices of autotrophs being grazed
@@ -812,7 +946,7 @@ PFT_derived_types :
                grazing = "diat_zoo" : 2 # index where autotroph_name = diat
                grazing = "diaz_zoo" : 3 # index where autotroph_name = diaz
          zoo_ind :
-            _array_size : zooplankton_cnt
+            _array_shape : zooplankton_cnt
             _array_len_to_print : zoo_ind_cnt
             _is_allocatable : true
             longname : Indices of zooplankton being grazed
@@ -831,7 +965,7 @@ tracer_dependent :
       subcategory : 20. tracer restoring
       units : non-numeric
       datatype : string
-      _array_size : *TRACER_CNT
+      _array_shape : _tracer_list
       _is_allocatable : true
       default_value :
          default : ''
@@ -840,5 +974,7 @@ tracer_dependent :
             - 'NO3'
             - 'SiO3'
             - 'ALK'
+            - 'ALK_ALT_CO2'
          GRID = CESM_x3 : *CESM_TRACER_RESTORE
          GRID = CESM_x1 : *CESM_TRACER_RESTORE
+

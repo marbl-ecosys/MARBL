@@ -113,6 +113,7 @@ module marbl_diagnostics_mod
     integer(int_kind) :: tot_CaCO3_form_zint
 
     ! General 3D diags
+    integer(int_kind) :: insitu_temp
     integer(int_kind) :: CO3
     integer(int_kind) :: HCO3
     integer(int_kind) :: H2CO3
@@ -286,7 +287,6 @@ module marbl_diagnostics_mod
      integer(int_kind) :: PV_O2
      integer(int_kind) :: SCHMIDT_O2
      integer(int_kind) :: O2SAT
-     integer(int_kind) :: O2_GAS_FLUX
      integer(int_kind) :: CO2STAR
      integer(int_kind) :: DCO2STAR
      integer(int_kind) :: pCO2SURF
@@ -343,6 +343,7 @@ contains
        marbl_status_log)
 
     use marbl_settings_mod, only : ciso_on
+    use marbl_settings_mod, only : lvariable_PtoC
 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
@@ -446,18 +447,6 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%O2SAT, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call log_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname    = 'Dissolved Oxygen Surface Flux'
-      sname    = 'STF_O2'
-      units    = 'mmol/m^3 cm/s'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%O2_GAS_FLUX, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -1301,6 +1290,18 @@ contains
       end if
 
       ! General 3D diags
+      lname = 'in situ temperature'
+      sname = 'insitu_temp'
+      units = 'degC'
+      vgrid = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%insitu_temp, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
       lname = 'Carbonate Ion Concentration'
       sname = 'CO3'
       units = 'mmol/m^3'
@@ -2037,17 +2038,21 @@ contains
         allocate(ind%CaCO3_form(autotroph_cnt))
         allocate(ind%Nfix(autotroph_cnt))
       end if
-      do n= 1,autotroph_cnt
-        lname = trim(autotrophs(n)%lname) // ' P:C ratio'
-        sname = trim(autotrophs(n)%sname) // '_Qp'
-        units = 'none'
-        vgrid = 'layer_avg'
-        truncate = .true.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%Qp(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
+      do n=1,autotroph_cnt
+        if (lvariable_PtoC) then
+          lname = trim(autotrophs(n)%lname) // ' P:C ratio'
+          sname = trim(autotrophs(n)%sname) // '_Qp'
+          units = 'none'
+          vgrid = 'layer_avg'
+          truncate = .true.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+               ind%Qp(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+        else
+          ind%Qp(n) = -1
         end if
 
         lname = trim(autotrophs(n)%lname) // ' N Limitation'
@@ -3176,6 +3181,7 @@ contains
        domain,                                        &
        interior_forcing_ind,                          &
        interior_forcings,                             &
+       temperature,                                   &
        dtracers,                                      &
        marbl_tracer_indices,                          &
        carbonate,                                     &
@@ -3202,6 +3208,7 @@ contains
     type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
 
     type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
+    real (r8)                                 , intent(in) :: temperature(domain%km) ! in situ temperature
     real(r8), intent(in) :: dtracers(:,:) ! (tracer_cnt, km) computed source/sink terms
 
     type(marbl_tracer_index_type)             , intent(in) :: marbl_tracer_indices
@@ -3236,21 +3243,20 @@ contains
 
     !-----------------------------------------------------------------
 
-    associate(                                                                &
-         POC              => marbl_particulate_share%POC,                     &
-         POP              => marbl_particulate_share%POP,                     &
-         P_CaCO3          => marbl_particulate_share%P_CaCO3,                 &
-         P_SiO2           => marbl_particulate_share%P_SiO2,                  &
-         dust             => marbl_particulate_share%dust,                    &
-         P_iron           => marbl_particulate_share%P_iron                   &
-         )
-
     call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace(&
            'marbl_interior_forcing_diags%set_to_zero', subname)
       return
     end if
+
+    associate( &
+         kmt   => domain%kmt, &
+         diags => marbl_interior_forcing_diags%diags, &
+         ind   => marbl_interior_diag_ind &
+         )
+    diags(ind%insitu_temp)%field_3d(1:kmt, 1) = temperature(1:kmt)
+    end associate
 
     call store_diagnostics_carbonate(domain, carbonate,                       &
          marbl_interior_forcing_diags, marbl_status_log)
@@ -3274,14 +3280,18 @@ contains
          PON_remin, PON_sed_loss, &
          sed_denitrif, other_remin, marbl_interior_forcing_diags)
 
+    associate( POC     => marbl_particulate_share%POC, &
+               P_CaCO3 => marbl_particulate_share%P_CaCO3 )
     call store_diagnostics_carbon_fluxes(domain, POC, P_CaCO3, dtracers,      &
-         interior_restore, marbl_tracer_indices, marbl_interior_forcing_diags)
+         marbl_tracer_indices, marbl_interior_forcing_diags)
+
+    end associate
 
     call store_diagnostics_nitrification(&
          nitrif, denitrif, marbl_interior_forcing_diags)
 
     call store_diagnostics_oxygen(domain, &
-         interior_forcings(interior_forcing_ind%temperature_id)%field_1d(1,:), &
+         interior_forcings(interior_forcing_ind%potemp_id)%field_1d(1,:), &
          interior_forcings(interior_forcing_ind%salinity_id)%field_1d(1,:), &
          column_o2, o2_production, o2_consumption, marbl_interior_forcing_diags)
 
@@ -3297,23 +3307,28 @@ contains
 
     call store_diagnostics_nitrogen_fluxes(domain, &
          PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracers, &
-         interior_restore, marbl_tracer_indices, marbl_interior_forcing_diags)
-
-    call store_diagnostics_phosphorus_fluxes(domain, POP, &
-         autotroph_secondary_species, dtracers, interior_restore, &
          marbl_tracer_indices, marbl_interior_forcing_diags)
 
-    call store_diagnostics_silicon_fluxes(domain, P_SiO2, dtracers,           &
-         interior_restore, marbl_tracer_indices, marbl_interior_forcing_diags)
+    associate( POP => marbl_particulate_share%POP )
+    call store_diagnostics_phosphorus_fluxes(domain, POP, &
+         autotroph_secondary_species, dtracers, &
+         marbl_tracer_indices, marbl_interior_forcing_diags)
+    end associate
 
+    associate( P_SiO2 => marbl_particulate_share%P_SiO2 )
+    call store_diagnostics_silicon_fluxes(domain, P_SiO2, dtracers,           &
+         marbl_tracer_indices, marbl_interior_forcing_diags)
+    end associate
+
+    associate( dust   => marbl_particulate_share%dust, &
+               P_iron => marbl_particulate_share%P_iron )
     call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
          interior_forcings(interior_forcing_ind%fesedflux_id)%field_1d(1,:),  &
-         dtracers, interior_restore, marbl_tracer_indices, marbl_interior_forcing_diags)
+         dtracers, marbl_tracer_indices, marbl_interior_forcing_diags)
+    end associate
 
     call store_diagnostics_interior_restore(interior_restore,                 &
                                             marbl_interior_forcing_diags)
-
-    end associate
 
   end subroutine marbl_diagnostics_set_interior_forcing
 
@@ -3323,7 +3338,6 @@ contains
        surface_forcing_ind,                         &
        surface_input_forcings,                      &
        surface_forcing_internal,                    &
-       surface_tracer_fluxes,                       &
        marbl_tracer_indices,                        &
        saved_state,                                 &
        saved_state_ind,                             &
@@ -3342,7 +3356,6 @@ contains
 
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
     type(marbl_forcing_fields_type)           , intent(in)    :: surface_input_forcings(:)
-    real(r8)                                  , intent(in)    :: surface_tracer_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(in)    :: saved_state
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
@@ -3393,8 +3406,6 @@ contains
 
          ph_prev           => saved_state%state(saved_state_ind%ph_surf)%field_2d,              &
          ph_prev_alt_co2   => saved_state%state(saved_state_ind%ph_alt_co2_surf)%field_2d,      &
-
-         stf               => surface_tracer_fluxes(:,:),                                       &
 
          po4_ind           => marbl_tracer_indices%po4_ind,                                     &
          no3_ind           => marbl_tracer_indices%no3_ind,                                     &
@@ -3479,8 +3490,6 @@ contains
     endif
 
     diags(ind_diag%NHx_SURFACE_EMIS)%field_2d(:) = nhx_surface_emis(:)
-
-    diags(ind_diag%O2_GAS_FLUX)%field_2d(:)   = stf(:, o2_ind)
 
     ! FIXME #63 : reported units of DUST_FLUX are g/cm^2/s, so this comment doesn't make sense
     ! multiply DUST flux by mpercm (.01) to convert from model units (cm/s)(mmol/m^3) to mmol/s/m^2
@@ -3650,7 +3659,9 @@ contains
     diags(ind%tot_Nfix)%field_3d(:, 1) = c0
     diags(ind%tot_CaCO3_form)%field_3d(:, 1) = c0
     do n = 1, autotroph_cnt
-       diags(ind%Qp(n))%field_3d(:, 1)          = autotroph_secondary_species(n,:)%Qp
+       if (ind%Qp(n).ne.-1) then
+         diags(ind%Qp(n))%field_3d(:, 1)          = autotroph_secondary_species(n,:)%Qp
+       end if
 
        diags(ind%N_lim(n))%field_3d(:, 1)       = autotroph_secondary_species(n,:)%VNtot
        diags(ind%Fe_lim(n))%field_3d(:, 1)      = autotroph_secondary_species(n,:)%VFe
@@ -3846,13 +3857,13 @@ contains
 
    !***********************************************************************
 
-  subroutine store_diagnostics_oxygen(marbl_domain, temperature, salinity, &
+  subroutine store_diagnostics_oxygen(marbl_domain, potemp, salinity, &
        column_o2, o2_production, o2_consumption, marbl_interior_diags)
 
     use marbl_oxygen, only : o2sat_scalar
 
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain
-    real(r8)                                , intent(in)    :: temperature(:)
+    real(r8)                                , intent(in)    :: potemp(:)
     real(r8)                                , intent(in)    :: salinity(:)
     real(r8)                                , intent(in)    :: column_o2(:)
     real(r8)                                , intent(in)    :: o2_production(:)
@@ -3882,7 +3893,7 @@ contains
     diags(ind%O2_CONSUMPTION)%field_3d(:, 1) = o2_consumption
 
     do k=1,kmt
-       diags(ind%AOU)%field_3d(k, 1) = O2SAT_scalar(temperature(k), salinity(k)) - column_o2(k)
+       diags(ind%AOU)%field_3d(k, 1) = O2SAT_scalar(potemp(k), salinity(k)) - column_o2(k)
     end do
 
     end associate
@@ -4035,13 +4046,12 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_carbon_fluxes(marbl_domain, POC, P_CaCO3, dtracers, &
-             interior_restore, marbl_tracer_indices, marbl_diags)
+             marbl_tracer_indices, marbl_diags)
 
     type(marbl_domain_type)     , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: POC
     type(column_sinking_particle_type) , intent(in)    :: P_CaCO3
     real(r8)                           , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
-    real(r8)                           , intent(in)    :: interior_restore(:,:) ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
@@ -4069,17 +4079,10 @@ contains
          sum(dtracers(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +     &
          sum(dtracers(marbl_tracer_indices%auto_inds(:)%C_ind,:),dim=1)
 
-    ! subtract tracer restoring terms
-    work = work - (interior_restore(dic_ind,:) + interior_restore(doc_ind,:) +              &
-                   interior_restore(docr_ind,:) +                                           &
-                   sum(interior_restore(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) + &
-                   sum(interior_restore(marbl_tracer_indices%auto_inds(:)%C_ind,:),dim=1))
-
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n .gt. 0) then
           work = work + dtracers(n,:)
-          work = work - interior_restore(n,:)
        end if
     end do
 
@@ -4096,7 +4099,7 @@ contains
 
   subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, &
        PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracers, &
-       interior_restore, marbl_tracer_indices, marbl_diags)
+       marbl_tracer_indices, marbl_diags)
 
     use marbl_settings_mod, only : Q
 
@@ -4106,7 +4109,6 @@ contains
     real(r8)                               , intent(in)    :: sed_denitrif(:) ! km
     type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:)
     real(r8)                               , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
-    real(r8)                               , intent(in)    :: interior_restore(:,:) ! tracer_cnt, km
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
 
@@ -4136,12 +4138,6 @@ contains
            Q * sum(dtracers(marbl_tracer_indices%auto_inds(:)%C_ind,:), dim=1) + &
            denitrif(:) + sed_denitrif(:)
 
-    ! subtract tracer restoring terms
-    work = work - (interior_restore(no3_ind,:) + interior_restore(nh4_ind,:) +                  &
-                   interior_restore(don_ind,:) + interior_restore(donr_ind,:) +                 &
-                   Q * sum(interior_restore(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) + &
-                   Q * sum(interior_restore(marbl_tracer_indices%auto_inds(:)%C_ind,:), dim=1))
-
     ! subtract out N fixation
     do n = 1, autotroph_cnt
        if (autotrophs(n)%Nfixer) then
@@ -4161,7 +4157,7 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_phosphorus_fluxes(marbl_domain, POP, &
-       autotroph_secondary_species, dtracers, interior_restore, &
+       autotroph_secondary_species, dtracers, &
        marbl_tracer_indices, marbl_diags)
 
     use marbl_pft_mod, only : Qp_zoo
@@ -4171,7 +4167,6 @@ contains
     type(column_sinking_particle_type)     , intent(in)    :: POP
     type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:)
     real(r8)                               , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
-    real(r8)                               , intent(in)    :: interior_restore(:,:) ! tracer_cnt, km
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
 
@@ -4204,18 +4199,6 @@ contains
        end do
     endif
 
-    ! subtract restoring terms
-    work = work - (interior_restore(po4_ind,:) + interior_restore(dop_ind,:) + interior_restore(dopr_ind,:) + &
-                   Qp_zoo * sum(interior_restore(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1))
-
-    if (lvariable_PtoC) then
-       work = work - sum(interior_restore(marbl_tracer_indices%auto_inds(:)%P_ind,:),dim=1)
-    else
-       do n = 1, autotroph_cnt
-          work = work - autotroph_secondary_species(n,:)%Qp * interior_restore(marbl_tracer_indices%auto_inds(n)%C_ind,:)
-       end do
-    endif
-
     call compute_vertical_integrals(work, delta_z, kmt,                       &
          full_depth_integral=diags(ind%Jint_Ptot)%field_2d(1),                &
          near_surface_integral=diags(ind%Jint_100m_Ptot)%field_2d(1),         &
@@ -4228,12 +4211,11 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_silicon_fluxes(marbl_domain, P_SiO2, dtracers, &
-       interior_restore, marbl_tracer_indices, marbl_diags)
+       marbl_tracer_indices, marbl_diags)
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: P_SiO2
     real(r8)                           , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
-    real(r8)                           , intent(in)    :: interior_restore(:,:) ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
@@ -4255,13 +4237,9 @@ contains
     ! vertical integrals
     work = dtracers(marbl_tracer_indices%sio3_ind,:)
 
-    ! subtract tracer restoring terms
-    work = work - interior_restore(marbl_tracer_indices%sio3_ind,:)
-
     do n = 1, autotroph_cnt
        if (marbl_tracer_indices%auto_inds(n)%Si_ind > 0) then
           work = work + dtracers(marbl_tracer_indices%auto_inds(n)%Si_ind,:)
-          work = work - interior_restore(marbl_tracer_indices%auto_inds(n)%Si_ind,:)
        end if
     end do
 
@@ -4277,7 +4255,7 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_iron_fluxes(marbl_domain, P_iron, dust, &
-             fesedflux, dtracers, interior_restore, marbl_tracer_indices, marbl_diags)
+             fesedflux, dtracers, marbl_tracer_indices, marbl_diags)
 
     use marbl_settings_mod, only : Qfe_zoo
     use marbl_settings_mod, only : dust_to_Fe
@@ -4287,7 +4265,6 @@ contains
     type(column_sinking_particle_type) , intent(in)    :: dust
     real(r8)                           , intent(in)    :: fesedflux(:)          ! km
     real(r8)                           , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
-    real(r8)                           , intent(in)    :: interior_restore(:,:) ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
@@ -4311,11 +4288,6 @@ contains
            sum(dtracers(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) + &
            Qfe_zoo * sum(dtracers(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1) - &
            dust%remin(:) * dust_to_Fe
-
-    ! subtract tracer restoring terms
-    work = work - (interior_restore(fe_ind, :) +                                              &
-                   sum(interior_restore(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) + &
-                   Qfe_zoo * sum(interior_restore(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1))
 
     call compute_vertical_integrals(work, delta_z, kmt,                       &
          full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),               &
