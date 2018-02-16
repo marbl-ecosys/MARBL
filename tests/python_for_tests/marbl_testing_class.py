@@ -1,3 +1,4 @@
+import logging
 import sys
 import machines as machs
 import os
@@ -7,6 +8,7 @@ class MARBL_testcase(object):
 
   def __init__(self):
     # supported_compilers is public, needed by the build tests
+    logging.basicConfig(format='(%(funcName)s): %(message)s', level=logging.DEBUG)
     self.supported_compilers = []
 
     # all other variables are private
@@ -30,6 +32,8 @@ class MARBL_testcase(object):
     import argparse
 
     parser = argparse.ArgumentParser(description=desc)
+    logger = logging.getLogger(__name__)
+
     if HaveCompiler:
       parser.add_argument('-c', '--compiler', action='store',
                           dest='compiler', help='compiler to build with')
@@ -79,17 +83,17 @@ class MARBL_testcase(object):
         self._machine = 'edison'
       else:
         found = False
-        print 'No machine specified and %s is not recognized' % self._hostname
-        print 'This test will assume you are not running on a supported cluster'
+        logger.info('No machine specified and %s is not recognized' % self._hostname)
+        logger.info('This test will assume you are not running on a supported cluster')
         self._machine = 'local'
 
       if found:
-        print 'No machine specified, but it looks like you are running on %s' % self._machine
+        logger.info('No machine specified, but it looks like you are running on %s' % self._machine)
 
-      print 'Override with the --mach option if this is not correct'
+      logger.info('Override with the --mach option if this is not correct')
     else:
       self._machine = args.mach
-      print 'Running test on %s' % self._machine
+      logger.info('Running test on %s' % self._machine)
 
     machs.machine_specific(self._machine, self.supported_compilers, self._module_names)
 
@@ -97,23 +101,22 @@ class MARBL_testcase(object):
       self._compiler = args.compiler
       if self._compiler == None:
         self._compiler = self.supported_compilers[0]
-        print 'No compiler specified, using %s by default' % self._compiler
+        logger.info('No compiler specified, using %s by default' % self._compiler)
       else:
-        print 'Testing with %s' % self._compiler
+        logger.info('Testing with %s' % self._compiler)
 
     if HaveInputFile:
       self._input_file = args.input_file
 
     self._namelist_file = args.namelist_file
     self._mpitasks = int(args.mpitasks)
-    print '----'
     sys.stdout.flush()
 
     # ERROR CHECKING
     if HaveCompiler:
       if not self._compiler in self.supported_compilers:
-        print("%s is not supported on %s, please use one of following:" % (self._compiler, self._machine))
-        print self.supported_compilers
+        logger.error("%s is not supported on %s, please use one of following:" % (self._compiler, self._machine))
+        logger.info(self.supported_compilers)
         sys.exit(1)
 
   # -----------------------------------------------
@@ -157,6 +160,8 @@ class MARBL_testcase(object):
   # Execute marbl.exe
   def run_exe(self):
 
+    logger = logging.getLogger(__name__)
+
     # build the executable command string
     execmd = os.path.join(self._marbl_dir, 'tests', 'driver_exe') + os.sep
 
@@ -187,13 +192,12 @@ class MARBL_testcase(object):
       execmd += " -i %s" % self._input_file
 
     # Log executable command
-    print "Running following command:"
-    print execmd
-    print ''
+    logging.info("Running following command:")
+    logging.info(execmd)
     sys.stdout.flush()
     status_code = sh_command(execmd)
     if status_code != 0:
-        print "ERROR in executable"
+        logging.error("ERROR in executable")
         sys.exit(status_code)
 
   # -----------------------------------------------
