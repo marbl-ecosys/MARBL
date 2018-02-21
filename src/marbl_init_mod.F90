@@ -61,7 +61,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_parameters_pre_tracers(lallow_glo_ops, marbl_settings, marbl_status_log)
+  subroutine marbl_init_parameters_pre_tracers(marbl_settings, marbl_status_log)
 
     use marbl_settings_mod, only : marbl_settings_type
     use marbl_settings_mod, only : ladjust_bury_coeff
@@ -72,7 +72,6 @@ contains
     use marbl_settings_mod, only : marbl_settings_set_defaults_PFT_derived_types
     use marbl_settings_mod, only : marbl_settings_define_PFT_derived_types
 
-    logical,                    intent(in)    :: lallow_glo_ops
     type(marbl_settings_type),  intent(inout) :: marbl_settings
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
@@ -93,14 +92,6 @@ contains
     call marbl_settings_define_general_parms(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_settings_define_general_parms()", subname)
-      return
-    end if
-
-    !  Abort if GCM doesn't support global ops but configuration requires them
-    if (ladjust_bury_coeff .and. (.not.lallow_glo_ops)) then
-      write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
-             '.true. unless GCM can perform global operations'
-      call marbl_status_log%log_error(log_message, subname)
       return
     end if
 

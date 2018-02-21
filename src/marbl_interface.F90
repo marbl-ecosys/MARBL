@@ -183,6 +183,7 @@ contains
     use marbl_init_mod, only : marbl_init_bury_coeff
     use marbl_init_mod, only : marbl_init_forcing_fields
     use marbl_settings_mod, only : marbl_settings_set_all_derived
+    use marbl_settings_mod, only : marbl_settings_consistency_check
     use marbl_diagnostics_mod, only : marbl_diagnostics_init
     use marbl_saved_state_mod, only : marbl_saved_state_init
 
@@ -229,7 +230,7 @@ contains
     ! Initialize parameters that do not depend on tracer count or PFT categories
     !---------------------------------------------------------------------------
 
-    call marbl_init_parameters_pre_tracers(this%lallow_glo_ops, this%settings, this%StatusLog)
+    call marbl_init_parameters_pre_tracers(this%settings, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_parameters_pre_tracers", subname)
       return
@@ -361,6 +362,12 @@ contains
     call marbl_settings_set_all_derived(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('marbl_settings_set_all_derived', subname)
+      return
+    end if
+
+    call marbl_settings_consistency_check(this%lallow_glo_ops, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('marbl_settings_consistency_check', subname)
       return
     end if
 

@@ -1628,6 +1628,26 @@ contains
 
 !*****************************************************************************
 
+  subroutine marbl_settings_consistency_check(lallow_glo_ops, marbl_status_log)
+
+    logical,              intent(in)    :: lallow_glo_ops
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_consistency_check'
+    character(len=char_len) :: log_message
+
+    !  Abort if GCM doesn't support global ops but configuration requires them
+    if (ladjust_bury_coeff .and. (.not.lallow_glo_ops)) then
+      write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
+             '.true. unless GCM can perform global operations'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
+
+  end subroutine marbl_settings_consistency_check
+
+!*****************************************************************************
+
   subroutine add_var(this, sname, lname, units, datatype, category,    &
                      marbl_status_log, rptr, iptr, lptr, sptr,         &
                      nondefault_allowed, nondefault_required, comment)
