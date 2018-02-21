@@ -90,6 +90,7 @@ module marbl_interface_private_types
      real(r8) :: CO3_fields
      real(r8) :: HCO3_fields      ! bicarbonate ion
      real(r8) :: H2CO3_fields     ! carbonic acid
+     real(r8) :: CO3_sat_calcite
      real(r8) :: DOC_remin_fields ! remineralization of 13C DOC (mmol C/m^3/sec)
   end type marbl_interior_share_type
 

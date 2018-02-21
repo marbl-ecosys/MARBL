@@ -1259,8 +1259,7 @@ contains
           return
         end if
 
-        if (autotrophs(n)%imp_calcifier .or.                         &
-          autotrophs(n)%exp_calcifier) then
+        if (autotrophs(n)%imp_calcifier .or. autotrophs(n)%exp_calcifier) then
           lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation Vertical Integral'
           sname = trim(autotrophs(n)%sname) // '_CaCO3_form_zint'
           units = 'mmol/m^3 cm/s'
@@ -2315,8 +2314,7 @@ contains
           ind%bSi_form(n) = -1
         end if
 
-        if (autotrophs(n)%imp_calcifier .or.                         &
-            autotrophs(n)%exp_calcifier) then
+        if (autotrophs(n)%imp_calcifier .or. autotrophs(n)%exp_calcifier) then
           lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation'
           sname = trim(autotrophs(n)%sname) // '_CaCO3_form'
           units = 'mmol/m^3/s'
@@ -2879,7 +2877,7 @@ contains
           allocate(ind%CISO_autotrophCaCO3_d14C(autotroph_cnt))
         end if
         do n = 1, autotroph_cnt
-          if ((autotrophs(n)%imp_calcifier) .or. (autotrophs(n)%exp_calcifier)) then
+          if (autotrophs(n)%imp_calcifier .or. autotrophs(n)%exp_calcifier) then
             lname    = trim(autotrophs(n)%lname) // ' Ca13CO3 Formation'
             sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca13CO3_form'
             units    = 'mmol/m^3/s'
@@ -4484,13 +4482,13 @@ contains
        call compute_vertical_integrals(photo14C(n,:), delta_z, kmt,           &
             full_depth_integral=diags(ind%CISO_photo14C_zint(n))%field_2d(1))
 
-       if ((autotrophs(n)%imp_calcifier) .or. (autotrophs(n)%exp_calcifier)) then
+       if (ind%CISO_Ca13CO3_form_zint(n) .gt. 0) &
          call compute_vertical_integrals(Ca13CO3_prod(n,:), delta_z, kmt,       &
               full_depth_integral=diags(ind%CISO_Ca13CO3_form_zint(n))%field_2d(1))
 
+       if (ind%CISO_Ca14CO3_form_zint(n) .gt. 0) &
          call compute_vertical_integrals(Ca14CO3_prod(n,:), delta_z, kmt,       &
               full_depth_integral=diags(ind%CISO_Ca14CO3_form_zint(n))%field_2d(1))
-       end if
     end do
 
     do k = 1,km
@@ -4498,10 +4496,10 @@ contains
           diags(ind%CISO_d13C(n))%field_3d(k, 1)                = autotroph_d13C(n,k)
           diags(ind%CISO_d14C(n))%field_3d(k, 1)                = autotroph_d14C(n,k)
 
-          if ((autotrophs(n)%imp_calcifier) .or. (autotrophs(n)%exp_calcifier)) then
+          if (ind%CISO_autotrophCaCO3_d13C(n) .gt. 0) &
             diags(ind%CISO_autotrophCaCO3_d13C(n))%field_3d(k, 1) = autotrophCaCO3_d13C(n,k)
+          if (ind%CISO_autotrophCaCO3_d14C(n) .gt. 0) &
             diags(ind%CISO_autotrophCaCO3_d14C(n))%field_3d(k, 1) = autotrophCaCO3_d14C(n,k)
-          end if
 
           diags(ind%CISO_photo13C(n))%field_3d(k, 1)            = photo13C(n,k)
           diags(ind%CISO_photo14C(n))%field_3d(k, 1)            = photo14C(n,k)
@@ -4510,10 +4508,10 @@ contains
 
           diags(ind%CISO_mui_to_co2star(n))%field_3d(k, 1)      = mui_to_co2star(n,k)
 
-          if (autotrophs(n)%imp_calcifier) then
+          if (ind%CISO_Ca13CO3_form(n) .gt. 0) &
              diags(ind%CISO_Ca13CO3_form(n))%field_3d(k, 1)     = Ca13CO3_prod(n,k)
+          if (ind%CISO_Ca14CO3_form(n) .gt. 0) &
              diags(ind%CISO_Ca14CO3_form(n))%field_3d(k, 1)     = Ca14CO3_prod(n,k)
-          end if
        end do  ! end loop over autotrophs
     end do  ! end loop over k
 

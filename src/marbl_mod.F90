@@ -831,7 +831,6 @@ contains
             marbl_autotroph_share        = marbl_autotroph_share,   &
             marbl_particulate_share      = marbl_particulate_share, &
             temperature                  = temperature,             &
-            carbonate                    = carbonate,               &
             column_tracer                = tracers,                 &
             column_dtracer               = dtracers,                &
             marbl_tracer_indices         = marbl_tracer_indices,    &
@@ -4546,6 +4545,7 @@ contains
     marbl_interior_share%CO3_fields   = carbonate%CO3
     marbl_interior_share%HCO3_fields  = carbonate%HCO3
     marbl_interior_share%H2CO3_fields = carbonate%H2CO3
+    marbl_interior_share%CO3_sat_calcite = carbonate%CO3_sat_calcite
 
     marbl_interior_share%DOC_remin_fields = dissolved_organic_matter%DOC_remin
 
