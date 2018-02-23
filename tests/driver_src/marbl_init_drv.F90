@@ -56,7 +56,9 @@ Contains
       call marbl_instance%StatusLog%log_error_trace('marbl%init', subname)
       return
     end if
-    nt = size(marbl_instance%tracer_metadata)
+
+    ! Set tracer count (if requested)
+    if (present(nt)) nt = size(marbl_instance%tracer_metadata)
 
     if (lshutdown_loc) then
       ! Shutdown
