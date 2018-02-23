@@ -21,7 +21,9 @@ Contains
 
     ! 1. Read netCDF file -- get domain info, initial conditions, and forcings
     ! 2. Call init()
-    ! 3. Output netCDF
+    ! 3. Call set_surface_forcing()
+    ! 4. Call set_interior_forcing()
+    ! 5. Output netCDF
 
   end subroutine test
 
