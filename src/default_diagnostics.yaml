@@ -598,7 +598,7 @@ graze_auto_TOT :
    longname : Total Autotroph Grazing
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : never
+   frequency : medium
    operator : average
 photoC_TOT :
    longname : Total C Fixation
@@ -1198,6 +1198,90 @@ photoC_NO3_((autotroph_sname))_zint :
    vertical_grid : none
    frequency : medium
    operator : average
+graze_((autotroph_sname))_zint :
+   longname : ((autotroph_lname)) Grazing Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+graze_((autotroph_sname))_zint_100m :
+   longname : ((autotroph_lname)) Grazing Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+graze_((autotroph_sname))_poc_zint :
+   longname : ((autotroph_lname)) Grazing to POC Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+graze_((autotroph_sname))_poc_zint_100m :
+   longname : ((autotroph_lname)) Grazing to POC Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+graze_((autotroph_sname))_doc_zint :
+   longname : ((autotroph_lname)) Grazing to DOC Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+graze_((autotroph_sname))_doc_zint_100m :
+   longname : ((autotroph_lname)) Grazing to DOC Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+graze_((autotroph_sname))_zoo_zint :
+   longname : ((autotroph_lname)) Grazing to ZOO Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+graze_((autotroph_sname))_zoo_zint_100m :
+   longname : ((autotroph_lname)) Grazing to ZOO Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_loss_zint :
+   longname : ((autotroph_lname)) Loss Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_loss_zint_100m :
+   longname : ((autotroph_lname)) Loss Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_loss_poc_zint :
+   longname : ((autotroph_lname)) Loss to POC Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_loss_poc_zint_100m :
+   longname : ((autotroph_lname)) Loss to POC Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_loss_doc_zint :
+   longname : ((autotroph_lname)) Loss to DOC Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_loss_doc_zint_100m :
+   longname : ((autotroph_lname)) Loss to DOC Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
 ((autotroph_sname))_CaCO3_form_zint :
    dependencies :
       ((autotroph_calcifier)) : true
@@ -1311,7 +1395,7 @@ graze_((autotroph_sname)) :
    units : mmol/m^3/s
    vertical_grid : layer_avg
    truncate : true
-   frequency : medium
+   frequency : never
    operator : average
 graze_((autotroph_sname))_poc :
    longname : ((autotroph_lname)) Grazing to POC
@@ -1339,7 +1423,7 @@ graze_((autotroph_sname))_zoo :
    units : mmol/m^3/s
    vertical_grid : layer_avg
    truncate : true
-   frequency : medium
+   frequency : never
    operator : average
 ((autotroph_sname))_loss_poc :
    longname : ((autotroph_lname)) Loss to POC

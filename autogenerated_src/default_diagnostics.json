@@ -108,7 +108,7 @@
       "vertical_grid": "layer_avg"
    },
    "((autotroph_sname))_loss": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((autotroph_lname)) Loss",
       "operator": "average",
       "truncate": true,
@@ -123,6 +123,20 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "((autotroph_sname))_loss_doc_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss to DOC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_loss_doc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss to DOC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "((autotroph_sname))_loss_poc": {
       "frequency": "never",
       "longname": "((autotroph_lname)) Loss to POC",
@@ -130,6 +144,34 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_loss_poc_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss to POC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_loss_poc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss to POC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_loss_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_loss_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "((tracer_short_name))_RESTORE_TEND": {
       "frequency": {
@@ -1563,7 +1605,7 @@
       "vertical_grid": "layer_avg"
    },
    "graze_((autotroph_sname))": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((autotroph_lname)) Grazing",
       "operator": "average",
       "truncate": true,
@@ -1578,6 +1620,20 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "graze_((autotroph_sname))_doc_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to DOC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((autotroph_sname))_doc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to DOC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "graze_((autotroph_sname))_poc": {
       "frequency": "never",
       "longname": "((autotroph_lname)) Grazing to POC",
@@ -1586,6 +1642,34 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "graze_((autotroph_sname))_poc_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to POC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((autotroph_sname))_poc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to POC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((autotroph_sname))_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((autotroph_sname))_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "graze_((autotroph_sname))_zoo": {
       "frequency": "never",
       "longname": "((autotroph_lname)) Grazing to ZOO",
@@ -1593,6 +1677,20 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "graze_((autotroph_sname))_zoo_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to ZOO Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((autotroph_sname))_zoo_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to ZOO Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "graze_((zooplankton_sname))": {
       "frequency": "never",
@@ -1627,7 +1725,7 @@
       "vertical_grid": "layer_avg"
    },
    "graze_auto_TOT": {
-      "frequency": "never",
+      "frequency": "medium",
       "longname": "Total Autotroph Grazing",
       "operator": "average",
       "units": "mmol/m^3/s",
