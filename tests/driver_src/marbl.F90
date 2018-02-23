@@ -42,9 +42,10 @@ Program marbl
   use marbl_kinds_mod, only : r8
 
   ! Driver modules for individual tests
-  use marbl_init_drv,    only : marbl_init_test    => test
-  use marbl_get_put_drv, only : marbl_get_put_test => test
-  use marbl_utils_drv,   only : marbl_utils_test => test
+  use marbl_init_drv,        only : marbl_init_test        => test
+  use marbl_set_forcing_drv, only : marbl_set_forcing_test => test
+  use marbl_get_put_drv,     only : marbl_get_put_test     => test
+  use marbl_utils_drv,       only : marbl_utils_test       => test
 
   ! MPI wrappers (will build without MPI as well)
   use marbl_mpi_mod, only : marbl_mpi_init
@@ -66,19 +67,20 @@ Program marbl
   integer        :: argcnt
   logical        :: labort_after_argparse, lshow_usage, lfound_file
 
-  type(marbl_interface_class)   :: marbl_instance
-  type(marbl_log_type)          :: driver_status_log
-  integer                       :: m, n, nt, cnt
-  character(len=256)            :: input_line, testname, varname, log_message, log_out_file
-  logical                       :: lprint_marbl_log, lhas_namelist_file, lhas_input_file
-  logical                       :: ldriver_log_to_file, lsummarize_timers
+  type(marbl_interface_class), dimension(:), allocatable :: marbl_instances
+
+  type(marbl_log_type) :: driver_status_log
+  integer              :: m, n, nt, cnt, num_inst
+  character(len=256)   :: input_line, testname, varname, log_message, log_out_file
+  logical              :: lprint_marbl_log, lhas_namelist_file, lhas_input_file
+  logical              :: ldriver_log_to_file, lsummarize_timers
 
   ! Processing input file for put calls
   integer  :: ioerr
   integer  :: ival
   real(r8) :: rval
 
-  namelist /marbl_driver_nml/testname, log_out_file
+  namelist /marbl_driver_nml/testname, log_out_file, num_inst
 
   !****************************************************************************
 
@@ -88,6 +90,7 @@ Program marbl
 
   !     Command line arguments?
   !     (a) set default values
+  num_inst = 1
   labort_after_argparse = .false.
   lhas_namelist_file = .false.
   lhas_input_file = .false.
@@ -213,8 +216,8 @@ Program marbl
   if (labort_after_argparse) call marbl_mpi_abort()
 
   !     Set up local variables
-  !       * Some tests use a different status log than marbl_instance%StatusLog
-  !         (default is to use marbl_instance%StatusLog)
+  !       * Some tests use a different status log than marbl_instances%StatusLog
+  !         (default is to use marbl_instances%StatusLog)
   lprint_marbl_log = .true.
   ldriver_log_to_file = .false.
   lsummarize_timers = .true.
@@ -247,9 +250,14 @@ Program marbl
 
   if (my_task .eq. 0) close(98)
 
-  ! (2b) Read input file
+  ! (2b) allocate memory for marbl_instances
+  allocate(marbl_instances(num_inst))
+
+  ! (2c) Read input file
   if (lhas_input_file) then
-    call read_input_file(input_file, marbl_instance)
+    do n=1,num_inst
+      call read_input_file(input_file, marbl_instances(n))
+    end do
   end if
 
   ! (3) Run proper test
@@ -258,40 +266,44 @@ Program marbl
     !    REGRESSION TESTS
     ! -- init regression test -- !
     case ('init')
-      call marbl_init_test(marbl_instance)
+      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
+      call marbl_init_test(marbl_instances(1))
 
     ! -- init-twice test -- !
     case ('init-twice')
-      call marbl_instance%put_setting('ciso_on = .false.')
-      call marbl_init_test(marbl_instance)
-      call summarize_timers(driver_status_log, header_text = 'Without the CISO Tracers')
-      call marbl_instance%put_setting('ciso_on = .true.')
-      call marbl_init_test(marbl_instance)
-      call summarize_timers(driver_status_log, header_text = 'With the CISO Tracers')
+      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
+      call marbl_instances(1)%put_setting('ciso_on = .false.')
+      call marbl_init_test(marbl_instances(1))
+      call summarize_timers(marbl_instances(1), driver_status_log, header_text = 'Without the CISO Tracers')
+      call marbl_instances(1)%put_setting('ciso_on = .true.')
+      call marbl_init_test(marbl_instances(1))
+      call summarize_timers(marbl_instances(1), driver_status_log, header_text = 'With the CISO Tracers')
       lsummarize_timers = .false.
 
     ! -- gen_input_file test -- !
     case ('gen_input_file')
+      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       ldriver_log_to_file = .true.
-      call marbl_init_test(marbl_instance, lshutdown=.false.)
-      if (.not. marbl_instance%StatusLog%labort_marbl) then
-        do n=1,marbl_instance%get_settings_var_cnt()
-          call marbl_instance%inquire_settings_metadata(n, sname=varname)
-          if (marbl_instance%StatusLog%labort_marbl) exit
-          call marbl_instance%get_setting(varname, input_line, linput_file_format=.true.)
-          if (marbl_instance%StatusLog%labort_marbl) exit
+      call marbl_init_test(marbl_instances(1), lshutdown=.false.)
+      if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
+        do n=1,marbl_instances(1)%get_settings_var_cnt()
+          call marbl_instances(1)%inquire_settings_metadata(n, sname=varname)
+          if (marbl_instances(1)%StatusLog%labort_marbl) exit
+          call marbl_instances(1)%get_setting(varname, input_line, linput_file_format=.true.)
+          if (marbl_instances(1)%StatusLog%labort_marbl) exit
           call driver_status_log%log_noerror(input_line, subname)
         end do
-        call marbl_instance%shutdown()
+        call marbl_instances(1)%shutdown()
       end if
 
     ! -- request_diags test -- !
     case ('request_diags')
+      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instance, lshutdown = .false.)
+      call marbl_init_test(marbl_instances(1), lshutdown = .false.)
       ! Log surface forcing diagnostics passed back to driver
-      associate(diags => marbl_instance%surface_forcing_diags%diags)
+      associate(diags => marbl_instances(1)%surface_forcing_diags%diags)
         call driver_status_log%log_header('Surface forcing diagnostics', subname)
         do n=1, size(diags)
           write(log_message, "(I0,4A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name)
@@ -299,58 +311,61 @@ Program marbl
         end do
       end associate
       ! Log interior forcing diagnostics passed back to driver
-      associate(diags => marbl_instance%interior_forcing_diags%diags)
+      associate(diags => marbl_instances(1)%interior_forcing_diags%diags)
         call driver_status_log%log_header('Interior forcing diagnostics', subname)
         do n=1, size(diags)
           write(log_message, "(I0,4A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name)
           call driver_status_log%log_noerror(log_message, subname)
         end do
       end associate
-      call marbl_instance%shutdown()
+      call marbl_instances(1)%shutdown()
 
     ! -- request_tracers test -- !
     case ('request_tracers')
+      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
+      call marbl_init_test(marbl_instances(1), nt = nt, lshutdown = .false.)
       ! Log tracers requested for initialization
       call driver_status_log%log_header('Requested tracers', subname)
       do n=1,nt
         write(log_message, "(I0, 2A)") n, '. ',                               &
-          trim(marbl_instance%tracer_metadata(n)%short_name)
+          trim(marbl_instances(1)%tracer_metadata(n)%short_name)
         call driver_status_log%log_noerror(log_message, subname)
       end do
-      call marbl_instance%shutdown()
+      call marbl_instances(1)%shutdown()
 
     ! -- request_forcings test -- !
     case ('request_forcings')
+      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instance, lshutdown=.false.)
+      call marbl_init_test(marbl_instances(1), lshutdown=.false.)
       ! Log requested surface forcing fields
       call driver_status_log%log_header('Requested surface forcing fields', subname)
-      do n=1,size(marbl_instance%surface_input_forcings)
+      do n=1,size(marbl_instances(1)%surface_input_forcings)
         write(log_message, "(I0, 2A)") n, '. ', &
-              trim(marbl_instance%surface_input_forcings(n)%metadata%varname)
+              trim(marbl_instances(1)%surface_input_forcings(n)%metadata%varname)
         call driver_status_log%log_noerror(log_message, subname)
       end do
       ! Log requested interior forcing fields
       call driver_status_log%log_header('Requested interior forcing fields', subname)
-      do n=1,size(marbl_instance%interior_input_forcings)
+      do n=1,size(marbl_instances(1)%interior_input_forcings)
         write(log_message, "(I0, 2A)") n, '. ',                               &
-             trim(marbl_instance%interior_input_forcings(n)%metadata%varname)
+             trim(marbl_instances(1)%interior_input_forcings(n)%metadata%varname)
         call driver_status_log%log_noerror(log_message, subname)
       end do
-      call marbl_instance%shutdown()
+      call marbl_instances(1)%shutdown()
 
     ! -- request_restoring test -- !
     case ('request_restoring')
+      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
+      call marbl_init_test(marbl_instances(1), nt = nt, lshutdown = .false.)
 
       ! Log tracers requested for restoring
       call driver_status_log%log_header('Requested tracers to restore', subname)
       cnt = 0
-      do n=1,size(marbl_instance%interior_input_forcings)
-        varname = marbl_instance%interior_input_forcings(n)%metadata%varname
+      do n=1,size(marbl_instances(1)%interior_input_forcings)
+        varname = marbl_instances(1)%interior_input_forcings(n)%metadata%varname
         if (index(varname, 'Restoring Field').gt.0) then
           cnt = cnt + 1
           varname = varname(1:scan(varname,' ')-1)
@@ -361,16 +376,24 @@ Program marbl
       if (cnt.eq.0) then
         call driver_status_log%log_noerror('No tracers to restore!', subname)
       end if
-      call marbl_instance%shutdown()
+      call marbl_instances(1)%shutdown()
+
+    case ('set_forcing')
+      lprint_marbl_log = .false.
+      call marbl_set_forcing_test(marbl_instances)
+      write(*, "(A)") "ERROR: set_forcing test has not been set up yet."
+      call marbl_mpi_abort()
 
     !    UNIT TESTS
     ! -- get_put test -- !
     case ('get_put')
+      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_get_put_test(marbl_instance, driver_status_log)
+      call marbl_get_put_test(marbl_instances(1), driver_status_log)
 
     ! -- marbl_utils test -- !
     case ('marbl_utils')
+      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       lsummarize_timers = .false.
       call marbl_utils_test(driver_status_log)
@@ -383,8 +406,10 @@ Program marbl
 
   ! (4) Print log(s)
   ! (4a) If MARBL returns an error (or MARBL log was requested), print MARBL log
-  if (marbl_instance%StatusLog%labort_marbl.or.lprint_marbl_log) &
-      call print_marbl_log(marbl_instance%StatusLog)
+  do n=1,num_inst
+    if (marbl_instances(n)%StatusLog%labort_marbl.or.lprint_marbl_log) &
+        call print_marbl_log(marbl_instances(n)%StatusLog)
+  end do
 
   ! (4b) If driver log should be written to file, do so
   if (ldriver_log_to_file) then
@@ -395,7 +420,7 @@ Program marbl
   !      note that if driver log was previously written to a file,
   !      timers are all that will be written to screen
   if (lsummarize_timers) &
-    call summarize_timers(driver_status_log)
+    call summarize_timers(marbl_instances(1), driver_status_log)
   call print_marbl_log(driver_status_log)
 
 
@@ -503,10 +528,11 @@ Contains
 
   !****************************************************************************
 
-  subroutine summarize_timers(driver_status_log, header_text)
+  subroutine summarize_timers(marbl_instance, driver_status_log, header_text)
 
     use marbl_kinds_mod, only : r8
 
+    type(marbl_interface_class), intent(in)   :: marbl_instance
     type(marbl_log_type),       intent(inout) :: driver_status_log
     character(len=*), optional, intent(in)    :: header_text
 
@@ -567,5 +593,15 @@ Contains
   end subroutine summarize_timers
 
   !****************************************************************************
+
+  subroutine require_single_instance(num_inst, testname)
+
+    integer, intent(in) :: num_inst
+    character(len=*), intent(in) :: testname
+
+    write(*,"(3A,I0)") "ERROR: The '", testname, "' test requires a single instance, but num_inst = ", num_inst
+    call marbl_mpi_abort()
+
+  end subroutine require_single_instance
 
 End Program marbl

@@ -1,0 +1,4 @@
+&marbl_driver_nml
+testname="set_forcing"
+num_inst = 2
+/
