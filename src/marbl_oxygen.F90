@@ -96,7 +96,7 @@ contains
     real (r8), parameter :: a_2 =  4.05010_r8
     real (r8), parameter :: a_3 =  4.94457_r8
     real (r8), parameter :: a_4 = -2.56847E-1_r8
-    real (r8), parameter :: a_5 =  3.88767_r8    
+    real (r8), parameter :: a_5 =  3.88767_r8
     real (r8), parameter :: b_0 = -6.24523E-3_r8
     real (r8), parameter :: b_1 = -7.37614E-3_r8
     real (r8), parameter :: b_2 = -1.03410E-2_r8
@@ -153,7 +153,7 @@ contains
     real (r8), parameter :: a_2 =  4.05010_r8
     real (r8), parameter :: a_3 =  4.94457_r8
     real (r8), parameter :: a_4 = -2.56847E-1_r8
-    real (r8), parameter :: a_5 =  3.88767_r8    
+    real (r8), parameter :: a_5 =  3.88767_r8
     real (r8), parameter :: b_0 = -6.24523E-3_r8
     real (r8), parameter :: b_1 = -7.37614E-3_r8
     real (r8), parameter :: b_2 = -1.03410E-2_r8

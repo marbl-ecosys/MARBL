@@ -90,6 +90,7 @@ module marbl_interface_private_types
      real(r8) :: CO3_fields
      real(r8) :: HCO3_fields      ! bicarbonate ion
      real(r8) :: H2CO3_fields     ! carbonic acid
+     real(r8) :: CO3_sat_calcite
      real(r8) :: DOC_remin_fields ! remineralization of 13C DOC (mmol C/m^3/sec)
   end type marbl_interior_share_type
 
@@ -534,7 +535,7 @@ contains
   !*****************************************************************************
 
   subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs, &
-             zooplankton, marbl_status_log, marbl_tracer_cnt)
+             zooplankton, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -551,17 +552,13 @@ contains
     type(autotroph_type),           intent(in)    :: autotrophs(:)
     type(zooplankton_type),         intent(in)    :: zooplankton(:)
     type(marbl_log_type),           intent(inout) :: marbl_status_log
-    integer(int_kind), optional,    intent(out)   :: marbl_tracer_cnt
 
     character(len=*), parameter :: subname = 'marbl_interface_private_types:tracer_index_constructor'
     character(len=char_len) :: ind_name
     integer :: autotroph_cnt, zooplankton_cnt, n
 
-    ! If marbl_tracer_cnt is requested, initialize to zero
-    ! (so that count is zero if an error is encountered)
     autotroph_cnt = size(autotrophs)
     zooplankton_cnt = size(zooplankton)
-    if (present(marbl_tracer_cnt)) marbl_tracer_cnt = 0
 
     !Allocate memory
     allocate(this%auto_inds(autotroph_cnt))
@@ -648,9 +645,6 @@ contains
       call marbl_status_log%log_error_trace("add_tracer_index", subname)
       return
     end if
-
-    ! If marbl_tracer_cnt is requested, provide before returning
-    if (present(marbl_tracer_cnt)) marbl_tracer_cnt = this%total_cnt
 
   end subroutine tracer_index_constructor
 
@@ -875,6 +869,7 @@ contains
   subroutine interior_forcing_index_constructor(this,                         &
                                                 tracer_names,                 &
                                                 tracer_restore_vars,          &
+                                                num_PAR_subcols,              &
                                                 num_interior_forcing_fields,  &
                                                 marbl_status_log)
 
@@ -884,6 +879,7 @@ contains
     class(marbl_interior_forcing_indexing_type), intent(out)   :: this
     character(len=char_len), dimension(:),       intent(in)    :: tracer_names
     character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
+    integer(int_kind),                           intent(in)    :: num_PAR_subcols
     integer(int_kind),                           intent(out)   :: num_interior_forcing_fields
     type(marbl_log_type),                        intent(inout) :: marbl_status_log
 
@@ -899,17 +895,15 @@ contains
 
       forcing_cnt = 0
 
-      ! -------------------------------
-      ! | Always request these fields |
-      ! -------------------------------
-
       ! Dust Flux
       forcing_cnt = forcing_cnt + 1
       this%dustflux_id = forcing_cnt
 
-      ! PAR column fraction
-      forcing_cnt = forcing_cnt + 1
-      this%PAR_col_frac_id = forcing_cnt
+      ! PAR column fraction (not needed if num_PAR_subcols = 1)
+      if (num_PAR_subcols .gt. 1) then
+        forcing_cnt = forcing_cnt + 1
+        this%PAR_col_frac_id = forcing_cnt
+      end if
 
       ! PAR column shortwave
       forcing_cnt = forcing_cnt + 1

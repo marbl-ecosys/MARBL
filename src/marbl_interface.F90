@@ -174,8 +174,7 @@ contains
        gcm_delta_z,                       &
        gcm_zw,                            &
        gcm_zt,                            &
-       lgcm_has_global_ops,               &
-       marbl_tracer_cnt)
+       lgcm_has_global_ops)
 
     use marbl_init_mod, only : marbl_init_log_and_timers
     use marbl_init_mod, only : marbl_init_parameters_pre_tracers
@@ -184,6 +183,7 @@ contains
     use marbl_init_mod, only : marbl_init_bury_coeff
     use marbl_init_mod, only : marbl_init_forcing_fields
     use marbl_settings_mod, only : marbl_settings_set_all_derived
+    use marbl_settings_mod, only : marbl_settings_consistency_check
     use marbl_diagnostics_mod, only : marbl_diagnostics_init
     use marbl_saved_state_mod, only : marbl_saved_state_init
 
@@ -195,7 +195,6 @@ contains
     real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
     logical,           optional,  intent(in)    :: lgcm_has_global_ops
-    integer(int_kind), optional,  intent(out)   :: marbl_tracer_cnt
 
     character(len=*), parameter :: subname = 'marbl_interface:init'
     integer, parameter :: num_interior_elements = 1 ! FIXME #66: get this value from interface, let it vary
@@ -231,7 +230,7 @@ contains
     ! Initialize parameters that do not depend on tracer count or PFT categories
     !---------------------------------------------------------------------------
 
-    call marbl_init_parameters_pre_tracers(this%lallow_glo_ops, this%settings, this%StatusLog)
+    call marbl_init_parameters_pre_tracers(this%settings, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_parameters_pre_tracers", subname)
       return
@@ -269,7 +268,7 @@ contains
     call marbl_init_tracers(num_levels, num_surface_elements, &
                             this%tracer_indices, this%surface_vals, this%surface_tracer_fluxes, &
                             this%column_tracers, this%column_dtracers, this%tracer_metadata,    &
-                            this%StatusLog, marbl_tracer_cnt)
+                            this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_tracers", subname)
       return
@@ -363,6 +362,12 @@ contains
     call marbl_settings_set_all_derived(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('marbl_settings_set_all_derived', subname)
+      return
+    end if
+
+    call marbl_settings_consistency_check(this%lallow_glo_ops, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('marbl_settings_consistency_check', subname)
       return
     end if
 

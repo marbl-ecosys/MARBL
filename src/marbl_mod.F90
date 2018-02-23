@@ -149,7 +149,6 @@ module marbl_mod
   use marbl_settings_mod, only : grazing
   use marbl_settings_mod, only : caco3_bury_thres_iopt
   use marbl_settings_mod, only : caco3_bury_thres_iopt_fixed_depth
-  use marbl_settings_mod, only : caco3_bury_thres_iopt_omega_calc
   use marbl_settings_mod, only : caco3_bury_thres_depth
   use marbl_settings_mod, only : PON_bury_coeff
 
@@ -551,7 +550,7 @@ contains
     ! NOTE(bja, 2015-07) dtracers=0 must come before the "not
     ! lsource_sink check to ensure correct answer when not doing
     ! computations.
-    ! NOTE(mvertens, 2015-12) the following includes carbon isotopes if 
+    ! NOTE(mvertens, 2015-12) the following includes carbon isotopes if
     ! ciso_on is true
 
     dtracers(:, :) = c0
@@ -1158,7 +1157,7 @@ contains
     associate(                                                                         &
          column_kmt               => domain%kmt,                                       &
          delta_z                  => domain%delta_z,                                   &
-         zw                       => domain%zw,                                        & 
+         zw                       => domain%zw,                                        &
          O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind),        &
          NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind),       &
          POC_PROD_avail_fields    => marbl_particulate_share%POC_PROD_avail_fields,    & ! IN/OUT
@@ -1513,7 +1512,7 @@ contains
     !  POC burial from Dunne et al. 2007 (doi:10.1029/2006GB002907), maximum of 80% burial efficiency imposed
     !  Bsi preservation in sediments based on
     !     Ragueneau et al. 2000 (doi:10.1016/S0921-8181(00)00052-7)
-    !  Calcite is preserved in sediments above a threshold depth, 
+    !  Calcite is preserved in sediments above a threshold depth,
     !     which is based on caco3_bury_thres_opt.
     !-----------------------------------------------------------------------
 
@@ -2030,7 +2029,7 @@ contains
           if (sfo_ind%flux_co2_id.ne.0) then
             surface_forcing_output%sfo(sfo_ind%flux_co2_id)%forcing_field = flux_co2
           end if
- 
+
           !-------------------------------------------------------------------
           !  The following variables need to be shared with other modules,
           !  and are now defined in marbl_share as targets.
@@ -2549,7 +2548,11 @@ contains
     ! ignore provided shortwave where col_frac == 0
     !-----------------------------------------------------------------------
 
-    PAR%col_frac(:) = interior_forcings(interior_forcing_ind%PAR_col_frac_id)%field_1d(1,:)
+    if (interior_forcing_ind%PAR_col_frac_id .ne. 0) then
+      PAR%col_frac(:) = interior_forcings(interior_forcing_ind%PAR_col_frac_id)%field_1d(1,:)
+    else
+      PAR%col_frac(:) = c1
+    end if
 
     where (PAR%col_frac(:) > c0)
        PAR%interface(0,:) = f_qsw_par *                                       &
@@ -3942,7 +3945,7 @@ contains
     use marbl_settings_mod, only : Qfe_zoo
 
     ! Note (mvertens, 2016-02), all the column_sinking_partiles must be intent(inout)
-    ! rather than intent(out), since if they were intent(out) they would be automatically 
+    ! rather than intent(out), since if they were intent(out) they would be automatically
     ! deallocated on entry in this routine (this is not required behavior - but is
     ! standard)
 
@@ -4542,6 +4545,7 @@ contains
     marbl_interior_share%CO3_fields   = carbonate%CO3
     marbl_interior_share%HCO3_fields  = carbonate%HCO3
     marbl_interior_share%H2CO3_fields = carbonate%H2CO3
+    marbl_interior_share%CO3_sat_calcite = carbonate%CO3_sat_calcite
 
     marbl_interior_share%DOC_remin_fields = dissolved_organic_matter%DOC_remin
 
