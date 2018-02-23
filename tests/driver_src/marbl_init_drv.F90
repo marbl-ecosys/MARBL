@@ -19,7 +19,7 @@ Contains
     use marbl_mpi_mod, only : marbl_mpi_abort
 
     type(marbl_interface_class), intent(inout) :: marbl_instance
-    integer, optional,           intent(inout) :: nt
+    integer, optional,           intent(out)   :: nt
     logical, optional,           intent(in)    :: lshutdown
 
     character(*), parameter      :: subname = 'marbl_init_drv:test'
