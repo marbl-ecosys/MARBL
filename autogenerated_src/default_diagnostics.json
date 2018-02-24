@@ -184,7 +184,7 @@
       "vertical_grid": "layer_avg"
    },
    "((zooplankton_sname))_loss": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((zooplankton_lname)) Loss",
       "operator": "average",
       "truncate": true,
@@ -199,6 +199,20 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "((zooplankton_sname))_loss_doc_zint": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss to DOC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((zooplankton_sname))_loss_doc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss to DOC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "((zooplankton_sname))_loss_poc": {
       "frequency": "never",
       "longname": "((zooplankton_lname)) Loss to POC",
@@ -206,6 +220,34 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "((zooplankton_sname))_loss_poc_zint": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss to POC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((zooplankton_sname))_loss_poc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss to POC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((zooplankton_sname))_loss_zint": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((zooplankton_sname))_loss_zint_100m": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "AOU": {
       "frequency": "medium",
@@ -1708,6 +1750,20 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "graze_((zooplankton_sname))_doc_zint": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to DOC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((zooplankton_sname))_doc_zint_100m": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to DOC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "graze_((zooplankton_sname))_poc": {
       "frequency": "never",
       "longname": "((zooplankton_lname)) grazing loss to POC",
@@ -1716,6 +1772,34 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "graze_((zooplankton_sname))_poc_zint": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to POC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((zooplankton_sname))_poc_zint_100m": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to POC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((zooplankton_sname))_zint": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((zooplankton_sname))_zint_100m": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "graze_((zooplankton_sname))_zoo": {
       "frequency": "never",
       "longname": "((zooplankton_lname)) grazing loss to ZOO",
@@ -1723,6 +1807,20 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "graze_((zooplankton_sname))_zoo_zint": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to ZOO Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((zooplankton_sname))_zoo_zint_100m": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to ZOO Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "graze_auto_TOT": {
       "frequency": "medium",
@@ -1903,6 +2001,20 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "x_graze_((zooplankton_sname))_zint": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing Gain Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "x_graze_((zooplankton_sname))_zint_100m": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing Gain Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "zsatarag": {
       "frequency": "medium",

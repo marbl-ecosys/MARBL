@@ -1603,12 +1603,108 @@ CISO_mui_to_co2star_((autotroph_sname)) :
 # Per-zooplankton Diagnostics #
 ###############################
 
+((zooplankton_sname))_loss_zint :
+   longname : ((zooplankton_lname)) Loss Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((zooplankton_sname))_loss_zint_100m :
+   longname : ((zooplankton_lname)) Loss Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((zooplankton_sname))_loss_poc_zint :
+   longname : ((zooplankton_lname)) Loss to POC Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((zooplankton_sname))_loss_poc_zint_100m :
+   longname : ((zooplankton_lname)) Loss to POC Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((zooplankton_sname))_loss_doc_zint :
+   longname : ((zooplankton_lname)) Loss to DOC Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((zooplankton_sname))_loss_doc_zint_100m :
+   longname : ((zooplankton_lname)) Loss to DOC Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+graze_((zooplankton_sname))_zint :
+   longname : ((zooplankton_lname)) Grazing Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+graze_((zooplankton_sname))_zint_100m :
+   longname : ((zooplankton_lname)) Grazing Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+graze_((zooplankton_sname))_poc_zint :
+   longname : ((zooplankton_lname)) Grazing to POC Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+graze_((zooplankton_sname))_poc_zint_100m :
+   longname : ((zooplankton_lname)) Grazing to POC Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+graze_((zooplankton_sname))_doc_zint :
+   longname : ((zooplankton_lname)) Grazing to DOC Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+graze_((zooplankton_sname))_doc_zint_100m :
+   longname : ((zooplankton_lname)) Grazing to DOC Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+graze_((zooplankton_sname))_zoo_zint :
+   longname : ((zooplankton_lname)) Grazing to ZOO Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+graze_((zooplankton_sname))_zoo_zint_100m :
+   longname : ((zooplankton_lname)) Grazing to ZOO Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+x_graze_((zooplankton_sname))_zint :
+   longname : ((zooplankton_lname)) Grazing Gain Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+x_graze_((zooplankton_sname))_zint_100m :
+   longname : ((zooplankton_lname)) Grazing Gain Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
 ((zooplankton_sname))_loss :
    longname : ((zooplankton_lname)) Loss
    units : mmol/m^3/s
    vertical_grid : layer_avg
    truncate : true
-   frequency : medium
+   frequency : never
    operator : average
 ((zooplankton_sname))_loss_poc :
    longname : ((zooplankton_lname)) Loss to POC
