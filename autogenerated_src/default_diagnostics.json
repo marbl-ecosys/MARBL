@@ -1823,7 +1823,7 @@
       "vertical_grid": "none"
    },
    "graze_auto_TOT": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "Total Autotroph Grazing",
       "operator": "average",
       "units": "mmol/m^3/s",

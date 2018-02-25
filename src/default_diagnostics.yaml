@@ -598,7 +598,7 @@ graze_auto_TOT :
    longname : Total Autotroph Grazing
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 photoC_TOT :
    longname : Total C Fixation
