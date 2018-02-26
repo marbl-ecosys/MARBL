@@ -354,13 +354,25 @@ photoC_TOT_zint :
    longname : Total C Fixation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : never
+   frequency : medium
+   operator : average
+photoC_TOT_zint_100m :
+   longname : Total C Fixation Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
    operator : average
 photoC_NO3_TOT_zint :
    longname : Total C Fixation from NO3 Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : never
+   frequency : medium
+   operator : average
+photoC_NO3_TOT_zint_100m :
+   longname : Total C Fixation from NO3 Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
    operator : average
 Jint_Ctot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot
@@ -604,13 +616,13 @@ photoC_TOT :
    longname : Total C Fixation
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : never
+   frequency : medium
    operator : average
 photoC_NO3_TOT :
    longname : Total C Fixation from NO3
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : never
+   frequency : medium
    operator : average
 DOC_prod :
    longname : DOC Production
@@ -1190,13 +1202,23 @@ photoC_((autotroph_sname))_zint :
    longname : ((autotroph_lname)) C Fixation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : high
+   frequency :
+      - medium
+      - high
+   operator :
+      - average
+      - average
+photoC_((autotroph_sname))_zint_100m :
+   longname : ((autotroph_lname)) C Fixation Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
    operator : average
 photoC_NO3_((autotroph_sname))_zint :
    longname : ((autotroph_lname)) C Fixation from NO3 Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 graze_((autotroph_sname))_zint :
    longname : ((autotroph_lname)) Grazing Vertical Integral
@@ -1346,14 +1368,14 @@ photoC_((autotroph_sname)) :
    units : mmol/m^3/s
    vertical_grid : layer_avg
    truncate : true
-   frequency : medium
+   frequency : never
    operator : average
 photoC_NO3_((autotroph_sname)) :
    longname : ((autotroph_lname)) C Fixation from NO3
    units : mmol/m^3/s
    vertical_grid : layer_avg
    truncate : true
-   frequency : medium
+   frequency : never
    operator : average
 photoFe_((autotroph_sname)) :
    longname : ((autotroph_lname)) Fe Uptake

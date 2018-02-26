@@ -53,7 +53,6 @@ module marbl_diagnostics_mod
   private :: store_diagnostics_carbonate
   private :: store_diagnostics_nitrification
   private :: store_diagnostics_autotrophs
-  private :: store_diagnostics_autotroph_sums
   private :: store_diagnostics_particulates
   private :: store_diagnostics_oxygen
   private :: store_diagnostics_PAR
@@ -82,7 +81,9 @@ module marbl_diagnostics_mod
     integer(int_kind) :: O2_ZMIN
     integer(int_kind) :: O2_ZMIN_DEPTH
     integer(int_kind) :: photoC_TOT_zint
+    integer(int_kind) :: photoC_TOT_zint_100m
     integer(int_kind) :: photoC_NO3_TOT_zint
+    integer(int_kind) :: photoC_NO3_TOT_zint_100m
     integer(int_kind) :: Jint_Ctot
     integer(int_kind) :: Jint_100m_Ctot
     integer(int_kind) :: Jint_Ntot
@@ -108,6 +109,7 @@ module marbl_diagnostics_mod
 
     ! Autotroph 2D diags
     integer(int_kind), allocatable :: photoC_zint(:)
+    integer(int_kind), allocatable :: photoC_zint_100m(:)
     integer(int_kind), allocatable :: photoC_NO3_zint(:)
     integer(int_kind), allocatable :: CaCO3_form_zint(:)
     integer(int_kind), allocatable :: auto_graze_zint(:)
@@ -1007,6 +1009,18 @@ contains
         return
       end if
 
+      lname = 'Total C Fixation Vertical Integral, 0-100m'
+      sname = 'photoC_TOT_zint_100m'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%photoC_TOT_zint_100m, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
       lname = 'Total C Fixation from NO3 Vertical Integral'
       sname = 'photoC_NO3_TOT_zint'
       units = 'mmol/m^3 cm/s'
@@ -1014,6 +1028,18 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%photoC_NO3_TOT_zint, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Total C Fixation from NO3 Vertical Integral, 0-100m'
+      sname = 'photoC_NO3_TOT_zint_100m'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%photoC_NO3_TOT_zint_100m, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -1263,6 +1289,7 @@ contains
       ! Autotroph 2D diags
       if (.not.ind%lconstructed()) then
         allocate(ind%photoC_zint(autotroph_cnt))
+        allocate(ind%photoC_zint_100m(autotroph_cnt))
         allocate(ind%photoC_NO3_zint(autotroph_cnt))
         allocate(ind%CaCO3_form_zint(autotroph_cnt))
         allocate(ind%auto_graze_zint(autotroph_cnt))
@@ -1288,6 +1315,18 @@ contains
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%photoC_zint(n), marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = trim(autotrophs(n)%lname) // ' C Fixation Vertical Integral, 0-100m'
+        sname = 'photoC_' // trim(autotrophs(n)%sname) // '_zint_100m'
+        units = 'mmol/m^3 cm/s'
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%photoC_zint_100m(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call log_add_diagnostics_error(marbl_status_log, sname, subname)
           return
@@ -3703,9 +3742,6 @@ contains
     call store_diagnostics_autotrophs(domain, &
          autotroph_secondary_species, marbl_interior_forcing_diags)
 
-    call store_diagnostics_autotroph_sums(domain, &
-         autotroph_secondary_species, marbl_interior_forcing_diags)
-
     call store_diagnostics_zooplankton(domain, &
          zooplankton_secondary_species, marbl_interior_forcing_diags)
 
@@ -4088,10 +4124,17 @@ contains
          delta_z => marbl_domain%delta_z           &
          )
 
-    diags(ind%tot_CaCO3_form_zint)%field_2d(1) = c0
     diags(ind%tot_bSi_form)%field_3d(:, 1) = c0
-    diags(ind%tot_Nfix)%field_3d(:, 1) = c0
     diags(ind%tot_CaCO3_form)%field_3d(:, 1) = c0
+    diags(ind%tot_Nfix)%field_3d(:, 1) = c0
+    diags(ind%auto_graze_TOT)%field_3d(:, 1) = c0
+    diags(ind%photoC_TOT)%field_3d(:, 1) = c0
+    diags(ind%photoC_NO3_TOT)%field_3d(:, 1) = c0
+    diags(ind%tot_CaCO3_form_zint)%field_2d(1) = c0
+    diags(ind%photoC_TOT_zint)%field_2d(1) = c0
+    diags(ind%photoC_TOT_zint_100m)%field_2d(1) = c0
+    diags(ind%photoC_NO3_TOT_zint)%field_2d(1) = c0
+
     do n = 1, autotroph_cnt
        if (ind%Qp(n).ne.-1) then
          diags(ind%Qp(n))%field_3d(:, 1)          = autotroph_secondary_species(n,:)%Qp
@@ -4131,6 +4174,8 @@ contains
        end if
 
        diags(ind%auto_graze(n))%field_3d(:, 1)     = autotroph_secondary_species(n,:)%auto_graze
+       diags(ind%auto_graze_TOT)%field_3d(:, 1)    = diags(ind%auto_graze_TOT)%field_3d(:, 1) + &
+            autotroph_secondary_species(n,:)%auto_graze
        diags(ind%auto_graze_poc(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%auto_graze_poc
        diags(ind%auto_graze_doc(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%auto_graze_doc
        diags(ind%auto_graze_zoo(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%auto_graze_zoo
@@ -4139,14 +4184,19 @@ contains
        diags(ind%auto_loss_doc(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%auto_loss_doc
        diags(ind%auto_agg(n))%field_3d(:, 1)       = autotroph_secondary_species(n,:)%auto_agg
        diags(ind%photoC(n))%field_3d(:, 1)         = autotroph_secondary_species(n,:)%photoC
+       diags(ind%photoC_TOT)%field_3d(:, 1)        = diags(ind%photoC_TOT)%field_3d(:, 1) + &
+            autotroph_secondary_species(n,:)%photoC
 
        diags(ind%photoC_NO3(n))%field_3d(:, 1) = c0
        where (autotroph_secondary_species(n,:)%VNtot > c0)
           diags(ind%photoC_NO3(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%photoC * &
                (autotroph_secondary_species(n,:)%VNO3 / autotroph_secondary_species(n,:)%VNtot)
+
+          diags(ind%photoC_NO3_TOT)%field_3d(:, 1) = diags(ind%photoC_NO3_TOT)%field_3d(:, 1) + &
+               diags(ind%photoC_NO3(n))%field_3d(:, 1)
        end where
 
-       ! vertical integrals
+       ! per-autotroph vertical integrals and their sums
        if (ind%CaCO3_form_zint(n).ne.-1) then
           call compute_vertical_integrals(autotroph_secondary_species(n,:)%CaCO3_form, &
                delta_z, kmt, full_depth_integral=diags(ind%CaCO3_form_zint(n))%field_2d(1))
@@ -4156,10 +4206,20 @@ contains
        end if
 
        call compute_vertical_integrals(autotroph_secondary_species(n,:)%photoC, &
-            delta_z, kmt, full_depth_integral=diags(ind%photoC_zint(n))%field_2d(1))
+            delta_z, kmt, full_depth_integral=diags(ind%photoC_zint(n))%field_2d(1), &
+            near_surface_integral=diags(ind%photoC_zint_100m(n))%field_2d(1))
+
+       diags(ind%photoC_TOT_zint)%field_2d(1) = diags(ind%photoC_TOT_zint)%field_2d(1) + &
+            diags(ind%photoC_zint(n))%field_2d(1)
+
+       diags(ind%photoC_TOT_zint_100m)%field_2d(1) = diags(ind%photoC_TOT_zint_100m)%field_2d(1) + &
+            diags(ind%photoC_zint_100m(n))%field_2d(1)
 
        call compute_vertical_integrals(diags(ind%photoC_NO3(n))%field_3d(:, 1), &
             delta_z, kmt, full_depth_integral=diags(ind%photoC_NO3_zint(n))%field_2d(1))
+
+       diags(ind%photoC_NO3_TOT_zint)%field_2d(1) = diags(ind%photoC_NO3_TOT_zint)%field_2d(1) + &
+            diags(ind%photoC_NO3_zint(n))%field_2d(1)
 
        call compute_vertical_integrals(diags(ind%auto_graze(n))%field_3d(:, 1), &
             delta_z, kmt, full_depth_integral=diags(ind%auto_graze_zint(n))%field_2d(1), &
@@ -4193,43 +4253,6 @@ contains
     end associate
 
   end subroutine store_diagnostics_autotrophs
-
-  !***********************************************************************
-
-  subroutine store_diagnostics_autotroph_sums(marbl_domain, &
-       autotroph_secondary_species, marbl_interior_diags)
-
-    type(marbl_domain_type)                , intent(in)    :: marbl_domain
-    type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:) ! autotroph_cnt, km
-    type(marbl_diagnostics_type)           , intent(inout) :: marbl_interior_diags
-
-    integer(int_kind) :: n
-
-    associate(                                     &
-         ind     => marbl_interior_diag_ind,       &
-         diags   => marbl_interior_diags%diags,    &
-         delta_z => marbl_domain%delta_z           &
-         )
-
-    diags(ind%auto_graze_TOT)%field_3d(:, 1) = sum(autotroph_secondary_species%auto_graze, dim=1)
-    diags(ind%photoC_TOT)%field_3d(:, 1) = sum(autotroph_secondary_species%photoC, dim=1)
-
-    diags(ind%photoC_NO3_TOT)%field_3d(:, 1) = c0
-    do n = 1, autotroph_cnt
-       where (autotroph_secondary_species(n,:)%VNtot > c0)
-          diags(ind%photoC_NO3_TOT)%field_3d(:, 1) = diags(ind%photoC_NO3_TOT)%field_3d(:, 1) + &
-               (autotroph_secondary_species(n,:)%VNO3 /  &
-               autotroph_secondary_species(n,:)%VNtot) * &
-               autotroph_secondary_species(n,:)%photoC
-       end where
-    end do
-
-    diags(ind%photoC_TOT_zint)%field_2d(1) = sum(delta_z * sum(autotroph_secondary_species%photoC, dim=1))
-    diags(ind%photoC_NO3_TOT_zint)%field_2d(1) = sum(delta_z * diags(ind%photoC_NO3_TOT)%field_3d(:, 1))
-
-    end associate
-
-  end subroutine store_diagnostics_autotroph_sums
 
   !***********************************************************************
 
@@ -5245,6 +5268,7 @@ contains
 
     if (this%lconstructed()) then
       deallocate(this%photoC_zint)
+      deallocate(this%photoC_zint_100m)
       deallocate(this%photoC_NO3_zint)
       deallocate(this%CaCO3_form_zint)
       deallocate(this%auto_graze_zint)

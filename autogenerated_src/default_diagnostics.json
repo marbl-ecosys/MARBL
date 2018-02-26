@@ -1872,7 +1872,7 @@
       "vertical_grid": "none"
    },
    "photoC_((autotroph_sname))": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((autotroph_lname)) C Fixation",
       "operator": "average",
       "truncate": true,
@@ -1880,14 +1880,27 @@
       "vertical_grid": "layer_avg"
    },
    "photoC_((autotroph_sname))_zint": {
-      "frequency": "high",
+      "frequency": [
+         "medium",
+         "high"
+      ],
       "longname": "((autotroph_lname)) C Fixation Vertical Integral",
+      "operator": [
+         "average",
+         "average"
+      ],
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "photoC_((autotroph_sname))_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) C Fixation Vertical Integral, 0-100m",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "photoC_NO3_((autotroph_sname))": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((autotroph_lname)) C Fixation from NO3",
       "operator": "average",
       "truncate": true,
@@ -1895,36 +1908,50 @@
       "vertical_grid": "layer_avg"
    },
    "photoC_NO3_((autotroph_sname))_zint": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((autotroph_lname)) C Fixation from NO3 Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "photoC_NO3_TOT": {
-      "frequency": "never",
+      "frequency": "medium",
       "longname": "Total C Fixation from NO3",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "photoC_NO3_TOT_zint": {
-      "frequency": "never",
+      "frequency": "medium",
       "longname": "Total C Fixation from NO3 Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "photoC_NO3_TOT_zint_100m": {
+      "frequency": "medium",
+      "longname": "Total C Fixation from NO3 Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "photoC_TOT": {
-      "frequency": "never",
+      "frequency": "medium",
       "longname": "Total C Fixation",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "photoC_TOT_zint": {
-      "frequency": "never",
+      "frequency": "medium",
       "longname": "Total C Fixation Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "photoC_TOT_zint_100m": {
+      "frequency": "medium",
+      "longname": "Total C Fixation Vertical Integral, 0-100m",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
