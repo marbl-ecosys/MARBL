@@ -1444,12 +1444,40 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "POC_REMIN_DIC_zint": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of POC Remineralization routed to DIC",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "POC_REMIN_DIC_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of POC Remineralization routed to DIC, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "POC_REMIN_DOCr": {
       "frequency": "low",
       "longname": "POC Remineralization routed to DOCr",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "POC_REMIN_DOCr_zint": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of POC Remineralization routed to DOCr",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "POC_REMIN_DOCr_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of POC Remineralization routed to DOCr, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "PON_REMIN_DONr": {
       "frequency": "low",

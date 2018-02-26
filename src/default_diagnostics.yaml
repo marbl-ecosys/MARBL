@@ -727,6 +727,32 @@ Lig_deg :
    frequency : medium
    operator : average
 
+# Particulate 2D diags
+POC_REMIN_DOCr_zint :
+   longname : Vertical Integral of POC Remineralization routed to DOCr
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+POC_REMIN_DOCr_zint_100m :
+   longname : Vertical Integral of POC Remineralization routed to DOCr, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+POC_REMIN_DIC_zint :
+   longname : Vertical Integral of POC Remineralization routed to DIC
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+POC_REMIN_DIC_zint_100m :
+   longname : Vertical Integral of POC Remineralization routed to DIC, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+
 # Particulate 3D diags
 POC_FLUX_IN :
    longname : POC Flux into Cell

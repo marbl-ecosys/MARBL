@@ -185,6 +185,12 @@ module marbl_diagnostics_mod
     integer(int_kind) :: Lig_photochem
     integer(int_kind) :: Lig_deg
 
+    ! Particulate 2D diags
+    integer(int_kind) :: POC_REMIN_DOCr_zint
+    integer(int_kind) :: POC_REMIN_DOCr_zint_100m
+    integer(int_kind) :: POC_REMIN_DIC_zint
+    integer(int_kind) :: POC_REMIN_DIC_zint_100m
+
     ! Particulate 3D diags
     integer(int_kind) :: POC_FLUX_IN
     integer(int_kind) :: POC_PROD
@@ -2195,6 +2201,55 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%Lig_deg, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      ! Particulate 2D diags
+      lname = 'Vertical Integral of POC Remineralization routed to DOCr'
+      sname = 'POC_REMIN_DOCr_zint'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+           ind%POC_REMIN_DOCr_zint, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of POC Remineralization routed to DOCr, 0-100m'
+      sname = 'POC_REMIN_DOCr_zint_100m'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+           ind%POC_REMIN_DOCr_zint_100m, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of POC Remineralization routed to DIC'
+      sname = 'POC_REMIN_DIC_zint'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+           ind%POC_REMIN_DIC_zint, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of POC Remineralization routed to DIC, 0-100m'
+      sname = 'POC_REMIN_DIC_zint_100m'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+           ind%POC_REMIN_DIC_zint_100m, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -4298,6 +4353,7 @@ contains
          ind             => marbl_interior_diag_ind,                 &
          diags           => marbl_interior_forcing_diags%diags,      &
          delta_z         => marbl_domain%delta_z,                    &
+         kmt             => marbl_domain%kmt,                        &
          POC             => marbl_particulate_share%POC,             &
          POP             => marbl_particulate_share%POP,             &
          P_CaCO3         => marbl_particulate_share%P_CaCO3,         &
@@ -4310,7 +4366,13 @@ contains
     diags(ind%POC_FLUX_IN)%field_3d(:, 1)    = POC%sflux_in + POC%hflux_in
     diags(ind%POC_PROD)%field_3d(:, 1)       = POC%prod
     diags(ind%POC_REMIN_DOCr)%field_3d(:, 1) = POC%remin * POCremin_refract
+    call compute_vertical_integrals(diags(ind%POC_REMIN_DOCr)%field_3d(:, 1), &
+         delta_z, kmt, full_depth_integral=diags(ind%POC_REMIN_DOCr_zint)%field_2d(1), &
+         near_surface_integral=diags(ind%POC_REMIN_DOCr_zint_100m)%field_2d(1))
     diags(ind%POC_REMIN_DIC)%field_3d(:, 1)  = POC%remin * (c1 - POCremin_refract)
+    call compute_vertical_integrals(diags(ind%POC_REMIN_DIC)%field_3d(:, 1), &
+         delta_z, kmt, full_depth_integral=diags(ind%POC_REMIN_DIC_zint)%field_2d(1), &
+         near_surface_integral=diags(ind%POC_REMIN_DIC_zint_100m)%field_2d(1))
 
     diags(ind%POP_FLUX_IN)%field_3d(:, 1)    = POP%sflux_in + POP%hflux_in
     diags(ind%POP_PROD)%field_3d(:, 1)       = POP%prod
