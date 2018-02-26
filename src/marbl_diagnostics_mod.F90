@@ -188,12 +188,13 @@ module marbl_diagnostics_mod
     ! Particulate 3D diags
     integer(int_kind) :: POC_FLUX_IN
     integer(int_kind) :: POC_PROD
-    integer(int_kind) :: POC_REMIN
+    integer(int_kind) :: POC_REMIN_DOCr
     integer(int_kind) :: POC_REMIN_DIC
     integer(int_kind) :: POP_FLUX_IN
     integer(int_kind) :: POP_PROD
-    integer(int_kind) :: POP_REMIN
+    integer(int_kind) :: POP_REMIN_DOPr
     integer(int_kind) :: POP_REMIN_PO4
+    integer(int_kind) :: PON_REMIN_DONr
     integer(int_kind) :: PON_REMIN_NH4
     integer(int_kind) :: CaCO3_FLUX_IN
     integer(int_kind) :: CaCO3_PROD
@@ -2225,12 +2226,12 @@ contains
       end if
 
       lname = 'POC Remineralization'
-      sname = 'POC_REMIN'
+      sname = 'POC_REMIN_DOCr'
       units = 'mmol/m^3/s'
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_REMIN, marbl_status_log)
+           ind%POC_REMIN_DOCr, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -2273,12 +2274,12 @@ contains
       end if
 
       lname = 'POP Remineralization'
-      sname = 'POP_REMIN'
+      sname = 'POP_REMIN_DOPr'
       units = 'mmol/m^3/s'
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POP_REMIN, marbl_status_log)
+           ind%POP_REMIN_DOPr, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -2291,6 +2292,18 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%POP_REMIN_PO4, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'PON Remineralization routed to DONr'
+      sname = 'PON_REMIN_DONr'
+      units = 'mmol/m^3/s'
+      vgrid = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%PON_REMIN_DONr, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -4296,14 +4309,15 @@ contains
 
     diags(ind%POC_FLUX_IN)%field_3d(:, 1)    = POC%sflux_in + POC%hflux_in
     diags(ind%POC_PROD)%field_3d(:, 1)       = POC%prod
-    diags(ind%POC_REMIN)%field_3d(:, 1)      = POC%remin
+    diags(ind%POC_REMIN_DOCr)%field_3d(:, 1) = POC%remin * POCremin_refract
     diags(ind%POC_REMIN_DIC)%field_3d(:, 1)  = POC%remin * (c1 - POCremin_refract)
 
     diags(ind%POP_FLUX_IN)%field_3d(:, 1)    = POP%sflux_in + POP%hflux_in
     diags(ind%POP_PROD)%field_3d(:, 1)       = POP%prod
-    diags(ind%POP_REMIN)%field_3d(:, 1)      = POP%remin
+    diags(ind%POP_REMIN_DOPr)%field_3d(:, 1) = POP%remin * POPremin_refract
     diags(ind%POP_REMIN_PO4)%field_3d(:, 1)  = POP%remin * (c1 - POPremin_refract)
 
+    diags(ind%PON_REMIN_DONr)%field_3d(:, 1) = PON_remin * PONremin_refract
     diags(ind%PON_REMIN_NH4)%field_3d(:, 1)  = PON_remin * (c1 - PONremin_refract)
 
     diags(ind%CaCO3_FLUX_IN)%field_3d(:, 1)  = P_CaCO3%sflux_in + P_CaCO3%hflux_in

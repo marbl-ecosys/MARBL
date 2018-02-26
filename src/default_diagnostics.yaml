@@ -634,13 +634,13 @@ DOC_remin :
    longname : DOC Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 DOCr_remin :
    longname : DOCr Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 DON_prod :
    longname : DON Production
@@ -652,13 +652,13 @@ DON_remin :
    longname : DON Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 DONr_remin :
    longname : DONr Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 DOP_prod :
    longname : DOP Production
@@ -670,13 +670,13 @@ DOP_remin :
    longname : DOP Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 DOPr_remin :
    longname : DOPr Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 Fe_scavenge :
    longname : Iron Scavenging
@@ -740,17 +740,17 @@ POC_PROD :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-POC_REMIN :
-   longname : POC Remineralization
+POC_REMIN_DOCr :
+   longname : POC Remineralization routed to DOCr
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 POC_REMIN_DIC :
    longname : POC Remineralization routed to DIC
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 POP_FLUX_IN :
    longname : POP Flux into Cell
@@ -764,23 +764,29 @@ POP_PROD :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-POP_REMIN :
-   longname : POP Remineralization
+POP_REMIN_DOPr :
+   longname : POP Remineralization routed to DOPr
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 POP_REMIN_PO4 :
    longname : POP Remineralization routed to PO4
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
+   operator : average
+PON_REMIN_DONr :
+   longname : PON Remineralization routed to DONr
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : low
    operator : average
 PON_REMIN_NH4 :
    longname : PON Remineralization routed to NH4
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 CaCO3_FLUX_IN :
    longname : CaCO3 Flux into Cell

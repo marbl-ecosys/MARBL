@@ -1013,14 +1013,14 @@
       "vertical_grid": "layer_avg"
    },
    "DOC_remin": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "DOC Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "DOCr_remin": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "DOCr Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
@@ -1034,14 +1034,14 @@
       "vertical_grid": "layer_avg"
    },
    "DON_remin": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "DON Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "DONr_remin": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "DONr Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
@@ -1063,14 +1063,14 @@
       "vertical_grid": "layer_avg"
    },
    "DOP_remin": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "DOP Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "DOPr_remin": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "DOPr Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
@@ -1437,22 +1437,29 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "POC_REMIN": {
-      "frequency": "medium",
-      "longname": "POC Remineralization",
-      "operator": "average",
-      "units": "mmol/m^3/s",
-      "vertical_grid": "layer_avg"
-   },
    "POC_REMIN_DIC": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "POC Remineralization routed to DIC",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "POC_REMIN_DOCr": {
+      "frequency": "low",
+      "longname": "POC Remineralization routed to DOCr",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "PON_REMIN_DONr": {
+      "frequency": "low",
+      "longname": "PON Remineralization routed to DONr",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "PON_REMIN_NH4": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "PON Remineralization routed to NH4",
       "operator": "average",
       "units": "mmol/m^3/s",
@@ -1472,15 +1479,15 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "POP_REMIN": {
-      "frequency": "medium",
-      "longname": "POP Remineralization",
+   "POP_REMIN_DOPr": {
+      "frequency": "low",
+      "longname": "POP Remineralization routed to DOPr",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "POP_REMIN_PO4": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "POP Remineralization routed to PO4",
       "operator": "average",
       "units": "mmol/m^3/s",
