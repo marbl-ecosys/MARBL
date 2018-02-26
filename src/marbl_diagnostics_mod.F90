@@ -2225,7 +2225,7 @@ contains
         return
       end if
 
-      lname = 'POC Remineralization'
+      lname = 'POC Remineralization routed to DOCr'
       sname = 'POC_REMIN_DOCr'
       units = 'mmol/m^3/s'
       vgrid = 'layer_avg'
@@ -2273,7 +2273,7 @@ contains
         return
       end if
 
-      lname = 'POP Remineralization'
+      lname = 'POP Remineralization routed to DOPr'
       sname = 'POP_REMIN_DOPr'
       units = 'mmol/m^3/s'
       vgrid = 'layer_avg'
