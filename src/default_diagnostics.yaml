@@ -374,6 +374,30 @@ photoC_NO3_TOT_zint_100m :
    vertical_grid : none
    frequency : medium
    operator : average
+DOC_remin_zint :
+   longname : Vertical Integral of DOC Remineralization
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DOC_remin_zint_100m :
+   longname : Vertical Integral of DOC Remineralization, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DOCr_remin_zint :
+   longname : Vertical Integral of DOCr Remineralization
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+DOCr_remin_zint_100m :
+   longname : Vertical Integral of DOCr Remineralization, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
 Jint_Ctot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot
    units : mmol/m^3 cm/s

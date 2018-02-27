@@ -1019,11 +1019,39 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "DOC_remin_zint": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of DOC Remineralization",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DOC_remin_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of DOC Remineralization, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
    "DOCr_remin": {
       "frequency": "low",
       "longname": "DOCr Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DOCr_remin_zint": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of DOCr Remineralization",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DOCr_remin_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of DOCr Remineralization, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
    },
    "DON_prod": {

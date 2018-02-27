@@ -84,6 +84,10 @@ module marbl_diagnostics_mod
     integer(int_kind) :: photoC_TOT_zint_100m
     integer(int_kind) :: photoC_NO3_TOT_zint
     integer(int_kind) :: photoC_NO3_TOT_zint_100m
+    integer(int_kind) :: DOC_remin_zint
+    integer(int_kind) :: DOC_remin_zint_100m
+    integer(int_kind) :: DOCr_remin_zint
+    integer(int_kind) :: DOCr_remin_zint_100m
     integer(int_kind) :: Jint_Ctot
     integer(int_kind) :: Jint_100m_Ctot
     integer(int_kind) :: Jint_Ntot
@@ -1047,6 +1051,54 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%photoC_NO3_TOT_zint_100m, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of DOC Remineralization'
+      sname = 'DOC_remin_zint'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%DOC_remin_zint, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of DOC Remineralization, 0-100m'
+      sname = 'DOC_remin_zint_100m'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%DOC_remin_zint_100m, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of DOCr Remineralization'
+      sname = 'DOCr_remin_zint'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%DOCr_remin_zint, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of DOCr Remineralization, 0-100m'
+      sname = 'DOCr_remin_zint_100m'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%DOCr_remin_zint_100m, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -2212,7 +2264,7 @@ contains
       units = 'mmol/m^3 cm/s'
       vgrid = 'none'
       truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%POC_REMIN_DOCr_zint, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
@@ -2224,7 +2276,7 @@ contains
       units = 'mmol/m^3 cm/s'
       vgrid = 'none'
       truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%POC_REMIN_DOCr_zint_100m, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
@@ -2236,7 +2288,7 @@ contains
       units = 'mmol/m^3 cm/s'
       vgrid = 'none'
       truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%POC_REMIN_DIC_zint, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
@@ -2248,7 +2300,7 @@ contains
       units = 'mmol/m^3 cm/s'
       vgrid = 'none'
       truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%POC_REMIN_DIC_zint_100m, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
@@ -4576,10 +4628,12 @@ contains
     integer(int_kind) :: k
     !-----------------------------------------------------------------------
 
-    associate(                            &
-         km    => marbl_domain%km,        &
-         diags => marbl_diags%diags,      &
-         ind   => marbl_interior_diag_ind &
+    associate(                               &
+         km      => marbl_domain%km,         &
+         delta_z => marbl_domain%delta_z,    &
+         kmt     => marbl_domain%kmt,        &
+         diags   => marbl_diags%diags,       &
+         ind     => marbl_interior_diag_ind  &
          )
 
     do k = 1, km
@@ -4593,6 +4647,14 @@ contains
        diags(ind%DOP_remin)%field_3d(k, 1)        = dissolved_organic_matter(k)%DOP_remin
        diags(ind%DOPr_remin)%field_3d(k, 1)       = dissolved_organic_matter(k)%DOPr_remin
     end do
+
+    call compute_vertical_integrals(diags(ind%DOC_remin)%field_3d(:,1), &
+         delta_z, kmt, full_depth_integral=diags(ind%DOC_remin_zint)%field_2d(1), &
+         near_surface_integral=diags(ind%DOC_remin_zint_100m)%field_2d(1))
+
+    call compute_vertical_integrals(diags(ind%DOCr_remin)%field_3d(:,1), &
+         delta_z, kmt, full_depth_integral=diags(ind%DOCr_remin_zint)%field_2d(1), &
+         near_surface_integral=diags(ind%DOCr_remin_zint_100m)%field_2d(1))
 
     end associate
 
