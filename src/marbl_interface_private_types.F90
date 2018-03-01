@@ -37,12 +37,12 @@ module marbl_interface_private_types
      real(r8) :: gamma                      ! fraction of production -> hard subclass
      real(r8) :: mass                       ! mass of 1e9 base units in g
      real(r8) :: rho                        ! QA mass ratio of POC to this particle class
+     real(r8) :: to_floor                   ! flux hitting sea floor (base units/cm^s/sec)
      real(r8), allocatable  :: sflux_in (:) ! incoming flux of soft subclass (base units/cm^2/sec)
      real(r8), allocatable  :: hflux_in (:) ! incoming flux of hard subclass (base units/cm^2/sec)
      real(r8), allocatable  :: prod     (:) ! production term (base units/cm^3/sec)
      real(r8), allocatable  :: sflux_out(:) ! outgoing flux of soft subclass (base units/cm^2/sec)
      real(r8), allocatable  :: hflux_out(:) ! outgoing flux of hard subclass (base units/cm^2/sec)
-     real(r8), allocatable  :: to_floor (:) ! flux hitting sea floor (base units/cm^s/sec)
      real(r8), allocatable  :: sed_loss (:) ! loss to sediments (base units/cm^s/sec)
      real(r8), allocatable  :: remin    (:) ! remineralization term (base units/cm^3/sec)
    contains
@@ -111,8 +111,6 @@ module marbl_interface_private_types
      real(r8), allocatable :: decay_Hard_fields        (:) ! scaling factor for dissolution of Hard Ballast
      real(r8), allocatable :: poc_diss_fields          (:) ! diss. length used (cm)
      real(r8), allocatable :: caco3_diss_fields        (:) ! caco3 diss. length used (cm)
-     real(r8), allocatable :: POC_sflux_out_fields     (:) ! POC_sflux_out from ecosys before getting set to zero for k=KMT
-     real(r8), allocatable :: POC_hflux_out_fields     (:) ! POC_hflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: POC_remin_fields         (:) ! POC remin from ecosys before it gets modified for k=KMT
      real(r8), allocatable :: POC_prod_avail_fields    (:) ! POC production available for excess POC flux
 
@@ -328,7 +326,6 @@ contains
     allocate(this%prod     (num_levels))
     allocate(this%sflux_out(num_levels))
     allocate(this%hflux_out(num_levels))
-    allocate(this%to_floor (num_levels))
     allocate(this%sed_loss (num_levels))
     allocate(this%remin    (num_levels))
 
@@ -347,7 +344,6 @@ contains
     deallocate(this%prod)
     deallocate(this%sflux_out)
     deallocate(this%hflux_out)
-    deallocate(this%to_floor)
     deallocate(this%sed_loss)
     deallocate(this%remin)
 
@@ -366,8 +362,6 @@ contains
     allocate(this%decay_Hard_fields                (num_levels))
     allocate(this%poc_diss_fields                  (num_levels))
     allocate(this%caco3_diss_fields                (num_levels))
-    allocate(this%POC_sflux_out_fields             (num_levels))
-    allocate(this%POC_hflux_out_fields             (num_levels))
     allocate(this%POC_remin_fields                 (num_levels))
     allocate(this%POC_prod_avail_fields            (num_levels))
 
@@ -393,8 +387,6 @@ contains
     deallocate(this%decay_Hard_fields)
     deallocate(this%poc_diss_fields)
     deallocate(this%caco3_diss_fields)
-    deallocate(this%POC_sflux_out_fields)
-    deallocate(this%POC_hflux_out_fields)
     deallocate(this%POC_remin_fields)
     deallocate(this%POC_prod_avail_fields)
 

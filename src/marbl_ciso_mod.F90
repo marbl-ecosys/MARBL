@@ -63,7 +63,7 @@ module marbl_ciso_mod
   private :: setup_local_column_tracers
   private :: setup_local_autotrophs
   private :: fract_keller_morel
-  private :: init_particulate_terms
+  private :: set_surface_particulate_terms
   private :: compute_particulate_terms
 
   type, private :: autotroph_local_type
@@ -447,8 +447,8 @@ contains
     !  Initialize Particulate terms for k=1
     !-----------------------------------------------------------------------
 
-    call init_particulate_terms(k=1, POC_ciso=PO13C, P_CaCO3_ciso=P_Ca13CO3)
-    call init_particulate_terms(k=1, POC_ciso=PO14C, P_CaCO3_ciso=P_Ca14CO3)
+    call set_surface_particulate_terms(POC_ciso=PO13C, P_CaCO3_ciso=P_Ca13CO3)
+    call set_surface_particulate_terms(POC_ciso=PO14C, P_CaCO3_ciso=P_Ca14CO3)
 
     !-----------------------------------------------------------------------
     !  Set ratios
@@ -1237,7 +1237,7 @@ contains
 
   !***********************************************************************
 
-  subroutine init_particulate_terms(k, POC_ciso, P_CaCO3_ciso)
+  subroutine set_surface_particulate_terms(POC_ciso, P_CaCO3_ciso)
 
     !---------------------------------------------------------------------
     !  Set incoming fluxes (put into outgoing flux for first level usage).
@@ -1246,9 +1246,14 @@ contains
 
     implicit none
 
-    integer(int_kind)                 , intent(in)    :: k
     type(column_sinking_particle_type), intent(inout) :: POC_ciso     ! base units = nmol C_ciso
     type(column_sinking_particle_type), intent(inout) :: P_CaCO3_ciso ! base units = nmol C_ciso
+
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+
+    integer(int_kind) :: ksurf
 
     !-----------------------------------------------------------------------
     !  parameters
@@ -1268,21 +1273,19 @@ contains
     !  Set incoming fluxes
     !-----------------------------------------------------------------------
 
-    P_CaCO3_ciso%sflux_out(k) = c0
-    P_CaCO3_ciso%hflux_out(k) = c0
-    P_CaCO3_ciso%sflux_in(k)  = P_CaCO3_ciso%sflux_out(k)
-    P_CaCO3_ciso%hflux_in(k)  = P_CaCO3_ciso%hflux_out(k)
+    ksurf = 1
+
+    P_CaCO3_ciso%sflux_in(ksurf) = c0
+    P_CaCO3_ciso%hflux_in(ksurf) = c0
 
     !-----------------------------------------------------------------------
     !  Hard POC is QA flux and soft POC is excess POC.
     !-----------------------------------------------------------------------
 
-    POC_ciso%sflux_out(k) = c0
-    POC_ciso%hflux_out(k) = c0
-    POC_ciso%sflux_in(k)  = POC_ciso%sflux_out(k)
-    POC_ciso%hflux_in(k)  = POC_ciso%hflux_out(k)
+    POC_ciso%sflux_in(ksurf) = c0
+    POC_ciso%hflux_in(ksurf) = c0
 
-  end subroutine init_particulate_terms
+  end subroutine set_surface_particulate_terms
 
   !***********************************************************************
 
@@ -1291,7 +1294,7 @@ contains
     !-----------------------------------------------------------------------
     ! NOTE: incoming fluxes are outgoing fluxes from previous level
     ! initialize loss to sediments = 0
-    ! Assume that k == 1 condition was handled by call to init_particulate_terms()
+    ! Assume that k == 1 condition was handled by call to set_surface_particulate_terms()
     !-----------------------------------------------------------------------
 
     implicit none
@@ -1319,8 +1322,6 @@ contains
     !-----------------------------------------------------------------------
 
     ! NOTE: level k influx is equal to the level k-1 outflux.
-    sinking_particle%sflux_out(k) = sinking_particle%sflux_out(k-1)
-    sinking_particle%hflux_out(k) = sinking_particle%hflux_out(k-1)
     sinking_particle%sflux_in(k)  = sinking_particle%sflux_out(k-1)
     sinking_particle%hflux_in(k)  = sinking_particle%hflux_out(k-1)
 
@@ -1387,8 +1388,6 @@ contains
          POC_PROD_avail    => marbl_particulate_share%POC_PROD_avail_fields , & ! IN
          poc_diss          => marbl_particulate_share%poc_diss_fields       , & ! IN
          caco3_diss        => marbl_particulate_share%caco3_diss_fields     , & ! IN
-         POC_sflux_out     => marbl_particulate_share%POC_sflux_out_fields  , & ! IN
-         POC_hflux_out     => marbl_particulate_share%POC_hflux_out_fields  , & ! IN
          POC_remin         => marbl_particulate_share%POC_remin_fields      , & ! IN
          POC_bury_coeff    => marbl_particulate_share%POC_bury_coeff          & ! IN
          )
@@ -1396,9 +1395,6 @@ contains
     !-----------------------------------------------------------------------
     !  initialize loss to sediments = 0 and local copy of percent sed
     !-----------------------------------------------------------------------
-
-    POC_ciso%to_floor(k)     = c0
-    P_CaCO3_ciso%to_floor(k) = c0
 
     POC_ciso%sed_loss(k)     = c0
     P_CaCO3_ciso%sed_loss(k) = c0
@@ -1458,7 +1454,7 @@ contains
           POC_ciso%hflux_out(k) = c0
        else
 
-          Rciso_POC_hflux_out = POC%prod(k) + ( POC%sflux_in(k) - POC_sflux_out(k) + POC%hflux_in(k) ) * dzr_loc
+          Rciso_POC_hflux_out = POC%prod(k) + ( POC%sflux_in(k) - POC%sflux_out(k) + POC%hflux_in(k) ) * dzr_loc
 
           if (Rciso_POC_hflux_out /= c0) then
              Rciso_POC_hflux_out = ( POC_ciso%prod(k) + ( POC_ciso%sflux_in(k) - &
@@ -1467,7 +1463,7 @@ contains
              Rciso_POC_hflux_out = c0
           endif
 
-          POC_ciso%hflux_out(k) = POC_hflux_out(k) * Rciso_POC_hflux_out
+          POC_ciso%hflux_out(k) = POC%hflux_out(k) * Rciso_POC_hflux_out
           POC_ciso%hflux_out(k) = max(POC_ciso%hflux_out(k), c0)
 
        endif
@@ -1519,21 +1515,11 @@ contains
        !      Rciso_POC_in = c0
        !   endif
        !
-       !   POC_ciso%sflux_out(k) = POC_sflux_out(k) * Rciso_POC_in
-       !   POC_ciso%hflux_out(k) = POC_hflux_out(k) * Rciso_POC_in
+       !   POC_ciso%sflux_out(k) = POC%sflux_out(k) * Rciso_POC_in
+       !   POC_ciso%hflux_out(k) = POC%hflux_out(k) * Rciso_POC_in
        !   POC_ciso%remin(k)     = POC_remin(k)     * Rciso_POC_in
        !
        !-----------------------------------------------------------------
-
-    else
-
-       P_CaCO3_ciso%sflux_out(k) = c0
-       P_CaCO3_ciso%hflux_out(k) = c0
-       P_CaCO3_ciso%remin(k)     = c0
-
-       POC_ciso%sflux_out(k) = c0
-       POC_ciso%hflux_out(k) = c0
-       POC_ciso%remin(k)     = c0
 
     endif
 
@@ -1558,37 +1544,37 @@ contains
 
     if (k == column_kmt) then
 
-       POC_ciso%to_floor(k) = POC_ciso%sflux_out(k) + POC_ciso%hflux_out(k)
+       POC_ciso%to_floor = POC_ciso%sflux_out(k) + POC_ciso%hflux_out(k)
 
-       if (POC_ciso%to_floor(k) > c0) then
-          flux_alt = POC_ciso%to_floor(k) * mpercm * spd ! convert to mmol/m^2/day
+       if (POC_ciso%to_floor > c0) then
+          flux_alt = POC_ciso%to_floor * mpercm * spd ! convert to mmol/m^2/day
 
-          POC_ciso%sed_loss(k) = POC_ciso%to_floor(k) * min(0.8_r8, POC_bury_coeff &
+          POC_ciso%sed_loss(k) = POC_ciso%to_floor * min(0.8_r8, POC_bury_coeff &
                * (0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2))
 
 
-          sed_denitrif = dzr_loc * POC_ciso%to_floor(k) * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
+          sed_denitrif = dzr_loc * POC_ciso%to_floor * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
-          flux_alt = POC_ciso%to_floor(k)*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
+          flux_alt = POC_ciso%to_floor*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
           other_remin = dzr_loc &
-               * min ( min(0.1_r8 + flux_alt,0.5_r8) * (POC_ciso%to_floor(k) - POC_ciso%sed_loss(k)) , &
-                      (POC_ciso%to_floor(k) - POC_ciso%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N)))
+               * min ( min(0.1_r8 + flux_alt,0.5_r8) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)) , &
+                      (POC_ciso%to_floor - POC_ciso%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N)))
 
           ! if bottom water O2 is depleted, assume all remin is denitrif + other
           if (O2_loc < c1) then
-             other_remin = dzr_loc * (POC_ciso%to_floor(k) - POC_ciso%sed_loss(k) - (sed_denitrif * dz_loc * denitrif_C_N))
+             other_remin = dzr_loc * (POC_ciso%to_floor - POC_ciso%sed_loss(k) - (sed_denitrif * dz_loc * denitrif_C_N))
           endif
        endif
 
-       P_CaCO3_ciso%to_floor(k) = P_CaCO3_ciso%sflux_out(k) + P_CaCO3_ciso%hflux_out(k)
+       P_CaCO3_ciso%to_floor = P_CaCO3_ciso%sflux_out(k) + P_CaCO3_ciso%hflux_out(k)
 
        if (caco3_bury_thres_iopt == caco3_bury_thres_iopt_fixed_depth) then
           if (column_zw < caco3_bury_thres_depth) then
-            P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%to_floor(k)
+            P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%to_floor
          endif
        else ! caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
          if (CO3 > CO3_sat_calcite) then
-            P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%to_floor(k)
+            P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%to_floor
          endif
        end if
 
@@ -1597,23 +1583,13 @@ contains
        ! flux used to hold sinking fluxes before update.
        !----------------------------------------------------------------------------------
 
-       if (P_CaCO3_ciso%to_floor(k) > c0) then
-          P_CaCO3_ciso%remin(k) = P_CaCO3_ciso%remin(k) + ((P_CaCO3_ciso%to_floor(k) - P_CaCO3_ciso%sed_loss(k)) * dzr_loc)
+       if (P_CaCO3_ciso%to_floor > c0) then
+          P_CaCO3_ciso%remin(k) = P_CaCO3_ciso%remin(k) + ((P_CaCO3_ciso%to_floor - P_CaCO3_ciso%sed_loss(k)) * dzr_loc)
        endif
 
-       if (POC_ciso%to_floor(k) > c0) then
-          POC_ciso%remin(k) = POC_ciso%remin(k) + ((POC_ciso%to_floor(k) - POC_ciso%sed_loss(k)) * dzr_loc)
+       if (POC_ciso%to_floor > c0) then
+          POC_ciso%remin(k) = POC_ciso%remin(k) + ((POC_ciso%to_floor - POC_ciso%sed_loss(k)) * dzr_loc)
        endif
-
-       !-----------------------------------------------------------------------
-       ! Set all outgoing fluxes to 0.0
-       !-----------------------------------------------------------------------
-
-       P_CaCO3_ciso%sflux_out(k) = c0
-       P_CaCO3_ciso%hflux_out(k) = c0
-
-       POC_ciso%sflux_out(k) = c0
-       POC_ciso%hflux_out(k) = c0
 
     endif
 

@@ -4511,43 +4511,23 @@ contains
         wbot = (depth_ref - ztop) / delta_z(k_ref)
 
         flux_top = POC%sflux_in(k_ref) + POC%hflux_in(k_ref)
-        if (k_ref .lt. kmt) then
-          flux_bot = POC%sflux_in(k_ref+1) + POC%hflux_in(k_ref+1)
-        else
-          flux_bot = POC%to_floor(k_ref)
-        end if
+        flux_bot = POC%sflux_out(k_ref) + POC%hflux_out(k_ref)
         diags(ind%POC_FLUX_100m)%field_2d(1) = flux_top + wbot * (flux_bot - flux_top)
 
         flux_top = POP%sflux_in(k_ref) + POP%hflux_in(k_ref)
-        if (k_ref .lt. kmt) then
-          flux_bot = POP%sflux_in(k_ref+1) + POP%hflux_in(k_ref+1)
-        else
-          flux_bot = POP%to_floor(k_ref)
-        end if
+        flux_bot = POP%sflux_out(k_ref) + POP%hflux_out(k_ref)
         diags(ind%POP_FLUX_100m)%field_2d(1) = flux_top + wbot * (flux_bot - flux_top)
 
         flux_top = P_CaCO3%sflux_in(k_ref) + P_CaCO3%hflux_in(k_ref)
-        if (k_ref .lt. kmt) then
-          flux_bot = P_CaCO3%sflux_in(k_ref+1) + P_CaCO3%hflux_in(k_ref+1)
-        else
-          flux_bot = P_CaCO3%to_floor(k_ref)
-        end if
+        flux_bot = P_CaCO3%sflux_out(k_ref) + P_CaCO3%hflux_out(k_ref)
         diags(ind%CaCO3_FLUX_100m)%field_2d(1) = flux_top + wbot * (flux_bot - flux_top)
 
         flux_top = P_SiO2%sflux_in(k_ref) + P_SiO2%hflux_in(k_ref)
-        if (k_ref .lt. kmt) then
-          flux_bot = P_SiO2%sflux_in(k_ref+1) + P_SiO2%hflux_in(k_ref+1)
-        else
-          flux_bot = P_SiO2%to_floor(k_ref)
-        end if
+        flux_bot = P_SiO2%sflux_out(k_ref) + P_SiO2%hflux_out(k_ref)
         diags(ind%SiO2_FLUX_100m)%field_2d(1) = flux_top + wbot * (flux_bot - flux_top)
 
         flux_top = P_iron%sflux_in(k_ref) + P_iron%hflux_in(k_ref)
-        if (k_ref .lt. kmt) then
-          flux_bot = P_iron%sflux_in(k_ref+1) + P_iron%hflux_in(k_ref+1)
-        else
-          flux_bot = P_iron%to_floor(k_ref)
-        end if
+        flux_bot = P_iron%sflux_out(k_ref) + P_iron%hflux_out(k_ref)
         diags(ind%P_iron_FLUX_100m)%field_2d(1) = flux_top + wbot * (flux_bot - flux_top)
       end if
     else
