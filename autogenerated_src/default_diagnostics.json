@@ -949,6 +949,13 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "CaCO3_FLUX_100m": {
+      "frequency": "medium",
+      "longname": "CaCO3 Flux at 100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "CaCO3_FLUX_IN": {
       "frequency": "medium",
       "longname": "CaCO3 Flux into Cell",
@@ -1451,6 +1458,13 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "POC_FLUX_100m": {
+      "frequency": "medium",
+      "longname": "POC Flux at 100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "POC_FLUX_IN": {
       "frequency": "medium",
       "longname": "POC Flux into Cell",
@@ -1521,6 +1535,13 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "POP_FLUX_100m": {
+      "frequency": "medium",
+      "longname": "POP Flux at 100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "POP_FLUX_IN": {
       "frequency": "medium",
       "longname": "POP Flux into Cell",
@@ -1563,6 +1584,13 @@
       "units": "cm/s",
       "vertical_grid": "none"
    },
+   "P_iron_FLUX_100m": {
+      "frequency": "medium",
+      "longname": "P_iron Flux at 100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "P_iron_FLUX_IN": {
       "frequency": "medium",
       "longname": "P_iron Flux into Cell",
@@ -1603,6 +1631,13 @@
       "longname": "nitrogen loss in Sediments",
       "operator": "average",
       "units": "nmolN/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "SiO2_FLUX_100m": {
+      "frequency": "medium",
+      "longname": "SiO2 Flux at 100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "SiO2_FLUX_IN": {

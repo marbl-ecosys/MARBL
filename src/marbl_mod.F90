@@ -1139,8 +1139,7 @@ contains
          new_QA_dust_def,    & ! outgoing deficit in the QA(dust) POC flux
          scalelength,        & ! used to scale dissolution length scales as function of depth
          o2_scalefactor,     & ! used to scale dissolution length scales as function of o2
-         flux, flux_alt,     & ! temp variables used to update sinking flux
-         flux_POP,           & ! temp variables used to update sinking flux
+         flux_alt,           & ! flux to floor in alternative units, to match particular parameterizations
          bury_frac,          & ! fraction of flux hitting floor that gets buried
          dz_loc, dzr_loc       ! dz, dzr at a particular i, j location
 
@@ -1516,6 +1515,14 @@ contains
     !     which is based on caco3_bury_thres_opt.
     !-----------------------------------------------------------------------
 
+    POC%to_floor(k)             = c0
+    POP%to_floor(k)             = c0
+    P_SiO2%to_floor(k)          = c0
+    P_CaCO3%to_floor(k)         = c0
+    P_CaCO3_ALT_CO2%to_floor(k) = c0
+    P_iron%to_floor(k)          = c0
+    dust%to_floor(k)            = c0
+
     POC%sed_loss(k)             = c0
     POP%sed_loss(k)             = c0
     P_SiO2%sed_loss(k)          = c0
@@ -1528,43 +1535,43 @@ contains
 
     if ((k == column_kmt)) then
 
-       flux = POC%sflux_out(k) + POC%hflux_out(k)
+       POC%to_floor(k) = POC%sflux_out(k) + POC%hflux_out(k)
 
-       if (flux > c0) then
-          flux_alt = flux*mpercm*spd ! convert to mmol/m^2/day
+       if (POC%to_floor(k) > c0) then
+          flux_alt = POC%to_floor(k)*mpercm*spd ! convert to mmol/m^2/day
 
           ! first compute burial efficiency, then compute loss to sediments
           bury_frac = 0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2
-          POC%sed_loss(k) = flux * min(0.8_r8, POC_bury_coeff * bury_frac)
+          POC%sed_loss(k) = POC%to_floor(k) * min(0.8_r8, POC_bury_coeff * bury_frac)
 
           PON_sed_loss = PON_bury_coeff * Q * POC%sed_loss(k)
 
-          flux_POP = POP%sflux_out(k) + POP%hflux_out(k)
-          POP%sed_loss(k) = flux_POP * min(0.8_r8, POP_bury_coeff * bury_frac)
+          POP%to_floor(k) = POP%sflux_out(k) + POP%hflux_out(k)
+          POP%sed_loss(k) = POP%to_floor(k) * min(0.8_r8, POP_bury_coeff * bury_frac)
 
           if (ladjust_bury_coeff) then
              glo_avg_fields_interior(glo_avg_field_ind_interior_POC_bury) = POC%sed_loss(k)
              if (POC_bury_coeff * bury_frac < 0.8_r8) then
-                glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = flux * bury_frac
+                glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = POC%to_floor(k) * bury_frac
              else
                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = c0
              endif
 
              glo_avg_fields_interior(glo_avg_field_ind_interior_POP_bury) = POP%sed_loss(k)
              if (POP_bury_coeff * bury_frac < 0.8_r8) then
-                glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = flux_POP * bury_frac
+                glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = POP%to_floor(k) * bury_frac
              else
                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = c0
              endif
           endif
 
-          sed_denitrif = dzr_loc * parm_sed_denitrif_coeff * flux &
+          sed_denitrif = dzr_loc * parm_sed_denitrif_coeff * POC%to_floor(k) &
                * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
-          flux_alt = flux*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
+          flux_alt = POC%to_floor(k)*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
           other_remin = dzr_loc &
-               * min(min(0.1_r8 + flux_alt, 0.5_r8) * (flux - POC%sed_loss(k)), &
-               (flux - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N)))
+               * min(min(0.1_r8 + flux_alt, 0.5_r8) * (POC%to_floor(k) - POC%sed_loss(k)), &
+               (POC%to_floor(k) - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N)))
 
           !----------------------------------------------------------------------------------
           !              if bottom water O2 is depleted, assume all remin is denitrif + other
@@ -1572,7 +1579,7 @@ contains
 
           if (O2_loc < c1) then
              other_remin = dzr_loc * &
-                  (flux - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N))
+                  (POC%to_floor(k) - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N))
           endif
 
        else
@@ -1587,32 +1594,35 @@ contains
 
        endif
 
-       flux = P_SiO2%sflux_out(k) + P_SiO2%hflux_out(k)
-       flux_alt = flux*mpercm*spd ! convert to mmol/m^2/day
+       P_SiO2%to_floor(k) = P_SiO2%sflux_out(k) + P_SiO2%hflux_out(k)
+       flux_alt = P_SiO2%to_floor(k)*mpercm*spd ! convert to mmol/m^2/day
        ! first compute burial efficiency, then compute loss to sediments
        if (flux_alt > c2) then
           bury_frac = 0.2_r8
        else
           bury_frac = 0.04_r8
        endif
-       P_SiO2%sed_loss(k) = flux * bSi_bury_coeff * bury_frac
+       P_SiO2%sed_loss(k) = P_SiO2%to_floor(k) * bSi_bury_coeff * bury_frac
 
        if (ladjust_bury_coeff) then
           glo_avg_fields_interior(glo_avg_field_ind_interior_bSi_bury) = P_SiO2%sed_loss(k)
-          glo_avg_fields_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff) = flux * bury_frac
+          glo_avg_fields_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff) = P_SiO2%to_floor(k) * bury_frac
        endif
+
+       P_CaCO3%to_floor(k)         = P_CaCO3%sflux_out(k)         + P_CaCO3%hflux_out(k)
+       P_CaCO3_ALT_CO2%to_floor(k) = P_CaCO3_ALT_CO2%sflux_out(k) + P_CaCO3_ALT_CO2%hflux_out(k)
 
        if (caco3_bury_thres_iopt == caco3_bury_thres_iopt_fixed_depth) then
           if (zw(k) < caco3_bury_thres_depth) then
-             P_CaCO3%sed_loss(k)         = P_CaCO3%sflux_out(k)         + P_CaCO3%hflux_out(k)
-             P_CaCO3_ALT_CO2%sed_loss(k) = P_CaCO3_ALT_CO2%sflux_out(k) + P_CaCO3_ALT_CO2%hflux_out(k)
+             P_CaCO3%sed_loss(k)         = P_CaCO3%to_floor(k)
+             P_CaCO3_ALT_CO2%sed_loss(k) = P_CaCO3_ALT_CO2%to_floor(k)
           endif
        else ! caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
           if (carbonate%CO3 > carbonate%CO3_sat_calcite) then
-             P_CaCO3%sed_loss(k) = P_CaCO3%sflux_out(k) + P_CaCO3%hflux_out(k)
+             P_CaCO3%sed_loss(k) = P_CaCO3%to_floor(k)
           endif
           if (carbonate%CO3_ALT_CO2 > carbonate%CO3_sat_calcite) then
-             P_CaCO3_ALT_CO2%sed_loss(k) = P_CaCO3_ALT_CO2%sflux_out(k) + P_CaCO3_ALT_CO2%hflux_out(k)
+             P_CaCO3_ALT_CO2%sed_loss(k) = P_CaCO3_ALT_CO2%to_floor(k)
           endif
        endif
 
@@ -1625,37 +1635,32 @@ contains
        !  flux used to hold sinking fluxes before update.
        !----------------------------------------------------------------------------------
 
-       flux = P_CaCO3%sflux_out(k) + P_CaCO3%hflux_out(k)
-       if (flux > c0) then
+       if (P_CaCO3%to_floor(k) > c0) then
           P_CaCO3%remin(k) = P_CaCO3%remin(k) &
-               + ((flux - P_CaCO3%sed_loss(k)) * dzr_loc)
+               + ((P_CaCO3%to_floor(k) - P_CaCO3%sed_loss(k)) * dzr_loc)
        endif
 
-       flux = P_CaCO3_ALT_CO2%sflux_out(k) + P_CaCO3_ALT_CO2%hflux_out(k)
-       if (flux > c0) then
+       if (P_CaCO3_ALT_CO2%to_floor(k) > c0) then
           P_CaCO3_ALT_CO2%remin(k) = P_CaCO3_ALT_CO2%remin(k) &
-               + ((flux - P_CaCO3_ALT_CO2%sed_loss(k)) * dzr_loc)
+               + ((P_CaCO3_ALT_CO2%to_floor(k) - P_CaCO3_ALT_CO2%sed_loss(k)) * dzr_loc)
        endif
 
-       flux = P_SiO2%sflux_out(k) + P_SiO2%hflux_out(k)
-       if (flux > c0) then
+       if (P_SiO2%to_floor(k) > c0) then
           P_SiO2%remin(k) = P_SiO2%remin(k) &
-               + ((flux - P_SiO2%sed_loss(k)) * dzr_loc)
+               + ((P_SiO2%to_floor(k) - P_SiO2%sed_loss(k)) * dzr_loc)
        endif
 
-       flux = POC%sflux_out(k) + POC%hflux_out(k)
-       if (flux > c0) then
+       if (POC%to_floor(k) > c0) then
           POC%remin(k) = POC%remin(k) &
-               + ((flux - POC%sed_loss(k)) * dzr_loc)
+               + ((POC%to_floor(k) - POC%sed_loss(k)) * dzr_loc)
 
           PON_remin = PON_remin &
-               + ((Q * flux - PON_sed_loss) * dzr_loc)
+               + ((Q * POC%to_floor(k) - PON_sed_loss) * dzr_loc)
        endif
 
-       flux = POP%sflux_out(k) + POP%hflux_out(k)
-       if (flux > c0) then
+       if (POP%to_floor(k) > c0) then
           POP%remin(k) = POP%remin(k) &
-               + ((flux - POP%sed_loss(k)) * dzr_loc)
+               + ((POP%to_floor(k) - POP%sed_loss(k)) * dzr_loc)
        endif
 
        !-----------------------------------------------------------------------
@@ -1663,12 +1668,13 @@ contains
        !        accounted for by fesedflux elsewhere.
        !-----------------------------------------------------------------------
 
-       flux = (P_iron%sflux_out(k) + P_iron%hflux_out(k))
-       if (flux > c0) then
-          P_iron%sed_loss(k) = flux
+       P_iron%to_floor(k) = P_iron%sflux_out(k) + P_iron%hflux_out(k)
+       if (P_iron%to_floor(k) > c0) then
+          P_iron%sed_loss(k) = P_iron%to_floor(k)
        endif
 
-       dust%sed_loss(k) = dust%sflux_out(k) + dust%hflux_out(k)
+       dust%to_floor(k) = dust%sflux_out(k) + dust%hflux_out(k)
+       dust%sed_loss(k) = dust%to_floor(k)
 
        !-----------------------------------------------------------------------
        !   Set all outgoing fluxes to 0.0

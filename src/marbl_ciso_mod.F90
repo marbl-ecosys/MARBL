@@ -1361,7 +1361,7 @@ contains
     real (r8) ::              &
          dz_loc,              & ! dz at a particular i,j location
          dzr_loc,             & ! dzr at a particular i,j location
-         flux, flux_alt,      & ! temp variables used to update sinking flux
+         flux_alt,           & ! flux to floor in alternative units, to match particular parameterizations
          POC_ciso_PROD_avail, & ! 13C POC production available for excess POC flux
          Rciso_POC_hflux_out, & ! ciso/12C of outgoing flux of hard POC
          Rciso_POC_in,        & ! ciso/12C of total POC ingoing component
@@ -1398,8 +1398,12 @@ contains
     !  initialize loss to sediments = 0 and local copy of percent sed
     !-----------------------------------------------------------------------
 
+    POC_ciso%to_floor(k)     = c0
+    P_CaCO3_ciso%to_floor(k) = c0
+
     POC_ciso%sed_loss(k)     = c0
     P_CaCO3_ciso%sed_loss(k) = c0
+
     sed_denitrif             = c0
     other_remin              = c0
 
@@ -1555,35 +1559,37 @@ contains
 
     if (k == column_kmt) then
 
-       flux = POC_ciso%sflux_out(k) + POC_ciso%hflux_out(k)
+       POC_ciso%to_floor(k) = POC_ciso%sflux_out(k) + POC_ciso%hflux_out(k)
 
-       if (flux > c0) then
-          flux_alt = flux * mpercm * spd ! convert to mmol/m^2/day
+       if (POC_ciso%to_floor(k) > c0) then
+          flux_alt = POC_ciso%to_floor(k) * mpercm * spd ! convert to mmol/m^2/day
 
-          POC_ciso%sed_loss(k) = flux * min(0.8_r8, POC_bury_coeff &
+          POC_ciso%sed_loss(k) = POC_ciso%to_floor(k) * min(0.8_r8, POC_bury_coeff &
                * (0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2))
 
 
-          sed_denitrif = dzr_loc * flux * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
+          sed_denitrif = dzr_loc * POC_ciso%to_floor(k) * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
-          flux_alt = flux*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
+          flux_alt = POC_ciso%to_floor(k)*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
           other_remin = dzr_loc &
-               * min ( min(0.1_r8 + flux_alt,0.5_r8) * (flux - POC_ciso%sed_loss(k)) , &
-                      (flux - POC_ciso%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N)))
+               * min ( min(0.1_r8 + flux_alt,0.5_r8) * (POC_ciso%to_floor(k) - POC_ciso%sed_loss(k)) , &
+                      (POC_ciso%to_floor(k) - POC_ciso%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N)))
 
           ! if bottom water O2 is depleted, assume all remin is denitrif + other
           if (O2_loc < c1) then
-             other_remin = dzr_loc * (flux - POC_ciso%sed_loss(k) - (sed_denitrif * dz_loc * denitrif_C_N))
+             other_remin = dzr_loc * (POC_ciso%to_floor(k) - POC_ciso%sed_loss(k) - (sed_denitrif * dz_loc * denitrif_C_N))
           endif
        endif
 
+       P_CaCO3_ciso%to_floor(k) = P_CaCO3_ciso%sflux_out(k) + P_CaCO3_ciso%hflux_out(k)
+
        if (caco3_bury_thres_iopt == caco3_bury_thres_iopt_fixed_depth) then
           if (column_zw < caco3_bury_thres_depth) then
-            P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%sflux_out(k) + P_CaCO3_ciso%hflux_out(k)
+            P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%to_floor(k)
          endif
        else ! caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
          if (CO3 > CO3_sat_calcite) then
-            P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%sflux_out(k) + P_CaCO3_ciso%hflux_out(k)
+            P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%to_floor(k)
          endif
        end if
 
@@ -1592,14 +1598,12 @@ contains
        ! flux used to hold sinking fluxes before update.
        !----------------------------------------------------------------------------------
 
-       flux = P_CaCO3_ciso%sflux_out(k) + P_CaCO3_ciso%hflux_out(k)
-       if (flux > c0) then
-          P_CaCO3_ciso%remin(k) = P_CaCO3_ciso%remin(k) + ((flux - P_CaCO3_ciso%sed_loss(k)) * dzr_loc)
+       if (P_CaCO3_ciso%to_floor(k) > c0) then
+          P_CaCO3_ciso%remin(k) = P_CaCO3_ciso%remin(k) + ((P_CaCO3_ciso%to_floor(k) - P_CaCO3_ciso%sed_loss(k)) * dzr_loc)
        endif
 
-       flux = POC_ciso%sflux_out(k) + POC_ciso%hflux_out(k)
-       if (flux > c0) then
-          POC_ciso%remin(k) = POC_ciso%remin(k) + ((flux - POC_ciso%sed_loss(k)) * dzr_loc)
+       if (POC_ciso%to_floor(k) > c0) then
+          POC_ciso%remin(k) = POC_ciso%remin(k) + ((POC_ciso%to_floor(k) - POC_ciso%sed_loss(k)) * dzr_loc)
        endif
 
        !-----------------------------------------------------------------------

@@ -42,6 +42,7 @@ module marbl_interface_private_types
      real(r8), allocatable  :: prod     (:) ! production term (base units/cm^3/sec)
      real(r8), allocatable  :: sflux_out(:) ! outgoing flux of soft subclass (base units/cm^2/sec)
      real(r8), allocatable  :: hflux_out(:) ! outgoing flux of hard subclass (base units/cm^2/sec)
+     real(r8), allocatable  :: to_floor (:) ! flux hitting sea floor (base units/cm^s/sec)
      real(r8), allocatable  :: sed_loss (:) ! loss to sediments (base units/cm^s/sec)
      real(r8), allocatable  :: remin    (:) ! remineralization term (base units/cm^3/sec)
    contains
@@ -330,6 +331,7 @@ contains
     allocate(this%prod     (num_levels))
     allocate(this%sflux_out(num_levels))
     allocate(this%hflux_out(num_levels))
+    allocate(this%to_floor (num_levels))
     allocate(this%sed_loss (num_levels))
     allocate(this%remin    (num_levels))
 
@@ -348,6 +350,7 @@ contains
     deallocate(this%prod)
     deallocate(this%sflux_out)
     deallocate(this%hflux_out)
+    deallocate(this%to_floor)
     deallocate(this%sed_loss)
     deallocate(this%remin)
 
@@ -990,4 +993,3 @@ contains
   !*****************************************************************************
 
 end module marbl_interface_private_types
-
