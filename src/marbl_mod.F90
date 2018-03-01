@@ -1164,12 +1164,9 @@ contains
          decay_CaCO3_fields       => marbl_particulate_share%decay_CaCO3_fields,       & ! IN/OUT
          poc_diss_fields          => marbl_particulate_share%poc_diss_fields,          & ! IN/OUT
          caco3_diss_fields        => marbl_particulate_share%caco3_diss_fields,        & ! IN/OUT
-         P_CaCO3_sflux_out_fields => marbl_particulate_share%P_CaCO3_sflux_out_fields, & ! IN/OUT
-         P_CaCO3_hflux_out_fields => marbl_particulate_share%P_CaCO3_hflux_out_fields, & ! IN/OUT
          POC_sflux_out_fields     => marbl_particulate_share%POC_sflux_out_fields,     & ! IN/OUT
          POC_hflux_out_fields     => marbl_particulate_share%POC_hflux_out_fields,     & ! IN/OUT
          POC_remin_fields         => marbl_particulate_share%POC_remin_fields,         & ! IN/OUT
-         P_CaCO3_remin_fields     => marbl_particulate_share%P_CaCO3_remin_fields,     & ! IN/OUT
          DECAY_Hard_fields        => marbl_particulate_share%DECAY_Hard_fields,        & ! IN/OUT
          POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff,           & ! IN/OUT
          POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff,           & ! IN/OUT
@@ -1487,12 +1484,9 @@ contains
 
     ! Save some fields for use by other modules before setting outgoing fluxes to 0.0 in bottom cell below
     if (ciso_on) then
-       P_CaCO3_sflux_out_fields(k) = P_CaCO3%sflux_out(k)
-       P_CaCO3_hflux_out_fields(k) = P_CaCO3%hflux_out(k)
        POC_sflux_out_fields(k)     = POC%sflux_out(k)
        POC_hflux_out_fields(k)     = POC%hflux_out(k)
        POC_remin_fields(k)         = POC%remin(k)
-       P_CaCO3_remin_fields(k)     = P_CaCO3%remin(k)
        DECAY_Hard_fields(k)        = DECAY_Hard
     endif
 

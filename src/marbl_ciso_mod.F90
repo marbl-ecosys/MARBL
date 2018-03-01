@@ -1390,7 +1390,6 @@ contains
          POC_sflux_out     => marbl_particulate_share%POC_sflux_out_fields  , & ! IN
          POC_hflux_out     => marbl_particulate_share%POC_hflux_out_fields  , & ! IN
          POC_remin         => marbl_particulate_share%POC_remin_fields      , & ! IN
-         P_CaCO3_remin     => marbl_particulate_share%P_CaCO3_remin_fields  , & ! IN
          POC_bury_coeff    => marbl_particulate_share%POC_bury_coeff          & ! IN
          )
 

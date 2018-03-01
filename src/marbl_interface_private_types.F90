@@ -111,9 +111,6 @@ module marbl_interface_private_types
      real(r8), allocatable :: decay_Hard_fields        (:) ! scaling factor for dissolution of Hard Ballast
      real(r8), allocatable :: poc_diss_fields          (:) ! diss. length used (cm)
      real(r8), allocatable :: caco3_diss_fields        (:) ! caco3 diss. length used (cm)
-     real(r8), allocatable :: P_CaCO3_sflux_out_fields (:) ! P_CaCO3 sflux_out from ecosys before getting set to zero for k=KMT
-     real(r8), allocatable :: P_CaCO3_hflux_out_fields (:) ! P_CaCO3_hflux_out from ecosys before getting set to zero for k=KMT
-     real(r8), allocatable :: P_CaCO3_remin_fields     (:) ! P_CaCO3 remin from ecosys before it gets modified for k=KMT
      real(r8), allocatable :: POC_sflux_out_fields     (:) ! POC_sflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: POC_hflux_out_fields     (:) ! POC_hflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: POC_remin_fields         (:) ! POC remin from ecosys before it gets modified for k=KMT
@@ -369,9 +366,6 @@ contains
     allocate(this%decay_Hard_fields                (num_levels))
     allocate(this%poc_diss_fields                  (num_levels))
     allocate(this%caco3_diss_fields                (num_levels))
-    allocate(this%P_CaCO3_sflux_out_fields         (num_levels))
-    allocate(this%P_CaCO3_hflux_out_fields         (num_levels))
-    allocate(this%P_CaCO3_remin_fields             (num_levels))
     allocate(this%POC_sflux_out_fields             (num_levels))
     allocate(this%POC_hflux_out_fields             (num_levels))
     allocate(this%POC_remin_fields                 (num_levels))
@@ -399,9 +393,6 @@ contains
     deallocate(this%decay_Hard_fields)
     deallocate(this%poc_diss_fields)
     deallocate(this%caco3_diss_fields)
-    deallocate(this%P_CaCO3_sflux_out_fields)
-    deallocate(this%P_CaCO3_hflux_out_fields)
-    deallocate(this%P_CaCO3_remin_fields)
     deallocate(this%POC_sflux_out_fields)
     deallocate(this%POC_hflux_out_fields)
     deallocate(this%POC_remin_fields)
