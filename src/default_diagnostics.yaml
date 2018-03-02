@@ -374,28 +374,40 @@ photoC_NO3_TOT_zint_100m :
    vertical_grid : none
    frequency : medium
    operator : average
+DOC_prod_zint :
+   longname : Vertical Integral of DOC Production
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+DOC_prod_zint_100m :
+   longname : Vertical Integral of DOC Production, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
 DOC_remin_zint :
    longname : Vertical Integral of DOC Remineralization
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : none
    frequency : medium
    operator : average
 DOC_remin_zint_100m :
    longname : Vertical Integral of DOC Remineralization, 0-100m
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : none
    frequency : medium
    operator : average
 DOCr_remin_zint :
    longname : Vertical Integral of DOCr Remineralization
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : none
    frequency : medium
    operator : average
 DOCr_remin_zint_100m :
    longname : Vertical Integral of DOCr Remineralization, 0-100m
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : none
    frequency : medium
    operator : average
 Jint_Ctot :
@@ -778,6 +790,18 @@ SiO2_FLUX_100m :
    operator : average
 P_iron_FLUX_100m :
    longname : P_iron Flux at 100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+POC_PROD_zint :
+   longname : Vertical Integral of POC Production
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+POC_PROD_zint_100m :
+   longname : Vertical Integral of POC Production, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium

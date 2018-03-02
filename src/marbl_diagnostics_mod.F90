@@ -84,6 +84,8 @@ module marbl_diagnostics_mod
     integer(int_kind) :: photoC_TOT_zint_100m
     integer(int_kind) :: photoC_NO3_TOT_zint
     integer(int_kind) :: photoC_NO3_TOT_zint_100m
+    integer(int_kind) :: DOC_prod_zint
+    integer(int_kind) :: DOC_prod_zint_100m
     integer(int_kind) :: DOC_remin_zint
     integer(int_kind) :: DOC_remin_zint_100m
     integer(int_kind) :: DOCr_remin_zint
@@ -195,6 +197,8 @@ module marbl_diagnostics_mod
     integer(int_kind) :: CaCO3_FLUX_100m
     integer(int_kind) :: SiO2_FLUX_100m
     integer(int_kind) :: P_iron_FLUX_100m
+    integer(int_kind) :: POC_PROD_zint
+    integer(int_kind) :: POC_PROD_zint_100m
     integer(int_kind) :: POC_REMIN_DOCr_zint
     integer(int_kind) :: POC_REMIN_DOCr_zint_100m
     integer(int_kind) :: POC_REMIN_DIC_zint
@@ -1056,6 +1060,30 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%photoC_NO3_TOT_zint_100m, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of DOC Production'
+      sname = 'DOC_prod_zint'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%DOC_prod_zint, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of DOC Production, 0-100m'
+      sname = 'DOC_prod_zint_100m'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%DOC_prod_zint_100m, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -2319,6 +2347,30 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%P_iron_FLUX_100m, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of POC Production'
+      sname = 'POC_PROD_zint'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%POC_PROD_zint, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of POC Production, 0-100m'
+      sname = 'POC_PROD_zint_100m'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%POC_PROD_zint_100m, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -4540,6 +4592,9 @@ contains
 
     diags(ind%POC_FLUX_IN)%field_3d(:, 1)    = POC%sflux_in + POC%hflux_in
     diags(ind%POC_PROD)%field_3d(:, 1)       = POC%prod
+    call compute_vertical_integrals(diags(ind%POC_PROD)%field_3d(:, 1), &
+         delta_z, kmt, full_depth_integral=diags(ind%POC_PROD_zint)%field_2d(1), &
+         near_surface_integral=diags(ind%POC_PROD_zint_100m)%field_2d(1))
     diags(ind%POC_REMIN_DOCr)%field_3d(:, 1) = POC%remin * POCremin_refract
     call compute_vertical_integrals(diags(ind%POC_REMIN_DOCr)%field_3d(:, 1), &
          delta_z, kmt, full_depth_integral=diags(ind%POC_REMIN_DOCr_zint)%field_2d(1), &
@@ -4770,6 +4825,10 @@ contains
        diags(ind%DOP_remin)%field_3d(k, 1)        = dissolved_organic_matter(k)%DOP_remin
        diags(ind%DOPr_remin)%field_3d(k, 1)       = dissolved_organic_matter(k)%DOPr_remin
     end do
+
+    call compute_vertical_integrals(diags(ind%DOC_prod)%field_3d(:,1), &
+         delta_z, kmt, full_depth_integral=diags(ind%DOC_prod_zint)%field_2d(1), &
+         near_surface_integral=diags(ind%DOC_prod_zint_100m)%field_2d(1))
 
     call compute_vertical_integrals(diags(ind%DOC_remin)%field_3d(:,1), &
          delta_z, kmt, full_depth_integral=diags(ind%DOC_remin_zint)%field_2d(1), &

@@ -1019,6 +1019,20 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "DOC_prod_zint": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of DOC Production",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "DOC_prod_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of DOC Production, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "DOC_remin": {
       "frequency": "low",
       "longname": "DOC Remineralization",
@@ -1031,14 +1045,14 @@
       "longname": "Vertical Integral of DOC Remineralization",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "none"
    },
    "DOC_remin_zint_100m": {
       "frequency": "medium",
       "longname": "Vertical Integral of DOC Remineralization, 0-100m",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "none"
    },
    "DOCr_remin": {
       "frequency": "low",
@@ -1052,14 +1066,14 @@
       "longname": "Vertical Integral of DOCr Remineralization",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "none"
    },
    "DOCr_remin_zint_100m": {
       "frequency": "medium",
       "longname": "Vertical Integral of DOCr Remineralization, 0-100m",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "none"
    },
    "DON_prod": {
       "frequency": "medium",
@@ -1478,6 +1492,20 @@
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "POC_PROD_zint": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of POC Production",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "POC_PROD_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of POC Production, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "POC_REMIN_DIC": {
       "frequency": "low",
