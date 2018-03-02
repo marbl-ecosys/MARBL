@@ -88,6 +88,20 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "((autotroph_sname))_agg_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Aggregation Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_agg_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Aggregation Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "((autotroph_sname))_bSi_form": {
       "dependencies": {
          "((autotroph_silicifier))": true

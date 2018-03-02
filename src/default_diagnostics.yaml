@@ -1414,6 +1414,18 @@ graze_((autotroph_sname))_zoo_zint_100m :
    vertical_grid : none
    frequency : medium
    operator : average
+((autotroph_sname))_agg_zint :
+   longname : ((autotroph_lname)) Aggregation Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_agg_zint_100m :
+   longname : ((autotroph_lname)) Aggregation Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
 ((autotroph_sname))_CaCO3_form_zint :
    dependencies :
       ((autotroph_calcifier)) : true

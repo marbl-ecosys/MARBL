@@ -132,6 +132,8 @@ module marbl_diagnostics_mod
     integer(int_kind), allocatable :: auto_loss_poc_zint_100m(:)
     integer(int_kind), allocatable :: auto_loss_doc_zint(:)
     integer(int_kind), allocatable :: auto_loss_doc_zint_100m(:)
+    integer(int_kind), allocatable :: auto_agg_zint(:)
+    integer(int_kind), allocatable :: auto_agg_zint_100m(:)
     integer(int_kind) :: tot_CaCO3_form_zint
 
     ! Zooplankton 2D diags
@@ -1398,6 +1400,8 @@ contains
         allocate(ind%auto_loss_poc_zint_100m(autotroph_cnt))
         allocate(ind%auto_loss_doc_zint(autotroph_cnt))
         allocate(ind%auto_loss_doc_zint_100m(autotroph_cnt))
+        allocate(ind%auto_agg_zint(autotroph_cnt))
+        allocate(ind%auto_agg_zint_100m(autotroph_cnt))
       end if
       do n=1,autotroph_cnt
         lname = trim(autotrophs(n)%lname) // ' C Fixation Vertical Integral'
@@ -1615,6 +1619,30 @@ contains
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%auto_loss_doc_zint_100m(n), marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = trim(autotrophs(n)%lname) // ' Aggregation Vertical Integral'
+        sname = trim(autotrophs(n)%sname) // '_agg_zint'
+        units = 'mmol/m^3 cm/s'
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%auto_agg_zint(n), marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = trim(autotrophs(n)%lname) // ' Aggregation Vertical Integral, 0-100m'
+        sname = trim(autotrophs(n)%sname) // '_agg_zint_100m'
+        units = 'mmol/m^3 cm/s'
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%auto_agg_zint_100m(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call log_add_diagnostics_error(marbl_status_log, sname, subname)
           return
@@ -2989,7 +3017,7 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Aggregate'
+        lname = trim(autotrophs(n)%lname) // ' Aggregation'
         sname = trim(autotrophs(n)%sname) // '_agg'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
@@ -4485,6 +4513,10 @@ contains
        call compute_vertical_integrals(diags(ind%auto_loss_doc(n))%field_3d(:, 1), &
             delta_z, kmt, full_depth_integral=diags(ind%auto_loss_doc_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%auto_loss_doc_zint_100m(n))%field_2d(1))
+
+       call compute_vertical_integrals(diags(ind%auto_agg(n))%field_3d(:, 1), &
+            delta_z, kmt, full_depth_integral=diags(ind%auto_agg_zint(n))%field_2d(1), &
+            near_surface_integral=diags(ind%auto_agg_zint_100m(n))%field_2d(1))
     end do ! do n
 
     end associate
@@ -5605,6 +5637,8 @@ contains
       deallocate(this%auto_loss_poc_zint_100m)
       deallocate(this%auto_loss_doc_zint)
       deallocate(this%auto_loss_doc_zint_100m)
+      deallocate(this%auto_agg_zint)
+      deallocate(this%auto_agg_zint_100m)
       deallocate(this%zoo_loss_zint)
       deallocate(this%zoo_loss_zint_100m)
       deallocate(this%zoo_loss_poc_zint)
