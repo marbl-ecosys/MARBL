@@ -125,7 +125,6 @@ contains
 #ifndef _NETCDF
     ! Abort if not built with -D_NETCDF
     call driver_status_log%log_error('Can not call marbl_io_close without netCDF support', subname)
-    file_id = -1
     return
 #else
     entry_to_remove => file_database
