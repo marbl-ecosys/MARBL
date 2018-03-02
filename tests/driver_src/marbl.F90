@@ -380,9 +380,7 @@ Program marbl
 
     case ('set_forcing')
       lprint_marbl_log = .false.
-      call marbl_set_forcing_test(marbl_instances)
-      write(*, "(A)") "ERROR: set_forcing test has not been set up yet."
-      call marbl_mpi_abort()
+      call marbl_set_forcing_test(marbl_instances, driver_status_log)
 
     !    UNIT TESTS
     ! -- get_put test -- !
@@ -407,7 +405,7 @@ Program marbl
   ! (4) Print log(s)
   ! (4a) If MARBL returns an error (or MARBL log was requested), print MARBL log
   do n=1,num_inst
-    if (marbl_instances(n)%StatusLog%labort_marbl.or.lprint_marbl_log) &
+    if (marbl_instances(n)%StatusLog%labort_marbl .or. lprint_marbl_log) &
         call print_marbl_log(marbl_instances(n)%StatusLog)
   end do
 
