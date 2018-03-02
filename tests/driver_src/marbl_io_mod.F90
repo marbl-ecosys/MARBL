@@ -37,6 +37,13 @@ contains
   !*****************************************************************************
 
   subroutine marbl_io_open(file_name, read_only, file_id, driver_status_log)
+    ! Open a netCDF file
+    ! if read_only is .true. then file is assumed to exist, but if
+    ! read_only is not .true. then new file will be created or the old
+    ! file will be clobbered.
+    !
+    ! Also prepends file info to module variable file_database (used to track
+    ! what files are open)
 
     character(len=*),     intent(in)    :: file_name
     logical,              intent(in)    :: read_only
@@ -93,63 +100,30 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_debug()
-    type(marbl_file_entry), pointer :: new_entry
+  subroutine marbl_io_close_by_database(entry_to_remove, driver_status_log)
 
-    new_entry => file_database
-    if (.not.associated(new_entry)) then
-      write(*,"(A)") "No files open"
-    else
-      do while (associated(new_entry))
-        write(*, "(2A,I0)") trim(new_entry%file_name), ': ', new_entry%file_id
-        new_entry => new_entry%next
-      end do
-    end if
-    write(*,"(A)") ""
+    type(marbl_log_type),            intent(inout) :: driver_status_log
+    type(marbl_file_entry), pointer, intent(inout) :: entry_to_remove
 
-  end subroutine marbl_io_debug
-
-  !*****************************************************************************
-
-  subroutine marbl_io_close_by_id(file_id, driver_status_log)
-
-    integer,              intent(in)    :: file_id
-    type(marbl_log_type), intent(inout) :: driver_status_log
-
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_by_id'
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_by_database'
     character(len=char_len) :: log_message
-    type(marbl_file_entry), pointer :: entry_to_remove, prev_entry
-    logical :: closed_file
+    type(marbl_file_entry), pointer :: prev_entry
 
-    closed_file = .false.
 #ifndef _NETCDF
     ! Abort if not built with -D_NETCDF
     call driver_status_log%log_error('Can not call marbl_io_close without netCDF support', subname)
     return
 #else
-    entry_to_remove => file_database
-    do while (associated(entry_to_remove))
-      if (file_id .eq. entry_to_remove%file_id) then
-        call netcdf_check(nf90_close(entry_to_remove%file_id), driver_status_log)
-        if (driver_status_log%labort_marbl) then
-          call driver_status_log%log_error_trace('nf90_close', subname)
-          return
-        end if
-        closed_file = .true.
-        entry_to_remove%file_id = -1
-        exit
-      end if
-      entry_to_remove => entry_to_remove%next
-    end do
-
-    if (.not. closed_file) then
-      write(log_message, "(A,I0,A)") "File with identifier ",file_id, " is not open!"
-      call driver_status_log%log_error(log_message, subname)
+    ! Close the netCDF file
+    call netcdf_check(nf90_close(entry_to_remove%file_id), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_close', subname)
       return
     end if
 
     ! File has already been closed, now just need to pop entry_to_remove out of linked list
     ! Two options:
+    entry_to_remove%file_id = -1
     if (file_database%file_id .eq. -1) then
       ! (1) Closing first file
       file_database => entry_to_remove%next
@@ -164,11 +138,42 @@ contains
     deallocate(entry_to_remove)
 #endif
 
+  end subroutine marbl_io_close_by_database
+
+  !*****************************************************************************
+
+  subroutine marbl_io_close_by_id(file_id, driver_status_log)
+    ! Given netCDF identifier, close the file and remove it from file_database
+
+    integer,              intent(in)    :: file_id
+    type(marbl_log_type), intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_by_id'
+    character(len=char_len) :: log_message
+    type(marbl_file_entry), pointer :: entry_to_remove, prev_entry
+
+    entry_to_remove => file_database
+    do while (associated(entry_to_remove))
+      if (file_id .eq. entry_to_remove%file_id) then
+        call marbl_io_close_by_database(entry_to_remove, driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          call driver_status_log%log_error_trace('marbl_io_close_by_database', subname)
+        end if
+        ! Return after closing file
+        return
+      end if
+      entry_to_remove => entry_to_remove%next
+    end do
+    ! If loop finishes then file name never matched
+    write(log_message, "(A,I0,A)") "File with identifier ", file_id, " is not open!"
+    call driver_status_log%log_error(log_message, subname)
+
   end subroutine marbl_io_close_by_id
 
   !*****************************************************************************
 
   subroutine marbl_io_close_by_name(file_name, driver_status_log)
+    ! Given netCDF file name, close the file and remove it from file_database
 
     character(len=*),     intent(in)    :: file_name
     type(marbl_log_type), intent(inout) :: driver_status_log
@@ -180,9 +185,9 @@ contains
     entry_to_remove => file_database
     do while (associated(entry_to_remove))
       if (trim(file_name) .eq. trim(entry_to_remove%file_name)) then
-        call marbl_io_close(entry_to_remove%file_id, driver_status_log)
+        call marbl_io_close_by_database(entry_to_remove, driver_status_log)
         if (driver_status_log%labort_marbl) then
-          call driver_status_log%log_error_trace('marbl_io_close_by_id', subname)
+          call driver_status_log%log_error_trace('marbl_io_close_by_database', subname)
         end if
         ! Return after closing file
         return
@@ -206,7 +211,13 @@ contains
     type(marbl_file_entry), pointer :: entry_to_remove
 
     do while (associated(file_database))
-        call marbl_io_close(file_database%file_id, driver_status_log)
+        ! Can not just pass file_database to marbl_io_close_by_database()
+        ! because argument is intent(inout) and gets deallocated; we don't
+        ! want to deallocate the module variable file_database, we want to
+        ! update it to point at next object in link list and then be able
+        ! to deallocate the first object in the list
+        entry_to_remove => file_database
+        call marbl_io_close_by_database(entry_to_remove, driver_status_log)
         if (driver_status_log%labort_marbl) then
           call driver_status_log%log_error_trace('marbl_io_close_by_id', subname)
         end if
@@ -235,5 +246,22 @@ contains
 #endif
 
   !*****************************************************************************
+
+  subroutine marbl_io_debug()
+
+    type(marbl_file_entry), pointer :: new_entry
+
+    new_entry => file_database
+    if (.not. associated(new_entry)) then
+      write(*,"(A)") "No files open"
+    else
+      do while (associated(new_entry))
+        write(*, "(2A,I0)") trim(new_entry%file_name), ': ', new_entry%file_id
+        new_entry => new_entry%next
+      end do
+    end if
+    write(*,"(A)") ""
+
+  end subroutine marbl_io_debug
 
 end module marbl_io_mod

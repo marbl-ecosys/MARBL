@@ -33,6 +33,7 @@ Contains
     end if
 
     call marbl_io_close_all(driver_status_log)
+    !call marbl_io_close('file1', driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_close_all', subname)
       return

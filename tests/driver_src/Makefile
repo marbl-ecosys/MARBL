@@ -151,13 +151,13 @@ $(LIB_DIR)/%.a: $(LIB_SRC_DIR)/*.F90
 
 # Driver object files
 $(OBJ_DIR)/%.o: $(EXE_SRC_DIR)/%.F90 $(LIB_DIR)/$(LIB_NAME)
-	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(INC2) $(INCLUDES) -c $< -o $@
+	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(NETCDF_INC) $(INC2) $(INCLUDES) -c $< -o $@
 
 # Executable
 $(EXE): clean_exe                        \
         $(LIB_DIR)/$(LIB_NAME)           \
         $(addprefix $(OBJ_DIR)/,$(OBJS))
-	$(FC) -o $(EXE) $(OBJ_DIR)/*.o $(LINKS)
+	$(FC) -o $(EXE) $(OBJ_DIR)/*.o $(LINKS) $(NETCDF_LNK)
 
 # Clean up previous builds
 .PHONY: clean_exe
