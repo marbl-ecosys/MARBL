@@ -25,7 +25,6 @@ module marbl_io_mod
   public :: marbl_io_open
   public :: marbl_io_close
   public :: marbl_io_close_all
-  public :: marbl_io_debug
 
   interface marbl_io_close
     procedure :: marbl_io_close_by_id
@@ -100,10 +99,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_close_by_database(entry_to_remove, driver_status_log)
+  subroutine marbl_io_close_by_database(file_database_entry, driver_status_log)
+    ! Given an entry in file_database, close the netCDF file and then
+    ! remove the entry from the linked list (private routine called from the
+    ! public marbl_io_close interface)
 
     type(marbl_log_type),            intent(inout) :: driver_status_log
-    type(marbl_file_entry), pointer, intent(inout) :: entry_to_remove
+    type(marbl_file_entry), pointer, intent(inout) :: file_database_entry
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_by_database'
     character(len=char_len) :: log_message
@@ -115,27 +117,27 @@ contains
     return
 #else
     ! Close the netCDF file
-    call netcdf_check(nf90_close(entry_to_remove%file_id), driver_status_log)
+    call netcdf_check(nf90_close(file_database_entry%file_id), driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('nf90_close', subname)
       return
     end if
 
-    ! File has already been closed, now just need to pop entry_to_remove out of linked list
+    ! File has already been closed, now just need to pop file_database_entry out of linked list
     ! Two options:
-    entry_to_remove%file_id = -1
+    file_database_entry%file_id = -1
     if (file_database%file_id .eq. -1) then
       ! (1) Closing first file
-      file_database => entry_to_remove%next
+      file_database => file_database_entry%next
     else
       ! (2) Closing file that is not first in the stack
       prev_entry => file_database
       do while (prev_entry%next%file_id .ne. -1)
         prev_entry => prev_entry%next
       end do
-      prev_entry%next => entry_to_remove%next
+      prev_entry%next => file_database_entry%next
     end if
-    deallocate(entry_to_remove)
+    deallocate(file_database_entry)
 #endif
 
   end subroutine marbl_io_close_by_database
@@ -203,6 +205,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_io_close_all(driver_status_log)
+    ! Close all the files in file_database
 
     type(marbl_log_type), intent(inout) :: driver_status_log
 
@@ -228,8 +231,9 @@ contains
   !*****************************************************************************
 
 #ifdef _NETCDF
-! Routine to handle errors returned from netcdf
   subroutine netcdf_check(status, driver_status_log)
+    ! Private routine to handle errors returned from netcdf
+    ! (can only be called if _NETCDF is defined)
 
     integer, intent(in)                 :: status
     type(marbl_log_type), intent(inout) :: driver_status_log
@@ -246,22 +250,5 @@ contains
 #endif
 
   !*****************************************************************************
-
-  subroutine marbl_io_debug()
-
-    type(marbl_file_entry), pointer :: new_entry
-
-    new_entry => file_database
-    if (.not. associated(new_entry)) then
-      write(*,"(A)") "No files open"
-    else
-      do while (associated(new_entry))
-        write(*, "(2A,I0)") trim(new_entry%file_name), ': ', new_entry%file_id
-        new_entry => new_entry%next
-      end do
-    end if
-    write(*,"(A)") ""
-
-  end subroutine marbl_io_debug
 
 end module marbl_io_mod
