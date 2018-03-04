@@ -973,9 +973,9 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CaCO3_FLUX_100m": {
+   "CaCO3_FLUX_((particulate_flux_ref_depth_str))": {
       "frequency": "medium",
-      "longname": "CaCO3 Flux at 100m",
+      "longname": "CaCO3 Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -1537,9 +1537,9 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "POC_FLUX_100m": {
+   "POC_FLUX_((particulate_flux_ref_depth_str))": {
       "frequency": "medium",
-      "longname": "POC Flux at 100m",
+      "longname": "POC Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -1628,9 +1628,9 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "POP_FLUX_100m": {
+   "POP_FLUX_((particulate_flux_ref_depth_str))": {
       "frequency": "medium",
-      "longname": "POP Flux at 100m",
+      "longname": "POP Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -1677,9 +1677,9 @@
       "units": "cm/s",
       "vertical_grid": "none"
    },
-   "P_iron_FLUX_100m": {
+   "P_iron_FLUX_((particulate_flux_ref_depth_str))": {
       "frequency": "medium",
-      "longname": "P_iron Flux at 100m",
+      "longname": "P_iron Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -1726,9 +1726,9 @@
       "units": "nmolN/cm^2/s",
       "vertical_grid": "none"
    },
-   "SiO2_FLUX_100m": {
+   "SiO2_FLUX_((particulate_flux_ref_depth_str))": {
       "frequency": "medium",
-      "longname": "SiO2 Flux at 100m",
+      "longname": "SiO2 Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"

@@ -281,6 +281,12 @@ general_parms :
       units : unitless
       datatype : real
       default_value : 1.0
+   particulate_flux_ref_depth :
+      longname : reference depth for particulate flux diagnostics
+      subcategory : 4. general parameters
+      units : m
+      datatype : real
+      default_value : 100.0
    parm_o2_min :
       longname : Minimum O2 needed for production & consumption
       subcategory : 4. general parameters
@@ -977,4 +983,3 @@ tracer_dependent :
             - 'ALK_ALT_CO2'
          GRID == "CESM_x3" : *CESM_TRACER_RESTORE
          GRID == "CESM_x1" : *CESM_TRACER_RESTORE
-

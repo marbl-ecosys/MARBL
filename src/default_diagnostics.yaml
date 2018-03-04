@@ -774,32 +774,32 @@ Lig_deg :
    operator : average
 
 # Particulate 2D diags
-POC_FLUX_100m :
-   longname : POC Flux at 100m
+POC_FLUX_((particulate_flux_ref_depth_str)) :
+   longname : POC Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
-POP_FLUX_100m :
-   longname : POP Flux at 100m
+POP_FLUX_((particulate_flux_ref_depth_str)) :
+   longname : POP Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
-CaCO3_FLUX_100m :
-   longname : CaCO3 Flux at 100m
+CaCO3_FLUX_((particulate_flux_ref_depth_str)) :
+   longname : CaCO3 Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
-SiO2_FLUX_100m :
-   longname : SiO2 Flux at 100m
+SiO2_FLUX_((particulate_flux_ref_depth_str)) :
+   longname : SiO2 Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
-P_iron_FLUX_100m :
-   longname : P_iron Flux at 100m
+P_iron_FLUX_((particulate_flux_ref_depth_str)) :
+   longname : P_iron Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium

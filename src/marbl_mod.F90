@@ -1077,8 +1077,10 @@ contains
     ! !USES:
 
     use marbl_constants_mod, only : Tref
+    use marbl_constants_mod, only : cmperm
     use marbl_settings_mod , only : parm_Fe_desorption_rate0
     use marbl_settings_mod , only : parm_sed_denitrif_coeff
+    use marbl_settings_mod , only : particulate_flux_ref_depth
 
     integer (int_kind)                , intent(in)    :: k                   ! vertical model level
     type(marbl_domain_type)           , intent(in)    :: domain
@@ -1129,9 +1131,14 @@ contains
          new_QA_dust_def,    & ! outgoing deficit in the QA(dust) POC flux
          scalelength,        & ! used to scale dissolution length scales as function of depth
          o2_scalefactor,     & ! used to scale dissolution length scales as function of o2
+         ztop,               & ! depth of top of layer
+         flux_top, flux_bot, & ! total (sflux+hflux) particulate fluxes at top and bottom of layer
+         wbot,               & ! weight for interpolating fluxes vertically
          flux_alt,           & ! flux to floor in alternative units, to match particular parameterizations
          bury_frac,          & ! fraction of flux hitting floor that gets buried
          dz_loc, dzr_loc       ! dz, dzr at a particular i, j location
+
+    real (r8) :: particulate_flux_ref_depth_cm
 
     real (r8), parameter :: &  ! o2_sf is an abbreviation for o2_scalefactor
          o2_sf_o2_range_hi = 45.0_r8, & ! apply o2_scalefactor for O2_loc less than this
@@ -1443,6 +1450,54 @@ contains
        POC_remin_fields(k)         = POC%remin(k)
        DECAY_Hard_fields(k)        = DECAY_Hard
     endif
+
+    ! extract particulate fluxes at particulate_flux_ref_depth, if this layer contains that depth
+    if (k .gt. 1) then
+      ztop = zw(k-1)
+    else
+      ztop = c0
+    end if
+    particulate_flux_ref_depth_cm = cmperm * particulate_flux_ref_depth
+    if (ztop .le. particulate_flux_ref_depth_cm .and. particulate_flux_ref_depth_cm .lt. zw(k)) then
+      if (k <= column_kmt) then
+        if (particulate_flux_ref_depth_cm .eq. ztop) then
+          ! expressions are simplified if particulate_flux_ref_depth is exactly the top of the layer
+          POC%flux_at_ref_depth     = POC%sflux_in(k)     + POC%hflux_in(k)
+          POP%flux_at_ref_depth     = POP%sflux_in(k)     + POP%hflux_in(k)
+          P_CaCO3%flux_at_ref_depth = P_CaCO3%sflux_in(k) + P_CaCO3%hflux_in(k)
+          P_SiO2%flux_at_ref_depth  = P_SiO2%sflux_in(k)  + P_SiO2%hflux_in(k)
+          P_iron%flux_at_ref_depth  = P_iron%sflux_in(k)  + P_iron%hflux_in(k)
+        else
+          wbot = (particulate_flux_ref_depth_cm - ztop) / delta_z(k)
+
+          flux_top = POC%sflux_in(k) + POC%hflux_in(k)
+          flux_bot = POC%sflux_out(k) + POC%hflux_out(k)
+          POC%flux_at_ref_depth = flux_top + wbot * (flux_bot - flux_top)
+
+          flux_top = POP%sflux_in(k) + POP%hflux_in(k)
+          flux_bot = POP%sflux_out(k) + POP%hflux_out(k)
+          POP%flux_at_ref_depth = flux_top + wbot * (flux_bot - flux_top)
+
+          flux_top = P_CaCO3%sflux_in(k) + P_CaCO3%hflux_in(k)
+          flux_bot = P_CaCO3%sflux_out(k) + P_CaCO3%hflux_out(k)
+          P_CaCO3%flux_at_ref_depth = flux_top + wbot * (flux_bot - flux_top)
+
+          flux_top = P_SiO2%sflux_in(k) + P_SiO2%hflux_in(k)
+          flux_bot = P_SiO2%sflux_out(k) + P_SiO2%hflux_out(k)
+          P_SiO2%flux_at_ref_depth = flux_top + wbot * (flux_bot - flux_top)
+
+          flux_top = P_iron%sflux_in(k) + P_iron%hflux_in(k)
+          flux_bot = P_iron%sflux_out(k) + P_iron%hflux_out(k)
+          P_iron%flux_at_ref_depth = flux_top + wbot * (flux_bot - flux_top)
+        end if
+      else
+        POC%flux_at_ref_depth     = c0
+        POP%flux_at_ref_depth     = c0
+        P_CaCO3%flux_at_ref_depth = c0
+        P_SiO2%flux_at_ref_depth  = c0
+        P_iron%flux_at_ref_depth  = c0
+      end if
+    end if
 
     !-----------------------------------------------------------------------
     !  Bottom Sediments Cell?

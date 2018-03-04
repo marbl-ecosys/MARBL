@@ -196,11 +196,11 @@ module marbl_diagnostics_mod
     integer(int_kind) :: Lig_deg
 
     ! Particulate 2D diags
-    integer(int_kind) :: POC_FLUX_100m
-    integer(int_kind) :: POP_FLUX_100m
-    integer(int_kind) :: CaCO3_FLUX_100m
-    integer(int_kind) :: SiO2_FLUX_100m
-    integer(int_kind) :: P_iron_FLUX_100m
+    integer(int_kind) :: POC_FLUX_at_ref_depth
+    integer(int_kind) :: POP_FLUX_at_ref_depth
+    integer(int_kind) :: CaCO3_FLUX_at_ref_depth
+    integer(int_kind) :: SiO2_FLUX_at_ref_depth
+    integer(int_kind) :: P_iron_FLUX_at_ref_depth
     integer(int_kind) :: POC_PROD_zint
     integer(int_kind) :: POC_PROD_zint_100m
     integer(int_kind) :: POC_REMIN_DOCr_zint
@@ -406,6 +406,7 @@ contains
 
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lvariable_PtoC
+    use marbl_settings_mod, only : particulate_flux_ref_depth
 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
@@ -420,6 +421,7 @@ contains
     integer :: n
     logical :: truncate
     character(len=char_len) :: lname, sname, units, vgrid
+    character(len=char_len) :: particulate_flux_ref_depth_str
 
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_init'
     !-----------------------------------------------------------------------
@@ -2355,61 +2357,64 @@ contains
       end if
 
       ! Particulate 2D diags
-      lname = 'POC Flux at 100m'
-      sname = 'POC_FLUX_100m'
+
+      write(particulate_flux_ref_depth_str, "(I0,A)") nint(particulate_flux_ref_depth), 'm'
+
+      lname = 'POC Flux at ' // trim(particulate_flux_ref_depth_str)
+      sname = 'POC_FLUX_' // trim(particulate_flux_ref_depth_str)
       units = 'mmol/m^3 cm/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_FLUX_100m, marbl_status_log)
+           ind%POC_FLUX_at_ref_depth, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
       end if
 
-      lname = 'POP Flux at 100m'
-      sname = 'POP_FLUX_100m'
+      lname = 'POP Flux at ' // trim(particulate_flux_ref_depth_str)
+      sname = 'POP_FLUX_' // trim(particulate_flux_ref_depth_str)
       units = 'mmol/m^3 cm/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POP_FLUX_100m, marbl_status_log)
+           ind%POP_FLUX_at_ref_depth, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
       end if
 
-      lname = 'CaCO3 Flux at 100m'
-      sname = 'CaCO3_FLUX_100m'
+      lname = 'CaCO3 Flux at ' // trim(particulate_flux_ref_depth_str)
+      sname = 'CaCO3_FLUX_' // trim(particulate_flux_ref_depth_str)
       units = 'mmol/m^3 cm/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_FLUX_100m, marbl_status_log)
+           ind%CaCO3_FLUX_at_ref_depth, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
       end if
 
-      lname = 'SiO2 Flux at 100m'
-      sname = 'SiO2_FLUX_100m'
+      lname = 'SiO2 Flux at ' // trim(particulate_flux_ref_depth_str)
+      sname = 'SiO2_FLUX_' // trim(particulate_flux_ref_depth_str)
       units = 'mmol/m^3 cm/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%SiO2_FLUX_100m, marbl_status_log)
+           ind%SiO2_FLUX_at_ref_depth, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
       end if
 
-      lname = 'P_iron Flux at 100m'
-      sname = 'P_iron_FLUX_100m'
+      lname = 'P_iron Flux at ' // trim(particulate_flux_ref_depth_str)
+      sname = 'P_iron_FLUX_' // trim(particulate_flux_ref_depth_str)
       units = 'mmol/m^3 cm/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%P_iron_FLUX_100m, marbl_status_log)
+           ind%P_iron_FLUX_at_ref_depth, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -4636,15 +4641,6 @@ contains
     real(r8), dimension(:)             , intent(in)    :: sed_denitrif ! km
     real(r8), dimension(:)             , intent(in)    :: other_remin  ! km
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_interior_forcing_diags
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    real (r8), parameter :: depth_ref = 100.0e2_r8 ! 100m
-    real (r8)            :: ztop                   ! depth of top of layer containing depth_ref
-    real (r8)            :: wbot                   ! interpolation weight
-    real (r8)            :: flux_top, flux_bot     ! particulate flux at top and bottom of layer
-    integer (int_kind)   :: k_ref                  ! k index s.t. zw(k-1) .le. depth_ref .lt. zw(k)
-    !-----------------------------------------------------------------------
 
     associate(                                                       &
          ind             => marbl_interior_diag_ind,                 &
@@ -4661,101 +4657,57 @@ contains
          P_iron          => marbl_particulate_share%P_iron           &
          )
 
-    ! extract particulate fluxes at depth_ref, if depth_ref is shallower than the ocean floor
-    if (depth_ref .lt. zw(kmt)) then
-      ! find layer containing depth_ref, i.e. zw(k-1) .le. depth_ref .lt. zw(k)
-      do k_ref = 1, kmt
-        if (depth_ref .lt. zw(k_ref)) exit
-      end do
-      if (k_ref .gt. 1) then
-        ztop = zw(k_ref-1)
-      else
-        ztop = c0
-      end if
-      if (depth_ref .eq. ztop) then
-        ! no interpolation of fluxes if depth_ref is exactly the top of the layer
-        diags(ind%POC_FLUX_100m)%field_2d(1)    = POC%sflux_in(k_ref)     + POC%hflux_in(k_ref)
-        diags(ind%POP_FLUX_100m)%field_2d(1)    = POP%sflux_in(k_ref)     + POP%hflux_in(k_ref)
-        diags(ind%CaCO3_FLUX_100m)%field_2d(1)  = P_CaCO3%sflux_in(k_ref) + P_CaCO3%hflux_in(k_ref)
-        diags(ind%SiO2_FLUX_100m)%field_2d(1)   = P_SiO2%sflux_in(k_ref)  + P_SiO2%hflux_in(k_ref)
-        diags(ind%P_iron_FLUX_100m)%field_2d(1) = P_iron%sflux_in(k_ref)  + P_iron%hflux_in(k_ref)
-      else
-        wbot = (depth_ref - ztop) / delta_z(k_ref)
-
-        flux_top = POC%sflux_in(k_ref) + POC%hflux_in(k_ref)
-        flux_bot = POC%sflux_out(k_ref) + POC%hflux_out(k_ref)
-        diags(ind%POC_FLUX_100m)%field_2d(1) = flux_top + wbot * (flux_bot - flux_top)
-
-        flux_top = POP%sflux_in(k_ref) + POP%hflux_in(k_ref)
-        flux_bot = POP%sflux_out(k_ref) + POP%hflux_out(k_ref)
-        diags(ind%POP_FLUX_100m)%field_2d(1) = flux_top + wbot * (flux_bot - flux_top)
-
-        flux_top = P_CaCO3%sflux_in(k_ref) + P_CaCO3%hflux_in(k_ref)
-        flux_bot = P_CaCO3%sflux_out(k_ref) + P_CaCO3%hflux_out(k_ref)
-        diags(ind%CaCO3_FLUX_100m)%field_2d(1) = flux_top + wbot * (flux_bot - flux_top)
-
-        flux_top = P_SiO2%sflux_in(k_ref) + P_SiO2%hflux_in(k_ref)
-        flux_bot = P_SiO2%sflux_out(k_ref) + P_SiO2%hflux_out(k_ref)
-        diags(ind%SiO2_FLUX_100m)%field_2d(1) = flux_top + wbot * (flux_bot - flux_top)
-
-        flux_top = P_iron%sflux_in(k_ref) + P_iron%hflux_in(k_ref)
-        flux_bot = P_iron%sflux_out(k_ref) + P_iron%hflux_out(k_ref)
-        diags(ind%P_iron_FLUX_100m)%field_2d(1) = flux_top + wbot * (flux_bot - flux_top)
-      end if
-    else
-      diags(ind%POC_FLUX_100m)%field_2d(1)    = c0
-      diags(ind%POP_FLUX_100m)%field_2d(1)    = c0
-      diags(ind%CaCO3_FLUX_100m)%field_2d(1)  = c0
-      diags(ind%SiO2_FLUX_100m)%field_2d(1)   = c0
-      diags(ind%P_iron_FLUX_100m)%field_2d(1) = c0
-    end if
-
-    diags(ind%POC_FLUX_IN)%field_3d(:, 1)    = POC%sflux_in + POC%hflux_in
-    diags(ind%POC_PROD)%field_3d(:, 1)       = POC%prod
+    diags(ind%POC_FLUX_at_ref_depth)%field_2d(1) = POC%flux_at_ref_depth
+    diags(ind%POC_FLUX_IN)%field_3d(:, 1)        = POC%sflux_in + POC%hflux_in
+    diags(ind%POC_PROD)%field_3d(:, 1)           = POC%prod
     call compute_vertical_integrals(diags(ind%POC_PROD)%field_3d(:, 1), &
          delta_z, kmt, full_depth_integral=diags(ind%POC_PROD_zint)%field_2d(1), &
          near_surface_integral=diags(ind%POC_PROD_zint_100m)%field_2d(1))
-    diags(ind%POC_REMIN_DOCr)%field_3d(:, 1) = POC%remin * POCremin_refract
+    diags(ind%POC_REMIN_DOCr)%field_3d(:, 1)     = POC%remin * POCremin_refract
     call compute_vertical_integrals(diags(ind%POC_REMIN_DOCr)%field_3d(:, 1), &
          delta_z, kmt, full_depth_integral=diags(ind%POC_REMIN_DOCr_zint)%field_2d(1), &
          near_surface_integral=diags(ind%POC_REMIN_DOCr_zint_100m)%field_2d(1))
-    diags(ind%POC_REMIN_DIC)%field_3d(:, 1)  = POC%remin * (c1 - POCremin_refract)
+    diags(ind%POC_REMIN_DIC)%field_3d(:, 1)      = POC%remin * (c1 - POCremin_refract)
     call compute_vertical_integrals(diags(ind%POC_REMIN_DIC)%field_3d(:, 1), &
          delta_z, kmt, full_depth_integral=diags(ind%POC_REMIN_DIC_zint)%field_2d(1), &
          near_surface_integral=diags(ind%POC_REMIN_DIC_zint_100m)%field_2d(1))
 
-    diags(ind%POP_FLUX_IN)%field_3d(:, 1)    = POP%sflux_in + POP%hflux_in
-    diags(ind%POP_PROD)%field_3d(:, 1)       = POP%prod
-    diags(ind%POP_REMIN_DOPr)%field_3d(:, 1) = POP%remin * POPremin_refract
-    diags(ind%POP_REMIN_PO4)%field_3d(:, 1)  = POP%remin * (c1 - POPremin_refract)
+    diags(ind%POP_FLUX_at_ref_depth)%field_2d(1) = POP%flux_at_ref_depth
+    diags(ind%POP_FLUX_IN)%field_3d(:, 1)        = POP%sflux_in + POP%hflux_in
+    diags(ind%POP_PROD)%field_3d(:, 1)           = POP%prod
+    diags(ind%POP_REMIN_DOPr)%field_3d(:, 1)     = POP%remin * POPremin_refract
+    diags(ind%POP_REMIN_PO4)%field_3d(:, 1)      = POP%remin * (c1 - POPremin_refract)
 
     diags(ind%PON_REMIN_DONr)%field_3d(:, 1) = PON_remin * PONremin_refract
     diags(ind%PON_REMIN_NH4)%field_3d(:, 1)  = PON_remin * (c1 - PONremin_refract)
 
-    diags(ind%CaCO3_FLUX_IN)%field_3d(:, 1)  = P_CaCO3%sflux_in + P_CaCO3%hflux_in
-    diags(ind%CaCO3_PROD)%field_3d(:, 1)     = P_CaCO3%prod
+    diags(ind%CaCO3_FLUX_at_ref_depth)%field_2d(1) = P_CaCO3%flux_at_ref_depth
+    diags(ind%CaCO3_FLUX_IN)%field_3d(:, 1)        = P_CaCO3%sflux_in + P_CaCO3%hflux_in
+    diags(ind%CaCO3_PROD)%field_3d(:, 1)           = P_CaCO3%prod
     call compute_vertical_integrals(diags(ind%CaCO3_PROD)%field_3d(:, 1), &
          delta_z, kmt, full_depth_integral=diags(ind%CaCO3_PROD_zint)%field_2d(1), &
          near_surface_integral=diags(ind%CaCO3_PROD_zint_100m)%field_2d(1))
-    diags(ind%CaCO3_REMIN)%field_3d(:, 1)    = P_CaCO3%remin
+    diags(ind%CaCO3_REMIN)%field_3d(:, 1)          = P_CaCO3%remin
     call compute_vertical_integrals(diags(ind%CaCO3_REMIN)%field_3d(:, 1), &
          delta_z, kmt, full_depth_integral=diags(ind%CaCO3_REMIN_zint)%field_2d(1), &
          near_surface_integral=diags(ind%CaCO3_REMIN_zint_100m)%field_2d(1))
 
-    diags(ind%CaCO3_ALT_CO2_FLUX_IN)%field_3d(:, 1)  = P_CaCO3_ALT_CO2%sflux_in + P_CaCO3_ALT_CO2%hflux_in
-    diags(ind%CaCO3_ALT_CO2_PROD)%field_3d(:, 1)     = P_CaCO3_ALT_CO2%prod
-    diags(ind%CaCO3_ALT_CO2_REMIN)%field_3d(:, 1)    = P_CaCO3_ALT_CO2%remin
+    diags(ind%CaCO3_ALT_CO2_FLUX_IN)%field_3d(:, 1) = P_CaCO3_ALT_CO2%sflux_in + P_CaCO3_ALT_CO2%hflux_in
+    diags(ind%CaCO3_ALT_CO2_PROD)%field_3d(:, 1)    = P_CaCO3_ALT_CO2%prod
+    diags(ind%CaCO3_ALT_CO2_REMIN)%field_3d(:, 1)   = P_CaCO3_ALT_CO2%remin
 
-    diags(ind%SiO2_FLUX_IN)%field_3d(:, 1)   = P_SiO2%sflux_in + P_SiO2%hflux_in
-    diags(ind%SiO2_PROD)%field_3d(:, 1)      = P_SiO2%prod
-    diags(ind%SiO2_REMIN)%field_3d(:, 1)     = P_SiO2%remin
+    diags(ind%SiO2_FLUX_at_ref_depth)%field_2d(1) = P_SiO2%flux_at_ref_depth
+    diags(ind%SiO2_FLUX_IN)%field_3d(:, 1)        = P_SiO2%sflux_in + P_SiO2%hflux_in
+    diags(ind%SiO2_PROD)%field_3d(:, 1)           = P_SiO2%prod
+    diags(ind%SiO2_REMIN)%field_3d(:, 1)          = P_SiO2%remin
 
-    diags(ind%dust_FLUX_IN)%field_3d(:, 1)   = dust%sflux_in + dust%hflux_in
-    diags(ind%dust_REMIN)%field_3d(:, 1)     = P_SiO2%remin
+    diags(ind%dust_FLUX_IN)%field_3d(:, 1) = dust%sflux_in + dust%hflux_in
+    diags(ind%dust_REMIN)%field_3d(:, 1)   = P_SiO2%remin
 
-    diags(ind%P_iron_FLUX_IN)%field_3d(:, 1) = P_iron%sflux_in + P_iron%hflux_in
-    diags(ind%P_iron_PROD)%field_3d(:, 1)    = P_iron%prod
-    diags(ind%P_iron_REMIN)%field_3d(:, 1)   = P_iron%remin
+    diags(ind%P_iron_FLUX_at_ref_depth)%field_2d(1) = P_iron%flux_at_ref_depth
+    diags(ind%P_iron_FLUX_IN)%field_3d(:, 1)        = P_iron%sflux_in + P_iron%hflux_in
+    diags(ind%P_iron_PROD)%field_3d(:, 1)           = P_iron%prod
+    diags(ind%P_iron_REMIN)%field_3d(:, 1)          = P_iron%remin
 
     diags(ind%calcToSed)%field_2d(1)         = sum(P_CaCO3%sed_loss)
     diags(ind%calcToSed_ALT_CO2)%field_2d(1) = sum(P_CaCO3_ALT_CO2%sed_loss)
