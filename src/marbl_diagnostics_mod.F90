@@ -118,6 +118,7 @@ module marbl_diagnostics_mod
     integer(int_kind), allocatable :: photoC_zint_100m(:)
     integer(int_kind), allocatable :: photoC_NO3_zint(:)
     integer(int_kind), allocatable :: CaCO3_form_zint(:)
+    integer(int_kind), allocatable :: CaCO3_form_zint_100m(:)
     integer(int_kind), allocatable :: auto_graze_zint(:)
     integer(int_kind), allocatable :: auto_graze_zint_100m(:)
     integer(int_kind), allocatable :: auto_graze_poc_zint(:)
@@ -135,6 +136,7 @@ module marbl_diagnostics_mod
     integer(int_kind), allocatable :: auto_agg_zint(:)
     integer(int_kind), allocatable :: auto_agg_zint_100m(:)
     integer(int_kind) :: tot_CaCO3_form_zint
+    integer(int_kind) :: tot_CaCO3_form_zint_100m
 
     ! Zooplankton 2D diags
     integer(int_kind), allocatable :: zoo_loss_zint(:)
@@ -205,6 +207,10 @@ module marbl_diagnostics_mod
     integer(int_kind) :: POC_REMIN_DOCr_zint_100m
     integer(int_kind) :: POC_REMIN_DIC_zint
     integer(int_kind) :: POC_REMIN_DIC_zint_100m
+    integer(int_kind) :: CaCO3_PROD_zint
+    integer(int_kind) :: CaCO3_PROD_zint_100m
+    integer(int_kind) :: CaCO3_REMIN_zint
+    integer(int_kind) :: CaCO3_REMIN_zint_100m
 
     ! Particulate 3D diags
     integer(int_kind) :: POC_FLUX_IN
@@ -1386,6 +1392,7 @@ contains
         allocate(ind%photoC_zint_100m(autotroph_cnt))
         allocate(ind%photoC_NO3_zint(autotroph_cnt))
         allocate(ind%CaCO3_form_zint(autotroph_cnt))
+        allocate(ind%CaCO3_form_zint_100m(autotroph_cnt))
         allocate(ind%auto_graze_zint(autotroph_cnt))
         allocate(ind%auto_graze_zint_100m(autotroph_cnt))
         allocate(ind%auto_graze_poc_zint(autotroph_cnt))
@@ -1454,6 +1461,22 @@ contains
           end if
         else
           ind%CaCO3_form_zint(n) = -1
+        end if
+
+        if (autotrophs(n)%imp_calcifier .or. autotrophs(n)%exp_calcifier) then
+          lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation Vertical Integral, 0-100m'
+          sname = trim(autotrophs(n)%sname) // '_CaCO3_form_zint_100m'
+          units = 'mmol/m^3 cm/s'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+               ind%CaCO3_form_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+        else
+          ind%CaCO3_form_zint_100m(n) = -1
         end if
 
         lname = trim(autotrophs(n)%lname) // ' Grazing Vertical Integral'
@@ -1656,6 +1679,18 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%tot_CaCO3_form_zint, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Total CaCO3 Formation Vertical Integral, 0-100m'
+      sname = 'CaCO3_form_zint_100m'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%tot_CaCO3_form_zint_100m, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -2447,6 +2482,54 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%POC_REMIN_DIC_zint_100m, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of CaCO3 Production'
+      sname = 'CaCO3_PROD_zint'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%CaCO3_PROD_zint, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of CaCO3 Production, 0-100m'
+      sname = 'CaCO3_PROD_zint_100m'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%CaCO3_PROD_zint_100m, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of CaCO3 Remineralization'
+      sname = 'CaCO3_REMIN_zint'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%CaCO3_REMIN_zint, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Vertical Integral of CaCO3 Remineralization, 0-100m'
+      sname = 'CaCO3_REMIN_zint_100m'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%CaCO3_REMIN_zint_100m, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -4396,6 +4479,7 @@ contains
     diags(ind%photoC_TOT)%field_3d(:, 1) = c0
     diags(ind%photoC_NO3_TOT)%field_3d(:, 1) = c0
     diags(ind%tot_CaCO3_form_zint)%field_2d(1) = c0
+    diags(ind%tot_CaCO3_form_zint_100m)%field_2d(1) = c0
     diags(ind%photoC_TOT_zint)%field_2d(1) = c0
     diags(ind%photoC_TOT_zint_100m)%field_2d(1) = c0
     diags(ind%photoC_NO3_TOT_zint)%field_2d(1) = c0
@@ -4464,10 +4548,14 @@ contains
        ! per-autotroph vertical integrals and their sums
        if (ind%CaCO3_form_zint(n).ne.-1) then
           call compute_vertical_integrals(autotroph_secondary_species(n,:)%CaCO3_form, &
-               delta_z, kmt, full_depth_integral=diags(ind%CaCO3_form_zint(n))%field_2d(1))
+               delta_z, kmt, full_depth_integral=diags(ind%CaCO3_form_zint(n))%field_2d(1), &
+               near_surface_integral=diags(ind%CaCO3_form_zint_100m(n))%field_2d(1))
 
           diags(ind%tot_CaCO3_form_zint)%field_2d(1) = diags(ind%tot_CaCO3_form_zint)%field_2d(1) + &
                diags(ind%CaCO3_form_zint(n))%field_2d(1)
+
+          diags(ind%tot_CaCO3_form_zint_100m)%field_2d(1) = diags(ind%tot_CaCO3_form_zint_100m)%field_2d(1) + &
+               diags(ind%CaCO3_form_zint_100m(n))%field_2d(1)
        end if
 
        call compute_vertical_integrals(autotroph_secondary_species(n,:)%photoC, &
@@ -4646,7 +4734,13 @@ contains
 
     diags(ind%CaCO3_FLUX_IN)%field_3d(:, 1)  = P_CaCO3%sflux_in + P_CaCO3%hflux_in
     diags(ind%CaCO3_PROD)%field_3d(:, 1)     = P_CaCO3%prod
+    call compute_vertical_integrals(diags(ind%CaCO3_PROD)%field_3d(:, 1), &
+         delta_z, kmt, full_depth_integral=diags(ind%CaCO3_PROD_zint)%field_2d(1), &
+         near_surface_integral=diags(ind%CaCO3_PROD_zint_100m)%field_2d(1))
     diags(ind%CaCO3_REMIN)%field_3d(:, 1)    = P_CaCO3%remin
+    call compute_vertical_integrals(diags(ind%CaCO3_REMIN)%field_3d(:, 1), &
+         delta_z, kmt, full_depth_integral=diags(ind%CaCO3_REMIN_zint)%field_2d(1), &
+         near_surface_integral=diags(ind%CaCO3_REMIN_zint_100m)%field_2d(1))
 
     diags(ind%CaCO3_ALT_CO2_FLUX_IN)%field_3d(:, 1)  = P_CaCO3_ALT_CO2%sflux_in + P_CaCO3_ALT_CO2%hflux_in
     diags(ind%CaCO3_ALT_CO2_PROD)%field_3d(:, 1)     = P_CaCO3_ALT_CO2%prod
@@ -5623,6 +5717,7 @@ contains
       deallocate(this%photoC_zint_100m)
       deallocate(this%photoC_NO3_zint)
       deallocate(this%CaCO3_form_zint)
+      deallocate(this%CaCO3_form_zint_100m)
       deallocate(this%auto_graze_zint)
       deallocate(this%auto_graze_zint_100m)
       deallocate(this%auto_graze_poc_zint)

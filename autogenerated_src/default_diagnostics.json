@@ -20,6 +20,16 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "((autotroph_sname))_CaCO3_form_zint_100m": {
+      "dependencies": {
+         "((autotroph_calcifier))": true
+      },
+      "frequency": "never",
+      "longname": "((autotroph_lname)) CaCO3 Formation Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "((autotroph_sname))_Fe_lim": {
       "frequency": "medium",
       "longname": "((autotroph_lname)) Fe Limitation",
@@ -943,7 +953,7 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_ALT_CO2_FLUX_IN": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "CaCO3 Flux into Cell, Alternative CO2",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
@@ -957,7 +967,7 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_ALT_CO2_REMIN": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "CaCO3 Remineralization, Alternative CO2",
       "operator": "average",
       "units": "mmol/m^3/s",
@@ -971,36 +981,77 @@
       "vertical_grid": "none"
    },
    "CaCO3_FLUX_IN": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "CaCO3 Flux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
    },
    "CaCO3_PROD": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "CaCO3 Production",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CaCO3_REMIN": {
+   "CaCO3_PROD_zint": {
       "frequency": "medium",
+      "longname": "Vertical Integral of CaCO3 Production",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CaCO3_PROD_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of CaCO3 Production, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CaCO3_REMIN": {
+      "frequency": "low",
       "longname": "CaCO3 Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CaCO3_form": {
+   "CaCO3_REMIN_zint": {
       "frequency": "medium",
+      "longname": "Vertical Integral of CaCO3 Remineralization",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CaCO3_REMIN_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of CaCO3 Remineralization, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CaCO3_form": {
+      "frequency": "low",
       "longname": "Total CaCO3 Formation",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CaCO3_form_zint": {
-      "frequency": "high",
+      "frequency": [
+         "medium",
+         "high"
+      ],
       "longname": "Total CaCO3 Formation Vertical Integral",
+      "operator": [
+         "average",
+         "average"
+      ],
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CaCO3_form_zint_100m": {
+      "frequency": "medium",
+      "longname": "Total CaCO3 Formation Vertical Integral, 0-100m",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"

@@ -536,7 +536,17 @@ CaCO3_form_zint :
    longname : Total CaCO3 Formation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : high
+   frequency :
+      - medium
+      - high
+   operator :
+      - average
+      - average
+CaCO3_form_zint_100m :
+   longname : Total CaCO3 Formation Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
    operator : average
 
 # General 3D diags
@@ -830,6 +840,30 @@ POC_REMIN_DIC_zint_100m :
    vertical_grid : none
    frequency : medium
    operator : average
+CaCO3_PROD_zint :
+   longname : Vertical Integral of CaCO3 Production
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CaCO3_PROD_zint_100m :
+   longname : Vertical Integral of CaCO3 Production, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CaCO3_REMIN_zint :
+   longname : Vertical Integral of CaCO3 Remineralization
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+CaCO3_REMIN_zint_100m :
+   longname : Vertical Integral of CaCO3 Remineralization, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
 
 # Particulate 3D diags
 POC_FLUX_IN :
@@ -896,25 +930,25 @@ CaCO3_FLUX_IN :
    longname : CaCO3 Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 CaCO3_PROD :
    longname : CaCO3 Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 CaCO3_REMIN :
    longname : CaCO3 Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 CaCO3_ALT_CO2_FLUX_IN :
    longname : CaCO3 Flux into Cell, Alternative CO2
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 CaCO3_ALT_CO2_PROD :
    longname : CaCO3 Production, Alternative CO2
@@ -926,7 +960,7 @@ CaCO3_ALT_CO2_REMIN :
    longname : CaCO3 Remineralization, Alternative CO2
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 SiO2_FLUX_IN :
    longname : SiO2 Flux into Cell
@@ -986,7 +1020,7 @@ CaCO3_form :
    longname : Total CaCO3 Formation
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 Nfix :
    longname : Total N Fixation
@@ -1430,6 +1464,14 @@ graze_((autotroph_sname))_zoo_zint_100m :
    dependencies :
       ((autotroph_calcifier)) : true
    longname : ((autotroph_lname)) CaCO3 Formation Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+((autotroph_sname))_CaCO3_form_zint_100m :
+   dependencies :
+      ((autotroph_calcifier)) : true
+   longname : ((autotroph_lname)) CaCO3 Formation Vertical Integral, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never
