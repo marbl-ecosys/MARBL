@@ -844,10 +844,13 @@ contains
        end if
     end if
 
-    end associate
-
     ! ADD RESTORING
     dtracers = dtracers + interior_restore
+
+    ! set sub-sea floor tendencies to 0
+    dtracers(:,kmt+1:km) = c0
+
+    end associate
 
   end subroutine marbl_set_interior_forcing
 
@@ -1445,7 +1448,7 @@ contains
 
     endif
 
-    ! Save some fields for use by other modules before setting outgoing fluxes to 0.0 in bottom cell below
+    ! Save some fields for use by other modules
     if (ciso_on) then
        POC_remin_fields(k)         = POC%remin(k)
        DECAY_Hard_fields(k)        = DECAY_Hard
