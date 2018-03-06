@@ -1064,6 +1064,13 @@
          "longname": "Global scaling factor for sed_denitrif",
          "subcategory": "4. general parameters",
          "units": "unitless"
+      },
+      "particulate_flux_ref_depth": {
+         "datatype": "integer",
+         "default_value": 100,
+         "longname": "reference depth for particulate flux diagnostics",
+         "subcategory": "4. general parameters",
+         "units": "m"
       }
    },
    "general_parms2": {

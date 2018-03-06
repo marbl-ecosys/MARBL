@@ -20,6 +20,16 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "((autotroph_sname))_CaCO3_form_zint_100m": {
+      "dependencies": {
+         "((autotroph_calcifier))": true
+      },
+      "frequency": "never",
+      "longname": "((autotroph_lname)) CaCO3 Formation Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "((autotroph_sname))_Fe_lim": {
       "frequency": "medium",
       "longname": "((autotroph_lname)) Fe Limitation",
@@ -88,6 +98,20 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "((autotroph_sname))_agg_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Aggregation Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_agg_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Aggregation Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "((autotroph_sname))_bSi_form": {
       "dependencies": {
          "((autotroph_silicifier))": true
@@ -108,7 +132,7 @@
       "vertical_grid": "layer_avg"
    },
    "((autotroph_sname))_loss": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((autotroph_lname)) Loss",
       "operator": "average",
       "truncate": true,
@@ -123,6 +147,20 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "((autotroph_sname))_loss_doc_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss to DOC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_loss_doc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss to DOC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "((autotroph_sname))_loss_poc": {
       "frequency": "never",
       "longname": "((autotroph_lname)) Loss to POC",
@@ -130,6 +168,34 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_loss_poc_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss to POC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_loss_poc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss to POC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_loss_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_loss_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Loss Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "((tracer_short_name))_RESTORE_TEND": {
       "frequency": {
@@ -142,7 +208,7 @@
       "vertical_grid": "layer_avg"
    },
    "((zooplankton_sname))_loss": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((zooplankton_lname)) Loss",
       "operator": "average",
       "truncate": true,
@@ -157,6 +223,20 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "((zooplankton_sname))_loss_doc_zint": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss to DOC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((zooplankton_sname))_loss_doc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss to DOC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "((zooplankton_sname))_loss_poc": {
       "frequency": "never",
       "longname": "((zooplankton_lname)) Loss to POC",
@@ -164,6 +244,34 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "((zooplankton_sname))_loss_poc_zint": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss to POC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((zooplankton_sname))_loss_poc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss to POC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((zooplankton_sname))_loss_zint": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((zooplankton_sname))_loss_zint_100m": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "AOU": {
       "frequency": "medium",
@@ -845,7 +953,7 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_ALT_CO2_FLUX_IN": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "CaCO3 Flux into Cell, Alternative CO2",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
@@ -859,43 +967,91 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_ALT_CO2_REMIN": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "CaCO3 Remineralization, Alternative CO2",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CaCO3_FLUX_IN": {
+   "CaCO3_FLUX_((particulate_flux_ref_depth_str))": {
       "frequency": "medium",
+      "longname": "CaCO3 Flux at ((particulate_flux_ref_depth_str))",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CaCO3_FLUX_IN": {
+      "frequency": "low",
       "longname": "CaCO3 Flux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "layer_avg"
    },
    "CaCO3_PROD": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "CaCO3 Production",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CaCO3_REMIN": {
+   "CaCO3_PROD_zint": {
       "frequency": "medium",
+      "longname": "Vertical Integral of CaCO3 Production",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CaCO3_PROD_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of CaCO3 Production, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CaCO3_REMIN": {
+      "frequency": "low",
       "longname": "CaCO3 Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CaCO3_form": {
+   "CaCO3_REMIN_zint": {
       "frequency": "medium",
+      "longname": "Vertical Integral of CaCO3 Remineralization",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CaCO3_REMIN_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of CaCO3 Remineralization, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CaCO3_form": {
+      "frequency": "low",
       "longname": "Total CaCO3 Formation",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "CaCO3_form_zint": {
-      "frequency": "high",
+      "frequency": [
+         "medium",
+         "high"
+      ],
       "longname": "Total CaCO3 Formation Vertical Integral",
+      "operator": [
+         "average",
+         "average"
+      ],
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "CaCO3_form_zint_100m": {
+      "frequency": "medium",
+      "longname": "Total CaCO3 Formation Vertical Integral, 0-100m",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -928,19 +1084,61 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "DOC_remin": {
+   "DOC_prod_zint": {
       "frequency": "medium",
+      "longname": "Vertical Integral of DOC Production",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "DOC_prod_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of DOC Production, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "DOC_remin": {
+      "frequency": "low",
       "longname": "DOC Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "DOCr_remin": {
+   "DOC_remin_zint": {
       "frequency": "medium",
+      "longname": "Vertical Integral of DOC Remineralization",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "DOC_remin_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of DOC Remineralization, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "DOCr_remin": {
+      "frequency": "low",
       "longname": "DOCr Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "DOCr_remin_zint": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of DOCr Remineralization",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "DOCr_remin_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of DOCr Remineralization, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "DON_prod": {
       "frequency": "medium",
@@ -950,14 +1148,14 @@
       "vertical_grid": "layer_avg"
    },
    "DON_remin": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "DON Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "DONr_remin": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "DONr Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
@@ -979,14 +1177,14 @@
       "vertical_grid": "layer_avg"
    },
    "DOP_remin": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "DOP Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "DOPr_remin": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "DOPr Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
@@ -1339,6 +1537,13 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "POC_FLUX_((particulate_flux_ref_depth_str))": {
+      "frequency": "medium",
+      "longname": "POC Flux at ((particulate_flux_ref_depth_str))",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "POC_FLUX_IN": {
       "frequency": "medium",
       "longname": "POC Flux into Cell",
@@ -1353,26 +1558,82 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "POC_REMIN": {
+   "POC_PROD_zint": {
       "frequency": "medium",
-      "longname": "POC Remineralization",
+      "longname": "Vertical Integral of POC Production",
       "operator": "average",
-      "units": "mmol/m^3/s",
-      "vertical_grid": "layer_avg"
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "POC_PROD_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of POC Production, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "POC_REMIN_DIC": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "POC Remineralization routed to DIC",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "PON_REMIN_NH4": {
+   "POC_REMIN_DIC_zint": {
       "frequency": "medium",
+      "longname": "Vertical Integral of POC Remineralization routed to DIC",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "POC_REMIN_DIC_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of POC Remineralization routed to DIC, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "POC_REMIN_DOCr": {
+      "frequency": "low",
+      "longname": "POC Remineralization routed to DOCr",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "POC_REMIN_DOCr_zint": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of POC Remineralization routed to DOCr",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "POC_REMIN_DOCr_zint_100m": {
+      "frequency": "medium",
+      "longname": "Vertical Integral of POC Remineralization routed to DOCr, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "PON_REMIN_DONr": {
+      "frequency": "low",
+      "longname": "PON Remineralization routed to DONr",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "PON_REMIN_NH4": {
+      "frequency": "low",
       "longname": "PON Remineralization routed to NH4",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "POP_FLUX_((particulate_flux_ref_depth_str))": {
+      "frequency": "medium",
+      "longname": "POP Flux at ((particulate_flux_ref_depth_str))",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "POP_FLUX_IN": {
       "frequency": "medium",
@@ -1388,15 +1649,15 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "POP_REMIN": {
-      "frequency": "medium",
-      "longname": "POP Remineralization",
+   "POP_REMIN_DOPr": {
+      "frequency": "low",
+      "longname": "POP Remineralization routed to DOPr",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "POP_REMIN_PO4": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "POP Remineralization routed to PO4",
       "operator": "average",
       "units": "mmol/m^3/s",
@@ -1414,6 +1675,13 @@
       "longname": "PV_O2",
       "operator": "average",
       "units": "cm/s",
+      "vertical_grid": "none"
+   },
+   "P_iron_FLUX_((particulate_flux_ref_depth_str))": {
+      "frequency": "medium",
+      "longname": "P_iron Flux at ((particulate_flux_ref_depth_str))",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "P_iron_FLUX_IN": {
@@ -1456,6 +1724,13 @@
       "longname": "nitrogen loss in Sediments",
       "operator": "average",
       "units": "nmolN/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "SiO2_FLUX_((particulate_flux_ref_depth_str))": {
+      "frequency": "medium",
+      "longname": "SiO2 Flux at ((particulate_flux_ref_depth_str))",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "SiO2_FLUX_IN": {
@@ -1563,7 +1838,7 @@
       "vertical_grid": "layer_avg"
    },
    "graze_((autotroph_sname))": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((autotroph_lname)) Grazing",
       "operator": "average",
       "truncate": true,
@@ -1578,6 +1853,20 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "graze_((autotroph_sname))_doc_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to DOC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((autotroph_sname))_doc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to DOC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "graze_((autotroph_sname))_poc": {
       "frequency": "never",
       "longname": "((autotroph_lname)) Grazing to POC",
@@ -1586,6 +1875,34 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "graze_((autotroph_sname))_poc_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to POC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((autotroph_sname))_poc_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to POC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((autotroph_sname))_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((autotroph_sname))_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "graze_((autotroph_sname))_zoo": {
       "frequency": "never",
       "longname": "((autotroph_lname)) Grazing to ZOO",
@@ -1593,6 +1910,20 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "graze_((autotroph_sname))_zoo_zint": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to ZOO Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((autotroph_sname))_zoo_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Grazing to ZOO Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "graze_((zooplankton_sname))": {
       "frequency": "never",
@@ -1610,6 +1941,20 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "graze_((zooplankton_sname))_doc_zint": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to DOC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((zooplankton_sname))_doc_zint_100m": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to DOC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "graze_((zooplankton_sname))_poc": {
       "frequency": "never",
       "longname": "((zooplankton_lname)) grazing loss to POC",
@@ -1617,6 +1962,34 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "graze_((zooplankton_sname))_poc_zint": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to POC Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((zooplankton_sname))_poc_zint_100m": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to POC Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((zooplankton_sname))_zint": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((zooplankton_sname))_zint_100m": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "graze_((zooplankton_sname))_zoo": {
       "frequency": "never",
@@ -1626,8 +1999,22 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "graze_auto_TOT": {
+   "graze_((zooplankton_sname))_zoo_zint": {
       "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to ZOO Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_((zooplankton_sname))_zoo_zint_100m": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing to ZOO Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "graze_auto_TOT": {
+      "frequency": "low",
       "longname": "Total Autotroph Grazing",
       "operator": "average",
       "units": "mmol/m^3/s",
@@ -1676,7 +2063,7 @@
       "vertical_grid": "none"
    },
    "photoC_((autotroph_sname))": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((autotroph_lname)) C Fixation",
       "operator": "average",
       "truncate": true,
@@ -1684,14 +2071,27 @@
       "vertical_grid": "layer_avg"
    },
    "photoC_((autotroph_sname))_zint": {
-      "frequency": "high",
+      "frequency": [
+         "medium",
+         "high"
+      ],
       "longname": "((autotroph_lname)) C Fixation Vertical Integral",
+      "operator": [
+         "average",
+         "average"
+      ],
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "photoC_((autotroph_sname))_zint_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) C Fixation Vertical Integral, 0-100m",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "photoC_NO3_((autotroph_sname))": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((autotroph_lname)) C Fixation from NO3",
       "operator": "average",
       "truncate": true,
@@ -1699,36 +2099,50 @@
       "vertical_grid": "layer_avg"
    },
    "photoC_NO3_((autotroph_sname))_zint": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "((autotroph_lname)) C Fixation from NO3 Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "photoC_NO3_TOT": {
-      "frequency": "never",
+      "frequency": "medium",
       "longname": "Total C Fixation from NO3",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "photoC_NO3_TOT_zint": {
-      "frequency": "never",
+      "frequency": "medium",
       "longname": "Total C Fixation from NO3 Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "photoC_NO3_TOT_zint_100m": {
+      "frequency": "medium",
+      "longname": "Total C Fixation from NO3 Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "photoC_TOT": {
-      "frequency": "never",
+      "frequency": "medium",
       "longname": "Total C Fixation",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "photoC_TOT_zint": {
-      "frequency": "never",
+      "frequency": "medium",
       "longname": "Total C Fixation Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "photoC_TOT_zint_100m": {
+      "frequency": "medium",
+      "longname": "Total C Fixation Vertical Integral, 0-100m",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -1805,6 +2219,20 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "x_graze_((zooplankton_sname))_zint": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing Gain Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "x_graze_((zooplankton_sname))_zint_100m": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Grazing Gain Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "zsatarag": {
       "frequency": "medium",
