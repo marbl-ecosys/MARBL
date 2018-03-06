@@ -2358,7 +2358,7 @@ contains
 
       ! Particulate 2D diags
 
-      write(particulate_flux_ref_depth_str, "(I0,A)") nint(particulate_flux_ref_depth), 'm'
+      write(particulate_flux_ref_depth_str, "(I0,A)") particulate_flux_ref_depth, 'm'
 
       lname = 'POC Flux at ' // trim(particulate_flux_ref_depth_str)
       sname = 'POC_FLUX_' // trim(particulate_flux_ref_depth_str)
@@ -2366,7 +2366,7 @@ contains
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_FLUX_at_ref_depth, marbl_status_log)
+           ind%POC_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -2378,7 +2378,7 @@ contains
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POP_FLUX_at_ref_depth, marbl_status_log)
+           ind%POP_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -2390,7 +2390,7 @@ contains
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_FLUX_at_ref_depth, marbl_status_log)
+           ind%CaCO3_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -2402,7 +2402,7 @@ contains
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%SiO2_FLUX_at_ref_depth, marbl_status_log)
+           ind%SiO2_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -2414,7 +2414,7 @@ contains
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%P_iron_FLUX_at_ref_depth, marbl_status_log)
+           ind%P_iron_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return

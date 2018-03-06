@@ -1294,7 +1294,7 @@ contains
     !-----------------------------------------------------------------------
     ! NOTE: incoming fluxes are outgoing fluxes from previous level
     ! initialize loss to sediments = 0
-    ! Assume that k == 1 condition was handled by call to set_surface_particulate_terms()
+    ! Assume that k == ksurf condition was handled by call to set_surface_particulate_terms()
     !-----------------------------------------------------------------------
 
     implicit none

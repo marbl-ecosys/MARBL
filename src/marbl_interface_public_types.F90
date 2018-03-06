@@ -92,6 +92,7 @@ module marbl_interface_public_types
      character (len=char_len)                    :: vertical_grid ! 'none', 'layer_avg', 'layer_iface'
      logical   (log_kind)                        :: compute_now
      logical   (log_kind)                        :: ltruncated_vertical_extent
+     integer   (int_kind)                        :: ref_depth ! depth that diagnostic nominally resides at
      real      (r8), allocatable, dimension(:)   :: field_2d
      real      (r8), allocatable, dimension(:,:) :: field_3d
 
@@ -389,7 +390,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_single_diag_init(this, lname, sname, units, vgrid,         &
-             truncate, num_elements, num_levels, marbl_status_log)
+             truncate, num_elements, num_levels, marbl_status_log, ref_depth)
 
     class(marbl_single_diagnostic_type) , intent(inout) :: this
     character(len=char_len) , intent(in)    :: lname, sname, units, vgrid
@@ -397,6 +398,7 @@ contains
     integer                 , intent(in)    :: num_elements
     integer                 , intent(in)    :: num_levels
     type(marbl_log_type)    , intent(inout) :: marbl_status_log
+    integer,       optional , intent(in)    :: ref_depth
 
     character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_diag_init'
     character(len=char_len)     :: log_message
@@ -422,6 +424,17 @@ contains
     this%units = trim(units)
     this%vertical_grid = trim(vgrid)
     this%ltruncated_vertical_extent = truncate
+
+    if (present(ref_depth)) then
+      if (.not. allocated(this%field_2d)) then
+        write(log_message,"(A)") "ref_depth can only be provided for 2D vars"
+        call marbl_status_log%log_error(log_message, subname)
+        return
+      end if
+      this%ref_depth = ref_depth
+    else
+      this%ref_depth = 0
+    end if
 
   end subroutine marbl_single_diag_init
 
@@ -590,13 +603,14 @@ contains
   !*****************************************************************************
 
   subroutine marbl_diagnostics_add(this, lname, sname, units, vgrid,          &
-             truncate, id, marbl_status_log)
+             truncate, id, marbl_status_log, ref_depth)
 
     class(marbl_diagnostics_type) , intent(inout) :: this
     character(len=char_len)       , intent(in)    :: lname, sname, units, vgrid
     logical (int_kind)            , intent(in)    :: truncate
     integer (int_kind)            , intent(out)   :: id
     type(marbl_log_type)          , intent(inout) :: marbl_status_log
+    integer,             optional , intent(in)    :: ref_depth
 
     character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_diagnostics_add'
     character(len=char_len)     :: log_message
@@ -624,6 +638,7 @@ contains
         new_diags(n)%vertical_grid              = old_diag%vertical_grid
         new_diags(n)%compute_now                = old_diag%compute_now
         new_diags(n)%ltruncated_vertical_extent = old_diag%ltruncated_vertical_extent
+        new_diags(n)%ref_depth                  = old_diag%ref_depth
         if (allocated(old_diag%field_2d)) then
           allocate(new_diags(n)%field_2d(this%num_elements))
           new_diags(n)%field_2d = old_diag%field_2d
@@ -639,7 +654,7 @@ contains
 
     ! 3) Add newest diagnostic
     call new_diags(id)%initialize(lname, sname, units, vgrid, truncate,      &
-         this%num_elements, this%num_levels, marbl_status_log)
+         this%num_elements, this%num_levels, marbl_status_log, ref_depth=ref_depth)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('this%diags%initialize()', subname)
       return

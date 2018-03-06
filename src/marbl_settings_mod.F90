@@ -226,8 +226,10 @@ module marbl_settings_mod
 
   character(len=char_len), target :: init_bury_coeff_opt
 
+  integer(int_kind), target :: &
+       particulate_flux_ref_depth    ! reference depth for particulate flux diagnostics (m)
+
   real(r8), target :: &
-       particulate_flux_ref_depth, & ! reference depth for particulate flux diagnostics (m)
        parm_Fe_bioavail,           & ! fraction of Fe flux that is bioavailable
        parm_o2_min,                & ! min O2 needed for prod & consump. (nmol/cm^3)
        parm_o2_min_delta,          & ! width of min O2 range (nmol/cm^3)
@@ -344,7 +346,7 @@ contains
     lvariable_PtoC                = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     init_bury_coeff_opt           = 'settings_file' ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    particulate_flux_ref_depth    = 100.0_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Fe_bioavail              = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min                   = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min_delta             = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -619,10 +621,10 @@ contains
     sname     = 'particulate_flux_ref_depth'
     lname     = 'reference depth for particulate flux diagnostics'
     units     = 'm'
-    datatype  = 'real'
-    rptr      => particulate_flux_ref_depth
+    datatype  = 'integer'
+    iptr      => particulate_flux_ref_depth
     call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
+                        marbl_status_log, iptr=iptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_Fe_bioavail'

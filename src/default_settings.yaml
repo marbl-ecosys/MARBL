@@ -285,8 +285,8 @@ general_parms :
       longname : reference depth for particulate flux diagnostics
       subcategory : 4. general parameters
       units : m
-      datatype : real
-      default_value : 100.0
+      datatype : integer
+      default_value : 100
    parm_o2_min :
       longname : Minimum O2 needed for production & consumption
       subcategory : 4. general parameters

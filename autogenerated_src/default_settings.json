@@ -1066,8 +1066,8 @@
          "units": "unitless"
       },
       "particulate_flux_ref_depth": {
-         "datatype": "real",
-         "default_value": 100.0,
+         "datatype": "integer",
+         "default_value": 100,
          "longname": "reference depth for particulate flux diagnostics",
          "subcategory": "4. general parameters",
          "units": "m"

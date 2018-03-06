@@ -979,7 +979,7 @@ contains
     type(column_sinking_particle_type) , intent(inout) :: POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron
     real(r8)                           , intent(inout) :: QA_dust_def(:) !(km)
 
-    ! NOTE(bja, 2015-04) assume that k == 1 condition was handled by
+    ! NOTE(bja, 2015-04) assume that k == ksurf condition was handled by
     ! call to marbl_set_surface_particulate_terms()
     if (k > 1) then
        !-----------------------------------------------------------------------

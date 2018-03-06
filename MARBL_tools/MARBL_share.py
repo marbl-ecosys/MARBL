@@ -59,7 +59,7 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
         loop_for_replacement = range(1,MARBL_settings.settings_dict['zooplankton_cnt']+1)
     elif template == '((particulate_flux_ref_depth_str))':
         fill_source = 'strings'
-        particulate_flux_ref_depth_str = '%dm' % round(MARBL_settings.settings_dict['particulate_flux_ref_depth'])
+        particulate_flux_ref_depth_str = '%dm' % MARBL_settings.settings_dict['particulate_flux_ref_depth']
         loop_for_replacement = [ particulate_flux_ref_depth_str ]
     else:
         logger.error("%s is not a valid template value" % template)
