@@ -772,6 +772,12 @@ Lig_deg :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
+ECOSYS_FESEDFLUX :
+   longname : Iron Sediment Flux
+   units : need_units
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
 
 # Particulate 2D diags
 POC_FLUX_((particulate_flux_ref_depth_str)) :

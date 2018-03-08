@@ -194,6 +194,8 @@ module marbl_diagnostics_mod
     integer(int_kind) :: Fefree
     integer(int_kind) :: Lig_photochem
     integer(int_kind) :: Lig_deg
+    integer(int_kind) :: fesedflux
+
 
     ! Particulate 2D diags
     integer(int_kind) :: POC_FLUX_at_ref_depth
@@ -2351,6 +2353,18 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%Lig_deg, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Iron Sediment Flux'
+      sname = 'ECOSYS_FESEDFLUX'
+      units = 'need_units'
+      vgrid = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%fesedflux, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -5204,6 +5218,7 @@ contains
          fe_ind  => marbl_tracer_indices%fe_ind &
          )
 
+    diags(ind%fesedflux)%field_3d(1,:) = fesedflux(:)
     ! vertical integrals
     work = dtracers(fe_ind, :) +                                              &
            sum(dtracers(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) + &

@@ -1224,6 +1224,13 @@
       "units": "atmospheres",
       "vertical_grid": "none"
    },
+   "ECOSYS_FESEDFLUX": {
+      "frequency": "never",
+      "longname": "Iron Sediment Flux",
+      "operator": "average",
+      "units": "need_units",
+      "vertical_grid": "layer_avg"
+   },
    "ECOSYS_IFRAC": {
       "frequency": [
          "medium",
