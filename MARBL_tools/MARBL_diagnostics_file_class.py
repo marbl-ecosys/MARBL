@@ -33,6 +33,7 @@ class MARBL_diagnostics_class(object):
 
         # 3. Generate processed version of self._diagnostics
         self.diagnostics_dict = dict()
+        diags_to_delete = []
 
         #    i. Expand per-tracer / per-PFT diagnostics
         #       [Look for keywords in (()) to signify need for string replacement]
@@ -49,10 +50,13 @@ class MARBL_diagnostics_class(object):
         #        (Some diagnostics have already been removed via expand_template_value())
         for diag_name in self.diagnostics_dict.keys():
             if not MARBL_tools.meet_dependencies(self.diagnostics_dict[diag_name], MARBL_settings):
-                del self.diagnostics_dict[diag_name]
+                diags_to_delete.append(diag_name)
                 continue
 
             #    iii. frequency and operator should always be lists
             if not isinstance(self.diagnostics_dict[diag_name]['frequency'], list):
                 self.diagnostics_dict[diag_name]['frequency'] = [self.diagnostics_dict[diag_name]['frequency']]
                 self.diagnostics_dict[diag_name]['operator'] = [self.diagnostics_dict[diag_name]['operator']]
+
+        for diag_name in diags_to_delete:
+            del self.diagnostics_dict[diag_name]

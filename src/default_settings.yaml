@@ -281,6 +281,12 @@ general_parms :
       units : unitless
       datatype : real
       default_value : 1.0
+   particulate_flux_ref_depth :
+      longname : reference depth for particulate flux diagnostics
+      subcategory : 4. general parameters
+      units : m
+      datatype : integer
+      default_value : 100
    parm_o2_min :
       longname : Minimum O2 needed for production & consumption
       subcategory : 4. general parameters
@@ -318,7 +324,7 @@ general_parms :
       datatype : real
       default_value : # default value is resolution dependent!
          default : 1.1
-         GRID = CESM_x3 : 5.0
+         GRID == "CESM_x3" : 5.0
    parm_init_POP_bury_coeff :
       longname : Initial scale factor for burial of POP
       subcategory : 4. general parameters (bury coeffs)
@@ -326,7 +332,7 @@ general_parms :
       datatype : real
       default_value : # default value is resolution dependent!
          default : 1.1
-         GRID = CESM_x3 : 5.0
+         GRID == "CESM_x3" : 5.0
    parm_init_bSi_bury_coeff :
       longname : Initial scale factor for burial of bSi
       subcategory : 4. general parameters (bury coeffs)
@@ -334,7 +340,7 @@ general_parms :
       datatype : real
       default_value : # default value is resolution dependent!
          default : 1.0
-         GRID = CESM_x3 : 1.1
+         GRID == "CESM_x3" : 1.1
    parm_Fe_scavenge_rate0 :
       longname : Scavenging base rate for Fe
       subcategory : 4. general parameters (scavenging)
@@ -372,7 +378,7 @@ general_parms :
       datatype : real
       default_value : # default value is resolution dependent!
          default : 0.07
-         GRID = CESM_x3 : 0.075
+         GRID == "CESM_x3" : 0.075
    parm_POC_diss :
       longname : Base POC dissipation length scale
       subcategory : 4. general parameters (dissipation)
@@ -398,7 +404,7 @@ general_parms :
       datatype : real
       default_value :
          default : 1
-         GRID = CESM_x3 : 1.4
+         GRID == "CESM_x3" : 1.4
    bury_coeff_rmean_timescale_years :
       longname : Running mean time scale for bury coefficients
       subcategory : 4. general parameters
@@ -428,7 +434,7 @@ general_parms :
             - 2.2
             - 4
             - 5
-         GRID = CESM_x3 :
+         GRID == "CESM_x3" :
             - 1
             - 3.3
             - 4.2
@@ -479,8 +485,8 @@ general_parms2 :
          #       ladjust_bury_coeff = .false. and SAVED_STATE_VARS_SOURCE = GCM we
          #       want init_bury_coeff_opt = settings_file
          default : settings_file
-         ladjust_bury_coeff = ".false." : settings_file
-         SAVED_STATE_VARS_SOURCE = GCM : GCM
+         not ladjust_bury_coeff : settings_file
+         SAVED_STATE_VARS_SOURCE == "GCM" : GCM
 
 ################################################################################
 #                            Category 2: PFT_counts                            #
@@ -494,7 +500,7 @@ PFT_counts :
       datatype : integer
       default_value :
          default : 1
-         PFT_defaults = "CESM2" : 3
+         PFT_defaults == "CESM2" : 3
       cannot change : PFT_defaults == 'CESM2'
       must set : PFT_defaults == 'user-specified'
    zooplankton_cnt :
@@ -504,7 +510,7 @@ PFT_counts :
       datatype : integer
       default_value :
          default : 1
-         PFT_defaults = "CESM2" : 1
+         PFT_defaults == "CESM2" : 1
    max_grazer_prey_cnt :
       longname : Number of grazer prey classes
       subcategory : 1. config PFTs
@@ -512,7 +518,7 @@ PFT_counts :
       datatype : integer
       default_value :
          default : 1
-         PFT_defaults = "CESM2" : 3
+         PFT_defaults == "CESM2" : 3
 
 ################################################################################
 #                         Category 3: PFT_derived_types                        #
@@ -533,9 +539,9 @@ PFT_derived_types :
             datatype : string
             default_value :
                default : UNSET
-               autotrophs = "sp" : sp
-               autotrophs = "diat" : diat
-               autotrophs = "diaz" : diaz
+               ((autotroph_sname)) == "sp" : sp
+               ((autotroph_sname)) == "diat" : diat
+               ((autotroph_sname)) == "diaz" : diaz
          lname :
             longname : Long name of the autotroph
             subcategory : 10. autotrophs
@@ -543,9 +549,9 @@ PFT_derived_types :
             datatype : string
             default_value :
                default : UNSET
-               autotrophs = "sp" : Small Phyto
-               autotrophs = "diat" : Diatom
-               autotrophs = "diaz" : Diazotroph
+               ((autotroph_sname)) == "sp" : Small Phyto
+               ((autotroph_sname)) == "diat" : Diatom
+               ((autotroph_sname)) == "diaz" : Diazotroph
          Nfixer :
             longname : Flag set to true if autotroph fixes nitrogen
             subcategory : 10. autotrophs
@@ -553,7 +559,7 @@ PFT_derived_types :
             datatype : logical
             default_value :
                default : .false.
-               autotrophs = "diaz" : .true.
+               ((autotroph_sname)) == "diaz" : .true.
          imp_calcifier :
             longname : Flag set to true if autotroph implicitly handles calcification
             subcategory : 10. autotrophs
@@ -561,7 +567,7 @@ PFT_derived_types :
             datatype : logical
             default_value :
                default : .false.
-               autotrophs = "sp" : .true.
+               ((autotroph_sname)) == "sp" : .true.
          exp_calcifier :
             longname : Flag set to true if autotroph explicitly handles calcification
             subcategory : 10. autotrophs
@@ -576,7 +582,7 @@ PFT_derived_types :
             datatype : logical
             default_value :
                default : .false.
-               autotrophs = "diat" : .true.
+               ((autotroph_sname)) == "diat" : .true.
          kFe :
             longname : Fe uptake half-sat constant
             subcategory : 10. autotrophs
@@ -584,9 +590,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.03e-3
-               autotrophs = "diat" : 0.06e-3
-               autotrophs = "diaz" : 0.045e-3
+               ((autotroph_sname)) == "sp" : 0.03e-3
+               ((autotroph_sname)) == "diat" : 0.06e-3
+               ((autotroph_sname)) == "diaz" : 0.045e-3
          kPO4 :
             longname : PO4 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -594,9 +600,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.01
-               autotrophs = "diat" : 0.05
-               autotrophs = "diaz" : 0.015
+               ((autotroph_sname)) == "sp" : 0.01
+               ((autotroph_sname)) == "diat" : 0.05
+               ((autotroph_sname)) == "diaz" : 0.015
          kDOP :
             longname : DOP uptake half-sat constant
             subcategory : 10. autotrophs
@@ -604,9 +610,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.3
-               autotrophs = "diat" : 0.5
-               autotrophs = "diaz" : 0.075
+               ((autotroph_sname)) == "sp" : 0.3
+               ((autotroph_sname)) == "diat" : 0.5
+               ((autotroph_sname)) == "diaz" : 0.075
          kNO3 :
             longname : NO3 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -614,9 +620,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.25
-               autotrophs = "diat" : 0.5
-               autotrophs = "diaz" : 2
+               ((autotroph_sname)) == "sp" : 0.25
+               ((autotroph_sname)) == "diat" : 0.5
+               ((autotroph_sname)) == "diaz" : 2
          kNH4 :
             longname : NH4 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -624,9 +630,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.01
-               autotrophs = "diat" : 0.05
-               autotrophs = "diaz" : 0.2
+               ((autotroph_sname)) == "sp" : 0.01
+               ((autotroph_sname)) == "diat" : 0.05
+               ((autotroph_sname)) == "diaz" : 0.2
          kSiO3 :
             longname : SiO3 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -634,9 +640,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0
-               autotrophs = "diat" : 0.7
-               autotrophs = "diaz" : 0
+               ((autotroph_sname)) == "sp" : 0
+               ((autotroph_sname)) == "diat" : 0.7
+               ((autotroph_sname)) == "diaz" : 0
          Qp_fixed :
             longname : P/C ratio when using fixed P/C ratios
             subcategory : 10. autotrophs
@@ -644,9 +650,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 1.0/117
-               autotrophs = "diat" : 1.0/117
-               autotrophs = "diaz" : 0.32*(1.0/117)
+               ((autotroph_sname)) == "sp" : 1.0/117
+               ((autotroph_sname)) == "diat" : 1.0/117
+               ((autotroph_sname)) == "diaz" : 0.32*(1.0/117)
          gQfe_0 :
             longname : Initial Fe/C ratio for growth
             subcategory : 10. autotrophs
@@ -654,9 +660,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 35e-6
-               autotrophs = "diat" : 35e-6
-               autotrophs = "diaz" : 70e-6
+               ((autotroph_sname)) == "sp" : 35e-6
+               ((autotroph_sname)) == "diat" : 35e-6
+               ((autotroph_sname)) == "diaz" : 70e-6
          gQfe_min :
             longname : Minimum Fe/C ratio for growth
             subcategory : 10. autotrophs
@@ -664,9 +670,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 3e-6
-               autotrophs = "diat" : 3e-6
-               autotrophs = "diaz" : 6e-6
+               ((autotroph_sname)) == "sp" : 3e-6
+               ((autotroph_sname)) == "diat" : 3e-6
+               ((autotroph_sname)) == "diaz" : 6e-6
          alphaPI_per_day :
             longname : Initial slope of P_I curve (GD98)
             subcategory : 10. autotrophs
@@ -674,9 +680,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.39
-               autotrophs = "diat" : 0.29
-               autotrophs = "diaz" : 0.39
+               ((autotroph_sname)) == "sp" : 0.39
+               ((autotroph_sname)) == "diat" : 0.29
+               ((autotroph_sname)) == "diaz" : 0.39
          PCref_per_day :
             longname : Maximum C-spec growth rate at Tref
             subcategory : 10. autotrophs
@@ -684,9 +690,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 5
-               autotrophs = "diat" : 5
-               autotrophs = "diaz" : 2.2
+               ((autotroph_sname)) == "sp" : 5
+               ((autotroph_sname)) == "diat" : 5
+               ((autotroph_sname)) == "diaz" : 2.2
          thetaN_max :
             longname : Maximum thetaN (Chl / N)
             subcategory : 10. autotrophs
@@ -694,9 +700,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 2.5
-               autotrophs = "diat" : 4
-               autotrophs = "diaz" : 2.5
+               ((autotroph_sname)) == "sp" : 2.5
+               ((autotroph_sname)) == "diat" : 4
+               ((autotroph_sname)) == "diaz" : 2.5
          loss_thres :
             longname : concentration where losses go to zero
             subcategory : 10. autotrophs
@@ -704,9 +710,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.01
-               autotrophs = "diat" : 0.02
-               autotrophs = "diaz" : 0.02
+               ((autotroph_sname)) == "sp" : 0.01
+               ((autotroph_sname)) == "diat" : 0.02
+               ((autotroph_sname)) == "diaz" : 0.02
          loss_thres2 :
             longname : concentration where losses go to zero
             subcategory : 10. autotrophs
@@ -714,9 +720,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0
-               autotrophs = "diat" : 0
-               autotrophs = "diaz" : 0.001
+               ((autotroph_sname)) == "sp" : 0
+               ((autotroph_sname)) == "diat" : 0
+               ((autotroph_sname)) == "diaz" : 0.001
          temp_thres :
             longname : Temperature where concentration threshold and photosynthesis rate drops
             subcategory : 10. autotrophs
@@ -724,9 +730,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : -10
-               autotrophs = "diat" : -10
-               autotrophs = "diaz" : 15
+               ((autotroph_sname)) == "sp" : -10
+               ((autotroph_sname)) == "diat" : -10
+               ((autotroph_sname)) == "diaz" : 15
          mort_per_day :
             longname : Linear mortality rate
             subcategory : 10. autotrophs
@@ -734,9 +740,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.1
-               autotrophs = "diat" : 0.1
-               autotrophs = "diaz" : 0.1
+               ((autotroph_sname)) == "sp" : 0.1
+               ((autotroph_sname)) == "diat" : 0.1
+               ((autotroph_sname)) == "diaz" : 0.1
          mort2_per_day :
             longname : Quadratic mortality rate
             subcategory : 10. autotrophs
@@ -744,9 +750,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.01
-               autotrophs = "diat" : 0.01
-               autotrophs = "diaz" : 0.01
+               ((autotroph_sname)) == "sp" : 0.01
+               ((autotroph_sname)) == "diat" : 0.01
+               ((autotroph_sname)) == "diaz" : 0.01
          agg_rate_max :
             longname : Maximum agg rate
             subcategory : 10. autotrophs
@@ -754,9 +760,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.5
-               autotrophs = "diat" : 0.5
-               autotrophs = "diaz" : 0.5
+               ((autotroph_sname)) == "sp" : 0.5
+               ((autotroph_sname)) == "diat" : 0.5
+               ((autotroph_sname)) == "diaz" : 0.5
          agg_rate_min :
             longname : Minimum agg rate
             subcategory : 10. autotrophs
@@ -764,9 +770,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0.01
-               autotrophs = "diat" : 0.02
-               autotrophs = "diaz" : 0.01
+               ((autotroph_sname)) == "sp" : 0.01
+               ((autotroph_sname)) == "diat" : 0.02
+               ((autotroph_sname)) == "diaz" : 0.01
          loss_poc :
             longname : Routing of loss term
             subcategory : 10. autotrophs
@@ -774,9 +780,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               autotrophs = "sp" : 0
-               autotrophs = "diat" : 0
-               autotrophs = "diaz" : 0
+               ((autotroph_sname)) == "sp" : 0
+               ((autotroph_sname)) == "diat" : 0
+               ((autotroph_sname)) == "diaz" : 0
    zooplankton :
       _array_shape : zooplankton_cnt
       _is_allocatable : true
@@ -791,7 +797,7 @@ PFT_derived_types :
             datatype : string
             default_value :
                default : UNSET
-               zooplankton = "zoo" : zoo
+               ((zooplankton_sname)) == "zoo" : zoo
          lname :
             longname : Long name of the zooplankton
             subcategory : 11. zooplankton
@@ -799,7 +805,7 @@ PFT_derived_types :
             datatype : string
             default_value :
                default : UNSET
-               zooplankton = "zoo" : Zooplankton
+               ((zooplankton_sname)) == "zoo" : Zooplankton
          z_mort_0_per_day :
             longname : Linear mortality rate
             subcategory : 11. zooplankton
@@ -807,7 +813,7 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               zooplankton = "zoo" : 0.1
+               ((zooplankton_sname)) == "zoo" : 0.1
          z_mort2_0_per_day :
             longname : Quadratic mortality rate
             subcategory : 11. zooplankton
@@ -815,7 +821,7 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               zooplankton = "zoo" : 0.4
+               ((zooplankton_sname)) == "zoo" : 0.4
          loss_thres :
             longname : Zoo concentration where losses go to zero
             subcategory : 11. zooplankton
@@ -823,7 +829,7 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               zooplankton = "zoo" : 0.075
+               ((zooplankton_sname)) == "zoo" : 0.075
    grazing :
       _array_shape :
          - max_grazer_prey_cnt
@@ -838,9 +844,9 @@ PFT_derived_types :
             datatype : string
             default_value :
                default : UNSET
-               grazing = "sp_zoo" : grz_sp_zoo
-               grazing = "diat_zoo" : grz_diat_zoo
-               grazing = "diaz_zoo" : grz_diaz_zoo
+               ((grazing_sname)) == "sp_zoo" : grz_sp_zoo
+               ((grazing_sname)) == "diat_zoo" : grz_diat_zoo
+               ((grazing_sname)) == "diaz_zoo" : grz_diaz_zoo
          lname :
             longname : Long name of the grazing relationship
             subcategory : 12. grazing
@@ -848,9 +854,9 @@ PFT_derived_types :
             datatype : string
             default_value :
                default : UNSET
-               grazing = "sp_zoo" : Grazing of sp by zoo
-               grazing = "diat_zoo" : Grazing of diat by zoo
-               grazing = "diaz_zoo" : Grazing of diaz by zoo
+               ((grazing_sname)) == "sp_zoo" : Grazing of sp by zoo
+               ((grazing_sname)) == "diat_zoo" : Grazing of diat by zoo
+               ((grazing_sname)) == "diaz_zoo" : Grazing of diaz by zoo
          auto_ind_cnt :
             longname : Number of autotrophs being grazed
             subcategory : 12. grazing
@@ -879,9 +885,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               grazing = "sp_zoo" : 3.3
-               grazing = "diat_zoo" : 3.05
-               grazing = "diaz_zoo" : 3.1
+               ((grazing_sname)) == "sp_zoo" : 3.3
+               ((grazing_sname)) == "diat_zoo" : 3.05
+               ((grazing_sname)) == "diaz_zoo" : 3.1
          z_grz :
             longname : Grazing coefficient
             subcategory : 12. grazing
@@ -889,9 +895,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               grazing = "sp_zoo" : 1.2
-               grazing = "diat_zoo" : 1.2
-               grazing = "diaz_zoo" : 1.2
+               ((grazing_sname)) == "sp_zoo" : 1.2
+               ((grazing_sname)) == "diat_zoo" : 1.2
+               ((grazing_sname)) == "diaz_zoo" : 1.2
          graze_zoo :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -899,9 +905,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               grazing = "sp_zoo" : 0.3
-               grazing = "diat_zoo" : 0.25
-               grazing = "diaz_zoo" : 0.3
+               ((grazing_sname)) == "sp_zoo" : 0.3
+               ((grazing_sname)) == "diat_zoo" : 0.25
+               ((grazing_sname)) == "diaz_zoo" : 0.3
          graze_poc :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -909,9 +915,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               grazing = "sp_zoo" : 0
-               grazing = "diat_zoo" : 0.38
-               grazing = "diaz_zoo" : 0.1
+               ((grazing_sname)) == "sp_zoo" : 0
+               ((grazing_sname)) == "diat_zoo" : 0.38
+               ((grazing_sname)) == "diaz_zoo" : 0.1
          graze_doc :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -919,9 +925,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               grazing = "sp_zoo" : 0.06
-               grazing = "diat_zoo" : 0.06
-               grazing = "diaz_zoo" : 0.06
+               ((grazing_sname)) == "sp_zoo" : 0.06
+               ((grazing_sname)) == "diat_zoo" : 0.06
+               ((grazing_sname)) == "diaz_zoo" : 0.06
          f_zoo_detr :
             longname : Fraction of zoo losses to detrital
             subcategory : 12. grazing
@@ -929,9 +935,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               grazing = "sp_zoo" : 0.12
-               grazing = "diat_zoo" : 0.24
-               grazing = "diaz_zoo" : 0.12
+               ((grazing_sname)) == "sp_zoo" : 0.12
+               ((grazing_sname)) == "diat_zoo" : 0.24
+               ((grazing_sname)) == "diaz_zoo" : 0.12
          auto_ind :
             _array_shape : autotroph_cnt
             _array_len_to_print : auto_ind_cnt
@@ -942,9 +948,9 @@ PFT_derived_types :
             datatype : integer
             default_value :
                default : 0
-               grazing = "sp_zoo" : 1 # index where autotroph_name = sp
-               grazing = "diat_zoo" : 2 # index where autotroph_name = diat
-               grazing = "diaz_zoo" : 3 # index where autotroph_name = diaz
+               ((grazing_sname)) == "sp_zoo" : 1 # index where autotroph_name = sp
+               ((grazing_sname)) == "diat_zoo" : 2 # index where autotroph_name = diat
+               ((grazing_sname)) == "diaz_zoo" : 3 # index where autotroph_name = diaz
          zoo_ind :
             _array_shape : zooplankton_cnt
             _array_len_to_print : zoo_ind_cnt
@@ -969,12 +975,11 @@ tracer_dependent :
       _is_allocatable : true
       default_value :
          default : ''
-         GCM = CESM : &CESM_TRACER_RESTORE
+         GCM == "CESM" : &CESM_TRACER_RESTORE
             - 'PO4'
             - 'NO3'
             - 'SiO3'
             - 'ALK'
             - 'ALK_ALT_CO2'
-         GRID = CESM_x3 : *CESM_TRACER_RESTORE
-         GRID = CESM_x1 : *CESM_TRACER_RESTORE
-
+         GRID == "CESM_x3" : *CESM_TRACER_RESTORE
+         GRID == "CESM_x1" : *CESM_TRACER_RESTORE

@@ -24,8 +24,8 @@ class MARBL_settings_class(object):
         # 1. List of configuration keywords to match in JSON if default_default is a dictionary
         self._config_keyword = []
         if grid != None:
-            self._config_keyword.append("GRID = " + grid)
-        self._config_keyword.append("SAVED_STATE_VARS_SOURCE = " + saved_state_vars_source)
+            self._config_keyword.append('GRID == "%s"' % grid)
+        self._config_keyword.append('SAVED_STATE_VARS_SOURCE == "%s"' % saved_state_vars_source)
 
         # 2. Read settings JSON file
         import json
@@ -59,6 +59,7 @@ class MARBL_settings_class(object):
             message = "Did not fully parse input file:"
             for varname in self._input_dict.keys():
                 message = message + "\n     * Variable %s not found in JSON file" % varname
+                message = message + "\n       (this was a case-insensitive lookup)"
             logger.error(message)
             MARBL_tools.abort(1)
 
@@ -182,6 +183,7 @@ class MARBL_settings_class(object):
         import re
 
         tracer_dict = dict()
+        tracers_to_delete = []
 
         # 1. tracer_dict should be identical to self._settings['_tracer_list'] except
         #    we expand any templated values such as ((autotroph_sname))
@@ -195,12 +197,15 @@ class MARBL_settings_class(object):
         #    (Some tracers have already been removed via expand_template_value())
         for tracer_name in tracer_dict.keys():
             if not MARBL_tools.meet_dependencies(tracer_dict[tracer_name], self):
-                del tracer_dict[tracer_name]
+                tracers_to_delete.append(tracer_name)
                 continue
 
             # 3. Add tend_units and flux_units to dictionary
             tracer_dict[tracer_name][u'tend_units'] = tracer_dict[tracer_name]['units'] + '/s'
             tracer_dict[tracer_name][u'flux_units'] = tracer_dict[tracer_name]['units'] + ' cm/s'
+
+        for tracer_name in tracers_to_delete:
+            del tracer_dict[tracer_name]
 
         return tracer_dict
 
@@ -220,10 +225,14 @@ class MARBL_settings_class(object):
             return
 
         # Process derived type!
-        append_to_keys = (('PFT_defaults = "CESM2"' in self._config_keyword) and
+        append_to_keys = (('PFT_defaults == "CESM2"' in self._config_keyword) and
                           (category_name == "PFT_derived_types"))
         if append_to_keys:
             PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][variable_name]
+            if variable_name == "autotrophs":
+                PFT_name = "autotroph"
+            else:
+                PFT_name = variable_name
         # Is the derived type an array? If so, treat each entry separately
         if ("_array_shape" in this_var.keys()):
             for n, elem_index in enumerate(_get_array_info(this_var["_array_shape"], self.settings_dict, self.tracers_dict)):
@@ -232,7 +241,7 @@ class MARBL_settings_class(object):
 
                 if append_to_keys:
                     # Add key for specific PFT
-                    self._config_keyword.append('%s = "%s"' % (variable_name, PFT_keys[n]))
+                    self._config_keyword.append('((%s_sname)) == "%s"' % (PFT_name, PFT_keys[n]))
 
                 for key in _sort_with_specific_suffix_first(this_var["datatype"].keys(),'_cnt'):
                     if key[0] != '_':
@@ -297,19 +306,21 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
             * dictionary containing values from input file
     """
     # Either get value from input file or from the JSON
-    if varname in input_dict.keys():
+    # Note that all keys in input file are converted to lower-case
+    # (Fortran vars are case-insensitive)
+    if varname.lower() in input_dict.keys():
         # Ignore ' and " from strings
-        def_value = input_dict[varname].strip('"').strip("'")
+        def_value = input_dict[varname.lower()].strip('"').strip("'")
         # Remove from input file dictionary; if dictionary is not empty after processing
         # all input file lines, then it included a bad variable in it
-        del input_dict[varname]
+        del input_dict[varname.lower()]
     # Note that if variable foo is an array, then foo = bar in the input file
     # should be treated as foo(1) = bar
-    elif varname[-3:] == "(1)" and varname[:-3] in input_dict.keys():
-        def_value = input_dict[varname[:-3]].strip('"').strip("'")
+    elif varname[-3:] == "(1)" and varname.lower()[:-3] in input_dict.keys():
+        def_value = input_dict[varname.lower()[:-3]].strip('"').strip("'")
         # Remove from input file dictionary; if dictionary is not empty after processing
         # all input file lines, then it included a bad variable in it
-        del input_dict[varname[:-3]]
+        del input_dict[varname.lower()[:-3]]
     else:
         # is default value a dictionary? If so, it depends on self._config_keyword
         # Otherwise we're interested in default value
@@ -317,6 +328,14 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
             # NOTE: settings_dictionary_is_consistent() has ensured that this dictionary has
             #       a "default" key
             use_key = "default"
+
+            # We convert all single quotes to double quotes in key matching; all string-based
+            # keys in provided_keys use double quotes.
+            for key in var_dict["default_value"].keys():
+                new_key = key.replace("'", '"')
+                if new_key != key:
+                    var_dict["default_value"][new_key] = var_dict["default_value"][key]
+
             for key in provided_keys:
                 # return "default" entry in default_values dictionary unless one of the keys
                 # in provided_keys matches
@@ -326,47 +345,48 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
         else:
             def_value = var_dict["default_value"]
 
-    # call value validation check
+    # call translate value from JSON file to format F90 expects
+    value = _translate_JSON_value(def_value, var_dict["datatype"])
 
     # Append to config keywords if JSON wants it
-
-    # if default value is a list, return the whole thing
-    if isinstance(def_value, list):
-        return def_value
-
     if "_append_to_config_keywords" in var_dict.keys():
-        append_to_config = var_dict["_append_to_config_keywords"]
-    else:
-        append_to_config = False
-    return _translate_JSON_value(def_value, var_dict["datatype"], append_to_config, varname, provided_keys)
+        if var_dict["_append_to_config_keywords"]:
+            if var_dict["datatype"] == "logical":
+                if value == _get_F90_logical('.true.'):
+                    provided_keys.append(varname)
+                else:
+                    provided_keys.append('not %s' % varname)
+            else:
+                provided_keys.append('%s == %s' % (varname, value))
+
+    return value
 
 ################################################################################
 
-def _translate_JSON_value(value, datatype, append_to_config=False, varname=None, provided_keys=None):
+def _translate_JSON_value(value, datatype):
     """ The value provided in the JSON file needs to be adjusted depending on the datatype
         of the variable. Strings need to be wrapped in "", and numbers written in
         scientific notation need to be formatted consistently.
-
-        Also, some values need to added to the "provided_keys" list (by default assume that
-        is not the case)
     """
-    if isinstance(value, str):
-        value = value.decode('utf-8')
-    if append_to_config:
-        if isinstance(value, type(u'')):
-            provided_keys.append('%s = "%s"' % (varname, value.encode('utf-8')))
-        else:
-            provided_keys.append('%s = %s' % (varname, value))
+    if not isinstance(value, list):
+        # convert byte strings to unicode
+        if isinstance(value, type(b'')):
+            value = value.decode('utf-8')
 
-    # if variable is a string, put quotes around the default value
-    if datatype == "string":
-        return '"%s"' % value.encode('utf-8')
-    if datatype == "logical":
-        return _get_F90_logical(value)
-    if datatype == "real" and isinstance(value, type(u'')):
-        return "%24.16e" % eval(value)
-    if datatype == "integer" and isinstance(value, type(u'')):
-        return int(value)
+        # if variable is a string, put quotes around the default value
+        if datatype == "string":
+            return '"%s"' % value
+        # if variable is a logical, return .true. or .false.
+        if datatype == "logical":
+            return _get_F90_logical(value)
+        # if variable is a real but value is unicode evaluate it
+        if datatype == "real" and isinstance(value, type(u'')):
+            return "%24.16e" % eval(value)
+        # if variable is an integer but value is unicode convert it
+        if datatype == "integer" and isinstance(value, type(u'')):
+            return int(value)
+
+    # Otherwise return value unchanged
     return value
 
 ################################################################################
@@ -517,7 +537,8 @@ def _parse_input_file(input_file):
                 continue
 
             line_list = line_loc.strip().split('=')
-            var_name = line_list[0].strip()
+            # keys in input_dict are all lowercase to allow case-insensitive match
+            var_name = line_list[0].strip().lower()
             value = line_list[1].strip()
             val_array = _string_to_substring(value, ',')
             if len(val_array) > 1:

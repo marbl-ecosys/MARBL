@@ -37,6 +37,8 @@ module marbl_interface_private_types
      real(r8) :: gamma                      ! fraction of production -> hard subclass
      real(r8) :: mass                       ! mass of 1e9 base units in g
      real(r8) :: rho                        ! QA mass ratio of POC to this particle class
+     real(r8) :: to_floor                   ! flux hitting sea floor (base units/cm^s/sec)
+     real(r8) :: flux_at_ref_depth          ! flux at particulate_flux_ref_depth (base units/cm^s/sec)
      real(r8), allocatable  :: sflux_in (:) ! incoming flux of soft subclass (base units/cm^2/sec)
      real(r8), allocatable  :: hflux_in (:) ! incoming flux of hard subclass (base units/cm^2/sec)
      real(r8), allocatable  :: prod     (:) ! production term (base units/cm^3/sec)
@@ -110,11 +112,6 @@ module marbl_interface_private_types
      real(r8), allocatable :: decay_Hard_fields        (:) ! scaling factor for dissolution of Hard Ballast
      real(r8), allocatable :: poc_diss_fields          (:) ! diss. length used (cm)
      real(r8), allocatable :: caco3_diss_fields        (:) ! caco3 diss. length used (cm)
-     real(r8), allocatable :: P_CaCO3_sflux_out_fields (:) ! P_CaCO3 sflux_out from ecosys before getting set to zero for k=KMT
-     real(r8), allocatable :: P_CaCO3_hflux_out_fields (:) ! P_CaCO3_hflux_out from ecosys before getting set to zero for k=KMT
-     real(r8), allocatable :: P_CaCO3_remin_fields     (:) ! P_CaCO3 remin from ecosys before it gets modified for k=KMT
-     real(r8), allocatable :: POC_sflux_out_fields     (:) ! POC_sflux_out from ecosys before getting set to zero for k=KMT
-     real(r8), allocatable :: POC_hflux_out_fields     (:) ! POC_hflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: POC_remin_fields         (:) ! POC remin from ecosys before it gets modified for k=KMT
      real(r8), allocatable :: POC_prod_avail_fields    (:) ! POC production available for excess POC flux
 
@@ -366,11 +363,6 @@ contains
     allocate(this%decay_Hard_fields                (num_levels))
     allocate(this%poc_diss_fields                  (num_levels))
     allocate(this%caco3_diss_fields                (num_levels))
-    allocate(this%P_CaCO3_sflux_out_fields         (num_levels))
-    allocate(this%P_CaCO3_hflux_out_fields         (num_levels))
-    allocate(this%P_CaCO3_remin_fields             (num_levels))
-    allocate(this%POC_sflux_out_fields             (num_levels))
-    allocate(this%POC_hflux_out_fields             (num_levels))
     allocate(this%POC_remin_fields                 (num_levels))
     allocate(this%POC_prod_avail_fields            (num_levels))
 
@@ -396,11 +388,6 @@ contains
     deallocate(this%decay_Hard_fields)
     deallocate(this%poc_diss_fields)
     deallocate(this%caco3_diss_fields)
-    deallocate(this%P_CaCO3_sflux_out_fields)
-    deallocate(this%P_CaCO3_hflux_out_fields)
-    deallocate(this%P_CaCO3_remin_fields)
-    deallocate(this%POC_sflux_out_fields)
-    deallocate(this%POC_hflux_out_fields)
     deallocate(this%POC_remin_fields)
     deallocate(this%POC_prod_avail_fields)
 
@@ -990,4 +977,3 @@ contains
   !*****************************************************************************
 
 end module marbl_interface_private_types
-
