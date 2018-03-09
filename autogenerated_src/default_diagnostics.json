@@ -440,62 +440,62 @@
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DO13C_prod": {
+   "CISO_DO13Ctot_prod": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "DO13C Production",
+      "longname": "DO13Ctot Production",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DO13C_remin": {
+   "CISO_DO13Ctot_remin": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "DO13C Remineralization",
+      "longname": "DO13Ctot Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DO14C_prod": {
+   "CISO_DO14Ctot_prod": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "DO14C Production",
+      "longname": "DO14Ctot Production",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DO14C_remin": {
+   "CISO_DO14Ctot_remin": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "DO14C Remineralization",
+      "longname": "DO14Ctot Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DOC_d13C": {
+   "CISO_DOCtot_d13C": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "d13C of DOC",
+      "longname": "d13C of DOCtot",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DOC_d14C": {
+   "CISO_DOCtot_d14C": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "d14C of DOC",
+      "longname": "d14C of DOCtot",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
