@@ -113,10 +113,10 @@ contains
     !-----------------------------------------------------------------------
 
     associate(di13c_ind         => marbl_tracer_indices%di13c_ind,            &
-              do13c_ind         => marbl_tracer_indices%do13c_ind,            &
+              do13ctot_ind      => marbl_tracer_indices%do13ctot_ind,         &
               zoo13c_ind        => marbl_tracer_indices%zoo13c_ind,           &
               di14c_ind         => marbl_tracer_indices%di14c_ind,            &
-              do14c_ind         => marbl_tracer_indices%do14c_ind,            &
+              do14ctot_ind      => marbl_tracer_indices%do14ctot_ind,         &
               zoo14c_ind        => marbl_tracer_indices%zoo14c_ind,           &
               ciso_ind_beg      => marbl_tracer_indices%ciso%ind_beg,         &
               ciso_ind_end      => marbl_tracer_indices%ciso%ind_end          &
@@ -133,8 +133,8 @@ contains
     marbl_tracer_metadata(di13c_ind)%short_name='DI13C'
     marbl_tracer_metadata(di13c_ind)%long_name='Dissolved Inorganic Carbon-13'
 
-    marbl_tracer_metadata(do13c_ind)%short_name='DO13C'
-    marbl_tracer_metadata(do13c_ind)%long_name='Dissolved Organic Carbon-13'
+    marbl_tracer_metadata(do13ctot_ind)%short_name='DO13Ctot'
+    marbl_tracer_metadata(do13ctot_ind)%long_name='Dissolved Organic Carbon-13 (semi-labile+refractory)'
 
     marbl_tracer_metadata(zoo13C_ind)%short_name='zoo13C'
     marbl_tracer_metadata(zoo13C_ind)%long_name='Zooplankton Carbon-13'
@@ -142,8 +142,8 @@ contains
     marbl_tracer_metadata(di14c_ind)%short_name='DI14C'
     marbl_tracer_metadata(di14c_ind)%long_name='Dissolved Inorganic Carbon-14'
 
-    marbl_tracer_metadata(do14c_ind)%short_name='DO14C'
-    marbl_tracer_metadata(do14c_ind)%long_name='Dissolved Organic Carbon-14'
+    marbl_tracer_metadata(do14ctot_ind)%short_name='DO14Ctot'
+    marbl_tracer_metadata(do14ctot_ind)%long_name='Dissolved Organic Carbon-14 (semi-labile+refractory)'
 
     marbl_tracer_metadata(zoo14C_ind)%short_name='zoo14C'
     marbl_tracer_metadata(zoo14C_ind)%long_name='Zooplankton Carbon-14'
@@ -283,10 +283,10 @@ contains
          P_Ca14CO3         ! base units = nmol CaCO3 14C
 
     real (r8), dimension (marbl_domain%km) :: &
-         DO13C_loc,         & ! local copy of model DO13C
+         DO13Ctot_loc,      & ! local copy of model DO13Ctot
          DI13C_loc,         & ! local copy of model DI13C
          zoo13C_loc,        & ! local copy of model zoo13C
-         DO14C_loc,         & ! local copy of model DO14C
+         DO14Ctot_loc,      & ! local copy of model DO14Ctot
          DI14C_loc,         & ! local copy of model DI14C
          zoo14C_loc           ! local copy of model zoo14C
 
@@ -297,12 +297,12 @@ contains
          R13C_CaCO3_form,   & ! 13C/12C in CaCO3 production of small phyto
          R13C_CO2STAR,      & ! 13C/12C in CO2* water
          R13C_DIC,          & ! 13C/12C in total DIC
-         R13C_DOC,          & ! 13C/12C in total DOC
+         R13C_DOCtot,       & ! 13C/12C in total DOCtot
          R13C_zooC,         & ! 13C/12C in total zooplankton
          R14C_CaCO3_form,   & ! 14C/12C in CaCO3 production of small phyto
          R14C_CO2STAR,      & ! 14C/12C in CO2* water
          R14C_DIC,          & ! 14C/12C in total DIC
-         R14C_DOC,          & ! 14C/12C in total DOC
+         R14C_DOCtot,       & ! 14C/12C in total DOCtot
          R14C_zooC            ! 14C/12C in total zooplankton
 
     real (r8), dimension(autotroph_cnt, marbl_domain%km) :: &
@@ -326,25 +326,25 @@ contains
     real (r8), dimension(marbl_domain%km) :: &
          frac_co3,          & ! carbonate fraction fCO3 = [CO3--]/DIC
          CO2STAR_int,       & ! [CO2*] water (mmol/m^3) in interior domain (not only surface)
-         DO13C_prod,        & ! production of 13C DOC (mmol C/m^3/sec)
-         DO13C_remin,       & ! remineralization of 13C DOC (mmol C/m^3/sec)
+         DO13Ctot_prod,     & ! production of 13C DOCtot (mmol C/m^3/sec)
+         DO13Ctot_remin,    & ! remineralization of 13C DOCtot (mmol C/m^3/sec)
          eps_aq_g,          & ! equilibrium fractionation (CO2_gaseous <-> CO2_aq)
          eps_dic_g,         & ! equilibrium fractionation between total DIC and gaseous CO2
          alpha_aq_g,        & ! eps = ( alpa -1 ) * 1000
          alpha_dic_g,       & ! eps = ( alpa -1 ) * 1000
          delta_C13_Corg,    & ! deltaC13 of Net Primary Production
          delta_C13_CO2STAR, & ! deltaC13 of CO2*
-         DO14C_prod,        & ! production of 13C DOC (mmol C/m^3/sec)
-         DO14C_remin,       & ! remineralization of 13C DOC (mmol C/m^3/sec)
+         DO14Ctot_prod,     & ! production of 13C DOCtot (mmol C/m^3/sec)
+         DO14Ctot_remin,    & ! remineralization of 13C DOCtot (mmol C/m^3/sec)
          alpha_aq_g_14c,    & ! alpha for 14C, with fractionation twice as large as for 13C
          alpha_dic_g_14c,   & ! alpha for 14C, with fractionation twice as large as for 13C
          delta_C14_Corg,    & ! deltaC14 of Net Primary Production
          delta_C14_CO2STAR, & ! deltaC14 of CO2*
          DIC_d13C,          & ! d13C of DIC
-         DOC_d13C,          & ! d13C of DOC
+         DOCtot_d13C,       & ! d13C of DOCtot
          zooC_d13C,         & ! d13C of zooC
          DIC_d14C,          & ! d14C of DIC
-         DOC_d14C,          & ! d14C of DOC
+         DOCtot_d14C,       & ! d14C of DOCtot
          zooC_d14C            ! d14C of zooC
     !-------------------------------------------------------------
 
@@ -353,11 +353,11 @@ contains
          column_kmt         => marbl_domain%kmt                                , &
 
          DIC_loc            => marbl_interior_share%DIC_loc_fields             , & ! INPUT local copy of model DIC
-         DOC_loc            => marbl_interior_share%DOC_loc_fields             , & ! INPUT local copy of model DOC
+         DOCtot_loc         => marbl_interior_share%DOCtot_loc_fields          , & ! INPUT local copy of model DOCtot
          CO3                => marbl_interior_share%CO3_fields                 , & ! INPUT carbonate ion
          HCO3               => marbl_interior_share%HCO3_fields                , & ! INPUT bicarbonate ion
          H2CO3              => marbl_interior_share%H2CO3_fields               , & ! INPUT carbonic acid
-         DOC_remin          => marbl_interior_share%DOC_remin_fields           , & ! INPUT remineralization of 13C DOC (mmol C/m^3/sec)
+         DOCtot_remin       => marbl_interior_share%DOCtot_remin_fields        , & ! INPUT remineralization of DOCtot (mmol C/m^3/sec)
 
          autotrophCaCO3_loc => marbl_autotroph_share%autotrophCaCO3_loc_fields , & ! INPUT local copy of model autotroph CaCO3
          autotrophC_loc     => marbl_autotroph_share%autotrophC_loc_fields     , & ! INPUT local copy of model autotroph C
@@ -386,10 +386,10 @@ contains
          P_CaCO3            => marbl_particulate_share%P_CaCO3                 , & ! INPUT
 
          di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
-         do13c_ind          => marbl_tracer_indices%do13c_ind                  , &
+         do13ctot_ind       => marbl_tracer_indices%do13ctot_ind               , &
          zoo13c_ind         => marbl_tracer_indices%zoo13c_ind                 , &
          di14c_ind          => marbl_tracer_indices%di14c_ind                  , &
-         do14c_ind          => marbl_tracer_indices%do14c_ind                  , &
+         do14ctot_ind       => marbl_tracer_indices%do14ctot_ind               , &
          zoo14c_ind         => marbl_tracer_indices%zoo14c_ind                   &
          )
 
@@ -425,9 +425,9 @@ contains
     !  Create local copies of model column_tracer, treat negative values as zero
     !-----------------------------------------------------------------------
 
-    call setup_local_column_tracers(column_km, column_kmt, column_tracer,     &
-           marbl_tracer_indices, DI13C_loc, DO13c_loc, zoo13C_loc, DI14C_loc, &
-           DO14C_loc, zoo14C_loc)
+    call setup_local_column_tracers(column_km, column_kmt, column_tracer, &
+           marbl_tracer_indices, DI13C_loc, DO13Ctot_loc, zoo13C_loc, DI14C_loc, &
+           DO14Ctot_loc, zoo14C_loc)
 
     !-----------------------------------------------------------------------
     !  Create local copies of model column autotrophs, treat negative values as zero
@@ -462,12 +462,12 @@ contains
        !  Calculate fraction of CO3
        !-----------------------------------------------------------------------
 
-       if (DOC_loc(k) > c0) then
-          R13C_DOC(k) = DO13C_loc(k) / DOC_loc(k)
-          R14C_DOC(k) = DO14C_loc(k) / DOC_loc(k)
+       if (DOCtot_loc(k) > c0) then
+          R13C_DOCtot(k) = DO13Ctot_loc(k) / DOCtot_loc(k)
+          R14C_DOCtot(k) = DO14Ctot_loc(k) / DOCtot_loc(k)
        else
-          R13C_DOC(k) = c0
-          R14C_DOC(k) = c0
+          R13C_DOCtot(k) = c0
+          R14C_DOCtot(k) = c0
        end if
 
        if (DIC_loc(k) > c0) then
@@ -673,19 +673,19 @@ contains
        end do ! end loop over auto_ind
 
        !-----------------------------------------------------------------------
-       !  compute terms for DO13C and DO14C
+       !  compute terms for DO13Ctot and DO14Ctot
        !-----------------------------------------------------------------------
 
-       DO13C_prod(k) = &
+       DO13Ctot_prod(k) = &
             sum(zoo_loss_doc(:,k),dim=1)*R13C_zooC(k) + &
             sum((auto_loss_doc(:,k) + auto_graze_doc(:,k)) * R13C_autotroph(:,k),dim=1)
 
-       DO14C_prod(k) = &
+       DO14Ctot_prod(k) = &
             sum(zoo_loss_doc(:,k),dim=1)*R14C_zooC(k) + &
             sum((auto_loss_doc(:,k) + auto_graze_doc(:,k)) * R14C_autotroph(:,k),dim=1)
 
-       DO13C_remin(k) = DOC_remin(k) * R13C_DOC(k)
-       DO14C_remin(k) = DOC_remin(k) * R14C_DOC(k)
+       DO13Ctot_remin(k) = DOCtot_remin(k) * R13C_DOCtot(k)
+       DO14Ctot_remin(k) = DOCtot_remin(k) * R14C_DOCtot(k)
 
        !-----------------------------------------------------------------------
        !  large detritus 13C and 14C
@@ -717,8 +717,8 @@ contains
        DIC_d13C(k) =  ( R13C_DIC(k) / R13C_std - c1 ) * c1000
        DIC_d14C(k) =  ( R14C_DIC(k) / R14C_std - c1 ) * c1000
 
-       DOC_d13C(k) =  ( R13C_DOC(k) / R13C_std - c1 ) * c1000
-       DOC_d14C(k) =  ( R14C_DOC(k) / R14C_std - c1 ) * c1000
+       DOCtot_d13C(k) =  ( R13C_DOCtot(k) / R13C_std - c1 ) * c1000
+       DOCtot_d14C(k) =  ( R14C_DOCtot(k) / R14C_std - c1 ) * c1000
 
        zooC_d13C(k)=  ( R13C_zooC(k) / R13C_std - c1 ) * c1000
        zooC_d14C(k)=  ( R14C_zooC(k) / R14C_std - c1 ) * c1000
@@ -795,9 +795,9 @@ contains
        !  column_dtracer: dissolved organic Matter 13C and 14C
        !-----------------------------------------------------------------------
 
-       column_dtracer(do13c_ind,k) = DO13C_prod(k) - DO13C_remin(k)
+       column_dtracer(do13ctot_ind,k) = DO13Ctot_prod(k) - DO13Ctot_remin(k)
 
-       column_dtracer(do14c_ind,k) = DO14C_prod(k) - DO14C_remin(k) - c14_lambda_inv_sec * DO14C_loc(k)
+       column_dtracer(do14ctot_ind,k) = DO14Ctot_prod(k) - DO14Ctot_remin(k) - c14_lambda_inv_sec * DO14Ctot_loc(k)
 
        !-----------------------------------------------------------------------
        !   column_dtracer: dissolved inorganic Carbon 13 and 14
@@ -806,15 +806,15 @@ contains
        column_dtracer(di13c_ind,k) =                                                       &
             sum( (auto_loss_dic(:,k) + auto_graze_dic(:,k)) * R13C_autotroph(:,k), dim=1 ) &
           - sum(photo13C(:,k),dim=1)                                                       &
-          + DO13C_remin(k) + PO13C%remin(k)                                                &
-          + sum(zoo_loss_dic(:,k),dim=1) * R13C_zooC(k)                                    &
+          + DO13Ctot_remin(k) + PO13C%remin(k)                                             &
+          + sum(zoo_loss_dic(:,k),dim=1) * R13C_zooC(k)                 &
           + P_Ca13CO3%remin(k)
 
        column_dtracer(di14c_ind,k) =                                                       &
             sum( (auto_loss_dic(:,k) + auto_graze_dic(:,k)) * R14C_autotroph(:,k), dim=1 ) &
           - sum(photo14C(:,k),dim=1)                                                       &
-          + DO14C_remin(k) + PO14C%remin(k)                                                &
-          + sum(zoo_loss_dic(:,k),dim=1) * R14C_zooC(k)                                    &
+          + DO14Ctot_remin(k) + PO14C%remin(k)                                             &
+          + sum(zoo_loss_dic(:,k),dim=1) * R14C_zooC(k)                 &
           + P_Ca14CO3%remin(k)                                                             &
           - c14_lambda_inv_sec * DI14C_loc(k)
 
@@ -858,8 +858,8 @@ contains
        autotrophCaCO3_d14C, &
        DIC_d13C,            &
        DIC_d14C,            &
-       DOC_d13C,            &
-       DOC_d14C,            &
+       DOCtot_d13C,         &
+       DOCtot_d14C,         &
        zooC_d13C,           &
        zooC_d14C,           &
        photo13C,            &
@@ -868,10 +868,10 @@ contains
        mui_to_co2star,      &
        Ca13CO3_prod,        &
        Ca14CO3_prod,        &
-       DO13C_prod,          &
-       DO14C_prod,          &
-       DO13C_remin,         &
-       DO14C_remin,         &
+       DO13Ctot_prod,       &
+       DO14Ctot_prod,       &
+       DO13Ctot_remin,      &
+       DO14Ctot_remin,      &
        eps_aq_g,            &
        eps_dic_g,           &
        PO13C,               &
@@ -1001,8 +1001,8 @@ contains
   !***********************************************************************
 
   subroutine setup_local_column_tracers(column_km, column_kmt, column_tracer, &
-           marbl_tracer_indices, DI13C_loc, DO13c_loc, zoo13C_loc, DI14C_loc, &
-           DO14C_loc, zoo14C_loc)
+           marbl_tracer_indices, DI13C_loc, DO13Ctot_loc, zoo13C_loc, DI14C_loc, &
+           DO14Ctot_loc, zoo14C_loc)
 
     !-----------------------------------------------------------------------
     !  create local copies of model column_tracer
@@ -1017,10 +1017,10 @@ contains
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
 
     real (r8)         , intent(out) :: DI13C_loc(:)     ! (km) local copy of model DI13C
-    real (r8)         , intent(out) :: DO13C_loc(:)     ! (km) local copy of model DO13C
+    real (r8)         , intent(out) :: DO13Ctot_loc(:)  ! (km) local copy of model DO13Ctot
     real (r8)         , intent(out) :: zoo13C_loc(:)    ! (km) local copy of model zoo13C
     real (r8)         , intent(out) :: DI14C_loc(:)     ! (km) local copy of model DI14C
-    real (r8)         , intent(out) :: DO14C_loc(:)     ! (km) local copy of model DO14C
+    real (r8)         , intent(out) :: DO14Ctot_loc(:)  ! (km) local copy of model DO14Ctot
     real (r8)         , intent(out) :: zoo14C_loc(:)    ! (km) local copy of model zoo14C
     !-----------------------------------------------------------------------
     !  local variables
@@ -1028,32 +1028,32 @@ contains
     integer :: k
     !-----------------------------------------------------------------------
 
-    associate(di13c_ind  => marbl_tracer_indices%di13c_ind,                   &
-              do13c_ind  => marbl_tracer_indices%do13c_ind,                   &
-              zoo13c_ind => marbl_tracer_indices%zoo13c_ind,                  &
-              di14c_ind  => marbl_tracer_indices%di14c_ind,                   &
-              do14c_ind  => marbl_tracer_indices%do14c_ind,                   &
-              zoo14c_ind => marbl_tracer_indices%zoo14c_ind)
+    associate(di13c_ind     => marbl_tracer_indices%di13c_ind,                   &
+              do13ctot_ind  => marbl_tracer_indices%do13ctot_ind,                &
+              zoo13c_ind    => marbl_tracer_indices%zoo13c_ind,                  &
+              di14c_ind     => marbl_tracer_indices%di14c_ind,                   &
+              do14ctot_ind  => marbl_tracer_indices%do14ctot_ind,                &
+              zoo14c_ind    => marbl_tracer_indices%zoo14c_ind)
     do k = 1,column_kmt
-       DI13C_loc(k)  = max(c0, column_tracer(di13c_ind,k))
-       DI14C_loc(k)  = max(c0, column_tracer(di14c_ind,k))
+       DI13C_loc(k)    = max(c0, column_tracer(di13c_ind,k))
+       DI14C_loc(k)    = max(c0, column_tracer(di14c_ind,k))
 
-       DO13C_loc(k)  = max(c0, column_tracer(do13c_ind,k))
-       DO14C_loc(k)  = max(c0, column_tracer(do14c_ind,k))
+       DO13Ctot_loc(k) = max(c0, column_tracer(do13ctot_ind,k))
+       DO14Ctot_loc(k) = max(c0, column_tracer(do14ctot_ind,k))
 
-       zoo13C_loc(k) = max(c0, column_tracer(zoo13C_ind,k))
-       zoo14C_loc(k) = max(c0, column_tracer(zoo14C_ind,k))
+       zoo13C_loc(k)   = max(c0, column_tracer(zoo13C_ind,k))
+       zoo14C_loc(k)   = max(c0, column_tracer(zoo14C_ind,k))
     end do
 
     do k = column_kmt+1, column_km
-       DI13C_loc(k)  = c0
-       DI14C_loc(k)  = c0
+       DI13C_loc(k)    = c0
+       DI14C_loc(k)    = c0
 
-       DO13C_loc(k)  = c0
-       DO14C_loc(k)  = c0
+       DO13Ctot_loc(k) = c0
+       DO14Ctot_loc(k) = c0
 
-       zoo13C_loc(k) = c0
-       zoo14C_loc(k) = c0
+       zoo13C_loc(k)   = c0
+       zoo14C_loc(k)   = c0
     end do
     end associate
 
@@ -1752,9 +1752,9 @@ contains
          co3_surf_fields     => marbl_surface_forcing_share%co3_surf_fields      , & ! in/out
 
          di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
-         do13c_ind          => marbl_tracer_indices%do13c_ind                  , &
+         do13ctot_ind       => marbl_tracer_indices%do13ctot_ind               , &
          di14c_ind          => marbl_tracer_indices%di14c_ind                  , &
-         do14c_ind          => marbl_tracer_indices%do14c_ind                  , &
+         do14ctot_ind       => marbl_tracer_indices%do14ctot_ind               , &
          ciso_ind_beg       => marbl_tracer_indices%ciso%ind_beg               , &
          ciso_ind_end       => marbl_tracer_indices%ciso%ind_end                 &
          )

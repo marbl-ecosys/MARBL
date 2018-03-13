@@ -678,18 +678,18 @@
          "long_name": "Dissolved Inorganic Carbon, Alternative CO2",
          "units": "mmol/m^3"
       },
-      "DO13C": {
+      "DO13Ctot": {
          "dependencies": {
             "ciso_on": ".true."
          },
-         "long_name": "Dissolved Organic Carbon-13",
+         "long_name": "Dissolved Organic Carbon-13 (semi-labile+refractoy)",
          "units": "mmol/m^3"
       },
-      "DO14C": {
+      "DO14Ctot": {
          "dependencies": {
             "ciso_on": ".true."
          },
-         "long_name": "Dissolved Organic Carbon-14",
+         "long_name": "Dissolved Organic Carbon-14 (semi-labile+refractoy)",
          "units": "mmol/m^3"
       },
       "DOC": {

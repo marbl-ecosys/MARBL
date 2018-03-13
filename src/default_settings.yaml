@@ -107,20 +107,20 @@ _tracer_list :
          ciso_on : .true.
       long_name : Dissolved Inorganic Carbon-13
       units : mmol/m^3
-   DO13C :
+   DO13Ctot :
       dependencies :
          ciso_on : .true.
-      long_name : Dissolved Organic Carbon-13
+      long_name : Dissolved Organic Carbon-13 (semi-labile+refractoy)
       units : mmol/m^3
    DI14C :
       dependencies :
          ciso_on : .true.
       long_name : Dissolved Inorganic Carbon-14
       units : mmol/m^3
-   DO14C :
+   DO14Ctot :
       dependencies :
          ciso_on : .true.
-      long_name : Dissolved Organic Carbon-14
+      long_name : Dissolved Organic Carbon-14 (semi-labile+refractoy)
       units : mmol/m^3
 
    # Per-autotroph tracers
