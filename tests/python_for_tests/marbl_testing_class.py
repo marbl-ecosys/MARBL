@@ -73,9 +73,7 @@ class MARBL_testcase(object):
       from socket import gethostname
       self._hostname = gethostname()
       found = True
-      if any(host in self._hostname for host in ['geyser', 'caldera', 'prong', 'yslogin']):
-        self._machine = 'yellowstone'
-      elif 'cheyenne' in self._hostname:
+      if 'cheyenne' in self._hostname:
         self._machine = 'cheyenne'
       elif 'hobart' in self._hostname:
         self._machine = 'hobart'
@@ -170,15 +168,7 @@ class MARBL_testcase(object):
       execmd += "marbl-mpi.exe"
 
       # need to launch with mpirun
-      # Note that yellowstone actually uses mpirun.lsf
-      # (and we want to avoid running on a login node)
-      if self._machine == 'yellowstone':
-        execmd = 'mpirun.lsf %s' % execmd
-        if 'yslogin' in self._hostname:
-          # on login node => request caldera node!
-          execmd = 'execca %s' % execmd
-      else:
-        execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
+      execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
 
     # if running in serial, executable is marbl.exe
     else:

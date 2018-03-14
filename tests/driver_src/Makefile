@@ -22,6 +22,10 @@ else
   override MAKE_DIR=$(realpath .)
 endif
 
+NETCDF_INC=-D_NETCDF -I$(shell nc-config --includedir)
+# hobart_intel version of nc-config does not have --libdir option
+NETCDF_LNK=-L$(shell nc-config --prefix)/lib -lnetcdf -lnetcdff
+
 # (2) Default directories (can be changed by invoking "make LIB_SRC_DIR=...", etc)
 OBJ_ROOT = $(realpath $(MAKE_DIR)/../obj)
 INC_DIR = $(realpath $(MAKE_DIR)/../../include)
@@ -139,7 +143,7 @@ pgi:
 
 .PHONY: nag
 nag:
-	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-O2 -free -kind=byte -wmismatch=mpi_bcast" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-O2 -free -kind=sequential -wmismatch=mpi_bcast" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
 
 .PHONY: cray
 cray:

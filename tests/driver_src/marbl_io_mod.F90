@@ -27,9 +27,9 @@ module marbl_io_mod
   public :: marbl_io_close_all
 
   interface marbl_io_close
-    procedure :: marbl_io_close_by_id
-    procedure :: marbl_io_close_by_name
-  end interface
+    module procedure marbl_io_close_by_id
+    module procedure marbl_io_close_by_name
+  end interface marbl_io_close
 
 contains
 
