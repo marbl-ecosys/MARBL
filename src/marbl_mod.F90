@@ -2775,8 +2775,8 @@ contains
 
 
 !Tfunc_cocco = Q_10**(((column_temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
-Tfunc_cocco = 0.085 * ((column_temperature)**(0.53))
-
+!Tfunc_cocco = 0.085 * ((column_temperature)**(0.53))
+Tfunc_cocco = 0.12 * ((column_temperature)**(0.4))
 !Tfunc_cocco = 1.8**(((column_temperature + T0_Kelvin) - (33.0 + T0_Kelvin)) / c10)
 
   end subroutine marbl_compute_function_scaling
@@ -3215,16 +3215,16 @@ Tfunc_cocco = 0.085 * ((column_temperature)**(0.53))
 
             !temperature effect
             if (temperature < 11.) then
-                picpoc = 0.104 * temperature - 0.108
+                picpoc = max(0.,0.104 * temperature - 0.108)
             else
                 picpoc = 1.
             end if
 
             !CO2 effect
-            picpoc = -0.0136 * CO2 + picpoc + 0.21
+            picpoc = max(0.,-0.0136 * CO2 + picpoc + 0.21)
 
             !nut lim effect (maybe just making this for P-limited areas? if (Plim(auto_ind) == f_nut(auto_ind) then..)
-            picpoc = -0.48 * Plim(auto_ind) + picpoc + 0.48
+            picpoc = max(0.,-0.48 * Plim(auto_ind) + picpoc + 0.48)
 
             !multiply cocco growth rate by picpoc to get CaCO3 formation
 
