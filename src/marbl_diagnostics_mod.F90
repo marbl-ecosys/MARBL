@@ -4028,8 +4028,6 @@ contains
 
     use marbl_interface_private_types , only : marbl_interior_forcing_indexing_type
 
-    implicit none
-
     type (marbl_domain_type)                  , intent(in) :: domain
     type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
 
@@ -4087,8 +4085,7 @@ contains
     call store_diagnostics_carbonate(domain, carbonate,                       &
          marbl_interior_forcing_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('store_diagnostics_carbonate',    &
-           subname)
+      call marbl_status_log%log_error_trace('store_diagnostics_carbonate', subname)
       return
     end if
 
@@ -4105,9 +4102,12 @@ contains
 
     associate( POC     => marbl_particulate_share%POC, &
                P_CaCO3 => marbl_particulate_share%P_CaCO3 )
-    call store_diagnostics_carbon_fluxes(domain, POC, P_CaCO3, dtracers,      &
-         marbl_tracer_indices, marbl_interior_forcing_diags)
-
+    call store_diagnostics_carbon_fluxes(domain, POC, P_CaCO3, dtracers, &
+         marbl_tracer_indices, marbl_interior_forcing_diags, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('store_diagnostics_carbon_fluxes', subname)
+      return
+    end if
     end associate
 
     call store_diagnostics_nitrification(&
@@ -4130,24 +4130,40 @@ contains
 
     call store_diagnostics_nitrogen_fluxes(domain, &
          PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracers, &
-         marbl_tracer_indices, marbl_interior_forcing_diags)
+         marbl_tracer_indices, marbl_interior_forcing_diags, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('store_diagnostics_nitrogen_fluxes', subname)
+      return
+    end if
 
     associate( POP => marbl_particulate_share%POP )
     call store_diagnostics_phosphorus_fluxes(domain, POP, &
          autotroph_secondary_species, dtracers, &
-         marbl_tracer_indices, marbl_interior_forcing_diags)
+         marbl_tracer_indices, marbl_interior_forcing_diags, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('store_diagnostics_phosphorus_fluxes', subname)
+      return
+    end if
     end associate
 
     associate( P_SiO2 => marbl_particulate_share%P_SiO2 )
     call store_diagnostics_silicon_fluxes(domain, P_SiO2, dtracers,           &
-         marbl_tracer_indices, marbl_interior_forcing_diags)
+         marbl_tracer_indices, marbl_interior_forcing_diags, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('store_diagnostics_silicon_fluxes', subname)
+      return
+    end if
     end associate
 
     associate( dust   => marbl_particulate_share%dust, &
                P_iron => marbl_particulate_share%P_iron )
     call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
          interior_forcings(interior_forcing_ind%fesedflux_id)%field_1d(1,:),  &
-         dtracers, marbl_tracer_indices, marbl_interior_forcing_diags)
+         dtracers, marbl_tracer_indices, marbl_interior_forcing_diags, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('store_diagnostics_iron_fluxes', subname)
+      return
+    end if
     end associate
 
     call store_diagnostics_interior_restore(interior_restore,                 &
@@ -4174,8 +4190,6 @@ contains
     use marbl_settings_mod   , only : lflux_gas_o2
     use marbl_settings_mod   , only : lflux_gas_co2
     use marbl_constants_mod  , only : mpercm
-
-    implicit none
 
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
     type(marbl_forcing_fields_type)           , intent(in)    :: surface_input_forcings(:)
@@ -4632,8 +4646,6 @@ contains
     use marbl_settings_mod, only : PONremin_refract
     use marbl_settings_mod, only : POPremin_refract
 
-    implicit none
-
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(marbl_particulate_share_type) , intent(in)    :: marbl_particulate_share
     real(r8), dimension(:)             , intent(in)    :: PON_remin    ! km
@@ -4967,7 +4979,9 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_carbon_fluxes(marbl_domain, POC, P_CaCO3, dtracers, &
-             marbl_tracer_indices, marbl_diags)
+             marbl_tracer_indices, marbl_diags, marbl_status_log)
+
+    use marbl_settings_mod, only : Jint_Ctot_thres
 
     type(marbl_domain_type)     , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: POC
@@ -4975,10 +4989,13 @@ contains
     real(r8)                           , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
+    type(marbl_log_type)               , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_carbon_fluxes'
+    character(len=char_len)     :: log_message
     integer(int_kind) :: n, auto_ind
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
@@ -5012,6 +5029,14 @@ contains
          near_surface_integral=diags(ind%Jint_100m_Ctot)%field_2d(1),         &
          integrated_terms = POC%sed_loss + P_CaCO3%sed_loss)
 
+    if (abs(diags(ind%Jint_Ctot)%field_2d(1)) .gt. Jint_Ctot_thres) then
+       write(log_message,"(A,E11.3e3,A,E11.3e3)") &
+            'abs(Jint_Ctot)=', abs(diags(ind%Jint_Ctot)%field_2d(1)), &
+            ' exceeds Jint_Ctot_thres=', Jint_Ctot_thres
+       call marbl_status_log%log_error(log_message, subname, ElemInd=1)
+       return
+    end if
+
     end associate
 
   end subroutine store_diagnostics_carbon_fluxes
@@ -5020,9 +5045,10 @@ contains
 
   subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, &
        PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracers, &
-       marbl_tracer_indices, marbl_diags)
+       marbl_tracer_indices, marbl_diags, marbl_status_log)
 
     use marbl_settings_mod, only : Q
+    use marbl_settings_mod, only : Jint_Ntot_thres
 
     type(marbl_domain_type)         , intent(in)    :: marbl_domain
     real(r8)                               , intent(in)    :: PON_sed_loss(:) ! km
@@ -5032,10 +5058,13 @@ contains
     real(r8)                               , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
+    type(marbl_log_type)                   , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_nitrogen_fluxes'
+    character(len=char_len)     :: log_message
     integer(int_kind) :: n
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
@@ -5071,6 +5100,14 @@ contains
          near_surface_integral=diags(ind%Jint_100m_Ntot)%field_2d(1),         &
          integrated_terms = PON_sed_loss)
 
+    if (abs(diags(ind%Jint_Ntot)%field_2d(1)) .gt. Jint_Ntot_thres) then
+       write(log_message,"(A,E11.3e3,A,E11.3e3)") &
+            'abs(Jint_Ntot)=', abs(diags(ind%Jint_Ntot)%field_2d(1)), &
+            ' exceeds Jint_Ntot_thres=', Jint_Ntot_thres
+       call marbl_status_log%log_error(log_message, subname, ElemInd=1)
+       return
+    end if
+
     end associate
 
   end subroutine store_diagnostics_nitrogen_fluxes
@@ -5079,10 +5116,11 @@ contains
 
   subroutine store_diagnostics_phosphorus_fluxes(marbl_domain, POP, &
        autotroph_secondary_species, dtracers, &
-       marbl_tracer_indices, marbl_diags)
+       marbl_tracer_indices, marbl_diags, marbl_status_log)
 
     use marbl_pft_mod, only : Qp_zoo
     use marbl_settings_mod, only : lvariable_PtoC
+    use marbl_settings_mod, only : Jint_Ptot_thres
 
     type(marbl_domain_type)                , intent(in)    :: marbl_domain
     type(column_sinking_particle_type)     , intent(in)    :: POP
@@ -5090,10 +5128,13 @@ contains
     real(r8)                               , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
+    type(marbl_log_type)                   , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_phosphorus_fluxes'
+    character(len=char_len)     :: log_message
     integer(int_kind) :: n
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
@@ -5125,6 +5166,14 @@ contains
          near_surface_integral=diags(ind%Jint_100m_Ptot)%field_2d(1),         &
          integrated_terms = POP%sed_loss)
 
+    if (abs(diags(ind%Jint_Ptot)%field_2d(1)) .gt. Jint_Ptot_thres) then
+       write(log_message,"(A,E11.3e3,A,E11.3e3)") &
+            'abs(Jint_Ptot)=', abs(diags(ind%Jint_Ptot)%field_2d(1)), &
+            ' exceeds Jint_Ptot_thres=', Jint_Ptot_thres
+       call marbl_status_log%log_error(log_message, subname, ElemInd=1)
+       return
+    end if
+
     end associate
 
   end subroutine store_diagnostics_phosphorus_fluxes
@@ -5132,17 +5181,22 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_silicon_fluxes(marbl_domain, P_SiO2, dtracers, &
-       marbl_tracer_indices, marbl_diags)
+       marbl_tracer_indices, marbl_diags, marbl_status_log)
+
+    use marbl_settings_mod, only : Jint_Sitot_thres
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: P_SiO2
     real(r8)                           , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
+    type(marbl_log_type)               , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_silicon_fluxes'
+    character(len=char_len)     :: log_message
     integer(int_kind) :: n
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
@@ -5169,6 +5223,14 @@ contains
          near_surface_integral=diags(ind%Jint_100m_Sitot)%field_2d(1),        &
          integrated_terms = P_SiO2%sed_loss)
 
+    if (abs(diags(ind%Jint_Sitot)%field_2d(1)) .gt. Jint_Sitot_thres) then
+       write(log_message,"(A,E11.3e3,A,E11.3e3)") &
+            'abs(Jint_Sitot)=', abs(diags(ind%Jint_Sitot)%field_2d(1)), &
+            ' exceeds Jint_Sitot_thres=', Jint_Sitot_thres
+       call marbl_status_log%log_error(log_message, subname, ElemInd=1)
+       return
+    end if
+
     end associate
 
   end subroutine store_diagnostics_silicon_fluxes
@@ -5176,10 +5238,11 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_iron_fluxes(marbl_domain, P_iron, dust, &
-             fesedflux, dtracers, marbl_tracer_indices, marbl_diags)
+             fesedflux, dtracers, marbl_tracer_indices, marbl_diags, marbl_status_log)
 
     use marbl_settings_mod, only : Qfe_zoo
     use marbl_settings_mod, only : dust_to_Fe
+    use marbl_settings_mod, only : Jint_Fetot_thres
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: P_iron
@@ -5188,10 +5251,13 @@ contains
     real(r8)                           , intent(in)    :: dtracers(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
+    type(marbl_log_type)               , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_iron_fluxes'
+    character(len=char_len)     :: log_message
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
 
@@ -5214,6 +5280,14 @@ contains
          full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),               &
          near_surface_integral=diags(ind%Jint_100m_Fetot)%field_2d(1),        &
          integrated_terms = P_iron%sed_loss - fesedflux)
+
+    if (abs(diags(ind%Jint_Fetot)%field_2d(1)) .gt. Jint_Fetot_thres) then
+       write(log_message,"(A,E11.3e3,A,E11.3e3)") &
+            'abs(Jint_Fetot)=', abs(diags(ind%Jint_Fetot)%field_2d(1)), &
+            ' exceeds Jint_Fetot_thres=', Jint_Fetot_thres
+       call marbl_status_log%log_error(log_message, subname, ElemInd=1)
+       return
+    end if
 
     end associate
 
@@ -5271,16 +5345,19 @@ contains
        PO14C,               &
        P_Ca13CO3,           &
        P_Ca14CO3,           &
+       decay_14Ctot,        &
        dtracers,            &
        marbl_tracer_indices,&
-       marbl_diags)
+       marbl_diags,         &
+       marbl_status_log)
 
     !---------------------------------------------------------------------
     ! !DESCRIPTION:
     !  Update marbl_interior_ciso_diags data type
     !---------------------------------------------------------------------
 
-    implicit none
+    use marbl_settings_mod, only : CISO_Jint_13Ctot_thres
+    use marbl_settings_mod, only : CISO_Jint_14Ctot_thres
 
     type(marbl_domain_type), intent(in)    :: marbl_domain
 
@@ -5308,7 +5385,8 @@ contains
          DO14Ctot_prod  , & ! production of 14C DOCtot (mmol C/m^3/sec)
          DO14Ctot_remin , & ! remineralization of 14C DOCtot (mmol C/m^3/sec)
          eps_aq_g       , & ! equilibrium fractionation (CO2_gaseous <-> CO2_aq)
-         eps_dic_g          ! equilibrium fractionation between total DIC and gaseous CO2
+         eps_dic_g      , & ! equilibrium fractionation between total DIC and gaseous CO2
+         decay_14Ctot       ! 14C decay loss term
 
     real (r8), intent(in) :: dtracers(:,:) ! (tracer_cnt, km) computed source/sink terms
 
@@ -5323,9 +5401,14 @@ contains
     type(marbl_diagnostics_type), intent(inout) :: &
          marbl_diags
 
+    type(marbl_log_type), intent(inout) :: &
+         marbl_status_log
+
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_ciso_interior'
+    character(len=char_len)     :: log_message
     integer (int_kind) :: k, n, auto_ind
     real (r8)          :: work(marbl_domain%km)
     !-----------------------------------------------------------------------
@@ -5372,10 +5455,18 @@ contains
          near_surface_integral=diags(ind%CISO_Jint_100m_13Ctot)%field_2d(1),  &
          integrated_terms = PO13C%sed_loss + P_Ca13CO3%sed_loss)
 
+    if (abs(diags(ind%CISO_Jint_13Ctot)%field_2d(1)) .gt. CISO_Jint_13Ctot_thres) then
+       write(log_message,"(A,E11.3e3,A,E11.3e3)") &
+            'abs(CISO_Jint_13Ctot)=', abs(diags(ind%CISO_Jint_13Ctot)%field_2d(1)), &
+            ' exceeds CISO_Jint_13Ctot_thres=', CISO_Jint_13Ctot_thres
+       call marbl_status_log%log_error(log_message, subname, ElemInd=1)
+       return
+    end if
+
     ! Vertical integral - CISO_Jint_14Ctot and Jint_100m_14Ctot
 
     work(:) = dtracers(di14c_ind,:) + dtracers(do14ctot_ind,:) + dtracers(zoo14C_ind,:) &
-         + sum(dtracers(marbl_tracer_indices%auto_inds(:)%C14_ind,:), dim=1)
+         + sum(dtracers(marbl_tracer_indices%auto_inds(:)%C14_ind,:), dim=1) + decay_14Ctot
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
        if (n > 0) then
@@ -5386,6 +5477,14 @@ contains
          full_depth_integral=diags(ind%CISO_Jint_14Ctot)%field_2d(1),         &
          near_surface_integral=diags(ind%CISO_Jint_100m_14Ctot)%field_2d(1),  &
          integrated_terms = PO14C%sed_loss + P_Ca14CO3%sed_loss)
+
+    if (abs(diags(ind%CISO_Jint_14ctot)%field_2d(1)) .gt. CISO_Jint_14ctot_thres) then
+       write(log_message,"(A,E11.3e3,A,E11.3e3)") &
+            'abs(CISO_Jint_14ctot)=', abs(diags(ind%CISO_Jint_14ctot)%field_2d(1)), &
+            ' exceeds CISO_Jint_14ctot_thres=', CISO_Jint_14Ctot_thres
+       call marbl_status_log%log_error(log_message, subname, ElemInd=1)
+       return
+    end if
 
     ! Other vertical integrals
 
@@ -5497,9 +5596,7 @@ contains
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
 
-    use marbl_constants_mod, only : R13c_std, R14c_std, c1000
-
-    implicit none
+    use marbl_constants_mod, only : R13C_std, R14C_std, c1000
 
     integer (int_kind)                 , intent(in)    :: num_elements
     real (r8), dimension(num_elements) , intent(in)    :: D13C           ! atm 13co2 value
