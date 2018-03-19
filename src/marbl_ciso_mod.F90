@@ -870,29 +870,29 @@ contains
        autotroph_d14C,      &
        autotrophCaCO3_d13C, &
        autotrophCaCO3_d14C, &
-       DIC_d13C,            &
-       DIC_d14C,            &
-       DOCtot_d13C,         &
-       DOCtot_d14C,         &
-       zooC_d13C,           &
-       zooC_d14C,           &
        photo13C,            &
        photo14C,            &
        eps_autotroph,       &
        mui_to_co2star,      &
        Ca13CO3_prod,        &
        Ca14CO3_prod,        &
+       DIC_d13C,            &
+       DIC_d14C,            &
+       DOCtot_d13C,         &
+       DOCtot_d14C,         &
+       zooC_d13C,           &
+       zooC_d14C,           &
        DO13Ctot_prod,       &
        DO14Ctot_prod,       &
        DO13Ctot_remin,      &
        DO14Ctot_remin,      &
        eps_aq_g,            &
        eps_dic_g,           &
+       decay_14Ctot,        &
        PO13C,               &
        PO14C,               &
        P_Ca13CO3,           &
        P_Ca14CO3,           &
-       decay_14Ctot,        &
        column_dtracer,      &
        marbl_tracer_indices,&
        marbl_interior_diags,&

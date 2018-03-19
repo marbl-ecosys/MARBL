@@ -580,31 +580,11 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
-   "CISO_Jint_100m_13Ctot": {
-      "dependencies": {
-         "ciso_on": ".true."
-      },
-      "frequency": "medium",
-      "longname": "13Ctot Source Sink Term Vertical Integral, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
-   "CISO_Jint_100m_14Ctot": {
-      "dependencies": {
-         "ciso_on": ".true."
-      },
-      "frequency": "medium",
-      "longname": "14Ctot Source Sink Term Vertical Integral, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
    "CISO_Jint_13Ctot": {
       "dependencies": {
          "ciso_on": ".true."
       },
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "13Ctot Source Sink Term Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
@@ -614,7 +594,7 @@
       "dependencies": {
          "ciso_on": ".true."
       },
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "14Ctot Source Sink Term Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
@@ -1326,71 +1306,36 @@
       "units": "mmol/m^2/s",
       "vertical_grid": "none"
    },
-   "Jint_100m_Ctot": {
-      "frequency": "medium",
-      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ctot, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
-   "Jint_100m_Fetot": {
-      "frequency": "medium",
-      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Fetot, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
-   "Jint_100m_Ntot": {
-      "frequency": "medium",
-      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ntot, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
-   "Jint_100m_Ptot": {
-      "frequency": "medium",
-      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ptot, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
-   "Jint_100m_Sitot": {
-      "frequency": "medium",
-      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Sitot, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
    "Jint_Ctot": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ctot",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "Jint_Fetot": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Fetot",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "Jint_Ntot": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ntot",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "Jint_Ptot": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ptot",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "Jint_Sitot": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Sitot",
       "operator": "average",
       "units": "mmol/m^3 cm/s",

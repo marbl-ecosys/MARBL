@@ -414,61 +414,31 @@ Jint_Ctot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Ctot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Ntot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ntot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Ntot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ntot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Ptot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ptot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Ptot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ptot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Sitot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Sitot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Sitot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Sitot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Fetot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Fetot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Fetot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Fetot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 
 # Particulate 2D diags
@@ -1056,7 +1026,7 @@ CISO_Jint_13Ctot :
    longname : 13Ctot Source Sink Term Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 CISO_Jint_14Ctot :
    dependencies :
@@ -1064,23 +1034,7 @@ CISO_Jint_14Ctot :
    longname : 14Ctot Source Sink Term Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-CISO_Jint_100m_13Ctot :
-   dependencies :
-      ciso_on : .true.
-   longname : 13Ctot Source Sink Term Vertical Integral, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
-   operator : average
-CISO_Jint_100m_14Ctot :
-   dependencies :
-      ciso_on : .true.
-   longname : 14Ctot Source Sink Term Vertical Integral, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 calcToSed_13C :
    dependencies :
