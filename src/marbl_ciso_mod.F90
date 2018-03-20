@@ -345,7 +345,9 @@ contains
          zooC_d13C,         & ! d13C of zooC
          DIC_d14C,          & ! d14C of DIC
          DOCtot_d14C,       & ! d14C of DOCtot
-         zooC_d14C            ! d14C of zooC
+         zooC_d14C,         & ! d14C of zooC
+         decay_14Ctot         ! 14C decay loss term
+
     !-------------------------------------------------------------
 
     associate(                                                                   &
@@ -750,6 +752,8 @@ contains
        ! Update column_dtracer for the 7 carbon pools for each Carbon isotope
        !-----------------------------------------------------------------------
 
+       decay_14Ctot(k) = c0
+
        !-----------------------------------------------------------------------
        !  dtracrs: autotroph Carbon (3 carbon pools), autotroph Ca13CO3 and Ca14CO3
        !-----------------------------------------------------------------------
@@ -764,6 +768,8 @@ contains
           column_dtracer(n,k) = photo14C(auto_ind,k) - work1 * R14C_autotroph(auto_ind,k) - &
                c14_lambda_inv_sec * autotroph_loc(auto_ind,k)%C14
 
+          decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_loc(auto_ind,k)%C14
+
           n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
           if (n > 0) then
              column_dtracer(n,k) = Ca13CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
@@ -775,6 +781,8 @@ contains
              column_dtracer(n,k) = Ca14CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
                   * work1 * R14C_autotrophCaCO3(auto_ind,k)      &
                   - c14_lambda_inv_sec * autotroph_loc(auto_ind,k)%Ca14CO3
+
+             decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_loc(auto_ind,k)%Ca14CO3
           endif
        end do
 
@@ -791,6 +799,8 @@ contains
             - sum(zoo_loss(:,k),dim=1) * R14C_zooC(k) &
             - c14_lambda_inv_sec * zoo14C_loc(k)
 
+       decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * zoo14C_loc(k)
+
        !-----------------------------------------------------------------------
        !  column_dtracer: dissolved organic Matter 13C and 14C
        !-----------------------------------------------------------------------
@@ -798,6 +808,8 @@ contains
        column_dtracer(do13ctot_ind,k) = DO13Ctot_prod(k) - DO13Ctot_remin(k)
 
        column_dtracer(do14ctot_ind,k) = DO14Ctot_prod(k) - DO14Ctot_remin(k) - c14_lambda_inv_sec * DO14Ctot_loc(k)
+
+       decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * DO14Ctot_loc(k)
 
        !-----------------------------------------------------------------------
        !   column_dtracer: dissolved inorganic Carbon 13 and 14
@@ -807,16 +819,18 @@ contains
             sum( (auto_loss_dic(:,k) + auto_graze_dic(:,k)) * R13C_autotroph(:,k), dim=1 ) &
           - sum(photo13C(:,k),dim=1)                                                       &
           + DO13Ctot_remin(k) + PO13C%remin(k)                                             &
-          + sum(zoo_loss_dic(:,k),dim=1) * R13C_zooC(k)                 &
+          + sum(zoo_loss_dic(:,k),dim=1) * R13C_zooC(k)                                    &
           + P_Ca13CO3%remin(k)
 
        column_dtracer(di14c_ind,k) =                                                       &
             sum( (auto_loss_dic(:,k) + auto_graze_dic(:,k)) * R14C_autotroph(:,k), dim=1 ) &
           - sum(photo14C(:,k),dim=1)                                                       &
           + DO14Ctot_remin(k) + PO14C%remin(k)                                             &
-          + sum(zoo_loss_dic(:,k),dim=1) * R14C_zooC(k)                 &
+          + sum(zoo_loss_dic(:,k),dim=1) * R14C_zooC(k)                                    &
           + P_Ca14CO3%remin(k)                                                             &
           - c14_lambda_inv_sec * DI14C_loc(k)
+
+       decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * DI14C_loc(k)
 
        do auto_ind = 1, autotroph_cnt
           if (marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind > 0) then
@@ -856,31 +870,38 @@ contains
        autotroph_d14C,      &
        autotrophCaCO3_d13C, &
        autotrophCaCO3_d14C, &
-       DIC_d13C,            &
-       DIC_d14C,            &
-       DOCtot_d13C,         &
-       DOCtot_d14C,         &
-       zooC_d13C,           &
-       zooC_d14C,           &
        photo13C,            &
        photo14C,            &
        eps_autotroph,       &
        mui_to_co2star,      &
        Ca13CO3_prod,        &
        Ca14CO3_prod,        &
+       DIC_d13C,            &
+       DIC_d14C,            &
+       DOCtot_d13C,         &
+       DOCtot_d14C,         &
+       zooC_d13C,           &
+       zooC_d14C,           &
        DO13Ctot_prod,       &
        DO14Ctot_prod,       &
        DO13Ctot_remin,      &
        DO14Ctot_remin,      &
        eps_aq_g,            &
        eps_dic_g,           &
+       decay_14Ctot,        &
        PO13C,               &
        PO14C,               &
        P_Ca13CO3,           &
        P_Ca14CO3,           &
        column_dtracer,      &
        marbl_tracer_indices,&
-       marbl_interior_diags)
+       marbl_interior_diags,&
+       marbl_status_log)
+
+    if (marbl_status_log%labort_marbl) then
+       call marbl_status_log%log_error_trace("store_diagnostics_ciso_interior", subname)
+       return
+    end if
 
     !-----------------------------------------------------------------------
     ! Deallocate memory for column_sinking_particle data types

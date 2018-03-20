@@ -230,6 +230,14 @@ module marbl_settings_mod
        particulate_flux_ref_depth    ! reference depth for particulate flux diagnostics (m)
 
   real(r8), target :: &
+       Jint_Ctot_thres_molpm2pyr,  & ! MARBL will abort if abs(Jint_Ctot) exceeds this threshold
+       Jint_Ctot_thres,            & ! MARBL will abort if abs(Jint_Ctot) exceeds this threshold (derived from Jint_Ctot_thres_molpm2pyr)
+       Jint_Ntot_thres,            & ! MARBL will abort if abs(Jint_Ntot) exceeds this threshold (derived from Jint_Ctot_thres)
+       Jint_Ptot_thres,            & ! MARBL will abort if abs(Jint_Ptot) exceeds this threshold (derived from Jint_Ctot_thres)
+       Jint_Sitot_thres,           & ! MARBL will abort if abs(Jint_Sitot) exceeds this threshold (derived from Jint_Ctot_thres)
+       Jint_Fetot_thres,           & ! MARBL will abort if abs(Jint_Fetot) exceeds this threshold (derived from Jint_Ctot_thres)
+       CISO_Jint_13Ctot_thres,     & ! MARBL will abort if abs(CISO_Jint_13Ctot) exceeds this threshold (derived from Jint_Ctot_thres)
+       CISO_Jint_14Ctot_thres,     & ! MARBL will abort if abs(CISO_Jint_14Ctot) exceeds this threshold (derived from Jint_Ctot_thres)
        parm_Fe_bioavail,           & ! fraction of Fe flux that is bioavailable
        parm_o2_min,                & ! min O2 needed for prod & consump. (nmol/cm^3)
        parm_o2_min_delta,          & ! width of min O2 range (nmol/cm^3)
@@ -347,6 +355,7 @@ contains
     init_bury_coeff_opt           = 'settings_file' ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    Jint_Ctot_thres_molpm2pyr     = 1.0e-10_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Fe_bioavail              = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min                   = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min_delta             = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -625,6 +634,15 @@ contains
     iptr      => particulate_flux_ref_depth
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, iptr=iptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'Jint_Ctot_thres_molpm2pyr'
+    lname     = 'MARBL will abort if abs(Jint_Ctot) exceeds this threshold'
+    units     = 'mol m-2 yr-1'
+    datatype  = 'real'
+    rptr      => Jint_Ctot_thres_molpm2pyr
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_Fe_bioavail'
@@ -1471,6 +1489,9 @@ contains
 
   subroutine marbl_settings_set_all_derived(marbl_status_log)
 
+    use marbl_constants_mod, only : mpercm, yps
+    use marbl_constants_mod, only : R13C_std, R14C_std
+
     type(marbl_log_type), intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
@@ -1500,6 +1521,34 @@ contains
     parm_kappa_nitrif = dps * parm_kappa_nitrif_per_day
     call print_single_derived_parm('parm_kappa_nitrif_per_day', 'parm_kappa_nitrif', &
          parm_kappa_nitrif, subname, marbl_status_log)
+
+    Jint_Ctot_thres = 1.0e9_r8 * mpercm**2 * yps * Jint_Ctot_thres_molpm2pyr
+    call print_single_derived_parm('Jint_Ctot_thres_molpm2pyr', 'Jint_Ctot_thres', &
+         Jint_Ctot_thres, subname, marbl_status_log)
+
+    Jint_Ntot_thres = Q * Jint_Ctot_thres
+    call print_single_derived_parm('Jint_Ctot_thres', 'Jint_Ntot_thres', &
+         Jint_Ntot_thres, subname, marbl_status_log)
+
+    Jint_Ptot_thres = (c1/parm_Red_D_C_P) * Jint_Ctot_thres
+    call print_single_derived_parm('Jint_Ctot_thres', 'Jint_Ptot_thres', &
+         Jint_Ptot_thres, subname, marbl_status_log)
+
+    Jint_Sitot_thres = gQsi_0 * Jint_Ctot_thres
+    call print_single_derived_parm('Jint_Ctot_thres', 'Jint_Sitot_thres', &
+         Jint_Sitot_thres, subname, marbl_status_log)
+
+    Jint_Fetot_thres = parm_Red_Fe_C * Jint_Ctot_thres
+    call print_single_derived_parm('Jint_Ctot_thres', 'Jint_Fetot_thres', &
+         Jint_Fetot_thres, subname, marbl_status_log)
+
+    CISO_Jint_13Ctot_thres = R13C_std * Jint_Ctot_thres
+    call print_single_derived_parm('Jint_Ctot_thres', 'CISO_Jint_13Ctot_thres', &
+         CISO_Jint_13Ctot_thres, subname, marbl_status_log)
+
+    CISO_Jint_14Ctot_thres = R14C_std * Jint_Ctot_thres
+    call print_single_derived_parm('Jint_Ctot_thres', 'CISO_Jint_14Ctot_thres', &
+         CISO_Jint_14Ctot_thres, subname, marbl_status_log)
 
     call marbl_status_log%log_noerror('', subname)
 

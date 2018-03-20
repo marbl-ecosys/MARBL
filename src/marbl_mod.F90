@@ -1443,6 +1443,12 @@ contains
 
        POP%hflux_out(k) = POP%hflux_in(k)
 
+    else
+
+       POC%remin(k) = c0
+       POC%sflux_out(k) = c0
+       POC%hflux_out(k) = c0
+
     endif
 
     ! Save some fields for use by other modules

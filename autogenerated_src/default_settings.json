@@ -746,6 +746,13 @@
       }
    },
    "general_parms": {
+      "Jint_Ctot_thres_molpm2pyr": {
+         "datatype": "real",
+         "default_value": 1e-10,
+         "longname": "MARBL will abort if abs(Jint_Ctot) exceeds this threshold",
+         "subcategory": "4. general parameters",
+         "units": "mol m-2 yr-1"
+      },
       "PFT_defaults": {
          "_CESM2_PFT_keys": {
             "autotrophs": [
