@@ -2292,8 +2292,8 @@ contains
       end if
 
       lname = 'Iron Sediment Flux'
-      sname = 'ECOSYS_FESEDFLUX'
-      units = 'nmolFe/cm^2/s'
+      sname = 'FESEDFLUX'
+      units = 'nmol/cm^2/s'
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &

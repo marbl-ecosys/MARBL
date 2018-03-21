@@ -742,9 +742,9 @@ Lig_deg :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-ECOSYS_FESEDFLUX :
+FESEDFLUX :
    longname : Iron Sediment Flux
-   units : need_units
+   units : nmol/cm^2/s
    vertical_grid : layer_avg
    frequency : never
    operator : average
