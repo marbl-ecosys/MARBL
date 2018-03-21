@@ -1230,6 +1230,13 @@
       "units": "cm/s",
       "vertical_grid": "none"
    },
+   "FESEDFLUX": {
+      "frequency": "never",
+      "longname": "Iron Sediment Flux",
+      "operator": "average",
+      "units": "nmol/cm^2/s",
+      "vertical_grid": "layer_avg"
+   },
    "FG_ALT_CO2": {
       "frequency": "medium",
       "longname": "DIC Surface Gas Flux, Alternative CO2",
