@@ -890,7 +890,7 @@ contains
         if (id .eq. ind%dustflux_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Dust Flux'
-          interior_forcings(id)%metadata%field_units = 'need_units'
+          interior_forcings(id)%metadata%field_units = 'g/cm^2/s'
           call interior_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
         end if
 
@@ -906,7 +906,7 @@ contains
         if (id .eq. ind%surf_shortwave_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Surface Shortwave'
-          interior_forcings(id)%metadata%field_units = 'need_units' ! W/m^2?
+          interior_forcings(id)%metadata%field_units = 'W/m^2'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_PAR_subcols)
         end if
@@ -925,7 +925,7 @@ contains
         if (id .eq. ind%salinity_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Salinity'
-          interior_forcings(id)%metadata%field_units = 'need_units'
+          interior_forcings(id)%metadata%field_units = 'psu'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_levels)
         end if
@@ -934,7 +934,7 @@ contains
         if (id .eq. ind%pressure_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Pressure'
-          interior_forcings(id)%metadata%field_units = 'need_units'
+          interior_forcings(id)%metadata%field_units = 'bars'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_levels)
         end if
@@ -943,7 +943,7 @@ contains
         if (id .eq. ind%fesedflux_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
-          interior_forcings(id)%metadata%field_units = 'need_units'
+          interior_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_levels)
         end if
