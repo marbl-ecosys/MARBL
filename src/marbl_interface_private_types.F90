@@ -84,16 +84,16 @@ module marbl_interface_private_types
   !****************************************************************************
 
   type, public :: marbl_interior_share_type
-     real(r8) :: QA_dust_def      ! incoming deficit in the QA(dust) POC flux
-     real(r8) :: DIC_loc_fields   ! local copy of model DIC
-     real(r8) :: DOC_loc_fields   ! local copy of model DOC
-     real(r8) :: O2_loc_fields    ! local copy of model O2
-     real(r8) :: NO3_loc_fields   ! local copy of model NO3
+     real(r8) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux
+     real(r8) :: DIC_loc_fields      ! local copy of model DIC
+     real(r8) :: DOCtot_loc_fields   ! local copy of model DOC+DOCr
+     real(r8) :: O2_loc_fields       ! local copy of model O2
+     real(r8) :: NO3_loc_fields      ! local copy of model NO3
      real(r8) :: CO3_fields
-     real(r8) :: HCO3_fields      ! bicarbonate ion
-     real(r8) :: H2CO3_fields     ! carbonic acid
+     real(r8) :: HCO3_fields         ! bicarbonate ion
+     real(r8) :: H2CO3_fields        ! carbonic acid
      real(r8) :: CO3_sat_calcite
-     real(r8) :: DOC_remin_fields ! remineralization of 13C DOC (mmol C/m^3/sec)
+     real(r8) :: DOCtot_remin_fields ! remineralization of DOC+DOCr (mmol C/m^3/sec)
   end type marbl_interior_share_type
 
   !***********************************************************************
@@ -222,9 +222,9 @@ module marbl_interface_private_types
 
     ! CISO tracers
     integer (int_kind) :: di13c_ind       = 0 ! dissolved inorganic carbon 13
-    integer (int_kind) :: do13c_ind       = 0 ! dissolved organic carbon 13
+    integer (int_kind) :: do13ctot_ind    = 0 ! dissolved organic carbon 13 (semi-labile+refractory)
     integer (int_kind) :: di14c_ind       = 0 ! dissolved inorganic carbon 14
-    integer (int_kind) :: do14c_ind       = 0 ! dissolved organic carbon 14
+    integer (int_kind) :: do14ctot_ind    = 0 ! dissolved organic carbon 14 (semi-labile+refractory)
 
     ! Living tracers
     type(marbl_living_tracer_index_type), allocatable :: auto_inds(:)
@@ -603,12 +603,12 @@ contains
     end do
 
     if (ciso_on) then
-      call this%add_tracer_index('di13c', 'ciso', this%di13c_ind, marbl_status_log)
-      call this%add_tracer_index('do13c', 'ciso', this%do13c_ind, marbl_status_log)
-      call this%add_tracer_index('di14c', 'ciso', this%di14c_ind, marbl_status_log)
-      call this%add_tracer_index('do14c', 'ciso', this%do14c_ind, marbl_status_log)
-      call this%add_tracer_index('zoo13c', 'ciso', this%zoo13C_ind, marbl_status_log)
-      call this%add_tracer_index('zoo14c', 'ciso', this%zoo14C_ind, marbl_status_log)
+      call this%add_tracer_index('di13c',    'ciso', this%di13c_ind,    marbl_status_log)
+      call this%add_tracer_index('do13ctot', 'ciso', this%do13ctot_ind, marbl_status_log)
+      call this%add_tracer_index('di14c',    'ciso', this%di14c_ind,    marbl_status_log)
+      call this%add_tracer_index('do14ctot', 'ciso', this%do14ctot_ind, marbl_status_log)
+      call this%add_tracer_index('zoo13c',   'ciso', this%zoo13C_ind,   marbl_status_log)
+      call this%add_tracer_index('zoo14c',   'ciso', this%zoo14C_ind,   marbl_status_log)
 
       do n=1,autotroph_cnt
         write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C13"

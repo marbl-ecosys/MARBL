@@ -107,20 +107,20 @@ _tracer_list :
          ciso_on : .true.
       long_name : Dissolved Inorganic Carbon-13
       units : mmol/m^3
-   DO13C :
+   DO13Ctot :
       dependencies :
          ciso_on : .true.
-      long_name : Dissolved Organic Carbon-13
+      long_name : Dissolved Organic Carbon-13 (semi-labile+refractoy)
       units : mmol/m^3
    DI14C :
       dependencies :
          ciso_on : .true.
       long_name : Dissolved Inorganic Carbon-14
       units : mmol/m^3
-   DO14C :
+   DO14Ctot :
       dependencies :
          ciso_on : .true.
-      long_name : Dissolved Organic Carbon-14
+      long_name : Dissolved Organic Carbon-14 (semi-labile+refractoy)
       units : mmol/m^3
 
    # Per-autotroph tracers
@@ -275,6 +275,12 @@ general_parms :
       datatype : logical
       default_value : .false.
       _append_to_config_keywords : true
+   Jint_Ctot_thres_molpm2pyr :
+      longname : MARBL will abort if abs(Jint_Ctot) exceeds this threshold
+      subcategory : 4. general parameters
+      units : mol m-2 yr-1
+      datatype : real
+      default_value : 1.0e-10
    parm_Fe_bioavail :
       longname : Fraction of Fe flux that is bioavailable
       subcategory : 4. general parameters

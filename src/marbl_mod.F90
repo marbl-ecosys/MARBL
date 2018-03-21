@@ -1443,6 +1443,12 @@ contains
 
        POP%hflux_out(k) = POP%hflux_in(k)
 
+    else
+
+       POC%remin(k) = c0
+       POC%sflux_out(k) = c0
+       POC%hflux_out(k) = c0
+
     endif
 
     ! Save some fields for use by other modules
@@ -4513,7 +4519,8 @@ contains
 
     marbl_interior_share%QA_dust_def    = QA_dust_def
     marbl_interior_share%DIC_loc_fields = tracer_local(marbl_tracer_indices%DIC_ind)
-    marbl_interior_share%DOC_loc_fields = tracer_local(marbl_tracer_indices%DOC_ind)
+    marbl_interior_share%DOCtot_loc_fields = &
+         tracer_local(marbl_tracer_indices%DOC_ind) + tracer_local(marbl_tracer_indices%DOCr_ind)
     marbl_interior_share%O2_loc_fields  = tracer_local(marbl_tracer_indices%O2_ind)
     marbl_interior_share%NO3_loc_fields = tracer_local(marbl_tracer_indices%NO3_ind)
 
@@ -4523,7 +4530,8 @@ contains
     marbl_interior_share%H2CO3_fields = carbonate%H2CO3
     marbl_interior_share%CO3_sat_calcite = carbonate%CO3_sat_calcite
 
-    marbl_interior_share%DOC_remin_fields = dissolved_organic_matter%DOC_remin
+    marbl_interior_share%DOCtot_remin_fields = &
+         dissolved_organic_matter%DOC_remin + dissolved_organic_matter%DOCr_remin
 
   end subroutine marbl_export_interior_shared_variables
 

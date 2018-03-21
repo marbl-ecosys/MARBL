@@ -414,61 +414,31 @@ Jint_Ctot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Ctot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Ntot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ntot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Ntot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ntot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Ptot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ptot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Ptot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ptot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Sitot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Sitot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Sitot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Sitot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Fetot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Fetot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Fetot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Fetot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 
 # Particulate 2D diags
@@ -1062,7 +1032,7 @@ CISO_Jint_13Ctot :
    longname : 13Ctot Source Sink Term Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 CISO_Jint_14Ctot :
    dependencies :
@@ -1070,23 +1040,7 @@ CISO_Jint_14Ctot :
    longname : 14Ctot Source Sink Term Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-CISO_Jint_100m_13Ctot :
-   dependencies :
-      ciso_on : .true.
-   longname : 13Ctot Source Sink Term Vertical Integral, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
-   operator : average
-CISO_Jint_100m_14Ctot :
-   dependencies :
-      ciso_on : .true.
-   longname : 14Ctot Source Sink Term Vertical Integral, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 calcToSed_13C :
    dependencies :
@@ -1146,18 +1100,18 @@ CISO_PO13C_REMIN :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DO13C_prod :
+CISO_DO13Ctot_prod :
    dependencies :
       ciso_on : .true.
-   longname : DO13C Production
+   longname : DO13Ctot Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DO13C_remin :
+CISO_DO13Ctot_remin :
    dependencies :
       ciso_on : .true.
-   longname : DO13C Remineralization
+   longname : DO13Ctot Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
@@ -1202,10 +1156,10 @@ CISO_DIC_d13C :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DOC_d13C :
+CISO_DOCtot_d13C :
    dependencies :
       ciso_on : .true.
-   longname : d13C of DOC
+   longname : d13C of DOCtot
    units : permil
    vertical_grid : layer_avg
    frequency : medium
@@ -1242,18 +1196,18 @@ CISO_PO14C_REMIN :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DO14C_prod :
+CISO_DO14Ctot_prod :
    dependencies :
       ciso_on : .true.
-   longname : DO14C Production
+   longname : DO14Ctot Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DO14C_remin :
+CISO_DO14Ctot_remin :
    dependencies :
       ciso_on : .true.
-   longname : DO14C Remineralization
+   longname : DO14Ctot Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
@@ -1298,10 +1252,10 @@ CISO_DIC_d14C :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DOC_d14C :
+CISO_DOCtot_d14C :
    dependencies :
       ciso_on : .true.
-   longname : d14C of DOC
+   longname : d14C of DOCtot
    units : permil
    vertical_grid : layer_avg
    frequency : medium
