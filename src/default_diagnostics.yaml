@@ -958,13 +958,13 @@ SiO2_REMIN :
    operator : average
 dust_FLUX_IN :
    longname : Dust Flux into Cell
-   units : ng/s/m^2
+   units : g/cm^2/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 dust_REMIN :
    longname : Dust Remineralization
-   units : mmol/m^3/s
+   units : g/cm^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
