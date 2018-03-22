@@ -1779,14 +1779,14 @@
       "frequency": "medium",
       "longname": "Dust Flux into Cell",
       "operator": "average",
-      "units": "ng/s/m^2",
+      "units": "g/cm^2/s",
       "vertical_grid": "layer_avg"
    },
    "dust_REMIN": {
       "frequency": "medium",
       "longname": "Dust Remineralization",
       "operator": "average",
-      "units": "mmol/m^3/s",
+      "units": "g/cm^3/s",
       "vertical_grid": "layer_avg"
    },
    "graze_((autotroph_sname))": {

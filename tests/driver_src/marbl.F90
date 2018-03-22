@@ -294,7 +294,8 @@ Program marbl
       associate(diags => marbl_instance%surface_forcing_diags%diags)
         call driver_status_log%log_header('Surface forcing diagnostics', subname)
         do n=1, size(diags)
-          write(log_message, "(I0,4A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name)
+          write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &
+                                        ' (units: ', trim(diags(n)%units),')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
       end associate
@@ -302,7 +303,8 @@ Program marbl
       associate(diags => marbl_instance%interior_forcing_diags%diags)
         call driver_status_log%log_header('Interior forcing diagnostics', subname)
         do n=1, size(diags)
-          write(log_message, "(I0,4A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name)
+          write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &
+                                        ' (units: ', trim(diags(n)%units),')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
       end associate
@@ -328,15 +330,17 @@ Program marbl
       ! Log requested surface forcing fields
       call driver_status_log%log_header('Requested surface forcing fields', subname)
       do n=1,size(marbl_instance%surface_input_forcings)
-        write(log_message, "(I0, 2A)") n, '. ', &
-              trim(marbl_instance%surface_input_forcings(n)%metadata%varname)
+        write(log_message, "(I0, 5A)") n, '. ', &
+              trim(marbl_instance%surface_input_forcings(n)%metadata%varname), &
+              ' (units: ', trim(marbl_instance%surface_input_forcings(n)%metadata%field_units),')'
         call driver_status_log%log_noerror(log_message, subname)
       end do
       ! Log requested interior forcing fields
       call driver_status_log%log_header('Requested interior forcing fields', subname)
       do n=1,size(marbl_instance%interior_input_forcings)
-        write(log_message, "(I0, 2A)") n, '. ',                               &
-             trim(marbl_instance%interior_input_forcings(n)%metadata%varname)
+        write(log_message, "(I0, 5A)") n, '. ',                               &
+             trim(marbl_instance%interior_input_forcings(n)%metadata%varname), &
+             ' (units: ', trim(marbl_instance%interior_input_forcings(n)%metadata%field_units),')'
         call driver_status_log%log_noerror(log_message, subname)
       end do
       call marbl_instance%shutdown()

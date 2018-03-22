@@ -2718,7 +2718,7 @@ contains
 
       lname = 'Dust Flux into Cell'
       sname = 'dust_FLUX_IN'
-      units = 'ng/s/m^2'
+      units = 'g/cm^2/s'
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2730,7 +2730,7 @@ contains
 
       lname = 'Dust Remineralization'
       sname = 'dust_REMIN'
-      units = 'mmol/m^3/s'
+      units = 'g/cm^3/s'
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -4250,10 +4250,7 @@ contains
     endif
 
     diags(ind_diag%NHx_SURFACE_EMIS)%field_2d(:) = nhx_surface_emis(:)
-
-    ! FIXME #63 : reported units of DUST_FLUX are g/cm^2/s, so this comment doesn't make sense
-    ! multiply DUST flux by mpercm (.01) to convert from model units (cm/s)(mmol/m^3) to mmol/s/m^2
-    diags(ind_diag%DUST_FLUX)%field_2d(:) = DUST_FLUX_IN(:)*mpercm
+    diags(ind_diag%DUST_FLUX)%field_2d(:) = DUST_FLUX_IN(:)
 
     end associate
 
@@ -4637,7 +4634,7 @@ contains
     diags(ind%SiO2_REMIN)%field_3d(:, 1)          = P_SiO2%remin
 
     diags(ind%dust_FLUX_IN)%field_3d(:, 1) = dust%sflux_in + dust%hflux_in
-    diags(ind%dust_REMIN)%field_3d(:, 1)   = P_SiO2%remin
+    diags(ind%dust_REMIN)%field_3d(:, 1)   = dust%remin
 
     diags(ind%P_iron_FLUX_at_ref_depth)%field_2d(1) = P_iron%flux_at_ref_depth
     diags(ind%P_iron_FLUX_IN)%field_3d(:, 1)        = P_iron%sflux_in + P_iron%hflux_in
