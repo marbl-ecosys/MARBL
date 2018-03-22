@@ -719,7 +719,7 @@ contains
         if (id .eq. ind%sss_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'sss'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'psu'
         end if
 
         ! Sea-surface temperature
@@ -754,14 +754,14 @@ contains
         if (id .eq. ind%nox_flux_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'NOx Flux'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'mmol/m^2/s'
         end if
 
         ! NHy Flux
         if (id .eq. ind%nhy_flux_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'NHy Flux'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'mmol/m^2/s'
         end if
 
         ! external C Flux
@@ -789,35 +789,35 @@ contains
         if (id .eq. ind%atm_pressure_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'Atmospheric Pressure'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'atmospheres'
         end if
 
         ! xco2
         if (id .eq. ind%xco2_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'xco2'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'ppmv'
         end if
 
         ! xco2_alt_co2
         if (id .eq. ind%xco2_alt_co2_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'xco2_alt_co2'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'ppmv'
         end if
 
         ! d13c
         if (id .eq. ind%d13c_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'd13c'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'mmol/m^3'
         end if
 
         ! d14c
         if (id .eq. ind%d14c_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'd14c'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'mmol/m^3'
         end if
 
         if (.not.found) then
