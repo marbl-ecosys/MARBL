@@ -754,14 +754,14 @@ contains
         if (id .eq. ind%nox_flux_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'NOx Flux'
-          surface_forcings(id)%metadata%field_units   = 'mmol/m^2/s'
+          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! NHy Flux
         if (id .eq. ind%nhy_flux_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'NHy Flux'
-          surface_forcings(id)%metadata%field_units   = 'mmol/m^2/s'
+          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! external C Flux
@@ -810,14 +810,14 @@ contains
         if (id .eq. ind%d13c_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'd13c'
-          surface_forcings(id)%metadata%field_units   = 'mmol/m^3'
+          surface_forcings(id)%metadata%field_units   = 'permil'
         end if
 
         ! d14c
         if (id .eq. ind%d14c_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'd14c'
-          surface_forcings(id)%metadata%field_units   = 'mmol/m^3'
+          surface_forcings(id)%metadata%field_units   = 'permil'
         end if
 
         if (.not.found) then
@@ -916,7 +916,7 @@ contains
         if (id .eq. ind%potemp_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Potential Temperature'
-          interior_forcings(id)%metadata%field_units = 'Degrees C'
+          interior_forcings(id)%metadata%field_units = 'degrees C'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_levels)
         end if
