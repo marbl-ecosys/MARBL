@@ -5186,7 +5186,7 @@ contains
          fe_ind  => marbl_tracer_indices%fe_ind &
          )
 
-    diags(ind%fesedflux)%field_3d(1,:) = fesedflux(:)
+    diags(ind%fesedflux)%field_3d(:,1) = fesedflux(:)
     ! vertical integrals
     work = dtracers(fe_ind, :) +                                              &
            sum(dtracers(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) + &
