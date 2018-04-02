@@ -5,6 +5,7 @@ module marbl_io_mod
 ! -D_NETCDF this module does not include netCDF functions but will not provide any I/O)
 
   use marbl_kinds_mod, only : char_len
+  use marbl_interface, only : marbl_interface_class
   use marbl_logging,   only : marbl_log_type
 #ifdef _NETCDF
    use netcdf
@@ -23,6 +24,8 @@ module marbl_io_mod
   type(marbl_file_entry), pointer :: file_database => NULL()
 
   public :: marbl_io_open
+  public :: marbl_io_define_diags
+  public :: marbl_io_write_diags
   public :: marbl_io_close
   public :: marbl_io_close_all
 
@@ -96,6 +99,69 @@ contains
 #endif
 
   end subroutine marbl_io_open
+
+  !*****************************************************************************
+
+  subroutine marbl_io_define_diags(marbl_instances, outfile, driver_status_log)
+
+    type(marbl_interface_class), dimension(:), intent(in)    :: marbl_instances
+    character(len=*),                          intent(in)    :: outfile
+    type(marbl_log_type),                      intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_define_diags'
+    character(len=char_len) :: log_message
+    integer :: file_id
+    integer :: num_inst, num_inst_id
+    integer :: num_levels, num_levels_id
+    integer :: num_layers, num_layers_id
+
+    ! Get file_id given file_name
+    file_id = get_nc_file_id(outfile, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('get_nc_file_id', subname)
+      return
+    end if
+
+#ifdef _NETCDF
+    ! netCDF dimensions
+    ! 1) num_inst = number of netCDF instances
+    num_inst = size(marbl_instances)
+    call netcdf_check(nf90_def_dim(file_id, 'num_inst', num_inst, num_inst_id), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_def_dim(num_inst)', subname)
+      return
+    end if
+
+    ! 2) num_levels = number of levels (domain should be the same for all columns)
+    num_levels = marbl_instances(1)%domain%km
+    call netcdf_check(nf90_def_dim(file_id, 'num_levels', num_levels, num_levels_id), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_def_dim(num_levels)', subname)
+      return
+    end if
+
+    ! 3) num_layers = number of layers (domain should be the same for all columns)
+    num_layers = marbl_instances(1)%domain%km+1
+    call netcdf_check(nf90_def_dim(file_id, 'num_layers', num_layers, num_layers_id), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_def_dim(num_layers)', subname)
+      return
+    end if
+
+    ! netCDF variables
+#endif
+
+  end subroutine marbl_io_define_diags
+
+  !*****************************************************************************
+
+  subroutine marbl_io_write_diags(marbl_instances, outfile, driver_status_log)
+
+    type(marbl_interface_class), dimension(:), intent(in)    :: marbl_instances
+    character(len=*),                          intent(in)    :: outfile
+    type(marbl_log_type),                      intent(inout) :: driver_status_log
+
+  end subroutine marbl_io_write_diags
 
   !*****************************************************************************
 
@@ -181,24 +247,21 @@ contains
     type(marbl_log_type), intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_by_name'
-    character(len=char_len) :: log_message
-    type(marbl_file_entry), pointer :: entry_to_remove
+    integer :: file_id
 
-    entry_to_remove => file_database
-    do while (associated(entry_to_remove))
-      if (trim(file_name) .eq. trim(entry_to_remove%file_name)) then
-        call marbl_io_close_by_database(entry_to_remove, driver_status_log)
-        if (driver_status_log%labort_marbl) then
-          call driver_status_log%log_error_trace('marbl_io_close_by_database', subname)
-        end if
-        ! Return after closing file
-        return
-      end if
-      entry_to_remove => entry_to_remove%next
-    end do
-    ! If loop finishes then file name never matched
-    write(log_message, "(2A)") trim(file_name), " is not open!"
-    call driver_status_log%log_error(log_message, subname)
+    ! Get file_id given file_name
+    file_id = get_nc_file_id(file_name, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('get_nc_file_id', subname)
+      return
+    end if
+
+    ! close the file
+    call marbl_io_close_by_id(file_id, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('marbl_io_close_by_id', subname)
+      return
+    end if
 
   end subroutine marbl_io_close_by_name
 
@@ -227,6 +290,40 @@ contains
     end do
 
   end subroutine marbl_io_close_all
+
+  !*****************************************************************************
+
+  function get_nc_file_id(file_name, driver_status_log)
+    ! Given netCDF file name, return ID from file_database
+
+    character(len=*),     intent(in)    :: file_name
+    type(marbl_log_type), intent(inout) :: driver_status_log
+    integer                             :: get_nc_file_id
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_by_name'
+    character(len=char_len) :: log_message
+    type(marbl_file_entry), pointer :: single_entry
+
+    if (len_trim(file_name) .eq. 0) then
+      log_message = "file_name can not be blank!"
+      call driver_status_log%log_error(log_message, subname)
+      return
+    end if
+
+    get_nc_file_id = -1
+    single_entry => file_database
+    do while (associated(single_entry))
+      if (trim(file_name) .eq. trim(single_entry%file_name)) then
+        get_nc_file_id = single_entry%file_id
+        return
+      end if
+      single_entry => single_entry%next
+    end do
+    ! If loop finishes then file name never matched
+    write(log_message, "(2A)") trim(file_name), " is not open!"
+    call driver_status_log%log_error(log_message, subname)
+
+  end function get_nc_file_id
 
   !*****************************************************************************
 
