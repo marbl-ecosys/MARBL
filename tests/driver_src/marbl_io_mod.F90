@@ -16,12 +16,23 @@ module marbl_io_mod
   save
 
   ! MARBL uses a linked list to keep track of what files are open at any given time
-  type marbl_file_entry
+  type, private :: marbl_file_entry
     integer :: file_id
     character(len=char_len) :: file_name
     type(marbl_file_entry), pointer :: next => NULL()
   end type marbl_file_entry
   type(marbl_file_entry), pointer :: file_database => NULL()
+
+  ! MARBL needs to track dimension ids to use when defining netCDF variables
+  type, private :: netcdf_dimids
+    integer :: num_inst_id
+    integer :: num_levels_id
+    integer :: num_ifaces_id
+  end type netcdf_dimids
+  type(netcdf_dimids) :: dimids
+
+  ! netCDF ids usd for writing diagnostic output
+  integer, allocatable, dimension(:) :: surface_diag_ids, interior_diag_ids
 
   public :: marbl_io_open
   public :: marbl_io_define_diags
@@ -110,10 +121,10 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_define_diags'
     character(len=char_len) :: log_message
+    integer :: n, diag_size
     integer :: file_id
-    integer :: num_inst, num_inst_id
-    integer :: num_levels, num_levels_id
-    integer :: num_ifaces_id
+    integer :: num_inst
+    integer :: num_levels
 
     ! Get file_id given file_name
     file_id = get_nc_file_id(outfile, driver_status_log)
@@ -126,7 +137,7 @@ contains
     ! netCDF dimensions
     ! 1) num_inst = number of netCDF instances
     num_inst = size(marbl_instances)
-    call netcdf_check(nf90_def_dim(file_id, 'num_inst', num_inst, num_inst_id), driver_status_log)
+    call netcdf_check(nf90_def_dim(file_id, 'num_inst', num_inst, dimids%num_inst_id), driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('nf90_def_dim(num_inst)', subname)
       return
@@ -134,20 +145,52 @@ contains
 
     ! 2) num_levels = number of levels (domain should be the same for all columns)
     num_levels = marbl_instances(1)%domain%km
-    call netcdf_check(nf90_def_dim(file_id, 'num_levels', num_levels, num_levels_id), driver_status_log)
+    call netcdf_check(nf90_def_dim(file_id, 'num_levels', num_levels, dimids%num_levels_id), driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('nf90_def_dim(num_levels)', subname)
       return
     end if
 
     ! 3) num_ifaces = number of interfaces (domain should be the same for all columns)
-    call netcdf_check(nf90_def_dim(file_id, 'num_ifaces', num_levels+1, num_ifaces_id), driver_status_log)
+    call netcdf_check(nf90_def_dim(file_id, 'num_ifaces', num_levels+1, dimids%num_ifaces_id), driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('nf90_def_dim(num_ifaces)', subname)
       return
     end if
 
     ! netCDF variables
+    ! 1) Surface diagnostics
+    diag_size = size(marbl_instances(1)%surface_forcing_diags%diags)
+    allocate(surface_diag_ids(diag_size))
+    do n=1, diag_size
+      call define_diag(file_id, marbl_instances(1)%surface_forcing_diags, n, surface_diag_ids(n), &
+           driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        write(log_message, "(3A)") 'define_diag(', trim(marbl_instances(1)%surface_forcing_diags%diags(n)%short_name), ')'
+        call driver_status_log%log_error_trace(log_message, subname)
+        return
+      end if
+    end do
+
+    ! 2) Interior diagnostics
+    diag_size = size(marbl_instances(1)%interior_forcing_diags%diags)
+    allocate(interior_diag_ids(diag_size))
+    do n=1, diag_size
+      call define_diag(file_id, marbl_instances(1)%interior_forcing_diags, n, interior_diag_ids(n), &
+           driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        write(log_message, "(3A)") 'define_diag(', trim(marbl_instances(1)%interior_forcing_diags%diags(n)%short_name), ')'
+        call driver_status_log%log_error_trace(log_message, subname)
+        return
+      end if
+    end do
+
+    ! Exit define mode
+    call netcdf_check(nf90_enddef(file_id), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_enddef()', subname)
+      return
+    end if
 #endif
 
   end subroutine marbl_io_define_diags
@@ -323,6 +366,61 @@ contains
     call driver_status_log%log_error(log_message, subname)
 
   end function get_nc_file_id
+
+  !*****************************************************************************
+
+  subroutine define_diag(file_id, diag, diag_ind, ncid, driver_status_log)
+
+    use marbl_interface_public_types , only : marbl_diagnostics_type
+
+    integer,                      intent(in)    :: file_id
+    type(marbl_diagnostics_type), intent(in)    :: diag
+    integer,                      intent(in)    :: diag_ind
+    integer,                      intent(out)   :: ncid
+    type(marbl_log_type),         intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:define_diag'
+    character(len=char_len) :: log_message, varname
+
+    ! Define netCDF variable with appropriate dimensions
+    varname = trim(diag%diags(diag_ind)%short_name)
+    select case (trim(diag%diags(diag_ind)%vertical_grid))
+      case ('none')
+        call netcdf_check(nf90_def_var(file_id, varname, NF90_DOUBLE, &
+             (/dimids%num_inst_id/), ncid), driver_status_log)
+      case ('layer_avg')
+        call netcdf_check(nf90_def_var(file_id, varname, NF90_DOUBLE, &
+             (/dimids%num_levels_id, dimids%num_inst_id/), ncid), driver_status_log)
+      case DEFAULT
+        write(log_message, '(3A)') "'", trim(diag%diags(diag_ind)%vertical_grid), &
+             "' is not a valid vertical grid"
+        call driver_status_log%log_error(log_message, subname)
+        return
+    end select
+    if (driver_status_log%labort_marbl) then
+      write(log_message, "(3A)") 'nf90_def_var(', trim(varname), ')'
+      call driver_status_log%log_error_trace(log_message, subname)
+      return
+    end if
+
+    ! Add attributes to netCDF variable
+    ! 1) Long name
+    call netcdf_check(nf90_put_att(file_id, ncid, "long_name", &
+         trim(diag%diags(diag_ind)%long_name)), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_put_att(long_name)', subname)
+      return
+    end if
+
+    ! 2) Units
+    call netcdf_check(nf90_put_att(file_id, ncid, "units", &
+         trim(diag%diags(diag_ind)%units)), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_put_att(units)', subname)
+      return
+    end if
+
+  end subroutine define_diag
 
   !*****************************************************************************
 

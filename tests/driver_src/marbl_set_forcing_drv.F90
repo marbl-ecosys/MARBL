@@ -63,8 +63,17 @@ Contains
     end do
     ! 6. Define diagnostic fields in output netCDF file
     call marbl_io_define_diags(marbl_instances, outfile, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('marbl_io_define_diags', subname)
+      return
+    end if
+
     ! 7. Output netCDF
     call marbl_io_write_diags(marbl_instances, outfile, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('marbl_io_write_diags', subname)
+      return
+    end if
 
     ! 8. Close all netCDF files
     call marbl_io_close_all(driver_status_log)
