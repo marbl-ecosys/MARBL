@@ -113,7 +113,7 @@ contains
     integer :: file_id
     integer :: num_inst, num_inst_id
     integer :: num_levels, num_levels_id
-    integer :: num_layers, num_layers_id
+    integer :: num_ifaces_id
 
     ! Get file_id given file_name
     file_id = get_nc_file_id(outfile, driver_status_log)
@@ -140,11 +140,10 @@ contains
       return
     end if
 
-    ! 3) num_layers = number of layers (domain should be the same for all columns)
-    num_layers = marbl_instances(1)%domain%km+1
-    call netcdf_check(nf90_def_dim(file_id, 'num_layers', num_layers, num_layers_id), driver_status_log)
+    ! 3) num_ifaces = number of interfaces (domain should be the same for all columns)
+    call netcdf_check(nf90_def_dim(file_id, 'num_ifaces', num_levels+1, num_ifaces_id), driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('nf90_def_dim(num_layers)', subname)
+      call driver_status_log%log_error_trace('nf90_def_dim(num_ifaces)', subname)
       return
     end if
 
