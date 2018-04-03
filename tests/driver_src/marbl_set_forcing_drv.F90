@@ -25,7 +25,7 @@ Contains
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_set_forcing_drv:test'
-    character(len=*), parameter :: outfile = 'file1.nc'
+    character(len=*), parameter :: outfile = 'diagnostics.nc'
     integer :: n
     integer, parameter :: km = 5
     real(kind=r8), dimension(km) :: delta_z, zw, zt

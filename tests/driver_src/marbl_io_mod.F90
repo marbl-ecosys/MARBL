@@ -203,6 +203,50 @@ contains
     character(len=*),                          intent(in)    :: outfile
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_write_diags'
+    character(len=char_len) :: log_message
+    integer :: n, diag_size
+    integer :: file_id
+    integer :: num_inst
+    integer :: num_levels
+
+    ! Get file_id given file_name
+    file_id = get_nc_file_id(outfile, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('get_nc_file_id', subname)
+      return
+    end if
+
+#ifdef _NETCDF
+    ! 1) Surface diagnostics
+    diag_size = size(marbl_instances(1)%surface_forcing_diags%diags)
+    do num_inst=1, size(marbl_instances)
+      do n=1, diag_size
+        call write_diag(file_id, marbl_instances(num_inst)%surface_forcing_diags, n, num_inst, surface_diag_ids(n), &
+             driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%surface_forcing_diags%diags(n)%short_name), ')'
+          call driver_status_log%log_error_trace(log_message, subname)
+          return
+        end if
+      end do
+    end do
+
+    ! 2) Interior diagnostics
+    diag_size = size(marbl_instances(1)%interior_forcing_diags%diags)
+    do num_inst=1, size(marbl_instances)
+      do n=1, diag_size
+        call write_diag(file_id, marbl_instances(num_inst)%interior_forcing_diags, n, num_inst, interior_diag_ids(n), &
+             driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%interior_forcing_diags%diags(n)%short_name), ')'
+          call driver_status_log%log_error_trace(log_message, subname)
+          return
+        end if
+      end do
+    end do
+#endif
+
   end subroutine marbl_io_write_diags
 
   !*****************************************************************************
@@ -421,6 +465,40 @@ contains
     end if
 
   end subroutine define_diag
+
+  !*****************************************************************************
+
+  subroutine write_diag(file_id, diag, diag_ind, num_inst, ncid, driver_status_log)
+
+    use marbl_interface_public_types , only : marbl_diagnostics_type
+
+    integer,                      intent(in)    :: file_id
+    type(marbl_diagnostics_type), intent(in)    :: diag
+    integer,                      intent(in)    :: diag_ind
+    integer,                      intent(in)    :: num_inst
+    integer,                      intent(in)    :: ncid
+    type(marbl_log_type),         intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:write_diag'
+    character(len=char_len) :: log_message
+
+    select case (trim(diag%diags(diag_ind)%vertical_grid))
+      case ('none')
+        call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_2d(1), (/num_inst/)), driver_status_log)
+      case ('layer_avg')
+        call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_3d(:,1), (/1,num_inst/)), driver_status_log)
+      case DEFAULT
+        write(log_message, '(3A)') "'", trim(diag%diags(diag_ind)%vertical_grid), &
+             "' is not a valid vertical grid"
+        call driver_status_log%log_error(log_message, subname)
+        return
+    end select
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_def_var', subname)
+      return
+    end if
+
+  end subroutine write_diag
 
   !*****************************************************************************
 
