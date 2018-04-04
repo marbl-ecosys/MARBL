@@ -114,10 +114,10 @@ contains
 
     associate(di13c_ind         => marbl_tracer_indices%di13c_ind,            &
               do13ctot_ind      => marbl_tracer_indices%do13ctot_ind,         &
-              zoo13c_ind        => marbl_tracer_indices%zoo13c_ind,           &
+              zoo13Ctot_ind     => marbl_tracer_indices%zoo13Ctot_ind,        &
               di14c_ind         => marbl_tracer_indices%di14c_ind,            &
               do14ctot_ind      => marbl_tracer_indices%do14ctot_ind,         &
-              zoo14c_ind        => marbl_tracer_indices%zoo14c_ind,           &
+              zoo14Ctot_ind     => marbl_tracer_indices%zoo14Ctot_ind,        &
               ciso_ind_beg      => marbl_tracer_indices%ciso%ind_beg,         &
               ciso_ind_end      => marbl_tracer_indices%ciso%ind_end          &
              )
@@ -136,8 +136,8 @@ contains
     marbl_tracer_metadata(do13ctot_ind)%short_name='DO13Ctot'
     marbl_tracer_metadata(do13ctot_ind)%long_name='Dissolved Organic Carbon-13 (semi-labile+refractory)'
 
-    marbl_tracer_metadata(zoo13C_ind)%short_name='zoo13C'
-    marbl_tracer_metadata(zoo13C_ind)%long_name='Zooplankton Carbon-13'
+    marbl_tracer_metadata(zoo13Ctot_ind)%short_name='zoo13Ctot'
+    marbl_tracer_metadata(zoo13Ctot_ind)%long_name='Zooplankton Carbon-13 (sum over all zooplankton)'
 
     marbl_tracer_metadata(di14c_ind)%short_name='DI14C'
     marbl_tracer_metadata(di14c_ind)%long_name='Dissolved Inorganic Carbon-14'
@@ -145,8 +145,8 @@ contains
     marbl_tracer_metadata(do14ctot_ind)%short_name='DO14Ctot'
     marbl_tracer_metadata(do14ctot_ind)%long_name='Dissolved Organic Carbon-14 (semi-labile+refractory)'
 
-    marbl_tracer_metadata(zoo14C_ind)%short_name='zoo14C'
-    marbl_tracer_metadata(zoo14C_ind)%long_name='Zooplankton Carbon-14'
+    marbl_tracer_metadata(zoo14Ctot_ind)%short_name='zoo14Ctot'
+    marbl_tracer_metadata(zoo14Ctot_ind)%long_name='Zooplankton Carbon-14 (sum over all zooplankton)'
 
     !-----------------------------------------------------------------------
     !  initialize autotroph tracer_d values and tracer indices
@@ -178,8 +178,8 @@ contains
     !  set lfull_depth_tavg flag for short-lived ecosystem tracers
     !-----------------------------------------------------------------------
 
-    marbl_tracer_metadata(zoo13C_ind   )%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
-    marbl_tracer_metadata(zoo14C_ind   )%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
+    marbl_tracer_metadata(zoo13Ctot_ind)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
+    marbl_tracer_metadata(zoo14Ctot_ind)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
@@ -285,10 +285,10 @@ contains
     real (r8), dimension (marbl_domain%km) :: &
          DO13Ctot_loc,      & ! local copy of model DO13Ctot
          DI13C_loc,         & ! local copy of model DI13C
-         zoo13C_loc,        & ! local copy of model zoo13C
+         zoo13Ctot_loc,     & ! local copy of model zoo13Ctot
          DO14Ctot_loc,      & ! local copy of model DO14Ctot
          DI14C_loc,         & ! local copy of model DI14C
-         zoo14C_loc           ! local copy of model zoo14C
+         zoo14Ctot_loc        ! local copy of model zoo14Ctot
 
     real (r8), dimension(marbl_domain%km) :: &
          mui_to_co2star_loc     ! local carbon autotroph instanteous growth rate over [CO2*] (m^3 /mol C /s)
@@ -389,10 +389,10 @@ contains
 
          di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
          do13ctot_ind       => marbl_tracer_indices%do13ctot_ind               , &
-         zoo13c_ind         => marbl_tracer_indices%zoo13c_ind                 , &
+         zoo13Ctot_ind      => marbl_tracer_indices%zoo13Ctot_ind              , &
          di14c_ind          => marbl_tracer_indices%di14c_ind                  , &
          do14ctot_ind       => marbl_tracer_indices%do14ctot_ind               , &
-         zoo14c_ind         => marbl_tracer_indices%zoo14c_ind                   &
+         zoo14Ctot_ind      => marbl_tracer_indices%zoo14Ctot_ind                &
          )
 
     !-----------------------------------------------------------------------
@@ -428,8 +428,8 @@ contains
     !-----------------------------------------------------------------------
 
     call setup_local_column_tracers(column_km, column_kmt, column_tracer, &
-           marbl_tracer_indices, DI13C_loc, DO13Ctot_loc, zoo13C_loc, DI14C_loc, &
-           DO14Ctot_loc, zoo14C_loc)
+           marbl_tracer_indices, DI13C_loc, DO13Ctot_loc, zoo13Ctot_loc, DI14C_loc, &
+           DO14Ctot_loc, zoo14Ctot_loc)
 
     !-----------------------------------------------------------------------
     !  Create local copies of model column autotrophs, treat negative values as zero
@@ -484,8 +484,8 @@ contains
 
        work1 = sum(zooC_loc(:,k),dim=1)
        if (work1 > c0) then
-          R13C_zooC(k) = zoo13C_loc(k) / work1
-          R14C_zooC(k) = zoo14C_loc(k) / work1
+          R13C_zooC(k) = zoo13Ctot_loc(k) / work1
+          R14C_zooC(k) = zoo14Ctot_loc(k) / work1
        else
           R13C_zooC(k) = c0
           R14C_zooC(k) = c0
@@ -790,16 +790,16 @@ contains
        !  column_dtracer: zoo 13 and 14 Carbon
        !-----------------------------------------------------------------------
 
-       column_dtracer(zoo13C_ind,k) = &
+       column_dtracer(zoo13Ctot_ind,k) = &
               sum(auto_graze_zoo(:,k) * R13C_autotroph(:,k),dim=1) &
             - sum(zoo_loss(:,k),dim=1) * R13C_zooC(k)
 
-       column_dtracer(zoo14C_ind,k) = &
+       column_dtracer(zoo14Ctot_ind,k) = &
               sum(auto_graze_zoo(:,k) * R14C_autotroph(:,k),dim=1) &
             - sum(zoo_loss(:,k),dim=1) * R14C_zooC(k) &
-            - c14_lambda_inv_sec * zoo14C_loc(k)
+            - c14_lambda_inv_sec * zoo14Ctot_loc(k)
 
-       decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * zoo14C_loc(k)
+       decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * zoo14Ctot_loc(k)
 
        !-----------------------------------------------------------------------
        !  column_dtracer: dissolved organic Matter 13C and 14C
@@ -1022,8 +1022,8 @@ contains
   !***********************************************************************
 
   subroutine setup_local_column_tracers(column_km, column_kmt, column_tracer, &
-           marbl_tracer_indices, DI13C_loc, DO13Ctot_loc, zoo13C_loc, DI14C_loc, &
-           DO14Ctot_loc, zoo14C_loc)
+           marbl_tracer_indices, DI13C_loc, DO13Ctot_loc, zoo13Ctot_loc, DI14C_loc, &
+           DO14Ctot_loc, zoo14Ctot_loc)
 
     !-----------------------------------------------------------------------
     !  create local copies of model column_tracer
@@ -1039,10 +1039,10 @@ contains
 
     real (r8)         , intent(out) :: DI13C_loc(:)     ! (km) local copy of model DI13C
     real (r8)         , intent(out) :: DO13Ctot_loc(:)  ! (km) local copy of model DO13Ctot
-    real (r8)         , intent(out) :: zoo13C_loc(:)    ! (km) local copy of model zoo13C
+    real (r8)         , intent(out) :: zoo13Ctot_loc(:) ! (km) local copy of model zoo13Ctot
     real (r8)         , intent(out) :: DI14C_loc(:)     ! (km) local copy of model DI14C
     real (r8)         , intent(out) :: DO14Ctot_loc(:)  ! (km) local copy of model DO14Ctot
-    real (r8)         , intent(out) :: zoo14C_loc(:)    ! (km) local copy of model zoo14C
+    real (r8)         , intent(out) :: zoo14Ctot_loc(:) ! (km) local copy of model zoo14Ctot
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
@@ -1051,30 +1051,30 @@ contains
 
     associate(di13c_ind     => marbl_tracer_indices%di13c_ind,                   &
               do13ctot_ind  => marbl_tracer_indices%do13ctot_ind,                &
-              zoo13c_ind    => marbl_tracer_indices%zoo13c_ind,                  &
+              zoo13Ctot_ind => marbl_tracer_indices%zoo13Ctot_ind,               &
               di14c_ind     => marbl_tracer_indices%di14c_ind,                   &
               do14ctot_ind  => marbl_tracer_indices%do14ctot_ind,                &
-              zoo14c_ind    => marbl_tracer_indices%zoo14c_ind)
+              zoo14Ctot_ind => marbl_tracer_indices%zoo14Ctot_ind)
     do k = 1,column_kmt
-       DI13C_loc(k)    = max(c0, column_tracer(di13c_ind,k))
-       DI14C_loc(k)    = max(c0, column_tracer(di14c_ind,k))
+       DI13C_loc(k) = max(c0, column_tracer(di13c_ind,k))
+       DI14C_loc(k) = max(c0, column_tracer(di14c_ind,k))
 
        DO13Ctot_loc(k) = max(c0, column_tracer(do13ctot_ind,k))
        DO14Ctot_loc(k) = max(c0, column_tracer(do14ctot_ind,k))
 
-       zoo13C_loc(k)   = max(c0, column_tracer(zoo13C_ind,k))
-       zoo14C_loc(k)   = max(c0, column_tracer(zoo14C_ind,k))
+       zoo13Ctot_loc(k) = max(c0, column_tracer(zoo13Ctot_ind,k))
+       zoo14Ctot_loc(k) = max(c0, column_tracer(zoo14Ctot_ind,k))
     end do
 
     do k = column_kmt+1, column_km
-       DI13C_loc(k)    = c0
-       DI14C_loc(k)    = c0
+       DI13C_loc(k) = c0
+       DI14C_loc(k) = c0
 
        DO13Ctot_loc(k) = c0
        DO14Ctot_loc(k) = c0
 
-       zoo13C_loc(k)   = c0
-       zoo14C_loc(k)   = c0
+       zoo13Ctot_loc(k) = c0
+       zoo14Ctot_loc(k) = c0
     end do
     end associate
 
