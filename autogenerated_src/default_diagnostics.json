@@ -38,6 +38,13 @@
       "units": "none",
       "vertical_grid": "layer_avg"
    },
+   "((autotroph_sname))_Fe_lim_Cweight_avg_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Fe Limitation, carbon biomass weighted average over 0-100m",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
+   },
    "((autotroph_sname))_N_lim": {
       "frequency": {
          "((autotroph_Nfixer))": "never",
@@ -48,6 +55,13 @@
       "truncate": true,
       "units": "none",
       "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_N_lim_Cweight_avg_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) N Limitation, carbon biomass weighted average over 0-100m",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
    },
    "((autotroph_sname))_Nfix": {
       "dependencies": {
@@ -67,6 +81,13 @@
       "truncate": true,
       "units": "none",
       "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_P_lim_Cweight_avg_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) P Limitation, carbon biomass weighted average over 0-100m",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
    },
    "((autotroph_sname))_Qp": {
       "dependencies": {
@@ -89,6 +110,16 @@
       "truncate": true,
       "units": "none",
       "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_SiO3_lim_Cweight_avg_100m": {
+      "dependencies": {
+         "((autotroph_silicifier))": true
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) SiO3 Limitation, carbon biomass weighted average over 0-100m",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
    },
    "((autotroph_sname))_agg": {
       "frequency": "medium",
@@ -130,6 +161,13 @@
       "truncate": true,
       "units": "none",
       "vertical_grid": "layer_avg"
+   },
+   "((autotroph_sname))_light_lim_Cweight_avg_100m": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Light Limitation, carbon biomass weighted average over 0-100m",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
    },
    "((autotroph_sname))_loss": {
       "frequency": "never",

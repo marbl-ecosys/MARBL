@@ -172,6 +172,7 @@ module marbl_mod
   use marbl_interface_public_types, only : marbl_running_mean_0d_type
 
   use marbl_pft_mod, only : autotroph_type
+  use marbl_pft_mod, only : autotroph_local_type
   use marbl_pft_mod, only : zooplankton_type
   use marbl_pft_mod, only : autotroph_secondary_species_type
   use marbl_pft_mod, only : zooplankton_secondary_species_type
@@ -213,15 +214,6 @@ module marbl_mod
   type, private :: zooplankton_local_type
      real (r8) :: C  ! local copy of model zooplankton C
   end type zooplankton_local_type
-
-  type, private :: autotroph_local_type
-     real (r8) :: Chl   ! local copy of model autotroph Chl
-     real (r8) :: C     ! local copy of model autotroph C
-     real (r8) :: P     ! local copy of model autotroph P
-     real (r8) :: Fe    ! local copy of model autotroph Fe
-     real (r8) :: Si    ! local copy of model autotroph Si
-     real (r8) :: CaCO3 ! local copy of model autotroph CaCO3
-  end type autotroph_local_type
 
   integer (int_kind) :: glo_avg_field_ind_interior_CaCO3_bury = 0
   integer (int_kind) :: glo_avg_field_ind_interior_POC_bury = 0
@@ -802,6 +794,7 @@ contains
          dtracers,                                          &
          marbl_tracer_indices,                              &
          carbonate,                                         &
+         autotroph_local,                                   &
          autotroph_secondary_species,                       &
          zooplankton_secondary_species,                     &
          dissolved_organic_matter,                          &

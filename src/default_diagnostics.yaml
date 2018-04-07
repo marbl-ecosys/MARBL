@@ -1302,6 +1302,38 @@ CISO_eps_dic_g :
 # Per-autotroph Diagnostics #
 #############################
 
+((autotroph_sname))_N_lim_Cweight_avg_100m :
+   longname : ((autotroph_lname)) N Limitation, carbon biomass weighted average over 0-100m
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_P_lim_Cweight_avg_100m :
+   longname : ((autotroph_lname)) P Limitation, carbon biomass weighted average over 0-100m
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_Fe_lim_Cweight_avg_100m :
+   longname : ((autotroph_lname)) Fe Limitation, carbon biomass weighted average over 0-100m
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_SiO3_lim_Cweight_avg_100m :
+   dependencies :
+      ((autotroph_silicifier)) : true
+   longname : ((autotroph_lname)) SiO3 Limitation, carbon biomass weighted average over 0-100m
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_light_lim_Cweight_avg_100m :
+   longname : ((autotroph_lname)) Light Limitation, carbon biomass weighted average over 0-100m
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
 photoC_((autotroph_sname))_zint :
    longname : ((autotroph_lname)) C Fixation Vertical Integral
    units : mmol/m^3 cm/s
