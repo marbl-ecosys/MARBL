@@ -1302,10 +1302,26 @@ CISO_eps_dic_g :
 # Per-autotroph Diagnostics #
 #############################
 
+((autotroph_sname))_N_lim_surf :
+   longname : ((autotroph_lname)) N Limitation, Surface
+   units : 1
+   vertical_grid : none
+   truncate : true
+   frequency :
+      default : medium
+      ((autotroph_Nfixer)) : never
+   operator : average
 ((autotroph_sname))_N_lim_Cweight_avg_100m :
    longname : ((autotroph_lname)) N Limitation, carbon biomass weighted average over 0-100m
    units : 1
    vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_P_lim_surf :
+   longname : ((autotroph_lname)) P Limitation, Surface
+   units : 1
+   vertical_grid : none
+   truncate : true
    frequency : medium
    operator : average
 ((autotroph_sname))_P_lim_Cweight_avg_100m :
@@ -1314,10 +1330,26 @@ CISO_eps_dic_g :
    vertical_grid : none
    frequency : medium
    operator : average
+((autotroph_sname))_Fe_lim_surf :
+   longname : ((autotroph_lname)) Fe Limitation, Surface
+   units : 1
+   vertical_grid : none
+   truncate : true
+   frequency : medium
+   operator : average
 ((autotroph_sname))_Fe_lim_Cweight_avg_100m :
    longname : ((autotroph_lname)) Fe Limitation, carbon biomass weighted average over 0-100m
    units : 1
    vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_SiO3_lim_surf :
+   dependencies :
+      ((autotroph_silicifier)) : true
+   longname : ((autotroph_lname)) SiO3 Limitation, Surface
+   units : 1
+   vertical_grid : none
+   truncate : true
    frequency : medium
    operator : average
 ((autotroph_sname))_SiO3_lim_Cweight_avg_100m :
@@ -1326,6 +1358,13 @@ CISO_eps_dic_g :
    longname : ((autotroph_lname)) SiO3 Limitation, carbon biomass weighted average over 0-100m
    units : 1
    vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_light_lim_surf :
+   longname : ((autotroph_lname)) Light Limitation, Surface
+   units : 1
+   vertical_grid : none
+   truncate : true
    frequency : medium
    operator : average
 ((autotroph_sname))_light_lim_Cweight_avg_100m :
@@ -1475,45 +1514,6 @@ graze_((autotroph_sname))_zoo_zint_100m :
                  #       fixed P:C so I'd like to update the fortran as well
       lvariable_PtoC : .true.
    longname : ((autotroph_lname))
-   units : none
-   vertical_grid : layer_avg
-   truncate : true
-   frequency : medium
-   operator : average
-((autotroph_sname))_N_lim :
-   longname : ((autotroph_lname)) N Limitation
-   units : none
-   vertical_grid : layer_avg
-   truncate : true
-   frequency :
-      default : medium
-      ((autotroph_Nfixer)) : never
-   operator : average
-((autotroph_sname))_P_lim :
-   longname : ((autotroph_lname)) P Limitation
-   units : none
-   vertical_grid : layer_avg
-   truncate : true
-   frequency : medium
-   operator : average
-((autotroph_sname))_Fe_lim :
-   longname : ((autotroph_lname)) Fe Limitation
-   units : none
-   vertical_grid : layer_avg
-   truncate : true
-   frequency : medium
-   operator : average
-((autotroph_sname))_SiO3_lim :
-   dependencies :
-      ((autotroph_silicifier)) : true
-   longname : ((autotroph_lname)) SiO3 Limitation
-   units : none
-   vertical_grid : layer_avg
-   truncate : true
-   frequency : medium
-   operator : average
-((autotroph_sname))_light_lim :
-   longname : ((autotroph_lname)) Light Limitation
    units : none
    vertical_grid : layer_avg
    truncate : true

@@ -108,10 +108,15 @@ module marbl_diagnostics_mod
     integer(int_kind) :: pfeToSed
 
     ! Autotroph 2D diags
+    integer(int_kind), allocatable :: N_lim_surf(:)
     integer(int_kind), allocatable :: N_lim_Cweight_avg_100m(:)
+    integer(int_kind), allocatable :: P_lim_surf(:)
     integer(int_kind), allocatable :: P_lim_Cweight_avg_100m(:)
+    integer(int_kind), allocatable :: Fe_lim_surf(:)
     integer(int_kind), allocatable :: Fe_lim_Cweight_avg_100m(:)
+    integer(int_kind), allocatable :: SiO3_lim_surf(:)
     integer(int_kind), allocatable :: SiO3_lim_Cweight_avg_100m(:)
+    integer(int_kind), allocatable :: light_lim_surf(:)
     integer(int_kind), allocatable :: light_lim_Cweight_avg_100m(:)
     integer(int_kind), allocatable :: photoC_zint(:)
     integer(int_kind), allocatable :: photoC_zint_100m(:)
@@ -241,11 +246,6 @@ module marbl_diagnostics_mod
 
     ! Autotroph 3D diags
     integer(int_kind), allocatable :: Qp(:)
-    integer(int_kind), allocatable :: N_lim(:)
-    integer(int_kind), allocatable :: P_lim(:)
-    integer(int_kind), allocatable :: Fe_lim(:)
-    integer(int_kind), allocatable :: SiO3_lim(:)
-    integer(int_kind), allocatable :: light_lim(:)
     integer(int_kind), allocatable :: photoC(:)
     integer(int_kind), allocatable :: photoC_NO3(:)
     integer(int_kind), allocatable :: photoFe(:)
@@ -1329,10 +1329,15 @@ contains
 
       ! Autotroph 2D diags
       if (.not.ind%lconstructed()) then
+        allocate(ind%N_lim_surf(autotroph_cnt))
         allocate(ind%N_lim_Cweight_avg_100m(autotroph_cnt))
+        allocate(ind%P_lim_surf(autotroph_cnt))
         allocate(ind%P_lim_Cweight_avg_100m(autotroph_cnt))
+        allocate(ind%Fe_lim_surf(autotroph_cnt))
         allocate(ind%Fe_lim_Cweight_avg_100m(autotroph_cnt))
+        allocate(ind%SiO3_lim_surf(autotroph_cnt))
         allocate(ind%SiO3_lim_Cweight_avg_100m(autotroph_cnt))
+        allocate(ind%light_lim_surf(autotroph_cnt))
         allocate(ind%light_lim_Cweight_avg_100m(autotroph_cnt))
         allocate(ind%photoC_zint(autotroph_cnt))
         allocate(ind%photoC_zint_100m(autotroph_cnt))
@@ -1357,6 +1362,18 @@ contains
         allocate(ind%auto_agg_zint_100m(autotroph_cnt))
       end if
       do n=1,autotroph_cnt
+        lname = trim(autotrophs(n)%lname) // ' N Limitation, Surface'
+        sname = trim(autotrophs(n)%sname) // '_N_lim_surf'
+        units = '1'
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%N_lim_surf(n), marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
         lname = trim(autotrophs(n)%lname) // ' N Limitation, carbon biomass weighted average over 0-100m'
         sname = trim(autotrophs(n)%sname) // '_N_lim_Cweight_avg_100m'
         units = '1'
@@ -1369,6 +1386,18 @@ contains
           return
         end if
 
+        lname = trim(autotrophs(n)%lname) // ' P Limitation, Surface'
+        sname = trim(autotrophs(n)%sname) // '_P_lim_surf'
+        units = '1'
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%P_lim_surf(n), marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
         lname = trim(autotrophs(n)%lname) // ' P Limitation, carbon biomass weighted average over 0-100m'
         sname = trim(autotrophs(n)%sname) // '_P_lim_Cweight_avg_100m'
         units = '1'
@@ -1376,6 +1405,18 @@ contains
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%P_lim_Cweight_avg_100m(n), marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = trim(autotrophs(n)%lname) // ' Fe Limitation, Surface'
+        sname = trim(autotrophs(n)%sname) // '_Fe_lim_surf'
+        units = '1'
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%Fe_lim_surf(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call log_add_diagnostics_error(marbl_status_log, sname, subname)
           return
@@ -1394,6 +1435,18 @@ contains
         end if
 
         if (autotrophs(n)%silicifier) then
+          lname = trim(autotrophs(n)%lname) // ' SiO3 Limitation, Surface'
+          sname = trim(autotrophs(n)%sname) // '_SiO3_lim_surf'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+               ind%SiO3_lim_surf(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call log_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
           lname = trim(autotrophs(n)%lname) // ' SiO3 Limitation, carbon biomass weighted average over 0-100m'
           sname = trim(autotrophs(n)%sname) // '_SiO3_lim_Cweight_avg_100m'
           units = '1'
@@ -1406,7 +1459,20 @@ contains
             return
           end if
         else
+          ind%SiO3_lim_surf(n) = -1
           ind%SiO3_lim_Cweight_avg_100m(n) = -1
+        end if
+
+        lname = trim(autotrophs(n)%lname) // ' Light Limitation, Surface'
+        sname = trim(autotrophs(n)%sname) // '_light_lim_surf'
+        units = '1'
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%light_lim_surf(n), marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
         end if
 
         lname = trim(autotrophs(n)%lname) // ' Light Limitation, carbon biomass weighted average over 0-100m'
@@ -2852,11 +2918,6 @@ contains
       ! Autotroph 3D diags
       if (.not.ind%lconstructed()) then
         allocate(ind%Qp(autotroph_cnt))
-        allocate(ind%N_lim(autotroph_cnt))
-        allocate(ind%P_lim(autotroph_cnt))
-        allocate(ind%Fe_lim(autotroph_cnt))
-        allocate(ind%SiO3_lim(autotroph_cnt))
-        allocate(ind%light_lim(autotroph_cnt))
         allocate(ind%photoC(autotroph_cnt))
         allocate(ind%photoC_NO3(autotroph_cnt))
         allocate(ind%photoFe(autotroph_cnt))
@@ -2891,70 +2952,6 @@ contains
           end if
         else
           ind%Qp(n) = -1
-        end if
-
-        lname = trim(autotrophs(n)%lname) // ' N Limitation'
-        sname = trim(autotrophs(n)%sname) // '_N_lim'
-        units = 'none'
-        vgrid = 'layer_avg'
-        truncate = .true.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%N_lim(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotrophs(n)%lname) // ' P Limitation'
-        sname = trim(autotrophs(n)%sname) // '_P_lim'
-        units = 'none'
-        vgrid = 'layer_avg'
-        truncate = .true.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%P_lim(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotrophs(n)%lname) // ' Fe Limitation'
-        sname = trim(autotrophs(n)%sname) // '_Fe_lim'
-        units = 'none'
-        vgrid = 'layer_avg'
-        truncate = .true.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%Fe_lim(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        if (autotrophs(n)%silicifier) then
-          lname = trim(autotrophs(n)%lname) // ' SiO3 Limitation'
-          sname = trim(autotrophs(n)%sname) // '_SiO3_lim'
-          units = 'none'
-          vgrid = 'layer_avg'
-          truncate = .true.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%SiO3_lim(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call log_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-        else
-          ind%SiO3_lim(n) = -1
-        end if
-
-        lname = trim(autotrophs(n)%lname) // ' Light Limitation'
-        sname = trim(autotrophs(n)%sname) // '_light_lim'
-        units = 'none'
-        vgrid = 'layer_avg'
-        truncate = .true.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%light_lim(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call log_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
         end if
 
         lname = trim(autotrophs(n)%lname) // ' C Fixation'
@@ -4504,20 +4501,6 @@ contains
     diags(ind%photoC_NO3_TOT_zint)%field_2d(1) = c0
 
     do n = 1, autotroph_cnt
-       if (ind%Qp(n).ne.-1) then
-         diags(ind%Qp(n))%field_3d(:, 1)        = autotroph_secondary_species(n,:)%Qp
-       end if
-
-       diags(ind%N_lim(n))%field_3d(:, 1)       = autotroph_secondary_species(n,:)%VNtot
-       diags(ind%Fe_lim(n))%field_3d(:, 1)      = autotroph_secondary_species(n,:)%VFe
-       diags(ind%P_lim(n))%field_3d(:, 1)       = autotroph_secondary_species(n,:)%VPtot
-
-       if (ind%SiO3_lim(n).ne.-1) then
-          diags(ind%SiO3_lim(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%VSiO3
-       end if
-
-       diags(ind%light_lim(n))%field_3d(:, 1)   = autotroph_secondary_species(n,:)%light_lim
-
        ! compute biomass weighted average of limitation terms over 0..100m
        autotrophC_weight(:) = autotroph_local(n,:)%C
        call compute_vertical_integrals(autotrophC_weight, delta_z, kmt, near_surface_integral=autotrophC_zint_100m)
@@ -4531,27 +4514,38 @@ contains
        ! normalize weight, so that its integral is 1
        autotrophC_weight(:) = autotrophC_weight(:) / autotrophC_zint_100m
 
-       limterm = diags(ind%N_lim(n))%field_3d(:, 1) * autotrophC_weight(:)
+       diags(ind%N_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VNtot
+       limterm = autotroph_secondary_species(n,:)%VNtot * autotrophC_weight(:)
        call compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%N_lim_Cweight_avg_100m(n))%field_2d(1))
 
-       limterm = diags(ind%P_lim(n))%field_3d(:, 1) * autotrophC_weight(:)
+       diags(ind%P_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VPtot
+       limterm = autotroph_secondary_species(n,:)%VPtot * autotrophC_weight(:)
        call compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%P_lim_Cweight_avg_100m(n))%field_2d(1))
 
-       limterm = diags(ind%Fe_lim(n))%field_3d(:, 1) * autotrophC_weight(:)
+       diags(ind%Fe_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VFe
+       limterm = autotroph_secondary_species(n,:)%VFe * autotrophC_weight(:)
        call compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%Fe_lim_Cweight_avg_100m(n))%field_2d(1))
 
-       if (ind%SiO3_lim(n).ne.-1) then
-          limterm = diags(ind%SiO3_lim(n))%field_3d(:, 1) * autotrophC_weight(:)
+       if (ind%SiO3_lim_surf(n).ne.-1) then
+          diags(ind%SiO3_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VSiO3
+       endif
+       if (ind%SiO3_lim_Cweight_avg_100m(n).ne.-1) then
+          limterm = autotroph_secondary_species(n,:)%VSiO3 * autotrophC_weight(:)
           call compute_vertical_integrals(limterm, delta_z, kmt, &
                near_surface_integral=diags(ind%SiO3_lim_Cweight_avg_100m(n))%field_2d(1))
        endif
 
-       limterm = diags(ind%light_lim(n))%field_3d(:, 1) * autotrophC_weight(:)
+       diags(ind%light_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%light_lim
+       limterm = autotroph_secondary_species(n,:)%light_lim * autotrophC_weight(:)
        call compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%light_lim_Cweight_avg_100m(n))%field_2d(1))
+
+       if (ind%Qp(n).ne.-1) then
+         diags(ind%Qp(n))%field_3d(:, 1)        = autotroph_secondary_species(n,:)%Qp
+       end if
 
        diags(ind%photoNO3(n))%field_3d(:, 1)    = autotroph_secondary_species(n,:)%NO3_V
        diags(ind%photoNH4(n))%field_3d(:, 1)    = autotroph_secondary_species(n,:)%NH4_V
@@ -5792,10 +5786,15 @@ contains
     class(marbl_interior_diagnostics_indexing_type), intent(inout) :: this
 
     if (this%lconstructed()) then
+      deallocate(this%N_lim_surf)
       deallocate(this%N_lim_Cweight_avg_100m)
+      deallocate(this%P_lim_surf)
       deallocate(this%P_lim_Cweight_avg_100m)
+      deallocate(this%Fe_lim_surf)
       deallocate(this%Fe_lim_Cweight_avg_100m)
+      deallocate(this%SiO3_lim_surf)
       deallocate(this%SiO3_lim_Cweight_avg_100m)
+      deallocate(this%light_lim_surf)
       deallocate(this%light_lim_Cweight_avg_100m)
       deallocate(this%photoC_zint)
       deallocate(this%photoC_zint_100m)
@@ -5835,11 +5834,6 @@ contains
       deallocate(this%x_graze_zoo_zint)
       deallocate(this%x_graze_zoo_zint_100m)
       deallocate(this%Qp)
-      deallocate(this%N_lim)
-      deallocate(this%P_lim)
-      deallocate(this%Fe_lim)
-      deallocate(this%SiO3_lim)
-      deallocate(this%light_lim)
       deallocate(this%photoC)
       deallocate(this%photoC_NO3)
       deallocate(this%photoFe)
