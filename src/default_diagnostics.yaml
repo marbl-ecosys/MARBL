@@ -55,7 +55,7 @@ PV_O2 :
    operator : average
 SCHMIDT_O2 :
    longname : O2 Schmidt Number
-   units : none
+   units : 1
    vertical_grid : none
    frequency : medium
    operator : average
@@ -117,7 +117,7 @@ PV_CO2 :
    operator : average
 SCHMIDT_CO2 :
    longname : CO2 Schmidt Number
-   units : none
+   units : 1
    vertical_grid : none
    frequency : medium
    operator : average
@@ -138,7 +138,7 @@ FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
    operator : average
 PH : &PH
    longname : Surface pH
-   units : none
+   units : 1
    vertical_grid : none
    frequency : medium
    operator : average
@@ -444,7 +444,7 @@ Jint_Fetot :
 # Particulate 2D diags
 calcToSed :
    longname : CaCO3 Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -456,37 +456,37 @@ calcToSed_ALT_CO2 :
    operator : average
 pocToSed :
    longname : POC Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 ponToSed :
    longname : nitrogen burial Flux to Sediments
-   units : nmolN/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 SedDenitrif :
    longname : nitrogen loss in Sediments
-   units : nmolN/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 OtherRemin :
    longname : non-oxic,non-dentr remin in Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : never
    operator : average
 popToSed :
    longname : phosphorus Flux to Sediments
-   units : nmolP/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 bsiToSed :
    longname : biogenic Si Flux to Sediments
-   units : nmolSi/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -498,7 +498,7 @@ dustToSed :
    operator : average
 pfeToSed :
    longname : pFe Flux to Sediments
-   units : nmolFe/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -546,7 +546,7 @@ H2CO3 :
    operator : average
 pH_3D :
    longname : pH
-   units : none
+   units : 1
    vertical_grid : layer_avg
    frequency : medium
    operator : average
@@ -570,7 +570,7 @@ H2CO3_ALT_CO2 :
    operator : average
 pH_3D_ALT_CO2 :
    longname : pH, Alternative CO2
-   units : none
+   units : 1
    vertical_grid : layer_avg
    frequency : never
    operator : average
@@ -1046,7 +1046,7 @@ calcToSed_13C :
    dependencies :
       ciso_on : .true.
    longname : Ca13CO3 Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -1054,7 +1054,7 @@ pocToSed_13C :
    dependencies :
       ciso_on : .true.
    longname : PO13C Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -1062,7 +1062,7 @@ calcToSed_14C :
    dependencies :
       ciso_on : .true.
    longname : Ca14CO3 Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -1070,7 +1070,7 @@ pocToSed_14C :
    dependencies :
       ciso_on : .true.
    longname : PO14C Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -1514,7 +1514,7 @@ graze_((autotroph_sname))_zoo_zint_100m :
                  #       fixed P:C so I'd like to update the fortran as well
       lvariable_PtoC : .true.
    longname : ((autotroph_lname))
-   units : none
+   units : 1
    vertical_grid : layer_avg
    truncate : true
    frequency : medium
@@ -1771,7 +1771,7 @@ CISO_mui_to_co2star_((autotroph_sname)) :
    dependencies :
       ciso_on : .true.
    longname : ((autotroph_lname)) instanteous growth rate over [CO2*]
-   units : m^3/mmol C/s
+   units : m^3/mmol/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average

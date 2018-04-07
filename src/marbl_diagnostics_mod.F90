@@ -493,7 +493,7 @@ contains
 
       lname    = 'O2 Schmidt Number'
       sname    = 'SCHMIDT_O2'
-      units    = 'none'
+      units    = '1'
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -577,7 +577,7 @@ contains
 
       lname    = 'CO2 Schmidt Number'
       sname    = 'SCHMIDT_CO2'
-      units    = 'none'
+      units    = '1'
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -601,7 +601,7 @@ contains
 
       lname    = 'Surface pH'
       sname    = 'PH'
-      units    = 'none'
+      units    = '1'
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -685,7 +685,7 @@ contains
 
       lname    = 'Surface pH, Alternative CO2'
       sname    = 'PH_ALT_CO2'
-      units    = 'none'
+      units    = '1'
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1209,7 +1209,7 @@ contains
       ! Particulate 2D diags
       lname = 'CaCO3 Flux to Sediments'
       sname = 'calcToSed'
-      units = 'nmolC/cm^2/s'
+      units = 'nmol/cm^2/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1221,7 +1221,7 @@ contains
 
       lname = 'CaCO3 Flux to Sediments, Alternative CO2'
       sname = 'calcToSed_ALT_CO2'
-      units = 'nmolC/cm^2/s'
+      units = 'nmol/cm^2/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1233,7 +1233,7 @@ contains
 
       lname = 'POC Flux to Sediments'
       sname = 'pocToSed'
-      units = 'nmolC/cm^2/s'
+      units = 'nmol/cm^2/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1245,7 +1245,7 @@ contains
 
       lname = 'nitrogen burial Flux to Sediments'
       sname = 'ponToSed'
-      units = 'nmolN/cm^2/s'
+      units = 'nmol/cm^2/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1257,7 +1257,7 @@ contains
 
       lname = 'nitrogen loss in Sediments'
       sname = 'SedDenitrif'
-      units = 'nmolN/cm^2/s'
+      units = 'nmol/cm^2/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1269,7 +1269,7 @@ contains
 
       lname = 'non-oxic,non-dentr remin in Sediments'
       sname = 'OtherRemin'
-      units = 'nmolC/cm^2/s'
+      units = 'nmol/cm^2/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1281,7 +1281,7 @@ contains
 
       lname = 'phosphorus Flux to Sediments'
       sname = 'popToSed'
-      units = 'nmolP/cm^2/s'
+      units = 'nmol/cm^2/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1293,7 +1293,7 @@ contains
 
       lname = 'biogenic Si Flux to Sediments'
       sname = 'bsiToSed'
-      units = 'nmolSi/cm^2/s'
+      units = 'nmol/cm^2/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1317,7 +1317,7 @@ contains
 
       lname = 'pFe Flux to Sediments'
       sname = 'pfeToSed'
-      units = 'nmolFe/cm^2/s'
+      units = 'nmol/cm^2/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2036,7 +2036,7 @@ contains
 
       lname = 'pH'
       sname = 'pH_3D'
-      units = 'none'
+      units = '1'
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2084,7 +2084,7 @@ contains
 
       lname = 'pH, Alternative CO2'
       sname = 'pH_3D_ALT_CO2'
-      units = 'none'
+      units = '1'
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2941,7 +2941,7 @@ contains
         if (lvariable_PtoC) then
           lname = trim(autotrophs(n)%lname) // ' P:C ratio'
           sname = trim(autotrophs(n)%sname) // '_Qp'
-          units = 'none'
+          units = '1'
           vgrid = 'layer_avg'
           truncate = .true.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -3856,7 +3856,7 @@ contains
 
           lname    = trim(autotrophs(n)%lname) // ' instanteous growth rate over [CO2*]'
           sname    = 'CISO_mui_to_co2star_' // trim(autotrophs(n)%sname)
-          units    = 'm^3/mmol C/s'
+          units    = 'm^3/mmol/s'
           vgrid    = 'layer_avg'
           truncate = .false.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
@@ -3898,7 +3898,7 @@ contains
 
         lname    = 'Ca13CO3 Flux to Sediments'
         sname    = 'calcToSed_13C'
-        units    = 'nmolC/cm^2/s'
+        units    = 'nmol/cm^2/s'
         vgrid    = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -3910,7 +3910,7 @@ contains
 
         lname    = 'PO13C Flux to Sediments'
         sname    = 'pocToSed_13C'
-        units    = 'nmolC/cm^2/s'
+        units    = 'nmol/cm^2/s'
         vgrid    = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -3922,7 +3922,7 @@ contains
 
         lname    = 'Ca14CO3 Flux to Sediments'
         sname    = 'calcToSed_14C'
-        units    = 'nmolC/cm^2/s'
+        units    = 'nmol/cm^2/s'
         vgrid    = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -3934,7 +3934,7 @@ contains
 
         lname    = 'PO14C Flux to Sediments'
         sname    = 'pocToSed_14C'
-        units    = 'nmolC/cm^2/s'
+        units    = 'nmol/cm^2/s'
         vgrid    = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &

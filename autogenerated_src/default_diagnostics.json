@@ -97,7 +97,7 @@
       "longname": "((autotroph_lname))",
       "operator": "average",
       "truncate": true,
-      "units": "none",
+      "units": 1,
       "vertical_grid": "layer_avg"
    },
    "((autotroph_sname))_SiO3_lim_Cweight_avg_100m": {
@@ -837,7 +837,7 @@
       "frequency": "medium",
       "longname": "((autotroph_lname)) instanteous growth rate over [CO2*]",
       "operator": "average",
-      "units": "m^3/mmol C/s",
+      "units": "m^3/mmol/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_photo13C_((autotroph_sname))": {
@@ -1495,7 +1495,7 @@
       "frequency": "never",
       "longname": "non-oxic,non-dentr remin in Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "PAR_avg": {
@@ -1509,14 +1509,14 @@
       "frequency": "medium",
       "longname": "Surface pH",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "none"
    },
    "PH_ALT_CO2": {
       "frequency": "medium",
       "longname": "Surface pH, Alternative CO2",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "none"
    },
    "PO4_((autotroph_sname))_uptake": {
@@ -1699,21 +1699,21 @@
       "frequency": "medium",
       "longname": "CO2 Schmidt Number",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "none"
    },
    "SCHMIDT_O2": {
       "frequency": "medium",
       "longname": "O2 Schmidt Number",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "none"
    },
    "SedDenitrif": {
       "frequency": "medium",
       "longname": "nitrogen loss in Sediments",
       "operator": "average",
-      "units": "nmolN/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "SiO2_FLUX_((particulate_flux_ref_depth_str))": {
@@ -1755,14 +1755,14 @@
       "frequency": "medium",
       "longname": "biogenic Si Flux to Sediments",
       "operator": "average",
-      "units": "nmolSi/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "calcToSed": {
       "frequency": "medium",
       "longname": "CaCO3 Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "calcToSed_13C": {
@@ -1772,7 +1772,7 @@
       "frequency": "medium",
       "longname": "Ca13CO3 Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "calcToSed_14C": {
@@ -1782,7 +1782,7 @@
       "frequency": "medium",
       "longname": "Ca14CO3 Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "calcToSed_ALT_CO2": {
@@ -2035,21 +2035,21 @@
       "frequency": "medium",
       "longname": "pH",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "layer_avg"
    },
    "pH_3D_ALT_CO2": {
       "frequency": "never",
       "longname": "pH, Alternative CO2",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "layer_avg"
    },
    "pfeToSed": {
       "frequency": "medium",
       "longname": "pFe Flux to Sediments",
       "operator": "average",
-      "units": "nmolFe/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "photoC_((autotroph_sname))": {
@@ -2165,7 +2165,7 @@
       "frequency": "medium",
       "longname": "POC Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "pocToSed_13C": {
@@ -2175,7 +2175,7 @@
       "frequency": "medium",
       "longname": "PO13C Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "pocToSed_14C": {
@@ -2185,21 +2185,21 @@
       "frequency": "medium",
       "longname": "PO14C Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "ponToSed": {
       "frequency": "medium",
       "longname": "nitrogen burial Flux to Sediments",
       "operator": "average",
-      "units": "nmolN/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "popToSed": {
       "frequency": "medium",
       "longname": "phosphorus Flux to Sediments",
       "operator": "average",
-      "units": "nmolP/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "x_graze_((zooplankton_sname))": {
