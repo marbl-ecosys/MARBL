@@ -726,7 +726,7 @@ contains
         if (id .eq. ind%sst_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'sst'
-          surface_forcings(id)%metadata%field_units   = 'degrees C'
+          surface_forcings(id)%metadata%field_units   = 'degC'
         end if
 
         ! Ice Fraction
@@ -916,7 +916,7 @@ contains
         if (id .eq. ind%potemp_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Potential Temperature'
-          interior_forcings(id)%metadata%field_units = 'degrees C'
+          interior_forcings(id)%metadata%field_units = 'degC'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_levels)
         end if

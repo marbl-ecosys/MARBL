@@ -881,7 +881,7 @@ contains
     !  parameters, from Armstrong et al. 2000
     !
     !  July 2002, length scale for excess POC and bSI modified by temperature
-    !  Value given here is at Tref of 30 deg. C, JKM
+    !  Value given here is at Tref of 30 degC, JKM
     !-----------------------------------------------------------------------
 
     POC%diss      = parm_POC_diss   ! diss. length (cm), modified by TEMP
@@ -1190,7 +1190,7 @@ contains
     DECAY_HardDust = exp(-delta_z(k) / 1.2e8_r8)
 
     !----------------------------------------------------------------------
-    !   Tref = 30.0 reference temperature (deg. C)
+    !   Tref = 30.0 reference temperature (degC)
     !   not currently being applied
     !----------------------------------------------------------------------
 !   TfuncS = 1.5_r8**(((temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
@@ -2739,7 +2739,7 @@ contains
   subroutine marbl_compute_function_scaling(temperature, Tfunc)
 
     !-----------------------------------------------------------------------
-    !  Tref = 30.0 reference temperature (deg. C)
+    !  Tref = 30.0 reference temperature (degC)
     !  Using q10 formulation with Q10 value of 2.0 (Doney et al., 1996).
     !  growth, mort and grazing rates scaled by Tfunc where they are computed
     !-----------------------------------------------------------------------

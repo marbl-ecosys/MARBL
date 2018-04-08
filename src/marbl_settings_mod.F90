@@ -1194,7 +1194,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'temp_thres'
       lname    = 'Temperature where concentration threshold and photosynthesis rate drop'
-      units    = 'deg C'
+      units    = 'degC'
       datatype = 'real'
       rptr     => autotrophs(n)%temp_thres
       call this%add_var(sname, lname, units, datatype, category,     &

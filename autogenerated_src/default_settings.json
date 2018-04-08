@@ -328,7 +328,7 @@
                },
                "longname": "Temperature where concentration threshold and photosynthesis rate drops",
                "subcategory": "10. autotrophs",
-               "units": "deg C"
+               "units": "degC"
             },
             "thetaN_max": {
                "datatype": "real",
