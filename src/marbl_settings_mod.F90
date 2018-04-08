@@ -1144,7 +1144,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'alphaPi_per_day'
       lname    = 'Initial slope of P_I curve (GD98)'
-      units    = 'mmol C m^2 / (mg Chl W day)'
+      units    = 'mmol m^2 / (mg Chl W day)'
       datatype = 'real'
       rptr     => autotrophs(n)%alphaPi_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
@@ -1164,7 +1164,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'thetaN_max'
       lname    = 'max thetaN (Chl/N)'
-      units    = 'mg Chl / mmol N'
+      units    = 'mg Chl / mmol'
       datatype = 'real'
       rptr     => autotrophs(n)%thetaN_max
       call this%add_var(sname, lname, units, datatype, category,     &
@@ -1214,7 +1214,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'mort2_per_day'
       lname    = 'quadratic mortality rate'
-      units    = '1/day/(mmol C/m^3)'
+      units    = '1/day/(mmol/m^3)'
       datatype = 'real'
       rptr     => autotrophs(n)%mort2_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
@@ -1300,7 +1300,7 @@ contains
 
       write(sname, "(2A)") trim(prefix), 'z_mort2_0_per_day'
       lname    = 'Quadratic mortality rate'
-      units    = '1/day/(mmol C / m^3)'
+      units    = '1/day/(mmol/m^3)'
       datatype = 'real'
       rptr     => zooplankton(n)%z_mort2_0_per_day
       call this%add_var(sname, lname, units, datatype, category,       &
@@ -1377,7 +1377,7 @@ contains
 
         write(sname, "(2A)") trim(prefix), 'z_grz'
         lname    = 'Grazing coefficient'
-        units    = '(mmol C/m^3)^2'
+        units    = '(mmol/m^3)^2'
         datatype = 'real'
         rptr     => grazing(m,n)%z_grz
         call this%add_var(sname, lname, units, datatype, category,     &

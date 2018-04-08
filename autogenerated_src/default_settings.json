@@ -107,7 +107,7 @@
                },
                "longname": "Initial slope of P_I curve (GD98)",
                "subcategory": "10. autotrophs",
-               "units": "mmol C m^2/(mg Chl W day)"
+               "units": "mmol m^2/(mg Chl W day)"
             },
             "exp_calcifier": {
                "datatype": "logical",
@@ -282,7 +282,7 @@
                },
                "longname": "Quadratic mortality rate",
                "subcategory": "10. autotrophs",
-               "units": "(1/day)/(mmol C/m^3)"
+               "units": "(1/day)/(mmol/m^3)"
             },
             "mort_per_day": {
                "datatype": "real",
@@ -340,7 +340,7 @@
                },
                "longname": "Maximum thetaN (Chl / N)",
                "subcategory": "10. autotrophs",
-               "units": "mg Chl / mmol N"
+               "units": "mg Chl / mmol"
             }
          }
       },
@@ -466,7 +466,7 @@
                },
                "longname": "Grazing coefficient",
                "subcategory": "12. grazing",
-               "units": "(mmol C/m^3)^2"
+               "units": "(mmol/m^3)^2"
             },
             "z_umax_0_per_day": {
                "datatype": "real",
@@ -544,7 +544,7 @@
                },
                "longname": "Quadratic mortality rate",
                "subcategory": "11. zooplankton",
-               "units": "1/day / (mmol C/m^3)"
+               "units": "1/day / (mmol/m^3)"
             },
             "z_mort_0_per_day": {
                "datatype": "real",
