@@ -10,6 +10,12 @@ module marbl_ciso_mod
   !  This code needs the ecosystem model to run, as it uses several
   !  variables computed there.
   !  This module adds 7 carbon pools for 13C and another 7 for 14C
+  !
+  !   References
+  !   Jahn, A., K. Lindsay, X. Giraud, N. Gruber, B. L. Otto-Bliesner, Z. Liu,
+  !   E. C. Brady, 2015. Carbon isotopes in the ocean model of the Community
+  !   Earth System Model (CESM1). Geosci. Model Dev., 8: 2419-2434.
+  !   doi:10.5194/gmd-8-2419-2015
   !-----------------------------------------------------------------------
 
   use marbl_kinds_mod, only : r8
