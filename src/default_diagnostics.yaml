@@ -450,7 +450,7 @@ calcToSed :
    operator : average
 calcToSed_ALT_CO2 :
    longname : CaCO3 Flux to Sediments, Alternative CO2
-   units : calcToSed_ALT_CO2
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -1306,7 +1306,6 @@ CISO_eps_dic_g :
    longname : ((autotroph_lname)) N Limitation, Surface
    units : 1
    vertical_grid : none
-   truncate : true
    frequency :
       default : medium
       ((autotroph_Nfixer)) : never
@@ -1315,13 +1314,14 @@ CISO_eps_dic_g :
    longname : ((autotroph_lname)) N Limitation, carbon biomass weighted average over 0-100m
    units : 1
    vertical_grid : none
-   frequency : medium
+   frequency :
+      default : medium
+      ((autotroph_Nfixer)) : never
    operator : average
 ((autotroph_sname))_P_lim_surf :
    longname : ((autotroph_lname)) P Limitation, Surface
    units : 1
    vertical_grid : none
-   truncate : true
    frequency : medium
    operator : average
 ((autotroph_sname))_P_lim_Cweight_avg_100m :
@@ -1334,7 +1334,6 @@ CISO_eps_dic_g :
    longname : ((autotroph_lname)) Fe Limitation, Surface
    units : 1
    vertical_grid : none
-   truncate : true
    frequency : medium
    operator : average
 ((autotroph_sname))_Fe_lim_Cweight_avg_100m :
@@ -1349,7 +1348,6 @@ CISO_eps_dic_g :
    longname : ((autotroph_lname)) SiO3 Limitation, Surface
    units : 1
    vertical_grid : none
-   truncate : true
    frequency : medium
    operator : average
 ((autotroph_sname))_SiO3_lim_Cweight_avg_100m :
@@ -1364,7 +1362,6 @@ CISO_eps_dic_g :
    longname : ((autotroph_lname)) Light Limitation, Surface
    units : 1
    vertical_grid : none
-   truncate : true
    frequency : medium
    operator : average
 ((autotroph_sname))_light_lim_Cweight_avg_100m :
