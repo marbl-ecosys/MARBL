@@ -119,7 +119,7 @@ contains
     real(kind=r8)                 , intent(in)    :: ta_in(num_elements)    ! total alkalinity (neq/cm^3)
     real(kind=r8)                 , intent(in)    :: pt_in(num_elements)    ! inorganic phosphate (nmol/cm^3)
     real(kind=r8)                 , intent(in)    :: sit_in(num_elements)   ! inorganic silicate (nmol/cm^3)
-    real(kind=r8)                 , intent(in)    :: temp(num_elements)     ! temperature (degrees C)
+    real(kind=r8)                 , intent(in)    :: temp(num_elements)     ! temperature (degC)
     real(kind=r8)                 , intent(in)    :: salt(num_elements)     ! salinity (PSU)
     real(kind=r8)                 , intent(in)    :: atmpres(num_elements)  ! atmospheric pressure (atmosphere)
     real(kind=r8)                 , intent(inout) :: phlo(num_elements)     ! lower limit of ph range
@@ -261,7 +261,7 @@ contains
     integer(kind=int_kind)    , intent(in)    :: num_elements
     integer(kind=int_kind)    , intent(in)    :: num_active_elements
     logical(kind=log_kind)    , intent(in)    :: lcomp_co2calc_coeffs
-    real(kind=r8)             , intent(in)    :: temp(num_elements)      ! temperature (degrees C)
+    real(kind=r8)             , intent(in)    :: temp(num_elements)      ! temperature (degC)
     real(kind=r8)             , intent(in)    :: salt(num_elements)      ! salinity (PSU)
     real(kind=r8)             , intent(in)    :: press_bar(num_elements) ! pressure at level (bars)
     real(kind=r8)             , intent(in)    :: dic_in(num_elements)    ! total inorganic carbon (nmol/cm^3)
@@ -1155,7 +1155,7 @@ contains
 
     integer(kind=int_kind)                           , intent(in)  :: num_elements
     integer(kind=int_kind)                           , intent(in)  :: num_active_elements
-    real(kind=r8)          , dimension(num_elements) , intent(in)  :: temp         ! temperature (degrees c)
+    real(kind=r8)          , dimension(num_elements) , intent(in)  :: temp         ! temperature (degC)
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: salt         ! salinity (psu)
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: press_bar    ! pressure at level k (bars)
     real(kind=r8)          , dimension(num_elements) , intent(out) :: co3_sat_calc ! co3 concentration at calcite saturation

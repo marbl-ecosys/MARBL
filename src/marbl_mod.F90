@@ -172,6 +172,7 @@ module marbl_mod
   use marbl_interface_public_types, only : marbl_running_mean_0d_type
 
   use marbl_pft_mod, only : autotroph_type
+  use marbl_pft_mod, only : autotroph_local_type
   use marbl_pft_mod, only : zooplankton_type
   use marbl_pft_mod, only : autotroph_secondary_species_type
   use marbl_pft_mod, only : zooplankton_secondary_species_type
@@ -213,15 +214,6 @@ module marbl_mod
   type, private :: zooplankton_local_type
      real (r8) :: C  ! local copy of model zooplankton C
   end type zooplankton_local_type
-
-  type, private :: autotroph_local_type
-     real (r8) :: Chl   ! local copy of model autotroph Chl
-     real (r8) :: C     ! local copy of model autotroph C
-     real (r8) :: P     ! local copy of model autotroph P
-     real (r8) :: Fe    ! local copy of model autotroph Fe
-     real (r8) :: Si    ! local copy of model autotroph Si
-     real (r8) :: CaCO3 ! local copy of model autotroph CaCO3
-  end type autotroph_local_type
 
   integer (int_kind) :: glo_avg_field_ind_interior_CaCO3_bury = 0
   integer (int_kind) :: glo_avg_field_ind_interior_POC_bury = 0
@@ -802,6 +794,7 @@ contains
          dtracers,                                          &
          marbl_tracer_indices,                              &
          carbonate,                                         &
+         autotroph_local,                                   &
          autotroph_secondary_species,                       &
          zooplankton_secondary_species,                     &
          dissolved_organic_matter,                          &
@@ -888,7 +881,7 @@ contains
     !  parameters, from Armstrong et al. 2000
     !
     !  July 2002, length scale for excess POC and bSI modified by temperature
-    !  Value given here is at Tref of 30 deg. C, JKM
+    !  Value given here is at Tref of 30 degC, JKM
     !-----------------------------------------------------------------------
 
     POC%diss      = parm_POC_diss   ! diss. length (cm), modified by TEMP
@@ -1197,7 +1190,7 @@ contains
     DECAY_HardDust = exp(-delta_z(k) / 1.2e8_r8)
 
     !----------------------------------------------------------------------
-    !   Tref = 30.0 reference temperature (deg. C)
+    !   Tref = 30.0 reference temperature (degC)
     !   not currently being applied
     !----------------------------------------------------------------------
 !   TfuncS = 1.5_r8**(((temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
@@ -2746,7 +2739,7 @@ contains
   subroutine marbl_compute_function_scaling(temperature, Tfunc)
 
     !-----------------------------------------------------------------------
-    !  Tref = 30.0 reference temperature (deg. C)
+    !  Tref = 30.0 reference temperature (degC)
     !  Using q10 formulation with Q10 value of 2.0 (Doney et al., 1996).
     !  growth, mort and grazing rates scaled by Tfunc where they are computed
     !-----------------------------------------------------------------------
