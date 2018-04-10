@@ -232,8 +232,8 @@ module marbl_interface_private_types
     ! For CISO, don't want individual C13 and C14 tracers for each zooplankton
     ! Instead we collect them into one tracer for each isotope, regardless of
     ! zooplankton_cnt
-    integer (int_kind) :: zoo13C_ind      = 0 ! zooplankton carbon 13
-    integer (int_kind) :: zoo14C_ind      = 0 ! zooplankton carbon 14
+    integer (int_kind) :: zoo13Ctot_ind   = 0 ! zooplankton carbon 13
+    integer (int_kind) :: zoo14Ctot_ind   = 0 ! zooplankton carbon 14
 
   contains
     procedure, public :: add_tracer_index
@@ -466,27 +466,47 @@ contains
 
   subroutine marbl_surface_forcing_internal_constructor(this, num_elements)
 
+    use marbl_constants_mod, only : c0
+
     class(marbl_surface_forcing_internal_type), intent(out) :: this
     integer (int_kind),                         intent(in)  :: num_elements
 
     allocate(this%piston_velocity (num_elements))
+    this%piston_velocity  = c0
     allocate(this%flux_co2        (num_elements))
+    this%flux_co2         = c0
     allocate(this%flux_alt_co2    (num_elements))
+    this%flux_alt_co2     = c0
     allocate(this%co2star         (num_elements))
+    this%co2star          = c0
     allocate(this%dco2star        (num_elements))
+    this%dco2star         = c0
     allocate(this%pco2surf        (num_elements))
+    this%pco2surf         = c0
     allocate(this%dpco2           (num_elements))
+    this%dpco2            = c0
     allocate(this%co3             (num_elements))
+    this%co3              = c0
     allocate(this%co2star_alt     (num_elements))
+    this%co2star_alt      = c0
     allocate(this%dco2star_alt    (num_elements))
+    this%dco2star_alt     = c0
     allocate(this%pco2surf_alt    (num_elements))
+    this%pco2surf_alt     = c0
     allocate(this%dpco2_alt       (num_elements))
+    this%dpco2_alt        = c0
     allocate(this%schmidt_co2     (num_elements))
+    this%schmidt_co2      = c0
     allocate(this%schmidt_o2      (num_elements))
+    this%schmidt_o2       = c0
     allocate(this%pv_o2           (num_elements))
+    this%pv_o2            = c0
     allocate(this%pv_co2          (num_elements))
+    this%pv_co2           = c0
     allocate(this%o2sat           (num_elements))
+    this%o2sat            = c0
     allocate(this%nhx_surface_emis(num_elements))
+    this%nhx_surface_emis = c0
 
   end subroutine marbl_surface_forcing_internal_constructor
 
@@ -607,8 +627,8 @@ contains
       call this%add_tracer_index('do13ctot', 'ciso', this%do13ctot_ind, marbl_status_log)
       call this%add_tracer_index('di14c',    'ciso', this%di14c_ind,    marbl_status_log)
       call this%add_tracer_index('do14ctot', 'ciso', this%do14ctot_ind, marbl_status_log)
-      call this%add_tracer_index('zoo13c',   'ciso', this%zoo13C_ind,   marbl_status_log)
-      call this%add_tracer_index('zoo14c',   'ciso', this%zoo14C_ind,   marbl_status_log)
+      call this%add_tracer_index('zoo13Ctot',   'ciso', this%zoo13Ctot_ind,   marbl_status_log)
+      call this%add_tracer_index('zoo14Ctot',   'ciso', this%zoo14Ctot_ind,   marbl_status_log)
 
       do n=1,autotroph_cnt
         write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C13"

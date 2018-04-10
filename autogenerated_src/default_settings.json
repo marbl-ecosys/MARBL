@@ -630,20 +630,6 @@
          "long_name": "((autotroph_lname)) Silicon",
          "units": "mmol/m^3"
       },
-      "((zooplankton_sname))13C": {
-         "dependencies": {
-            "ciso_on": ".true."
-         },
-         "long_name": "((zooplankton_lname)) Carbon-13",
-         "units": "mmol/m^3"
-      },
-      "((zooplankton_sname))14C": {
-         "dependencies": {
-            "ciso_on": ".true."
-         },
-         "long_name": "((zooplankton_lname)) Carbon-14",
-         "units": "mmol/m^3"
-      },
       "((zooplankton_sname))C": {
          "long_name": "((zooplankton_lname)) Carbon",
          "units": "mmol/m^3"
@@ -742,6 +728,20 @@
       },
       "SiO3": {
          "long_name": "Dissolved Inorganic Silicate",
+         "units": "mmol/m^3"
+      },
+      "zoo13Ctot": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Zooplankton Carbon-13 (sum over all zooplankton)",
+         "units": "mmol/m^3"
+      },
+      "zoo14Ctot": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Zooplankton Carbon-14 (sum over all zooplankton)",
          "units": "mmol/m^3"
       }
    },

@@ -2082,22 +2082,22 @@ contains
     !  FIXME: ensure that ph is computed, even if lflux_gas_co2=.false.
     !-----------------------------------------------------------------------
 
-    call marbl_comp_nhx_surface_emis(                &
-         num_elements     = num_elements,            &
-         nh4              = surface_vals(:,nh4_ind), &
-         ph               = ph_prev_surf,            &
-         sst              = sst,                     &
-         sss              = sss,                     &
-         u10_sqr          = u10_sqr,                 &
-         atmpres          = ap_used,                 &
-         ifrac            = ifrac,                   &
-         nhx_surface_emis = nhx_surface_emis)
-
-    if (sfo_ind%flux_nhx_id.ne.0) then
-       surface_forcing_output%sfo(sfo_ind%flux_nhx_id)%forcing_field = nhx_surface_emis
-    end if
-
     if (lcompute_nhx_surface_emis) then
+      call marbl_comp_nhx_surface_emis(                &
+           num_elements     = num_elements,            &
+           nh4              = surface_vals(:,nh4_ind), &
+           ph               = ph_prev_surf,            &
+           sst              = sst,                     &
+           sss              = sss,                     &
+           u10_sqr          = u10_sqr,                 &
+           atmpres          = ap_used,                 &
+           ifrac            = ifrac,                   &
+           nhx_surface_emis = nhx_surface_emis)
+
+      if (sfo_ind%flux_nhx_id.ne.0) then
+         surface_forcing_output%sfo(sfo_ind%flux_nhx_id)%forcing_field = nhx_surface_emis
+      end if
+
       stf(:, nh4_ind) = stf(:, nh4_ind) - nhx_surface_emis(:)
     endif
 
