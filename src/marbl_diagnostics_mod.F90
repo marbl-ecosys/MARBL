@@ -5338,10 +5338,10 @@ contains
          ind     => marbl_interior_diag_ind, &
          di13c_ind     => marbl_tracer_indices%di13c_ind,    &
          do13ctot_ind  => marbl_tracer_indices%do13ctot_ind, &
-         zoo13c_ind    => marbl_tracer_indices%zoo13c_ind,   &
+         zoo13Ctot_ind    => marbl_tracer_indices%zoo13Ctot_ind,   &
          di14c_ind     => marbl_tracer_indices%di14c_ind,    &
          do14ctot_ind  => marbl_tracer_indices%do14ctot_ind, &
-         zoo14c_ind    => marbl_tracer_indices%zoo14c_ind    &
+         zoo14Ctot_ind    => marbl_tracer_indices%zoo14Ctot_ind    &
          )
 
     diags(ind%calcToSed_13C)%field_2d(1) = sum(P_Ca13CO3%sed_loss)
@@ -5358,7 +5358,7 @@ contains
 
     ! Vertical integrals - CISO_Jint_13Ctot
 
-    work(:) = dtracers(di13c_ind,:) + dtracers(do13ctot_ind,:) + dtracers(zoo13C_ind,:) &
+    work(:) = dtracers(di13c_ind,:) + dtracers(do13ctot_ind,:) + dtracers(zoo13Ctot_ind,:) &
          + sum(dtracers(marbl_tracer_indices%auto_inds(:)%C13_ind,:), dim=1)
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
@@ -5380,7 +5380,7 @@ contains
 
     ! Vertical integral - CISO_Jint_14Ctot
 
-    work(:) = dtracers(di14c_ind,:) + dtracers(do14ctot_ind,:) + dtracers(zoo14C_ind,:) &
+    work(:) = dtracers(di14c_ind,:) + dtracers(do14ctot_ind,:) + dtracers(zoo14Ctot_ind,:) &
          + sum(dtracers(marbl_tracer_indices%auto_inds(:)%C14_ind,:), dim=1) + decay_14Ctot
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
