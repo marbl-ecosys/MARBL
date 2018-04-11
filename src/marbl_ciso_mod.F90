@@ -691,11 +691,11 @@ contains
        !-----------------------------------------------------------------------
 
        DO13Ctot_prod(k) = &
-            sum(zoo_loss_doc(:,k),dim=1)*R13C_zooC(k) + &
+            sum(zoo_loss_doc(:,k) + zoo_graze_doc(:,k),dim=1)*R13C_zooC(k) + &
             sum((auto_loss_doc(:,k) + auto_graze_doc(:,k)) * R13C_autotroph(:,k),dim=1)
 
        DO14Ctot_prod(k) = &
-            sum(zoo_loss_doc(:,k),dim=1)*R14C_zooC(k) + &
+            sum(zoo_loss_doc(:,k) + zoo_graze_doc(:,k),dim=1)*R14C_zooC(k) + &
             sum((auto_loss_doc(:,k) + auto_graze_doc(:,k)) * R14C_autotroph(:,k),dim=1)
 
        DO13Ctot_remin(k) = DOCtot_remin(k) * R13C_DOCtot(k)
@@ -706,11 +706,11 @@ contains
        !-----------------------------------------------------------------------
 
        PO13C%prod(k) = &
-            sum(zoo_loss_poc(:,k),dim=1)*R13C_zooC(k) + &
+            sum(zoo_loss_poc(:,k) + zoo_graze_poc(:,k),dim=1)*R13C_zooC(k) + &
             sum((auto_graze_poc(:,k) + auto_agg(:,k) + auto_loss_poc(:,k)) * R13C_autotroph(:,k),dim=1)
 
        PO14C%prod(k) = &
-            sum(zoo_loss_poc(:,k),dim=1)*R14C_zooC(k) + &
+            sum(zoo_loss_poc(:,k) + zoo_graze_poc(:,k),dim=1)*R14C_zooC(k) + &
             sum((auto_graze_poc(:,k) + auto_agg(:,k) + auto_loss_poc(:,k)) * R14C_autotroph(:,k),dim=1)
 
        !-----------------------------------------------------------------------
@@ -804,12 +804,13 @@ contains
 
        column_dtracer(zoo13Ctot_ind,k) = &
               sum(auto_graze_zoo(:,k) * R13C_autotroph(:,k),dim=1) &
-            - sum(zoo_loss(:,k),dim=1) * R13C_zooC(k)
+            + sum(zoo_graze_zoo(:,k) - zoo_graze(:,k) - zoo_loss(:,k),dim=1) &
+            * R13C_zooC(k)
 
        column_dtracer(zoo14Ctot_ind,k) = &
               sum(auto_graze_zoo(:,k) * R14C_autotroph(:,k),dim=1) &
-            - sum(zoo_loss(:,k),dim=1) * R14C_zooC(k) &
-            - c14_lambda_inv_sec * zoo14Ctot_loc(k)
+            + sum(zoo_graze_zoo(:,k) - zoo_graze(:,k) - zoo_loss(:,k),dim=1) &
+            * R14C_zooC(k) - c14_lambda_inv_sec * zoo14Ctot_loc(k)
 
        decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * zoo14Ctot_loc(k)
 
@@ -831,14 +832,14 @@ contains
             sum( (auto_loss_dic(:,k) + auto_graze_dic(:,k)) * R13C_autotroph(:,k), dim=1 ) &
           - sum(photo13C(:,k),dim=1)                                                       &
           + DO13Ctot_remin(k) + PO13C%remin(k)                                             &
-          + sum(zoo_loss_dic(:,k),dim=1) * R13C_zooC(k)                                    &
+          + sum(zoo_loss_dic(:,k) + zoo_graze_dic(:,k),dim=1) * R13C_zooC(k)               &
           + P_Ca13CO3%remin(k)
 
        column_dtracer(di14c_ind,k) =                                                       &
             sum( (auto_loss_dic(:,k) + auto_graze_dic(:,k)) * R14C_autotroph(:,k), dim=1 ) &
           - sum(photo14C(:,k),dim=1)                                                       &
           + DO14Ctot_remin(k) + PO14C%remin(k)                                             &
-          + sum(zoo_loss_dic(:,k),dim=1) * R14C_zooC(k)                                    &
+          + sum(zoo_loss_dic(:,k) + zoo_graze_dic(:,k),dim=1) * R14C_zooC(k)               &
           + P_Ca14CO3%remin(k)                                                             &
           - c14_lambda_inv_sec * DI14C_loc(k)
 
