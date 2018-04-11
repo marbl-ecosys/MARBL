@@ -119,11 +119,17 @@ module marbl_pft_mod
   !***********************************************************************
 
   type, public :: marbl_zooplankton_share_type
-     real(r8) :: zooC_loc_fields     ! local copy of model zooC
-     real(r8) :: zoo_loss_fields     ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_poc_fields ! zoo_loss routed to large detrital (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_doc_fields ! zoo_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_dic_fields ! zoo_loss routed to dic (mmol C/m^3/sec)
+     real(r8) :: zooC_loc_fields      ! local copy of model zooC
+     real(r8) :: zoo_loss_fields      ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+     real(r8) :: zoo_loss_poc_fields  ! zoo_loss routed to large detrital (mmol C/m^3/sec)
+     real(r8) :: zoo_loss_doc_fields  ! zoo_loss routed to doc (mmol C/m^3/sec)
+     real(r8) :: zoo_loss_dic_fields  ! zoo_loss routed to dic (mmol C/m^3/sec)
+     real(r8) :: x_graze_zoo_fields   ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
+     real(r8) :: zoo_graze_fields     ! zooplankton losses due to grazing (mmol C/m^3/sec)
+     real(r8) :: zoo_graze_zoo_fields ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+     real(r8) :: zoo_graze_poc_fields ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
+     real(r8) :: zoo_graze_doc_fields ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
+     real(r8) :: zoo_graze_dic_fields ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
   end type marbl_zooplankton_share_type
 
   !*****************************************************************************

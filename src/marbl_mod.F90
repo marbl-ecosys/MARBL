@@ -4548,11 +4548,17 @@ contains
          )
 
     do n = 1, zoo_cnt
-       share(n)%zooC_loc_fields     = zooplankton_local(n)%C
-       share(n)%zoo_loss_fields     = zooplankton_secondary_species(n)%zoo_loss
-       share(n)%zoo_loss_poc_fields = zooplankton_secondary_species(n)%zoo_loss_poc
-       share(n)%zoo_loss_doc_fields = zooplankton_secondary_species(n)%zoo_loss_doc
-       share(n)%zoo_loss_dic_fields = zooplankton_secondary_species(n)%zoo_loss_dic
+       share(n)%zooC_loc_fields      = zooplankton_local(n)%C
+       share(n)%zoo_loss_fields      = zooplankton_secondary_species(n)%zoo_loss
+       share(n)%zoo_loss_poc_fields  = zooplankton_secondary_species(n)%zoo_loss_poc
+       share(n)%zoo_loss_doc_fields  = zooplankton_secondary_species(n)%zoo_loss_doc
+       share(n)%zoo_loss_dic_fields  = zooplankton_secondary_species(n)%zoo_loss_dic
+       share(n)%x_graze_zoo_fields   = zooplankton_secondary_species(n)%x_graze_zoo
+       share(n)%zoo_graze_fields     = zooplankton_secondary_species(n)%zoo_graze
+       share(n)%zoo_graze_zoo_fields = zooplankton_secondary_species(n)%zoo_graze_zoo
+       share(n)%zoo_graze_poc_fields = zooplankton_secondary_species(n)%zoo_graze_poc
+       share(n)%zoo_graze_doc_fields = zooplankton_secondary_species(n)%zoo_graze_doc
+       share(n)%zoo_graze_dic_fields = zooplankton_secondary_species(n)%zoo_graze_dic
     end do
 
     end associate

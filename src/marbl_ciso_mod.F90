@@ -389,6 +389,12 @@ contains
          zoo_loss_poc       => marbl_zooplankton_share%zoo_loss_poc_fields     , & ! INPUT zoo_loss routed to large detrital pool (mmol C/m^3/sec)
          zoo_loss_doc       => marbl_zooplankton_share%zoo_loss_doc_fields     , & ! INPUT zoo_loss routed to doc (mmol C/m^3/sec)
          zoo_loss_dic       => marbl_zooplankton_share%zoo_loss_dic_fields     , & ! INPUT zoo_loss routed to dic (mmol C/m^3/sec)
+         x_graze_zoo        => marbl_zooplankton_share%x_graze_zoo_fields      , & ! INPUT {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
+         zoo_graze          => marbl_zooplankton_share%zoo_graze_fields        , & ! INPUT zooplankton losses due to grazing (mmol C/m^3/sec)
+         zoo_graze_zoo      => marbl_zooplankton_share%zoo_graze_zoo_fields    , & ! INPUT grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+         zoo_graze_poc      => marbl_zooplankton_share%zoo_graze_poc_fields    , & ! INPUT grazing of zooplankton routed to poc (mmol C/m^3/sec)
+         zoo_graze_doc      => marbl_zooplankton_share%zoo_graze_doc_fields    , & ! INPUT grazing of zooplankton routed to doc (mmol C/m^3/sec)
+         zoo_graze_dic      => marbl_zooplankton_share%zoo_graze_dic_fields    , & ! INPUT grazing of zooplankton routed to dic (mmol C/m^3/sec)
 
          POC                => marbl_particulate_share%POC                     , & ! INPUT
          P_CaCO3            => marbl_particulate_share%P_CaCO3                 , & ! INPUT
