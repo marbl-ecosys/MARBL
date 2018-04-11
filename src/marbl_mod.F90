@@ -3975,7 +3975,7 @@ contains
 
     POP%prod(k) = Qp_zoo * (sum(zoo_loss_poc(:)) + sum(zoo_graze_poc(:))) + sum(remaining_P_pop(:))
 
-    if (POC%prod(k) <= c0) POP%prod(k) = c0
+    if (POP%prod(k) < c0) POP%prod(k) = c0
 
     !-----------------------------------------------------------------------
     !  large detrital CaCO3
