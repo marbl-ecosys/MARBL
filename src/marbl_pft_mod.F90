@@ -100,11 +100,6 @@ module marbl_pft_mod
      real(r8) :: autotrophFe_loc_fields    ! local copy of model autotroph Fe
      real(r8) :: autotrophSi_loc_fields    ! local copy of model autotroph Si
      real(r8) :: autotrophCaCO3_loc_fields ! local copy of model autotroph CaCO3
-     real(r8) :: QCaCO3_fields             ! small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
-     real(r8) :: auto_agg_fields           ! autotroph aggregation (mmol C/m^3/sec)
-     real(r8) :: photoC_fields             ! C-fixation (mmol C/m^3/sec)
-     real(r8) :: CaCO3_form_fields         ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-     real(r8) :: PCphoto_fields            ! C-specific rate of photosynth. (1/sec)
   end type marbl_autotroph_share_type
 
   !***********************************************************************

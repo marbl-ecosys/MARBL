@@ -372,7 +372,7 @@ contains
 
          autotrophCaCO3_loc => marbl_autotroph_share%autotrophCaCO3_loc_fields , & ! INPUT local copy of model autotroph CaCO3
          autotrophC_loc     => marbl_autotroph_share%autotrophC_loc_fields     , & ! INPUT local copy of model autotroph C
-         QCaCO3             => marbl_autotroph_share%QCaCO3_fields             , & ! INPUT small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
+         QCaCO3             => autotroph_secondary_species%QCaCO3              , & ! INPUT small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
          auto_graze         => autotroph_secondary_species%auto_graze          , & ! INPUT autotroph grazing rate (mmol C/m^3/sec)
          auto_graze_zoo     => autotroph_secondary_species%auto_graze_zoo      , & ! INPUT auto_graze routed to zoo (mmol C/m^3/sec)
          auto_graze_poc     => autotroph_secondary_species%auto_graze_poc      , & ! INPUT auto_graze routed to poc (mmol C/m^3/sec)
@@ -382,10 +382,10 @@ contains
          auto_loss_poc      => autotroph_secondary_species%auto_loss_poc       , & ! INPUT auto_loss routed to poc (mmol C/m^3/sec)
          auto_loss_doc      => autotroph_secondary_species%auto_loss_doc       , & ! INPUT auto_loss routed to doc (mmol C/m^3/sec)
          auto_loss_dic      => autotroph_secondary_species%auto_loss_dic       , & ! INPUT auto_loss routed to dic (mmol C/m^3/sec)
-         auto_agg           => marbl_autotroph_share%auto_agg_fields           , & ! INPUT autotroph aggregation (mmol C/m^3/sec)
-         photoC             => marbl_autotroph_share%photoC_fields             , & ! INPUT C-fixation (mmol C/m^3/sec)
-         CaCO3_form         => marbl_autotroph_share%CaCO3_form_fields         , & ! INPUT prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-         PCphoto            => marbl_autotroph_share%PCphoto_fields            , & ! INPUT C-specific rate of photosynth. (1/sec)
+         auto_agg           => autotroph_secondary_species%auto_agg            , & ! INPUT autotroph aggregation (mmol C/m^3/sec)
+         photoC             => autotroph_secondary_species%photoC              , & ! INPUT C-fixation (mmol C/m^3/sec)
+         CaCO3_form         => autotroph_secondary_species%CaCO3_form          , & ! INPUT prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
+         PCphoto            => autotroph_secondary_species%PCphoto             , & ! INPUT C-specific rate of photosynth. (1/sec)
 
          zooC_loc           => marbl_zooplankton_share%zooC_loc_fields         , & ! INPUT local copy of model zooC
          zoo_loss           => marbl_zooplankton_share%zoo_loss_fields         , & ! INPUT mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)

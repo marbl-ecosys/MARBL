@@ -4596,11 +4596,6 @@ contains
           share(n)%autotrophCaCO3_loc_fields = c0
        end if
 
-       share(n)%QCaCO3_fields         = autotroph_secondary_species(n)%QCaCO3
-       share(n)%auto_agg_fields       = autotroph_secondary_species(n)%auto_agg
-       share(n)%photoC_fields         = autotroph_secondary_species(n)%photoC
-       share(n)%CaCO3_form_fields     = autotroph_secondary_species(n)%CaCO3_form
-       share(n)%PCphoto_fields        = autotroph_secondary_species(n)%PCphoto
     end do
     end associate
 
