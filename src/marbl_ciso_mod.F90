@@ -241,7 +241,7 @@ contains
 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
     type(marbl_interior_share_type)   , intent(in)    :: marbl_interior_share(:)
-    type(marbl_zooplankton_share_type), intent(in)    :: marbl_zooplankton_share(:, :)
+    type(marbl_zooplankton_share_type), intent(in)    :: marbl_zooplankton_share(:)
     type(marbl_autotroph_share_type)  , intent(in)    :: marbl_autotroph_share(:, :)
     type(marbl_particulate_share_type), intent(in)    :: marbl_particulate_share
     real (r8)                         , intent(in)    :: temperature(:)
@@ -389,7 +389,6 @@ contains
          zoo_loss_poc       => marbl_zooplankton_share%zoo_loss_poc_fields     , & ! INPUT zoo_loss routed to large detrital pool (mmol C/m^3/sec)
          zoo_loss_doc       => marbl_zooplankton_share%zoo_loss_doc_fields     , & ! INPUT zoo_loss routed to doc (mmol C/m^3/sec)
          zoo_loss_dic       => marbl_zooplankton_share%zoo_loss_dic_fields     , & ! INPUT zoo_loss routed to dic (mmol C/m^3/sec)
-         x_graze_zoo        => marbl_zooplankton_share%x_graze_zoo_fields      , & ! INPUT {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
          zoo_graze          => marbl_zooplankton_share%zoo_graze_fields        , & ! INPUT zooplankton losses due to grazing (mmol C/m^3/sec)
          zoo_graze_zoo      => marbl_zooplankton_share%zoo_graze_zoo_fields    , & ! INPUT grazing of zooplankton routed to zoo (mmol C/m^3/sec)
          zoo_graze_poc      => marbl_zooplankton_share%zoo_graze_poc_fields    , & ! INPUT grazing of zooplankton routed to poc (mmol C/m^3/sec)
@@ -494,10 +493,9 @@ contains
           frac_co3(k) = c0
        end if
 
-       work1 = sum(zooC_loc(:,k),dim=1)
-       if (work1 > c0) then
-          R13C_zooC(k) = zoo13Ctot_loc(k) / work1
-          R14C_zooC(k) = zoo14Ctot_loc(k) / work1
+       if (zooC_loc(k) > c0) then
+          R13C_zooC(k) = zoo13Ctot_loc(k) / zooC_loc(k)
+          R14C_zooC(k) = zoo14Ctot_loc(k) / zooC_loc(k)
        else
           R13C_zooC(k) = c0
           R14C_zooC(k) = c0
@@ -691,11 +689,11 @@ contains
        !-----------------------------------------------------------------------
 
        DO13Ctot_prod(k) = &
-            sum(zoo_loss_doc(:,k) + zoo_graze_doc(:,k),dim=1)*R13C_zooC(k) + &
+            (zoo_loss_doc(k) + zoo_graze_doc(k))*R13C_zooC(k) + &
             sum((auto_loss_doc(:,k) + auto_graze_doc(:,k)) * R13C_autotroph(:,k),dim=1)
 
        DO14Ctot_prod(k) = &
-            sum(zoo_loss_doc(:,k) + zoo_graze_doc(:,k),dim=1)*R14C_zooC(k) + &
+            (zoo_loss_doc(k) + zoo_graze_doc(k))*R14C_zooC(k) + &
             sum((auto_loss_doc(:,k) + auto_graze_doc(:,k)) * R14C_autotroph(:,k),dim=1)
 
        DO13Ctot_remin(k) = DOCtot_remin(k) * R13C_DOCtot(k)
@@ -706,11 +704,11 @@ contains
        !-----------------------------------------------------------------------
 
        PO13C%prod(k) = &
-            sum(zoo_loss_poc(:,k) + zoo_graze_poc(:,k),dim=1)*R13C_zooC(k) + &
+            (zoo_loss_poc(k) + zoo_graze_poc(k))*R13C_zooC(k) + &
             sum((auto_graze_poc(:,k) + auto_agg(:,k) + auto_loss_poc(:,k)) * R13C_autotroph(:,k),dim=1)
 
        PO14C%prod(k) = &
-            sum(zoo_loss_poc(:,k) + zoo_graze_poc(:,k),dim=1)*R14C_zooC(k) + &
+            (zoo_loss_poc(k) + zoo_graze_poc(k))*R14C_zooC(k) + &
             sum((auto_graze_poc(:,k) + auto_agg(:,k) + auto_loss_poc(:,k)) * R14C_autotroph(:,k),dim=1)
 
        !-----------------------------------------------------------------------
@@ -804,12 +802,12 @@ contains
 
        column_dtracer(zoo13Ctot_ind,k) = &
               sum(auto_graze_zoo(:,k) * R13C_autotroph(:,k),dim=1) &
-            + sum(zoo_graze_zoo(:,k) - zoo_graze(:,k) - zoo_loss(:,k),dim=1) &
+            + (zoo_graze_zoo(k) - zoo_graze(k) - zoo_loss(k)) &
             * R13C_zooC(k)
 
        column_dtracer(zoo14Ctot_ind,k) = &
               sum(auto_graze_zoo(:,k) * R14C_autotroph(:,k),dim=1) &
-            + sum(zoo_graze_zoo(:,k) - zoo_graze(:,k) - zoo_loss(:,k),dim=1) &
+            + (zoo_graze_zoo(k) - zoo_graze(k) - zoo_loss(k)) &
             * R14C_zooC(k) - c14_lambda_inv_sec * zoo14Ctot_loc(k)
 
        decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * zoo14Ctot_loc(k)
@@ -828,19 +826,19 @@ contains
        !   column_dtracer: dissolved inorganic Carbon 13 and 14
        !-----------------------------------------------------------------------
 
-       column_dtracer(di13c_ind,k) =                                                       &
-            sum( (auto_loss_dic(:,k) + auto_graze_dic(:,k)) * R13C_autotroph(:,k), dim=1 ) &
-          - sum(photo13C(:,k),dim=1)                                                       &
-          + DO13Ctot_remin(k) + PO13C%remin(k)                                             &
-          + sum(zoo_loss_dic(:,k) + zoo_graze_dic(:,k),dim=1) * R13C_zooC(k)               &
+       column_dtracer(di13c_ind,k) = &
+            sum((auto_loss_dic(:,k) + auto_graze_dic(:,k))*R13C_autotroph(:,k),dim=1) &
+          - sum(photo13C(:,k),dim=1) &
+          + DO13Ctot_remin(k) + PO13C%remin(k) &
+          + (zoo_loss_dic(k) + zoo_graze_dic(k)) * R13C_zooC(k) &
           + P_Ca13CO3%remin(k)
 
-       column_dtracer(di14c_ind,k) =                                                       &
-            sum( (auto_loss_dic(:,k) + auto_graze_dic(:,k)) * R14C_autotroph(:,k), dim=1 ) &
-          - sum(photo14C(:,k),dim=1)                                                       &
-          + DO14Ctot_remin(k) + PO14C%remin(k)                                             &
-          + sum(zoo_loss_dic(:,k) + zoo_graze_dic(:,k),dim=1) * R14C_zooC(k)               &
-          + P_Ca14CO3%remin(k)                                                             &
+       column_dtracer(di14c_ind,k) = &
+            sum((auto_loss_dic(:,k) + auto_graze_dic(:,k))*R14C_autotroph(:,k),dim=1) &
+          - sum(photo14C(:,k),dim=1) &
+          + DO14Ctot_remin(k) + PO14C%remin(k) &
+          + (zoo_loss_dic(k) + zoo_graze_dic(k)) * R14C_zooC(k) &
+          + P_Ca14CO3%remin(k) &
           - c14_lambda_inv_sec * DI14C_loc(k)
 
        decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * DI14C_loc(k)

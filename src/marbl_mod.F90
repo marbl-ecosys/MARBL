@@ -496,7 +496,7 @@ contains
 
     type(marbl_interior_share_type)    :: marbl_interior_share(domain%km)
     type(marbl_autotroph_share_type)   :: marbl_autotroph_share(autotroph_cnt, domain%km)
-    type(marbl_zooplankton_share_type) :: marbl_zooplankton_share(zooplankton_cnt, domain%km)
+    type(marbl_zooplankton_share_type) :: marbl_zooplankton_share(domain%km)
 
     integer (int_kind) :: n         ! tracer index
     integer (int_kind) :: k         ! vertical level index
@@ -766,10 +766,9 @@ contains
                marbl_tracer_indices, carbonate(k), dissolved_organic_matter(k), &
                QA_dust_def(k), marbl_interior_share(k))
 
-          call marbl_export_zooplankton_shared_variables(zooplankton_cnt, &
-               zooplankton_local(:, k), &
+          call marbl_export_zooplankton_shared_variables(zooplankton_local(:, k), &
                zooplankton_secondary_species(:, k), &
-               marbl_zooplankton_share(:, k))
+               marbl_zooplankton_share(k))
 
           call marbl_export_autotroph_shared_variables(autotroph_cnt, &
                autotroph_local(:, k), &
@@ -4531,35 +4530,28 @@ contains
   !-----------------------------------------------------------------------
 
   subroutine marbl_export_zooplankton_shared_variables (&
-       zoo_cnt, &
        zooplankton_local, &
        zooplankton_secondary_species, &
        marbl_zooplankton_share)
 
-    integer(int_kind)                        , intent(in)    :: zoo_cnt
-    type(zooplankton_local_type)             , intent(in)    :: zooplankton_local(zoo_cnt)
-    type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(zoo_cnt)
-    type(marbl_zooplankton_share_type)       , intent(inout) :: marbl_zooplankton_share(zoo_cnt)
-
-    integer(int_kind) :: n
+    type(zooplankton_local_type)             , intent(in)    :: zooplankton_local(:)
+    type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(:)
+    type(marbl_zooplankton_share_type)       , intent(inout) :: marbl_zooplankton_share
 
     associate( &
-         share => marbl_zooplankton_share(:) &
+         share => marbl_zooplankton_share &
          )
 
-    do n = 1, zoo_cnt
-       share(n)%zooC_loc_fields      = zooplankton_local(n)%C
-       share(n)%zoo_loss_fields      = zooplankton_secondary_species(n)%zoo_loss
-       share(n)%zoo_loss_poc_fields  = zooplankton_secondary_species(n)%zoo_loss_poc
-       share(n)%zoo_loss_doc_fields  = zooplankton_secondary_species(n)%zoo_loss_doc
-       share(n)%zoo_loss_dic_fields  = zooplankton_secondary_species(n)%zoo_loss_dic
-       share(n)%x_graze_zoo_fields   = zooplankton_secondary_species(n)%x_graze_zoo
-       share(n)%zoo_graze_fields     = zooplankton_secondary_species(n)%zoo_graze
-       share(n)%zoo_graze_zoo_fields = zooplankton_secondary_species(n)%zoo_graze_zoo
-       share(n)%zoo_graze_poc_fields = zooplankton_secondary_species(n)%zoo_graze_poc
-       share(n)%zoo_graze_doc_fields = zooplankton_secondary_species(n)%zoo_graze_doc
-       share(n)%zoo_graze_dic_fields = zooplankton_secondary_species(n)%zoo_graze_dic
-    end do
+       share%zooC_loc_fields      = sum(zooplankton_local(:)%C)
+       share%zoo_loss_fields      = sum(zooplankton_secondary_species(:)%zoo_loss)
+       share%zoo_loss_poc_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_poc)
+       share%zoo_loss_doc_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_doc)
+       share%zoo_loss_dic_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_dic)
+       share%zoo_graze_fields     = sum(zooplankton_secondary_species(:)%zoo_graze)
+       share%zoo_graze_zoo_fields = sum(zooplankton_secondary_species(:)%zoo_graze_zoo)
+       share%zoo_graze_poc_fields = sum(zooplankton_secondary_species(:)%zoo_graze_poc)
+       share%zoo_graze_doc_fields = sum(zooplankton_secondary_species(:)%zoo_graze_doc)
+       share%zoo_graze_dic_fields = sum(zooplankton_secondary_species(:)%zoo_graze_dic)
 
     end associate
   end subroutine marbl_export_zooplankton_shared_variables
