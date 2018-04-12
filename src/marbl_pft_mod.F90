@@ -101,15 +101,6 @@ module marbl_pft_mod
      real(r8) :: autotrophSi_loc_fields    ! local copy of model autotroph Si
      real(r8) :: autotrophCaCO3_loc_fields ! local copy of model autotroph CaCO3
      real(r8) :: QCaCO3_fields             ! small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
-     real(r8) :: auto_graze_fields         ! autotroph grazing rate (mmol C/m^3/sec)
-     real(r8) :: auto_graze_zoo_fields     ! auto_graze routed to zoo (mmol C/m^3/sec)
-     real(r8) :: auto_graze_poc_fields     ! auto_graze routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_doc_fields     ! auto_graze routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_dic_fields     ! auto_graze routed to dic (mmol C/m^3/sec)
-     real(r8) :: auto_loss_fields          ! autotroph non-grazing mort (mmol C/m^3/sec)
-     real(r8) :: auto_loss_poc_fields      ! auto_loss routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_doc_fields      ! auto_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_dic_fields      ! auto_loss routed to dic (mmol C/m^3/sec)
      real(r8) :: auto_agg_fields           ! autotroph aggregation (mmol C/m^3/sec)
      real(r8) :: photoC_fields             ! C-fixation (mmol C/m^3/sec)
      real(r8) :: CaCO3_form_fields         ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)

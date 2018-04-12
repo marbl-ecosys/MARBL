@@ -53,6 +53,7 @@ module marbl_ciso_mod
   use marbl_pft_mod, only : autotroph_type
   use marbl_pft_mod, only : marbl_zooplankton_share_type
   use marbl_pft_mod, only : marbl_autotroph_share_type
+  use marbl_pft_mod, only : autotroph_secondary_species_type
 
   implicit none
   private
@@ -217,6 +218,7 @@ contains
        marbl_zooplankton_share,               &
        marbl_autotroph_share,                 &
        marbl_particulate_share,               &
+       autotroph_secondary_species,           &
        temperature,                           &
        column_tracer,                         &
        column_dtracer,                        &
@@ -239,17 +241,18 @@ contains
 
     implicit none
 
-    type(marbl_domain_type)           , intent(in)    :: marbl_domain
-    type(marbl_interior_share_type)   , intent(in)    :: marbl_interior_share(:)
-    type(marbl_zooplankton_share_type), intent(in)    :: marbl_zooplankton_share(:)
-    type(marbl_autotroph_share_type)  , intent(in)    :: marbl_autotroph_share(:, :)
-    type(marbl_particulate_share_type), intent(in)    :: marbl_particulate_share
-    real (r8)                         , intent(in)    :: temperature(:)
-    real (r8)                         , intent(in)    :: column_tracer(:,:)
-    real (r8)                         , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
-    type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
-    type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_diags
-    type(marbl_log_type)              , intent(inout) :: marbl_status_log
+    type(marbl_domain_type)               , intent(in)    :: marbl_domain
+    type(marbl_interior_share_type)       , intent(in)    :: marbl_interior_share(:)
+    type(marbl_zooplankton_share_type)    , intent(in)    :: marbl_zooplankton_share(:)
+    type(marbl_autotroph_share_type)      , intent(in)    :: marbl_autotroph_share(:, :)
+    type(marbl_particulate_share_type)    , intent(in)    :: marbl_particulate_share
+    type(autotroph_secondary_species_type), intent(in)    :: autotroph_secondary_species(:,:)
+    real (r8)                             , intent(in)    :: temperature(:)
+    real (r8)                             , intent(in)    :: column_tracer(:,:)
+    real (r8)                             , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
+    type(marbl_tracer_index_type)         , intent(in)    :: marbl_tracer_indices
+    type(marbl_diagnostics_type)          , intent(inout) :: marbl_interior_diags
+    type(marbl_log_type)                  , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -370,15 +373,15 @@ contains
          autotrophCaCO3_loc => marbl_autotroph_share%autotrophCaCO3_loc_fields , & ! INPUT local copy of model autotroph CaCO3
          autotrophC_loc     => marbl_autotroph_share%autotrophC_loc_fields     , & ! INPUT local copy of model autotroph C
          QCaCO3             => marbl_autotroph_share%QCaCO3_fields             , & ! INPUT small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
-         auto_graze         => marbl_autotroph_share%auto_graze_fields         , & ! INPUT autotroph grazing rate (mmol C/m^3/sec)
-         auto_graze_zoo     => marbl_autotroph_share%auto_graze_zoo_fields     , & ! INPUT auto_graze routed to zoo (mmol C/m^3/sec)
-         auto_graze_poc     => marbl_autotroph_share%auto_graze_poc_fields     , & ! INPUT auto_graze routed to poc (mmol C/m^3/sec)
-         auto_graze_doc     => marbl_autotroph_share%auto_graze_doc_fields     , & ! INPUT auto_graze routed to doc (mmol C/m^3/sec)
-         auto_graze_dic     => marbl_autotroph_share%auto_graze_dic_fields     , & ! INPUT auto_graze routed to dic (mmol C/m^3/sec)
-         auto_loss          => marbl_autotroph_share%auto_loss_fields          , & ! INPUT autotroph non-grazing mort (mmol C/m^3/sec)
-         auto_loss_poc      => marbl_autotroph_share%auto_loss_poc_fields      , & ! INPUT auto_loss routed to poc (mmol C/m^3/sec)
-         auto_loss_doc      => marbl_autotroph_share%auto_loss_doc_fields      , & ! INPUT auto_loss routed to doc (mmol C/m^3/sec)
-         auto_loss_dic      => marbl_autotroph_share%auto_loss_dic_fields      , & ! INPUT auto_loss routed to dic (mmol C/m^3/sec)
+         auto_graze         => autotroph_secondary_species%auto_graze          , & ! INPUT autotroph grazing rate (mmol C/m^3/sec)
+         auto_graze_zoo     => autotroph_secondary_species%auto_graze_zoo      , & ! INPUT auto_graze routed to zoo (mmol C/m^3/sec)
+         auto_graze_poc     => autotroph_secondary_species%auto_graze_poc      , & ! INPUT auto_graze routed to poc (mmol C/m^3/sec)
+         auto_graze_doc     => autotroph_secondary_species%auto_graze_doc      , & ! INPUT auto_graze routed to doc (mmol C/m^3/sec)
+         auto_graze_dic     => autotroph_secondary_species%auto_graze_dic      , & ! INPUT auto_graze routed to dic (mmol C/m^3/sec)
+         auto_loss          => autotroph_secondary_species%auto_loss           , & ! INPUT autotroph non-grazing mort (mmol C/m^3/sec)
+         auto_loss_poc      => autotroph_secondary_species%auto_loss_poc       , & ! INPUT auto_loss routed to poc (mmol C/m^3/sec)
+         auto_loss_doc      => autotroph_secondary_species%auto_loss_doc       , & ! INPUT auto_loss routed to doc (mmol C/m^3/sec)
+         auto_loss_dic      => autotroph_secondary_species%auto_loss_dic       , & ! INPUT auto_loss routed to dic (mmol C/m^3/sec)
          auto_agg           => marbl_autotroph_share%auto_agg_fields           , & ! INPUT autotroph aggregation (mmol C/m^3/sec)
          photoC             => marbl_autotroph_share%photoC_fields             , & ! INPUT C-fixation (mmol C/m^3/sec)
          CaCO3_form         => marbl_autotroph_share%CaCO3_form_fields         , & ! INPUT prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)

@@ -816,17 +816,18 @@ contains
 
     !  Compute time derivatives for ecosystem carbon isotope state variables
     if (ciso_on) then
-       call marbl_ciso_set_interior_forcing(                        &
-            marbl_domain                 = domain,                  &
-            marbl_interior_share         = marbl_interior_share,    &
-            marbl_zooplankton_share      = marbl_zooplankton_share, &
-            marbl_autotroph_share        = marbl_autotroph_share,   &
-            marbl_particulate_share      = marbl_particulate_share, &
-            temperature                  = temperature,             &
-            column_tracer                = tracers,                 &
-            column_dtracer               = dtracers,                &
-            marbl_tracer_indices         = marbl_tracer_indices,    &
-            marbl_interior_diags         = interior_forcing_diags,  &
+       call marbl_ciso_set_interior_forcing(                            &
+            marbl_domain                 = domain,                      &
+            marbl_interior_share         = marbl_interior_share,        &
+            marbl_zooplankton_share      = marbl_zooplankton_share,     &
+            marbl_autotroph_share        = marbl_autotroph_share,       &
+            marbl_particulate_share      = marbl_particulate_share,     &
+            autotroph_secondary_species  = autotroph_secondary_species, &
+            temperature                  = temperature,                 &
+            column_tracer                = tracers,                     &
+            column_dtracer               = dtracers,                    &
+            marbl_tracer_indices         = marbl_tracer_indices,        &
+            marbl_interior_diags         = interior_forcing_diags,      &
             marbl_status_log             = marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
@@ -4596,15 +4597,6 @@ contains
        end if
 
        share(n)%QCaCO3_fields         = autotroph_secondary_species(n)%QCaCO3
-       share(n)%auto_graze_fields     = autotroph_secondary_species(n)%auto_graze
-       share(n)%auto_graze_zoo_fields = autotroph_secondary_species(n)%auto_graze_zoo
-       share(n)%auto_graze_poc_fields = autotroph_secondary_species(n)%auto_graze_poc
-       share(n)%auto_graze_doc_fields = autotroph_secondary_species(n)%auto_graze_doc
-       share(n)%auto_graze_dic_fields = autotroph_secondary_species(n)%auto_graze_dic
-       share(n)%auto_loss_fields      = autotroph_secondary_species(n)%auto_loss
-       share(n)%auto_loss_poc_fields  = autotroph_secondary_species(n)%auto_loss_poc
-       share(n)%auto_loss_doc_fields  = autotroph_secondary_species(n)%auto_loss_doc
-       share(n)%auto_loss_dic_fields  = autotroph_secondary_species(n)%auto_loss_dic
        share(n)%auto_agg_fields       = autotroph_secondary_species(n)%auto_agg
        share(n)%photoC_fields         = autotroph_secondary_species(n)%photoC
        share(n)%CaCO3_form_fields     = autotroph_secondary_species(n)%CaCO3_form
