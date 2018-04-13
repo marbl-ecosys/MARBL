@@ -232,8 +232,8 @@ module marbl_interface_private_types
     ! For CISO, don't want individual C13 and C14 tracers for each zooplankton
     ! Instead we collect them into one tracer for each isotope, regardless of
     ! zooplankton_cnt
-    integer (int_kind) :: zoo13Ctot_ind   = 0 ! zooplankton carbon 13
-    integer (int_kind) :: zoo14Ctot_ind   = 0 ! zooplankton carbon 14
+    integer (int_kind) :: zootot13C_ind   = 0 ! zooplankton carbon 13
+    integer (int_kind) :: zootot14C_ind   = 0 ! zooplankton carbon 14
 
   contains
     procedure, public :: add_tracer_index
@@ -627,8 +627,8 @@ contains
       call this%add_tracer_index('do13ctot', 'ciso', this%do13ctot_ind, marbl_status_log)
       call this%add_tracer_index('di14c',    'ciso', this%di14c_ind,    marbl_status_log)
       call this%add_tracer_index('do14ctot', 'ciso', this%do14ctot_ind, marbl_status_log)
-      call this%add_tracer_index('zoo13Ctot',   'ciso', this%zoo13Ctot_ind,   marbl_status_log)
-      call this%add_tracer_index('zoo14Ctot',   'ciso', this%zoo14Ctot_ind,   marbl_status_log)
+      call this%add_tracer_index('zootot13C',   'ciso', this%zootot13C_ind,   marbl_status_log)
+      call this%add_tracer_index('zootot14C',   'ciso', this%zootot14C_ind,   marbl_status_log)
 
       do n=1,autotroph_cnt
         write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C13"

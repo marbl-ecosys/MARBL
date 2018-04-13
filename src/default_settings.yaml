@@ -176,13 +176,13 @@ _tracer_list :
    ((zooplankton_sname))C :
       long_name : ((zooplankton_lname)) Carbon
       units : mmol/m^3
-   # Per-zooplankton (ciso only)
-   zoo13Ctot :
+   # Total zooplankton tracers (ciso only)
+   zootot13C :
       dependencies :
          ciso_on : .true.
       long_name : Zooplankton Carbon-13 (sum over all zooplankton)
       units : mmol/m^3
-   zoo14Ctot :
+   zootot14C :
       dependencies :
          ciso_on : .true.
       long_name : Zooplankton Carbon-14 (sum over all zooplankton)
