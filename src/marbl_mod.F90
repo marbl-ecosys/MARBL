@@ -4543,16 +4543,16 @@ contains
          share => marbl_zooplankton_share &
          )
 
-       share%zooC_loc_fields      = sum(zooplankton_local(:)%C)
-       share%zoo_loss_fields      = sum(zooplankton_secondary_species(:)%zoo_loss)
-       share%zoo_loss_poc_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_poc)
-       share%zoo_loss_doc_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_doc)
-       share%zoo_loss_dic_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_dic)
-       share%zoo_graze_fields     = sum(zooplankton_secondary_species(:)%zoo_graze)
-       share%zoo_graze_zoo_fields = sum(zooplankton_secondary_species(:)%zoo_graze_zoo)
-       share%zoo_graze_poc_fields = sum(zooplankton_secondary_species(:)%zoo_graze_poc)
-       share%zoo_graze_doc_fields = sum(zooplankton_secondary_species(:)%zoo_graze_doc)
-       share%zoo_graze_dic_fields = sum(zooplankton_secondary_species(:)%zoo_graze_dic)
+       share%zoototC_loc_fields      = sum(zooplankton_local(:)%C)
+       share%zootot_loss_fields      = sum(zooplankton_secondary_species(:)%zoo_loss)
+       share%zootot_loss_poc_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_poc)
+       share%zootot_loss_doc_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_doc)
+       share%zootot_loss_dic_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_dic)
+       share%zootot_graze_fields     = sum(zooplankton_secondary_species(:)%zoo_graze)
+       share%zootot_graze_zoo_fields = sum(zooplankton_secondary_species(:)%zoo_graze_zoo)
+       share%zootot_graze_poc_fields = sum(zooplankton_secondary_species(:)%zoo_graze_poc)
+       share%zootot_graze_doc_fields = sum(zooplankton_secondary_species(:)%zoo_graze_doc)
+       share%zootot_graze_dic_fields = sum(zooplankton_secondary_species(:)%zoo_graze_dic)
 
     end associate
   end subroutine marbl_export_zooplankton_shared_variables

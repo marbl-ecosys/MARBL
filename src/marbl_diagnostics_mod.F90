@@ -320,8 +320,8 @@ module marbl_diagnostics_mod
      integer (int_kind) :: CISO_DO14Ctot_remin                                ! do14ctot remineralization
      integer (int_kind) :: CISO_Jint_13Ctot                                   ! vertically integrated source sink term, 13Ctot
      integer (int_kind) :: CISO_Jint_14Ctot                                   ! vertically integrated source sink term, 14Ctot
-     integer (int_kind) :: CISO_zooC_d13C                                     ! if for d13C of zooC
-     integer (int_kind) :: CISO_zooC_d14C                                     ! if for d14C of zooC
+     integer (int_kind) :: CISO_zoototC_d13C                                  ! if for d13C of zooC
+     integer (int_kind) :: CISO_zoototC_d14C                                  ! if for d14C of zooC
      integer (int_kind) :: CISO_DOCtot_d13C                                   ! if for d13C of DOCtot
      integer (int_kind) :: CISO_DOCtot_d14C                                   ! if for d14C of DOCtot
      integer (int_kind) :: CISO_DIC_d13C                                      ! if for d13C of DIC
@@ -3465,13 +3465,13 @@ contains
           return
         end if
 
-        lname    = 'd13C of zooC'
-        sname    = 'CISO_zooC_d13C'
+        lname    = 'd13C of total zooC'
+        sname    = 'CISO_zoototC_d13C'
         units    = 'permil'
         vgrid    = 'layer_avg'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%CISO_zooC_d13C, marbl_status_log)
+             ind%CISO_zoototC_d13C, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call log_add_diagnostics_error(marbl_status_log, sname, subname)
           return
@@ -3609,13 +3609,13 @@ contains
           return
         end if
 
-        lname    = 'd14C of zooC'
-        sname    = 'CISO_zooC_d14C'
+        lname    = 'd14C of total zooC'
+        sname    = 'CISO_zoototC_d14C'
         units    = 'permil'
         vgrid    = 'layer_avg'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%CISO_zooC_d14C, marbl_status_log)
+             ind%CISO_zoototC_d14C, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call log_add_diagnostics_error(marbl_status_log, sname, subname)
           return
@@ -5359,8 +5359,8 @@ contains
        DIC_d14C,            &
        DOCtot_d13C,         &
        DOCtot_d14C,         &
-       zooC_d13C,           &
-       zooC_d14C,           &
+       zoototC_d13C,        &
+       zoototC_d14C,        &
        DO13Ctot_prod,       &
        DO14Ctot_prod,       &
        DO13Ctot_remin,      &
@@ -5404,8 +5404,8 @@ contains
          DIC_d14C       , & ! d14C of DIC
          DOCtot_d13C    , & ! d13C of DOCtot
          DOCtot_d14C    , & ! d14C of DOCtot
-         zooC_d13C      , & ! d13C of zooC
-         zooC_d14C      , & ! d14C of zooC
+         zoototC_d13C   , & ! d13C of zooC
+         zoototC_d14C   , & ! d14C of zooC
          DO13Ctot_prod  , & ! production of 13C DOCtot (mmol C/m^3/sec)
          DO14Ctot_prod  , & ! production of 14C DOCtot (mmol C/m^3/sec)
          DO13Ctot_remin , & ! remineralization of 13C DOCtot (mmol C/m^3/sec)
@@ -5565,8 +5565,8 @@ contains
        diags(ind%CISO_DO13Ctot_remin)%field_3d(k, 1)  = DO13Ctot_remin(k)
        diags(ind%CISO_DO14Ctot_remin)%field_3d(k, 1)  = DO14Ctot_remin(k)
 
-       diags(ind%CISO_zooC_d13C)%field_3d(k, 1)       = zooC_d13C(k)
-       diags(ind%CISO_zooC_d14C)%field_3d(k, 1)       = zooC_d14C(k)
+       diags(ind%CISO_zoototC_d13C)%field_3d(k, 1)    = zoototC_d13C(k)
+       diags(ind%CISO_zoototC_d14C)%field_3d(k, 1)    = zoototC_d14C(k)
 
        diags(ind%CISO_eps_aq_g)%field_3d(k, 1)        = eps_aq_g(k)
        diags(ind%CISO_eps_dic_g)%field_3d(k, 1)       = eps_dic_g(k)
