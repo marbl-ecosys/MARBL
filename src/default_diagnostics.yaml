@@ -1164,10 +1164,10 @@ CISO_DOCtot_d13C :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_zooC_d13C :
+CISO_zoototC_d13C :
    dependencies :
       ciso_on : .true.
-   longname : d13C of zooC
+   longname : d13C of total zooC
    units : permil
    vertical_grid : layer_avg
    frequency : medium
@@ -1260,10 +1260,10 @@ CISO_DOCtot_d14C :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_zooC_d14C :
+CISO_zoototC_d14C :
    dependencies :
       ciso_on : .true.
-   longname : d14C of zooC
+   longname : d14C of total zooC
    units : permil
    vertical_grid : layer_avg
    frequency : medium
