@@ -492,6 +492,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_mod:marbl_set_interior_forcing'
 
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
+    real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
 
     type(marbl_interior_share_type)    :: marbl_interior_share(domain%km)
     type(marbl_zooplankton_share_type) :: marbl_zooplankton_share(domain%km)
@@ -522,7 +523,6 @@ contains
     real (r8) :: Lig_deg(domain%km)          ! loss of Fe-binding Ligand from bacterial degradation
     real (r8) :: Lig_loss(domain%km)         ! loss of Fe-binding Ligand
     real (r8) :: totalChl_local(domain%km)   ! local value of totalChl
-    real (r8) :: tracer_local(marbl_tracer_indices%ecosys_base%cnt, domain%km)
 
     type(zooplankton_local_type)             :: zooplankton_local(zooplankton_cnt, domain%km)
     type(autotroph_local_type)               :: autotroph_local(autotroph_cnt, domain%km)
@@ -2269,6 +2269,8 @@ contains
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n > 0) then
           autotroph_local(auto_ind,:)%CaCO3 = tracer_local(n,:)
+       else
+          autotroph_local(auto_ind,:)%CaCO3 = c0
        endif
 
        ! Carbon isotope elements of autotroph_local
