@@ -51,8 +51,8 @@ module marbl_ciso_mod
   use marbl_interface_private_types, only : carbonate_type
 
   use marbl_pft_mod, only : autotroph_type
+  use marbl_pft_mod, only : autotroph_local_type
   use marbl_pft_mod, only : marbl_zooplankton_share_type
-  use marbl_pft_mod, only : marbl_autotroph_share_type
   use marbl_pft_mod, only : autotroph_secondary_species_type
 
   implicit none
@@ -68,17 +68,9 @@ module marbl_ciso_mod
 
   private :: setup_cell_attributes
   private :: setup_local_column_tracers
-  private :: setup_local_autotrophs
   private :: fract_keller_morel
   private :: set_surface_particulate_terms
   private :: compute_particulate_terms
-
-  type, private :: autotroph_local_type
-     real (r8) :: C13     ! local copy of model autotroph C13
-     real (r8) :: C14     ! local copy of model autotroph C14
-     real (r8) :: Ca13CO3 ! local copy of model autotroph Ca13CO3
-     real (r8) :: Ca14CO3 ! local copy of model autotroph Ca14CO3
-  end type autotroph_local_type
 
   !-----------------------------------------------------------------------
   !  scalar constants for 14C decay calculation
@@ -216,8 +208,8 @@ contains
        marbl_domain,                          &
        marbl_interior_share,                  &
        marbl_zooplankton_share,               &
-       marbl_autotroph_share,                 &
        marbl_particulate_share,               &
+       autotroph_local,                       &
        autotroph_secondary_species,           &
        temperature,                           &
        column_tracer,                         &
@@ -244,8 +236,8 @@ contains
     type(marbl_domain_type)               , intent(in)    :: marbl_domain
     type(marbl_interior_share_type)       , intent(in)    :: marbl_interior_share(:)
     type(marbl_zooplankton_share_type)    , intent(in)    :: marbl_zooplankton_share(:)
-    type(marbl_autotroph_share_type)      , intent(in)    :: marbl_autotroph_share(:, :)
     type(marbl_particulate_share_type)    , intent(in)    :: marbl_particulate_share
+    type(autotroph_local_type)            , intent(in)    :: autotroph_local(:,:)
     type(autotroph_secondary_species_type), intent(in)    :: autotroph_secondary_species(:,:)
     real (r8)                             , intent(in)    :: temperature(:)
     real (r8)                             , intent(in)    :: column_tracer(:,:)
@@ -269,9 +261,6 @@ contains
          n,m,            & ! tracer index
          auto_ind,       & ! autotroph functional group index
          k                 ! index for looping over k levels
-
-    type(autotroph_local_type), dimension(autotroph_cnt, marbl_domain%km) :: &
-         autotroph_loc
 
     real (r8), dimension(autotroph_cnt) :: &
          cell_active_C_uptake,  & ! ratio of active carbon uptake to carbon fixation
@@ -370,8 +359,6 @@ contains
          H2CO3              => marbl_interior_share%H2CO3_fields               , & ! INPUT carbonic acid
          DOCtot_remin       => marbl_interior_share%DOCtot_remin_fields        , & ! INPUT remineralization of DOCtot (mmol C/m^3/sec)
 
-         autotrophCaCO3_loc => marbl_autotroph_share%autotrophCaCO3_loc_fields , & ! INPUT local copy of model autotroph CaCO3
-         autotrophC_loc     => marbl_autotroph_share%autotrophC_loc_fields     , & ! INPUT local copy of model autotroph C
          QCaCO3             => autotroph_secondary_species%QCaCO3              , & ! INPUT small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
          auto_graze         => autotroph_secondary_species%auto_graze          , & ! INPUT autotroph grazing rate (mmol C/m^3/sec)
          auto_graze_zoo     => autotroph_secondary_species%auto_graze_zoo      , & ! INPUT auto_graze routed to zoo (mmol C/m^3/sec)
@@ -446,20 +433,6 @@ contains
            DO14Ctot_loc, zootot14C_loc)
 
     !-----------------------------------------------------------------------
-    !  Create local copies of model column autotrophs, treat negative values as zero
-    !-----------------------------------------------------------------------
-
-    call setup_local_autotrophs(column_km, column_kmt, column_tracer, &
-         marbl_tracer_indices, autotroph_loc)
-
-    !-----------------------------------------------------------------------
-    !  If any ecosys phyto box is zero, set others to zeros
-    !-----------------------------------------------------------------------
-
-    call marbl_autotroph_consistency_check(column_km, autotroph_cnt, autotrophs, &
-         marbl_tracer_indices, marbl_autotroph_share, autotroph_loc)
-
-    !-----------------------------------------------------------------------
     !  Initialize Particulate terms for k=1
     !-----------------------------------------------------------------------
 
@@ -505,17 +478,17 @@ contains
        end if
 
        do auto_ind = 1, autotroph_cnt
-          if (autotrophC_loc(auto_ind,k) > c0) then
-             R13C_autotroph(auto_ind,k) = autotroph_loc(auto_ind,k)%C13 / autotrophC_loc(auto_ind,k)
-             R14C_autotroph(auto_ind,k) = autotroph_loc(auto_ind,k)%C14 / autotrophC_loc(auto_ind,k)
+          if (autotroph_local(auto_ind,k)%C > c0) then
+             R13C_autotroph(auto_ind,k) = autotroph_local(auto_ind,k)%C13 / autotroph_local(auto_ind,k)%C
+             R14C_autotroph(auto_ind,k) = autotroph_local(auto_ind,k)%C14 / autotroph_local(auto_ind,k)%C
           else
              R13C_autotroph(auto_ind,k) = c0
              R14C_autotroph(auto_ind,k) = c0
           end if
 
-          if (autotrophCaCO3_loc(auto_ind,k) > c0) then
-             R13C_autotrophCaCO3(auto_ind,k) = autotroph_loc(auto_ind,k)%Ca13CO3 / autotrophCaCO3_loc(auto_ind,k)
-             R14C_autotrophCaCO3(auto_ind,k) = autotroph_loc(auto_ind,k)%Ca14CO3 / autotrophCaCO3_loc(auto_ind,k)
+          if (autotroph_local(auto_ind,k)%CaCO3 > c0) then
+             R13C_autotrophCaCO3(auto_ind,k) = autotroph_local(auto_ind,k)%Ca13CO3 / autotroph_local(auto_ind,k)%CaCO3
+             R14C_autotrophCaCO3(auto_ind,k) = autotroph_local(auto_ind,k)%Ca14CO3 / autotroph_local(auto_ind,k)%CaCO3
           else
              R13C_autotrophCaCO3(auto_ind,k) = c0
              R14C_autotrophCaCO3(auto_ind,k) = c0
@@ -779,9 +752,9 @@ contains
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
           column_dtracer(n,k) = photo14C(auto_ind,k) - work1 * R14C_autotroph(auto_ind,k) - &
-               c14_lambda_inv_sec * autotroph_loc(auto_ind,k)%C14
+               c14_lambda_inv_sec * autotroph_local(auto_ind,k)%C14
 
-          decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_loc(auto_ind,k)%C14
+          decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local(auto_ind,k)%C14
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
           if (n > 0) then
@@ -793,9 +766,9 @@ contains
           if (n > 0) then
              column_dtracer(n,k) = Ca14CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
                   * work1 * R14C_autotrophCaCO3(auto_ind,k)      &
-                  - c14_lambda_inv_sec * autotroph_loc(auto_ind,k)%Ca14CO3
+                  - c14_lambda_inv_sec * autotroph_local(auto_ind,k)%Ca14CO3
 
-             decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_loc(auto_ind,k)%Ca14CO3
+             decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local(auto_ind,k)%Ca14CO3
           endif
        end do
 
@@ -1093,64 +1066,6 @@ contains
     end associate
 
   end subroutine setup_local_column_tracers
-
-  !***********************************************************************
-
-  subroutine setup_local_autotrophs(column_km, column_kmt, column_tracer, &
-             marbl_tracer_indices, autotroph_loc)
-
-    !-----------------------------------------------------------------------
-    !  create local copies of model column_tracer, treat negative values as zero
-    !-----------------------------------------------------------------------
-
-    implicit none
-
-    integer(int_kind)          , intent(in)  :: column_km
-    integer(int_kind)          , intent(in)  :: column_kmt
-    real (r8)                  , intent(in)  :: column_tracer(:,:)  ! (tracer_cnt, km) tracer values
-
-    type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
-    type(autotroph_local_type) , intent(out) :: autotroph_loc(:,:)  ! (autotroph_cnt)
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer (int_kind) :: k
-    integer (int_kind) :: auto_ind
-    integer (int_kind) :: tracer_ind ! tracer index
-    !-----------------------------------------------------------------------
-
-    do auto_ind = 1, autotroph_cnt
-       do k = 1, column_kmt
-          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
-          autotroph_loc(auto_ind,k)%C13 = max(c0, column_tracer(tracer_ind,k))
-
-          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
-          autotroph_loc(auto_ind,k)%C14 = max(c0, column_tracer(tracer_ind,k))
-
-          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
-          if (tracer_ind > 0) then
-             autotroph_loc(auto_ind,k)%Ca13CO3 = max(c0, column_tracer(tracer_ind,k))
-          else
-             autotroph_loc(auto_ind,k)%Ca13CO3 = c0
-          end if
-
-          tracer_ind = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
-          if (tracer_ind > 0) then
-             autotroph_loc(auto_ind,k)%Ca14CO3 = max(c0, column_tracer(tracer_ind,k))
-          else
-             autotroph_loc(auto_ind,k)%Ca14CO3 = c0
-          end if
-       end do
-       do k = column_kmt+1, column_km
-          autotroph_loc(auto_ind,k)%C13 = c0
-          autotroph_loc(auto_ind,k)%C14 = c0
-          autotroph_loc(auto_ind,k)%Ca13CO3 = c0
-          autotroph_loc(auto_ind,k)%Ca14CO3 = c0
-       end do
-    end do
-
-  end subroutine setup_local_autotrophs
 
   !***********************************************************************
 
@@ -1633,72 +1548,6 @@ contains
   end subroutine compute_particulate_terms
 
   !***********************************************************************
-
-  subroutine marbl_autotroph_consistency_check(column_km, autotroph_cnt,      &
-         autotroph_meta, marbl_tracer_indices, autotroph_share, autotroph_loc)
-
-    !-----------------------------------------------------------------------
-    !  If any phyto box are zero, set others to zeros.
-    !-----------------------------------------------------------------------
-
-    implicit none
-
-    integer(int_kind)                , intent(in)    :: column_km                     ! number of active model layers
-    integer(int_kind)                , intent(in)    :: autotroph_cnt                 ! autotroph_cnt
-    type(autotroph_type)             , intent(in)    :: autotroph_meta(autotroph_cnt) ! autotroph metadata
-    type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
-    type(marbl_autotroph_share_type) , intent(in)    :: autotroph_share(autotroph_cnt, column_km)
-    type(autotroph_local_type)       , intent(inout) :: autotroph_loc(autotroph_cnt, column_km)
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer (int_kind) :: auto_ind, k
-    logical (log_kind) :: zero_mask
-    !-----------------------------------------------------------------------
-
-    associate(&
-         autotrophC_loc     => autotroph_share%autotrophC_loc_fields     , & ! local copy of model autotroph C
-         autotrophChl_loc   => autotroph_share%autotrophChl_loc_fields   , & ! local copy of model autotroph Chl
-         autotrophFe_loc    => autotroph_share%autotrophFe_loc_fields    , & ! local copy of model autotroph Fe
-         autotrophSi_loc    => autotroph_share%autotrophSi_loc_fields      & ! local copy of model autotroph Si
-         )
-
-    do k = 1, column_km
-       do auto_ind = 1, autotroph_cnt
-
-          ! Zero_mask=true for any zero in Chl, C, Fe,
-          ! It is false only if all are false
-          ! Add si to zero mask... if it is present (ind > 0)
-
-          zero_mask = (autotrophChl_loc(auto_ind,k) == c0 .or. &
-                       autotrophC_loc(auto_ind,k)   == c0 .or. &
-                       autotrophFe_loc(auto_ind,k)  == c0)
-
-          if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-             zero_mask = (zero_mask .or. autotrophSi_loc(auto_ind,k) == c0)
-          end if
-
-          if (zero_mask) then
-             autotroph_loc(auto_ind,k)%C13 = c0
-             autotroph_loc(auto_ind,k)%C14 = c0
-
-             if (marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind > 0) then
-                autotroph_loc(auto_ind,k)%Ca13CO3 = c0
-             end if
-             if (marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind > 0) then
-                autotroph_loc(auto_ind,k)%Ca14CO3 = c0
-             end if
-          end if
-
-       end do
-    end do
-
-    end associate
-
-  end subroutine marbl_autotroph_consistency_check
-
-  !*****************************************************************************
 
   subroutine marbl_ciso_set_surface_forcing( &
        num_elements        ,                 &

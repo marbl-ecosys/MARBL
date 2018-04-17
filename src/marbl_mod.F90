@@ -176,7 +176,6 @@ module marbl_mod
   use marbl_pft_mod, only : zooplankton_type
   use marbl_pft_mod, only : autotroph_secondary_species_type
   use marbl_pft_mod, only : zooplankton_secondary_species_type
-  use marbl_pft_mod, only : marbl_autotroph_share_type
   use marbl_pft_mod, only : marbl_zooplankton_share_type
   use marbl_pft_mod, only : Qp_zoo
 
@@ -495,7 +494,6 @@ contains
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
 
     type(marbl_interior_share_type)    :: marbl_interior_share(domain%km)
-    type(marbl_autotroph_share_type)   :: marbl_autotroph_share(autotroph_cnt, domain%km)
     type(marbl_zooplankton_share_type) :: marbl_zooplankton_share(domain%km)
 
     integer (int_kind) :: n         ! tracer index
@@ -665,8 +663,7 @@ contains
             PAR%avg(k,:), autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_phyto_diatoms (autotroph_cnt, &
-            autotroph_local(:, k), marbl_tracer_indices,          &
-            autotroph_secondary_species(:, k))
+            marbl_tracer_indices, autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_calcification(autotroph_cnt,              &
             autotrophs, autotroph_local(:, k), temperature(k),                &
@@ -770,11 +767,6 @@ contains
                zooplankton_secondary_species(:, k), &
                marbl_zooplankton_share(k))
 
-          call marbl_export_autotroph_shared_variables(autotroph_cnt, &
-               autotroph_local(:, k), &
-               autotroph_secondary_species(:, k), &
-               marbl_tracer_indices, &
-               marbl_autotroph_share(:, k))
        end if
 
        if  (k < km) then
@@ -820,9 +812,9 @@ contains
             marbl_domain                 = domain,                      &
             marbl_interior_share         = marbl_interior_share,        &
             marbl_zooplankton_share      = marbl_zooplankton_share,     &
-            marbl_autotroph_share        = marbl_autotroph_share,       &
             marbl_particulate_share      = marbl_particulate_share,     &
             autotroph_secondary_species  = autotroph_secondary_species, &
+            autotroph_local              = autotroph_local,             &
             temperature                  = temperature,                 &
             column_tracer                = tracers,                     &
             column_dtracer               = dtracers,                    &
@@ -2278,6 +2270,25 @@ contains
        if (n > 0) then
           autotroph_local(auto_ind,:)%CaCO3 = tracer_local(n,:)
        endif
+
+       ! Carbon isotope elements of autotroph_local
+       n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
+       if (n > 0) then
+          autotroph_local(auto_ind,:)%C13 = tracer_local(n,:)
+       endif
+       n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
+       if (n > 0) then
+          autotroph_local(auto_ind,:)%C14 = tracer_local(n,:)
+       endif
+
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
+       if (n > 0) then
+          autotroph_local(auto_ind,:)%Ca13CO3 = tracer_local(n,:)
+       endif
+       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
+       if (n > 0) then
+          autotroph_local(auto_ind,:)%Ca14CO3 = tracer_local(n,:)
+       endif
     end do
 
     ! autotroph consistency check
@@ -2328,15 +2339,25 @@ contains
              autotroph_local(auto_ind,k)%C = c0
              autotroph_local(auto_ind,k)%P = c0
              autotroph_local(auto_ind,k)%Fe = c0
-          end if
-          if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-             if (zero_mask) then
+             if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
                 autotroph_local(auto_ind,k)%Si = c0
              end if
-          end if
-          if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
-             if (zero_mask) then
+             if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
                 autotroph_local(auto_ind,k)%CaCO3 = c0
+             end if
+
+             ! carbon isotope components of autotroph_local_type
+             if (marbl_tracer_indices%auto_inds(auto_ind)%C13_ind > 0) then
+                autotroph_local(auto_ind,k)%C13 = c0
+             end if
+             if (marbl_tracer_indices%auto_inds(auto_ind)%C14_ind > 0) then
+                autotroph_local(auto_ind,k)%C14 = c0
+             end if
+             if (marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind > 0) then
+                autotroph_local(auto_ind,k)%Ca13CO3 = c0
+             end if
+             if (marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind > 0) then
+                autotroph_local(auto_ind,k)%Ca14CO3 = c0
              end if
           end if
 
@@ -2947,7 +2968,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_autotroph_photosynthesis (auto_cnt, PAR_nsubcols,  &
-       autotrophs, autotroph_loc, temperature, Tfunc, PAR_col_frac, PAR_avg,  &
+       autotrophs, autotroph_local, temperature, Tfunc, PAR_col_frac, PAR_avg,  &
        autotroph_secondary_species)
 
     !-----------------------------------------------------------------------
@@ -2959,7 +2980,7 @@ contains
     integer(int_kind)                      , intent(in)    :: auto_cnt
     integer(int_kind)                      , intent(in)    :: PAR_nsubcols
     type(autotroph_type)             , intent(in)    :: autotrophs(auto_cnt)
-    type(autotroph_local_type)             , intent(in)    :: autotroph_loc(auto_cnt)
+    type(autotroph_local_type)             , intent(in)    :: autotroph_local(auto_cnt)
     real(r8)                               , intent(in)    :: temperature
     real(r8)                               , intent(in)    :: Tfunc
     real(r8)                               , intent(in)    :: PAR_col_frac(PAR_nsubcols)
@@ -3011,7 +3032,7 @@ contains
                 ! GD 98 Chl. synth. term
                 pChl_subcol = autotrophs(auto_ind)%thetaN_max * PCphoto_subcol / &
                      (autotrophs(auto_ind)%alphaPI * thetaC * PAR_avg(subcol_ind))
-                photoacc_subcol = (pChl_subcol * PCphoto_subcol * Q / thetaC) * autotroph_loc(auto_ind)%Chl
+                photoacc_subcol = (pChl_subcol * PCphoto_subcol * Q / thetaC) * autotroph_local(auto_ind)%Chl
 
                 light_lim = light_lim + PAR_col_frac(subcol_ind) * light_lim_subcol
                 PCphoto   = PCphoto   + PAR_col_frac(subcol_ind) * PCphoto_subcol
@@ -3019,7 +3040,7 @@ contains
              end if
           end do
 
-          photoC = PCphoto * autotroph_loc(auto_ind)%C
+          photoC = PCphoto * autotroph_local(auto_ind)%C
        else
           light_lim = c0
           PCphoto   = c0
@@ -3036,7 +3057,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_autotroph_phyto_diatoms (auto_cnt, &
-       autotroph_loc, marbl_tracer_indices, autotroph_secondary_species)
+       marbl_tracer_indices, autotroph_secondary_species)
 
     !-----------------------------------------------------------------------
     !  Get nutrient uptakes by small phyto based on calculated C fixation
@@ -3045,7 +3066,6 @@ contains
     use marbl_settings_mod, only : Q
 
     integer(int_kind)                      , intent(in)    :: auto_cnt
-    type(autotroph_local_type)             , intent(in)    :: autotroph_loc(auto_cnt)
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(auto_cnt)
 
@@ -3111,7 +3131,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_autotroph_calcification (auto_cnt, autotrophs,    &
-             autotroph_loc, temperature, autotroph_secondary_species)
+             autotroph_local, temperature, autotroph_secondary_species)
 
     !-----------------------------------------------------------------------
     !  CaCO3 Production, parameterized as function of small phyto production
@@ -3128,7 +3148,7 @@ contains
 
     integer(int_kind)                      , intent(in)    :: auto_cnt
     type(autotroph_type)                   , intent(in)    :: autotrophs(auto_cnt)
-    type(autotroph_local_type)             , intent(in)    :: autotroph_loc(auto_cnt)
+    type(autotroph_local_type)             , intent(in)    :: autotroph_local(auto_cnt)
     real(r8)                               , intent(in)    :: temperature
     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(auto_cnt)
 
@@ -3154,8 +3174,8 @@ contains
                   (CaCO3_temp_thres1-CaCO3_temp_thres2)
           end if
 
-          if (autotroph_loc(auto_ind)%C > CaCO3_sp_thres) then
-             CaCO3_form(auto_ind) = min((CaCO3_form(auto_ind) * autotroph_loc(auto_ind)%C / CaCO3_sp_thres), &
+          if (autotroph_local(auto_ind)%C > CaCO3_sp_thres) then
+             CaCO3_form(auto_ind) = min((CaCO3_form(auto_ind) * autotroph_local(auto_ind)%C / CaCO3_sp_thres), &
                   (f_photosp_CaCO3 * photoC(auto_ind)))
           end if
        end if
@@ -4556,50 +4576,6 @@ contains
 
     end associate
   end subroutine marbl_export_zooplankton_shared_variables
-
-
-  !***********************************************************************
-
-  subroutine marbl_export_autotroph_shared_variables (&
-       auto_cnt, &
-       autotroph_local, &
-       autotroph_secondary_species, &
-       marbl_tracer_indices, &
-       marbl_autotroph_share)
-
-    integer(int_kind)                      , intent(in)    :: auto_cnt
-    type(autotroph_local_type)             , intent(in)    :: autotroph_local(auto_cnt)
-    type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(auto_cnt)
-    type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
-    type(marbl_autotroph_share_type)       , intent(inout) :: marbl_autotroph_share(auto_cnt)
-
-    integer(int_kind) :: n
-
-    associate( &
-         share => marbl_autotroph_share(:) &
-         )
-
-    do n = 1, auto_cnt
-       share(n)%autotrophChl_loc_fields = autotroph_local(n)%Chl
-       share(n)%autotrophC_loc_fields = autotroph_local(n)%C
-       share(n)%autotrophFe_loc_fields = autotroph_local(n)%Fe
-
-       if (marbl_tracer_indices%auto_inds(n)%Si_ind > 0) then
-          share(n)%autotrophSi_loc_fields = autotroph_local(n)%Si
-       else
-          share(n)%autotrophSi_loc_fields = c0
-       end if
-
-       if (marbl_tracer_indices%auto_inds(n)%CaCO3_ind > 0) then
-          share(n)%autotrophCaCO3_loc_fields = autotroph_local(n)%CaCO3
-       else
-          share(n)%autotrophCaCO3_loc_fields = c0
-       end if
-
-    end do
-    end associate
-
-  end subroutine marbl_export_autotroph_shared_variables
 
   !***********************************************************************
 

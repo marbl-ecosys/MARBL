@@ -52,6 +52,10 @@ module marbl_pft_mod
      real (r8) :: Fe    ! local copy of model autotroph Fe
      real (r8) :: Si    ! local copy of model autotroph Si
      real (r8) :: CaCO3 ! local copy of model autotroph CaCO3
+     real (r8) :: C13     ! local copy of model autotroph C13
+     real (r8) :: C14     ! local copy of model autotroph C14
+     real (r8) :: Ca13CO3 ! local copy of model autotroph Ca13CO3
+     real (r8) :: Ca14CO3 ! local copy of model autotroph Ca14CO3
   end type autotroph_local_type
 
   !****************************************************************************
@@ -91,16 +95,6 @@ module marbl_pft_mod
     procedure, public :: set_to_default => grazing_set_to_default
     procedure, public :: construct => grazing_constructor
   end type grazing_type
-
-  !***********************************************************************
-
-  type, public :: marbl_autotroph_share_type
-     real(r8) :: autotrophChl_loc_fields   ! local copy of model autotroph Chl
-     real(r8) :: autotrophC_loc_fields     ! local copy of model autotroph C
-     real(r8) :: autotrophFe_loc_fields    ! local copy of model autotroph Fe
-     real(r8) :: autotrophSi_loc_fields    ! local copy of model autotroph Si
-     real(r8) :: autotrophCaCO3_loc_fields ! local copy of model autotroph CaCO3
-  end type marbl_autotroph_share_type
 
   !***********************************************************************
 
