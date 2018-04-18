@@ -2269,8 +2269,6 @@ contains
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n > 0) then
           autotroph_local(auto_ind,:)%CaCO3 = tracer_local(n,:)
-       else
-          autotroph_local(auto_ind,:)%CaCO3 = c0
        endif
 
        ! Carbon isotope elements of autotroph_local

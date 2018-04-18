@@ -486,12 +486,14 @@ contains
              R14C_autotroph(auto_ind,k) = c0
           end if
 
-          if (autotroph_local(auto_ind,k)%CaCO3 > c0) then
-             R13C_autotrophCaCO3(auto_ind,k) = autotroph_local(auto_ind,k)%Ca13CO3 / autotroph_local(auto_ind,k)%CaCO3
-             R14C_autotrophCaCO3(auto_ind,k) = autotroph_local(auto_ind,k)%Ca14CO3 / autotroph_local(auto_ind,k)%CaCO3
-          else
-             R13C_autotrophCaCO3(auto_ind,k) = c0
-             R14C_autotrophCaCO3(auto_ind,k) = c0
+          if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
+             if (autotroph_local(auto_ind,k)%CaCO3 > c0) then
+                R13C_autotrophCaCO3(auto_ind,k) = autotroph_local(auto_ind,k)%Ca13CO3 / autotroph_local(auto_ind,k)%CaCO3
+                R14C_autotrophCaCO3(auto_ind,k) = autotroph_local(auto_ind,k)%Ca14CO3 / autotroph_local(auto_ind,k)%CaCO3
+             else
+                R13C_autotrophCaCO3(auto_ind,k) = c0
+                R14C_autotrophCaCO3(auto_ind,k) = c0
+             end if
           end if
        end do
 
