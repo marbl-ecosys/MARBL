@@ -814,9 +814,9 @@ contains
             marbl_zooplankton_share      = marbl_zooplankton_share,     &
             marbl_particulate_share      = marbl_particulate_share,     &
             autotroph_secondary_species  = autotroph_secondary_species, &
+            tracer_local                 = tracer_local,                &
             autotroph_local              = autotroph_local,             &
             temperature                  = temperature,                 &
-            column_tracer                = tracers,                     &
             column_dtracer               = dtracers,                    &
             marbl_tracer_indices         = marbl_tracer_indices,        &
             marbl_interior_diags         = interior_forcing_diags,      &
@@ -4531,18 +4531,14 @@ contains
     type(marbl_interior_share_type)     , intent(inout) :: marbl_interior_share
 
     marbl_interior_share%QA_dust_def    = QA_dust_def
-    marbl_interior_share%DIC_loc_fields = tracer_local(marbl_tracer_indices%DIC_ind)
-    marbl_interior_share%DOCtot_loc_fields = &
-         tracer_local(marbl_tracer_indices%DOC_ind) + tracer_local(marbl_tracer_indices%DOCr_ind)
-    marbl_interior_share%O2_loc_fields  = tracer_local(marbl_tracer_indices%O2_ind)
-    marbl_interior_share%NO3_loc_fields = tracer_local(marbl_tracer_indices%NO3_ind)
-
 
     marbl_interior_share%CO3_fields   = carbonate%CO3
     marbl_interior_share%HCO3_fields  = carbonate%HCO3
     marbl_interior_share%H2CO3_fields = carbonate%H2CO3
     marbl_interior_share%CO3_sat_calcite = carbonate%CO3_sat_calcite
 
+    marbl_interior_share%DOCtot_loc_fields = &
+         tracer_local(marbl_tracer_indices%DOC_ind) + tracer_local(marbl_tracer_indices%DOCr_ind)
     marbl_interior_share%DOCtot_remin_fields = &
          dissolved_organic_matter%DOC_remin + dissolved_organic_matter%DOCr_remin
 

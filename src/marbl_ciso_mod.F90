@@ -67,7 +67,6 @@ module marbl_ciso_mod
   public  :: marbl_ciso_set_surface_forcing
 
   private :: setup_cell_attributes
-  private :: setup_local_column_tracers
   private :: fract_keller_morel
   private :: set_surface_particulate_terms
   private :: compute_particulate_terms
@@ -209,10 +208,10 @@ contains
        marbl_interior_share,                  &
        marbl_zooplankton_share,               &
        marbl_particulate_share,               &
+       tracer_local,                          &
        autotroph_local,                       &
        autotroph_secondary_species,           &
        temperature,                           &
-       column_tracer,                         &
        column_dtracer,                        &
        marbl_tracer_indices,                  &
        marbl_interior_diags,                  &
@@ -237,10 +236,10 @@ contains
     type(marbl_interior_share_type)       , intent(in)    :: marbl_interior_share(:)
     type(marbl_zooplankton_share_type)    , intent(in)    :: marbl_zooplankton_share(:)
     type(marbl_particulate_share_type)    , intent(in)    :: marbl_particulate_share
+    real (r8)                             , intent(in)    :: tracer_local(:,:)
     type(autotroph_local_type)            , intent(in)    :: autotroph_local(:,:)
     type(autotroph_secondary_species_type), intent(in)    :: autotroph_secondary_species(:,:)
     real (r8)                             , intent(in)    :: temperature(:)
-    real (r8)                             , intent(in)    :: column_tracer(:,:)
     real (r8)                             , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
     type(marbl_tracer_index_type)         , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)          , intent(inout) :: marbl_interior_diags
@@ -279,14 +278,6 @@ contains
          PO14C,          & ! base units = nmol 14C
          P_Ca13CO3,      & ! base units = nmol CaCO3 13C
          P_Ca14CO3         ! base units = nmol CaCO3 14C
-
-    real (r8), dimension (marbl_domain%km) :: &
-         DO13Ctot_loc,      & ! local copy of model DO13Ctot
-         DI13C_loc,         & ! local copy of model DI13C
-         zootot13C_loc,     & ! local copy of model zootot13C
-         DO14Ctot_loc,      & ! local copy of model DO14Ctot
-         DI14C_loc,         & ! local copy of model DI14C
-         zootot14C_loc        ! local copy of model zootot14C
 
     real (r8), dimension(marbl_domain%km) :: &
          mui_to_co2star_loc     ! local carbon autotroph instanteous growth rate over [CO2*] (m^3 /mol C /s)
@@ -352,12 +343,18 @@ contains
          column_km          => marbl_domain%km                                 , &
          column_kmt         => marbl_domain%kmt                                , &
 
-         DIC_loc            => marbl_interior_share%DIC_loc_fields             , & ! INPUT local copy of model DIC
-         DOCtot_loc         => marbl_interior_share%DOCtot_loc_fields          , & ! INPUT local copy of model DOCtot
          CO3                => marbl_interior_share%CO3_fields                 , & ! INPUT carbonate ion
          HCO3               => marbl_interior_share%HCO3_fields                , & ! INPUT bicarbonate ion
          H2CO3              => marbl_interior_share%H2CO3_fields               , & ! INPUT carbonic acid
          DOCtot_remin       => marbl_interior_share%DOCtot_remin_fields        , & ! INPUT remineralization of DOCtot (mmol C/m^3/sec)
+         DOCtot_loc         => marbl_interior_share%DOCtot_loc_fields          , & ! INPUT local copy of model DOCtot
+         DO13Ctot_loc       => tracer_local(marbl_tracer_indices%DO14Ctot_ind,:) , & ! local copy of model DO14Ctot
+         DO14Ctot_loc       => tracer_local(marbl_tracer_indices%DO14Ctot_ind,:) , & ! local copy of model DO14Ctot
+         DIC_loc            => tracer_local(marbl_tracer_indices%DIC_ind,:)    , & ! INPUT local copy of model DIC
+         DI13C_loc          => tracer_local(marbl_tracer_indices%DI13C_ind,:)    , & ! local copy of model DI13C
+         DI14C_loc          => tracer_local(marbl_tracer_indices%DI14C_ind,:)    , & ! local copy of model DI14C
+         zootot13C_loc      => tracer_local(marbl_tracer_indices%zootot13C_ind,:), & ! local copy of model zootot13C
+         zootot14C_loc      => tracer_local(marbl_tracer_indices%zootot14C_ind,:), &  ! local copy of model zootot14C
 
          QCaCO3             => autotroph_secondary_species%QCaCO3              , & ! INPUT small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
          auto_graze         => autotroph_secondary_species%auto_graze          , & ! INPUT autotroph grazing rate (mmol C/m^3/sec)
@@ -423,14 +420,6 @@ contains
        call marbl_status_log%log_error_trace("setup_cell_attributes", subname)
        return
     end if
-
-    !-----------------------------------------------------------------------
-    !  Create local copies of model column_tracer, treat negative values as zero
-    !-----------------------------------------------------------------------
-
-    call setup_local_column_tracers(column_km, column_kmt, column_tracer, &
-           marbl_tracer_indices, DI13C_loc, DO13Ctot_loc, zootot13C_loc, DI14C_loc, &
-           DO14Ctot_loc, zootot14C_loc)
 
     !-----------------------------------------------------------------------
     !  Initialize Particulate terms for k=1
@@ -730,11 +719,11 @@ contains
        ! Compute carbon isotope particulate terms
        !-----------------------------------------------------------------------
 
-       call compute_particulate_terms(k, marbl_domain, marbl_interior_share(k), &
-            marbl_particulate_share, PO13C, P_Ca13CO3)
+       call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
+            marbl_interior_share(k), marbl_particulate_share, PO13C, P_Ca13CO3)
 
-       call compute_particulate_terms(k, marbl_domain, marbl_interior_share(k), &
-            marbl_particulate_share, PO14C, P_Ca14CO3)
+       call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
+            marbl_interior_share(k), marbl_particulate_share, PO14C, P_Ca14CO3)
 
        !-----------------------------------------------------------------------
        ! Update column_dtracer for the 7 carbon pools for each Carbon isotope
@@ -1010,67 +999,6 @@ contains
 
   !***********************************************************************
 
-  subroutine setup_local_column_tracers(column_km, column_kmt, column_tracer, &
-           marbl_tracer_indices, DI13C_loc, DO13Ctot_loc, zootot13C_loc, DI14C_loc, &
-           DO14Ctot_loc, zootot14C_loc)
-
-    !-----------------------------------------------------------------------
-    !  create local copies of model column_tracer
-    !  treat negative values as zero
-    !-----------------------------------------------------------------------
-
-    implicit none
-
-    integer(int_kind) , intent(in)  :: column_km
-    integer(int_kind) , intent(in)  :: column_kmt
-    real (r8)         , intent(in)  :: column_tracer(:,:) ! (tracer_cnt,km) tracer values
-    type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
-
-    real (r8)         , intent(out) :: DI13C_loc(:)     ! (km) local copy of model DI13C
-    real (r8)         , intent(out) :: DO13Ctot_loc(:)  ! (km) local copy of model DO13Ctot
-    real (r8)         , intent(out) :: zootot13C_loc(:) ! (km) local copy of model zootot13C
-    real (r8)         , intent(out) :: DI14C_loc(:)     ! (km) local copy of model DI14C
-    real (r8)         , intent(out) :: DO14Ctot_loc(:)  ! (km) local copy of model DO14Ctot
-    real (r8)         , intent(out) :: zootot14C_loc(:) ! (km) local copy of model zootot14C
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer :: k
-    !-----------------------------------------------------------------------
-
-    associate(di13c_ind     => marbl_tracer_indices%di13c_ind,                   &
-              do13ctot_ind  => marbl_tracer_indices%do13ctot_ind,                &
-              zootot13C_ind => marbl_tracer_indices%zootot13C_ind,               &
-              di14c_ind     => marbl_tracer_indices%di14c_ind,                   &
-              do14ctot_ind  => marbl_tracer_indices%do14ctot_ind,                &
-              zootot14C_ind => marbl_tracer_indices%zootot14C_ind)
-    do k = 1,column_kmt
-       DI13C_loc(k) = max(c0, column_tracer(di13c_ind,k))
-       DI14C_loc(k) = max(c0, column_tracer(di14c_ind,k))
-
-       DO13Ctot_loc(k) = max(c0, column_tracer(do13ctot_ind,k))
-       DO14Ctot_loc(k) = max(c0, column_tracer(do14ctot_ind,k))
-
-       zootot13C_loc(k) = max(c0, column_tracer(zootot13C_ind,k))
-       zootot14C_loc(k) = max(c0, column_tracer(zootot14C_ind,k))
-    end do
-
-    do k = column_kmt+1, column_km
-       DI13C_loc(k) = c0
-       DI14C_loc(k) = c0
-
-       DO13Ctot_loc(k) = c0
-       DO14Ctot_loc(k) = c0
-
-       zootot13C_loc(k) = c0
-       zootot14C_loc(k) = c0
-    end do
-    end associate
-
-  end subroutine setup_local_column_tracers
-
-  !***********************************************************************
-
   subroutine fract_keller_morel( &
        mui_to_co2star,           &
        cell_active_C_uptake,     &
@@ -1281,8 +1209,8 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_particulate_terms(k, domain, marbl_interior_share, &
-             marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
+  subroutine compute_particulate_terms(k, domain, tracer_local, marbl_tracer_indices, &
+             marbl_interior_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
 
     !----------------------------------------------------------------------------------------
     !  Compute outgoing fluxes and remineralization terms for Carbon isotopes.
@@ -1300,6 +1228,8 @@ contains
 
     integer (int_kind)                , intent(in)    :: k                 ! vertical model level
     type(marbl_domain_type)           , intent(in)    :: domain
+    real(r8)                          , intent(in)    :: tracer_local(:)
+    type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
     type(marbl_interior_share_type)   , intent(in)    :: marbl_interior_share
     type(marbl_particulate_share_type), intent(in)    :: marbl_particulate_share
     type(column_sinking_particle_type), intent(inout) :: POC_ciso          ! base units = nmol particulate organic Carbon isotope
@@ -1328,8 +1258,8 @@ contains
          column_kmt        => domain%kmt                                    , & ! IN
          column_delta_z    => domain%delta_z(k)                             , & ! IN
          column_zw         => domain%zw(k)                                  , & ! IN
-         O2_loc            => marbl_interior_share%O2_loc_fields            , & ! IN
-         NO3_loc           => marbl_interior_share%NO3_loc_fields           , & ! IN
+         O2_loc            => tracer_local(marbl_tracer_indices%O2_ind)     , & ! IN
+         NO3_loc           => tracer_local(marbl_tracer_indices%NO3_ind)    , & ! IN
          CO3               => marbl_interior_share%CO3_fields               , & ! IN
          CO3_sat_calcite   => marbl_interior_share%CO3_sat_calcite          , & ! IN
          decay_CaCO3       => marbl_particulate_share%decay_CaCO3_fields    , & ! IN
