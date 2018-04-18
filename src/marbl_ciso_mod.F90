@@ -348,7 +348,7 @@ contains
          H2CO3              => marbl_interior_share%H2CO3_fields               , & ! INPUT carbonic acid
          DOCtot_remin       => marbl_interior_share%DOCtot_remin_fields        , & ! INPUT remineralization of DOCtot (mmol C/m^3/sec)
          DOCtot_loc         => marbl_interior_share%DOCtot_loc_fields          , & ! INPUT local copy of model DOCtot
-         DO13Ctot_loc       => tracer_local(marbl_tracer_indices%DO14Ctot_ind,:) , & ! local copy of model DO14Ctot
+         DO13Ctot_loc       => tracer_local(marbl_tracer_indices%DO13Ctot_ind,:) , & ! local copy of model DO14Ctot
          DO14Ctot_loc       => tracer_local(marbl_tracer_indices%DO14Ctot_ind,:) , & ! local copy of model DO14Ctot
          DIC_loc            => tracer_local(marbl_tracer_indices%DIC_ind,:)    , & ! INPUT local copy of model DIC
          DI13C_loc          => tracer_local(marbl_tracer_indices%DI13C_ind,:)    , & ! local copy of model DI13C
