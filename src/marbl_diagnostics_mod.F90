@@ -307,10 +307,10 @@ module marbl_diagnostics_mod
      integer (int_kind), allocatable :: CISO_photo14C(:)            ! 14C fixation
      integer (int_kind), allocatable :: CISO_photo13C_zint(:)       ! 13C fixation vertical integral
      integer (int_kind), allocatable :: CISO_photo14C_zint(:)       ! 14C fixation vertical integral
-     integer (int_kind), allocatable :: CISO_d13C(:)                ! if for d13C of autotroph carbon
-     integer (int_kind), allocatable :: CISO_d14C(:)                ! if for d14C of autotroph carbon
-     integer (int_kind), allocatable :: CISO_autotrophCaCO3_d14C(:) ! if for d14C of autotrophCaCO3
-     integer (int_kind), allocatable :: CISO_autotrophCaCO3_d13C(:) ! if for d13C of autotrophCaCO3
+     integer (int_kind), allocatable :: CISO_d13C(:)                ! d13C of autotroph carbon
+     integer (int_kind), allocatable :: CISO_d14C(:)                ! d14C of autotroph carbon
+     integer (int_kind), allocatable :: CISO_autotrophCaCO3_d14C(:) ! d14C of autotrophCaCO3
+     integer (int_kind), allocatable :: CISO_autotrophCaCO3_d13C(:) ! d13C of autotrophCaCO3
 
      integer (int_kind) :: CISO_eps_aq_g                                      ! eps_aq_g
      integer (int_kind) :: CISO_eps_dic_g                                     ! eps_dic_g
@@ -320,12 +320,12 @@ module marbl_diagnostics_mod
      integer (int_kind) :: CISO_DO14Ctot_remin                                ! do14ctot remineralization
      integer (int_kind) :: CISO_Jint_13Ctot                                   ! vertically integrated source sink term, 13Ctot
      integer (int_kind) :: CISO_Jint_14Ctot                                   ! vertically integrated source sink term, 14Ctot
-     integer (int_kind) :: CISO_zoototC_d13C                                  ! if for d13C of zooC
-     integer (int_kind) :: CISO_zoototC_d14C                                  ! if for d14C of zooC
-     integer (int_kind) :: CISO_DOCtot_d13C                                   ! if for d13C of DOCtot
-     integer (int_kind) :: CISO_DOCtot_d14C                                   ! if for d14C of DOCtot
-     integer (int_kind) :: CISO_DIC_d13C                                      ! if for d13C of DIC
-     integer (int_kind) :: CISO_DIC_d14C                                      ! if for d14C of DIC
+     integer (int_kind) :: CISO_zoototC_d13C                                  ! d13C of total zooC
+     integer (int_kind) :: CISO_zoototC_d14C                                  ! d14C of total zooC
+     integer (int_kind) :: CISO_DOCtot_d13C                                   ! d13C of DOCtot
+     integer (int_kind) :: CISO_DOCtot_d14C                                   ! d14C of DOCtot
+     integer (int_kind) :: CISO_DIC_d13C                                      ! d13C of DIC
+     integer (int_kind) :: CISO_DIC_d14C                                      ! d14C of DIC
      integer (int_kind) :: calcToSed_13C                                      ! calcite flux sedimentary burial
      integer (int_kind) :: calcToSed_14C                                      ! calcite flux sedimentary burial
      integer (int_kind) :: pocToSed_13C                                       ! poc burial flux to sediments
@@ -5404,8 +5404,8 @@ contains
          DIC_d14C       , & ! d14C of DIC
          DOCtot_d13C    , & ! d13C of DOCtot
          DOCtot_d14C    , & ! d14C of DOCtot
-         zoototC_d13C   , & ! d13C of zooC
-         zoototC_d14C   , & ! d14C of zooC
+         zoototC_d13C   , & ! d13C of total zooC
+         zoototC_d14C   , & ! d14C of total zooC
          DO13Ctot_prod  , & ! production of 13C DOCtot (mmol C/m^3/sec)
          DO14Ctot_prod  , & ! production of 14C DOCtot (mmol C/m^3/sec)
          DO13Ctot_remin , & ! remineralization of 13C DOCtot (mmol C/m^3/sec)

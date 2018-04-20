@@ -817,14 +817,14 @@ contains
             tracer_local                 = tracer_local,                &
             autotroph_local              = autotroph_local,             &
             temperature                  = temperature,                 &
-            column_dtracer               = dtracers,                    &
             marbl_tracer_indices         = marbl_tracer_indices,        &
+            column_dtracer               = dtracers,                    &
             marbl_interior_diags         = interior_forcing_diags,      &
             marbl_status_log             = marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
           call marbl_status_log%log_error_trace(&
-               'marbl_ciso_set_interior_foricng()', subname)
+               'marbl_ciso_set_interior_forcing()', subname)
           return
        end if
     end if
@@ -2347,17 +2347,16 @@ contains
              end if
 
              ! carbon isotope components of autotroph_local_type
-             if (marbl_tracer_indices%auto_inds(auto_ind)%C13_ind > 0) then
+             if (ciso_on) then
                 autotroph_local(auto_ind,k)%C13 = c0
-             end if
-             if (marbl_tracer_indices%auto_inds(auto_ind)%C14_ind > 0) then
                 autotroph_local(auto_ind,k)%C14 = c0
-             end if
-             if (marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind > 0) then
-                autotroph_local(auto_ind,k)%Ca13CO3 = c0
-             end if
-             if (marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind > 0) then
-                autotroph_local(auto_ind,k)%Ca14CO3 = c0
+
+                if (marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind > 0) then
+                   autotroph_local(auto_ind,k)%Ca13CO3 = c0
+                end if
+                if (marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind > 0) then
+                   autotroph_local(auto_ind,k)%Ca14CO3 = c0
+                end if
              end if
           end if
 

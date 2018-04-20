@@ -229,8 +229,8 @@ module marbl_interface_private_types
     ! For CISO, don't want individual C13 and C14 tracers for each zooplankton
     ! Instead we collect them into one tracer for each isotope, regardless of
     ! zooplankton_cnt
-    integer (int_kind) :: zootot13C_ind   = 0 ! zooplankton carbon 13
-    integer (int_kind) :: zootot14C_ind   = 0 ! zooplankton carbon 14
+    integer (int_kind) :: zootot13C_ind   = 0 ! total zooplankton carbon 13
+    integer (int_kind) :: zootot14C_ind   = 0 ! total zooplankton carbon 14
 
   contains
     procedure, public :: add_tracer_index

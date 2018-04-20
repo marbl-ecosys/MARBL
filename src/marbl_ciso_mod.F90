@@ -212,8 +212,8 @@ contains
        autotroph_local,                       &
        autotroph_secondary_species,           &
        temperature,                           &
-       column_dtracer,                        &
        marbl_tracer_indices,                  &
+       column_dtracer,                        &
        marbl_interior_diags,                  &
        marbl_status_log)
 
@@ -240,8 +240,8 @@ contains
     type(autotroph_local_type)            , intent(in)    :: autotroph_local(:,:)
     type(autotroph_secondary_species_type), intent(in)    :: autotroph_secondary_species(:,:)
     real (r8)                             , intent(in)    :: temperature(:)
-    real (r8)                             , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
     type(marbl_tracer_index_type)         , intent(in)    :: marbl_tracer_indices
+    real (r8)                             , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
     type(marbl_diagnostics_type)          , intent(inout) :: marbl_interior_diags
     type(marbl_log_type)                  , intent(inout) :: marbl_status_log
 
@@ -287,12 +287,12 @@ contains
          R13C_CO2STAR,      & ! 13C/12C in CO2* water
          R13C_DIC,          & ! 13C/12C in total DIC
          R13C_DOCtot,       & ! 13C/12C in total DOCtot
-         R13C_zooC,         & ! 13C/12C in total zooplankton
+         R13C_zoototC,      & ! 13C/12C in total zooplankton
          R14C_CaCO3_form,   & ! 14C/12C in CaCO3 production of small phyto
          R14C_CO2STAR,      & ! 14C/12C in CO2* water
          R14C_DIC,          & ! 14C/12C in total DIC
          R14C_DOCtot,       & ! 14C/12C in total DOCtot
-         R14C_zooC            ! 14C/12C in total zooplankton
+         R14C_zoototC         ! 14C/12C in total zooplankton
 
     real (r8), dimension(autotroph_cnt, marbl_domain%km) :: &
          Ca13CO3_PROD,        & ! prod. of 13C CaCO3 by small phyto (mmol CaCO3/m^3/sec)
@@ -331,10 +331,10 @@ contains
          delta_C14_CO2STAR, & ! deltaC14 of CO2*
          DIC_d13C,          & ! d13C of DIC
          DOCtot_d13C,       & ! d13C of DOCtot
-         zoototC_d13C,      & ! d13C of zooC
+         zoototC_d13C,      & ! d13C of zoototC
          DIC_d14C,          & ! d14C of DIC
          DOCtot_d14C,       & ! d14C of DOCtot
-         zoototC_d14C,      & ! d14C of zooC
+         zoototC_d14C,      & ! d14C of zoototC
          decay_14Ctot         ! 14C decay loss term
 
     !-------------------------------------------------------------
@@ -371,7 +371,7 @@ contains
          CaCO3_form         => autotroph_secondary_species%CaCO3_form          , & ! INPUT prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
          PCphoto            => autotroph_secondary_species%PCphoto             , & ! INPUT C-specific rate of photosynth. (1/sec)
 
-         zoototC_loc        => marbl_zooplankton_share%zoototC_loc_fields      , & ! INPUT local copy of model zooC
+         zoototC_loc        => marbl_zooplankton_share%zoototC_loc_fields      , & ! INPUT local copy of model zoototC
          zootot_loss        => marbl_zooplankton_share%zootot_loss_fields      , & ! INPUT mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
          zootot_loss_poc    => marbl_zooplankton_share%zootot_loss_poc_fields  , & ! INPUT zootot_loss routed to large detrital pool (mmol C/m^3/sec)
          zootot_loss_doc    => marbl_zooplankton_share%zootot_loss_doc_fields  , & ! INPUT zootot_loss routed to doc (mmol C/m^3/sec)
@@ -459,11 +459,11 @@ contains
        end if
 
        if (zoototC_loc(k) > c0) then
-          R13C_zooC(k) = zootot13C_loc(k) / zoototC_loc(k)
-          R14C_zooC(k) = zootot14C_loc(k) / zoototC_loc(k)
+          R13C_zoototC(k) = zootot13C_loc(k) / zoototC_loc(k)
+          R14C_zoototC(k) = zootot14C_loc(k) / zoototC_loc(k)
        else
-          R13C_zooC(k) = c0
-          R14C_zooC(k) = c0
+          R13C_zoototC(k) = c0
+          R14C_zoototC(k) = c0
        end if
 
        do auto_ind = 1, autotroph_cnt
@@ -656,11 +656,11 @@ contains
        !-----------------------------------------------------------------------
 
        DO13Ctot_prod(k) = &
-            (zootot_loss_doc(k) + zootot_graze_doc(k))*R13C_zooC(k) + &
+            (zootot_loss_doc(k) + zootot_graze_doc(k))*R13C_zoototC(k) + &
             sum((auto_loss_doc(:,k) + auto_graze_doc(:,k)) * R13C_autotroph(:,k),dim=1)
 
        DO14Ctot_prod(k) = &
-            (zootot_loss_doc(k) + zootot_graze_doc(k))*R14C_zooC(k) + &
+            (zootot_loss_doc(k) + zootot_graze_doc(k))*R14C_zoototC(k) + &
             sum((auto_loss_doc(:,k) + auto_graze_doc(:,k)) * R14C_autotroph(:,k),dim=1)
 
        DO13Ctot_remin(k) = DOCtot_remin(k) * R13C_DOCtot(k)
@@ -671,11 +671,11 @@ contains
        !-----------------------------------------------------------------------
 
        PO13C%prod(k) = &
-            (zootot_loss_poc(k) + zootot_graze_poc(k))*R13C_zooC(k) + &
+            (zootot_loss_poc(k) + zootot_graze_poc(k))*R13C_zoototC(k) + &
             sum((auto_graze_poc(:,k) + auto_agg(:,k) + auto_loss_poc(:,k)) * R13C_autotroph(:,k),dim=1)
 
        PO14C%prod(k) = &
-            (zootot_loss_poc(k) + zootot_graze_poc(k))*R14C_zooC(k) + &
+            (zootot_loss_poc(k) + zootot_graze_poc(k))*R14C_zoototC(k) + &
             sum((auto_graze_poc(:,k) + auto_agg(:,k) + auto_loss_poc(:,k)) * R14C_autotroph(:,k),dim=1)
 
        !-----------------------------------------------------------------------
@@ -699,8 +699,8 @@ contains
        DOCtot_d13C(k) =  ( R13C_DOCtot(k) / R13C_std - c1 ) * c1000
        DOCtot_d14C(k) =  ( R14C_DOCtot(k) / R14C_std - c1 ) * c1000
 
-       zoototC_d13C(k)=  ( R13C_zooC(k) / R13C_std - c1 ) * c1000
-       zoototC_d14C(k)=  ( R14C_zooC(k) / R14C_std - c1 ) * c1000
+       zoototC_d13C(k)=  ( R13C_zoototC(k) / R13C_std - c1 ) * c1000
+       zoototC_d14C(k)=  ( R14C_zoototC(k) / R14C_std - c1 ) * c1000
 
        do auto_ind = 1, autotroph_cnt
           if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
@@ -770,12 +770,12 @@ contains
        column_dtracer(zootot13C_ind,k) = &
               sum(auto_graze_zoo(:,k) * R13C_autotroph(:,k),dim=1) &
             + (zootot_graze_zoo(k) - zootot_graze(k) - zootot_loss(k)) &
-            * R13C_zooC(k)
+            * R13C_zoototC(k)
 
        column_dtracer(zootot14C_ind,k) = &
               sum(auto_graze_zoo(:,k) * R14C_autotroph(:,k),dim=1) &
             + (zootot_graze_zoo(k) - zootot_graze(k) - zootot_loss(k)) &
-            * R14C_zooC(k) - c14_lambda_inv_sec * zootot14C_loc(k)
+            * R14C_zoototC(k) - c14_lambda_inv_sec * zootot14C_loc(k)
 
        decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * zootot14C_loc(k)
 
@@ -797,14 +797,14 @@ contains
             sum((auto_loss_dic(:,k) + auto_graze_dic(:,k))*R13C_autotroph(:,k),dim=1) &
           - sum(photo13C(:,k),dim=1) &
           + DO13Ctot_remin(k) + PO13C%remin(k) &
-          + (zootot_loss_dic(k) + zootot_graze_dic(k)) * R13C_zooC(k) &
+          + (zootot_loss_dic(k) + zootot_graze_dic(k)) * R13C_zoototC(k) &
           + P_Ca13CO3%remin(k)
 
        column_dtracer(di14c_ind,k) = &
             sum((auto_loss_dic(:,k) + auto_graze_dic(:,k))*R14C_autotroph(:,k),dim=1) &
           - sum(photo14C(:,k),dim=1) &
           + DO14Ctot_remin(k) + PO14C%remin(k) &
-          + (zootot_loss_dic(k) + zootot_graze_dic(k)) * R14C_zooC(k) &
+          + (zootot_loss_dic(k) + zootot_graze_dic(k)) * R14C_zoototC(k) &
           + P_Ca14CO3%remin(k) &
           - c14_lambda_inv_sec * DI14C_loc(k)
 
