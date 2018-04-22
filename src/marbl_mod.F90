@@ -147,9 +147,6 @@ module marbl_mod
   use marbl_settings_mod, only : r_Nfix_photo
   use marbl_settings_mod, only : spc_poc_fac
   use marbl_settings_mod, only : grazing
-  use marbl_settings_mod, only : caco3_bury_thres_iopt
-  use marbl_settings_mod, only : caco3_bury_thres_iopt_fixed_depth
-  use marbl_settings_mod, only : caco3_bury_thres_depth
   use marbl_settings_mod, only : PON_bury_coeff
 
   use marbl_interface_private_types, only : carbonate_type
@@ -1074,6 +1071,10 @@ contains
     use marbl_settings_mod , only : parm_Fe_desorption_rate0
     use marbl_settings_mod , only : parm_sed_denitrif_coeff
     use marbl_settings_mod , only : particulate_flux_ref_depth
+    use marbl_settings_mod , only : caco3_bury_thres_iopt
+    use marbl_settings_mod , only : caco3_bury_thres_iopt_fixed_depth
+    use marbl_settings_mod , only : caco3_bury_thres_depth
+    use marbl_settings_mod , only : caco3_bury_thres_omega_calc
 
     integer (int_kind)                , intent(in)    :: k                   ! vertical model level
     type(marbl_domain_type)           , intent(in)    :: domain
@@ -1614,10 +1615,10 @@ contains
              P_CaCO3_ALT_CO2%sed_loss(k) = P_CaCO3_ALT_CO2%to_floor
           endif
        else ! caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
-          if (carbonate%CO3 > carbonate%CO3_sat_calcite) then
+          if (carbonate%CO3 > caco3_bury_thres_omega_calc * carbonate%CO3_sat_calcite) then
              P_CaCO3%sed_loss(k) = P_CaCO3%to_floor
           endif
-          if (carbonate%CO3_ALT_CO2 > carbonate%CO3_sat_calcite) then
+          if (carbonate%CO3_ALT_CO2 > caco3_bury_thres_omega_calc * carbonate%CO3_sat_calcite) then
              P_CaCO3_ALT_CO2%sed_loss(k) = P_CaCO3_ALT_CO2%to_floor
           endif
        endif

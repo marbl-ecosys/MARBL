@@ -801,6 +801,13 @@
          "subcategory": "4. general parameters",
          "units": "cm"
       },
+      "caco3_bury_thres_omega_calc": {
+         "datatype": "real",
+         "default_value": 1.0,
+         "longname": "omega calcite threshold for CaCO3 burial when opt = 'omega_calc'",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
       "caco3_bury_thres_opt": {
          "datatype": "string",
          "default_value": "omega_calc",

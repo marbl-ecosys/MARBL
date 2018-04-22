@@ -33,9 +33,6 @@ module marbl_ciso_mod
   use marbl_settings_mod, only : autotrophs
   use marbl_settings_mod, only : zooplankton
   use marbl_settings_mod, only : grazing
-  use marbl_settings_mod, only : caco3_bury_thres_iopt
-  use marbl_settings_mod, only : caco3_bury_thres_iopt_fixed_depth
-  use marbl_settings_mod, only : caco3_bury_thres_depth
 
   use marbl_logging, only : marbl_log_type
 
@@ -1368,8 +1365,12 @@ contains
     !  For other comments, see compute_particulate_terms in marbl_mod
     !----------------------------------------------------------------------------------------
 
-    use marbl_settings_mod , only : denitrif_C_N
     use marbl_constants_mod, only : spd
+    use marbl_settings_mod , only : denitrif_C_N
+    use marbl_settings_mod , only : caco3_bury_thres_iopt
+    use marbl_settings_mod , only : caco3_bury_thres_iopt_fixed_depth
+    use marbl_settings_mod , only : caco3_bury_thres_depth
+    use marbl_settings_mod , only : caco3_bury_thres_omega_calc
 
     implicit none
 
@@ -1600,7 +1601,7 @@ contains
             P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%to_floor
          endif
        else ! caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
-         if (CO3 > CO3_sat_calcite) then
+         if (CO3 > caco3_bury_thres_omega_calc * CO3_sat_calcite) then
             P_CaCO3_ciso%sed_loss(k) = P_CaCO3_ciso%to_floor
          endif
        end if

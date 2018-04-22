@@ -460,6 +460,12 @@ general_parms :
       units : cm
       datatype : real
       default_value : 3000e2
+   caco3_bury_thres_omega_calc :
+      longname : omega calcite threshold for CaCO3 burial when opt = 'omega_calc'
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 1.0
    PON_bury_coeff :
       longname : Scale factor for burial of PON
       subcategory : 4. general parameters (bury coeffs)
