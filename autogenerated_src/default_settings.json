@@ -748,7 +748,7 @@
    "general_parms": {
       "Jint_Ctot_thres_molpm2pyr": {
          "datatype": "real",
-         "default_value": 1e-10,
+         "default_value": 1e-09,
          "longname": "MARBL will abort if abs(Jint_Ctot) exceeds this threshold",
          "subcategory": "4. general parameters",
          "units": "mol m-2 yr-1"
