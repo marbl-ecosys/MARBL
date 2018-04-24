@@ -51,12 +51,14 @@ Contains
                              gcm_num_elements_surface_forcing = 1, &
                              gcm_delta_z = delta_z,                &
                              gcm_zw = zw,                          &
-                             gcm_zt = zt,                          &
-                             marbl_tracer_cnt = nt)
+                             gcm_zt = zt)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%init', subname)
       return
     end if
+
+    ! Set tracer count (if requested)
+    if (present(nt)) nt = size(marbl_instance%tracer_metadata)
 
     if (lshutdown_loc) then
       ! Shutdown

@@ -1,4 +1,4 @@
 &marbl_driver_nml
-testname="gen_inputfile"
+testname="gen_input_file"
 log_out_file='marbl_input.gen'
 /

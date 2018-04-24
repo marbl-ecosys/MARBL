@@ -4,6 +4,14 @@ Program marbl
 ! The driver for MARBL's stand-alone testing. When built, the executable will
 ! run one of several tests based on the value of testname in &marbl_driver_nml
 !
+! usage: marbl.exe -n NAMELIST_FILE [-i INPUT_FILE]
+!   required argument:
+!      -n NAMELIST_FILE, --namelist_file NAMELIST_FILE
+!                     File containing &marbl_driver_nml
+!   optional argument:
+!      -i INPUT_FILE, --input_file INPUT_FILE
+!                     File containing MARBL input file
+!
 ! In $MARBL/tests/ the actual tests are divided into the following categories:
 ! 1) Build tests ($MARBL/tests/bld_tests/)
 !    * Make sure the code provided compiles, but nothing is executed. Tests
@@ -46,17 +54,23 @@ Program marbl
   use marbl_mpi_mod, only : marbl_mpi_send
   use marbl_mpi_mod, only : marbl_mpi_recv
   ! MPI-related variables (if .not.mpi_on, my_task = 0 and num_tasks = 1)
-  use marbl_mpi_mod, only : mpi_on, my_task, num_tasks
+  use marbl_mpi_mod, only : mpi_on, my_task, num_tasks, marbl_mpi_return_error
 
   Implicit None
 
   character(len=256), parameter :: subname = 'Program Marbl'
 
+  ! Variables for processing commandline arguments
+  character(256) :: progname, argstr
+  character(256) :: namelist_file, input_file
+  integer        :: argcnt
+  logical        :: labort_after_argparse, lshow_usage, lfound_file
+
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
   integer                       :: m, n, nt, cnt
   character(len=256)            :: input_line, testname, varname, log_message, log_out_file
-  logical                       :: lprint_marbl_log, lhas_inputfile
+  logical                       :: lprint_marbl_log, lhas_namelist_file, lhas_input_file
   logical                       :: ldriver_log_to_file, lsummarize_timers
 
   ! Processing input file for put calls
@@ -64,13 +78,139 @@ Program marbl
   integer  :: ival
   real(r8) :: rval
 
-  namelist /marbl_driver_nml/testname, lhas_inputfile, log_out_file
+  namelist /marbl_driver_nml/testname, log_out_file
 
   !****************************************************************************
 
   ! (0) Initialization
   !     MPI?
   call marbl_mpi_init()
+
+  !     Command line arguments?
+  !     (a) set default values
+  labort_after_argparse = .false.
+  lhas_namelist_file = .false.
+  lhas_input_file = .false.
+  input_file = ''
+  namelist_file = ''
+
+  !     (b) get program name and argument count
+  call get_command_argument(0, progname)
+  argcnt = command_argument_count()
+  lshow_usage = (argcnt .eq. 0)
+
+  !     (c) process command line arguments
+  n = 1
+  do while (n .le. argcnt)
+    call get_command_argument(n, argstr)
+    select case (argstr)
+      case ('-n', '--namelist_file')
+        lhas_namelist_file = .true.
+
+        ! Error checking: is this the second occurance of the '--namelist_file' argument?
+        if (len_trim(namelist_file) .ne. 0) then
+          labort_after_argparse = .true.
+          if (my_task .eq. 0) &
+            write(*, "(A)") "ERROR: Namelist file specified multiple times on command line"
+          exit
+        end if
+
+        ! Error checking: is this the last commandline argument (i.e. no file was specified?)
+        if (n .eq. argcnt) then
+          labort_after_argparse = .true.
+          lshow_usage = .true.
+          if (my_task .eq. 0) &
+            write(*, "(A)") "ERROR: -n argument requires namelist file as well"
+          exit
+        end if
+
+        n = n+1
+        call get_command_argument(n, namelist_file)
+
+        ! Error checking: does the file exist?
+        inquire( file=trim(namelist_file), exist=lfound_file)
+        if (.not. lfound_file) then
+          labort_after_argparse = .true.
+          if (my_task .eq. 0) &
+            write(*, "(2A)") "ERROR: Namelist file not found: ", trim(namelist_file)
+          exit
+        end if
+
+      case ('-i', '--input_file')
+        lhas_input_file = .true.
+
+        ! Error checking: is this the second occurance of the '--input_file' argument?
+        if (len_trim(input_file) .ne. 0) then
+          labort_after_argparse = .true.
+          if (my_task .eq. 0) &
+            write(*, "(A)") "ERROR: Input file specified multiple times on command line"
+          exit
+        end if
+
+        ! Error checking: is this the last commandline argument (i.e. no file was specified?)
+        if (n .eq. argcnt) then
+          labort_after_argparse = .true.
+          lshow_usage = .true.
+          if (my_task .eq. 0) &
+            write(*, "(A)") "ERROR: -i argument requires input file as well"
+          exit
+        end if
+
+        n = n+1
+        call get_command_argument(n, input_file)
+
+        ! Error checking: does the file exist?
+        inquire( file=trim(input_file), exist=lfound_file)
+        if (.not. lfound_file) then
+          labort_after_argparse = .true.
+          if (my_task .eq. 0) &
+            write(*, "(2A)") "ERROR: Input file not found: ", trim(input_file)
+          exit
+        end if
+
+      case ('-h', '--help')
+        lshow_usage = .true.
+        ! suppress "no namelist" error message
+        lhas_namelist_file = .true.
+        ! call mpi_abort after parsing arguments rather than running driver
+        labort_after_argparse = .true.
+        ! Do not return error status code
+        marbl_mpi_return_error = .false.
+        ! no need to parse additonal arguments
+        exit
+      case DEFAULT
+        labort_after_argparse = .true.
+        if(my_task .eq. 0) &
+          write(*, "(2A)") "ERROR: Unknown command line argument: ", trim(argstr)
+        exit
+    end select
+    n = n+1
+  end do
+
+  ! Namelist file is required:
+  if (.not. lhas_namelist_file) then
+    labort_after_argparse = .true.
+    if (my_task .eq. 0) &
+      write(*,"(A)") "ERROR: namelist file is required!"
+  end if
+
+  ! Program requires one command line argument (namelist)
+  ! and accepts and optional second argument (input file)
+  if (lshow_usage) then
+    labort_after_argparse = .true.
+    if (my_task .eq. 0) then
+      write(*,"(3A)") "usage: ", trim(progname), " -n NAMELIST_FILE [-i INPUT_FILE]"
+      write(*,"(A)") "required argument:"
+      write(*,"(A)") "  -n NAMELIST_FILE, --namelist_file NAMELIST_FILE"
+      write(*,"(A)") "                        File containing &marbl_driver_nml"
+      write(*,"(A)") "optional argument:"
+      write(*,"(A)") "  -i INPUT_FILE, --input_file INPUT_FILE"
+      write(*,"(A)") "                        File containing MARBL input file"
+    end if
+  end if
+
+  ! Abort if error processing command line arguments
+  if (labort_after_argparse) call marbl_mpi_abort()
 
   !     Set up local variables
   !       * Some tests use a different status log than marbl_instance%StatusLog
@@ -82,28 +222,45 @@ Program marbl
 
   ! (1) Set marbl_driver_nml defaults
   testname       = ''
-  lhas_inputfile = .true.
   log_out_file   = 'marbl.out' ! only written if ldriver_log_to_file = .true.
 
   ! (2a) Read driver namelist to know what test to run
-  open(8, file="test.nml", status="old")
-  read(8, nml=marbl_driver_nml, iostat=ioerr)
+  if (my_task .eq. 0) open(98, file=trim(namelist_file), status="old", iostat=ioerr)
+  call marbl_mpi_bcast(ioerr, 0)
   if (ioerr.ne.0) then
-    write(*,*) "ERROR reading &marbl_driver_nml"
+    if (my_task.eq.0) &
+      write(*,'(2A)') "ERROR opening namelist file: ", trim(namelist_file)
     call marbl_mpi_abort()
   end if
-  close(8)
 
-  ! (2b) Read inputfile
-  if (lhas_inputfile) then
-    call read_inputfile(marbl_instance)
+  if (my_task .eq. 0) read(98, nml=marbl_driver_nml, iostat=ioerr)
+  call marbl_mpi_bcast(ioerr, 0)
+  if (ioerr.ne.0) then
+    if (my_task.eq.0) &
+      write(*,'(2A)') "ERROR reading &marbl_driver_nml from ", trim(namelist_file)
+    call marbl_mpi_abort()
+  else
+    ! Only read the file on master => broadcast contents
+    call marbl_mpi_bcast(testname, 0)
+    call marbl_mpi_bcast(log_out_file, 0)
+  end if
+
+  if (my_task .eq. 0) close(98)
+
+  ! (2b) Read input file
+  if (lhas_input_file) then
+    call read_input_file(input_file, marbl_instance)
   end if
 
   ! (3) Run proper test
   if (my_task.eq.0) write(*,"(3A)") "Beginning ", trim(testname), " test..."
   select case (trim(testname))
+    !    REGRESSION TESTS
+    ! -- init regression test -- !
     case ('init')
       call marbl_init_test(marbl_instance)
+
+    ! -- init-twice test -- !
     case ('init-twice')
       call marbl_instance%put_setting('ciso_on = .false.')
       call marbl_init_test(marbl_instance)
@@ -112,7 +269,9 @@ Program marbl
       call marbl_init_test(marbl_instance)
       call summarize_timers(driver_status_log, header_text = 'With the CISO Tracers')
       lsummarize_timers = .false.
-    case ('gen_inputfile')
+
+    ! -- gen_input_file test -- !
+    case ('gen_input_file')
       lprint_marbl_log = .false.
       ldriver_log_to_file = .true.
       call marbl_init_test(marbl_instance, lshutdown=.false.)
@@ -120,67 +279,79 @@ Program marbl
         do n=1,marbl_instance%get_settings_var_cnt()
           call marbl_instance%inquire_settings_metadata(n, sname=varname)
           if (marbl_instance%StatusLog%labort_marbl) exit
-          call marbl_instance%get_setting(varname, input_line, linputfile_format=.true.)
+          call marbl_instance%get_setting(varname, input_line, linput_file_format=.true.)
           if (marbl_instance%StatusLog%labort_marbl) exit
-          call driver_status_log%log_noerror(trim(input_line), subname)
+          call driver_status_log%log_noerror(input_line, subname)
         end do
         call marbl_instance%shutdown()
       end if
-    case ('get_put')
+
+    ! -- request_diags test -- !
+    case ('request_diags')
       lprint_marbl_log = .false.
-      call marbl_get_put_test(marbl_instance, driver_status_log)
-    case ('marbl_utils')
-      lprint_marbl_log = .false.
-      lsummarize_timers = .false.
-      call marbl_utils_test(driver_status_log)
+      call marbl_init_test(marbl_instance, lshutdown = .false.)
+      ! Log surface forcing diagnostics passed back to driver
+      associate(diags => marbl_instance%surface_forcing_diags%diags)
+        call driver_status_log%log_header('Surface forcing diagnostics', subname)
+        do n=1, size(diags)
+          write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &
+                                        ' (units: ', trim(diags(n)%units),')'
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+      end associate
+      ! Log interior forcing diagnostics passed back to driver
+      associate(diags => marbl_instance%interior_forcing_diags%diags)
+        call driver_status_log%log_header('Interior forcing diagnostics', subname)
+        do n=1, size(diags)
+          write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &
+                                        ' (units: ', trim(diags(n)%units),')'
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+      end associate
+      call marbl_instance%shutdown()
+
+    ! -- request_tracers test -- !
     case ('request_tracers')
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
-
       ! Log tracers requested for initialization
-      call driver_status_log%log_noerror('', subname)
-      call driver_status_log%log_noerror('Requested tracers', subname)
-      call driver_status_log%log_noerror('---', subname)
+      call driver_status_log%log_header('Requested tracers', subname)
       do n=1,nt
         write(log_message, "(I0, 2A)") n, '. ',                               &
           trim(marbl_instance%tracer_metadata(n)%short_name)
         call driver_status_log%log_noerror(log_message, subname)
       end do
       call marbl_instance%shutdown()
+
+    ! -- request_forcings test -- !
     case ('request_forcings')
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instance, lshutdown=.false.)
-
       ! Log requested surface forcing fields
-      call driver_status_log%log_noerror('', subname)
-      call driver_status_log%log_noerror('Requested surface forcing fields', subname)
-      call driver_status_log%log_noerror('---', subname)
+      call driver_status_log%log_header('Requested surface forcing fields', subname)
       do n=1,size(marbl_instance%surface_input_forcings)
-        write(log_message, "(I0, 2A)") n, '. ', &
-              trim(marbl_instance%surface_input_forcings(n)%metadata%varname)
+        write(log_message, "(I0, 5A)") n, '. ', &
+              trim(marbl_instance%surface_input_forcings(n)%metadata%varname), &
+              ' (units: ', trim(marbl_instance%surface_input_forcings(n)%metadata%field_units),')'
         call driver_status_log%log_noerror(log_message, subname)
       end do
-
       ! Log requested interior forcing fields
-      call driver_status_log%log_noerror('', subname)
-      call driver_status_log%log_noerror('Requested interior forcing fields', subname)
-      call driver_status_log%log_noerror('---', subname)
+      call driver_status_log%log_header('Requested interior forcing fields', subname)
       do n=1,size(marbl_instance%interior_input_forcings)
-        write(log_message, "(I0, 2A)") n, '. ',                               &
-             trim(marbl_instance%interior_input_forcings(n)%metadata%varname)
+        write(log_message, "(I0, 5A)") n, '. ',                               &
+             trim(marbl_instance%interior_input_forcings(n)%metadata%varname), &
+             ' (units: ', trim(marbl_instance%interior_input_forcings(n)%metadata%field_units),')'
         call driver_status_log%log_noerror(log_message, subname)
       end do
-
       call marbl_instance%shutdown()
 
+    ! -- request_restoring test -- !
     case ('request_restoring')
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
 
       ! Log tracers requested for restoring
-      call driver_status_log%log_noerror('', subname)
-      call driver_status_log%log_noerror('Requested tracers to restore', subname)
-      call driver_status_log%log_noerror('---', subname)
+      call driver_status_log%log_header('Requested tracers to restore', subname)
       cnt = 0
       do n=1,size(marbl_instance%interior_input_forcings)
         varname = marbl_instance%interior_input_forcings(n)%metadata%varname
@@ -195,6 +366,20 @@ Program marbl
         call driver_status_log%log_noerror('No tracers to restore!', subname)
       end if
       call marbl_instance%shutdown()
+
+    !    UNIT TESTS
+    ! -- get_put test -- !
+    case ('get_put')
+      lprint_marbl_log = .false.
+      call marbl_get_put_test(marbl_instance, driver_status_log)
+
+    ! -- marbl_utils test -- !
+    case ('marbl_utils')
+      lprint_marbl_log = .false.
+      lsummarize_timers = .false.
+      call marbl_utils_test(driver_status_log)
+
+    !   UNRECOGNIZED TEST
     case DEFAULT
       write(*,*) "ERROR: testname = ", trim(testname), " is not a valid option"
       call marbl_mpi_abort()
@@ -226,40 +411,56 @@ Contains
 
   !****************************************************************************
 
-  subroutine read_inputfile(marbl_instance)
+  subroutine read_input_file(input_file, marbl_instance)
 
+    character(len=*),            intent(in)    :: input_file
     type(marbl_interface_class), intent(inout) :: marbl_instance
 
-    character(len=256), parameter :: subname = 'marbl::read_inputfile'
+    character(len=256), parameter :: subname = 'marbl::read_input_file'
     character(len=256) :: input_line
     integer :: ioerr
 
-    ioerr = 0
+    if (my_task .eq. 0) open(97, file=trim(input_file), status="old", iostat=ioerr)
+    call marbl_mpi_bcast(ioerr, 0)
+    if (ioerr .ne. 0) then
+      if (my_task .eq. 0) then
+        write(*,"(A,I0)") "ioerr = ", ioerr
+        write(*,"(2A)") "ERROR encountered when opening MARBL input file ", trim(input_file)
+      end if
+      call marbl_mpi_abort()
+    end if
+
     input_line = ''
     do while(ioerr .eq. 0)
-      ! (i) call put_setting(); abort if error
+      ! (i) broadcast input_line and call put_setting(); abort if error
       !     calling with empty input_line on first entry to loop is okay, and
       !     this ensures we don't call put_setting with a garbage line if
       !     ioerr is non-zero
+      call marbl_mpi_bcast(input_line, 0)
       call marbl_instance%put_setting(input_line)
       if (marbl_instance%StatusLog%labort_marbl) then
         call marbl_instance%StatusLog%log_error_trace("put_setting(input_line)", subname)
         call print_marbl_log(marbl_instance%StatusLog)
       end if
-      ! (ii) master task reads next line in inputfile
-      if (my_task .eq. 0) read(*,"(A)", iostat=ioerr) input_line
-      ! (iii) broadcast inputfile line to all tasks (along with iostat)
-      call marbl_mpi_bcast(input_line, 0)
+
+      ! (ii) master task reads next line in input file
+      if (my_task .eq. 0) read(97,"(A)", iostat=ioerr) input_line
+
+      ! (iii) broadcast input file line to all tasks (along with iostat)
       call marbl_mpi_bcast(ioerr, 0)
     end do
 
     if (.not.is_iostat_end(ioerr)) then
-      write(*,"(A,I0)") "ioerr = ", ioerr
-      write(*,"(A)") "ERROR encountered when reading MARBL input file from stdin"
+      if (my_task .eq. 0) then
+        write(*,"(A,I0)") "ioerr = ", ioerr
+        write(*,"(2A)") "ERROR encountered when reading MARBL input file ", trim(input_file)
+      end if
       call marbl_mpi_abort()
     end if
 
-  end subroutine read_inputfile
+    if (my_task .eq. 0) close(97)
+
+  end subroutine read_input_file
 
   !****************************************************************************
 
@@ -272,12 +473,12 @@ Contains
     type(marbl_status_log_entry_type), pointer :: tmp
     integer :: out_unit
 
-    ! write to stdout unless outfile is provided
+    ! write to stdout unless outfile is provided (only task 0 writes to file)
     out_unit = 6
-    if (present(outfile)) then
+    if ((my_task .eq. 0) .and. (present(outfile))) then
       out_unit = 99
       open(out_unit, file=outfile, action="write", status="replace")
-      if (my_task .eq. 0) write(6, "(3A)") "  Writing log to ", trim(outfile), "..."
+      write(6, "(3A)") "  Writing log to ", trim(outfile), "..."
     end if
 
     tmp => log_to_print%FullLog
@@ -293,7 +494,7 @@ Contains
       tmp => tmp%next
     end do
 
-    if (present(outfile)) then
+    if ((my_task .eq. 0) .and. (present(outfile))) then
       close(out_unit)
       if (my_task .eq. 0) write(6, "(A)") "  ... Done writing to file!"
     end if
