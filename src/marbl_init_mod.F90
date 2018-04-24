@@ -49,7 +49,6 @@ contains
 
     ! Construct status log
     call marbl_status_log%construct()
-    call marbl_status_log%log_noerror('', subname)
 
     ! Set up timers
     call marbl_timers%setup(timer_ids, marbl_status_log)
@@ -62,7 +61,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_parameters_pre_tracers(lallow_glo_ops, marbl_settings, marbl_status_log)
+  subroutine marbl_init_parameters_pre_tracers(marbl_settings, marbl_status_log)
 
     use marbl_settings_mod, only : marbl_settings_type
     use marbl_settings_mod, only : ladjust_bury_coeff
@@ -73,7 +72,6 @@ contains
     use marbl_settings_mod, only : marbl_settings_set_defaults_PFT_derived_types
     use marbl_settings_mod, only : marbl_settings_define_PFT_derived_types
 
-    logical,                    intent(in)    :: lallow_glo_ops
     type(marbl_settings_type),  intent(inout) :: marbl_settings
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
@@ -94,14 +92,6 @@ contains
     call marbl_settings_define_general_parms(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_settings_define_general_parms()", subname)
-      return
-    end if
-
-    !  Abort if GCM doesn't support global ops but configuration requires them
-    if (ladjust_bury_coeff .and. (.not.lallow_glo_ops)) then
-      write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
-             '.true. unless GCM can perform global operations'
-      call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
@@ -149,8 +139,7 @@ contains
                                 column_tracers, &
                                 column_dtracers, &
                                 tracer_metadata, &
-                                marbl_status_log, &
-                                marbl_tracer_cnt)
+                                marbl_status_log)
 
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lvariable_PtoC
@@ -168,7 +157,6 @@ contains
     real(r8),                         allocatable, intent(out)   :: column_dtracers(:,:)
     type(marbl_tracer_metadata_type), allocatable, intent(out)   :: tracer_metadata(:)
     type(marbl_log_type),                          intent(inout) :: marbl_status_log
-    integer(int_kind), optional,                   intent(out)   :: marbl_tracer_cnt
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_tracers'
@@ -178,7 +166,7 @@ contains
     ! Construct tracer indices
     allocate(tracer_indices)
     call tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs, zooplankton, &
-                                  marbl_status_log, marbl_tracer_cnt)
+                                  marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
       return
@@ -319,7 +307,7 @@ contains
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     ! local variables
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_tracer_dependent'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_post_tracers'
     character(len=char_len) :: log_message
 
     ! set default values for parameters
@@ -367,12 +355,12 @@ contains
     ! so they do not need to be initialized here
 
     if (.not. ladjust_bury_coeff) then
-       if (init_bury_coeff_opt == 'nml') then
+       if (init_bury_coeff_opt == 'settings_file') then
           marbl_particulate_share%POC_bury_coeff = parm_init_POC_bury_coeff
           marbl_particulate_share%POP_bury_coeff = parm_init_POP_bury_coeff
           marbl_particulate_share%bSi_bury_coeff = parm_init_bSi_bury_coeff
        else
-          call marbl_status_log%log_error("ladjust_bury_coeff=.false., init_bury_coeff_opt='restfile' not implemented", subname)
+          call marbl_status_log%log_error("ladjust_bury_coeff=.false., init_bury_coeff_opt='GCM' not implemented", subname)
           return
        end if
     end if
@@ -434,6 +422,7 @@ contains
                                          num_surface_forcing_fields)
       call interior_forcing_ind%construct(tracer_metadata%short_name,         &
                                           tracer_restore_vars,                &
+                                          domain%num_PAR_subcols,             &
                                           num_interior_forcing_fields,        &
                                           marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -730,14 +719,14 @@ contains
         if (id .eq. ind%sss_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'sss'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'psu'
         end if
 
         ! Sea-surface temperature
         if (id .eq. ind%sst_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'sst'
-          surface_forcings(id)%metadata%field_units   = 'degrees C'
+          surface_forcings(id)%metadata%field_units   = 'degC'
         end if
 
         ! Ice Fraction
@@ -765,14 +754,14 @@ contains
         if (id .eq. ind%nox_flux_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'NOx Flux'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! NHy Flux
         if (id .eq. ind%nhy_flux_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'NHy Flux'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! external C Flux
@@ -800,35 +789,35 @@ contains
         if (id .eq. ind%atm_pressure_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'Atmospheric Pressure'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'atmospheres'
         end if
 
         ! xco2
         if (id .eq. ind%xco2_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'xco2'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'ppmv'
         end if
 
         ! xco2_alt_co2
         if (id .eq. ind%xco2_alt_co2_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'xco2_alt_co2'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'ppmv'
         end if
 
         ! d13c
         if (id .eq. ind%d13c_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'd13c'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'permil'
         end if
 
         ! d14c
         if (id .eq. ind%d14c_id) then
           found = .true.
           surface_forcings(id)%metadata%varname       = 'd14c'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_forcings(id)%metadata%field_units   = 'permil'
         end if
 
         if (.not.found) then
@@ -901,7 +890,7 @@ contains
         if (id .eq. ind%dustflux_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Dust Flux'
-          interior_forcings(id)%metadata%field_units = 'need_units'
+          interior_forcings(id)%metadata%field_units = 'g/cm^2/s'
           call interior_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
         end if
 
@@ -917,17 +906,17 @@ contains
         if (id .eq. ind%surf_shortwave_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Surface Shortwave'
-          interior_forcings(id)%metadata%field_units = 'need_units' ! W/m^2?
+          interior_forcings(id)%metadata%field_units = 'W/m^2'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_PAR_subcols)
         end if
 
 
         ! Temperature
-        if (id .eq. ind%temperature_id) then
+        if (id .eq. ind%potemp_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Temperature'
-          interior_forcings(id)%metadata%field_units = 'Degrees C'
+          interior_forcings(id)%metadata%varname     = 'Potential Temperature'
+          interior_forcings(id)%metadata%field_units = 'degC'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_levels)
         end if
@@ -936,7 +925,7 @@ contains
         if (id .eq. ind%salinity_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Salinity'
-          interior_forcings(id)%metadata%field_units = 'need_units'
+          interior_forcings(id)%metadata%field_units = 'psu'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_levels)
         end if
@@ -945,7 +934,7 @@ contains
         if (id .eq. ind%pressure_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Pressure'
-          interior_forcings(id)%metadata%field_units = 'need_units'
+          interior_forcings(id)%metadata%field_units = 'bars'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_levels)
         end if
@@ -954,7 +943,7 @@ contains
         if (id .eq. ind%fesedflux_id) then
           found = .true.
           interior_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
-          interior_forcings(id)%metadata%field_units = 'need_units'
+          interior_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
           call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                               dim1 = num_levels)
         end if

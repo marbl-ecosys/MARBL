@@ -6,7 +6,7 @@ module marbl_interface_constants
   implicit none
 
   private
-  
+
   ! string sizes
   integer, public, parameter :: marbl_str_length = 1024
 

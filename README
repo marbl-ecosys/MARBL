@@ -3,16 +3,69 @@
 ---------
 
 The MARine Biogeochemistry Library (MARBL) is organized as follows:
-    
-    * include/  -- default location of mod files
-    * lib/ -- default location of libmarbl.a (or libmarbl-[compiler].a)
-    * src/ -- source code for building libmarbl.a
-    * tests/ -- all source and scripts required for stand-alone executable, as
-                well as the executable itself. Also moved the obj/ dir here so
-                that users don't use it instead of the include/ (especially once
-                we restrict include to just contain marbl_interface.mod)
 
-More details about the tests/ directory can be found in tests/README
+    MARBL
+    ├── include                       subdirectories contain default location for module files
+    |   |                             to be included when linking the MARBL library
+    |   |                             * subdirectories for each compiler / MPI option
+    │   ├── cray
+    │   ├── gnu
+    │   ├── gnu-mpi
+    │   ├── intel
+    │   ├── intel-mpi
+    │   ├── nag
+    │   ├── nag-mpi
+    │   ├── pgi
+    │   └── pgi-mpi
+    ├── lib                           default location of libmarbl.a (or libmarbl-[compiler].a)
+    ├── src                           Source code for MARBL library (Fortran)
+    └── tests
+        ├── bld_tests                 Test the MARBL build system
+        |                             (library build as well as fortran driver executable)
+        ├── driver_exe                Default location for marbl.exe (or marbl-mpi.exe)
+        ├── driver_src                Fortran source code for the stand-alone driver used
+        |                             by the test system (calls into MARBL library)
+        ├── input_files               Input files for regression tests
+        ├── obj                       subdirectories contain default location for object files
+        |   |                         * subdirectories for each compiler / MPI option, which are
+        |   |                           then further divided to separate stand-alone driver objects
+        |   |                           from library objects
+        │   ├── cray
+        │   │   └── driver
+        │   ├── gnu
+        │   │   └── driver
+        │   ├── gnu-mpi
+        │   │   └── driver
+        │   ├── intel
+        │   │   └── driver
+        │   ├── intel-mpi
+        │   │   └── driver
+        │   ├── nag
+        │   │   └── driver
+        │   ├── nag-mpi
+        │   │   └── driver
+        │   ├── pgi
+        │   │   └── driver
+        │   └── pgi-mpi
+        │       └── driver
+        ├── python_for_tests          Python modules for code that is used by multiple test
+        |                             scripts. E.g. routines to parse command line arguments,
+        |                             build the library, or load modules on supported machines
+        ├── regression_tests          Tests that produce output with various MARBL configurations
+        │   |                         so developers can quickly check the effect of new code
+        │   ├── gen_input_file        Generate a valid input file
+        │   ├── init                  Run initialization
+        │   ├── init-twice            Initialize, finalize, and initialize again
+        |   |                         * Ensures memory is deallocated correctly in finalize
+        │   ├── requested_diags       List all diagnostics being provided by MARBL
+        │   ├── requested_forcings    List all forcing fields MARBL requests from GCM
+        │   ├── requested_restoring   List all tracers MARBL will apply restoring to
+        │   └── requested_tracers     List all tracers MARBL will provide tendencies for
+        └── unit_tests                Tests that check the functionality of small pieces of the code
+            ├── get_put               Make sure parameters are registered correctly for
+            |                         get_setting() and put_setting()
+            └── utils_routines        Make sure all tools provided in marbl_utils_mod.F90
+                                       what they claim to do (esp. tests edge cases)
 
 ---------------------------------------------
 | INSTALLING THE LIBRARY FOR EXTERNAL USAGE |

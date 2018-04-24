@@ -52,7 +52,7 @@ contains
     character(len=*), intent(in) :: msg
     real(r8),         intent(in) :: val
 
-    write(stdout, '(A,1X,E24.16)') 'marbl_debug:' // trim(msg), val
+    write(stdout, '(A,1X,E25.17)') 'marbl_debug:' // trim(msg), val
 
   end subroutine marbl_debug_print_var_r8_0d
 
@@ -104,7 +104,7 @@ contains
     write(stdout, '(A,1X,I0)') 'marbl_debug:' // trim(msg) // ', num_elements=', num_elements
     do n = 1, num_elements
        if (mask_loc(n)) then
-          write(stdout, '(A,1X,I0,1X,E24.16)') 'marbl_debug:' // trim(msg), n, val(n)
+          write(stdout, '(A,1X,I0,1X,E25.17)') 'marbl_debug:' // trim(msg), n, val(n)
        end if
     end do
 

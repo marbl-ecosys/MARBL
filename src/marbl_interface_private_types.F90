@@ -37,6 +37,8 @@ module marbl_interface_private_types
      real(r8) :: gamma                      ! fraction of production -> hard subclass
      real(r8) :: mass                       ! mass of 1e9 base units in g
      real(r8) :: rho                        ! QA mass ratio of POC to this particle class
+     real(r8) :: to_floor                   ! flux hitting sea floor (base units/cm^s/sec)
+     real(r8) :: flux_at_ref_depth          ! flux at particulate_flux_ref_depth (base units/cm^s/sec)
      real(r8), allocatable  :: sflux_in (:) ! incoming flux of soft subclass (base units/cm^2/sec)
      real(r8), allocatable  :: hflux_in (:) ! incoming flux of hard subclass (base units/cm^2/sec)
      real(r8), allocatable  :: prod     (:) ! production term (base units/cm^3/sec)
@@ -82,15 +84,16 @@ module marbl_interface_private_types
   !****************************************************************************
 
   type, public :: marbl_interior_share_type
-     real(r8) :: QA_dust_def      ! incoming deficit in the QA(dust) POC flux
-     real(r8) :: DIC_loc_fields   ! local copy of model DIC
-     real(r8) :: DOC_loc_fields   ! local copy of model DOC
-     real(r8) :: O2_loc_fields    ! local copy of model O2
-     real(r8) :: NO3_loc_fields   ! local copy of model NO3
+     real(r8) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux
+     real(r8) :: DIC_loc_fields      ! local copy of model DIC
+     real(r8) :: DOCtot_loc_fields   ! local copy of model DOC+DOCr
+     real(r8) :: O2_loc_fields       ! local copy of model O2
+     real(r8) :: NO3_loc_fields      ! local copy of model NO3
      real(r8) :: CO3_fields
-     real(r8) :: HCO3_fields      ! bicarbonate ion
-     real(r8) :: H2CO3_fields     ! carbonic acid
-     real(r8) :: DOC_remin_fields ! remineralization of 13C DOC (mmol C/m^3/sec)
+     real(r8) :: HCO3_fields         ! bicarbonate ion
+     real(r8) :: H2CO3_fields        ! carbonic acid
+     real(r8) :: CO3_sat_calcite
+     real(r8) :: DOCtot_remin_fields ! remineralization of DOC+DOCr (mmol C/m^3/sec)
   end type marbl_interior_share_type
 
   !***********************************************************************
@@ -109,11 +112,6 @@ module marbl_interface_private_types
      real(r8), allocatable :: decay_Hard_fields        (:) ! scaling factor for dissolution of Hard Ballast
      real(r8), allocatable :: poc_diss_fields          (:) ! diss. length used (cm)
      real(r8), allocatable :: caco3_diss_fields        (:) ! caco3 diss. length used (cm)
-     real(r8), allocatable :: P_CaCO3_sflux_out_fields (:) ! P_CaCO3 sflux_out from ecosys before getting set to zero for k=KMT
-     real(r8), allocatable :: P_CaCO3_hflux_out_fields (:) ! P_CaCO3_hflux_out from ecosys before getting set to zero for k=KMT
-     real(r8), allocatable :: P_CaCO3_remin_fields     (:) ! P_CaCO3 remin from ecosys before it gets modified for k=KMT
-     real(r8), allocatable :: POC_sflux_out_fields     (:) ! POC_sflux_out from ecosys before getting set to zero for k=KMT
-     real(r8), allocatable :: POC_hflux_out_fields     (:) ! POC_hflux_out from ecosys before getting set to zero for k=KMT
      real(r8), allocatable :: POC_remin_fields         (:) ! POC remin from ecosys before it gets modified for k=KMT
      real(r8), allocatable :: POC_prod_avail_fields    (:) ! POC production available for excess POC flux
 
@@ -224,9 +222,9 @@ module marbl_interface_private_types
 
     ! CISO tracers
     integer (int_kind) :: di13c_ind       = 0 ! dissolved inorganic carbon 13
-    integer (int_kind) :: do13c_ind       = 0 ! dissolved organic carbon 13
+    integer (int_kind) :: do13ctot_ind    = 0 ! dissolved organic carbon 13 (semi-labile+refractory)
     integer (int_kind) :: di14c_ind       = 0 ! dissolved inorganic carbon 14
-    integer (int_kind) :: do14c_ind       = 0 ! dissolved organic carbon 14
+    integer (int_kind) :: do14ctot_ind    = 0 ! dissolved organic carbon 14 (semi-labile+refractory)
 
     ! Living tracers
     type(marbl_living_tracer_index_type), allocatable :: auto_inds(:)
@@ -234,8 +232,8 @@ module marbl_interface_private_types
     ! For CISO, don't want individual C13 and C14 tracers for each zooplankton
     ! Instead we collect them into one tracer for each isotope, regardless of
     ! zooplankton_cnt
-    integer (int_kind) :: zoo13C_ind      = 0 ! zooplankton carbon 13
-    integer (int_kind) :: zoo14C_ind      = 0 ! zooplankton carbon 14
+    integer (int_kind) :: zoo13Ctot_ind   = 0 ! zooplankton carbon 13
+    integer (int_kind) :: zoo14Ctot_ind   = 0 ! zooplankton carbon 14
 
   contains
     procedure, public :: add_tracer_index
@@ -275,7 +273,7 @@ module marbl_interface_private_types
      integer(int_kind) :: surf_shortwave_id  = 0
 
      ! Column fields
-     integer(int_kind) :: temperature_id = 0
+     integer(int_kind) :: potemp_id      = 0
      integer(int_kind) :: salinity_id    = 0
      integer(int_kind) :: pressure_id    = 0
      integer(int_kind) :: fesedflux_id   = 0
@@ -365,11 +363,6 @@ contains
     allocate(this%decay_Hard_fields                (num_levels))
     allocate(this%poc_diss_fields                  (num_levels))
     allocate(this%caco3_diss_fields                (num_levels))
-    allocate(this%P_CaCO3_sflux_out_fields         (num_levels))
-    allocate(this%P_CaCO3_hflux_out_fields         (num_levels))
-    allocate(this%P_CaCO3_remin_fields             (num_levels))
-    allocate(this%POC_sflux_out_fields             (num_levels))
-    allocate(this%POC_hflux_out_fields             (num_levels))
     allocate(this%POC_remin_fields                 (num_levels))
     allocate(this%POC_prod_avail_fields            (num_levels))
 
@@ -395,11 +388,6 @@ contains
     deallocate(this%decay_Hard_fields)
     deallocate(this%poc_diss_fields)
     deallocate(this%caco3_diss_fields)
-    deallocate(this%P_CaCO3_sflux_out_fields)
-    deallocate(this%P_CaCO3_hflux_out_fields)
-    deallocate(this%P_CaCO3_remin_fields)
-    deallocate(this%POC_sflux_out_fields)
-    deallocate(this%POC_hflux_out_fields)
     deallocate(this%POC_remin_fields)
     deallocate(this%POC_prod_avail_fields)
 
@@ -478,27 +466,47 @@ contains
 
   subroutine marbl_surface_forcing_internal_constructor(this, num_elements)
 
+    use marbl_constants_mod, only : c0
+
     class(marbl_surface_forcing_internal_type), intent(out) :: this
     integer (int_kind),                         intent(in)  :: num_elements
 
     allocate(this%piston_velocity (num_elements))
+    this%piston_velocity  = c0
     allocate(this%flux_co2        (num_elements))
+    this%flux_co2         = c0
     allocate(this%flux_alt_co2    (num_elements))
+    this%flux_alt_co2     = c0
     allocate(this%co2star         (num_elements))
+    this%co2star          = c0
     allocate(this%dco2star        (num_elements))
+    this%dco2star         = c0
     allocate(this%pco2surf        (num_elements))
+    this%pco2surf         = c0
     allocate(this%dpco2           (num_elements))
+    this%dpco2            = c0
     allocate(this%co3             (num_elements))
+    this%co3              = c0
     allocate(this%co2star_alt     (num_elements))
+    this%co2star_alt      = c0
     allocate(this%dco2star_alt    (num_elements))
+    this%dco2star_alt     = c0
     allocate(this%pco2surf_alt    (num_elements))
+    this%pco2surf_alt     = c0
     allocate(this%dpco2_alt       (num_elements))
+    this%dpco2_alt        = c0
     allocate(this%schmidt_co2     (num_elements))
+    this%schmidt_co2      = c0
     allocate(this%schmidt_o2      (num_elements))
+    this%schmidt_o2       = c0
     allocate(this%pv_o2           (num_elements))
+    this%pv_o2            = c0
     allocate(this%pv_co2          (num_elements))
+    this%pv_co2           = c0
     allocate(this%o2sat           (num_elements))
+    this%o2sat            = c0
     allocate(this%nhx_surface_emis(num_elements))
+    this%nhx_surface_emis = c0
 
   end subroutine marbl_surface_forcing_internal_constructor
 
@@ -534,7 +542,7 @@ contains
   !*****************************************************************************
 
   subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs, &
-             zooplankton, marbl_status_log, marbl_tracer_cnt)
+             zooplankton, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -551,17 +559,13 @@ contains
     type(autotroph_type),           intent(in)    :: autotrophs(:)
     type(zooplankton_type),         intent(in)    :: zooplankton(:)
     type(marbl_log_type),           intent(inout) :: marbl_status_log
-    integer(int_kind), optional,    intent(out)   :: marbl_tracer_cnt
 
     character(len=*), parameter :: subname = 'marbl_interface_private_types:tracer_index_constructor'
     character(len=char_len) :: ind_name
     integer :: autotroph_cnt, zooplankton_cnt, n
 
-    ! If marbl_tracer_cnt is requested, initialize to zero
-    ! (so that count is zero if an error is encountered)
     autotroph_cnt = size(autotrophs)
     zooplankton_cnt = size(zooplankton)
-    if (present(marbl_tracer_cnt)) marbl_tracer_cnt = 0
 
     !Allocate memory
     allocate(this%auto_inds(autotroph_cnt))
@@ -619,12 +623,12 @@ contains
     end do
 
     if (ciso_on) then
-      call this%add_tracer_index('di13c', 'ciso', this%di13c_ind, marbl_status_log)
-      call this%add_tracer_index('do13c', 'ciso', this%do13c_ind, marbl_status_log)
-      call this%add_tracer_index('di14c', 'ciso', this%di14c_ind, marbl_status_log)
-      call this%add_tracer_index('do14c', 'ciso', this%do14c_ind, marbl_status_log)
-      call this%add_tracer_index('zoo13c', 'ciso', this%zoo13C_ind, marbl_status_log)
-      call this%add_tracer_index('zoo14c', 'ciso', this%zoo14C_ind, marbl_status_log)
+      call this%add_tracer_index('di13c',    'ciso', this%di13c_ind,    marbl_status_log)
+      call this%add_tracer_index('do13ctot', 'ciso', this%do13ctot_ind, marbl_status_log)
+      call this%add_tracer_index('di14c',    'ciso', this%di14c_ind,    marbl_status_log)
+      call this%add_tracer_index('do14ctot', 'ciso', this%do14ctot_ind, marbl_status_log)
+      call this%add_tracer_index('zoo13Ctot',   'ciso', this%zoo13Ctot_ind,   marbl_status_log)
+      call this%add_tracer_index('zoo14Ctot',   'ciso', this%zoo14Ctot_ind,   marbl_status_log)
 
       do n=1,autotroph_cnt
         write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C13"
@@ -648,9 +652,6 @@ contains
       call marbl_status_log%log_error_trace("add_tracer_index", subname)
       return
     end if
-
-    ! If marbl_tracer_cnt is requested, provide before returning
-    if (present(marbl_tracer_cnt)) marbl_tracer_cnt = this%total_cnt
 
   end subroutine tracer_index_constructor
 
@@ -875,6 +876,7 @@ contains
   subroutine interior_forcing_index_constructor(this,                         &
                                                 tracer_names,                 &
                                                 tracer_restore_vars,          &
+                                                num_PAR_subcols,              &
                                                 num_interior_forcing_fields,  &
                                                 marbl_status_log)
 
@@ -884,6 +886,7 @@ contains
     class(marbl_interior_forcing_indexing_type), intent(out)   :: this
     character(len=char_len), dimension(:),       intent(in)    :: tracer_names
     character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
+    integer(int_kind),                           intent(in)    :: num_PAR_subcols
     integer(int_kind),                           intent(out)   :: num_interior_forcing_fields
     type(marbl_log_type),                        intent(inout) :: marbl_status_log
 
@@ -899,25 +902,23 @@ contains
 
       forcing_cnt = 0
 
-      ! -------------------------------
-      ! | Always request these fields |
-      ! -------------------------------
-
       ! Dust Flux
       forcing_cnt = forcing_cnt + 1
       this%dustflux_id = forcing_cnt
 
-      ! PAR column fraction
-      forcing_cnt = forcing_cnt + 1
-      this%PAR_col_frac_id = forcing_cnt
+      ! PAR column fraction (not needed if num_PAR_subcols = 1)
+      if (num_PAR_subcols .gt. 1) then
+        forcing_cnt = forcing_cnt + 1
+        this%PAR_col_frac_id = forcing_cnt
+      end if
 
       ! PAR column shortwave
       forcing_cnt = forcing_cnt + 1
       this%surf_shortwave_id = forcing_cnt
 
-      ! Temperature
+      ! Potential Temperature
       forcing_cnt = forcing_cnt + 1
-      this%temperature_id = forcing_cnt
+      this%potemp_id = forcing_cnt
 
       ! Salinity
       forcing_cnt = forcing_cnt + 1
@@ -996,4 +997,3 @@ contains
   !*****************************************************************************
 
 end module marbl_interface_private_types
-

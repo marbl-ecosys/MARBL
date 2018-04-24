@@ -100,7 +100,7 @@ Contains
     integer,                           intent(out)   :: id
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_timing_mod:marbl_timing_add'
+    character(len=*), parameter :: subname = 'marbl_timing_mod:add_new_timer'
     character(len=char_len)     :: log_message
 
     type(marbl_single_timer_type), allocatable :: tmp(:)
@@ -143,7 +143,7 @@ Contains
     integer,                           intent(in)    :: id
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_timing_mod:marbl_timing_start'
+    character(len=*), parameter :: subname = 'marbl_timing_mod:start_timer'
     character(len=char_len)     :: log_message
 
 #ifdef _OPENMP
@@ -184,7 +184,7 @@ Contains
     integer,                           intent(in)    :: id
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_timing_mod:marbl_timing_stop'
+    character(len=*), parameter :: subname = 'marbl_timing_mod:stop_timer'
     character(len=char_len)     :: log_message
 
     real(r8) :: runtime
