@@ -134,7 +134,7 @@ module marbl_settings_mod
       f_graze_sp_poc_lim    = 0.36_r8,  &
       f_photosp_CaCO3       = 0.40_r8,  & ! proportionality between small phyto
                                           !    production and CaCO3 production
-      f_graze_CaCO3_remin   = 0.33_r8,  & ! fraction of spCaCO3 grazing which is remin
+      f_graze_CaCO3_remin   = 0.7_r8,  & ! fraction of spCaCO3 grazing which is remin
       f_graze_si_remin      = 0.50_r8,  & ! fraction of diatom Si grazing which is remin
       f_toDON               = 0.70_r8,  & ! fraction DON relative to DOC
       f_toDOP               = 0.15_r8     ! fraction of remaining_P to DOP

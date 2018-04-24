@@ -675,14 +675,14 @@ contains
             autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_loss(autotroph_cnt, autotrophs,           &
-            Tfunc(k), autotroph_secondary_species(:, k))
+            Tfunc(k), Tfunc_cocco(k), autotroph_secondary_species(:, k))
 
        call marbl_compute_Zprime(k, domain, &
             zooplankton_cnt, zooplankton, zooplankton_local(:, k)%C, &
             Tfunc(k), zooplankton_secondary_species(:, k))
 
        call marbl_compute_grazing (autotroph_cnt, zooplankton_cnt,              &
-            max_grazer_prey_cnt, autotrophs, Tfunc(k), zooplankton_local(:, k), &
+            max_grazer_prey_cnt, autotrophs, Tfunc(k), Tfunc_cocco(k), zooplankton_local(:, k), &
             zooplankton_secondary_species(:, k),                                &
             autotroph_secondary_species(:, k))
 
@@ -2297,7 +2297,7 @@ contains
 
     ! autotroph consistency check
     call marbl_consistency_check_autotrophs(autotroph_cnt, column_kmt, &
-         marbl_tracer_indices, autotroph_local(:,1:column_kmt))
+         marbl_tracer_indices, autotrophs, autotroph_local(:,1:column_kmt))
 
     ! set totalChl_local
     totalChl_local = sum(autotroph_local(:,:)%Chl, dim=1)
@@ -2307,7 +2307,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_consistency_check_autotrophs(auto_cnt, column_kmt,         &
-             marbl_tracer_indices, autotroph_local)
+             marbl_tracer_indices, autotrophs, autotroph_local)
 
     !-----------------------------------------------------------------------
     !  If any phyto box are zero, set others to zeros.
@@ -2318,6 +2318,7 @@ contains
     integer(int_kind)          , intent(in)    :: auto_cnt   ! autotroph_cnt
     integer(int_kind)          , intent(in)    :: column_kmt ! number of active model layers
     type(marbl_tracer_index_type) , intent(in) :: marbl_tracer_indices
+    type(autotroph_type)         , intent(in)    :: autotrophs(:)
     type(autotroph_local_type) , intent(inout) :: autotroph_local(autotroph_cnt, column_kmt)
 
     !-----------------------------------------------------------------------
@@ -2774,9 +2775,10 @@ contains
 
 
 
-!Tfunc_cocco = Q_10**(((column_temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
+!Tfunc_cocco = Tfunc !Q_10**(((column_temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
 !Tfunc_cocco = 0.085 * ((column_temperature)**(0.53))
-Tfunc_cocco = 0.12 * ((column_temperature)**(0.4))
+!Tfunc_cocco = max(0.158, 0.12 * ((column_temperature)**(0.4)))
+Tfunc_cocco = 0.12_r8 * (max(0.0_r8, min(column_temperature,27.0_r8))**(0.4_r8))
 !Tfunc_cocco = 1.8**(((column_temperature + T0_Kelvin) - (33.0 + T0_Kelvin)) / c10)
 
   end subroutine marbl_compute_function_scaling
@@ -3281,7 +3283,7 @@ Tfunc_cocco = 0.12 * ((column_temperature)**(0.4))
   !***********************************************************************
 
   subroutine marbl_compute_autotroph_loss (auto_cnt, autotrophs, Tfunc,       &
-             autotroph_secondary_species)
+             Tfunc_cocco, autotroph_secondary_species)
 
     !-----------------------------------------------------------------------
     ! Compute autotroph-loss, autotroph aggregation loss and routine of
@@ -3291,6 +3293,7 @@ Tfunc_cocco = 0.12 * ((column_temperature)**(0.4))
     integer(int_kind)                      , intent(in)    :: auto_cnt
     type(autotroph_type)                   , intent(in)    :: autotrophs(auto_cnt)
     real(r8)                               , intent(in)    :: Tfunc
+    real(r8)                               , intent(in)    :: Tfunc_cocco
     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(auto_cnt)
 
     !-----------------------------------------------------------------------
@@ -3315,7 +3318,11 @@ Tfunc_cocco = 0.12 * ((column_temperature)**(0.4))
        !  autotroph agg loss
        !-----------------------------------------------------------------------
 
-       auto_loss(auto_ind) = autotrophs(auto_ind)%mort * Pprime(auto_ind) * Tfunc
+       if (autotrophs(auto_ind)%exp_calcifier) then
+         auto_loss(auto_ind) = autotrophs(auto_ind)%mort * Pprime(auto_ind) * Tfunc_cocco
+       else
+         auto_loss(auto_ind) = autotrophs(auto_ind)%mort * Pprime(auto_ind) * Tfunc
+       end if
 
        auto_agg(auto_ind) = min((autotrophs(auto_ind)%agg_rate_max * dps) * Pprime(auto_ind), &
             autotrophs(auto_ind)%mort2 * Pprime(auto_ind)**1.75_r8)
@@ -3342,7 +3349,7 @@ Tfunc_cocco = 0.12 * ((column_temperature)**(0.4))
   !***********************************************************************
 
   subroutine marbl_compute_grazing (auto_cnt, zoo_cnt, max_grazer_prey_cnt,  &
-             autotrophs, Tfunc, zooplankton_loc,                             &
+             autotrophs, Tfunc, Tfunc_cocco, zooplankton_loc,                             &
        zooplankton_secondary_species, autotroph_secondary_species)
 
     !-----------------------------------------------------------------------
@@ -3367,6 +3374,7 @@ Tfunc_cocco = 0.12 * ((column_temperature)**(0.4))
     integer(int_kind)                        , intent(in)    :: max_grazer_prey_cnt
     type(autotroph_type)                     , intent(in)    :: autotrophs(auto_cnt)
     real(r8)                                 , intent(in)    :: Tfunc
+    real(r8)                                 , intent(in)    :: Tfunc_cocco
     type(zooplankton_local_type)             , intent(in)    :: zooplankton_loc(zoo_cnt)
     type(zooplankton_secondary_species_type) , intent(inout) :: zooplankton_secondary_species(zoo_cnt)
     type(autotroph_secondary_species_type)   , intent(inout) :: autotroph_secondary_species(auto_cnt)
@@ -3441,8 +3449,13 @@ Tfunc_cocco = 0.12 * ((column_temperature)**(0.4))
           case (grz_fnc_michaelis_menten)
 
              if (work1 > c0) then
-                graze_rate = grazing(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_loc(pred_ind)%C &
+                if (autotrophs(auto_ind)%exp_calcifier) then
+                  graze_rate = grazing(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_loc(pred_ind)%C &
                      * ( work1 / (work1 + grazing(prey_ind, pred_ind)%z_grz) )
+                else
+                  graze_rate = grazing(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_loc(pred_ind)%C &
+                     * ( work1 / (work1 + grazing(prey_ind, pred_ind)%z_grz) )
+                end if
              else
                 graze_rate = c0
              end if
