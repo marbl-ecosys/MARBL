@@ -4566,8 +4566,8 @@ contains
                near_surface_integral=diags(ind%SiO3_lim_Cweight_avg_100m(n))%field_2d(1))
        endif
 
-       diags(ind%C_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VCtot
-       limterm = autotroph_secondary_species(n,:)%VCtot * autotrophC_weight(:)
+       diags(ind%C_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VCO2
+       limterm = autotroph_secondary_species(n,:)%VCO2 * autotrophC_weight(:)
        call compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%C_lim_Cweight_avg_100m(n))%field_2d(1))
 
@@ -4579,10 +4579,6 @@ contains
        if (ind%Qp(n).ne.-1) then
          diags(ind%Qp(n))%field_3d(:, 1)        = autotroph_secondary_species(n,:)%Qp
        end if
-!!!!!!!add for coccos
-        if (ind%C_lim(n).ne.-1) then
-            diags(ind%C_lim(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%VCO2
-        end if
 
        diags(ind%photoNO3(n))%field_3d(:, 1)    = autotroph_secondary_species(n,:)%NO3_V
        diags(ind%photoNH4(n))%field_3d(:, 1)    = autotroph_secondary_species(n,:)%NH4_V

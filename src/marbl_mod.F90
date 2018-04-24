@@ -2770,7 +2770,7 @@ contains
 !Tfunc_cocco = Tfunc !Q_10**(((column_temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
 !Tfunc_cocco = 0.085 * ((column_temperature)**(0.53))
 !Tfunc_cocco = max(0.158, 0.12 * ((column_temperature)**(0.4)))
-Tfunc_cocco = 0.12_r8 * (max(0.0_r8, min(column_temperature,27.0_r8))**(0.4_r8))
+Tfunc_cocco = 0.12_r8 * (max(0.0_r8, min(temperature,27.0_r8))**(0.4_r8))
 !Tfunc_cocco = 1.8**(((column_temperature + T0_Kelvin) - (33.0 + T0_Kelvin)) / c10)
 
   end subroutine marbl_compute_function_scaling

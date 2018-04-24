@@ -152,6 +152,18 @@
                "subcategory": "10. autotrophs",
                "units": "non-numeric"
             },
+            "kCO2": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"diat\"": 0,
+                  "((autotroph_sname)) == \"diaz\"": 0,
+                  "((autotroph_sname)) == \"sp\"": 0,
+                  "default": "1e34"
+               },
+               "longname": "CO2 uptake half-sat constant",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
             "kDOP": {
                "datatype": "real",
                "default_value": {
