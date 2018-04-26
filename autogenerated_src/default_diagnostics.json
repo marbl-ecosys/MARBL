@@ -920,22 +920,22 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
-   "CISO_zooC_d13C": {
+   "CISO_zoototC_d13C": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "d13C of zooC",
+      "longname": "d13C of total zooC",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
-   "CISO_zooC_d14C": {
+   "CISO_zoototC_d14C": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "d14C of zooC",
+      "longname": "d14C of total zooC",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"

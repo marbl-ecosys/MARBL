@@ -266,6 +266,7 @@ module marbl_settings_mod
 
   character(len=char_len), target :: caco3_bury_thres_opt         ! option of threshold of caco3 burial ['fixed_depth', 'omega_calc']
   real(r8),                target :: caco3_bury_thres_depth       ! threshold depth for caco3_bury_thres_opt='fixed_depth'
+  real(r8),                target :: caco3_bury_thres_omega_calc  ! omega calcite threshold for caco3_bury_thres_opt='omega_calc'
   ! -----------
   ! PON_sed_loss = PON_bury_coeff * Q * POC_sed_loss
   ! factor is used to avoid overburying PON like POC
@@ -355,7 +356,7 @@ contains
     init_bury_coeff_opt           = 'settings_file' ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    Jint_Ctot_thres_molpm2pyr     = 1.0e-10_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Fe_bioavail              = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min                   = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min_delta             = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -378,11 +379,11 @@ contains
     bury_coeff_rmean_timescale_years = 10.0_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8, 1000.0e2_r8 /)  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_scalelen_vals = (/     1.0_r8,     3.0_r8,     4.5_r8,      5.5_r8 /)  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-
-    caco3_bury_thres_opt   = 'omega_calc'           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    caco3_bury_thres_depth = 3000.0e2               ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    PON_bury_coeff         = 0.5_r8                 ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    ciso_fract_factors     = 'Laws'                 ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    caco3_bury_thres_opt          = 'omega_calc'    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    caco3_bury_thres_depth        = 3000.0e2_r8     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    caco3_bury_thres_omega_calc   = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    PON_bury_coeff                = 0.5_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    ciso_fract_factors            = 'Laws'          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
 
   end subroutine marbl_settings_set_defaults_general_parms
 
@@ -861,6 +862,15 @@ contains
     units     = 'cm'
     datatype  = 'real'
     rptr      => caco3_bury_thres_depth
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'caco3_bury_thres_omega_calc'
+    lname     = 'omega calcite threshold for CaCO3 burial (if using omega_calc option)'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => caco3_bury_thres_omega_calc
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)

@@ -176,13 +176,13 @@ _tracer_list :
    ((zooplankton_sname))C :
       long_name : ((zooplankton_lname)) Carbon
       units : mmol/m^3
-   # Per-zooplankton (ciso only)
-   zoo13Ctot :
+   # Total zooplankton tracers (ciso only)
+   zootot13C :
       dependencies :
          ciso_on : .true.
       long_name : Zooplankton Carbon-13 (sum over all zooplankton)
       units : mmol/m^3
-   zoo14Ctot :
+   zootot14C :
       dependencies :
          ciso_on : .true.
       long_name : Zooplankton Carbon-14 (sum over all zooplankton)
@@ -280,7 +280,7 @@ general_parms :
       subcategory : 4. general parameters
       units : mol m-2 yr-1
       datatype : real
-      default_value : 1.0e-10
+      default_value : 1.0e-9
    parm_Fe_bioavail :
       longname : Fraction of Fe flux that is bioavailable
       subcategory : 4. general parameters
@@ -460,6 +460,12 @@ general_parms :
       units : cm
       datatype : real
       default_value : 3000e2
+   caco3_bury_thres_omega_calc :
+      longname : omega calcite threshold for CaCO3 burial when opt = 'omega_calc'
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 1.0
    PON_bury_coeff :
       longname : Scale factor for burial of PON
       subcategory : 4. general parameters (bury coeffs)

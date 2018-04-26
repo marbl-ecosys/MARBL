@@ -730,14 +730,14 @@
          "long_name": "Dissolved Inorganic Silicate",
          "units": "mmol/m^3"
       },
-      "zoo13Ctot": {
+      "zootot13C": {
          "dependencies": {
             "ciso_on": ".true."
          },
          "long_name": "Zooplankton Carbon-13 (sum over all zooplankton)",
          "units": "mmol/m^3"
       },
-      "zoo14Ctot": {
+      "zootot14C": {
          "dependencies": {
             "ciso_on": ".true."
          },
@@ -748,7 +748,7 @@
    "general_parms": {
       "Jint_Ctot_thres_molpm2pyr": {
          "datatype": "real",
-         "default_value": 1e-10,
+         "default_value": 1e-09,
          "longname": "MARBL will abort if abs(Jint_Ctot) exceeds this threshold",
          "subcategory": "4. general parameters",
          "units": "mol m-2 yr-1"
@@ -800,6 +800,13 @@
          "longname": "Threshold depth for CaCO3 burial when opt = 'fixed_depth'",
          "subcategory": "4. general parameters",
          "units": "cm"
+      },
+      "caco3_bury_thres_omega_calc": {
+         "datatype": "real",
+         "default_value": 1.0,
+         "longname": "omega calcite threshold for CaCO3 burial when opt = 'omega_calc'",
+         "subcategory": "4. general parameters",
+         "units": 1
       },
       "caco3_bury_thres_opt": {
          "datatype": "string",

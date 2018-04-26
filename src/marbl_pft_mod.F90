@@ -52,6 +52,10 @@ module marbl_pft_mod
      real (r8) :: Fe    ! local copy of model autotroph Fe
      real (r8) :: Si    ! local copy of model autotroph Si
      real (r8) :: CaCO3 ! local copy of model autotroph CaCO3
+     real (r8) :: C13     ! local copy of model autotroph C13
+     real (r8) :: C14     ! local copy of model autotroph C14
+     real (r8) :: Ca13CO3 ! local copy of model autotroph Ca13CO3
+     real (r8) :: Ca14CO3 ! local copy of model autotroph Ca14CO3
   end type autotroph_local_type
 
   !****************************************************************************
@@ -94,36 +98,17 @@ module marbl_pft_mod
 
   !***********************************************************************
 
-  type, public :: marbl_autotroph_share_type
-     real(r8) :: autotrophChl_loc_fields   ! local copy of model autotroph Chl
-     real(r8) :: autotrophC_loc_fields     ! local copy of model autotroph C
-     real(r8) :: autotrophFe_loc_fields    ! local copy of model autotroph Fe
-     real(r8) :: autotrophSi_loc_fields    ! local copy of model autotroph Si
-     real(r8) :: autotrophCaCO3_loc_fields ! local copy of model autotroph CaCO3
-     real(r8) :: QCaCO3_fields             ! small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
-     real(r8) :: auto_graze_fields         ! autotroph grazing rate (mmol C/m^3/sec)
-     real(r8) :: auto_graze_zoo_fields     ! auto_graze routed to zoo (mmol C/m^3/sec)
-     real(r8) :: auto_graze_poc_fields     ! auto_graze routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_doc_fields     ! auto_graze routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_dic_fields     ! auto_graze routed to dic (mmol C/m^3/sec)
-     real(r8) :: auto_loss_fields          ! autotroph non-grazing mort (mmol C/m^3/sec)
-     real(r8) :: auto_loss_poc_fields      ! auto_loss routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_doc_fields      ! auto_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_dic_fields      ! auto_loss routed to dic (mmol C/m^3/sec)
-     real(r8) :: auto_agg_fields           ! autotroph aggregation (mmol C/m^3/sec)
-     real(r8) :: photoC_fields             ! C-fixation (mmol C/m^3/sec)
-     real(r8) :: CaCO3_form_fields         ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-     real(r8) :: PCphoto_fields            ! C-specific rate of photosynth. (1/sec)
-  end type marbl_autotroph_share_type
-
-  !***********************************************************************
-
   type, public :: marbl_zooplankton_share_type
-     real(r8) :: zooC_loc_fields     ! local copy of model zooC
-     real(r8) :: zoo_loss_fields     ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_poc_fields ! zoo_loss routed to large detrital (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_doc_fields ! zoo_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_dic_fields ! zoo_loss routed to dic (mmol C/m^3/sec)
+     real(r8) :: zoototC_loc_fields      ! local copy of model zooC
+     real(r8) :: zootot_loss_fields      ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+     real(r8) :: zootot_loss_poc_fields  ! zoo_loss routed to large detrital (mmol C/m^3/sec)
+     real(r8) :: zootot_loss_doc_fields  ! zoo_loss routed to doc (mmol C/m^3/sec)
+     real(r8) :: zootot_loss_dic_fields  ! zoo_loss routed to dic (mmol C/m^3/sec)
+     real(r8) :: zootot_graze_fields     ! zooplankton losses due to grazing (mmol C/m^3/sec)
+     real(r8) :: zootot_graze_zoo_fields ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+     real(r8) :: zootot_graze_poc_fields ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
+     real(r8) :: zootot_graze_doc_fields ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
+     real(r8) :: zootot_graze_dic_fields ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
   end type marbl_zooplankton_share_type
 
   !*****************************************************************************
