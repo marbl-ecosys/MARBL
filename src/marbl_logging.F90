@@ -380,6 +380,7 @@ contains
 
     write(log_message, "(2A)") "Warning reported from ", trim(RoutineName)
     call this%log_warning(log_message, CodeLoc, ElemInd)
+    this%lwarning = .false.
 
   end subroutine marbl_log_warning_trace
 
