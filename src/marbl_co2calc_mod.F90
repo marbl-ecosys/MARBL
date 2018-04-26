@@ -888,20 +888,17 @@ contains
 
              ! Iteration number
              WRITE(log_message,"(3A,1X,A,I0)") '(', subname, ')', 'it = ', it
-             call marbl_status_log%log_noerror(log_message, subname, c,       &
-                             lonly_master_writes=.false.)
+             call marbl_status_log%log_warning(log_message, subname, c)
 
              ! x1 & f
              WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')',       &
                   'x1,f = ', x1(c), flo(c)
-             call marbl_status_log%log_noerror(log_message, subname, c,       &
-                             lonly_master_writes=.false.)
+             call marbl_status_log%log_warning(log_message, subname, c)
 
              ! x2 & f
              WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')',       &
                   'x2,f = ', x2(c), fhi(c)
-             call marbl_status_log%log_noerror(log_message, subname, c,       &
-                             lonly_master_writes=.false.)
+             call marbl_status_log%log_warning(log_message, subname, c)
 
              ! Error if iteration count exceeds max_bracket_grow_it
              if (it > max_bracket_grow_it) then

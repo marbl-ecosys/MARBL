@@ -1989,8 +1989,12 @@ contains
                marbl_status_log = marbl_status_log)
 
           if (marbl_status_log%labort_marbl) then
-             call marbl_status_log%log_error_trace('co2calc_surf() with flux_co2', subname)
+             call marbl_status_log%log_error_trace('marbl_co2calc_surface() with flux_co2', subname)
              return
+          end if
+
+          if (marbl_status_log%lwarning) then
+             call marbl_status_log%log_warning_trace('marbl_co2calc_surface() with flux_co2', subname)
           end if
 
           flux_co2(:) = pv_co2(:) * dco2star(:)
@@ -2048,10 +2052,14 @@ contains
                ph         = ph_prev_alt_co2_surf,                          &
                marbl_status_log = marbl_status_log)
 
-            if (marbl_status_log%labort_marbl) then
-               call marbl_status_log%log_error_trace('co2calc_surf() with flux_alt_co2', subname)
-               return
-            end if
+          if (marbl_status_log%labort_marbl) then
+             call marbl_status_log%log_error_trace('marbl_co2calc_surface() with flux_alt_co2', subname)
+             return
+          end if
+
+          if (marbl_status_log%lwarning) then
+             call marbl_status_log%log_warning_trace('marbl_co2calc_surface() with flux_alt_co2', subname)
+          end if
 
           flux_alt_co2(:) = pv_co2(:) * dco2star_alt(:)
 
@@ -2715,8 +2723,12 @@ contains
          ph_lower_bound, ph_upper_bound, ph, h2co3, hco3, co3, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('marbl_co2calc_interior()', subname)
+      call marbl_status_log%log_error_trace('marbl_co2calc_interior() with dic', subname)
       return
+    end if
+
+    if (marbl_status_log%lwarning) then
+      call marbl_status_log%log_warning_trace('marbl_co2calc_interior() with dic', subname)
     end if
 
     do k=1,dkm
@@ -2741,8 +2753,12 @@ contains
          hco3_alt_co2, co3_alt_co2, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('marbl_co2calc_interior()', subname)
+      call marbl_status_log%log_error_trace('marbl_co2calc_interior() with dic_alt_co2', subname)
       return
+    end if
+
+    if (marbl_status_log%lwarning) then
+      call marbl_status_log%log_warning_trace('marbl_co2calc_interior() with dic_alt_co2', subname)
     end if
 
     ph_prev_alt_co2_col = ph_alt_co2
