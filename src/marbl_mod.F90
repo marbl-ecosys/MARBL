@@ -702,10 +702,12 @@ contains
           return
        end if
 
-       call marbl_compute_large_detritus_prod(k, autotroph_cnt,               &
-            zooplankton_cnt, autotrophs, zooplankton_secondary_species(:, k), &
+       call marbl_compute_large_detritus_prod(k, domain, autotroph_cnt,       &
+            zooplankton_cnt, marbl_tracer_indices, autotrophs,                &
+            zooplankton_secondary_species(:, k),                              &
             autotroph_secondary_species(:, k), Fe_scavenge(k),                &
-            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, marbl_tracer_indices)
+            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron,         &
+            dissolved_organic_matter(k)%DOP_loss_P_bal, marbl_status_log)
 
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
@@ -3946,11 +3948,12 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_large_detritus_prod(k, auto_cnt, zoo_cnt,          &
+  subroutine marbl_compute_large_detritus_prod(k, domain, auto_cnt, zoo_cnt, marbl_tracer_indices, &
        autotrophs, zooplankton_secondary_species, autotroph_secondary_species, &
        Fe_scavenge, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, &
-       marbl_tracer_indices)
+       DOP_loss_P_bal, marbl_status_log)
 
+    use marbl_settings_mod, only : Jint_Ptot_thres
     use marbl_settings_mod, only : f_graze_CaCO3_remin
     use marbl_settings_mod, only : f_graze_si_remin
     use marbl_settings_mod, only : Qfe_zoo
@@ -3961,9 +3964,11 @@ contains
     ! standard)
 
     integer                                  , intent(in)    :: k
+    type(marbl_domain_type)                  , intent(in)    :: domain
     integer                                  , intent(in)    :: auto_cnt
     integer                                  , intent(in)    :: zoo_cnt
-    type(autotroph_type)               , intent(in)    :: autotrophs(auto_cnt)
+    type(marbl_tracer_index_type)            , intent(in)    :: marbl_tracer_indices
+    type(autotroph_type)                     , intent(in)    :: autotrophs(auto_cnt)
     type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(zoo_cnt)
     type(autotroph_secondary_species_type)   , intent(in)    :: autotroph_secondary_species(auto_cnt)
     real(r8)                                 , intent(in)    :: Fe_scavenge
@@ -3974,11 +3979,14 @@ contains
     type(column_sinking_particle_type)       , intent(inout) :: P_SiO2
     type(column_sinking_particle_type)       , intent(inout) :: dust
     type(column_sinking_particle_type)       , intent(inout) :: P_iron
-    type(marbl_tracer_index_type)            , intent(in)    :: marbl_tracer_indices
+    real(r8)                                 , intent(out)   :: DOP_loss_P_bal
+    type(marbl_log_type)                     , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_compute_large_detritus_prod'
+    character(len=char_len)     :: log_message
 
     integer :: auto_ind
 
@@ -4011,7 +4019,20 @@ contains
 
     POP%prod(k) = Qp_zoo * (sum(zoo_loss_poc(:)) + sum(zoo_graze_poc(:))) + sum(remaining_P_pop(:))
 
-    if (POP%prod(k) < c0) POP%prod(k) = c0
+    if (POP%prod(k) < c0) then
+       DOP_loss_P_bal = -POP%prod(k)
+       POP%prod(k) = c0
+
+       ! write warning to log if omitting DOP_loss_P_bal would have led to a Jint_Ptot error
+       if (domain%delta_z(k) * DOP_loss_P_bal .gt. Jint_Ptot_thres) then
+          write(log_message,"(A,E11.3e3,A,E11.3e3)") &
+               'dz*DOP_loss_P_bal=', domain%delta_z(k) * DOP_loss_P_bal, &
+               ' exceeds Jint_Ptot_thres=', Jint_Ptot_thres
+          call marbl_status_log%log_warning(log_message, subname, ElemInd=k)
+       end if
+    else
+       DOP_loss_P_bal = c0
+    endif
 
     !-----------------------------------------------------------------------
     !  large detrital CaCO3
@@ -4320,6 +4341,7 @@ contains
          DOP_prod        => dissolved_organic_matter%DOP_prod        , & ! production of DOP
          DOP_remin       => dissolved_organic_matter%DOP_remin       , & ! remineralization of DOP
          DOPr_remin      => dissolved_organic_matter%DOPr_remin      , & ! remineralization of DOPr
+         DOP_loss_P_bal  => dissolved_organic_matter%DOP_loss_P_bal  , & ! DOP loss, due to P budget balancing
 
          po4_ind           => marbl_tracer_indices%po4_ind,         &
          no3_ind           => marbl_tracer_indices%no3_ind,         &
@@ -4460,7 +4482,7 @@ contains
 
     dtracers(dop_ind) = (DOP_prod * (c1 - DOPprod_refract)) - DOP_remin - sum(DOP_V(:))
 
-    dtracers(dopr_ind) = (DOP_prod * DOPprod_refract) - DOPr_remin + (POP_remin * POPremin_refract)
+    dtracers(dopr_ind) = (DOP_prod * DOPprod_refract) - DOPr_remin + (POP_remin * POPremin_refract) - DOP_loss_P_bal
 
     !-----------------------------------------------------------------------
     !  dissolved inorganic Carbon

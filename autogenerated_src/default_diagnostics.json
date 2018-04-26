@@ -1185,6 +1185,13 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "DOP_loss_P_bal": {
+      "frequency": "never",
+      "longname": "DOP loss, due to P budget balancing",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "DOP_prod": {
       "frequency": "medium",
       "longname": "DOP Production",

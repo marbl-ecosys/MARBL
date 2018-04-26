@@ -694,6 +694,12 @@ DOPr_remin :
    vertical_grid : layer_avg
    frequency : low
    operator : average
+DOP_loss_P_bal :
+   longname : DOP loss, due to P budget balancing
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
 Fe_scavenge :
    longname : Iron Scavenging
    units : mmol/m^3/s
