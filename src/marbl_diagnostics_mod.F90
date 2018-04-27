@@ -190,6 +190,7 @@ module marbl_diagnostics_mod
     integer(int_kind) :: DOP_prod
     integer(int_kind) :: DOP_remin
     integer(int_kind) :: DOPr_remin
+    integer(int_kind) :: DOP_loss_P_bal
     integer(int_kind) :: Fe_scavenge
     integer(int_kind) :: Fe_scavenge_rate
     integer(int_kind) :: Lig_prod
@@ -2329,6 +2330,18 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%DOPr_remin, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'DOP loss, due to P budget balancing'
+      sname = 'DOP_loss_P_bal'
+      units = 'mmol/m^3/s'
+      vgrid = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%DOP_loss_P_bal, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -4944,6 +4957,7 @@ contains
        diags(ind%DOP_prod)%field_3d(k, 1)         = dissolved_organic_matter(k)%DOP_prod
        diags(ind%DOP_remin)%field_3d(k, 1)        = dissolved_organic_matter(k)%DOP_remin
        diags(ind%DOPr_remin)%field_3d(k, 1)       = dissolved_organic_matter(k)%DOPr_remin
+       diags(ind%DOP_loss_P_bal)%field_3d(k, 1)   = dissolved_organic_matter(k)%DOP_loss_P_bal
     end do
 
     call compute_vertical_integrals(diags(ind%DOC_prod)%field_3d(:,1), &

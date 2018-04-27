@@ -147,6 +147,7 @@ module marbl_interface_private_types
      real (r8) :: DOP_prod         ! production of DOP
      real (r8) :: DOP_remin        ! remineralization of DOP
      real (r8) :: DOPr_remin       ! remineralization of DOPr
+     real (r8) :: DOP_loss_P_bal   ! DOP loss, due to P budget balancing
   end type dissolved_organic_matter_type
 
   !***********************************************************************
