@@ -96,6 +96,7 @@ module marbl_diagnostics_mod
     integer(int_kind) :: Jint_Fetot
 
     ! Particulate 2D diags
+    integer(int_kind) :: calcToFloor
     integer(int_kind) :: calcToSed
     integer(int_kind) :: calcToSed_ALT_CO2
     integer(int_kind) :: pocToSed
@@ -1208,6 +1209,18 @@ contains
       end if
 
       ! Particulate 2D diags
+      lname = 'CaCO3 Flux Hitting Sea Floor'
+      sname = 'calcToFloor'
+      units = 'nmol/cm^2/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%calcToFloor, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
       lname = 'CaCO3 Flux to Sediments'
       sname = 'calcToSed'
       units = 'nmol/cm^2/s'
@@ -4764,6 +4777,7 @@ contains
     diags(ind%P_iron_PROD)%field_3d(:, 1)           = P_iron%prod
     diags(ind%P_iron_REMIN)%field_3d(:, 1)          = P_iron%remin
 
+    diags(ind%calcToFloor)%field_2d(1)       = P_CaCO3%to_floor
     diags(ind%calcToSed)%field_2d(1)         = sum(P_CaCO3%sed_loss)
     diags(ind%calcToSed_ALT_CO2)%field_2d(1) = sum(P_CaCO3_ALT_CO2%sed_loss)
     diags(ind%bsiToSed)%field_2d(1)          = sum(P_SiO2%sed_loss)

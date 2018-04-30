@@ -442,6 +442,12 @@ Jint_Fetot :
    operator : average
 
 # Particulate 2D diags
+calcToFloor :
+   longname : CaCO3 Flux Hitting Sea Floor
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : never
+   operator : average
 calcToSed :
    longname : CaCO3 Flux to Sediments
    units : nmol/cm^2/s
