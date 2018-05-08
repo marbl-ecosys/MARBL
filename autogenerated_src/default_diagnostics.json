@@ -1763,6 +1763,13 @@
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
+   "calcToFloor": {
+      "frequency": "never",
+      "longname": "CaCO3 Flux Hitting Sea Floor",
+      "operator": "average",
+      "units": "nmol/cm^2/s",
+      "vertical_grid": "none"
+   },
    "calcToSed": {
       "frequency": "medium",
       "longname": "CaCO3 Flux to Sediments",
