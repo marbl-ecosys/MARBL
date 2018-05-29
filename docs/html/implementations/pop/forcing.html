@@ -1,0 +1,555 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>POP Interacting with MARBL Requested Forcings &#8212; MARBL 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="MARBL developer’s guide" href="../../dev-guide/index.html" />
+    <link rel="prev" title="POP Interacting with MARBL Tracers" href="tracers.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../dev-guide/index.html" title="MARBL developer’s guide"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tracers.html" title="POP Interacting with MARBL Tracers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MARBL 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Examples of MARBL Implementation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="index.html" accesskey="U">MARBL examples in POP</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tracers.html"
+                        title="previous chapter">POP Interacting with MARBL Tracers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../../dev-guide/index.html"
+                        title="next chapter">MARBL developer&#8217;s guide</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/implementations/pop/forcing.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pop-interacting-with-marbl-requested-forcings">
+<span id="pop-forcing"></span><h1>POP Interacting with MARBL Requested Forcings<a class="headerlink" href="#pop-interacting-with-marbl-requested-forcings" title="Permalink to this headline">¶</a></h1>
+<p>POP mirrors the MARBL datatypes for forcing fields and the associated metadata, but expands the metadata class to also manage the source of the data (read from a file, provided by POP, provided by the flux coupler, etc).
+In the code below, <code class="docutils literal"><span class="pre">surface_forcings(:)</span></code> is the MARBL data provided through the interface, and <code class="docutils literal"><span class="pre">surface_forcing_fields(:)</span></code> is the copy into the POP datatype.</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="k">allocate</span><span class="p">(</span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">size</span><span class="p">(</span><span class="n">surface_forcings</span><span class="p">)))</span>
+<span class="k">do </span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="p">(</span><span class="n">surface_forcing_fields</span><span class="p">)</span>
+  <span class="n">marbl_varname</span> <span class="o">=</span> <span class="n">surface_forcings</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">metadata</span><span class="p">%</span><span class="n">varname</span>
+  <span class="n">units</span>         <span class="o">=</span> <span class="n">surface_forcings</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">metadata</span><span class="p">%</span><span class="n">field_units</span>
+  <span class="k">select case</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">surface_forcings</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">metadata</span><span class="p">%</span><span class="n">varname</span><span class="p">))</span>
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;surface_mask&#39;</span><span class="p">)</span>
+      <span class="n">mask_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>      <span class="p">&amp;</span>
+                           <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;SURFACE_MASK&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;d13c&#39;</span><span class="p">)</span>
+      <span class="n">d13c_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>      <span class="p">&amp;</span>
+                           <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;D13C&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;d14c&#39;</span><span class="p">)</span>
+      <span class="n">d14c_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>      <span class="p">&amp;</span>
+                           <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;D14C&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;d14c_gloavg&#39;</span><span class="p">)</span>
+      <span class="n">d14c_glo_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>      <span class="p">&amp;</span>
+                           <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;D14C_GLOAVG&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;u10_sqr&#39;</span><span class="p">)</span>
+      <span class="n">u10sqr_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>      <span class="p">&amp;</span>
+                           <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;U10_SQR&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;sst&#39;</span><span class="p">)</span>
+      <span class="n">sst_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>      <span class="p">&amp;</span>
+                           <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;SST&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;sss&#39;</span><span class="p">)</span>
+      <span class="n">sss_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>      <span class="p">&amp;</span>
+                           <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;SSS&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;xco2&#39;</span><span class="p">)</span>
+      <span class="n">xco2_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">atm_co2_opt</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;const&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;const&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>   <span class="p">&amp;</span>
+                             <span class="n">field_constant</span><span class="o">=</span><span class="n">atm_co2_const</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">atm_co2_opt</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;drv_prog&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;named_field&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>         <span class="p">&amp;</span>
+                             <span class="n">named_field</span><span class="o">=</span><span class="s1">&#39;ATM_CO2_PROG&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">atm_co2_opt</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;drv_diag&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;named_field&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>         <span class="p">&amp;</span>
+                             <span class="n">named_field</span><span class="o">=</span><span class="s1">&#39;ATM_CO2_DIAG&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else</span>
+<span class="k">        write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(A,1X,A)&quot;</span><span class="p">)</span> <span class="nb">trim</span><span class="p">(</span><span class="n">atm_co2_opt</span><span class="p">),</span>                     <span class="p">&amp;</span>
+             <span class="s1">&#39;is not a valid option for atm_co2_opt&#39;</span>
+        <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+      <span class="k">end if</span>
+
+<span class="k">    case</span> <span class="p">(</span><span class="s1">&#39;xco2_alt_co2&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">atm_alt_co2_opt</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;const&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;const&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>   <span class="p">&amp;</span>
+                             <span class="n">field_constant</span><span class="o">=</span><span class="n">atm_alt_co2_const</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else</span>
+<span class="k">        write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(A,1X,A)&quot;</span><span class="p">)</span> <span class="nb">trim</span><span class="p">(</span><span class="n">atm_alt_co2_opt</span><span class="p">),</span>                 <span class="p">&amp;</span>
+             <span class="s1">&#39;is not a valid option for atm_alt_co2_opt&#39;</span>
+        <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+      <span class="k">end if</span>
+
+<span class="k">    case</span> <span class="p">(</span><span class="s1">&#39;Ice Fraction&#39;</span><span class="p">)</span>
+      <span class="n">ifrac_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">gas_flux_forcing_opt</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;drv&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>      <span class="p">&amp;</span>
+                             <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;ICE Fraction&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">gas_flux_forcing_opt</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;file&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        </span><span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">fice_file_loc</span>
+        <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                             <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else</span>
+<span class="k">        write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(A,1X,A)&quot;</span><span class="p">)</span> <span class="nb">trim</span><span class="p">(</span><span class="n">gas_flux_forcing_opt</span><span class="p">),</span>            <span class="p">&amp;</span>
+             <span class="s1">&#39;is not a valid option for gas_flux_forcing_opt&#39;</span>
+        <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+      <span class="k">end if</span>
+
+<span class="k">    case</span> <span class="p">(</span><span class="s1">&#39;Atmospheric Pressure&#39;</span><span class="p">)</span>
+      <span class="n">ap_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">gas_flux_forcing_opt</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;drv&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>      <span class="p">&amp;</span>
+                             <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;AP_FILE_INPUT&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">gas_flux_forcing_opt</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;file&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        </span><span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">ap_file_loc</span>
+        <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                             <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else</span>
+<span class="k">        write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(A,1X,A)&quot;</span><span class="p">)</span> <span class="nb">trim</span><span class="p">(</span><span class="n">gas_flux_forcing_opt</span><span class="p">),</span>            <span class="p">&amp;</span>
+             <span class="s1">&#39;is not a valid option for gas_flux_forcing_opt&#39;</span>
+        <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+      <span class="k">end if</span>
+
+<span class="k">    case</span> <span class="p">(</span><span class="s1">&#39;Dust Flux&#39;</span><span class="p">)</span>
+      <span class="n">dust_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">dust_flux_source</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;driver&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>      <span class="p">&amp;</span>
+                             <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;DUST_FLUX&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">dust_flux_source</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;monthly-calendar&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        </span><span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">dust_flux_file_loc</span>
+        <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                             <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else</span>
+<span class="k">        write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(A,1X,A)&quot;</span><span class="p">)</span> <span class="nb">trim</span><span class="p">(</span><span class="n">dust_flux_source</span><span class="p">),</span>                <span class="p">&amp;</span>
+             <span class="s1">&#39;is not a valid option for dust_flux_source&#39;</span>
+        <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+      <span class="k">end if</span>
+
+<span class="k">    case</span> <span class="p">(</span><span class="s1">&#39;Iron Flux&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">iron_flux_source</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;driver-derived&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        </span><span class="n">bc_ind</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>      <span class="p">&amp;</span>
+                             <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;BLACK_CARBON_FLUX&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">iron_flux_source</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;monthly-calendar&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        </span><span class="n">Fe_ind</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">iron_flux_file_loc</span>
+        <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                             <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else</span>
+<span class="k">        write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(A,1X,A)&quot;</span><span class="p">)</span> <span class="nb">trim</span><span class="p">(</span><span class="n">iron_flux_source</span><span class="p">),</span>                <span class="p">&amp;</span>
+             <span class="s1">&#39;is not a valid option for iron_flux_source&#39;</span>
+        <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+      <span class="k">end if</span>
+
+<span class="k">    case</span> <span class="p">(</span><span class="s1">&#39;NOx Flux&#39;</span><span class="p">)</span>
+      <span class="n">nox_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">ndep_data_type</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;shr_stream&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;shr_stream&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>  <span class="p">&amp;</span>
+                             <span class="n">unit_conv_factor</span><span class="o">=</span><span class="n">ndep_shr_stream_scale_factor</span><span class="p">,</span>   <span class="p">&amp;</span>
+                             <span class="n">file_varname</span><span class="o">=</span><span class="s1">&#39;NOy_deposition&#39;</span><span class="p">,</span>                   <span class="p">&amp;</span>
+                             <span class="n">year_first</span> <span class="o">=</span> <span class="n">ndep_shr_stream_year_first</span><span class="p">,</span>         <span class="p">&amp;</span>
+                             <span class="n">year_last</span> <span class="o">=</span> <span class="n">ndep_shr_stream_year_last</span><span class="p">,</span>           <span class="p">&amp;</span>
+                             <span class="n">year_align</span> <span class="o">=</span> <span class="n">ndep_shr_stream_year_align</span><span class="p">,</span>         <span class="p">&amp;</span>
+                             <span class="n">filename</span> <span class="o">=</span> <span class="n">ndep_shr_stream_file</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">ndep_data_type</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;monthly-calendar&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        </span><span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">nox_flux_monthly_file_loc</span>
+        <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                             <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else</span>
+<span class="k">        write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(A,1X,A)&quot;</span><span class="p">)</span> <span class="nb">trim</span><span class="p">(</span><span class="n">ndep_data_type</span><span class="p">),</span>                  <span class="p">&amp;</span>
+             <span class="s1">&#39;is not a valid option for ndep_data_type&#39;</span>
+        <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+      <span class="k">end if</span>
+
+<span class="k">    case</span> <span class="p">(</span><span class="s1">&#39;NHy Flux&#39;</span><span class="p">)</span>
+      <span class="n">nhy_ind</span> <span class="o">=</span> <span class="n">n</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">ndep_data_type</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;shr_stream&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;shr_stream&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>  <span class="p">&amp;</span>
+                             <span class="n">unit_conv_factor</span><span class="o">=</span><span class="n">ndep_shr_stream_scale_factor</span><span class="p">,</span>   <span class="p">&amp;</span>
+                             <span class="n">file_varname</span><span class="o">=</span><span class="s1">&#39;NHx_deposition&#39;</span><span class="p">,</span>                   <span class="p">&amp;</span>
+                             <span class="n">year_first</span> <span class="o">=</span> <span class="n">ndep_shr_stream_year_first</span><span class="p">,</span>         <span class="p">&amp;</span>
+                             <span class="n">year_last</span> <span class="o">=</span> <span class="n">ndep_shr_stream_year_last</span><span class="p">,</span>           <span class="p">&amp;</span>
+                             <span class="n">year_align</span> <span class="o">=</span> <span class="n">ndep_shr_stream_year_align</span><span class="p">,</span>         <span class="p">&amp;</span>
+                             <span class="n">filename</span> <span class="o">=</span> <span class="n">ndep_shr_stream_file</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">ndep_data_type</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="s1">&#39;monthly-calendar&#39;</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        </span><span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">nhy_flux_monthly_file_loc</span>
+        <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                             <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                             <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">else</span>
+<span class="k">        write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(A,1X,A)&quot;</span><span class="p">)</span> <span class="nb">trim</span><span class="p">(</span><span class="n">ndep_data_type</span><span class="p">),</span>                  <span class="p">&amp;</span>
+             <span class="s1">&#39;is not a valid option for ndep_data_type&#39;</span>
+        <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+      <span class="k">end if</span>
+
+<span class="k">    case</span> <span class="p">(</span><span class="s1">&#39;DIN River Flux&#39;</span><span class="p">)</span>
+      <span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">din_riv_flux_file_loc</span>
+      <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                           <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;DIP River Flux&#39;</span><span class="p">)</span>
+      <span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">dip_riv_flux_file_loc</span>
+      <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                           <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;DON River Flux&#39;</span><span class="p">)</span>
+      <span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">don_riv_flux_file_loc</span>
+      <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                           <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;DOP River Flux&#39;</span><span class="p">)</span>
+      <span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">dop_riv_flux_file_loc</span>
+      <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                           <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;DSi River Flux&#39;</span><span class="p">)</span>
+      <span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">dsi_riv_flux_file_loc</span>
+      <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                           <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;DFe River Flux&#39;</span><span class="p">)</span>
+      <span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">dfe_riv_flux_file_loc</span>
+      <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                           <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;DIC River Flux&#39;</span><span class="p">)</span>
+      <span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">dic_riv_flux_file_loc</span>
+      <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                           <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;ALK River Flux&#39;</span><span class="p">)</span>
+      <span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">alk_riv_flux_file_loc</span>
+      <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                           <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;DOC River Flux&#39;</span><span class="p">)</span>
+      <span class="n">file_details</span> <span class="o">=&gt;</span> <span class="n">doc_riv_flux_file_loc</span>
+      <span class="k">call </span><span class="n">init_monthly_surface_forcing_metadata</span><span class="p">(</span><span class="n">file_details</span><span class="p">)</span>
+      <span class="k">call </span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                    <span class="p">&amp;</span>
+                           <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;POP monthly calendar&#39;</span><span class="p">,</span>            <span class="p">&amp;</span>
+                           <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="p">&amp;</span>
+                           <span class="n">forcing_calendar_name</span><span class="o">=</span><span class="n">file_details</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">case </span><span class="n">DEFAULT</span>
+      <span class="k">write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(A,1X,A)&quot;</span><span class="p">)</span> <span class="nb">trim</span><span class="p">(</span><span class="n">surface_forcings</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">metadata</span><span class="p">%</span><span class="n">varname</span><span class="p">),</span> <span class="p">&amp;</span>
+                     <span class="s1">&#39;is not a valid surface forcing field name.&#39;</span>
+      <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+      <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+  <span class="k">end select</span>
+
+  <span class="c">! All surface forcing fields are 0d; if a 1d field is introduced later,</span>
+  <span class="c">! move this allocate into the select case</span>
+  <span class="k">allocate</span><span class="p">(</span><span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_0d</span><span class="p">(</span><span class="n">nx_block</span><span class="p">,</span> <span class="n">ny_block</span><span class="p">,</span> <span class="n">nblocks_clinic</span><span class="p">))</span>
+
+  <span class="c">! Zero out forcing field. If a 1d field is introduced later, check to see</span>
+  <span class="c">! which of field_0d and field_1d is allocated.</span>
+  <span class="n">surface_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_0d</span> <span class="o">=</span> <span class="n">c0</span>
+<span class="k">end do</span>
+</pre></div>
+</div>
+<p>Note that POP uses <code class="docutils literal"><span class="pre">field_source</span></code> to denote where it will be getting the forcing field.
+Not shown in this example is where POP actually populates the data.
+The code for interior forcing fields looks similar, although there are far fewer fields to handle and that results in a shorter code snippet.
+Again, <code class="docutils literal"><span class="pre">interior_forcings</span></code> is provided through the MARBL interface and <code class="docutils literal"><span class="pre">interior_forcing_fields</span></code> is a POP construct.</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="k">allocate</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">size</span><span class="p">(</span><span class="n">interior_forcings</span><span class="p">)))</span>
+
+<span class="k">do </span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">)</span>
+  <span class="n">marbl_varname</span> <span class="o">=</span> <span class="n">interior_forcings</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">metadata</span><span class="p">%</span><span class="n">varname</span>
+  <span class="n">units</span> <span class="o">=</span> <span class="n">interior_forcings</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">metadata</span><span class="p">%</span><span class="n">field_units</span>
+
+  <span class="n">var_processed</span> <span class="o">=</span> <span class="p">.</span><span class="n">false</span><span class="p">.</span>
+  <span class="c">! Check to see if this forcing field is tracer restoring</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nb">index</span><span class="p">(</span><span class="n">marbl_varname</span><span class="p">,</span><span class="s1">&#39;Restoring Field&#39;</span><span class="p">).</span><span class="n">gt</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">    </span><span class="n">tracer_name</span> <span class="o">=</span> <span class="nb">trim</span><span class="p">(</span><span class="n">marbl_varname</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="nb">scan</span><span class="p">(</span><span class="n">marbl_varname</span><span class="p">,</span><span class="s1">&#39; &#39;</span><span class="p">)))</span>
+    <span class="k">do </span><span class="n">m</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">marbl_tracer_cnt</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">tracer_name</span><span class="p">).</span><span class="n">eq</span><span class="p">.</span><span class="nb">trim</span><span class="p">(</span><span class="n">restoreable_tracer_names</span><span class="p">(</span><span class="n">m</span><span class="p">)))</span> <span class="k">then</span>
+        <span class="c">! Check to make sure restore_data_filenames and</span>
+        <span class="c">! restore_data_file_varnames have both been provided by namelist</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len_trim</span><span class="p">(</span><span class="n">restore_data_filenames</span><span class="p">(</span><span class="n">m</span><span class="p">)).</span><span class="n">eq</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">          write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(3A)&quot;</span><span class="p">)</span> <span class="s2">&quot;No file provided to read restoring &quot;</span><span class="p">,</span>   <span class="p">&amp;</span>
+                                 <span class="s2">&quot;field for &quot;</span><span class="p">,</span> <span class="nb">trim</span><span class="p">(</span><span class="n">tracer_name</span><span class="p">)</span>
+          <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+          <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+        <span class="k">end if</span>
+<span class="k">        if</span> <span class="p">(</span><span class="nb">len_trim</span><span class="p">(</span><span class="n">restore_data_file_varnames</span><span class="p">(</span><span class="n">m</span><span class="p">)).</span><span class="n">eq</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">          write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(3A)&quot;</span><span class="p">)</span> <span class="s2">&quot;No variable name provided to read &quot;</span><span class="p">,</span>    <span class="p">&amp;</span>
+                                 <span class="s2">&quot;restoring field for &quot;</span><span class="p">,</span> <span class="nb">trim</span><span class="p">(</span><span class="n">tracer_name</span><span class="p">)</span>
+          <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+          <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+        <span class="k">end if</span>
+<span class="k">        if</span> <span class="p">(</span><span class="n">my_task</span><span class="p">.</span><span class="n">eq</span><span class="p">.</span><span class="n">master_task</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">          write</span><span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="s2">&quot;(6A)&quot;</span><span class="p">)</span> <span class="s2">&quot;Will restore &quot;</span><span class="p">,</span> <span class="nb">trim</span><span class="p">(</span><span class="n">tracer_name</span><span class="p">),</span>       <span class="p">&amp;</span>
+                        <span class="s2">&quot; with &quot;</span><span class="p">,</span> <span class="nb">trim</span><span class="p">(</span><span class="n">restore_data_file_varnames</span><span class="p">(</span><span class="n">m</span><span class="p">)),</span>    <span class="p">&amp;</span>
+                        <span class="s2">&quot; from &quot;</span><span class="p">,</span> <span class="nb">trim</span><span class="p">(</span><span class="n">restore_data_filenames</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
+        <span class="k">end if</span>
+<span class="k">        call </span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                <span class="p">&amp;</span>
+                   <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;file_time_invariant&#39;</span><span class="p">,</span>                    <span class="p">&amp;</span>
+                   <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>        <span class="p">&amp;</span>
+                   <span class="n">filename</span><span class="o">=</span><span class="n">restore_data_filenames</span><span class="p">(</span><span class="n">m</span><span class="p">),</span>                    <span class="p">&amp;</span>
+                   <span class="n">file_varname</span><span class="o">=</span><span class="n">restore_data_file_varnames</span><span class="p">(</span><span class="n">m</span><span class="p">),</span>            <span class="p">&amp;</span>
+                   <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">allocate</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_1d</span><span class="p">(</span><span class="n">nx_block</span><span class="p">,</span> <span class="n">ny_block</span><span class="p">,</span> <span class="n">km</span><span class="p">,</span> <span class="n">nblocks_clinic</span><span class="p">))</span>
+        <span class="n">var_processed</span> <span class="o">=</span> <span class="p">.</span><span class="n">true</span><span class="p">.</span>
+        <span class="k">exit</span>
+<span class="k">      end if</span>
+<span class="k">    end do</span>
+<span class="k">  end if</span>
+
+  <span class="c">! Check to see if this forcing field is a restoring time scale</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nb">index</span><span class="p">(</span><span class="n">marbl_varname</span><span class="p">,</span><span class="s1">&#39;Restoring Inverse Timescale&#39;</span><span class="p">).</span><span class="n">gt</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">    </span><span class="n">tracer_name</span> <span class="o">=</span> <span class="nb">trim</span><span class="p">(</span><span class="n">marbl_varname</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="nb">scan</span><span class="p">(</span><span class="n">marbl_varname</span><span class="p">,</span><span class="s1">&#39; &#39;</span><span class="p">)))</span>
+    <span class="k">select case</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">restore_inv_tau_opt</span><span class="p">))</span>
+      <span class="k">case</span><span class="p">(</span><span class="s1">&#39;const&#39;</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                <span class="p">&amp;</span>
+                   <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;const&#39;</span><span class="p">,</span>                                  <span class="p">&amp;</span>
+                   <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>        <span class="p">&amp;</span>
+                   <span class="n">field_constant</span> <span class="o">=</span> <span class="n">restore_inv_tau_const</span><span class="p">,</span>                <span class="p">&amp;</span>
+                   <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+      <span class="c">! case(&#39;shr_stream&#39;)</span>
+      <span class="c">! NOT SUPPORTED YET</span>
+      <span class="c">! will require additional namelist variables, and we can consider</span>
+      <span class="c">! reading in one file per tracer instead of using the same mask</span>
+      <span class="c">! for all restoring fields</span>
+      <span class="k">case </span><span class="n">DEFAULT</span>
+        <span class="k">write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(A,1X,A)&quot;</span><span class="p">)</span> <span class="nb">trim</span><span class="p">(</span><span class="n">restore_inv_tau_opt</span><span class="p">),</span>             <span class="p">&amp;</span>
+             <span class="s1">&#39;is not a valid option for restore_inv_tau_opt&#39;</span>
+        <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+    <span class="k">end select</span>
+<span class="k">    allocate</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_1d</span><span class="p">(</span><span class="n">nx_block</span><span class="p">,</span> <span class="n">ny_block</span><span class="p">,</span> <span class="n">km</span><span class="p">,</span> <span class="n">nblocks_clinic</span><span class="p">))</span>
+    <span class="n">var_processed</span> <span class="o">=</span> <span class="p">.</span><span class="n">true</span><span class="p">.</span>
+  <span class="k">end if</span>
+
+<span class="k">  if</span> <span class="p">(.</span><span class="nb">not</span><span class="p">.</span><span class="n">var_processed</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">    select case</span> <span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">interior_forcings</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">metadata</span><span class="p">%</span><span class="n">varname</span><span class="p">))</span>
+      <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;Dust Flux&#39;</span><span class="p">)</span>
+        <span class="n">dustflux_ind</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="k">call </span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                      <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>              <span class="p">&amp;</span>
+                      <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;dust_flux&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">allocate</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_0d</span><span class="p">(</span><span class="n">nx_block</span><span class="p">,</span> <span class="n">ny_block</span><span class="p">,</span> <span class="n">nblocks_clinic</span><span class="p">))</span>
+      <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;PAR Column Fraction&#39;</span><span class="p">)</span>
+        <span class="n">PAR_col_frac_ind</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="k">call </span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                      <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>              <span class="p">&amp;</span>
+                      <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;PAR_col_frac&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">allocate</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_1d</span><span class="p">(</span><span class="n">nx_block</span><span class="p">,</span> <span class="n">ny_block</span><span class="p">,</span> <span class="n">mcog_nbins</span><span class="p">,</span> <span class="n">nblocks_clinic</span><span class="p">))</span>
+      <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;Surface Shortwave&#39;</span><span class="p">)</span>
+        <span class="n">surf_shortwave_ind</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="k">call </span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                      <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>              <span class="p">&amp;</span>
+                      <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;surf_shortwave&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">allocate</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_1d</span><span class="p">(</span><span class="n">nx_block</span><span class="p">,</span> <span class="n">ny_block</span><span class="p">,</span> <span class="n">mcog_nbins</span><span class="p">,</span> <span class="n">nblocks_clinic</span><span class="p">))</span>
+      <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;Temperature&#39;</span><span class="p">)</span>
+        <span class="n">temperature_ind</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="k">call </span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                      <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>              <span class="p">&amp;</span>
+                      <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">allocate</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_1d</span><span class="p">(</span><span class="n">nx_block</span><span class="p">,</span> <span class="n">ny_block</span><span class="p">,</span> <span class="n">km</span><span class="p">,</span> <span class="n">nblocks_clinic</span><span class="p">))</span>
+      <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;Salinity&#39;</span><span class="p">)</span>
+        <span class="n">salinity_ind</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="k">call </span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                      <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>              <span class="p">&amp;</span>
+                      <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;salinity&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">allocate</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_1d</span><span class="p">(</span><span class="n">nx_block</span><span class="p">,</span> <span class="n">ny_block</span><span class="p">,</span> <span class="n">km</span><span class="p">,</span> <span class="n">nblocks_clinic</span><span class="p">))</span>
+      <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;Pressure&#39;</span><span class="p">)</span>
+        <span class="n">pressure_ind</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="k">call </span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span><span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;internal&#39;</span><span class="p">,</span> <span class="p">&amp;</span>
+                      <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>              <span class="p">&amp;</span>
+                      <span class="n">driver_varname</span><span class="o">=</span><span class="s1">&#39;pressure&#39;</span><span class="p">,</span> <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">allocate</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_1d</span><span class="p">(</span><span class="n">nx_block</span><span class="p">,</span> <span class="n">ny_block</span><span class="p">,</span> <span class="n">km</span><span class="p">,</span> <span class="n">nblocks_clinic</span><span class="p">))</span>
+      <span class="k">case</span> <span class="p">(</span><span class="s1">&#39;Iron Sediment Flux&#39;</span><span class="p">)</span>
+        <span class="n">fesedflux_ind</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="k">call </span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">add_forcing_field</span><span class="p">(</span>                <span class="p">&amp;</span>
+                      <span class="n">field_source</span><span class="o">=</span><span class="s1">&#39;file_time_invariant&#39;</span><span class="p">,</span>                 <span class="p">&amp;</span>
+                      <span class="n">marbl_varname</span><span class="o">=</span><span class="n">marbl_varname</span><span class="p">,</span> <span class="n">field_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>     <span class="p">&amp;</span>
+                      <span class="n">filename</span><span class="o">=</span><span class="n">fesedflux_input</span><span class="p">%</span><span class="n">filename</span><span class="p">,</span>                  <span class="p">&amp;</span>
+                      <span class="n">file_varname</span><span class="o">=</span><span class="n">fesedflux_input</span><span class="p">%</span><span class="n">file_varname</span><span class="p">,</span>          <span class="p">&amp;</span>
+                      <span class="n">id</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">allocate</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_1d</span><span class="p">(</span><span class="n">nx_block</span><span class="p">,</span> <span class="n">ny_block</span><span class="p">,</span> <span class="n">km</span><span class="p">,</span> <span class="n">nblocks_clinic</span><span class="p">))</span>
+      <span class="k">case </span><span class="n">DEFAULT</span>
+        <span class="k">write</span><span class="p">(</span><span class="n">err_msg</span><span class="p">,</span> <span class="s2">&quot;(A,1X,A)&quot;</span><span class="p">)</span> <span class="nb">trim</span><span class="p">(</span><span class="n">interior_forcings</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">metadata</span><span class="p">%</span><span class="n">varname</span><span class="p">),</span> <span class="p">&amp;</span>
+                       <span class="s1">&#39;is not a valid interior forcing field name.&#39;</span>
+        <span class="k">call </span><span class="n">document</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">exit_POP</span><span class="p">(</span><span class="n">sigAbort</span><span class="p">,</span> <span class="s1">&#39;Stopping in &#39;</span> <span class="o">//</span> <span class="n">subname</span><span class="p">)</span>
+    <span class="k">end select</span>
+<span class="k">  end if</span>
+
+  <span class="c">! Zero out field</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nb">allocated</span><span class="p">(</span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_0d</span><span class="p">))</span> <span class="k">then</span>
+<span class="k">    </span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_0d</span> <span class="o">=</span> <span class="n">c0</span>
+  <span class="k">else</span>
+<span class="k">    </span><span class="n">interior_forcing_fields</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">field_1d</span> <span class="o">=</span> <span class="n">c0</span>
+  <span class="k">end if</span>
+<span class="k">end do</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../dev-guide/index.html" title="MARBL developer’s guide"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tracers.html" title="POP Interacting with MARBL Tracers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MARBL 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Examples of MARBL Implementation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="index.html" >MARBL examples in POP</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, National Science Foundation and U.S. Department of Energy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+    </div>
+  </body>
+</html>

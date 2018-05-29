@@ -1,0 +1,427 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Init &#8212; MARBL 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Requirements on the GCM" href="GCM_requirements/index.html" />
+    <link rel="prev" title="How to Use MARBL in a GCM" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="GCM_requirements/index.html" title="Requirements on the GCM"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="How to Use MARBL in a GCM"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MARBL 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >MARBL user guide</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="index.html" accesskey="U">How to Use MARBL in a GCM</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Init</a><ul>
+<li><a class="reference internal" href="#the-init-interface">The <code class="docutils literal"><span class="pre">init()</span></code> interface</a></li>
+<li><a class="reference internal" href="#example-from-stand-alone-marbl">Example from Stand-Alone MARBL</a></li>
+<li><a class="reference internal" href="#default-parameter-values">Default Parameter Values</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">How to Use MARBL in a GCM</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="GCM_requirements/index.html"
+                        title="next chapter">Requirements on the GCM</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/usr-guide/GCM-interface/init.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="init">
+<span id="id1"></span><h1>Init<a class="headerlink" href="#init" title="Permalink to this headline">¶</a></h1>
+<p>The init stage is where MARBL is configured, parameters are set, and memory is allocated.
+If the GCM wants to specify non-default parameter values, that needs to be done with <code class="docutils literal"><span class="pre">put_setting()</span></code> statements before calling <code class="docutils literal"><span class="pre">init()</span></code>.
+There are three different interfaces that can be used; all are equivalent, but different GCMs may find it easiest to call different interfaces.</p>
+<ol class="arabic">
+<li><p class="first">Two arguments: a string containing the variable name, and then the variable value (in proper datatype)</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="k">call </span><span class="n">marbl_instance</span><span class="p">%</span><span class="n">put_setting</span><span class="p">(</span><span class="s1">&#39;ciso_on&#39;</span><span class="p">,</span> <span class="p">.</span><span class="n">true</span><span class="p">.)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">One argument: a string containing a line from a MARBL input file (TODO: input file link!) of the format <code class="docutils literal"><span class="pre">varname</span> <span class="pre">=</span> <span class="pre">value</span></code></p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="k">call </span><span class="n">marbl_instance</span><span class="p">%</span><span class="n">put_setting</span><span class="p">(</span><span class="s1">&#39;ciso_on = .true.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Three arguments: strings containing the variable name, the datatype, and the value</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="k">call </span><span class="n">marbl_instance</span><span class="p">%</span><span class="n">put_setting</span><span class="p">(</span><span class="s1">&#39;ciso_on&#39;</span><span class="p">,</span> <span class="s1">&#39;logical&#39;</span><span class="p">,</span> <span class="s1">&#39;.true.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p><code class="docutils literal"><span class="pre">put_setting()</span></code> calls that do not correspond to defined MARBL parameters will result in an error during <code class="docutils literal"><span class="pre">init()</span></code>.
+There is no check in the <code class="docutils literal"><span class="pre">put_setting()</span></code> call itself because allowable parameters may depend on other parameter values.
+For example, <code class="docutils literal"><span class="pre">autotrophs(3)%sname</span></code> is defined if <code class="docutils literal"><span class="pre">autotroph_cnt</span> <span class="pre">&gt;=</span> <span class="pre">3</span></code> but not if <code class="docutils literal"><span class="pre">autotroph_cnt</span> <span class="pre">&lt;</span> <span class="pre">3</span></code>.</p>
+<div class="section" id="the-init-interface">
+<span id="ref-init-interface"></span><h2>The <code class="docutils literal"><span class="pre">init()</span></code> interface<a class="headerlink" href="#the-init-interface" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">init</span><span class="p">(</span><span class="n">this</span><span class="p">,</span>                   <span class="p">&amp;</span>
+     <span class="n">gcm_num_levels</span><span class="p">,</span>                    <span class="p">&amp;</span>
+     <span class="n">gcm_num_PAR_subcols</span><span class="p">,</span>               <span class="p">&amp;</span>
+     <span class="n">gcm_num_elements_surface_forcing</span><span class="p">,</span>  <span class="p">&amp;</span>
+     <span class="n">gcm_delta_z</span><span class="p">,</span>                       <span class="p">&amp;</span>
+     <span class="n">gcm_zw</span><span class="p">,</span>                            <span class="p">&amp;</span>
+     <span class="n">gcm_zt</span><span class="p">,</span>                            <span class="p">&amp;</span>
+     <span class="n">lgcm_has_global_ops</span><span class="p">)</span>
+
+  <span class="k">class</span><span class="p">(</span><span class="n">marbl_interface_class</span><span class="p">),</span> <span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span> <span class="kd">::</span> <span class="n">this</span>
+  <span class="kt">integer</span><span class="p">(</span><span class="n">int_kind</span><span class="p">),</span>            <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span>    <span class="kd">::</span> <span class="n">gcm_num_levels</span>
+  <span class="kt">integer</span><span class="p">(</span><span class="n">int_kind</span><span class="p">),</span>            <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span>    <span class="kd">::</span> <span class="n">gcm_num_PAR_subcols</span>
+  <span class="kt">integer</span><span class="p">(</span><span class="n">int_kind</span><span class="p">),</span>            <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span>    <span class="kd">::</span> <span class="n">gcm_num_elements_surface_forcing</span>
+  <span class="kt">real</span><span class="p">(</span><span class="n">r8</span><span class="p">),</span>                     <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span>    <span class="kd">::</span> <span class="n">gcm_delta_z</span><span class="p">(</span><span class="n">gcm_num_levels</span><span class="p">)</span> <span class="c">! thickness of layer k</span>
+  <span class="kt">real</span><span class="p">(</span><span class="n">r8</span><span class="p">),</span>                     <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span>    <span class="kd">::</span> <span class="n">gcm_zw</span><span class="p">(</span><span class="n">gcm_num_levels</span><span class="p">)</span> <span class="c">! thickness of layer k</span>
+  <span class="kt">real</span><span class="p">(</span><span class="n">r8</span><span class="p">),</span>                     <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span>    <span class="kd">::</span> <span class="n">gcm_zt</span><span class="p">(</span><span class="n">gcm_num_levels</span><span class="p">)</span> <span class="c">! thickness of layer k</span>
+  <span class="kt">logical</span><span class="p">,</span>           <span class="k">optional</span><span class="p">,</span>  <span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span>    <span class="kd">::</span> <span class="n">lgcm_has_global_ops</span>
+</pre></div>
+</div>
+<p>Note the optional argument:
+<code class="docutils literal"><span class="pre">lgcm_has_global_ops</span></code> is a way for the GCM to inform MARBL that it can perform global operations such as finding global averages of values.
+There are some MARBL configurations that require this, and MARBL will abort unless the GCM verifies it can provide these values.</p>
+<p>MARBL does not have an explicit interface to tell a GCM how many tracers are being computed.
+Instead, use <code class="docutils literal"><span class="pre">size(marbl_instance%tracer_metadata)</span></code> (called after <code class="docutils literal"><span class="pre">marbl_instance%init()</span></code>).</p>
+<p>MARBL can compute surface fluxes across multiple columns simultaneously, with the number of columns supported set by <code class="docutils literal"><span class="pre">gcm_num_elements_surface_forcing</span></code>.
+There is not a corresponding <code class="docutils literal"><span class="pre">gcm_num_elements_interior_forcing</span></code> yet, because currently MARBL computes tracer tendencies one column at a time.</p>
+</div>
+<div class="section" id="example-from-stand-alone-marbl">
+<h2>Example from Stand-Alone MARBL<a class="headerlink" href="#example-from-stand-alone-marbl" title="Permalink to this headline">¶</a></h2>
+<p>The stand-alone MARBL driver / test suite use input files (<code class="docutils literal"><span class="pre">*.input</span></code> in the test directory) that are processed in the following manner:</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="n">ioerr</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">do while</span><span class="p">(</span><span class="n">ioerr</span> <span class="p">.</span><span class="n">eq</span><span class="p">.</span> <span class="mi">0</span><span class="p">)</span>
+  <span class="n">input_line</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+  <span class="c">! (i) master task reads next line in inputfile</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">my_task</span> <span class="p">.</span><span class="n">eq</span><span class="p">.</span> <span class="mi">0</span><span class="p">)</span> <span class="k">read</span><span class="p">(</span><span class="o">*</span><span class="p">,</span><span class="s2">&quot;(A)&quot;</span><span class="p">,</span> <span class="n">iostat</span><span class="o">=</span><span class="n">ioerr</span><span class="p">)</span> <span class="n">input_line</span>
+  <span class="c">! (ii) broadcast inputfile line to all tasks (along with iostat)</span>
+  <span class="k">call </span><span class="n">marbl_mpi_bcast</span><span class="p">(</span><span class="n">ioerr</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+  <span class="k">call </span><span class="n">marbl_mpi_bcast</span><span class="p">(</span><span class="n">input_line</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+  <span class="c">! (iii) call put_setting(); abort if error</span>
+  <span class="k">call </span><span class="n">marbl_instance</span><span class="p">%</span><span class="n">put_setting</span><span class="p">(</span><span class="n">input_line</span><span class="p">)</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">marbl_instance</span><span class="p">%</span><span class="n">StatusLog</span><span class="p">%</span><span class="n">labort_marbl</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">    call </span><span class="n">marbl_instance</span><span class="p">%</span><span class="n">StatusLog</span><span class="p">%</span><span class="n">log_error</span><span class="p">(</span><span class="s2">&quot;Error reading input file!&quot;</span><span class="p">,</span> <span class="n">subname</span><span class="p">)</span>
+    <span class="k">call </span><span class="n">print_marbl_log</span><span class="p">(</span><span class="n">marbl_instance</span><span class="p">%</span><span class="n">StatusLog</span><span class="p">)</span>
+  <span class="k">end if</span>
+<span class="k">end do</span>
+
+<span class="k">if</span> <span class="p">(.</span><span class="nb">not</span><span class="p">.</span><span class="nb">is_iostat_end</span><span class="p">(</span><span class="n">ioerr</span><span class="p">))</span> <span class="k">then</span>
+<span class="k">  write</span><span class="p">(</span><span class="o">*</span><span class="p">,</span><span class="s2">&quot;(A,I0)&quot;</span><span class="p">)</span> <span class="s2">&quot;ioerr = &quot;</span><span class="p">,</span> <span class="n">ioerr</span>
+  <span class="k">write</span><span class="p">(</span><span class="o">*</span><span class="p">,</span><span class="s2">&quot;(A)&quot;</span><span class="p">)</span> <span class="s2">&quot;ERROR encountered when reading MARBL input file from stdin&quot;</span>
+  <span class="k">call </span><span class="n">marbl_mpi_abort</span><span class="p">()</span>
+<span class="k">end if</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">init()</span></code> is then called from the individual test, storing the tracer count in the local variable <code class="docutils literal"><span class="pre">nt</span></code>:</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="c">! Call marbl%init</span>
+<span class="k">call </span><span class="n">marbl_instance</span><span class="p">%</span><span class="n">init</span><span class="p">(</span><span class="n">gcm_num_levels</span> <span class="o">=</span> <span class="n">km</span><span class="p">,</span>                  <span class="p">&amp;</span>
+                         <span class="n">gcm_num_PAR_subcols</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>              <span class="p">&amp;</span>
+                         <span class="n">gcm_num_elements_surface_forcing</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="p">&amp;</span>
+                         <span class="n">gcm_delta_z</span> <span class="o">=</span> <span class="n">delta_z</span><span class="p">,</span>                <span class="p">&amp;</span>
+                         <span class="n">gcm_zw</span> <span class="o">=</span> <span class="n">zw</span><span class="p">,</span>                          <span class="p">&amp;</span>
+                         <span class="n">gcm_zt</span> <span class="o">=</span> <span class="n">zt</span><span class="p">,</span>                          <span class="p">&amp;</span>
+                         <span class="n">marbl_tracer_cnt</span> <span class="o">=</span> <span class="n">nt</span><span class="p">)</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">marbl_instance</span><span class="p">%</span><span class="n">StatusLog</span><span class="p">%</span><span class="n">labort_marbl</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">  call </span><span class="n">marbl_instance</span><span class="p">%</span><span class="n">StatusLog</span><span class="p">%</span><span class="n">log_error_trace</span><span class="p">(</span><span class="s1">&#39;marbl%init&#39;</span><span class="p">,</span> <span class="n">subname</span><span class="p">)</span>
+  <span class="k">return</span>
+<span class="k">end if</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="default-parameter-values">
+<h2>Default Parameter Values<a class="headerlink" href="#default-parameter-values" title="Permalink to this headline">¶</a></h2>
+<p>Below are the default parameter values (real variables provided to double precision).
+This specific page was been generated by running the <code class="docutils literal"><span class="pre">gen_inputfile</span></code> regression test with <code class="docutils literal"><span class="pre">marbl_no_ciso.input</span></code>, an empty input file.
+The test writes this output to <code class="docutils literal"><span class="pre">marbl.nml</span></code>.
+Note that the order the variables are listed in comes from the order the variables are defined in MARBL, but the order of <code class="docutils literal"><span class="pre">put_setting()</span></code> calls does not matter.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>PFT_defaults = &#39;CESM2&#39;
+ciso_on = F
+lsource_sink = T
+lecovars_full_depth_tavg = F
+ciso_lsource_sink = T
+ciso_lecovars_full_depth_tavg = F
+lflux_gas_o2 = T
+lflux_gas_co2 = T
+lcompute_nhx_surface_emis = T
+lvariable_PtoC = T
+ladjust_bury_coeff = F
+init_bury_coeff_opt = &#39;settings_file&#39;
+parm_Fe_bioavail =   0.10000000000000000E+01
+parm_o2_min =   0.50000000000000000E+01
+parm_o2_min_delta =   0.50000000000000000E+01
+parm_kappa_nitrif_per_day =   0.59999999999999998E-01
+parm_nitrif_par_lim =   0.10000000000000000E+01
+parm_labile_ratio =   0.93999999999999995E+00
+parm_init_POC_bury_coeff =   0.11000000000000001E+01
+parm_init_POP_bury_coeff =   0.11000000000000001E+01
+parm_init_bSi_bury_coeff =   0.10000000000000000E+01
+parm_Fe_scavenge_rate0 =   0.15000000000000000E+02
+parm_Lig_scavenge_rate0 =   0.14999999999999999E-01
+parm_FeLig_scavenge_rate0 =   0.13000000000000000E+01
+parm_Lig_degrade_rate0 =   0.93999999999999994E-04
+parm_Fe_desorption_rate0 =   0.99999999999999995E-06
+parm_f_prod_sp_CaCO3 =   0.70000000000000007E-01
+parm_POC_diss =   0.10000000000000000E+05
+parm_SiO2_diss =   0.77000000000000000E+05
+parm_CaCO3_diss =   0.50000000000000000E+05
+parm_sed_denitrif_coeff =   0.10000000000000000E+01
+bury_coeff_rmean_timescale_years =   0.10000000000000000E+02
+parm_scalelen_z(1) =   0.10000000000000000E+05
+parm_scalelen_z(2) =   0.25000000000000000E+05
+parm_scalelen_z(3) =   0.50000000000000000E+05
+parm_scalelen_z(4) =   0.10000000000000000E+06
+parm_scalelen_vals(1) =   0.10000000000000000E+01
+parm_scalelen_vals(2) =   0.22000000000000002E+01
+parm_scalelen_vals(3) =   0.40000000000000000E+01
+parm_scalelen_vals(4) =   0.50000000000000000E+01
+caco3_bury_thres_opt = &#39;omega_calc&#39;
+caco3_bury_thres_depth =   0.30000000000000000E+06
+PON_bury_coeff =   0.50000000000000000E+00
+ciso_fract_factors = &#39;Laws&#39;
+autotroph_cnt = 3
+zooplankton_cnt = 1
+max_grazer_prey_cnt = 3
+autotrophs(1)%sname = &#39;sp&#39;
+autotrophs(1)%lname = &#39;Small Phyto&#39;
+autotrophs(1)%Nfixer = F
+autotrophs(1)%imp_calcifier = T
+autotrophs(1)%exp_calcifier = F
+autotrophs(1)%silicifier = F
+autotrophs(1)%kFe =   0.30000000000000001E-04
+autotrophs(1)%kPO4 =   0.10000000000000000E-01
+autotrophs(1)%kDOP =   0.29999999999999999E+00
+autotrophs(1)%kNO3 =   0.25000000000000000E+00
+autotrophs(1)%kNH4 =   0.10000000000000000E-01
+autotrophs(1)%kSiO3 =   0.00000000000000000E+00
+autotrophs(1)%Qp_fixed =   0.85470085470085479E-02
+autotrophs(1)%gQfe_0 =   0.34999999999999997E-04
+autotrophs(1)%gQfe_min =   0.30000000000000001E-05
+autotrophs(1)%alphaPi_per_day =   0.39000000000000001E+00
+autotrophs(1)%PCref_per_day =   0.50000000000000000E+01
+autotrophs(1)%thetaN_max =   0.25000000000000000E+01
+autotrophs(1)%loss_thres =   0.10000000000000000E-01
+autotrophs(1)%loss_thres2 =   0.00000000000000000E+00
+autotrophs(1)%temp_thres =  -0.10000000000000000E+02
+autotrophs(1)%mort_per_day =   0.10000000000000001E+00
+autotrophs(1)%mort2_per_day =   0.10000000000000000E-01
+autotrophs(1)%agg_rate_max =   0.50000000000000000E+00
+autotrophs(1)%agg_rate_min =   0.10000000000000000E-01
+autotrophs(1)%loss_poc =   0.00000000000000000E+00
+autotrophs(2)%sname = &#39;diat&#39;
+autotrophs(2)%lname = &#39;Diatom&#39;
+autotrophs(2)%Nfixer = F
+autotrophs(2)%imp_calcifier = F
+autotrophs(2)%exp_calcifier = F
+autotrophs(2)%silicifier = T
+autotrophs(2)%kFe =   0.60000000000000002E-04
+autotrophs(2)%kPO4 =   0.50000000000000003E-01
+autotrophs(2)%kDOP =   0.50000000000000000E+00
+autotrophs(2)%kNO3 =   0.50000000000000000E+00
+autotrophs(2)%kNH4 =   0.50000000000000003E-01
+autotrophs(2)%kSiO3 =   0.69999999999999996E+00
+autotrophs(2)%Qp_fixed =   0.85470085470085479E-02
+autotrophs(2)%gQfe_0 =   0.34999999999999997E-04
+autotrophs(2)%gQfe_min =   0.30000000000000001E-05
+autotrophs(2)%alphaPi_per_day =   0.28999999999999998E+00
+autotrophs(2)%PCref_per_day =   0.50000000000000000E+01
+autotrophs(2)%thetaN_max =   0.40000000000000000E+01
+autotrophs(2)%loss_thres =   0.20000000000000000E-01
+autotrophs(2)%loss_thres2 =   0.00000000000000000E+00
+autotrophs(2)%temp_thres =  -0.10000000000000000E+02
+autotrophs(2)%mort_per_day =   0.10000000000000001E+00
+autotrophs(2)%mort2_per_day =   0.10000000000000000E-01
+autotrophs(2)%agg_rate_max =   0.50000000000000000E+00
+autotrophs(2)%agg_rate_min =   0.20000000000000000E-01
+autotrophs(2)%loss_poc =   0.00000000000000000E+00
+autotrophs(3)%sname = &#39;diaz&#39;
+autotrophs(3)%lname = &#39;Diazotroph&#39;
+autotrophs(3)%Nfixer = T
+autotrophs(3)%imp_calcifier = F
+autotrophs(3)%exp_calcifier = F
+autotrophs(3)%silicifier = F
+autotrophs(3)%kFe =   0.45000000000000003E-04
+autotrophs(3)%kPO4 =   0.14999999999999999E-01
+autotrophs(3)%kDOP =   0.74999999999999997E-01
+autotrophs(3)%kNO3 =   0.20000000000000000E+01
+autotrophs(3)%kNH4 =   0.20000000000000001E+00
+autotrophs(3)%kSiO3 =   0.00000000000000000E+00
+autotrophs(3)%Qp_fixed =   0.27350427350427355E-02
+autotrophs(3)%gQfe_0 =   0.69999999999999994E-04
+autotrophs(3)%gQfe_min =   0.60000000000000002E-05
+autotrophs(3)%alphaPi_per_day =   0.39000000000000001E+00
+autotrophs(3)%PCref_per_day =   0.22000000000000002E+01
+autotrophs(3)%thetaN_max =   0.25000000000000000E+01
+autotrophs(3)%loss_thres =   0.20000000000000000E-01
+autotrophs(3)%loss_thres2 =   0.10000000000000000E-02
+autotrophs(3)%temp_thres =   0.15000000000000000E+02
+autotrophs(3)%mort_per_day =   0.10000000000000001E+00
+autotrophs(3)%mort2_per_day =   0.10000000000000000E-01
+autotrophs(3)%agg_rate_max =   0.50000000000000000E+00
+autotrophs(3)%agg_rate_min =   0.10000000000000000E-01
+autotrophs(3)%loss_poc =   0.00000000000000000E+00
+zooplankton(1)%sname = &#39;zoo&#39;
+zooplankton(1)%lname = &#39;Zooplankton&#39;
+zooplankton(1)%z_mort_0_per_day =   0.10000000000000001E+00
+zooplankton(1)%loss_thres =   0.74999999999999997E-01
+zooplankton(1)%z_mort2_0_per_day =   0.40000000000000002E+00
+grazing(1,1)%sname = &#39;grz_sp_zoo&#39;
+grazing(1,1)%lname = &#39;Grazing of sp by zoo&#39;
+grazing(1,1)%auto_ind_cnt = 1
+grazing(1,1)%zoo_ind_cnt = 0
+grazing(1,1)%grazing_function = 1
+grazing(1,1)%z_umax_0_per_day =   0.32999999999999998E+01
+grazing(1,1)%z_grz =   0.12000000000000000E+01
+grazing(1,1)%graze_zoo =   0.29999999999999999E+00
+grazing(1,1)%graze_poc =   0.00000000000000000E+00
+grazing(1,1)%graze_doc =   0.59999999999999998E-01
+grazing(1,1)%f_zoo_detr =   0.12000000000000000E+00
+grazing(1,1)%auto_ind(1) = 1
+grazing(2,1)%sname = &#39;grz_diat_zoo&#39;
+grazing(2,1)%lname = &#39;Grazing of diat by zoo&#39;
+grazing(2,1)%auto_ind_cnt = 1
+grazing(2,1)%zoo_ind_cnt = 0
+grazing(2,1)%grazing_function = 1
+grazing(2,1)%z_umax_0_per_day =   0.30499999999999998E+01
+grazing(2,1)%z_grz =   0.12000000000000000E+01
+grazing(2,1)%graze_zoo =   0.25000000000000000E+00
+grazing(2,1)%graze_poc =   0.38000000000000000E+00
+grazing(2,1)%graze_doc =   0.59999999999999998E-01
+grazing(2,1)%f_zoo_detr =   0.23999999999999999E+00
+grazing(2,1)%auto_ind(1) = 2
+grazing(3,1)%sname = &#39;grz_diaz_zoo&#39;
+grazing(3,1)%lname = &#39;Grazing of diaz by zoo&#39;
+grazing(3,1)%auto_ind_cnt = 1
+grazing(3,1)%zoo_ind_cnt = 0
+grazing(3,1)%grazing_function = 1
+grazing(3,1)%z_umax_0_per_day =   0.31000000000000001E+01
+grazing(3,1)%z_grz =   0.12000000000000000E+01
+grazing(3,1)%graze_zoo =   0.29999999999999999E+00
+grazing(3,1)%graze_poc =   0.10000000000000001E+00
+grazing(3,1)%graze_doc =   0.59999999999999998E-01
+grazing(3,1)%f_zoo_detr =   0.12000000000000000E+00
+grazing(3,1)%auto_ind(1) = 3
+tracer_restore_vars(1) = &#39;&#39;
+tracer_restore_vars(2) = &#39;&#39;
+tracer_restore_vars(3) = &#39;&#39;
+tracer_restore_vars(4) = &#39;&#39;
+tracer_restore_vars(5) = &#39;&#39;
+tracer_restore_vars(6) = &#39;&#39;
+tracer_restore_vars(7) = &#39;&#39;
+tracer_restore_vars(8) = &#39;&#39;
+tracer_restore_vars(9) = &#39;&#39;
+tracer_restore_vars(10) = &#39;&#39;
+tracer_restore_vars(11) = &#39;&#39;
+tracer_restore_vars(12) = &#39;&#39;
+tracer_restore_vars(13) = &#39;&#39;
+tracer_restore_vars(14) = &#39;&#39;
+tracer_restore_vars(15) = &#39;&#39;
+tracer_restore_vars(16) = &#39;&#39;
+tracer_restore_vars(17) = &#39;&#39;
+tracer_restore_vars(18) = &#39;&#39;
+tracer_restore_vars(19) = &#39;&#39;
+tracer_restore_vars(20) = &#39;&#39;
+tracer_restore_vars(21) = &#39;&#39;
+tracer_restore_vars(22) = &#39;&#39;
+tracer_restore_vars(23) = &#39;&#39;
+tracer_restore_vars(24) = &#39;&#39;
+tracer_restore_vars(25) = &#39;&#39;
+tracer_restore_vars(26) = &#39;&#39;
+tracer_restore_vars(27) = &#39;&#39;
+tracer_restore_vars(28) = &#39;&#39;
+tracer_restore_vars(29) = &#39;&#39;
+tracer_restore_vars(30) = &#39;&#39;
+tracer_restore_vars(31) = &#39;&#39;
+tracer_restore_vars(32) = &#39;&#39;
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="GCM_requirements/index.html" title="Requirements on the GCM"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="How to Use MARBL in a GCM"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MARBL 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >MARBL user guide</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="index.html" >How to Use MARBL in a GCM</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, National Science Foundation and U.S. Department of Energy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+    </div>
+  </body>
+</html>

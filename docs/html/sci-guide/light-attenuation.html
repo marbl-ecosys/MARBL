@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Light attenuation formulation &#8212; MARBL 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Rules of engagement" href="../dev-guide/repo-access/index.html" />
+    <link rel="prev" title="Phytoplankton growth" href="phytoplankton-growth.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../dev-guide/repo-access/index.html" title="Rules of engagement"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="phytoplankton-growth.html" title="Phytoplankton growth"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">MARBL 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">MARBL scientific documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="phytoplankton-growth.html"
+                        title="previous chapter">Phytoplankton growth</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../dev-guide/repo-access/index.html"
+                        title="next chapter">Rules of engagement</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/sci-guide/light-attenuation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="light-attenuation-formulation">
+<span id="light-attenuation"></span><h1>Light attenuation formulation<a class="headerlink" href="#light-attenuation-formulation" title="Permalink to this headline">¶</a></h1>
+<p>Starting point is equation 6 of <a class="reference internal" href="#morel-maritorena-2001" id="id1">[MM01]</a></p>
+<div class="math" id="equation-ze_chl_tot">
+<span class="eqno">(1)<a class="headerlink" href="#equation-ze_chl_tot" title="Permalink to this equation">¶</a></span>\[\begin{split}Z_e =
+\begin{cases}
+912.5 \left[ \mathrm{Chl_{tot}} \right]^{-0.839} &amp; 10 &lt; Z_e &lt; 102 \\
+426.3 \left[ \mathrm{Chl_{tot}} \right]^{-0.547} &amp; 102 &lt; Z_e &lt; 180
+\end{cases}\end{split}\]</div>
+<p>In this approximation, <span class="math">\(\left[ \mathrm{Chl_{tot}} \right]\)</span> is
+<span class="math">\(\left[ \mathrm{Chl}(z) \right]\)</span> integrated from the surface to <span class="math">\(Z_e\)</span>,
+the depth of the euphotic zone.</p>
+<p>We will convert this formula to one based on <span class="math">\(\left[ \mathrm{Chl}(z) \right]\)</span>
+averaged over the euphotic zone</p>
+<div class="math" id="equation-chl_tot_def">
+<span class="eqno">(2)<a class="headerlink" href="#equation-chl_tot_def" title="Permalink to this equation">¶</a></span>\[\left[ \mathrm{Chl_{tot}} \right] =  Z_e \overline{\left[ \mathrm{Chl} \right]}\]</div>
+<p>The crossover point <span class="math">\(Z_e=102\)</span> corresponds to
+<span class="math">\(\left[ \mathrm{Chl_{tot}} \right]=13.65\)</span>, which is equivalent to
+<span class="math">\(\overline{\left[ \mathrm{Chl} \right]}=0.1338\)</span>.</p>
+<p>Substituting equation <a class="reference internal" href="#equation-chl_tot_def">(2)</a> into equation <a class="reference internal" href="#equation-ze_chl_tot">(1)</a>
+and solving for <span class="math">\(Z_e\)</span> yields</p>
+<div class="math" id="equation-ze_chl_avg">
+<span class="eqno">(3)<a class="headerlink" href="#equation-ze_chl_avg" title="Permalink to this equation">¶</a></span>\[\begin{split}Z_e =
+\begin{cases}
+        40.710 \overline{\left[ \mathrm{Chl} \right]}^{-0.4562} &amp; \overline{\left[ \mathrm{Chl} \right]} &gt; 0.1338 \\
+50.105 \overline{\left[ \mathrm{Chl} \right]}^{-0.3536} &amp; \overline{\left[ \mathrm{Chl} \right]} &lt; 0.1338
+\end{cases}\end{split}\]</div>
+<p>The euphotic zone depth is defined to be the depth where PAR is 1% of its surface value
+<a class="reference internal" href="#morel-1998" id="id2">[Mor88]</a>.</p>
+<p>We denote the attenuation coefficient of PAR as <span class="math">\(K\)</span>, and its effective average over the
+euphotic zone as <span class="math">\(\overline{K}\)</span>.</p>
+<p>So we have</p>
+<div class="math">
+\[0.01 = e^{-Z_e \overline{K}}.\]</div>
+<p>Solving for <span class="math">\(Z_e\)</span> yields</p>
+<div class="math" id="equation-Kbar_def">
+<span class="eqno">(4)<a class="headerlink" href="#equation-Kbar_def" title="Permalink to this equation">¶</a></span>\[Z_e = - \log 0.01 / \overline{K} = \log 100 / \overline{K}.\]</div>
+<p>Substituting equation <a class="reference internal" href="#equation-Kbar_def">(4)</a> into equation <a class="reference internal" href="#equation-ze_chl_avg">(3)</a> and
+solving for <span class="math">\(\overline{K}\)</span> yields</p>
+<div class="math" id="equation-Kbar_chl_avg">
+<span class="eqno">(5)<a class="headerlink" href="#equation-Kbar_chl_avg" title="Permalink to this equation">¶</a></span>\[\begin{split}\overline{K} =
+\begin{cases}
+0.1131 \overline{\left[ \mathrm{Chl} \right]}^{0.4562} &amp; \overline{\left[ \mathrm{Chl} \right]} &gt; 0.1338 \\
+0.0919 \overline{\left[ \mathrm{Chl} \right]}^{0.3536} &amp; \overline{\left[ \mathrm{Chl} \right]} &lt; 0.1338
+\end{cases}\end{split}\]</div>
+<p>In the model implementation, this equation relating <span class="math">\(\overline{K}\)</span> to
+<span class="math">\(\overline{\left[ \mathrm{Chl} \right]}\)</span> is applied to each model layer.</p>
+<p>The crossover point was recomputed to be where the curves
+cross, yielding <span class="math">\(\overline{\left[ \mathrm{Chl} \right]}=0.13224\)</span>.</p>
+<p>The units of <span class="math">\(K\)</span> in equation <a class="reference internal" href="#equation-Kbar_chl_avg">(5)</a> are 1/m.</p>
+<p>Model units are cm, so the model implementation includes multiplication by 0.01.</p>
+<p class="rubric">References</p>
+<p id="bibtex-bibliography-sci-guide/light-attenuation-0"><table class="docutils citation" frame="void" id="morel-1998" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[Mor88]</a></td><td>André Morel. Optical modeling of the upper ocean in relation to its biogenous matter content (case I waters). <em>J. Geophys. Res.</em>, 93(C9):10749–10768, 1988. <a class="reference external" href="https://doi.org/10.1029/jc093ic09p10749">doi:10.1029/jc093ic09p10749</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="morel-maritorena-2001" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[MM01]</a></td><td>André Morel and Stéphane Maritorena. Bio-optical properties of oceanic waters: a reappraisal. <em>J. Geophys. Res.</em>, 106(C4):7163–7180, Apr 2001. <a class="reference external" href="https://doi.org/10.1029/2000jc000319">doi:10.1029/2000jc000319</a>.</td></tr>
+</tbody>
+</table>
+</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../dev-guide/repo-access/index.html" title="Rules of engagement"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="phytoplankton-growth.html" title="Phytoplankton growth"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">MARBL 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >MARBL scientific documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, National Science Foundation and U.S. Department of Energy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+    </div>
+  </body>
+</html>

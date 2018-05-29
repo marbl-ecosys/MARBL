@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>POP Interacting with MARBL Tracers &#8212; MARBL 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="POP Interacting with MARBL Requested Forcings" href="forcing.html" />
+    <link rel="prev" title="MARBL examples in POP" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="forcing.html" title="POP Interacting with MARBL Requested Forcings"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="MARBL examples in POP"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MARBL 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Examples of MARBL Implementation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="index.html" accesskey="U">MARBL examples in POP</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">POP Interacting with MARBL Tracers</a><ul>
+<li><a class="reference internal" href="#reading-tracer-initial-conditions">Reading Tracer Initial Conditions</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">MARBL examples in POP</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="forcing.html"
+                        title="next chapter">POP Interacting with MARBL Requested Forcings</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/implementations/pop/tracers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pop-interacting-with-marbl-tracers">
+<span id="pop-tracers"></span><h1>POP Interacting with MARBL Tracers<a class="headerlink" href="#pop-interacting-with-marbl-tracers" title="Permalink to this headline">¶</a></h1>
+<p>POP will read the initial state for each tracers and store the data in a global array (dimensions <code class="docutils literal"><span class="pre">nx</span></code> by <code class="docutils literal"><span class="pre">ny</span></code> by <code class="docutils literal"><span class="pre">nz</span></code> by <code class="docutils literal"><span class="pre">n_tracers</span></code>).
+To know what tracer to read into each <code class="docutils literal"><span class="pre">n_tracers</span></code> index, POP copies the information from <code class="docutils literal"><span class="pre">marbl_instace%tracer_metadata</span></code> to a local type during initialization.
+The data type is defined as</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="k">type</span> <span class="kd">::</span> <span class="n">tracer_field</span>
+   <span class="kt">character</span><span class="p">(</span><span class="n">char_len</span><span class="p">)</span> <span class="kd">::</span> <span class="n">short_name</span>
+   <span class="kt">character</span><span class="p">(</span><span class="n">char_len</span><span class="p">)</span> <span class="kd">::</span> <span class="n">long_name</span>
+   <span class="kt">character</span><span class="p">(</span><span class="n">char_len</span><span class="p">)</span> <span class="kd">::</span> <span class="n">units</span>
+   <span class="kt">character</span><span class="p">(</span><span class="n">char_len</span><span class="p">)</span> <span class="kd">::</span> <span class="n">tend_units</span>
+   <span class="kt">character</span><span class="p">(</span><span class="n">char_len</span><span class="p">)</span> <span class="kd">::</span> <span class="n">flux_units</span>
+   <span class="kt">real</span><span class="p">(</span><span class="n">r8</span><span class="p">)</span>            <span class="kd">::</span> <span class="n">scale_factor</span>
+   <span class="kt">logical</span> <span class="kd">::</span> <span class="n">lfull_depth_tavg</span>
+<span class="k">end type</span>
+</pre></div>
+</div>
+<p>An array of the above type is then populated; note that MARBL expects the GCM to apply any necessary scale factor so the POP datatype is set to 1.</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="c">! Initialize tracer_d_module input argument (needed before reading</span>
+<span class="c">! tracers from restart file)</span>
+<span class="k">do </span><span class="n">n</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ecosys_tracer_cnt</span>
+   <span class="n">tracer_d_module</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">short_name</span>       <span class="o">=</span> <span class="n">marbl_instances</span><span class="p">(</span><span class="mi">1</span><span class="p">)%</span><span class="n">tracer_metadata</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">short_name</span>
+   <span class="n">tracer_d_module</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">long_name</span>        <span class="o">=</span> <span class="n">marbl_instances</span><span class="p">(</span><span class="mi">1</span><span class="p">)%</span><span class="n">tracer_metadata</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">long_name</span>
+   <span class="n">tracer_d_module</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">units</span>            <span class="o">=</span> <span class="n">marbl_instances</span><span class="p">(</span><span class="mi">1</span><span class="p">)%</span><span class="n">tracer_metadata</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">units</span>
+   <span class="n">tracer_d_module</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">tend_units</span>       <span class="o">=</span> <span class="n">marbl_instances</span><span class="p">(</span><span class="mi">1</span><span class="p">)%</span><span class="n">tracer_metadata</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">tend_units</span>
+   <span class="n">tracer_d_module</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">flux_units</span>       <span class="o">=</span> <span class="n">marbl_instances</span><span class="p">(</span><span class="mi">1</span><span class="p">)%</span><span class="n">tracer_metadata</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">flux_units</span>
+   <span class="n">tracer_d_module</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">lfull_depth_tavg</span> <span class="o">=</span> <span class="n">marbl_instances</span><span class="p">(</span><span class="mi">1</span><span class="p">)%</span><span class="n">tracer_metadata</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">lfull_depth_tavg</span>
+   <span class="n">tracer_d_module</span><span class="p">(</span><span class="n">n</span><span class="p">)%</span><span class="n">scale_factor</span>     <span class="o">=</span> <span class="n">c1</span>
+<span class="k">end do</span>
+</pre></div>
+</div>
+<p>POP combines the <code class="docutils literal"><span class="pre">tracer_d_module</span></code> object with information regarding what files contain tracer initial conditions (and what the netCDF variable name corresponds to each tracer) to properly initialize each tracer.</p>
+<div class="section" id="reading-tracer-initial-conditions">
+<h2>Reading Tracer Initial Conditions<a class="headerlink" href="#reading-tracer-initial-conditions" title="Permalink to this headline">¶</a></h2>
+<p>All tracer initial conditions are read from a file.
+If the run is a continuation run, the initial tracer values are found in a restart file.
+Otherwise they are read from an initial condition.</p>
+<p>POP has a specific data type to manage the metadata of a tracer it is reading from a file.</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span></span><span class="c">!-----------------------------------------------------------------------</span>
+<span class="c">!  derived type for reading tracers from a file</span>
+<span class="c">!-----------------------------------------------------------------------</span>
+
+<span class="k">type</span><span class="p">,</span> <span class="k">public</span> <span class="kd">::</span> <span class="n">tracer_read</span>
+   <span class="kt">character</span><span class="p">(</span><span class="n">char_len</span><span class="p">)</span> <span class="kd">::</span> <span class="n">mod_varname</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file_varname</span><span class="p">,</span> <span class="n">file_fmt</span>
+   <span class="kt">real</span><span class="p">(</span><span class="n">r8</span><span class="p">)</span> <span class="kd">::</span> <span class="n">scale_factor</span><span class="p">,</span> <span class="n">default_val</span>
+<span class="k">end type</span>
+</pre></div>
+</div>
+<p>Metadata such as the tracer name and the name of the tracer as it appears in the file is copied from <code class="docutils literal"><span class="pre">tracer_d_module</span></code> into <code class="docutils literal"><span class="pre">tracer_inputs</span></code> (an array of type <code class="docutils literal"><span class="pre">tracer_read</span></code>).
+The rest of <code class="docutils literal"><span class="pre">tracer_inputs</span></code> (file name, file format, etc) is also set and then each tracer state is read into the correct index of the tracer array  by looping over <code class="docutils literal"><span class="pre">tracer_inputs</span></code>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="forcing.html" title="POP Interacting with MARBL Requested Forcings"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="MARBL examples in POP"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">MARBL 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Examples of MARBL Implementation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="index.html" >MARBL examples in POP</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, National Science Foundation and U.S. Department of Energy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+    </div>
+  </body>
+</html>
