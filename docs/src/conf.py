@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'MARBL'
-copyright = u'2017, National Science Foundation and U.S. Department of Energy'
+copyright = u'2018, National Science Foundation and U.S. Department of Energy'
 author = u'MARBL developers'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -56,7 +56,7 @@ author = u'MARBL developers'
 # The short X.Y version.
 version = u'0.0'
 # The full version, including alpha/beta/rc tags.
-release = u'1.0.0'
+release = u'cesm2.0-n01'
 
 # Suppress "Created Using Sphinx" footer
 #html_show_sphinx = False
