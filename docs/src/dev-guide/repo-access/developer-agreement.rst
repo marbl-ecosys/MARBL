@@ -1,10 +1,10 @@
 .. _developer-agreement:
-	       
+
 =====================
 Developer's agreement
 =====================
 
-This document provides guidance for individuals contributing to the MARBL development repository, which is located here: https://github.com/NCAR/MARBL.
+This document provides guidance for individuals contributing to the MARBL development repository, which can be found at `https://github.com/marbl-ecosys/MARBL <https://github.com/marbl-ecosys/MARBL>`_.
 
 **If you do not agree to these policies and terms of use, you may not have access to the development code.**
 
@@ -15,7 +15,6 @@ Distribution policy
 The MARBL development code should not be distributed outside of a research group.
 Released versions of the MARBL code will be made publicly available on an open-source Github site.
 
-     
 ------------------------------------
 Contributions to a community project
 ------------------------------------
@@ -34,11 +33,11 @@ Publishing work based on MARBL development code is encouraged; however, this pro
 You are expected to communicate publication plans to other members of the MARBL development team if your work involves their contributions.
 
 You must offer co-authorship (or other mutually agreed upon recognition) on papers or other scientific communications to authors of MARBL development code if that code meets all of the following conditions:
-   
+
    - The research used the code by invoking it at run time;
-     
+
    - The code impacted solutions, such that results and/or conclusions would differ without it; and
-     
+
    - The code was not publicly released.
 
 MARBL code that has been released is not subject to these restrictions.

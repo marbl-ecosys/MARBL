@@ -7,7 +7,7 @@ Adding a Tracer
 The steps needed to add a new tracer depend greatly on what the tracer is, so this page will not use a single tracer as an example.
 Also, a significant portion of the code shown in these examples will be cleaned up prior to the MARBL 1.0.0 release (sorry!).
 
-This is a ? step process.
+This is a 7 step process.
 
 ------------------
 MARBL Code Changes
@@ -107,7 +107,7 @@ For example, here we set in index for the refractory DOC tracer:
   end subroutine tracer_index_constructor
 
 .. note::
-  There is an `issue ticket <https://github.com/NCAR/MARBL/issues/124>`_ to refer to objects as ``self`` instead of ``this``.
+  There is an `issue ticket <https://github.com/marbl-ecosys/MARBL/issues/124>`_ to refer to objects as ``self`` instead of ``this``.
   :ref:`ref-OO-examples` has it right.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
