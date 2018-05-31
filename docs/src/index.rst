@@ -19,6 +19,14 @@ The :ref:`scientific guide <sci-guide>` aims to communicate the scientific under
 
 ****
 
+-------
+License
+-------
+
+The MARBL license can be found :ref:`here <license>`.
+
+****
+
 -----------
 Sponsorship
 -----------
