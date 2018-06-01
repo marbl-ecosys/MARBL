@@ -28,14 +28,6 @@ If you want to bring MARBL in to your GCM, please wait for the official MARBL 1.
 
 ****
 
--------
-License
--------
-
-The MARBL license can be found :ref:`here <license>`.
-
-****
-
 -----------
 Sponsorship
 -----------

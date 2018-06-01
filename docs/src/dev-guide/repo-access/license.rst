@@ -4,6 +4,10 @@
 MARBL License
 =============
 
+:Release: |release|
+:Date: June 6, 2018
+:Editors: MARBL team
+
 .. code-block:: none
 
   Copyright (c) 2018, University Corporation for Atmospheric Research (UCAR)

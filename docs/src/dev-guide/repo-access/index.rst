@@ -7,7 +7,7 @@ Rules of engagement
 .. toctree::
    :maxdepth: 1
 
-   ../../license.rst
+   license.rst
    developer-agreement.rst
    workflow.rst
    working-on-docs.rst

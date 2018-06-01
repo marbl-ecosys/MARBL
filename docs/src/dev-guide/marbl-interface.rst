@@ -4,12 +4,8 @@
 MARBL interface
 ===============
 
-:Release: |release|
-:Date: June 6, 2018
-:Editors: MARBL team
-
-
-The MARBL interface class
+GCMs should use the MARBL interface class to call MARBL routines.
+The class definition is shown below:
 
 .. code-block:: fortran
 
