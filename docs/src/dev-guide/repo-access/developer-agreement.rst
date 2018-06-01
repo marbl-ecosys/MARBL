@@ -4,25 +4,24 @@
 Developer's agreement
 =====================
 
-This document provides guidance for individuals contributing to the MARBL development repository, which can be found at `https://github.com/marbl-ecosys/MARBL <https://github.com/marbl-ecosys/MARBL>`_.
-
-**If you do not agree to these policies and terms of use, you may not have access to the development code.**
-
--------------------
-Distribution policy
--------------------
-
-The MARBL development code should not be distributed outside of a research group.
-Released versions of the MARBL code will be made publicly available on an open-source Github site.
+This document provides guidance for individuals contributing to the MARBL project.
+The MARBL code is hosted on github at `https://github.com/marbl-ecosys/MARBL <https://github.com/marbl-ecosys/MARBL>`_.
 
 ------------------------------------
 Contributions to a community project
 ------------------------------------
 
 Your contributions to the MARBL project will likely be used by others on the development team.
-Furthermore, the MARBL code will be regularly released to an open-source repository with unrestricted access.
 This developer's agreement aims to ensure that authors receive appropriate credit for contributions to the MARBL code base.
 However, you must be aware that your contributions may ultimately be made public.
+
+----------------
+What Code to Run
+----------------
+
+Users interested in developing new features should fork the repository into their own github account and make branches off ``development``.
+MARBL development is an ongoing process that occurs in the same repository as stable releases.
+Users wanting vetted science should stick to the ``stable`` branch or tagged releases.
 
 -----------------------------------------
 Publishing research with development code
@@ -41,14 +40,6 @@ You must offer co-authorship (or other mutually agreed upon recognition) on pape
    - The code was not publicly released.
 
 MARBL code that has been released is not subject to these restrictions.
-
------------------
-Repository access
------------------
-
-MARBL is developed using Git as a version control system.
-Development should only occur on branches and not directly on `master`.
-Developers may create branches from the `master` and from their own branches; they may update or merge code from other branches only if permission has been granted from the authors of those branches.
 
 ------------
 Mailing List

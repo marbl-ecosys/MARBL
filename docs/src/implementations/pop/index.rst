@@ -10,4 +10,3 @@ MARBL examples in POP
 
    tracers.rst
    forcing.rst
-   global_means.rst

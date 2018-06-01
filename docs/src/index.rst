@@ -19,6 +19,15 @@ The :ref:`scientific guide <sci-guide>` aims to communicate the scientific under
 
 ****
 
+----------
+Disclaimer
+----------
+
+This version of MARBL has been made public solely for use in CESM 2.0.
+If you want to bring MARBL in to your GCM, please wait for the official MARBL 1.0.0 release.
+
+****
+
 -------
 License
 -------
