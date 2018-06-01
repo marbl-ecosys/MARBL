@@ -10,7 +10,6 @@ This document provides technical documentation of the MARBL code.
 
    * :ref:`Guidelines for participation <developer-agreement>`
 
-
    * :ref:`Developing code <workflow>`
 
    * :ref:`Working on the documentation <working-on-docs>`
@@ -22,4 +21,3 @@ This document provides technical documentation of the MARBL code.
    coding-conventions.rst
    marbl-interface.rst
    development-examples.rst
-

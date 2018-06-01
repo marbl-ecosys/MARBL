@@ -49,3 +49,11 @@ Repository access
 MARBL is developed using Git as a version control system.
 Development should only occur on branches and not directly on `master`.
 Developers may create branches from the `master` and from their own branches; they may update or merge code from other branches only if permission has been granted from the authors of those branches.
+
+------------
+Mailing List
+------------
+
+We recommend signing up for the `MARBL developer's mailing list <https://groups.google.com/forum/#!forum/marbl-dev>`_.
+This mailing list is used by the repository administrators to send out announcements about changes to the repository that may effect development.
+We also encourage developers to use the list to ask questions about the code or to communicate with each other about projects that could benefit from collaboration.
