@@ -8,7 +8,7 @@ This document provides technical documentation of the MARBL code.
 
 .. sidebar:: Contributing to MARBL
 
-   * :ref:`Guidelines for participation <developer-agreement>`
+   * :ref:`Guidelines for participation <developer-guidelines>`
 
    * :ref:`Developing code <workflow>`
 

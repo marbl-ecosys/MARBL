@@ -1,4 +1,4 @@
-.. _add-namelist-parm:
+.. _add-settings-parameter:
 
 ========================
 Adding a MARBL Parameter

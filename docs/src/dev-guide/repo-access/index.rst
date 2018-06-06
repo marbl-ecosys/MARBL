@@ -7,6 +7,6 @@ Rules of engagement
 .. toctree::
    :maxdepth: 1
 
-   developer-agreement.rst
+   developer-guidelines.rst
    workflow.rst
    working-on-docs.rst

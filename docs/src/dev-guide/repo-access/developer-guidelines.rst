@@ -1,23 +1,15 @@
-.. _developer-agreement:
+.. _developer-guidelines:
 
-=====================
-Developer's agreement
-=====================
+====================
+Developer Guidelines
+====================
 
 This document provides guidance for individuals contributing to the MARBL project.
 The MARBL code is hosted on github at `https://github.com/marbl-ecosys/MARBL <https://github.com/marbl-ecosys/MARBL>`_.
 
-------------------------------------
-Contributions to a community project
-------------------------------------
-
-Your contributions to the MARBL project will likely be used by others on the development team.
-This developer's agreement aims to ensure that authors receive appropriate credit for contributions to the MARBL code base.
-However, you must be aware that your contributions may ultimately be made public.
-
-----------------
-What Code to Run
-----------------
+--------------------
+Repository Structure
+--------------------
 
 Users interested in developing new features should fork the repository into their own github account and make branches off ``development``.
 MARBL development is an ongoing process that occurs in the same repository as stable releases.
@@ -27,6 +19,8 @@ Users wanting vetted science should stick to the ``stable`` branch or tagged rel
 Publishing research with development code
 -----------------------------------------
 
+Your contributions to the MARBL project will likely be used by others on the development team.
+This section aims to ensure that authors receive appropriate credit for contributions to the MARBL code base.
 Publishing work based on MARBL development code is encouraged; however, this project relies on contributions from a broad group and people deserve appropriate recognition for their intellectual efforts.
 
 You are expected to communicate publication plans to other members of the MARBL development team if your work involves their contributions.
@@ -37,7 +31,7 @@ You must offer co-authorship (or other mutually agreed upon recognition) on pape
 
    - The code impacted solutions, such that results and/or conclusions would differ without it; and
 
-   - The code was not publicly released.
+   - The code was not available on ``stable`` or a release branch.
 
 MARBL code that has been released is not subject to these restrictions.
 
