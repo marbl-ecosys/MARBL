@@ -140,7 +140,9 @@ The rest of the python scripts provided in the ``MARBL_tools/`` subdirectory rel
   #
   # Frequencies are never, low, medium, and high.
   # Operators are instantaneous, average, minimum, and maximum.
-  ...
+  .
+  .
+  .
   FG_CO2 : medium_average, high_average
 
 It is then up to the GCM to convert this text file into a format it recognizes for output (e.g. POP will add to the ``tavg_contents`` file).

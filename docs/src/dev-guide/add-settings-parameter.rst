@@ -156,13 +156,17 @@ We use a YAML file to provide an easy-to-edit and human-readable text file conta
   #                                value of another variable, then that variable needs to have
   #                                _append_to_config_keywords = True
   #
-  ...
+  .
+  .
+  .
   ################################################################################
   #                        Category 1: General Parameters                        #
   ################################################################################
 
   general_parms :
-    ...
+    .
+    .
+    .
     parm_o2_min :
         longname : Minimum O2 needed for production & consumption
         subcategory : 4. general parameters
@@ -190,7 +194,9 @@ The rest of the python scripts provided in the ``MARBL_tools/`` subdirectory rel
 .. code-block:: none
 
   ! general parameters
-  ...
+  .
+  .
+  .
   parm_o2_min = 5.0
   parm_o2_min_delta = 5.0
 
