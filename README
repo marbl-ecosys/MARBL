@@ -1,6 +1,23 @@
----------
-| ABOUT |
----------
+---------------------------------
+| MARBL Developers Mailing List |
+---------------------------------
+
+You can join the MARBL developers mailing list at
+
+https://groups.google.com/forum/#!forum/marbl-dev
+
+-----------------------
+| MARBL Documentation |
+-----------------------
+
+MARBL documentation is compiled by sphinx and hosted by readthedocs.io.
+It can be found on the web at
+
+https://marbl.readthedocs.io/en/latest/
+
+---------------
+| About MARBL |
+---------------
 
 The MARine Biogeochemistry Library (MARBL) is organized as follows:
 
@@ -70,42 +87,3 @@ The MARine Biogeochemistry Library (MARBL) is organized as follows:
             |                         get_setting() and put_setting()
             └── utils_routines        Make sure all tools provided in marbl_utils_mod.F90
                                        what they claim to do (esp. tests edge cases)
-
----------------------------------------------
-| INSTALLING THE LIBRARY FOR EXTERNAL USAGE |
----------------------------------------------
-
-The Makefile in src/ provides all that is needed to build the library. For
-testing purposes, you can run
-
-$ make [gnu|intel|pgi|nag|cray]
-
-to build with a specific compiler using pre-set compiler flags. However, if
-you want to build MARBL to link with an outside program, you may want more
-control over the compile-time options. To that end, run
-
-$ make OBJ_DIR=[location of object files] depends
-$ make [desired_location_of_lib]/libmarbl.a \
-       USE_DEPS=TRUE \
-       FC=[compiler] \
-       FCFLAGS="[compiler flags]" \
-       OBJ_DIR=[location of object files] \
-       INC_DIR=[location of .mod files]
-
-The first call will produce the dependency file (shared_deps.d), the second call
-will build libmarbl.a and the *.mod files. When building the GCM, you will need
-to add
-
--I$(INC_DIR)
-
-And when linking
-
--L$(LIB_DIR) -lmarbl
-
----------------------------------
-| MARBL Developers Mailing List |
----------------------------------
-
-You can join the MARBL developers mailing list at
-
-https://groups.google.com/forum/#!forum/marbl-dev

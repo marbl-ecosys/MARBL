@@ -54,9 +54,9 @@ author = u'MARBL developers'
 # built documents.
 #
 # The short X.Y version.
-version = u'0.0'
+version = u'cesm2.0'
 # The full version, including alpha/beta/rc tags.
-release = u'cesm2.0-n01'
+release = u'cesm2.0'
 
 # Suppress "Created Using Sphinx" footer
 #html_show_sphinx = False
@@ -87,7 +87,7 @@ todo_include_todos = False
 #
 #html_theme = 'bizstyle'
 #html_theme = 'sphinxdoc'
-html_theme = 'default'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

@@ -8,7 +8,8 @@ Marine Biogeochemistry Library
 ==============================
 
 The Marine Biogeochemistry Library, or MARBL, is a Fortran software package to be used by ocean general circulation models.
-It is `available via github <https://github.com/marbl-ecosys/MARBL>`_ under an open-source :ref:`license <license>`.
+It is `available via github <https://github.com/marbl-ecosys/MARBL>`_.
+Licensing details are provided in the top-level ``LICENSE``.
 
 ----------------
 About This Guide
