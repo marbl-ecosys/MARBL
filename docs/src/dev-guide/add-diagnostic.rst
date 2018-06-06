@@ -4,21 +4,17 @@
 Adding a Diagnostic
 ===================
 
-This is a four step process.
+This is a five step process.
 There are three changes to make in the Fortran code, all of which are made in ``marbl_diagnostics_mod.F90``.
 There are also two steps to make sure the diagnostic is known the GCM so it is included in the output.
-
-------------------
-MARBL Code Changes
-------------------
 
 For this example, we follow the DIC Surface Gas Flux, which uses the ``DIC_GAS_FLUX`` index.
 
 .. _ref-add-diag:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------
 Step 1. Add to MARBL diagnostic indexing type
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------
 
 To reduce the number of string comparisons inside routines called every time-step, MARBL uses integer indices to track many different variables.
 These indices are packed into datatypes to group common indices together.
@@ -40,14 +36,14 @@ So the indices for diagnostics variables are split into ``marbl_surface_forcing_
      .
    end type marbl_surface_forcing_diagnostics_indexing_type
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 Step 2. Add to diagnostic structure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 Another common feature among MARBL datatypes is the idea of adding an element to a derived type to contain all the data.
 Most derived types, including as ``marbl_diagnostics_type``,  are "reallocating":
 when a field is added, a new array of size ``N+1`` is created, the existing array is copied into the first ``N`` elements and then deallocated, and the new entry becomes element ``N+1``.
-In these situations, pointers are used instead of allocatable arrays so that ``marbl_instance%{surface,interior}_forcing_diags`` can point to the new array.
+In these situations, pointers are used instead of allocatable arrays so that ``marbl_instance%{surface,interior}_forcing_diags%diags`` can point to the new array.
 
 .. code-block:: fortran
 
@@ -63,9 +59,9 @@ In these situations, pointers are used instead of allocatable arrays so that ``m
     return
   end if
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------
 Step 3. Populate diagnostic type with data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------
 
 The purpose of the ``marbl_diagnostics_type`` structure is to allow an easy way to pass diagnostics through the interface.
 This step copies data only available in MARBL into the datatype that is available to the GCM.
@@ -91,9 +87,9 @@ This step copies data only available in MARBL into the datatype that is availabl
   In a future release the ``store_diagnostics`` routines will be condensed into a smaller subset of routines and there will be a clearer naming convention.
   Regardless, find the routine that makes the most sense for your diagnostic variable.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------------
 Step 4. Update the Diagnostics YAML files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------------
 
 We use a YAML file to provide an easy-to-edit and human-readable text file containing a list of all diagnostics and the recommended frequency of output.
 
@@ -113,9 +109,9 @@ We use a YAML file to provide an easy-to-edit and human-readable text file conta
 Note that ``FG_CO2`` matches what we used for the shortname in `Step 2. Add to diagnostic structure`_.
 The frequencies of ``medium`` and ``high`` mean "we recommend outputting this variable both daily and monthly", and the operators mean "average over both of those time periods."
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 Step 5. Convert the YAML file to JSON
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 
 We prefer editing YAML files to editing JSON files because they are much easier to maintain (and allow user comments).
 Unfortunately, python does not include a YAML parser in the default distributions.
