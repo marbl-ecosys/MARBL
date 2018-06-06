@@ -36,7 +36,8 @@ If you want to bring MARBL in to your GCM, please wait for the official MARBL 1.
 Sponsorship
 -----------
 
-MARBL funding is provided by the DOE `Biological and Environmental Research <https://climatemodeling.science.energy.gov/projects/marbl-marine-biogeochemistry-library>`_ office.
+MARBL is supported by the DOE `Biological and Environmental Research <https://climatemodeling.science.energy.gov/projects/marbl-marine-biogeochemistry-library>`_ office
+and the `National Center for Atmospheric Research <https://ncar.ucar.edu/home>`_, which is funded by the National Science Foundation.
 
 -----------------
 Table of contents
