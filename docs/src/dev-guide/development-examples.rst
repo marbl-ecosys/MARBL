@@ -10,6 +10,6 @@ Examples of common development tasks.
    :maxdepth: 1
 
    add-diagnostic.rst
-   add-namelist-parm.rst
+   add-settings-parameter.rst
    add-tracer.rst
 
