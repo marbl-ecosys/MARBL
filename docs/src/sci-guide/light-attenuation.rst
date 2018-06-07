@@ -84,7 +84,9 @@ The units of :math:`K` in equation :eq:`Kbar_chl_avg` are 1/m.
 
 Model units are cm, so the model implementation includes multiplication by 0.01.
 
-.. rubric:: References
+.. only:: html
+
+  .. rubric:: References
 
 .. bibliography:: ../references.bib
   :filter: docname in docnames
