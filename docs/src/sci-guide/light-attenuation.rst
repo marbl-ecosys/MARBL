@@ -4,11 +4,11 @@
  Light attenuation formulation
 ===============================
 
-Starting point is equation 6 of :cite:`Morel-Maritorena-2001`
+Starting point is equation 6 of :cite:`Morel-2001`
 
 .. math::
    :label: ze_chl_tot
-	  
+
    Z_e =
    \begin{cases}
    912.5 \left[ \mathrm{Chl_{tot}} \right]^{-0.839} & 10 < Z_e < 102 \\
@@ -24,9 +24,9 @@ averaged over the euphotic zone
 
 .. math::
    :label: chl_tot_def
-      
+
    \left[ \mathrm{Chl_{tot}} \right] =  Z_e \overline{\left[ \mathrm{Chl} \right]}
-   
+
 The crossover point :math:`Z_e=102` corresponds to
 :math:`\left[ \mathrm{Chl_{tot}} \right]=13.65`, which is equivalent to
 :math:`\overline{\left[ \mathrm{Chl} \right]}=0.1338`.
@@ -39,12 +39,12 @@ and solving for :math:`Z_e` yields
 
    Z_e =
    \begin{cases}
-	   40.710 \overline{\left[ \mathrm{Chl} \right]}^{-0.4562} & \overline{\left[ \mathrm{Chl} \right]} > 0.1338 \\
-   50.105 \overline{\left[ \mathrm{Chl} \right]}^{-0.3536} & \overline{\left[ \mathrm{Chl} \right]} < 0.1338
+     40.710 \overline{\left[ \mathrm{Chl} \right]}^{-0.4562} & \overline{\left[ \mathrm{Chl} \right]} > 0.1338 \\
+     50.105 \overline{\left[ \mathrm{Chl} \right]}^{-0.3536} & \overline{\left[ \mathrm{Chl} \right]} < 0.1338
    \end{cases}
 
 The euphotic zone depth is defined to be the depth where PAR is 1\% of its surface value
-:cite:`Morel-1998`.
+:cite:`Morel-1988`.
 
 We denote the attenuation coefficient of PAR as :math:`K`, and its effective average over the
 euphotic zone as :math:`\overline{K}`.
@@ -67,7 +67,7 @@ solving for :math:`\overline{K}` yields
 
 .. math::
    :label: Kbar_chl_avg
-   
+
    \overline{K} =
    \begin{cases}
    0.1131 \overline{\left[ \mathrm{Chl} \right]}^{0.4562} & \overline{\left[ \mathrm{Chl} \right]} > 0.1338 \\
@@ -85,7 +85,6 @@ The units of :math:`K` in equation :eq:`Kbar_chl_avg` are 1/m.
 Model units are cm, so the model implementation includes multiplication by 0.01.
 
 .. rubric:: References
-	    
-.. bibliography:: ../references.bib 
-   :cited:
-   
+
+.. bibliography:: ../references.bib
+  :filter: docname in docnames
