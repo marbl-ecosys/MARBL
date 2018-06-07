@@ -4,22 +4,20 @@
 MARBL interface
 ===============
 
-:Release: |release|
-:Date: |today|
-:Editors: MARBL team
-
-
-The MARBL interface class
+GCMs should use the MARBL interface class to call MARBL routines.
+The class definition is shown below:
 
 .. code-block:: fortran
 
   type, public :: marbl_interface_class
 
      ! public data - general
-     type(marbl_domain_type)           , public               :: domain
-     type(marbl_tracer_metadata_type)  , public, allocatable  :: tracer_metadata(:)
-     type(marbl_tracer_index_type)     , public               :: tracer_indices
-     type(marbl_log_type)              , public               :: StatusLog
+     type(marbl_domain_type)                        , public  :: domain
+     type(marbl_tracer_metadata_type)  , allocatable, public  :: tracer_metadata(:)
+     ! Pointer so that destructor doesn't need to reset all inds to 0
+     ! (that happens automatically when new tracer indexing type is allocated)
+     type(marbl_tracer_index_type)     , pointer    , public  :: tracer_indices => NULL()
+     type(marbl_log_type)                           , public  :: StatusLog
 
      type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
      type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
@@ -81,11 +79,11 @@ The MARBL interface class
      procedure, public  :: shutdown
      generic            :: inquire_settings_metadata => inquire_settings_metadata_by_name, &
                                                         inquire_settings_metadata_by_id
-     generic            :: put_setting => put_real,           &
-                                          put_integer,        &
-                                          put_logical,        &
-                                          put_string,         & ! This routine checks to see if string is actually an array
-                                          put_inputfile_line, & ! This line converts string "var = val" to proper put()
+     generic            :: put_setting => put_real,            &
+                                          put_integer,         &
+                                          put_logical,         &
+                                          put_string,          & ! This routine checks to see if string is actually an array
+                                          put_input_file_line, & ! This line converts string "var = val" to proper put()
                                           put_all_string
      generic            :: get_setting => get_real,    &
                                           get_integer, &
@@ -98,8 +96,7 @@ The MARBL interface class
      procedure, private :: put_integer
      procedure, private :: put_logical
      procedure, private :: put_string
-     procedure, private :: put_single_string             ! This routine assumes not an array
-     procedure, private :: put_inputfile_line
+     procedure, private :: put_input_file_line
      procedure, private :: put_all_string
      procedure, private :: get_real
      procedure, private :: get_integer

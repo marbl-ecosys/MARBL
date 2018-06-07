@@ -24,7 +24,7 @@ If running with ``ladjust_bury_coeff = .true.`` then MARBL will ask the GCM to p
 Note that the typical runcase sets ``ladjust_bury_coeff = .false.``, so for first-time implementations it is okay to skip this section.
 
 #. :ref:`Global sums <global_sums>` of data MARBL computes column-by-column
-#. :ref:`Running means <running_means>` of fields (eventually MARBL will compute these internally and use saved state to maintain the mean)
+#. :ref:`Running means <running_means>` of fields (eventually MARBL will `compute these internally <https://github.com/marbl-ecosys/MARBL/issues/77>`_ and use saved state to maintain the mean)
 
 
 .. toctree::

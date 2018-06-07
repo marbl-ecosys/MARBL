@@ -3,9 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-=================================
-Welcome to MARBL's documentation!
-=================================
+==============================
+Marine Biogeochemistry Library
+==============================
+
+The Marine Biogeochemistry Library, or MARBL, is a Fortran software package to be used by ocean general circulation models.
+It is `available via github <https://github.com/marbl-ecosys/MARBL>`_.
+Licensing details are provided in the top-level ``LICENSE`` file.
+
+----------------
+About This Guide
+----------------
 
 This document has four major sections.
 
@@ -17,13 +25,19 @@ The :ref:`developer's guide <dev-guide>` provides techincal documentation of the
 
 The :ref:`scientific guide <sci-guide>` aims to communicate the scientific underpinnings of the formulations encoded in MARBL.
 
-****
+----------
+Disclaimer
+----------
+
+This version of MARBL has been made public solely for use in CESM 2.0.
+If you want to bring MARBL in to your GCM, please wait for the official MARBL 1.0.0 release.
 
 -----------
 Sponsorship
 -----------
 
-MARBL funding is provided by the DOE `Biological and Environmental Research <https://climatemodeling.science.energy.gov/projects/marbl-marine-biogeochemistry-library>`_ office.
+MARBL is supported by the DOE `Biological and Environmental Research <https://climatemodeling.science.energy.gov/projects/marbl-marine-biogeochemistry-library>`_ office
+and the `National Center for Atmospheric Research <https://ncar.ucar.edu/home>`_, which is funded by the National Science Foundation.
 
 -----------------
 Table of contents

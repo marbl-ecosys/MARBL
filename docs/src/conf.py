@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'MARBL'
-copyright = u'2017, National Science Foundation and U.S. Department of Energy'
+copyright = u'2018, National Science Foundation and U.S. Department of Energy'
 author = u'MARBL developers'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -54,9 +54,9 @@ author = u'MARBL developers'
 # built documents.
 #
 # The short X.Y version.
-version = u'0.0'
+version = u'cesm2.0'
 # The full version, including alpha/beta/rc tags.
-release = u'1.0.0'
+release = u'cesm2.0'
 
 # Suppress "Created Using Sphinx" footer
 #html_show_sphinx = False
@@ -86,7 +86,8 @@ todo_include_todos = False
 # a list of builtin themes.
 #
 #html_theme = 'bizstyle'
-html_theme = 'sphinxdoc'
+#html_theme = 'sphinxdoc'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

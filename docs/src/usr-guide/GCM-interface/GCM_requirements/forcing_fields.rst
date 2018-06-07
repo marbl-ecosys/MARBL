@@ -19,28 +19,28 @@ Provides a list of the forcing fields requested with the default MARBL configura
   Requested surface forcing fields
   --------------------------------
 
-  1. u10_sqr
-  2. sss
-  3. sst
-  4. Ice Fraction
-  5. Dust Flux
-  6. Iron Flux
-  7. NOx Flux
-  8. NHy Flux
-  9. Atmospheric Pressure
-  10. xco2
-  11. xco2_alt_co2
+  1. u10_sqr (units: cm^2/s^2)
+  2. sss (units: psu)
+  3. sst (units: degC)
+  4. Ice Fraction (units: unitless)
+  5. Dust Flux (units: g/cm^2/s)
+  6. Iron Flux (units: nmol/cm^2/s)
+  7. NOx Flux (units: nmol/cm^2/s)
+  8. NHy Flux (units: nmol/cm^2/s)
+  9. Atmospheric Pressure (units: atmospheres)
+  10. xco2 (units: ppmv)
+  11. xco2_alt_co2 (units: ppmv)
 
   ---------------------------------
   Requested interior forcing fields
   ---------------------------------
 
-  1. Dust Flux
-  2. Surface Shortwave
-  3. Potential Temperature
-  4. Salinity
-  5. Pressure
-  6. Iron Sediment Flux
+  1. Dust Flux (units: g/cm^2/s)
+  2. Surface Shortwave (units: W/m^2)
+  3. Potential Temperature (units: degC)
+  4. Salinity (units: psu)
+  5. Pressure (units: bars)
+  6. Iron Sediment Flux (units: nmol/cm^2/s)
 
 
 ---------------------------------------------------------
@@ -51,17 +51,20 @@ The details are found in ``$MARBL/tests/driver_src/marbl.F90``:
 
 .. code-block:: fortran
 
+  ! Log requested surface forcing fields
   call driver_status_log%log_header('Requested surface forcing fields', subname)
   do n=1,size(marbl_instance%surface_input_forcings)
-    write(log_message, "(I0, 2A)") n, '. ', &
-          trim(marbl_instance%surface_input_forcings(n)%metadata%varname)
+    write(log_message, "(I0, 5A)") n, '. ', &
+          trim(marbl_instance%surface_input_forcings(n)%metadata%varname), &
+          ' (units: ', trim(marbl_instance%surface_input_forcings(n)%metadata%field_units),')'
     call driver_status_log%log_noerror(log_message, subname)
   end do
   ! Log requested interior forcing fields
   call driver_status_log%log_header('Requested interior forcing fields', subname)
   do n=1,size(marbl_instance%interior_input_forcings)
-    write(log_message, "(I0, 2A)") n, '. ',                               &
-         trim(marbl_instance%interior_input_forcings(n)%metadata%varname)
+    write(log_message, "(I0, 5A)") n, '. ',                               &
+         trim(marbl_instance%interior_input_forcings(n)%metadata%varname), &
+         ' (units: ', trim(marbl_instance%interior_input_forcings(n)%metadata%field_units),')'
     call driver_status_log%log_noerror(log_message, subname)
   end do
 

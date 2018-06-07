@@ -93,7 +93,9 @@ The subroutine header looks like this:
     integer,                           intent(in)    :: id
     type(marbl_log_type),              intent(inout) :: marbl_status_log
 
-    ...
+    .
+    .
+    .
 
   end subroutine start_timer
 
@@ -121,7 +123,9 @@ If we look closer at the ``start_timer`` routine, we see an example:
       end if
 
       timer%is_running = .true.
-      ...
+      .
+      .
+      .
       timer%cur_start = get_time()
      end associate
 
