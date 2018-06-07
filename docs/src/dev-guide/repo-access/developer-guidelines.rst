@@ -12,8 +12,8 @@ Repository Structure
 --------------------
 
 Users interested in developing new features should fork the repository into their own github account and make branches off ``development``.
-MARBL development is an ongoing process that occurs in the same repository as stable releases.
-Users wanting vetted science should stick to the ``stable`` branch or tagged releases.
+Submit a pull request back to ``development`` when your modifications are complete.
+The ``stable`` branch in the MARBL repository contains code from scientifically-vetted releases.
 
 -----------------------------------------
 Publishing research with development code

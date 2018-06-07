@@ -29,7 +29,7 @@ It's helpful to setup an environment. See `here
 for more on conda environments.
 
 With conda installed, do the following ::
-  
+
   $ conda create --name marbl-docs sphinx sphinx_rtd_theme
   $ source activate marbl-docs
   $ pip install sphinxcontrib-bibtex
@@ -53,7 +53,7 @@ Do all development work on a branch
 
 Checkout a new local branch using ::
 
-  $ ../marbl> git checkout -b my_branch
+  [MARBL]$ git checkout -b my_branch
 
 to create a branch or omit the ``-b`` to checkout an existing branch.
 
@@ -67,15 +67,15 @@ files.
 
 The documentation has three major sections
 
-==   ====================================  =======================
-\    :ref:`Developer's guide<dev-guide>`   ../docs/src/dev-guide
-\    :ref:`Scientific manual<sci-guide>`   ../docs/src/sci-guide
-\    :ref:`User guide<usr-guide>`          ../docs/src/usr-guide          
-==   ====================================  =======================
+==   ====================================  ============================
+\    :ref:`Developer's guide<dev-guide>`   ``MARBL/docs/src/dev-guide``
+\    :ref:`Scientific manual<sci-guide>`   ``MARBL/docs/src/sci-guide``
+\    :ref:`User guide<usr-guide>`          ``MARBL/docs/src/usr-guide``
+==   ====================================  ============================
 
-The file `index.html` in each of these directories includes the table of contents for each section; this file must be modified when new pages are added.
+The file ``index.html`` in each of these directories includes the table of contents for each section; this file must be modified when new pages are added.
 
-Begin each `rst` file with a label that is the same as the file name::
+Begin each ``rst`` file with a label that is the same as the file name::
 
   .. _myfilename:
 
@@ -90,9 +90,9 @@ Build the documentation
 
 Once changes are complete, build from `src` using ::
 
-  $ ../marbl/src> make html
+  [MARBL/src]$ make clean html
 
-The compiled documentation ends up in ``../marbl/docs/html``.
+The compiled documentation ends up in ``MARBL/docs/html``.
 You can view the files there in a browser locally as you work.
 
 ~~~~~~~~~~~~~~
@@ -101,12 +101,12 @@ Commit changes
 
 You can check the status of your modification using ::
 
-  $ ../marbl> git status
+  [MARBL]$ git status
 
 When you are ready to commit ::
-  
-  $ ../marbl/docs> git add .
-  $ ../marbl/docs> git commit -m 'message describing changes'
+
+  [MARBL/docs]$ git add .
+  [MARBL/docs]$ git commit -m 'message describing changes'
 
 ---------------------------
 Headers in ReStructuredText
@@ -164,6 +164,4 @@ If you find a need for a Subsubsubtitle, choose your favorite special character 
 .. admonition:: reStructuredText resource
 
    The authoritative `reStructuredText User Documentation
-   <http://docutils.sourceforge.net/rst.html>`_. 
-
-
+   <http://docutils.sourceforge.net/rst.html>`_.
