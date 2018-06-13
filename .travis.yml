@@ -4,6 +4,9 @@ before_install:
   - sudo apt-get install gfortran
 install:
   - pip install pyyaml
+  - pip install sphinx
+  - pip install sphinx_rtd_theme==0.2.5b1
+  - pip install sphinxcontrib-bibtex
 python:
   - '2.7'
   - '3.6'
