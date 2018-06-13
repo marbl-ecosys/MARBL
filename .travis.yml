@@ -8,7 +8,8 @@ python:
   - '2.7'
   - '3.6'
 script:
-  - cd MARBL_tools; ./run_test_suite.sh
+  - cd docs/src; make html
+  - cd ../../MARBL_tools; ./run_test_suite.sh
 
 branches:
   only:
