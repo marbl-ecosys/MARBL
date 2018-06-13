@@ -27,7 +27,7 @@ class MARBL_testcase(object):
   # Some tests will let you specify a compiler and / or input file
   # Some tests will require you to specify a machine
   def parse_args(self, desc, HaveCompiler=True, HaveInputFile=True,
-                 CleanLibOnly=False):
+                 HasPause=False, CleanLibOnly=False):
 
     import argparse
 
@@ -41,6 +41,10 @@ class MARBL_testcase(object):
     if HaveInputFile:
       parser.add_argument('-i', '--input_file', action='store', dest='input_file',
                           default=None, help='input file to read')
+
+    if HasPause:
+        parser.add_argument('--no_pause', action='store_true', dest='no_pause',
+                            help='do not pause between compilers')
 
     if CleanLibOnly:
       parser.add_argument('--clean', action='store_true',
@@ -111,6 +115,9 @@ class MARBL_testcase(object):
     self._namelist_file = args.namelist_file
     self._mpitasks = int(args.mpitasks)
     sys.stdout.flush()
+
+    if HasPause:
+        self.pause = not args.no_pause
 
     # ERROR CHECKING
     if HaveCompiler:

@@ -19,7 +19,7 @@ function print_status() {
   if [ "${STATUS}" == "FAIL" ]; then
     FAIL_CNT=$((FAIL_CNT+1))
   fi
-  echo "${TEST_CNT}. $1: " ${STATUS}
+  echo "${TEST_CNT}. $1: ${STATUS}"
 }
 
 #################################################
@@ -59,12 +59,26 @@ echo "$ ./MARBL_generate_diagnostics_file.py"
 STATUS=$(check_return $?)
 print_status "MARBL_generate_diagnostics_file.py" >> $OUTFILE
 
-# Build Fortran Code
-cd ${MARBL_ROOT}/tests/bld_tests
-echo "$ ./bld_exe.py"
-./bld_exe.py
+# Clean Fortran Code
+cd ${MARBL_ROOT}/tests/driver_src
+echo "$ make clean"
+make clean
 STATUS=$(check_return $?)
-print_status "bld_exe.py" >> $OUTFILE
+print_status "make clean" >> $OUTFILE
+
+# Build libmarbl.a
+cd ${MARBL_ROOT}/tests/bld_tests
+echo "$ ./bld_lib.py --no_pause"
+./bld_lib.py --no_pause
+STATUS=$(check_return $?)
+print_status "bld_lib.py --no_pause" >> $OUTFILE
+
+# Build stand-alone executable
+cd ${MARBL_ROOT}/tests/bld_tests
+echo "$ ./bld_exe.py --no_pause"
+./bld_exe.py --no_pause
+STATUS=$(check_return $?)
+print_status "bld_exe.py --no_pause" >> $OUTFILE
 
 # get_put unit test
 cd ${MARBL_ROOT}/tests/unit_tests/get_put
