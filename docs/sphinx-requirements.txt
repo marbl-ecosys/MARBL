@@ -28,8 +28,10 @@ requests==2.18.4
 six==1.11.0
 snowballstemmer==1.2.1
 Sphinx==1.7.5
+sphinx-better-theme==0.1.5
 sphinx-rtd-theme==0.3.1
 sphinxcontrib-bibtex==0.4.0
+sphinxcontrib-fulltoc==1.2.0
 sphinxcontrib-websupport==1.1.0
 typing==3.6.4
 urllib3==1.22
