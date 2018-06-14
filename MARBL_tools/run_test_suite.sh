@@ -73,75 +73,80 @@ echo "$ ./bld_lib.py --no_pause"
 STATUS=$(check_return $?)
 print_status "bld_lib.py --no_pause" >> $OUTFILE
 
-# Build stand-alone executable
-cd ${MARBL_ROOT}/tests/bld_tests
-echo "$ ./bld_exe.py --no_pause"
-./bld_exe.py --no_pause
-STATUS=$(check_return $?)
-print_status "bld_exe.py --no_pause" >> $OUTFILE
+# Build stand-alone executable (only if library built successfully)
+if [ "${STATUS}" == "PASS" ]; then
+  cd ${MARBL_ROOT}/tests/bld_tests
+  echo "$ ./bld_exe.py --no_pause"
+  ./bld_exe.py --no_pause
+  STATUS=$(check_return $?)
+  print_status "bld_exe.py --no_pause" >> $OUTFILE
+fi
 
-# get_put unit test
-cd ${MARBL_ROOT}/tests/unit_tests/get_put
-echo "$ ./get_put.py"
-./get_put.py
-STATUS=$(check_return $?)
-print_status "get_put.py" >> $OUTFILE
+# Only test Fortran executable if build was successful
+if [ "${STATUS}" == "PASS" ]; then
+  # get_put unit test
+  cd ${MARBL_ROOT}/tests/unit_tests/get_put
+  echo "$ ./get_put.py"
+  ./get_put.py
+  STATUS=$(check_return $?)
+  print_status "get_put.py" >> $OUTFILE
 
-# marbl_utils unit test
-cd ${MARBL_ROOT}/tests/unit_tests/utils_routines
-echo "$ ./marbl_utils.py"
-./marbl_utils.py
-STATUS=$(check_return $?)
-print_status "marbl_utils.py" >> $OUTFILE
+  # marbl_utils unit test
+  cd ${MARBL_ROOT}/tests/unit_tests/utils_routines
+  echo "$ ./marbl_utils.py"
+  ./marbl_utils.py
+  STATUS=$(check_return $?)
+  print_status "marbl_utils.py" >> $OUTFILE
 
-# Initialize MARBL
-cd ${MARBL_ROOT}/tests/regression_tests/init
-echo "$ ./init.py"
-./init.py
-STATUS=$(check_return $?)
-print_status "init.py" >> $OUTFILE
+  # Initialize MARBL
+  cd ${MARBL_ROOT}/tests/regression_tests/init
+  echo "$ ./init.py"
+  ./init.py
+  STATUS=$(check_return $?)
+  print_status "init.py" >> $OUTFILE
 
-# Initialize MARBL, clean up memory, initialize again
-cd ${MARBL_ROOT}/tests/regression_tests/init-twice
-echo "$ ./init-twice.py"
-./init-twice.py
-STATUS=$(check_return $?)
-print_status "init-twice.py" >> $OUTFILE
+  # Initialize MARBL, clean up memory, initialize again
+  cd ${MARBL_ROOT}/tests/regression_tests/init-twice
+  echo "$ ./init-twice.py"
+  ./init-twice.py
+  STATUS=$(check_return $?)
+  print_status "init-twice.py" >> $OUTFILE
 
-# Generate a settings file (Fortran)
-cd ${MARBL_ROOT}/tests/regression_tests/gen_input_file
-echo "$ ./gen_input_file.py"
-./gen_input_file.py
-STATUS=$(check_return $?)
-print_status "gen_input_file.py" >> $OUTFILE
+  # Generate a settings file (Fortran)
+  cd ${MARBL_ROOT}/tests/regression_tests/gen_input_file
+  echo "$ ./gen_input_file.py"
+  ./gen_input_file.py
+  STATUS=$(check_return $?)
+  print_status "gen_input_file.py" >> $OUTFILE
 
-# Print all diagnostics MARBL can provide
-cd ${MARBL_ROOT}/tests/regression_tests/requested_diags
-echo "$ ./requested_diags.py"
-./requested_diags.py
-STATUS=$(check_return $?)
-print_status "requested_diags.py" >> $OUTFILE
+  # Print all diagnostics MARBL can provide
+  cd ${MARBL_ROOT}/tests/regression_tests/requested_diags
+  echo "$ ./requested_diags.py"
+  ./requested_diags.py
+  STATUS=$(check_return $?)
+  print_status "requested_diags.py" >> $OUTFILE
 
-# Print all forcings MARBL requires
-cd ${MARBL_ROOT}/tests/regression_tests/requested_forcings
-echo "$ ./requested_forcings.py"
-./requested_forcings.py
-STATUS=$(check_return $?)
-print_status "requested_forcings.py" >> $OUTFILE
+  # Print all forcings MARBL requires
+  cd ${MARBL_ROOT}/tests/regression_tests/requested_forcings
+  echo "$ ./requested_forcings.py"
+  ./requested_forcings.py
+  STATUS=$(check_return $?)
+  print_status "requested_forcings.py" >> $OUTFILE
 
-# Print all restoring fields being requested
-cd ${MARBL_ROOT}/tests/regression_tests/requested_restoring
-echo "$ ./requested_restoring.py"
-./requested_restoring.py -i ${MARBL_ROOT}/tests/input_files/marbl_with_restore.input
-STATUS=$(check_return $?)
-print_status "requested_restoring.py" >> $OUTFILE
+  # Print all restoring fields being requested
+  cd ${MARBL_ROOT}/tests/regression_tests/requested_restoring
+  echo "$ ./requested_restoring.py"
+  ./requested_restoring.py -i ${MARBL_ROOT}/tests/input_files/marbl_with_restore.input
+  STATUS=$(check_return $?)
+  print_status "requested_restoring.py" >> $OUTFILE
 
-# Print all tracers MARBL computes tendencies for
-cd ${MARBL_ROOT}/tests/regression_tests/requested_tracers
-echo "$ ./requested_tracers.py"
-./requested_tracers.py
-STATUS=$(check_return $?)
-print_status "requested_tracers.py" >> $OUTFILE
+  # Print all tracers MARBL computes tendencies for
+  cd ${MARBL_ROOT}/tests/regression_tests/requested_tracers
+  echo "$ ./requested_tracers.py"
+  ./requested_tracers.py
+  STATUS=$(check_return $?)
+  print_status "requested_tracers.py" >> $OUTFILE
+fi
 
 echo "----"
 cat $OUTFILE
