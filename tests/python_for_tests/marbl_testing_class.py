@@ -142,7 +142,10 @@ class MARBL_testcase(object):
     makecmd = 'make %s' % loc_compiler
     if self._mpitasks > 0:
       makecmd += ' USEMPI=TRUE'
-    sh_command('cd %s; %s' % (src_dir, makecmd))
+    status_code = sh_command('cd %s; %s' % (src_dir, makecmd))
+    if status_code != 0:
+        logging.error("ERROR building MARBL library")
+        sys.exit(1)
 
   # -----------------------------------------------
 
@@ -160,7 +163,10 @@ class MARBL_testcase(object):
     makecmd = 'make %s' % loc_compiler
     if self._mpitasks > 0:
       makecmd += ' USEMPI=TRUE'
-    sh_command('cd %s; %s' % (drv_dir, makecmd))
+    status_code = sh_command('cd %s; %s' % (drv_dir, makecmd))
+    if status_code != 0:
+        logging.error("ERROR building MARBL stand-alone driver")
+        sys.exit(1)
 
   # -----------------------------------------------
 
@@ -205,7 +211,7 @@ class MARBL_testcase(object):
     status_code = sh_command(execmd)
     if status_code != 0:
         logging.error("ERROR in executable")
-        sys.exit(status_code)
+        sys.exit(1)
 
   # -----------------------------------------------
   # PRIVATE ROUTINES
