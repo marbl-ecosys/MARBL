@@ -4,23 +4,13 @@ before_install:
   - sudo apt-get install gfortran
 install:
   - pip install pyyaml
+  - pip install -r docs/py_requirements.txt
 python:
   - '2.7'
   - '3.6'
 script:
-  - cd MARBL_tools; ./yaml_to_json.py
-  - ./MARBL_generate_settings_file.py
-  - ./MARBL_generate_diagnostics_file.py
-  - cd ../tests/bld_tests; ./bld_exe.py
-  - cd ../unit_tests/get_put; ./get_put.py
-  - cd ../utils_routines; ./marbl_utils.py
-  - cd ../../regression_tests/init; ./init.py
-  - cd ../init-twice; ./init-twice.py
-  - cd ../gen_input_file; ./gen_input_file.py
-  - cd ../requested_diags; ./requested_diags.py
-  - cd ../requested_forcings; ./requested_forcings.py
-  - cd ../requested_restoring; ./requested_restoring.py
-  - cd ../requested_tracers; ./requested_tracers.py
+  - cd docs/src; make html
+  - cd ../../MARBL_tools; ./run_test_suite.sh
 
 branches:
   only:
