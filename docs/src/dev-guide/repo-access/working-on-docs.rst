@@ -30,9 +30,9 @@ for more on conda environments.
 
 With conda installed, do the following ::
 
-  $ conda create --name marbl-docs sphinx sphinx_rtd_theme
+  $ conda create --name marbl-docs
   $ source activate marbl-docs
-  $ pip install sphinxcontrib-bibtex
+  $ pip install -r $MARBL/docs/
 
 This creates an environment call "marbl-docs" and installs the required extensions.
 
