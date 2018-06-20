@@ -30,11 +30,11 @@ for more on conda environments.
 
 With conda installed, do the following ::
 
-  $ conda create --name marbl-docs
+  $ conda create --name marbl-docs pip
   $ source activate marbl-docs
   $ pip install -r $MARBL/docs/
 
-This creates an environment call "marbl-docs" and installs the required extensions.
+This creates an environment call "marbl-docs" and ensures that ``pip install`` commands are local to the environment rather than global.
 
 To deactivate the "marbl-docs" environment ::
 
