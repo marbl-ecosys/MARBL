@@ -44,6 +44,11 @@ Table of contents
 -----------------
 
 .. toctree::
+   :hidden:
+
+   self
+
+.. toctree::
    :maxdepth: 1
    :caption: Contents:
 
