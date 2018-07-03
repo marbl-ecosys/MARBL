@@ -23,7 +23,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -f DEFAULT_SETTINGS_FILE, --default_settings_file DEFAULT_SETTINGS_FILE
                         Location of JSON-formatted MARBL configuration file
-                        (default: $MARBLROOT/defaults/json/default_settings.json)
+                        (default: $MARBLROOT/defaults/json/settings_latest.json)
   -s {GCM,settings_file}, --saved_state_vars_source {GCM,settings_file}
                         Source of initial value for saved state vars that can
                         come from GCM or settings file (default:
@@ -63,9 +63,9 @@ def _parse_args(marbl_root):
     parser = argparse.ArgumentParser(description="Generate a MARBL settings file from a JSON file",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    # Command line argument to point to JSON file (default is $MARBLROOT/defaults/json/default_settings.json)
+    # Command line argument to point to JSON file (default is $MARBLROOT/defaults/json/settings_latest.json)
     parser.add_argument('-f', '--default_settings_file', action='store', dest='default_settings_file',
-                        default=os.path.join(marbl_root, 'defaults', 'json', 'default_settings.json'),
+                        default=os.path.join(marbl_root, 'defaults', 'json', 'settings_latest.json'),
                         help='Location of JSON-formatted MARBL configuration file')
 
     # Is the GCM providing initial bury coefficients via saved state?

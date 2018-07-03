@@ -25,11 +25,11 @@ optional arguments:
   -f DEFAULT_SETTINGS_FILE, --default_settings_file DEFAULT_SETTINGS_FILE
                         Location of JSON-formatted MARBL settings
                         configuration file (default: $MARBLROOT/
-                        defaults/json/default_settings.json)
+                        defaults/json/settings_latest.json)
   -j DEFAULT_DIAGNOSTICS_FILE, --default_diagnostics_file DEFAULT_DIAGNOSTICS_FILE
                         Location of JSON-formatted MARBL diagnostics
                         configuration file (default: $MARBLROOT/
-                        defaults/json/default_diagnostics.json)
+                        defaults/json/diagnostics_latest.json)
   -s {GCM,settings_file}, --saved_state_vars_source {GCM,settings_file}
                         Source of initial value for saved state vars that can
                         come from GCM or settings file (default:
@@ -102,14 +102,14 @@ def _parse_args(marbl_root):
     parser = argparse.ArgumentParser(description="Generate a MARBL settings file from a JSON file",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    # Command line argument to point to JSON settings file (default is $MARBLROOT/defaults/json/default_settings.json)
+    # Command line argument to point to JSON settings file (default is $MARBLROOT/defaults/json/settings_latest.json)
     parser.add_argument('-f', '--default_settings_file', action='store', dest='default_settings_file',
-                        default=os.path.join(marbl_root, 'defaults', 'json', 'default_settings.json'),
+                        default=os.path.join(marbl_root, 'defaults', 'json', 'settings_latest.json'),
                         help='Location of JSON-formatted MARBL settings configuration file')
 
-    # Command line argument to point to JSON diagnostics file (default is $MARBLROOT/defaults/json/default_diagnostics.json)
+    # Command line argument to point to JSON diagnostics file (default is $MARBLROOT/defaults/json/diagnostics_latest.json)
     parser.add_argument('-j', '--default_diagnostics_file', action='store', dest='default_diagnostics_file',
-                        default=os.path.join(marbl_root, 'defaults', 'json', 'default_diagnostics.json'),
+                        default=os.path.join(marbl_root, 'defaults', 'json', 'diagnostics_latest.json'),
                         help='Location of JSON-formatted MARBL diagnostics configuration file')
 
     # Is the GCM providing initial bury coefficients via saved state?
