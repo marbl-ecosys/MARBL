@@ -460,6 +460,12 @@ calcToSed_ALT_CO2 :
    vertical_grid : none
    frequency : medium
    operator : average
+pocToFloor :
+   longname : POC Flux Hitting Sea Floor
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : never
+   operator : average
 pocToSed :
    longname : POC Flux to Sediments
    units : nmol/cm^2/s
@@ -867,6 +873,18 @@ POC_FLUX_IN :
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
+   operator : average
+POC_sFLUX_IN :
+   longname : POC sFlux into Cell
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
+POC_hFLUX_IN :
+   longname : POC hFlux into Cell
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : never
    operator : average
 POC_PROD :
    longname : POC Production

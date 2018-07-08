@@ -99,6 +99,7 @@ module marbl_diagnostics_mod
     integer(int_kind) :: calcToFloor
     integer(int_kind) :: calcToSed
     integer(int_kind) :: calcToSed_ALT_CO2
+    integer(int_kind) :: pocToFloor
     integer(int_kind) :: pocToSed
     integer(int_kind) :: ponToSed
     integer(int_kind) :: SedDenitrif
@@ -223,6 +224,8 @@ module marbl_diagnostics_mod
     ! Particulate 3D diags
     integer(int_kind) :: P_REMIN_SCALEF
     integer(int_kind) :: POC_FLUX_IN
+    integer(int_kind) :: POC_sFLUX_IN
+    integer(int_kind) :: POC_hFLUX_IN
     integer(int_kind) :: POC_PROD
     integer(int_kind) :: POC_REMIN_DOCr
     integer(int_kind) :: POC_REMIN_DIC
@@ -1242,6 +1245,18 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%calcToSed_ALT_CO2, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'POC Flux Hitting Sea Floor'
+      sname = 'pocToFloor'
+      units = 'nmol/cm^2/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%pocToFloor, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -2676,6 +2691,30 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%POC_FLUX_IN, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'POC sFlux into Cell'
+      sname = 'POC_sFLUX_IN'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%POC_sFLUX_IN, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'POC hFlux into Cell'
+      sname = 'POC_hFLUX_IN'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%POC_hFLUX_IN, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -4753,6 +4792,8 @@ contains
     endif
     diags(ind%POC_FLUX_at_ref_depth)%field_2d(1) = POC%flux_at_ref_depth
     diags(ind%POC_FLUX_IN)%field_3d(:, 1)        = POC%sflux_in + POC%hflux_in
+    diags(ind%POC_sFLUX_IN)%field_3d(:, 1)       = POC%sflux_in
+    diags(ind%POC_hFLUX_IN)%field_3d(:, 1)       = POC%hflux_in
     diags(ind%POC_PROD)%field_3d(:, 1)           = POC%prod
     call compute_vertical_integrals(diags(ind%POC_PROD)%field_3d(:, 1), &
          delta_z, kmt, full_depth_integral=diags(ind%POC_PROD_zint)%field_2d(1), &
@@ -4807,6 +4848,7 @@ contains
     diags(ind%calcToSed)%field_2d(1)         = sum(P_CaCO3%sed_loss)
     diags(ind%calcToSed_ALT_CO2)%field_2d(1) = sum(P_CaCO3_ALT_CO2%sed_loss)
     diags(ind%bsiToSed)%field_2d(1)          = sum(P_SiO2%sed_loss)
+    diags(ind%pocToFloor)%field_2d(1)        = POC%to_floor
     diags(ind%pocToSed)%field_2d(1)          = sum(POC%sed_loss)
     diags(ind%SedDenitrif)%field_2d(1)       = sum(sed_denitrif * delta_z)
     diags(ind%OtherRemin)%field_2d(1)        = sum(other_remin * delta_z)
