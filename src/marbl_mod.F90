@@ -465,6 +465,7 @@ contains
     use marbl_interface_private_types, only : marbl_timer_indexing_type
     use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
     use marbl_restore_mod, only : marbl_restore_compute_interior_restore
+    use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
 
     type    (marbl_domain_type)                 , intent(in)    :: domain
@@ -500,6 +501,7 @@ contains
 
     real (r8) :: surf_press(domain%km)       ! pressure in surface layer
     real (r8) :: temperature(domain%km)      ! in situ temperature
+    real (r8) :: o2_consumption_scalef(domain%km) ! O2 Consumption Scale Factor
     real (r8) :: p_remin_scalef(domain%km)   ! Particulate Remin Scale Factor
     real (r8) :: O2_production(domain%km)    ! O2 production
     real (r8) :: O2_consumption(domain%km)   ! O2 consumption
@@ -605,6 +607,12 @@ contains
     !  local copies of optional forcings
     !  these are not handled via associate block because their forcing incides might be zero
     !-----------------------------------------------------------------------
+
+    if (lo2_consumption_scalef) then
+       o2_consumption_scalef(:) = interior_forcings(interior_forcing_indices%o2_consumption_scalef_id)%field_1d(1,:)
+    else
+       o2_consumption_scalef(:) = c1
+    endif
 
     if (lp_remin_scalef) then
        p_remin_scalef(:) = interior_forcings(interior_forcing_indices%p_remin_scalef_id)%field_1d(1,:)
@@ -766,6 +774,7 @@ contains
             other_remin(k), PON_remin(k), &
             interior_restore(:, k), &
             tracer_local(o2_ind, k), &
+            o2_consumption_scalef(k), &
             o2_production(k), o2_consumption(k), &
             dtracers(:, k), marbl_tracer_indices )
 
@@ -4293,7 +4302,8 @@ contains
              nitrif, denitrif, sed_denitrif, Fe_scavenge, Lig_prod, Lig_loss,   &
              P_iron_remin, POC_remin, POP_remin, P_SiO2_remin, P_CaCO3_remin,   &
              P_CaCO3_ALT_CO2_remin, other_remin, PON_remin, interior_restore,   &
-             O2_loc, o2_production, o2_consumption, dtracers, marbl_tracer_indices)
+             O2_loc, o2_consumption_scalef, o2_production, o2_consumption,      &
+             dtracers, marbl_tracer_indices)
 
     integer                                  , intent(in)  :: auto_cnt
     integer                                  , intent(in)  :: zoo_cnt
@@ -4318,6 +4328,7 @@ contains
     real(r8)                                 , intent(in)  :: PON_remin
     real(r8)                                 , intent(in)  :: interior_restore(:)
     real(r8)                                 , intent(in)  :: O2_loc
+    real(r8)                                 , intent(in)  :: o2_consumption_scalef
     real(r8)                                 , intent(out) :: o2_production
     real(r8)                                 , intent(out) :: o2_consumption
     real(r8)                                 , intent(out) :: dtracers(:)
@@ -4580,6 +4591,7 @@ contains
          + DOCr_remin - (sed_denitrif * denitrif_C_N) - other_remin + sum(zoo_loss_dic(:)) &
          + sum(zoo_graze_dic(:)) + sum(auto_loss_dic(:)) + sum(auto_graze_dic(:)) ) &
          / parm_Remin_D_C_O2 + (c2 * nitrif))
+    o2_consumption = o2_consumption_scalef * o2_consumption
 
     dtracers(o2_ind) = o2_production - o2_consumption
 

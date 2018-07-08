@@ -1475,6 +1475,16 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "O2_CONSUMPTION_SCALEF": {
+      "dependencies": {
+         "lo2_consumption_scalef": ".true."
+      },
+      "frequency": "never",
+      "longname": "O2 Consumption Scale Factor",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "layer_avg"
+   },
    "O2_PRODUCTION": {
       "frequency": "medium",
       "longname": "O2 Production",

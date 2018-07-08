@@ -275,6 +275,12 @@ general_parms :
       datatype : logical
       default_value : .false.
       _append_to_config_keywords : true
+   lo2_consumption_scalef :
+      longname : Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)
+      subcategory : 2. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
    lp_remin_scalef :
       longname : Apply p_remin_scalef to particulate remin (and request it as a forcing)
       subcategory : 2. config flags

@@ -177,6 +177,7 @@ module marbl_diagnostics_mod
     integer(int_kind) :: NITRIF
     integer(int_kind) :: DENITRIF
     integer(int_kind) :: O2_PRODUCTION
+    integer(int_kind) :: O2_CONSUMPTION_SCALEF
     integer(int_kind) :: O2_CONSUMPTION
     integer(int_kind) :: AOU
     integer(int_kind) :: PAR_avg
@@ -410,6 +411,7 @@ contains
        marbl_status_log)
 
     use marbl_settings_mod, only : ciso_on
+    use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : particulate_flux_ref_depth
@@ -2183,6 +2185,20 @@ contains
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
+      end if
+
+      if (lo2_consumption_scalef) then
+        lname = 'O2 Consumption Scale Factor'
+        sname = 'O2_CONSUMPTION_SCALEF'
+        units = '1'
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+             ind%O2_CONSUMPTION_SCALEF, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
       end if
 
       lname = 'O2 Consumption'
@@ -4191,6 +4207,7 @@ contains
          nitrif, denitrif, marbl_interior_forcing_diags)
 
     call store_diagnostics_oxygen(domain, &
+         interior_forcing_ind, interior_forcings, &
          interior_forcings(interior_forcing_ind%potemp_id)%field_1d(1,:), &
          interior_forcings(interior_forcing_ind%salinity_id)%field_1d(1,:), &
          column_o2, o2_production, o2_consumption, marbl_interior_forcing_diags)
@@ -4863,12 +4880,17 @@ contains
 
    !***********************************************************************
 
-  subroutine store_diagnostics_oxygen(marbl_domain, potemp, salinity, &
+  subroutine store_diagnostics_oxygen(marbl_domain, &
+       interior_forcing_ind, interior_forcings, potemp, salinity, &
        column_o2, o2_production, o2_consumption, marbl_interior_diags)
 
+    use marbl_interface_private_types , only : marbl_interior_forcing_indexing_type
+    use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_oxygen, only : o2sat_scalar
 
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain
+    type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
+    type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
     real(r8)                                , intent(in)    :: potemp(:)
     real(r8)                                , intent(in)    :: salinity(:)
     real(r8)                                , intent(in)    :: column_o2(:)
@@ -4889,6 +4911,11 @@ contains
          diags       => marbl_interior_diags%diags,               &
          ind         => marbl_interior_diag_ind                   &
          )
+
+    if (lo2_consumption_scalef) then
+       diags(ind%O2_CONSUMPTION_SCALEF)%field_3d(:, 1) = &
+            interior_forcings(interior_forcing_ind%o2_consumption_scalef_id)%field_1d(1,:)
+    endif
 
     min_ind = minloc(column_o2(1:kmt), dim=1)
 

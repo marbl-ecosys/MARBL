@@ -223,6 +223,7 @@ module marbl_settings_mod
                                                               !   .true., bury coefficients are adjusted to preserve C, P, Si
                                                               !   inventories on timescales exceeding bury_coeff_rmean_timescale_years
                                                               !   (this is done primarily in spinup runs)
+  logical(log_kind), target :: lo2_consumption_scalef         ! Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)
   logical(log_kind), target :: lp_remin_scalef                ! Apply p_remin_scalef to particulate remin (and request it as a forcing)
 
   character(len=char_len), target :: init_bury_coeff_opt
@@ -363,6 +364,7 @@ contains
     lvariable_PtoC                = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     init_bury_coeff_opt           = 'settings_file' ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    lo2_consumption_scalef        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -623,6 +625,15 @@ contains
     units     = 'unitless'
     datatype  = 'logical'
     lptr      => ladjust_bury_coeff
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, lptr=lptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'lo2_consumption_scalef'
+    lname     = 'Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)'
+    units     = 'unitless'
+    datatype  = 'logical'
+    lptr      => lo2_consumption_scalef
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)

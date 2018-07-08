@@ -616,6 +616,14 @@ O2_PRODUCTION :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
+O2_CONSUMPTION_SCALEF :
+   dependencies :
+      lo2_consumption_scalef : .true.
+   longname : O2 Consumption Scale Factor
+   units : 1
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
 O2_CONSUMPTION :
    longname : O2 Consumption
    units : mmol/m^3/s
