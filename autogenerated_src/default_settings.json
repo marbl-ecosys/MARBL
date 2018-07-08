@@ -921,9 +921,16 @@
       "parm_CaCO3_diss": {
          "datatype": "real",
          "default_value": "500e2",
-         "longname": "Base CaCO3 dissipation length scale",
-         "subcategory": "4. general parameters (dissipation)",
+         "longname": "Base CaCO3 dissolution length scale",
+         "subcategory": "4. general parameters (dissolution)",
          "units": "cm"
+      },
+      "parm_CaCO3_gamma": {
+         "datatype": "real",
+         "default_value": 0.1,
+         "longname": "CaCO3 gamma (fraction of production -> hard subclass)",
+         "subcategory": "4. general parameters",
+         "units": 1
       },
       "parm_FeLig_scavenge_rate0": {
          "datatype": "real",
@@ -970,16 +977,23 @@
       "parm_POC_diss": {
          "datatype": "real",
          "default_value": "100e2",
-         "longname": "Base POC dissipation length scale",
-         "subcategory": "4. general parameters (dissipation)",
+         "longname": "Base POC dissolution length scale",
+         "subcategory": "4. general parameters (dissolution)",
          "units": "cm"
       },
       "parm_SiO2_diss": {
          "datatype": "real",
          "default_value": "770e2",
-         "longname": "Base SiO2 dissipation length scale",
-         "subcategory": "4. general parameters (dissipation)",
+         "longname": "Base SiO2 dissolution length scale",
+         "subcategory": "4. general parameters (dissolution)",
          "units": "cm"
+      },
+      "parm_SiO2_gamma": {
+         "datatype": "real",
+         "default_value": 0.1,
+         "longname": "SiO2 gamma (fraction of production -> hard subclass)",
+         "subcategory": "4. general parameters",
+         "units": 1
       },
       "parm_f_prod_sp_CaCO3": {
          "datatype": "real",

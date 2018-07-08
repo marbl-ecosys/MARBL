@@ -392,23 +392,35 @@ general_parms :
          default : 0.07
          GRID == "CESM_x3" : 0.075
    parm_POC_diss :
-      longname : Base POC dissipation length scale
-      subcategory : 4. general parameters (dissipation)
+      longname : Base POC dissolution length scale
+      subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 100e2
    parm_SiO2_diss :
-      longname : Base SiO2 dissipation length scale
-      subcategory : 4. general parameters (dissipation)
+      longname : Base SiO2 dissolution length scale
+      subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 770e2
+   parm_SiO2_gamma :
+      longname : SiO2 gamma (fraction of production -> hard subclass)
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.1
    parm_CaCO3_diss :
-      longname : Base CaCO3 dissipation length scale
-      subcategory : 4. general parameters (dissipation)
+      longname : Base CaCO3 dissolution length scale
+      subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 500e2
+   parm_CaCO3_gamma :
+      longname : CaCO3 gamma (fraction of production -> hard subclass)
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.1
    parm_sed_denitrif_coeff :
       longname : Global scaling factor for sed_denitrif
       subcategory : 4. general parameters

@@ -257,7 +257,9 @@ module marbl_settings_mod
        parm_f_prod_sp_CaCO3,       & ! fraction of sp prod. as CaCO3 prod.
        parm_POC_diss,              & ! base POC diss len scale
        parm_SiO2_diss,             & ! base SiO2 diss len scale
+       parm_SiO2_gamma,            & ! SiO2 gamma (fraction of production -> hard subclass)
        parm_CaCO3_diss,            & ! base CaCO3 diss len scale
+       parm_CaCO3_gamma,           & ! CaCO3 gamma (fraction of production -> hard subclass)
        parm_sed_denitrif_coeff,    & ! global scaling factor for sed_denitrif
        bury_coeff_rmean_timescale_years
 
@@ -378,7 +380,9 @@ contains
     parm_f_prod_sp_CaCO3          = 0.070_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_POC_diss                 = 100.0e2_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_SiO2_diss                = 770.0e2_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_SiO2_gamma               = 0.10_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_CaCO3_diss               = 500.0e2_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_CaCO3_gamma              = 0.10_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_sed_denitrif_coeff       = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     bury_coeff_rmean_timescale_years = 10.0_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8, 1000.0e2_r8 /)  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -814,11 +818,29 @@ contains
                         marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
+    sname     = 'parm_SiO2_gamma'
+    lname     = 'SiO2 gamma (fraction of production -> hard subclass)'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => parm_SiO2_gamma
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
     sname     = 'parm_CaCO3_diss'
     lname     = 'base CaCO3 dissolution length scale'
     units     = 'cm'
     datatype  = 'real'
     rptr      => parm_CaCO3_diss
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'parm_CaCO3_gamma'
+    lname     = 'CaCO3 gamma (fraction of production -> hard subclass)'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => parm_CaCO3_gamma
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
