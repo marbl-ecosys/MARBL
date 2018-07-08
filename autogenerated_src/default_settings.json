@@ -1005,6 +1005,27 @@
          "subcategory": "4. general parameters",
          "units": "unitless"
       },
+      "parm_hPOC_CaCO3_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "longname": "hPOC to CaCO3 ratio",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "parm_hPOC_SiO2_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "longname": "hPOC to SiO2 ratio",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "parm_hPOC_dust_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "longname": "hPOC to dust ratio",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
       "parm_init_POC_bury_coeff": {
          "datatype": "real",
          "default_value": {

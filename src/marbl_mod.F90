@@ -865,8 +865,11 @@ contains
     use marbl_settings_mod, only : parm_POC_diss
     use marbl_settings_mod, only : parm_CaCO3_diss
     use marbl_settings_mod, only : parm_CaCO3_gamma
+    use marbl_settings_mod, only : parm_hPOC_CaCO3_ratio
     use marbl_settings_mod, only : parm_SiO2_diss
     use marbl_settings_mod, only : parm_SiO2_gamma
+    use marbl_settings_mod, only : parm_hPOC_SiO2_ratio
+    use marbl_settings_mod, only : parm_hPOC_dust_ratio
 
     real (r8)                          , intent(in)    :: net_dust_in     ! dust flux
     type(marbl_surface_forcing_indexing_type), intent(in)   :: surface_forcing_indices
@@ -904,7 +907,7 @@ contains
     P_CaCO3%diss  = parm_CaCO3_diss ! diss. length (cm)
     P_CaCO3%gamma = parm_CacO3_gamma! prod frac -> hard subclass
     P_CaCO3%mass  = 100.09_r8       ! molecular weight of CaCO
-    P_CaCO3%rho   = 0.05_r8 * P_CaCO3%mass / POC%mass ! QA mass ratio for CaCO3
+    P_CaCO3%rho   = parm_hPOC_CaCO3_ratio * P_CaCO3%mass / POC%mass ! QA mass ratio for CaCO3
 
     P_CaCO3_ALT_CO2%diss  = P_CaCO3%diss
     P_CaCO3_ALT_CO2%gamma = P_CaCO3%gamma
@@ -914,12 +917,12 @@ contains
     P_SiO2%diss   = parm_SiO2_diss  ! diss. length (cm), modified by TEMP
     P_SiO2%gamma  = parm_SiO2_gamma ! prod frac -> hard subclass
     P_SiO2%mass   = 60.08_r8        ! molecular weight of SiO2
-    P_SiO2%rho    = 0.05_r8 * P_SiO2%mass / POC%mass ! QA mass ratio for SiO2
+    P_SiO2%rho    = parm_hPOC_SiO2_ratio * P_SiO2%mass / POC%mass ! QA mass ratio for SiO2
 
     dust%diss     = 40000.0_r8      ! diss. length (cm)
     dust%gamma    = 0.98_r8         ! prod frac -> hard subclass
     dust%mass     = 1.0e9_r8        ! base units are already grams
-    dust%rho      = 0.05_r8 * dust%mass / POC%mass ! QA mass ratio for dust
+    dust%rho      = parm_hPOC_dust_ratio * dust%mass / POC%mass ! QA mass ratio for dust
 
     P_iron%diss   = 60000.0_r8      ! diss. length (cm) - not used
     P_iron%gamma  = c0              ! prod frac -> hard subclass - not used

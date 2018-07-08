@@ -409,6 +409,12 @@ general_parms :
       units : 1
       datatype : real
       default_value : 0.1
+   parm_hPOC_SiO2_ratio :
+      longname : hPOC to SiO2 ratio
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.05
    parm_CaCO3_diss :
       longname : Base CaCO3 dissolution length scale
       subcategory : 4. general parameters (dissolution)
@@ -421,6 +427,18 @@ general_parms :
       units : 1
       datatype : real
       default_value : 0.1
+   parm_hPOC_CaCO3_ratio :
+      longname : hPOC to CaCO3 ratio
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.05
+   parm_hPOC_dust_ratio :
+      longname : hPOC to dust ratio
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.05
    parm_sed_denitrif_coeff :
       longname : Global scaling factor for sed_denitrif
       subcategory : 4. general parameters
