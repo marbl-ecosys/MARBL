@@ -223,6 +223,7 @@ module marbl_settings_mod
                                                               !   .true., bury coefficients are adjusted to preserve C, P, Si
                                                               !   inventories on timescales exceeding bury_coeff_rmean_timescale_years
                                                               !   (this is done primarily in spinup runs)
+  logical(log_kind), target :: lp_remin_scalef                ! Apply p_remin_scalef to particulate remin (and request it as a forcing)
 
   character(len=char_len), target :: init_bury_coeff_opt
 
@@ -357,6 +358,7 @@ contains
     lvariable_PtoC                = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     init_bury_coeff_opt           = 'settings_file' ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Fe_bioavail              = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -611,6 +613,15 @@ contains
     units     = 'unitless'
     datatype  = 'logical'
     lptr      => ladjust_bury_coeff
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, lptr=lptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'lp_remin_scalef'
+    lname     = 'Apply p_remin_scalef to particulate remin (and request it as a forcing)'
+    units     = 'unitless'
+    datatype  = 'logical'
+    lptr      => lp_remin_scalef
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)

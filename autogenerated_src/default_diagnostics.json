@@ -1672,6 +1672,16 @@
       "units": "cm/s",
       "vertical_grid": "none"
    },
+   "P_REMIN_SCALEF": {
+      "dependencies": {
+         "lp_remin_scalef": ".true."
+      },
+      "frequency": "never",
+      "longname": "Particulate Remin Scale Factor",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "layer_avg"
+   },
    "P_iron_FLUX_((particulate_flux_ref_depth_str))": {
       "frequency": "medium",
       "longname": "P_iron Flux at ((particulate_flux_ref_depth_str))",

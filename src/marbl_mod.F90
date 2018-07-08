@@ -465,6 +465,7 @@ contains
     use marbl_interface_private_types, only : marbl_timer_indexing_type
     use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
     use marbl_restore_mod, only : marbl_restore_compute_interior_restore
+    use marbl_settings_mod, only : lp_remin_scalef
 
     type    (marbl_domain_type)                 , intent(in)    :: domain
     type(marbl_forcing_fields_type)             , intent(in)    :: interior_forcings(:)
@@ -499,6 +500,7 @@ contains
 
     real (r8) :: surf_press(domain%km)       ! pressure in surface layer
     real (r8) :: temperature(domain%km)      ! in situ temperature
+    real (r8) :: p_remin_scalef(domain%km)   ! Particulate Remin Scale Factor
     real (r8) :: O2_production(domain%km)    ! O2 production
     real (r8) :: O2_consumption(domain%km)   ! O2 consumption
     real (r8) :: nitrif(domain%km)           ! nitrification (NH4 -> NO3) (mmol N/m^3/sec)
@@ -598,6 +600,17 @@ contains
     surf_press(1:kmt) = c0
     temperature(1:kmt) = marbl_temperature_potemp(kmt, salinity, potemp, surf_press, pressure)
     temperature(kmt+1:km) = c0
+
+    !-----------------------------------------------------------------------
+    !  local copies of optional forcings
+    !  these are not handled via associate block because their forcing incides might be zero
+    !-----------------------------------------------------------------------
+
+    if (lp_remin_scalef) then
+       p_remin_scalef(:) = interior_forcings(interior_forcing_indices%p_remin_scalef_id)%field_1d(1,:)
+    else
+       p_remin_scalef(:) = c1
+    endif
 
     !-----------------------------------------------------------------------
     !  Compute adjustment to tendencies due to tracer restoring
@@ -712,7 +725,8 @@ contains
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
        call marbl_compute_particulate_terms(k, domain,                   &
-            marbl_particulate_share, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, &
+            marbl_particulate_share, p_remin_scalef(k),                  &
+            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                          &
             P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),         &
             QA_dust_def(k), temperature(k),                              &
             tracer_local(:, k), carbonate(k), sed_denitrif(k),           &
@@ -1006,7 +1020,8 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_particulate_terms(k, domain,                       &
-             marbl_particulate_share, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,     &
+             marbl_particulate_share, p_remin_scalef,                         &
+             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                              &
              P_SiO2, dust, P_iron, PON_remin, PON_sed_loss, QA_dust_def,      &
              temperature, tracer_local, carbonate, sed_denitrif, other_remin, &
              fesedflux, marbl_tracer_indices, glo_avg_fields_interior,        &
@@ -1074,6 +1089,7 @@ contains
 
     integer (int_kind)                , intent(in)    :: k                   ! vertical model level
     type(marbl_domain_type)           , intent(in)    :: domain
+    real (r8)                         , intent(in)    :: p_remin_scalef      ! Particulate Remin Scale Factor
     real (r8)                         , intent(in)    :: temperature         ! temperature for scaling functions bsi%diss
     real (r8), dimension(:)           , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
     type(carbonate_type)              , intent(in)    :: carbonate
@@ -1183,8 +1199,10 @@ contains
        end do
     endif
 
-    DECAY_Hard     = exp(-delta_z(k) / 4.0e6_r8)
-    DECAY_HardDust = exp(-delta_z(k) / 1.2e8_r8)
+    if (p_remin_scalef /= c1) scalelength = scalelength / p_remin_scalef
+
+    DECAY_Hard     = exp(-delta_z(k) * p_remin_scalef / 4.0e6_r8)
+    DECAY_HardDust = exp(-delta_z(k) * p_remin_scalef / 1.2e8_r8)
 
     !----------------------------------------------------------------------
     !   Tref = 30.0 reference temperature (degC)
@@ -1533,6 +1551,7 @@ contains
 
           ! first compute burial efficiency, then compute loss to sediments
           bury_frac = 0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2
+          if (p_remin_scalef /= c1) bury_frac = c1 - p_remin_scalef * (c1 - bury_frac)
           POC%sed_loss(k) = POC%to_floor * min(POM_bury_frac_max, POC_bury_coeff * bury_frac)
 
           PON_sed_loss = PON_bury_coeff * Q * POC%sed_loss(k)
@@ -1595,6 +1614,7 @@ contains
        else
           bury_frac = 0.04_r8
        endif
+       if (p_remin_scalef /= c1) bury_frac = c1 - p_remin_scalef * (c1 - bury_frac)
        if (bSi_bury_coeff * bury_frac < bSi_bury_frac_max) then
           P_SiO2%sed_loss(k) = P_SiO2%to_floor * bSi_bury_coeff * bury_frac
        else

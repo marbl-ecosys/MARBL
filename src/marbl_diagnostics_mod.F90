@@ -221,6 +221,7 @@ module marbl_diagnostics_mod
     integer(int_kind) :: CaCO3_REMIN_zint_100m
 
     ! Particulate 3D diags
+    integer(int_kind) :: P_REMIN_SCALEF
     integer(int_kind) :: POC_FLUX_IN
     integer(int_kind) :: POC_PROD
     integer(int_kind) :: POC_REMIN_DOCr
@@ -406,6 +407,7 @@ contains
        marbl_status_log)
 
     use marbl_settings_mod, only : ciso_on
+    use marbl_settings_mod, only : lp_remin_scalef
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : particulate_flux_ref_depth
 
@@ -2653,6 +2655,20 @@ contains
       end if
 
       ! Particulate 3D diags
+      if (lp_remin_scalef) then
+        lname = 'Particulate Remin Scale Factor'
+        sname = 'P_REMIN_SCALEF'
+        units = '1'
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+             ind%P_REMIN_SCALEF, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+      end if
+
       lname = 'POC Flux into Cell'
       sname = 'POC_FLUX_IN'
       units = 'mmol/m^3 cm/s'
@@ -4117,6 +4133,7 @@ contains
          zooplankton_secondary_species, marbl_interior_forcing_diags)
 
     call store_diagnostics_particulates(domain, &
+         interior_forcing_ind, interior_forcings, &
          marbl_particulate_share, &
          PON_remin, PON_sed_loss, &
          sed_denitrif, other_remin, marbl_interior_forcing_diags)
@@ -4689,6 +4706,7 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_particulates(marbl_domain, &
+       interior_forcing_ind, interior_forcings, &
        marbl_particulate_share, &
        PON_remin, PON_sed_loss, &
        sed_denitrif, other_remin, marbl_interior_forcing_diags)
@@ -4698,11 +4716,15 @@ contains
     ! - Accumulte losses of BGC tracers to sediments
     !-----------------------------------------------------------------------
 
+    use marbl_interface_private_types , only : marbl_interior_forcing_indexing_type
+    use marbl_settings_mod, only : lp_remin_scalef
     use marbl_settings_mod, only : POCremin_refract
     use marbl_settings_mod, only : PONremin_refract
     use marbl_settings_mod, only : POPremin_refract
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
+    type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
+    type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
     type(marbl_particulate_share_type) , intent(in)    :: marbl_particulate_share
     real(r8), dimension(:)             , intent(in)    :: PON_remin    ! km
     real(r8), dimension(:)             , intent(in)    :: PON_sed_loss ! km
@@ -4725,6 +4747,10 @@ contains
          P_iron          => marbl_particulate_share%P_iron           &
          )
 
+    if (lp_remin_scalef) then
+       diags(ind%P_REMIN_SCALEF)%field_3d(:, 1) = &
+            interior_forcings(interior_forcing_ind%p_remin_scalef_id)%field_1d(1,:)
+    endif
     diags(ind%POC_FLUX_at_ref_depth)%field_2d(1) = POC%flux_at_ref_depth
     diags(ind%POC_FLUX_IN)%field_3d(:, 1)        = POC%sflux_in + POC%hflux_in
     diags(ind%POC_PROD)%field_3d(:, 1)           = POC%prod

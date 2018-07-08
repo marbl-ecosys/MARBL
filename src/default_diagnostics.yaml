@@ -854,6 +854,14 @@ CaCO3_REMIN_zint_100m :
    operator : average
 
 # Particulate 3D diags
+P_REMIN_SCALEF :
+   dependencies :
+      lp_remin_scalef : .true.
+   longname : Particulate Remin Scale Factor
+   units : 1
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
 POC_FLUX_IN :
    longname : POC Flux into Cell
    units : mmol/m^3 cm/s

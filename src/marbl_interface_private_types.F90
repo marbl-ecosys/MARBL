@@ -275,6 +275,7 @@ module marbl_interface_private_types
      integer(int_kind) :: salinity_id    = 0
      integer(int_kind) :: pressure_id    = 0
      integer(int_kind) :: fesedflux_id   = 0
+     integer(int_kind) :: p_remin_scalef_id = 0
 
      ! Tracer restoring
      ! * tracer_restore_id is the index in interior forcings that contains the
@@ -881,6 +882,8 @@ contains
     ! This subroutine sets the interior forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
 
+    use marbl_settings_mod, only : lp_remin_scalef
+
     class(marbl_interior_forcing_indexing_type), intent(out)   :: this
     character(len=char_len), dimension(:),       intent(in)    :: tracer_names
     character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
@@ -929,6 +932,12 @@ contains
       ! Iron Sediment Flux
       forcing_cnt = forcing_cnt + 1
       this%fesedflux_id = forcing_cnt
+
+      ! Particulate Remin Scale Factor
+      if (lp_remin_scalef) then
+        forcing_cnt = forcing_cnt + 1
+        this%p_remin_scalef_id = forcing_cnt
+      endif
 
       ! Tracer restoring
       ! Note that this section
