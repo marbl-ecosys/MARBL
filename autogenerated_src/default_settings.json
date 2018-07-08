@@ -780,10 +780,24 @@
             "user-specified"
          ]
       },
+      "POM_bury_frac_max": {
+         "datatype": "real",
+         "default_value": 0.8,
+         "longname": "maximum bury fraction for POM",
+         "subcategory": "4. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
       "PON_bury_coeff": {
          "datatype": "real",
          "default_value": 0.5,
          "longname": "Scale factor for burial of PON",
+         "subcategory": "4. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
+      "bSi_bury_frac_max": {
+         "datatype": "real",
+         "default_value": 1.0,
+         "longname": "maximum bury fraction for bSi",
          "subcategory": "4. general parameters (bury coeffs)",
          "units": "unitless"
       },

@@ -1069,6 +1069,8 @@ contains
     use marbl_settings_mod , only : caco3_bury_thres_iopt_fixed_depth
     use marbl_settings_mod , only : caco3_bury_thres_depth
     use marbl_settings_mod , only : caco3_bury_thres_omega_calc
+    use marbl_settings_mod , only : POM_bury_frac_max
+    use marbl_settings_mod , only : bSi_bury_frac_max
 
     integer (int_kind)                , intent(in)    :: k                   ! vertical model level
     type(marbl_domain_type)           , intent(in)    :: domain
@@ -1531,23 +1533,23 @@ contains
 
           ! first compute burial efficiency, then compute loss to sediments
           bury_frac = 0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2
-          POC%sed_loss(k) = POC%to_floor * min(0.8_r8, POC_bury_coeff * bury_frac)
+          POC%sed_loss(k) = POC%to_floor * min(POM_bury_frac_max, POC_bury_coeff * bury_frac)
 
           PON_sed_loss = PON_bury_coeff * Q * POC%sed_loss(k)
 
           POP%to_floor = POP%sflux_out(k) + POP%hflux_out(k)
-          POP%sed_loss(k) = POP%to_floor * min(0.8_r8, POP_bury_coeff * bury_frac)
+          POP%sed_loss(k) = POP%to_floor * min(POM_bury_frac_max, POP_bury_coeff * bury_frac)
 
           if (ladjust_bury_coeff) then
              glo_avg_fields_interior(glo_avg_field_ind_interior_POC_bury) = POC%sed_loss(k)
-             if (POC_bury_coeff * bury_frac < 0.8_r8) then
+             if (POC_bury_coeff * bury_frac < POM_bury_frac_max) then
                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = POC%to_floor * bury_frac
              else
                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = c0
              endif
 
              glo_avg_fields_interior(glo_avg_field_ind_interior_POP_bury) = POP%sed_loss(k)
-             if (POP_bury_coeff * bury_frac < 0.8_r8) then
+             if (POP_bury_coeff * bury_frac < POM_bury_frac_max) then
                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = POP%to_floor * bury_frac
              else
                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = c0
@@ -1593,11 +1595,19 @@ contains
        else
           bury_frac = 0.04_r8
        endif
-       P_SiO2%sed_loss(k) = P_SiO2%to_floor * bSi_bury_coeff * bury_frac
+       if (bSi_bury_coeff * bury_frac < bSi_bury_frac_max) then
+          P_SiO2%sed_loss(k) = P_SiO2%to_floor * bSi_bury_coeff * bury_frac
+       else
+          P_SiO2%sed_loss(k) = P_SiO2%to_floor * bSi_bury_frac_max
+       endif
 
        if (ladjust_bury_coeff) then
           glo_avg_fields_interior(glo_avg_field_ind_interior_bSi_bury) = P_SiO2%sed_loss(k)
-          glo_avg_fields_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff) = P_SiO2%to_floor * bury_frac
+          if (bSi_bury_coeff * bury_frac < bSi_bury_frac_max) then
+             glo_avg_fields_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff) = P_SiO2%to_floor * bury_frac
+          else
+             glo_avg_fields_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff) = c0
+          endif
        endif
 
        P_CaCO3%to_floor         = P_CaCO3%sflux_out(k)         + P_CaCO3%hflux_out(k)

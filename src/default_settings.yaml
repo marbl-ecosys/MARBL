@@ -472,6 +472,18 @@ general_parms :
       units : unitless
       datatype : real
       default_value : 0.5
+   POM_bury_frac_max :
+      longname : maximum bury fraction for POM
+      subcategory : 4. general parameters (bury coeffs)
+      units : unitless
+      datatype : real
+      default_value : 0.8
+   bSi_bury_frac_max :
+      longname : maximum bury fraction for bSi
+      subcategory : 4. general parameters (bury coeffs)
+      units : unitless
+      datatype : real
+      default_value : 1.0
    ciso_fract_factors :
       longname : Option for which biological fractionation calculation to use
       subcategory : 4. general parameters

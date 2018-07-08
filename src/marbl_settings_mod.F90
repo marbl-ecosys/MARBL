@@ -273,6 +273,8 @@ module marbl_settings_mod
   ! is when total C burial is matched to C riverine input
   ! -----------
   real(r8),                target :: PON_bury_coeff
+  real(r8),                target :: POM_bury_frac_max
+  real(r8),                target :: bSi_bury_frac_max
   character(len=char_len), target :: ciso_fract_factors           ! option for which biological fractionation calculation to use
 
   !  marbl_settings_define_PFT_counts
@@ -383,6 +385,8 @@ contains
     caco3_bury_thres_depth        = 3000.0e2_r8     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     caco3_bury_thres_omega_calc   = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     PON_bury_coeff                = 0.5_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    POM_bury_frac_max             = 0.8_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    bSi_bury_frac_max             = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_fract_factors            = 'Laws'          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
 
   end subroutine marbl_settings_set_defaults_general_parms
@@ -880,6 +884,24 @@ contains
     units     = 'unitless'
     datatype  = 'real'
     rptr      => PON_bury_coeff
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'POM_bury_frac_max'
+    lname     = 'maximum bury fraction for POM'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => POM_bury_frac_max
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'bSi_bury_frac_max'
+    lname     = 'maximum bury fraction for bSi'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => bSi_bury_frac_max
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
