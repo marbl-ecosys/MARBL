@@ -1100,6 +1100,9 @@ contains
     use marbl_settings_mod , only : caco3_bury_thres_omega_calc
     use marbl_settings_mod , only : POM_bury_frac_max
     use marbl_settings_mod , only : bSi_bury_frac_max
+    use marbl_settings_mod , only : o2_sf_o2_range_hi
+    use marbl_settings_mod , only : o2_sf_o2_range_lo
+    use marbl_settings_mod , only : o2_sf_val_lo_o2
 
     integer (int_kind)                , intent(in)    :: k                   ! vertical model level
     type(marbl_domain_type)           , intent(in)    :: domain
@@ -1159,11 +1162,6 @@ contains
          dz_loc, dzr_loc       ! dz, dzr at a particular i, j location
 
     real (r8) :: particulate_flux_ref_depth_cm
-
-    real (r8), parameter :: &  ! o2_sf is an abbreviation for o2_scalefactor
-         o2_sf_o2_range_hi = 45.0_r8, & ! apply o2_scalefactor for O2_loc less than this
-         o2_sf_o2_range_lo =  5.0_r8, & ! o2_scalefactor is constant for O2_loc < this parameter
-         o2_sf_val_lo_o2   =  3.0_r8    ! o2_scalefactor for O2_loc < o2_sf_o2_range_lo
 
     integer (int_kind) :: n     ! loop indices
 

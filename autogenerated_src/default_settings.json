@@ -925,6 +925,27 @@
          "subcategory": "2. config flags",
          "units": "unitless"
       },
+      "o2_sf_o2_range_hi": {
+         "datatype": "real",
+         "default_value": 45.0,
+         "longname": "o2_scalefactor is applied to diss length scales for O2 less than this",
+         "subcategory": "4. general parameters",
+         "units": "mmol/m^3"
+      },
+      "o2_sf_o2_range_lo": {
+         "datatype": "real",
+         "default_value": 5.0,
+         "longname": "o2_scalefactor is constant for O2 less than this",
+         "subcategory": "4. general parameters",
+         "units": "mmol/m^3"
+      },
+      "o2_sf_val_lo_o2": {
+         "datatype": "real",
+         "default_value": 3.0,
+         "longname": "o2_scalefactor constant for O2 less than o2_sf_o2_range_lo",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
       "parm_CaCO3_diss": {
          "datatype": "real",
          "default_value": "500e2",
