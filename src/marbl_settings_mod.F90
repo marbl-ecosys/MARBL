@@ -146,9 +146,6 @@ module marbl_settings_mod
   real(r8), parameter :: &
       Q             = 16.0_r8 / 117.0_r8, & !N/C ratio (mmol/mmol) of phyto & zoo
       Qfe_zoo       = 3.0e-6_r8,          & !zooplankton Fe/C ratio
-      gQsi_0        = 0.137_r8,           & !initial Si/C ratio for growth
-      gQsi_max      = 0.685_r8,           & !max Si/C ratio for growth
-      gQsi_min      = 0.0457_r8,          & !min Si/C ratio for growth
       QCaCO3_max    = 0.4_r8,             & !max QCaCO3
       ! parameters in GalbraithMartiny Pquota Model^M
       PquotaSlope     = 7.0_r8,        &
@@ -240,6 +237,9 @@ module marbl_settings_mod
        Jint_Fetot_thres,           & ! MARBL will abort if abs(Jint_Fetot) exceeds this threshold (derived from Jint_Ctot_thres)
        CISO_Jint_13Ctot_thres,     & ! MARBL will abort if abs(CISO_Jint_13Ctot) exceeds this threshold (derived from Jint_Ctot_thres)
        CISO_Jint_14Ctot_thres,     & ! MARBL will abort if abs(CISO_Jint_14Ctot) exceeds this threshold (derived from Jint_Ctot_thres)
+       gQsi_0,                     & ! initial Si/C ratio for growth
+       gQsi_max,                   & ! max Si/C ratio for growth
+       gQsi_min,                   & ! min Si/C ratio for growth
        parm_Fe_bioavail,           & ! fraction of Fe flux that is bioavailable
        parm_o2_min,                & ! min O2 needed for prod & consump. (nmol/cm^3)
        parm_o2_min_delta,          & ! width of min O2 range (nmol/cm^3)
@@ -371,6 +371,9 @@ contains
     lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQsi_0                        = 0.137_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQsi_max                      = 0.685_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQsi_min                      = 0.0457_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Fe_bioavail              = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min                   = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min_delta             = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -684,6 +687,33 @@ contains
     units     = 'mol m-2 yr-1'
     datatype  = 'real'
     rptr      => Jint_Ctot_thres_molpm2pyr
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'gQsi_0'
+    lname     = 'initial Si/C ratio for growth'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => gQsi_0
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'gQsi_max'
+    lname     = 'max Si/C ratio for growth'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => gQsi_max
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'gQsi_min'
+    lname     = 'min Si/C ratio for growth'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => gQsi_min
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
