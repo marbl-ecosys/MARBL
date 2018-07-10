@@ -113,6 +113,8 @@ Step 4. Update the settings YAML files
 --------------------------------------
 
 We use a YAML file to provide an easy-to-edit and human-readable text file containing a list of all parameters and their default values.
+On the ``development`` branch, make changes to ``defaults/settings_latest.yaml``.
+Release branches may only offer specific versions of this file, such as ``defaults/settings_cesm2.1.yaml``.
 
 .. code-block:: yaml
 
@@ -186,7 +188,21 @@ The ``MARBL_tools/yaml_to_json.py`` script is provided to do just that:
 .. code-block:: none
 
   $ cd MARBL_tools
-  $ ./yaml_to_json.py
+  $ ./yaml_to_json.py -h
+  usage: yaml_to_json.py [-h] [-y YAML_FILES [YAML_FILES ...]] [-o OUTPUT_DIR]
+
+  Convert all of MARBL's YAML files to JSON
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    -y YAML_FILES [YAML_FILES ...], --yaml_files YAML_FILES [YAML_FILES ...]
+                          List of files to convert (default: ['../defaults/
+                          settings_cesm2.0.yaml', '../defaults/
+                          diagnostics_latest.yaml', '../defaults/
+                          settings_latest.yaml'])
+    -o OUTPUT_DIR, --output_dir OUTPUT_DIR
+                          Directory where JSON file(s) will be created (default:
+                          ../defaults/json)
 
 The rest of the python scripts provided in the ``MARBL_tools/`` subdirectory rely on the JSON file rather than the YAML.
 ``MARBL_tools/MARBL_generate_settings_file.py`` will turn the JSON file into a list for the GCM to parse:
