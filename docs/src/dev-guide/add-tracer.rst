@@ -342,21 +342,7 @@ The ``MARBL_tools/yaml_to_json.py`` script is provided to do just that:
 .. code-block:: none
 
   $ cd MARBL_tools
-  $ ./yaml_to_json.py -h
-  usage: yaml_to_json.py [-h] [-y YAML_FILES [YAML_FILES ...]] [-o OUTPUT_DIR]
-
-  Convert all of MARBL's YAML files to JSON
-
-  optional arguments:
-    -h, --help            show this help message and exit
-    -y YAML_FILES [YAML_FILES ...], --yaml_files YAML_FILES [YAML_FILES ...]
-                          List of files to convert (default: ['../defaults/
-                          settings_cesm2.0.yaml', '../defaults/
-                          diagnostics_latest.yaml', '../defaults/
-                          settings_latest.yaml'])
-    -o OUTPUT_DIR, --output_dir OUTPUT_DIR
-                          Directory where JSON file(s) will be created (default:
-                          ../defaults/json)
+  $ ./yaml_to_json.py
 
 There is not a tracer-specific python script to run, but the ``MARBL_settings_class`` has ``get_tracer_names()`` and ``get_tracer_cnt()`` routines.
 
