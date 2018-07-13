@@ -13,7 +13,7 @@ def check_for_hardtabs(file_and_line_number, line, log):
     Log any lines containing hard tabs
     """
     if "\t" in line:
-        log.append("%s:  %s" % (file_and_line_number, line.replace("\t", 2*u"\u2588")))
+        log.append("%s: %s" % (file_and_line_number, line.replace("\t", 2*u"\u2588")))
 
 ##############
 
@@ -24,7 +24,7 @@ def check_for_trailing_whitespace(file_and_line_number, line, log):
     full_line_len = len(line)
     no_trailing_space_len = len(line.rstrip(" "))
     if no_trailing_space_len < full_line_len:
-        log.append("%s:  %s" % (file_and_line_number, line.rstrip(" ")+(full_line_len-no_trailing_space_len)*u"\u2588"))
+        log.append("%s: %s" % (file_and_line_number, line.rstrip(" ")+(full_line_len-no_trailing_space_len)*u"\u2588"))
 
 ##############
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # -- This lets us read files once, rather than once per test, but still group output in readable fashion
     hard_tab_log = []
     trailing_space_log = []
-    logger.info("Check Fortran files for violating coding standards:")
+    logger.info("Check Fortran files for coding standard violations:")
     for file in fortran_files:
         with open(file, "r") as fortran_file:
             line_cnt = 0
@@ -83,7 +83,6 @@ if __name__ == "__main__":
     # Process each test log
     f90_err_cnt += process_err_log("Check for hard tabs", hard_tab_log)
     f90_err_cnt += process_err_log("Check for trailing white space", trailing_space_log)
-    logger.info("----\nErrors found: %d\n" % f90_err_cnt)
 
     # Python error checks
     py_err_cnt = 0
@@ -91,7 +90,7 @@ if __name__ == "__main__":
     # -- This lets us read files once, rather than once per test, but still group output in readable fashion
     hard_tab_log = []
     trailing_space_log = []
-    logger.info("Check python files for violating coding standards:")
+    logger.info("\nCheck python files for coding standard violations:")
     for file in python_files:
         with open(file, "r") as python_file:
             line_cnt = 0
@@ -104,6 +103,7 @@ if __name__ == "__main__":
     # Process each test log
     py_err_cnt += process_err_log("Check for hard tabs", hard_tab_log)
     py_err_cnt += process_err_log("Check for trailing white space", trailing_space_log)
-    logger.info("----\nErrors found: %d" % py_err_cnt)
 
+    logger.info("\nFortran errors found: %d" % f90_err_cnt)
+    logger.info("Python errors found: %d" % py_err_cnt)
     sys.exit(f90_err_cnt+py_err_cnt)
