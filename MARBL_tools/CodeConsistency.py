@@ -58,6 +58,24 @@ def check_case_sensitive_module_statements(file_and_line_number, line, log, comm
 
 ##############
 
+def check_for_spaces(file_and_line_number, line, log, comment_char="!", max_len=132):
+    """
+    The following statements should all include spaces:
+    * else if
+    * end if
+    * else where
+    * end where
+    * end do
+    """
+    statements = ["elseif", "endif", "elsewhere", "endwhere", "enddo"]
+    # ignore comments, and strip all white space
+    line_loc = line.split(comment_char)[0].strip(" ")
+    for bad_statement in statements:
+        if line_loc.lower().startswith(bad_statement):
+            log.append("%s: %s" % (file_and_line_number, line_loc))
+
+##############
+
 def process_err_log(test, log):
     logger = logging.getLogger(__name__)
     err_cnt = len(log)
@@ -102,6 +120,7 @@ if __name__ == "__main__":
     trailing_space_log = []
     line_len_log = []
     case_sensitive_log = []
+    spaces_log = []
     logger.info("Check Fortran files for coding standard violations:")
     for file in fortran_files:
         with open(file, "r") as fortran_file:
@@ -114,11 +133,13 @@ if __name__ == "__main__":
                 check_for_trailing_whitespace(file_and_line_number, line_loc, trailing_space_log)
                 check_line_length(file_and_line_number, line_loc, line_len_log)
                 check_case_sensitive_module_statements(file_and_line_number, line_loc, case_sensitive_log)
+                #check_for_spaces(file_and_line_number, line_loc, spaces_log)
     # Process each test log
     f90_err_cnt += process_err_log("Check for hard tabs", hard_tab_log)
     f90_err_cnt += process_err_log("Check for trailing white space", trailing_space_log)
     f90_err_cnt += process_err_log("Check length of lines", line_len_log)
     f90_err_cnt += process_err_log("Check for case sensitive statements", case_sensitive_log)
+    #f90_err_cnt += process_err_log("Check for spaces in statements", spaces_log)
 
     # Python error checks
     py_err_cnt = 0
