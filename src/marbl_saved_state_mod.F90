@@ -1,8 +1,8 @@
 module marbl_saved_state_mod
 
-  Implicit None
-  Private
-  Save
+  implicit none
+  private
+  save
 
   public :: marbl_saved_state_init
 
