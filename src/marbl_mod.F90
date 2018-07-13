@@ -2429,6 +2429,8 @@ contains
     use marbl_settings_mod , only : gQsi_0
     use marbl_settings_mod , only : gQsi_max
     use marbl_settings_mod , only : gQsi_min
+    use marbl_settings_mod , only : gQ_Fe_kFe_thres
+    use marbl_settings_mod , only : gQ_Si_kSi_thres
     use marbl_settings_mod , only : PquotaSlope, PquotaIntercept, PquotaMinNP
 
     implicit none
@@ -2443,8 +2445,6 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    real :: cks      ! constant used in  quota modification
-    real :: cksi     ! constant used in Si quota modification
     integer(int_kind) :: auto_ind
     !-----------------------------------------------------------------------
 
@@ -2491,9 +2491,6 @@ contains
     !  Modify the initial si/C ratio under low ambient Si conditions
     !-----------------------------------------------------------------------
 
-    cks = 10._r8
-    cksi = 5._r8
-
     do auto_ind = 1, autotroph_cnt
        if (lvariable_PtoC) then
           !-----------------------------------------------------------------------
@@ -2511,26 +2508,26 @@ contains
        !      gQp(auto_ind) = 0.00854701_r8      ! fixed Redfield C/N/P
 
        gQfe(auto_ind) = autotrophs(auto_ind)%gQfe_0
-       if (Fe_loc < cks * autotrophs(auto_ind)%kFe) then
+       if (Fe_loc < gQ_Fe_kFe_thres * autotrophs(auto_ind)%kFe) then
           gQfe(auto_ind) = &
-               max((gQfe(auto_ind) * Fe_loc / (cks * autotrophs(auto_ind)%kFe)), &
+               max((gQfe(auto_ind) * Fe_loc / (gQ_Fe_kFe_thres * autotrophs(auto_ind)%kFe)), &
                autotrophs(auto_ind)%gQfe_min)
        end if
 
        if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
           gQsi(auto_ind) = gQsi_0
-          if ((Fe_loc < cksi * autotrophs(auto_ind)%kFe) .and. &
+          if ((Fe_loc < gQ_Si_kSi_thres * autotrophs(auto_ind)%kFe) .and. &
                (Fe_loc > c0) .and. &
-               (SiO3_loc > (cksi * autotrophs(auto_ind)%kSiO3))) then
-             gQsi(auto_ind) = min((gQsi(auto_ind) * cksi * autotrophs(auto_ind)%kFe / Fe_loc), gQsi_max)
+               (SiO3_loc > (gQ_Si_kSi_thres * autotrophs(auto_ind)%kSiO3))) then
+             gQsi(auto_ind) = min((gQsi(auto_ind) * gQ_Si_kSi_thres * autotrophs(auto_ind)%kFe / Fe_loc), gQsi_max)
           end if
 
           if (Fe_loc == c0) then
              gQsi(auto_ind) = gQsi_max
           end if
 
-          if (SiO3_loc < (cksi * autotrophs(auto_ind)%kSiO3)) then
-             gQsi(auto_ind) = max((gQsi(auto_ind) * SiO3_loc / (cksi * autotrophs(auto_ind)%kSiO3)), &
+          if (SiO3_loc < (gQ_Si_kSi_thres * autotrophs(auto_ind)%kSiO3)) then
+             gQsi(auto_ind) = max((gQsi(auto_ind) * SiO3_loc / (gQ_Si_kSi_thres * autotrophs(auto_ind)%kSiO3)), &
                   gQsi_min)
           end if
        endif

@@ -861,6 +861,20 @@
          "subcategory": "2. config flags",
          "units": "unitless"
       },
+      "gQ_Fe_kFe_thres": {
+         "datatype": "real",
+         "default_value": 10.0,
+         "longname": "Fe:kFe ratio threshold in uptake ratio computations",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "gQ_Si_kSi_thres": {
+         "datatype": "real",
+         "default_value": 5.0,
+         "longname": "Si:kSi ratio threshold in uptake ratio computations",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
       "gQsi_0": {
          "datatype": "real",
          "default_value": 0.137,

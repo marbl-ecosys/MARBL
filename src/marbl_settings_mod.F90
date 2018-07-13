@@ -240,6 +240,8 @@ module marbl_settings_mod
        gQsi_0,                     & ! initial Si/C ratio for growth
        gQsi_max,                   & ! max Si/C ratio for growth
        gQsi_min,                   & ! min Si/C ratio for growth
+       gQ_Fe_kFe_thres,            & ! Fe:kFe ratio threshold in uptake ratio computations
+       gQ_Si_kSi_thres,            & ! Si:kSi ratio threshold in uptake ratio computations
        parm_Fe_bioavail,           & ! fraction of Fe flux that is bioavailable
        parm_o2_min,                & ! min O2 needed for prod & consump. (nmol/cm^3)
        parm_o2_min_delta,          & ! width of min O2 range (nmol/cm^3)
@@ -374,6 +376,8 @@ contains
     gQsi_0                        = 0.137_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     gQsi_max                      = 0.685_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     gQsi_min                      = 0.0457_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQ_Fe_kFe_thres               = 10.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQ_Si_kSi_thres               = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Fe_bioavail              = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min                   = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min_delta             = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -714,6 +718,24 @@ contains
     units     = '1'
     datatype  = 'real'
     rptr      => gQsi_min
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'gQ_Fe_kFe_thres'
+    lname     = 'Fe:kFe ratio threshold in uptake ratio computations'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => gQ_Fe_kFe_thres
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'gQ_Si_kSi_thres'
+    lname     = 'Si:kSi ratio threshold in uptake ratio computations'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => gQ_Si_kSi_thres
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)

@@ -311,6 +311,18 @@ general_parms :
       units : 1
       datatype : real
       default_value : 0.0457
+   gQ_Fe_kFe_thres :
+      longname : Fe:kFe ratio threshold in uptake ratio computations
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 10.0
+   gQ_Si_kSi_thres :
+      longname : Si:kSi ratio threshold in uptake ratio computations
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 5.0
    parm_Fe_bioavail :
       longname : Fraction of Fe flux that is bioavailable
       subcategory : 4. general parameters
