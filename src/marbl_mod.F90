@@ -605,7 +605,7 @@ contains
 
     !-----------------------------------------------------------------------
     !  local copies of optional forcings
-    !  these are not handled via associate block because their forcing incides might be zero
+    !  these are not handled via associate block because their forcing indices might be zero
     !-----------------------------------------------------------------------
 
     if (lo2_consumption_scalef) then
