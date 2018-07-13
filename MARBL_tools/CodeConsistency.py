@@ -54,7 +54,7 @@ def check_case_sensitive_module_statements(file_and_line_number, line, log, comm
     line_loc = line.split(comment_char)[0].strip(" ")
     if line_loc.lower() in statements:
         if line_loc not in statements:
-            log.append("%s: %s" % (file_and_line_number, line_loc))
+            log.append("%s: %s" % (file_and_line_number, line))
 
 ##############
 
