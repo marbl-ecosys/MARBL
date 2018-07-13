@@ -38,6 +38,13 @@ echo "Test Results:" > $OUTFILE
 # TESTS #
 #########
 
+# Code consistency check
+cd ${MARBL_ROOT}/MARBL_tools
+echo "$ ./CodeConsistency.py"
+./CodeConsistency.py
+STATUS=$(check_return $?)
+print_status "CodeConsistency.py" >> $OUTFILE
+
 # Convert YAML to JSON
 cd ${MARBL_ROOT}/MARBL_tools
 echo "$ ./yaml_to_json.py"
