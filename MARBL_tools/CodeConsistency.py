@@ -5,6 +5,7 @@ This script flags lines that do not conform to MARBL's coding practices
 """
 
 import os, sys, logging
+uniblock = u"\u2588"
 
 ##############
 
@@ -13,7 +14,7 @@ def check_for_hardtabs(file_and_line_number, line, log):
     Log any lines containing hard tabs
     """
     if "\t" in line:
-        log.append("%s: %s" % (file_and_line_number, line.replace("\t", 2*u"\u2588")))
+        log.append("%s: %s" % (file_and_line_number, line.replace("\t", 2*uniblock)))
 
 ##############
 
@@ -24,7 +25,18 @@ def check_for_trailing_whitespace(file_and_line_number, line, log):
     full_line_len = len(line)
     no_trailing_space_len = len(line.rstrip(" "))
     if no_trailing_space_len < full_line_len:
-        log.append("%s: %s" % (file_and_line_number, line.rstrip(" ")+(full_line_len-no_trailing_space_len)*u"\u2588"))
+        log.append("%s: %s" % (file_and_line_number, line.rstrip(" ")+(full_line_len-no_trailing_space_len)*uniblock))
+
+##############
+
+def check_line_length(file_and_line_number, line, log, comment_char="!", max_len=132):
+    """
+    Log any lines exceeding max_len
+    Currently ignores comment characters / anything following
+    """
+    line_len = len(line.split(comment_char)[0].rstrip(" "))
+    if line_len > max_len:
+        log.append("%s: %s" % (file_and_line_number, line[:max_len]+(line_len-max_len)*uniblock))
 
 ##############
 
@@ -70,6 +82,7 @@ if __name__ == "__main__":
     # -- This lets us read files once, rather than once per test, but still group output in readable fashion
     hard_tab_log = []
     trailing_space_log = []
+    line_len_log = []
     logger.info("Check Fortran files for coding standard violations:")
     for file in fortran_files:
         with open(file, "r") as fortran_file:
@@ -80,9 +93,11 @@ if __name__ == "__main__":
                 file_and_line_number = "%s:%d" % (file, line_cnt)
                 check_for_hardtabs(file_and_line_number, line_loc, hard_tab_log)
                 check_for_trailing_whitespace(file_and_line_number, line_loc, trailing_space_log)
+                check_line_length(file_and_line_number, line_loc, line_len_log)
     # Process each test log
     f90_err_cnt += process_err_log("Check for hard tabs", hard_tab_log)
     f90_err_cnt += process_err_log("Check for trailing white space", trailing_space_log)
+    f90_err_cnt += process_err_log("Check length of lines", line_len_log)
 
     # Python error checks
     py_err_cnt = 0
