@@ -100,7 +100,7 @@
             "alphaPI_per_day": {
                "datatype": "real",
                "default_value": {
-                  "((autotroph_sname)) == \"diat\"": 0.29,
+                  "((autotroph_sname)) == \"diat\"": 0.28,
                   "((autotroph_sname)) == \"diaz\"": 0.39,
                   "((autotroph_sname)) == \"sp\"": 0.39,
                   "default": "1e34"
@@ -121,9 +121,9 @@
             "gQfe_0": {
                "datatype": "real",
                "default_value": {
-                  "((autotroph_sname)) == \"diat\"": "35e-6",
-                  "((autotroph_sname)) == \"diaz\"": "70e-6",
-                  "((autotroph_sname)) == \"sp\"": "35e-6",
+                  "((autotroph_sname)) == \"diat\"": "30e-6",
+                  "((autotroph_sname)) == \"diaz\"": "60e-6",
+                  "((autotroph_sname)) == \"sp\"": "30e-6",
                   "default": "1e34"
                },
                "longname": "Initial Fe/C ratio for growth",
@@ -133,9 +133,9 @@
             "gQfe_min": {
                "datatype": "real",
                "default_value": {
-                  "((autotroph_sname)) == \"diat\"": 2.7e-06,
-                  "((autotroph_sname)) == \"diaz\"": 5.4e-06,
-                  "((autotroph_sname)) == \"sp\"": 2.7e-06,
+                  "((autotroph_sname)) == \"diat\"": 2.5e-06,
+                  "((autotroph_sname)) == \"diaz\"": 2.5e-06,
+                  "((autotroph_sname)) == \"sp\"": 2.5e-06,
                   "default": "1e34"
                },
                "longname": "Minimum Fe/C ratio for growth",
@@ -167,7 +167,7 @@
             "kFe": {
                "datatype": "real",
                "default_value": {
-                  "((autotroph_sname)) == \"diat\"": 6e-05,
+                  "((autotroph_sname)) == \"diat\"": 7e-05,
                   "((autotroph_sname)) == \"diaz\"": 4.5e-05,
                   "((autotroph_sname)) == \"sp\"": 3e-05,
                   "default": "1e34"
@@ -403,7 +403,7 @@
             "graze_poc": {
                "datatype": "real",
                "default_value": {
-                  "((grazing_sname)) == \"diat_zoo\"": 0.38,
+                  "((grazing_sname)) == \"diat_zoo\"": 0.39,
                   "((grazing_sname)) == \"diaz_zoo\"": 0.1,
                   "((grazing_sname)) == \"sp_zoo\"": 0,
                   "default": "1e34"
@@ -471,8 +471,8 @@
             "z_umax_0_per_day": {
                "datatype": "real",
                "default_value": {
-                  "((grazing_sname)) == \"diat_zoo\"": 3.1,
-                  "((grazing_sname)) == \"diaz_zoo\"": 3.25,
+                  "((grazing_sname)) == \"diat_zoo\"": 3.15,
+                  "((grazing_sname)) == \"diaz_zoo\"": 3.3,
                   "((grazing_sname)) == \"sp_zoo\"": 3.3,
                   "default": "1e34"
                },
@@ -817,7 +817,7 @@
       },
       "caco3_bury_thres_omega_calc": {
          "datatype": "real",
-         "default_value": 1.0,
+         "default_value": 0.89,
          "longname": "omega calcite threshold for CaCO3 burial when opt = 'omega_calc'",
          "subcategory": "4. general parameters",
          "units": 1
@@ -870,7 +870,7 @@
       },
       "gQ_Si_kSi_thres": {
          "datatype": "real",
-         "default_value": 5.0,
+         "default_value": 6.0,
          "longname": "Si:kSi ratio threshold in uptake ratio computations",
          "subcategory": "4. general parameters",
          "units": 1
@@ -884,7 +884,7 @@
       },
       "gQsi_max": {
          "datatype": "real",
-         "default_value": 0.685,
+         "default_value": 0.822,
          "longname": "max Si/C ratio for growth",
          "subcategory": "4. general parameters",
          "units": 1
@@ -979,7 +979,7 @@
       },
       "o2_sf_val_lo_o2": {
          "datatype": "real",
-         "default_value": 3.0,
+         "default_value": 2.6,
          "longname": "o2_scalefactor constant for O2 less than o2_sf_o2_range_lo",
          "subcategory": "4. general parameters",
          "units": 1
@@ -993,14 +993,14 @@
       },
       "parm_CaCO3_gamma": {
          "datatype": "real",
-         "default_value": 0.1,
+         "default_value": 0.02,
          "longname": "CaCO3 gamma (fraction of production -> hard subclass)",
          "subcategory": "4. general parameters",
          "units": 1
       },
       "parm_FeLig_scavenge_rate0": {
          "datatype": "real",
-         "default_value": 1.4,
+         "default_value": 1.2,
          "longname": "Scavenging base rate for bound iron",
          "subcategory": "4. general parameters (scavenging)",
          "units": "unitless"
@@ -1021,7 +1021,7 @@
       },
       "parm_Fe_scavenge_rate0": {
          "datatype": "real",
-         "default_value": 18.0,
+         "default_value": 22.0,
          "longname": "Scavenging base rate for Fe",
          "subcategory": "4. general parameters (scavenging)",
          "units": "unitless"
@@ -1049,14 +1049,14 @@
       },
       "parm_SiO2_diss": {
          "datatype": "real",
-         "default_value": "770e2",
+         "default_value": "650e2",
          "longname": "Base SiO2 dissolution length scale",
          "subcategory": "4. general parameters (dissolution)",
          "units": "cm"
       },
       "parm_SiO2_gamma": {
          "datatype": "real",
-         "default_value": 0.1,
+         "default_value": 0.0,
          "longname": "SiO2 gamma (fraction of production -> hard subclass)",
          "subcategory": "4. general parameters",
          "units": 1
@@ -1073,21 +1073,21 @@
       },
       "parm_hPOC_CaCO3_ratio": {
          "datatype": "real",
-         "default_value": 0.05,
+         "default_value": 0.01,
          "longname": "hPOC to CaCO3 ratio",
          "subcategory": "4. general parameters",
          "units": 1
       },
       "parm_hPOC_SiO2_ratio": {
          "datatype": "real",
-         "default_value": 0.05,
+         "default_value": 0.01,
          "longname": "hPOC to SiO2 ratio",
          "subcategory": "4. general parameters",
          "units": 1
       },
       "parm_hPOC_dust_ratio": {
          "datatype": "real",
-         "default_value": 0.05,
+         "default_value": 0.01,
          "longname": "hPOC to dust ratio",
          "subcategory": "4. general parameters",
          "units": 1
@@ -1096,7 +1096,7 @@
          "datatype": "real",
          "default_value": {
             "GRID == \"CESM_x3\"": 5.0,
-            "default": 1.1
+            "default": 2.54
          },
          "longname": "Initial scale factor for burial of POC, PON",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -1106,7 +1106,7 @@
          "datatype": "real",
          "default_value": {
             "GRID == \"CESM_x3\"": 5.0,
-            "default": 1.1
+            "default": 0.36
          },
          "longname": "Initial scale factor for burial of POP",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -1116,7 +1116,7 @@
          "datatype": "real",
          "default_value": {
             "GRID == \"CESM_x3\"": 1.1,
-            "default": 1.0
+            "default": 1.53
          },
          "longname": "Initial scale factor for burial of bSi",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -1169,9 +1169,9 @@
             ],
             "default": [
                1,
-               3.0,
-               4.5,
-               5.5
+               3.6,
+               4.7,
+               4.8
             ]
          },
          "longname": "Prescribed scalelen values",

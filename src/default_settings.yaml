@@ -306,7 +306,7 @@ general_parms :
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.685
+      default_value : 0.822
    gQsi_min :
       longname : min Si/C ratio for growth
       subcategory : 4. general parameters
@@ -324,7 +324,7 @@ general_parms :
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 5.0
+      default_value : 6.0
    parm_Fe_bioavail :
       longname : Fraction of Fe flux that is bioavailable
       subcategory : 4. general parameters
@@ -373,7 +373,7 @@ general_parms :
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
-         default : 1.1
+         default : 2.54
          GRID == "CESM_x3" : 5.0
    parm_init_POP_bury_coeff :
       longname : Initial scale factor for burial of POP
@@ -381,7 +381,7 @@ general_parms :
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
-         default : 1.1
+         default : 0.36
          GRID == "CESM_x3" : 5.0
    parm_init_bSi_bury_coeff :
       longname : Initial scale factor for burial of bSi
@@ -389,14 +389,14 @@ general_parms :
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
-         default : 1.0
+         default : 1.53
          GRID == "CESM_x3" : 1.1
    parm_Fe_scavenge_rate0 :
       longname : Scavenging base rate for Fe
       subcategory : 4. general parameters (scavenging)
       units : unitless
       datatype : real
-      default_value : 18.0
+      default_value : 22.0
    parm_Lig_scavenge_rate0 :
       longname : Scavenging base rate for bound ligand
       subcategory : 4. general parameters (scavenging)
@@ -408,7 +408,7 @@ general_parms :
       subcategory : 4. general parameters (scavenging)
       units : unitless
       datatype : real
-      default_value : 1.4
+      default_value : 1.2
    parm_Lig_degrade_rate0 :
       longname : Fe-binding ligand bacterial degradation base rate coefficient
       subcategory : 4. general parameters
@@ -440,19 +440,19 @@ general_parms :
       subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
-      default_value : 770e2
+      default_value : 650e2
    parm_SiO2_gamma :
       longname : SiO2 gamma (fraction of production -> hard subclass)
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.1
+      default_value : 0.0
    parm_hPOC_SiO2_ratio :
       longname : hPOC to SiO2 ratio
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.05
+      default_value : 0.01
    parm_CaCO3_diss :
       longname : Base CaCO3 dissolution length scale
       subcategory : 4. general parameters (dissolution)
@@ -464,19 +464,19 @@ general_parms :
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.1
+      default_value : 0.02
    parm_hPOC_CaCO3_ratio :
       longname : hPOC to CaCO3 ratio
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.05
+      default_value : 0.01
    parm_hPOC_dust_ratio :
       longname : hPOC to dust ratio
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.05
+      default_value : 0.01
    o2_sf_o2_range_hi :
       longname : o2_scalefactor is applied to diss length scales for O2 less than this
       subcategory : 4. general parameters
@@ -494,7 +494,7 @@ general_parms :
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 3.0
+      default_value : 2.6
    parm_sed_denitrif_coeff :
       longname : Global scaling factor for sed_denitrif
       subcategory : 4. general parameters
@@ -529,9 +529,9 @@ general_parms :
       default_value :
          default :
             - 1
-            - 3.0
-            - 4.5
-            - 5.5
+            - 3.6
+            - 4.7
+            - 4.8
          GRID == "CESM_x3" :
             - 1
             - 3.3
@@ -557,7 +557,7 @@ general_parms :
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 1.0
+      default_value : 0.89
    PON_bury_coeff :
       longname : Scale factor for burial of PON
       subcategory : 4. general parameters (bury coeffs)
@@ -707,7 +707,7 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((autotroph_sname)) == "sp" : 0.03e-3
-               ((autotroph_sname)) == "diat" : 0.06e-3
+               ((autotroph_sname)) == "diat" : 0.07e-3
                ((autotroph_sname)) == "diaz" : 0.045e-3
          kPO4 :
             longname : PO4 uptake half-sat constant
@@ -776,9 +776,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 35e-6
-               ((autotroph_sname)) == "diat" : 35e-6
-               ((autotroph_sname)) == "diaz" : 70e-6
+               ((autotroph_sname)) == "sp" : 30e-6
+               ((autotroph_sname)) == "diat" : 30e-6
+               ((autotroph_sname)) == "diaz" : 60e-6
          gQfe_min :
             longname : Minimum Fe/C ratio for growth
             subcategory : 10. autotrophs
@@ -786,9 +786,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 2.7e-6
-               ((autotroph_sname)) == "diat" : 2.7e-6
-               ((autotroph_sname)) == "diaz" : 5.4e-6
+               ((autotroph_sname)) == "sp" : 2.5e-6
+               ((autotroph_sname)) == "diat" : 2.5e-6
+               ((autotroph_sname)) == "diaz" : 2.5e-6
          alphaPI_per_day :
             longname : Initial slope of P_I curve (GD98)
             subcategory : 10. autotrophs
@@ -797,7 +797,7 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((autotroph_sname)) == "sp" : 0.39
-               ((autotroph_sname)) == "diat" : 0.29
+               ((autotroph_sname)) == "diat" : 0.28
                ((autotroph_sname)) == "diaz" : 0.39
          PCref_per_day :
             longname : Maximum C-spec growth rate at Tref
@@ -1002,8 +1002,8 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((grazing_sname)) == "sp_zoo" : 3.3
-               ((grazing_sname)) == "diat_zoo" : 3.1
-               ((grazing_sname)) == "diaz_zoo" : 3.25
+               ((grazing_sname)) == "diat_zoo" : 3.15
+               ((grazing_sname)) == "diaz_zoo" : 3.3
          z_grz :
             longname : Grazing coefficient
             subcategory : 12. grazing
@@ -1032,7 +1032,7 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((grazing_sname)) == "sp_zoo" : 0
-               ((grazing_sname)) == "diat_zoo" : 0.38
+               ((grazing_sname)) == "diat_zoo" : 0.39
                ((grazing_sname)) == "diaz_zoo" : 0.1
          graze_doc :
             longname : Routing of grazed term, remainder goes to dic
