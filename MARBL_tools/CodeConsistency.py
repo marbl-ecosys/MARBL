@@ -12,9 +12,8 @@ uniblock = u"\u2588"
 ##############
 
 class consistency_test_class(object):
-    def __init__(self, quiet=False):
+    def __init__(self):
         self.logs = OrderedDict()
-        self.quiet = quiet
 
     ##############
 
@@ -34,8 +33,7 @@ class consistency_test_class(object):
             logger.info("* %s: %d error(s) found" % (desc, err_cnt))
             while len(log) > 0:
                 msg = log.popleft()
-                if not self.quiet:
-                    logger.info("  %s" % msg)
+                logger.info("  %s" % msg)
             tot_err_cnt += err_cnt
         return tot_err_cnt
     ##############
