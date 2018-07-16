@@ -5,7 +5,24 @@ This script flags lines that do not conform to MARBL's coding practices
 """
 
 import os, sys, logging
+from collections import deque # Faster pop / append than standard lists
 uniblock = u"\u2588"
+
+##############
+
+class consistency_test_class(object):
+    def __init__(self, desc):
+        self.desc = desc
+        self.log = deque([])
+
+    def process(self):
+        logger = logging.getLogger(__name__)
+        err_cnt = len(self.log)
+        logger.info("* %s: %d error(s) found" % (self.desc, err_cnt))
+        while len(self.log) > 0:
+            logger.info("  %s" % self.log.popleft())
+        #logger.info("----")
+        return err_cnt
 
 ##############
 
@@ -104,17 +121,6 @@ def check_logical_statements(file_and_line_number, line, log):
 
 ##############
 
-def process_err_log(test, log):
-    logger = logging.getLogger(__name__)
-    err_cnt = len(log)
-    logger.info("* %s: %d error(s) found" % (test, err_cnt))
-    while len(log) > 0:
-        logger.info("  %s" % log.popleft())
-    #logger.info("----")
-    return err_cnt
-
-##############
-
 if __name__ == "__main__":
     # marbl_root is the top-level MARBL directory, which is a level above the directory containing this script
     # * Do some string manipulation to make marbl_root as human-readable as possible because it appears in the
@@ -142,14 +148,14 @@ if __name__ == "__main__":
 
     # Store messages to write to stdout appending lines to a list
     # -- This lets us read files once, rather than once per test, but still group output in readable fashion
-    from collections import deque # Faster pop / append than standard lists
-    hard_tab_log = deque([])
-    trailing_space_log = deque([])
-    line_len_log = deque([])
-    case_sensitive_log = deque([])
-    spaces_log = deque([])
-    quotes_log = deque([])
-    logical_log = deque([])
+    TestLog = dict()
+    TestLog['hard_tab_log'] = consistency_test_class('Check for hard tabs')
+    TestLog['trailing_space_log'] = consistency_test_class('Check for trailing white space')
+    TestLog['line_len_log'] = consistency_test_class('Check length of lines')
+    TestLog['case_sensitive_log'] = consistency_test_class('Check for case sensitive statements')
+    TestLog['spaces_log'] = consistency_test_class('Check for spaces in statements')
+    TestLog['quotes_log'] = consistency_test_class('Check for double quotes in statements')
+    TestLog['logical_log'] = consistency_test_class('Check for unwanted logical operators')
 
     # Fortran error checks
     f90_err_cnt = 0
@@ -161,22 +167,22 @@ if __name__ == "__main__":
                 line_loc = line.rstrip("\n")
                 line_cnt = line_cnt + 1
                 file_and_line_number = "%s:%d" % (file, line_cnt)
-                check_for_hardtabs(file_and_line_number, line_loc, hard_tab_log)
-                check_for_trailing_whitespace(file_and_line_number, line_loc, trailing_space_log)
-                check_line_length(file_and_line_number, line_loc, line_len_log)
-                check_case_sensitive_module_statements(file_and_line_number, line_loc, case_sensitive_log)
-                check_for_spaces(file_and_line_number, line_loc, spaces_log)
-                check_for_double_quotes(file_and_line_number, line_loc, quotes_log)
-                check_logical_statements(file_and_line_number, line_loc, logical_log)
+                check_for_hardtabs(file_and_line_number, line_loc, TestLog['hard_tab_log'].log)
+                check_for_trailing_whitespace(file_and_line_number, line_loc, TestLog['trailing_space_log'].log)
+                check_line_length(file_and_line_number, line_loc, TestLog['line_len_log'].log)
+                check_case_sensitive_module_statements(file_and_line_number, line_loc, TestLog['case_sensitive_log'].log)
+                check_for_spaces(file_and_line_number, line_loc, TestLog['spaces_log'].log)
+                check_for_double_quotes(file_and_line_number, line_loc, TestLog['quotes_log'].log)
+                check_logical_statements(file_and_line_number, line_loc, TestLog['logical_log'].log)
 
     # Process each test log
-    f90_err_cnt += process_err_log("Check for hard tabs", hard_tab_log)
-    f90_err_cnt += process_err_log("Check for trailing white space", trailing_space_log)
-    f90_err_cnt += process_err_log("Check length of lines", line_len_log)
-    f90_err_cnt += process_err_log("Check for case sensitive statements", case_sensitive_log)
-    #f90_err_cnt += process_err_log("Check for spaces in statements", spaces_log)
-    #f90_err_cnt += process_err_log("Check for double quotes in statements", quotes_log)
-    #f90_err_cnt += process_err_log("Check for unwanted logical operators", logical_log)
+    f90_err_cnt += TestLog['hard_tab_log'].process()
+    f90_err_cnt += TestLog['trailing_space_log'].process()
+    f90_err_cnt += TestLog['line_len_log'].process()
+    f90_err_cnt += TestLog['case_sensitive_log'].process()
+    #f90_err_cnt += TestLog['spaces_log'].process()
+    #f90_err_cnt += TestLog['quotes_log'].process()
+    #f90_err_cnt += TestLog['logical_log'].process()
 
     # Python error checks
     py_err_cnt = 0
@@ -188,11 +194,11 @@ if __name__ == "__main__":
                 line_loc = line.rstrip("\n")
                 line_cnt = line_cnt + 1
                 file_and_line_number = "%s:%d" % (file, line_cnt)
-                check_for_hardtabs(file_and_line_number, line_loc, hard_tab_log)
-                check_for_trailing_whitespace(file_and_line_number, line_loc, trailing_space_log)
+                check_for_hardtabs(file_and_line_number, line_loc, TestLog['hard_tab_log'].log)
+                check_for_trailing_whitespace(file_and_line_number, line_loc, TestLog['trailing_space_log'].log)
     # Process each test log
-    py_err_cnt += process_err_log("Check for hard tabs", hard_tab_log)
-    py_err_cnt += process_err_log("Check for trailing white space", trailing_space_log)
+    py_err_cnt += TestLog['hard_tab_log'].process()
+    py_err_cnt += TestLog['trailing_space_log'].process()
 
     logger.info("\nFortran errors found: %d" % f90_err_cnt)
     logger.info("Python errors found: %d" % py_err_cnt)
