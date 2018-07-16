@@ -2516,10 +2516,10 @@ contains
 
        if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
           gQsi(auto_ind) = gQsi_0
-          if ((Fe_loc < gQ_Si_kSi_thres * autotrophs(auto_ind)%kFe) .and. &
+          if ((Fe_loc < gQ_Fe_kFe_thres * autotrophs(auto_ind)%kFe) .and. &
                (Fe_loc > c0) .and. &
                (SiO3_loc > (gQ_Si_kSi_thres * autotrophs(auto_ind)%kSiO3))) then
-             gQsi(auto_ind) = min((gQsi(auto_ind) * gQ_Si_kSi_thres * autotrophs(auto_ind)%kFe / Fe_loc), gQsi_max)
+             gQsi(auto_ind) = min((gQsi(auto_ind) * gQ_Fe_kFe_thres * autotrophs(auto_ind)%kFe / Fe_loc), gQsi_max)
           end if
 
           if (Fe_loc == c0) then
