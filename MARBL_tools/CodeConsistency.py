@@ -73,6 +73,34 @@ def check_for_spaces(file_and_line_number, line, log, comment_char="!", max_len=
     for bad_statement in statements:
         if line_loc.lower().startswith(bad_statement):
             log.append("%s: %s" % (file_and_line_number, line_loc))
+            break
+
+##############
+
+def check_for_double_quotes(file_and_line_number, line, log):
+    """
+    All Fortran strings should appear as 'string', not "string"
+    """
+    if '"' in line:
+        log.append("%s: %s" % (file_and_line_number, line))
+
+##############
+
+def check_logical_statements(file_and_line_number, line, log):
+    """
+    Use symbols, not words, for logical operators:
+    * >=, not .ge.
+    * >, not .gt.
+    * <=, not .le.
+    * <, not .lt.
+    * ==, not .eq.
+    * /=, not .ne.
+    """
+    operators = ['.ge.', '.gt.', '.le.', '.lt.', '.eq.', '.ne.']
+    for op in operators:
+        if op in line:
+            log.append("%s: %s" % (file_and_line_number, line))
+            break
 
 ##############
 
@@ -80,8 +108,8 @@ def process_err_log(test, log):
     logger = logging.getLogger(__name__)
     err_cnt = len(log)
     logger.info("* %s: %d error(s) found" % (test, err_cnt))
-    for line in log:
-        logger.info("  %s" % line)
+    while len(log) > 0:
+        logger.info("  %s" % log.popleft())
     #logger.info("----")
     return err_cnt
 
@@ -112,15 +140,19 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(message)s', level=logging.DEBUG)
     logger = logging.getLogger(__name__)
 
-    # Fortran error checks
-    f90_err_cnt = 0
     # Store messages to write to stdout appending lines to a list
     # -- This lets us read files once, rather than once per test, but still group output in readable fashion
-    hard_tab_log = []
-    trailing_space_log = []
-    line_len_log = []
-    case_sensitive_log = []
-    spaces_log = []
+    from collections import deque # Faster pop / append than standard lists
+    hard_tab_log = deque([])
+    trailing_space_log = deque([])
+    line_len_log = deque([])
+    case_sensitive_log = deque([])
+    spaces_log = deque([])
+    quotes_log = deque([])
+    logical_log = deque([])
+
+    # Fortran error checks
+    f90_err_cnt = 0
     logger.info("Check Fortran files for coding standard violations:")
     for file in fortran_files:
         with open(file, "r") as fortran_file:
@@ -133,20 +165,21 @@ if __name__ == "__main__":
                 check_for_trailing_whitespace(file_and_line_number, line_loc, trailing_space_log)
                 check_line_length(file_and_line_number, line_loc, line_len_log)
                 check_case_sensitive_module_statements(file_and_line_number, line_loc, case_sensitive_log)
-                #check_for_spaces(file_and_line_number, line_loc, spaces_log)
+                check_for_spaces(file_and_line_number, line_loc, spaces_log)
+                check_for_double_quotes(file_and_line_number, line_loc, quotes_log)
+                check_logical_statements(file_and_line_number, line_loc, logical_log)
+
     # Process each test log
     f90_err_cnt += process_err_log("Check for hard tabs", hard_tab_log)
     f90_err_cnt += process_err_log("Check for trailing white space", trailing_space_log)
     f90_err_cnt += process_err_log("Check length of lines", line_len_log)
     f90_err_cnt += process_err_log("Check for case sensitive statements", case_sensitive_log)
     #f90_err_cnt += process_err_log("Check for spaces in statements", spaces_log)
+    #f90_err_cnt += process_err_log("Check for double quotes in statements", quotes_log)
+    #f90_err_cnt += process_err_log("Check for unwanted logical operators", logical_log)
 
     # Python error checks
     py_err_cnt = 0
-    # Store messages to write to stdout appending lines to a list
-    # -- This lets us read files once, rather than once per test, but still group output in readable fashion
-    hard_tab_log = []
-    trailing_space_log = []
     logger.info("\nCheck python files for coding standard violations:")
     for file in python_files:
         with open(file, "r") as python_file:
