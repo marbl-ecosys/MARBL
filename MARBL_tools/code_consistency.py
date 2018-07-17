@@ -169,6 +169,39 @@ class ConsistencyTestClass(object):
                 self.logs[test_desc].append("%s: %s" % (file_and_line, line))
                 break
 
+    ##############
+
+    def check_r8_settings(self, file_and_line, line, comment_char="!"):
+        """
+        Make sure all real numbers are cast as r8
+        """
+        test_desc = 'Check for r8'
+        self.init_log(test_desc)
+        import re
+        # Looking for decimal numbers that do not end in _r8
+        # Edge cases:
+        # 1. ignore decimals in comments
+        # 2. Ignore decimals in format strings (e.g. E24.16)
+        # 3. Allow 1.0e-2_r8
+        line_without_comments = line.split(comment_char)[0].strip(" ")
+
+        # Regex notes
+        # 1. (?<!\w) -- do not match numbers immediately following a letter,
+        #    such as E24 or I0 (these are Fortran format strings)
+        #    [regex refers to this as a negative lookbehind]
+        # 2. \d+\. -- match N consecutive decimal digits (for N>=1) followed
+        #    by a decimal point
+        # 3. (\d+[eE]([+-])?)? -- Optionally match a number followed by either
+        #    e or E (optionally followed by + or -)
+        # 4. \d+ -- match N consecutive decimal digits (for N>=1)
+        # 5. (?!\d+|_|[eE]) -- do not match a decimal, an underscore, an e,
+        #    or an E
+        #    [regex refers to this as a negative lookahead]
+        regex = '(?<!\w)\d+\.(\d+[eE]([+-])?)?\d+(?!\d+|_|[eE])'
+        valid = re.compile(regex)
+        if valid.search(line_without_comments):
+            self.logs[test_desc].append("%s: %s" % (file_and_line, line))
+
 ##############
 
 if __name__ == "__main__":
@@ -216,6 +249,7 @@ if __name__ == "__main__":
                 #Tests.check_for_spaces(file_and_line_number, line_without_cr)
                 #Tests.check_for_double_quotes(file_and_line_number, line_without_cr)
                 #Tests.check_logical_statements(file_and_line_number, line_without_cr)
+                #Tests.check_r8_settings(file_and_line_number, line_without_cr)
     FORTRAN_ERROR_COUNT = Tests.process()
     LOGGER.info("Fortran errors found: %d", FORTRAN_ERROR_COUNT)
 
