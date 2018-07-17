@@ -40,10 +40,20 @@ echo "Test Results:" > $OUTFILE
 
 # Code consistency check
 cd ${MARBL_ROOT}/MARBL_tools
-echo "$ ./CodeConsistency.py"
-./CodeConsistency.py
+echo "$ ./code_consistency.py"
+./code_consistency.py
 STATUS=$(check_return $?)
 print_status "CodeConsistency.py" >> $OUTFILE
+
+# Run pylint (if installed)
+command -v pylint 2>&1 > /dev/null
+if [ $? -eq 0 ]; then
+  cd ${MARBL_ROOT}/MARBL_tools
+  echo "$ pylint code_consistency.py"
+  pylint code_consistency.py
+  STATUS=$(check_return $?)
+  print_status "pylint" >> $OUTFILE
+fi
 
 # Convert YAML to JSON
 cd ${MARBL_ROOT}/MARBL_tools
