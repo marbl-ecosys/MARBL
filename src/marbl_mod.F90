@@ -3759,7 +3759,7 @@ contains
       if (k == 1) then
          do subcol_ind = 1, PAR_nsubcols
             if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR_in(subcol_ind) > 1.0_r8)) then
-               work = PAR_col_frac(subcol_ind) * (log(PAR_in(subcol_ind))*0.4373_r8) * (10.0e2/dz1)
+               work = PAR_col_frac(subcol_ind) * (log(PAR_in(subcol_ind))*0.4373_r8) * (10.0e2_r8/dz1)
                DOCr_reminR = DOCr_reminR + work * DOMr_reminR_photo
                DONr_reminR = DONr_reminR + work * DOMr_reminR_photo
                DOPr_reminR = DOPr_reminR + work * DOMr_reminR_photo
@@ -4174,7 +4174,7 @@ contains
        rate_per_sec = c0
        do subcol_ind = 1, PAR_nsubcols
           if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR_in(subcol_ind) > 1.0_r8)) then
-             rate_per_sec_subcol = (log(PAR_in(subcol_ind))*0.4373_r8)*(10.0e2/dz1)*((12.0_r8/3.0_r8)*yps) ! 1/(3 months)
+             rate_per_sec_subcol = (log(PAR_in(subcol_ind))*0.4373_r8)*(10.0e2_r8/dz1)*((12.0_r8/3.0_r8)*yps) ! 1/(3 months)
              rate_per_sec = rate_per_sec + PAR_col_frac(subcol_ind) * rate_per_sec_subcol
           endif
        end do

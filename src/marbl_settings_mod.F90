@@ -112,7 +112,7 @@ module marbl_settings_mod
 
   ! Misc. Rate constants
   real(r8), parameter :: &
-       dust_Fe_scavenge_scale  = 1.0e9         !dust scavenging scale factor
+       dust_Fe_scavenge_scale  = 1.0e9_r8      !dust scavenging scale factor
 
   ! dust_to_Fe: conversion of dust to iron (nmol Fe/g Dust)
   ! dust remin gDust = 0.035 gFe       mol Fe     1e9 nmolFe
