@@ -4,14 +4,21 @@
 This script flags lines that do not conform to MARBL's coding practices
 """
 
-import os, sys, logging
+import os
+import sys
+import logging
 from collections import deque # Faster pop / append than standard lists
 from collections import OrderedDict
-uniblock = u"\u2588"
+UNIBLOCK = u"\u2588"
 
 ##############
 
-class consistency_test_class(object):
+class ConsistencyTestClass(object):
+    """
+    This class contains all the Fortran consistency check tests.
+    The logs dictionary contains a deque object with a list of all source lines
+    that fail a particular test (given as the logs key)
+    """
     def __init__(self):
         self.logs = OrderedDict()
 
@@ -25,83 +32,93 @@ class consistency_test_class(object):
             ii. log (as info) all lines of code that do not conform to standards
         2. return total number of errors across all tests
         """
-        logger = logging.getLogger(__name__)
         tot_err_cnt = 0
-        while len(self.logs) > 0:
+        while self.logs:
             desc, log = self.logs.popitem(last=False)
             err_cnt = len(log)
-            logger.info("* %s: %d error(s) found" % (desc, err_cnt))
-            while len(log) > 0:
+            LOGGER.info("* %s: %d error(s) found", desc, err_cnt)
+            while log:
                 msg = log.popleft()
-                logger.info("  %s" % msg)
+                LOGGER.info("  %s", msg)
             tot_err_cnt += err_cnt
         return tot_err_cnt
     ##############
 
-    def init_test(self, description):
+    def init_log(self, description):
+        """
+        If self.logs does not already have a key for description, set
+        self.logs[description] to an empty deque list.
+        """
         if description not in self.logs.keys():
             self.logs[description] = deque([])
 
     ##############
 
-    def check_for_hardtabs(self, file_and_line_number, line):
+    def check_for_hard_tabs(self, file_and_line, line):
         """
         Log any lines containing hard tabs
         """
         test_desc = 'Check for hard tabs'
-        self.init_test(test_desc)
+        self.init_log(test_desc)
         if "\t" in line:
-            self.logs[test_desc].append("%s: %s" % (file_and_line_number, line.replace("\t", 2*uniblock)))
+            self.logs[test_desc].append("%s: %s" % (file_and_line,
+                                                    line.replace("\t", 2*UNIBLOCK)))
 
     ##############
 
-    def check_for_trailing_whitespace(self, file_and_line_number, line):
+    def check_for_trailing_whitespace(self, file_and_line, line):
         """
         Log any lines containing trailing whitespace
         """
         test_desc = 'Check for trailing white space'
-        self.init_test(test_desc)
+        self.init_log(test_desc)
         full_line_len = len(line)
         no_trailing_space_len = len(line.rstrip(" "))
         if no_trailing_space_len < full_line_len:
-            self.logs[test_desc].append("%s: %s" % (file_and_line_number, line.rstrip(" ")+(full_line_len-no_trailing_space_len)*uniblock))
+            self.logs[test_desc].append("%s: %s" % (file_and_line,
+                                                    line.rstrip(" ") +
+                                                    (full_line_len - no_trailing_space_len) *
+                                                    UNIBLOCK))
 
     ##############
 
-    def check_line_length(self, file_and_line_number, line, comment_char="!", max_len=132):
+    def check_line_length(self, file_and_line, line, comment_char="!", max_len=132):
         """
         Log any lines exceeding max_len
         Currently ignores comment characters / anything following
         """
         test_desc = 'Check length of lines'
-        self.init_test(test_desc)
+        self.init_log(test_desc)
         line_len = len(line.split(comment_char)[0].rstrip(" "))
         if line_len > max_len:
-            self.logs[test_desc].append("%s: %s" % (file_and_line_number, line[:max_len]+(line_len-max_len)*uniblock))
+            self.logs[test_desc].append("%s: %s" % (file_and_line,
+                                                    line[:max_len] +
+                                                    (line_len-max_len) * UNIBLOCK))
 
     ##############
 
-    def check_case_sensitive_module_statements(self, file_and_line_number, line, comment_char="!", max_len=132):
+    def check_case_in_module_statements(self, file_and_line, line, comment_char="!"):
         """
         The following module statements should be all lowercase:
         * implicit none
         * public
         * private
         * save
-        Note that at some point we may want to remove "save" altogether, since it is implicit in a module
+        Note that at some point we may want to remove "save" altogether,
+        since it is implicit in a module
         """
         test_desc = 'Check for case sensitive statements'
-        self.init_test(test_desc)
+        self.init_log(test_desc)
         statements = ["implicit none", "public", "private", "save"]
         # ignore comments, and strip all white space
-        line_loc = line.split(comment_char)[0].strip(" ")
-        if line_loc.lower() in statements:
-            if line_loc not in statements:
-                self.logs[test_desc].append("%s: %s" % (file_and_line_number, line))
+        line_without_comments = line.split(comment_char)[0].strip(" ")
+        if line_without_comments.lower() in statements:
+            if line_without_comments not in statements:
+                self.logs[test_desc].append("%s: %s" % (file_and_line, line))
 
     ##############
 
-    def check_for_spaces(self, file_and_line_number, line, comment_char="!", max_len=132):
+    def check_for_spaces(self, file_and_line, line, comment_char="!"):
         """
         The following statements should all include spaces:
         * else if
@@ -109,31 +126,32 @@ class consistency_test_class(object):
         * else where
         * end where
         * end do
+        * end module
         """
         test_desc = 'Check for spaces in statements'
-        self.init_test(test_desc)
-        statements = ["elseif", "endif", "elsewhere", "endwhere", "enddo"]
+        self.init_log(test_desc)
+        statements = ["elseif", "endif", "elsewhere", "endwhere", "enddo", "endmodule"]
         # ignore comments, and strip all white space
-        line_loc = line.split(comment_char)[0].strip(" ")
+        line_without_comments = line.split(comment_char)[0].strip(" ")
         for bad_statement in statements:
-            if line_loc.lower().startswith(bad_statement):
-                self.logs[test_desc].append("%s: %s" % (file_and_line_number, line_loc))
+            if line_without_comments.lower().startswith(bad_statement):
+                self.logs[test_desc].append("%s: %s" % (file_and_line, line_without_comments))
                 break
 
     ##############
 
-    def check_for_double_quotes(self, file_and_line_number, line):
+    def check_for_double_quotes(self, file_and_line, line):
         """
         All Fortran strings should appear as 'string', not "string"
         """
         test_desc = 'Check for double quotes in statements'
-        self.init_test(test_desc)
+        self.init_log(test_desc)
         if '"' in line:
-            self.logs[test_desc].append("%s: %s" % (file_and_line_number, line))
+            self.logs[test_desc].append("%s: %s" % (file_and_line, line))
 
     ##############
 
-    def check_logical_statements(self, file_and_line_number, line):
+    def check_logical_statements(self, file_and_line, line):
         """
         Use symbols, not words, for logical operators:
         * >=, not .ge.
@@ -144,79 +162,79 @@ class consistency_test_class(object):
         * /=, not .ne.
         """
         test_desc = 'Check for unwanted logical operators'
-        self.init_test(test_desc)
+        self.init_log(test_desc)
         operators = ['.ge.', '.gt.', '.le.', '.lt.', '.eq.', '.ne.']
-        for op in operators:
-            if op in line:
-                self.logs[test_desc].append("%s: %s" % (file_and_line_number, line))
+        for operator in operators:
+            if operator in line:
+                self.logs[test_desc].append("%s: %s" % (file_and_line, line))
                 break
 
 ##############
 
 if __name__ == "__main__":
-    # marbl_root is the top-level MARBL directory, which is a level above the directory containing this script
-    # * Do some string manipulation to make marbl_root as human-readable as possible because it appears in the
-    #   output if you run this script with the "-h" option
-    script_dir = os.path.dirname(sys.argv[0])
-    if script_dir == '.':
-        marbl_root = '..'
-    elif script_dir.endswith('MARBL_tools'):
-        marbl_root = script_dir[:-12]
+    # MARBL_ROOT is the top-level MARBL directory, which is a level above the
+    # directory containing this script
+    # * Do some string manipulation to make MARBL_ROOT as human-readable as
+    #   possible because it appears in the output if you run this script with
+    #   the "-h" option
+    SCRIPT_DIR = os.path.dirname(sys.argv[0])
+    if SCRIPT_DIR == '.':
+        MARBL_ROOT = '..'
+    elif SCRIPT_DIR.endswith('MARBL_tools'):
+        MARBL_ROOT = SCRIPT_DIR[:-12]
     else:
-        marbl_root = os.path.join(script_dir, '..')
+        MARBL_ROOT = os.path.join(SCRIPT_DIR, '..')
 
-    fortran_files = [] # list containing path to all Fortran files
-    python_files = []  # list containing path to all python files
-    for root, dirs, files in os.walk(marbl_root):
-        for file in files:
-            if file.endswith(".F90"):
-                fortran_files.append(os.path.join(root, file))
-            elif file.endswith(".py"):
-                python_files.append(os.path.join(root, file))
+    fortran_files = [] # pylint: disable=C0103
+    python_files = []  # pylint: disable=C0103
+    for root, dirs, files in os.walk(MARBL_ROOT):
+        for thisfile in files:
+            if thisfile.endswith(".F90"):
+                fortran_files.append(os.path.join(root, thisfile))
+            elif thisfile.endswith(".py"):
+                python_files.append(os.path.join(root, thisfile))
 
     # Use logging to write messages to stdout
     logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-    logger = logging.getLogger(__name__)
+    LOGGER = logging.getLogger(__name__)
 
-    Tests = consistency_test_class()
+    Tests = ConsistencyTestClass() # pylint: disable=C0103
 
     # Fortran error checks
-    f90_err_cnt = 0
-    logger.info("Check Fortran files for coding standard violations:")
-    for file in fortran_files:
-        with open(file, "r") as fortran_file:
+    LOGGER.info("Check Fortran files for coding standard violations:")
+    for thisfile in fortran_files:
+        with open(thisfile, "r") as fortran_file:
             line_cnt = 0
-            for line in fortran_file.readlines():
-                line_loc = line.rstrip("\n")
+            for thisline in fortran_file.readlines():
+                line_without_cr = thisline.rstrip("\n")
                 line_cnt = line_cnt + 1
-                file_and_line_number = "%s:%d" % (file, line_cnt)
-                Tests.check_for_hardtabs(file_and_line_number, line_loc)
-                Tests.check_for_trailing_whitespace(file_and_line_number, line_loc)
-                Tests.check_line_length(file_and_line_number, line_loc)
-                Tests.check_case_sensitive_module_statements(file_and_line_number, line_loc)
-                #Tests.check_for_spaces(file_and_line_number, line_loc)
-                #Tests.check_for_double_quotes(file_and_line_number, line_loc)
-                #Tests.check_logical_statements(file_and_line_number, line_loc)
-    f90_err_cnt = Tests.process()
-    logger.info("Fortran errors found: %d" % f90_err_cnt)
+                file_and_line_number = "%s:%d" % (thisfile, line_cnt)
+                Tests.check_for_hard_tabs(file_and_line_number, line_without_cr)
+                Tests.check_for_trailing_whitespace(file_and_line_number, line_without_cr)
+                Tests.check_line_length(file_and_line_number, line_without_cr)
+                Tests.check_case_in_module_statements(file_and_line_number, line_without_cr)
+                #Tests.check_for_spaces(file_and_line_number, line_without_cr)
+                #Tests.check_for_double_quotes(file_and_line_number, line_without_cr)
+                #Tests.check_logical_statements(file_and_line_number, line_without_cr)
+    FORTRAN_ERROR_COUNT = Tests.process()
+    LOGGER.info("Fortran errors found: %d", FORTRAN_ERROR_COUNT)
 
     # Python error checks
-    py_err_cnt = 0
-    logger.info("\nCheck python files for coding standard violations:")
-    for file in python_files:
-        with open(file, "r") as python_file:
+    LOGGER.info("\nCheck python files for coding standard violations:")
+    for thisfile in python_files:
+        with open(thisfile, "r") as python_file:
             line_cnt = 0
-            for line in python_file.readlines():
-                line_loc = line.rstrip("\n")
+            for thisline in python_file.readlines():
+                line_without_cr = thisline.rstrip("\n")
                 line_cnt = line_cnt + 1
-                file_and_line_number = "%s:%d" % (file, line_cnt)
-                Tests.check_for_hardtabs(file_and_line_number, line_loc)
-                Tests.check_for_trailing_whitespace(file_and_line_number, line_loc)
-    py_err_cnt  = Tests.process()
-    logger.info("Python errors found: %d" % py_err_cnt)
+                file_and_line_number = "%s:%d" % (thisfile, line_cnt)
+                Tests.check_for_hard_tabs(file_and_line_number, line_without_cr)
+                Tests.check_for_trailing_whitespace(file_and_line_number, line_without_cr)
+    PYTHON_ERROR_COUNT = Tests.process()
+    LOGGER.info("Python errors found: %d", PYTHON_ERROR_COUNT)
 
-    if f90_err_cnt + py_err_cnt > 0:
-        logger.info("\nTotal error count: %d" % (f90_err_cnt + py_err_cnt))
+    if FORTRAN_ERROR_COUNT + PYTHON_ERROR_COUNT > 0:
+        LOGGER.info("\nTotal error count: %d", FORTRAN_ERROR_COUNT + PYTHON_ERROR_COUNT)
         sys.exit(1)
 
-    logger.info("\nNo errors found!")
+    LOGGER.info("\nNo errors found!")
