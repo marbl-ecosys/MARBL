@@ -49,8 +49,8 @@ print_status "CodeConsistency.py" >> $OUTFILE
 command -v pylint 2>&1 > /dev/null
 if [ $? -eq 0 ]; then
   cd ${MARBL_ROOT}/MARBL_tools
-  echo "$ pylint code_consistency.py"
-  pylint code_consistency.py
+  echo "$ pylint --rcfile=pylintrc code_consistency.py"
+  pylint --rcfile=pylintrc code_consistency.py
   STATUS=$(check_return $?)
   print_status "pylint" >> $OUTFILE
 fi

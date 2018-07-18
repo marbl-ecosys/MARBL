@@ -197,7 +197,7 @@ class ConsistencyTestClass(object):
         # 5. (?!\d+|_|[eE]) -- do not match a decimal, an underscore, an e,
         #    or an E
         #    [regex refers to this as a negative lookahead]
-        regex = '(?<!\w)\d+\.(\d+[eE]([+-])?)?\d+(?!\d+|_|[eE])'
+        regex = r'(?<!\w)\d+\.(\d+[eE]([+-])?)?\d+(?!\d+|_|[eE])'
         valid = re.compile(regex)
         if valid.search(line_without_comments):
             self.logs[test_desc].append("%s: %s" % (file_and_line, line))
