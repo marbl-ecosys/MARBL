@@ -1475,6 +1475,16 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "O2_CONSUMPTION_SCALEF": {
+      "dependencies": {
+         "lo2_consumption_scalef": ".true."
+      },
+      "frequency": "never",
+      "longname": "O2 Consumption Scale Factor",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "layer_avg"
+   },
    "O2_PRODUCTION": {
       "frequency": "medium",
       "longname": "O2 Production",
@@ -1609,6 +1619,20 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "POC_hFLUX_IN": {
+      "frequency": "never",
+      "longname": "POC hFlux into Cell",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "POC_sFLUX_IN": {
+      "frequency": "never",
+      "longname": "POC sFlux into Cell",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
    "PON_REMIN_DONr": {
       "frequency": "low",
       "longname": "PON Remineralization routed to DONr",
@@ -1671,6 +1695,16 @@
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
+   },
+   "P_REMIN_SCALEF": {
+      "dependencies": {
+         "lp_remin_scalef": ".true."
+      },
+      "frequency": "never",
+      "longname": "Particulate Remin Scale Factor",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "layer_avg"
    },
    "P_iron_FLUX_((particulate_flux_ref_depth_str))": {
       "frequency": "medium",
@@ -2172,6 +2206,13 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "pocToFloor": {
+      "frequency": "never",
+      "longname": "POC Flux Hitting Sea Floor",
+      "operator": "average",
+      "units": "nmol/cm^2/s",
+      "vertical_grid": "none"
    },
    "pocToSed": {
       "frequency": "medium",

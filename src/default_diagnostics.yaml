@@ -460,6 +460,12 @@ calcToSed_ALT_CO2 :
    vertical_grid : none
    frequency : medium
    operator : average
+pocToFloor :
+   longname : POC Flux Hitting Sea Floor
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : never
+   operator : average
 pocToSed :
    longname : POC Flux to Sediments
    units : nmol/cm^2/s
@@ -609,6 +615,14 @@ O2_PRODUCTION :
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
+   operator : average
+O2_CONSUMPTION_SCALEF :
+   dependencies :
+      lo2_consumption_scalef : .true.
+   longname : O2 Consumption Scale Factor
+   units : 1
+   vertical_grid : layer_avg
+   frequency : never
    operator : average
 O2_CONSUMPTION :
    longname : O2 Consumption
@@ -854,11 +868,31 @@ CaCO3_REMIN_zint_100m :
    operator : average
 
 # Particulate 3D diags
+P_REMIN_SCALEF :
+   dependencies :
+      lp_remin_scalef : .true.
+   longname : Particulate Remin Scale Factor
+   units : 1
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
 POC_FLUX_IN :
    longname : POC Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
+   operator : average
+POC_sFLUX_IN :
+   longname : POC sFlux into Cell
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
+POC_hFLUX_IN :
+   longname : POC hFlux into Cell
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : never
    operator : average
 POC_PROD :
    longname : POC Production

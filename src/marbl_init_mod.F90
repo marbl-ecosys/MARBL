@@ -948,6 +948,24 @@ contains
                                               dim1 = num_levels)
         end if
 
+        ! O2 Consumption Scale Factor
+        if (id .eq. ind%o2_consumption_scalef_id) then
+          found = .true.
+          interior_forcings(id)%metadata%varname     = 'O2 Consumption Scale Factor'
+          interior_forcings(id)%metadata%field_units = '1'
+          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
+                                              dim1 = num_levels)
+        end if
+
+        ! Particulate Remin Scale Factor
+        if (id .eq. ind%p_remin_scalef_id) then
+          found = .true.
+          interior_forcings(id)%metadata%varname     = 'Particulate Remin Scale Factor'
+          interior_forcings(id)%metadata%field_units = '1'
+          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
+                                              dim1 = num_levels)
+        end if
+
         ! Interior Tracer Restoring
         do n=1,size(ind%tracer_restore_id)
           if (id .eq. ind%tracer_restore_id(n)) then
