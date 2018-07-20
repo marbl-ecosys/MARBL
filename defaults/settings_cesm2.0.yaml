@@ -275,12 +275,54 @@ general_parms :
       datatype : logical
       default_value : .false.
       _append_to_config_keywords : true
+   lo2_consumption_scalef :
+      longname : Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)
+      subcategory : 2. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
+   lp_remin_scalef :
+      longname : Apply p_remin_scalef to particulate remin (and request it as a forcing)
+      subcategory : 2. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
    Jint_Ctot_thres_molpm2pyr :
       longname : MARBL will abort if abs(Jint_Ctot) exceeds this threshold
       subcategory : 4. general parameters
       units : mol m-2 yr-1
       datatype : real
       default_value : 1.0e-9
+   gQsi_0 :
+      longname : initial Si/C ratio for growth
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.137
+   gQsi_max :
+      longname : max Si/C ratio for growth
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.685
+   gQsi_min :
+      longname : min Si/C ratio for growth
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.0457
+   gQ_Fe_kFe_thres :
+      longname : Fe:kFe ratio threshold in uptake ratio computations
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 10.0
+   gQ_Si_kSi_thres :
+      longname : Si:kSi ratio threshold in uptake ratio computations
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 5.0
    parm_Fe_bioavail :
       longname : Fraction of Fe flux that is bioavailable
       subcategory : 4. general parameters
@@ -386,23 +428,71 @@ general_parms :
          default : 0.07
          GRID == "CESM_x3" : 0.075
    parm_POC_diss :
-      longname : Base POC dissipation length scale
-      subcategory : 4. general parameters (dissipation)
+      longname : Base POC dissolution length scale
+      subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 100e2
    parm_SiO2_diss :
-      longname : Base SiO2 dissipation length scale
-      subcategory : 4. general parameters (dissipation)
+      longname : Base SiO2 dissolution length scale
+      subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 770e2
+   parm_SiO2_gamma :
+      longname : SiO2 gamma (fraction of production -> hard subclass)
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.1
+   parm_hPOC_SiO2_ratio :
+      longname : hPOC to SiO2 ratio
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.05
    parm_CaCO3_diss :
-      longname : Base CaCO3 dissipation length scale
-      subcategory : 4. general parameters (dissipation)
+      longname : Base CaCO3 dissolution length scale
+      subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 500e2
+   parm_CaCO3_gamma :
+      longname : CaCO3 gamma (fraction of production -> hard subclass)
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.1
+   parm_hPOC_CaCO3_ratio :
+      longname : hPOC to CaCO3 ratio
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.05
+   parm_hPOC_dust_ratio :
+      longname : hPOC to dust ratio
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.05
+   o2_sf_o2_range_hi :
+      longname : o2_scalefactor is applied to diss length scales for O2 less than this
+      subcategory : 4. general parameters
+      units : mmol/m^3
+      datatype : real
+      default_value : 45.0
+   o2_sf_o2_range_lo :
+      longname : o2_scalefactor is constant for O2 less than this
+      subcategory : 4. general parameters
+      units : mmol/m^3
+      datatype : real
+      default_value : 5.0
+   o2_sf_val_lo_o2 :
+      longname : o2_scalefactor constant for O2 less than o2_sf_o2_range_lo
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 3.0
    parm_sed_denitrif_coeff :
       longname : Global scaling factor for sed_denitrif
       subcategory : 4. general parameters
@@ -472,6 +562,18 @@ general_parms :
       units : unitless
       datatype : real
       default_value : 0.5
+   POM_bury_frac_max :
+      longname : maximum bury fraction for POM
+      subcategory : 4. general parameters (bury coeffs)
+      units : unitless
+      datatype : real
+      default_value : 0.8
+   bSi_bury_frac_max :
+      longname : maximum bury fraction for bSi
+      subcategory : 4. general parameters (bury coeffs)
+      units : unitless
+      datatype : real
+      default_value : 1.0
    ciso_fract_factors :
       longname : Option for which biological fractionation calculation to use
       subcategory : 4. general parameters

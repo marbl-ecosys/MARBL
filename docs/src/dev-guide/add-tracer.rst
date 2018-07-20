@@ -302,7 +302,10 @@ If you want to provide a specific diagnostic related to your tracer, see :ref:`a
 Step 7. Update the settings YAML files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``src/default_settings.yaml`` file also contains a list of all defined tracers:
+The ``defaults/settings_*.yaml`` files also contain a list of all defined tracers.
+On the ``development`` branch, make changes to ``defaults/settings_latest.yaml``.
+Release branches may only offer specific versions of this file, such as ``defaults/settings_cesm2.1.yaml``.
+The block of code defining the tracers looks like this:
 
 .. code-block:: yaml
 

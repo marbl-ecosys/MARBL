@@ -780,10 +780,24 @@
             "user-specified"
          ]
       },
+      "POM_bury_frac_max": {
+         "datatype": "real",
+         "default_value": 0.8,
+         "longname": "maximum bury fraction for POM",
+         "subcategory": "4. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
       "PON_bury_coeff": {
          "datatype": "real",
          "default_value": 0.5,
          "longname": "Scale factor for burial of PON",
+         "subcategory": "4. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
+      "bSi_bury_frac_max": {
+         "datatype": "real",
+         "default_value": 1.0,
+         "longname": "maximum bury fraction for bSi",
          "subcategory": "4. general parameters (bury coeffs)",
          "units": "unitless"
       },
@@ -847,6 +861,41 @@
          "subcategory": "2. config flags",
          "units": "unitless"
       },
+      "gQ_Fe_kFe_thres": {
+         "datatype": "real",
+         "default_value": 10.0,
+         "longname": "Fe:kFe ratio threshold in uptake ratio computations",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "gQ_Si_kSi_thres": {
+         "datatype": "real",
+         "default_value": 5.0,
+         "longname": "Si:kSi ratio threshold in uptake ratio computations",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "gQsi_0": {
+         "datatype": "real",
+         "default_value": 0.137,
+         "longname": "initial Si/C ratio for growth",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "gQsi_max": {
+         "datatype": "real",
+         "default_value": 0.685,
+         "longname": "max Si/C ratio for growth",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "gQsi_min": {
+         "datatype": "real",
+         "default_value": 0.0457,
+         "longname": "min Si/C ratio for growth",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
       "ladjust_bury_coeff": {
          "_append_to_config_keywords": true,
          "datatype": "logical",
@@ -883,6 +932,20 @@
          "subcategory": "2. config flags",
          "units": "unitless"
       },
+      "lo2_consumption_scalef": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "longname": "Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)",
+         "subcategory": "2. config flags",
+         "units": "unitless"
+      },
+      "lp_remin_scalef": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "longname": "Apply p_remin_scalef to particulate remin (and request it as a forcing)",
+         "subcategory": "2. config flags",
+         "units": "unitless"
+      },
       "lsource_sink": {
          "datatype": "logical",
          "default_value": ".true.",
@@ -897,12 +960,40 @@
          "subcategory": "2. config flags",
          "units": "unitless"
       },
+      "o2_sf_o2_range_hi": {
+         "datatype": "real",
+         "default_value": 45.0,
+         "longname": "o2_scalefactor is applied to diss length scales for O2 less than this",
+         "subcategory": "4. general parameters",
+         "units": "mmol/m^3"
+      },
+      "o2_sf_o2_range_lo": {
+         "datatype": "real",
+         "default_value": 5.0,
+         "longname": "o2_scalefactor is constant for O2 less than this",
+         "subcategory": "4. general parameters",
+         "units": "mmol/m^3"
+      },
+      "o2_sf_val_lo_o2": {
+         "datatype": "real",
+         "default_value": 3.0,
+         "longname": "o2_scalefactor constant for O2 less than o2_sf_o2_range_lo",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
       "parm_CaCO3_diss": {
          "datatype": "real",
          "default_value": "500e2",
-         "longname": "Base CaCO3 dissipation length scale",
-         "subcategory": "4. general parameters (dissipation)",
+         "longname": "Base CaCO3 dissolution length scale",
+         "subcategory": "4. general parameters (dissolution)",
          "units": "cm"
+      },
+      "parm_CaCO3_gamma": {
+         "datatype": "real",
+         "default_value": 0.1,
+         "longname": "CaCO3 gamma (fraction of production -> hard subclass)",
+         "subcategory": "4. general parameters",
+         "units": 1
       },
       "parm_FeLig_scavenge_rate0": {
          "datatype": "real",
@@ -949,16 +1040,23 @@
       "parm_POC_diss": {
          "datatype": "real",
          "default_value": "100e2",
-         "longname": "Base POC dissipation length scale",
-         "subcategory": "4. general parameters (dissipation)",
+         "longname": "Base POC dissolution length scale",
+         "subcategory": "4. general parameters (dissolution)",
          "units": "cm"
       },
       "parm_SiO2_diss": {
          "datatype": "real",
          "default_value": "770e2",
-         "longname": "Base SiO2 dissipation length scale",
-         "subcategory": "4. general parameters (dissipation)",
+         "longname": "Base SiO2 dissolution length scale",
+         "subcategory": "4. general parameters (dissolution)",
          "units": "cm"
+      },
+      "parm_SiO2_gamma": {
+         "datatype": "real",
+         "default_value": 0.1,
+         "longname": "SiO2 gamma (fraction of production -> hard subclass)",
+         "subcategory": "4. general parameters",
+         "units": 1
       },
       "parm_f_prod_sp_CaCO3": {
          "datatype": "real",
@@ -969,6 +1067,27 @@
          "longname": "Fraction of sp production as CaCO3 production",
          "subcategory": "4. general parameters",
          "units": "unitless"
+      },
+      "parm_hPOC_CaCO3_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "longname": "hPOC to CaCO3 ratio",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "parm_hPOC_SiO2_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "longname": "hPOC to SiO2 ratio",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "parm_hPOC_dust_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "longname": "hPOC to dust ratio",
+         "subcategory": "4. general parameters",
+         "units": 1
       },
       "parm_init_POC_bury_coeff": {
          "datatype": "real",

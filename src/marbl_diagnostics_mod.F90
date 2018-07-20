@@ -99,6 +99,7 @@ module marbl_diagnostics_mod
     integer(int_kind) :: calcToFloor
     integer(int_kind) :: calcToSed
     integer(int_kind) :: calcToSed_ALT_CO2
+    integer(int_kind) :: pocToFloor
     integer(int_kind) :: pocToSed
     integer(int_kind) :: ponToSed
     integer(int_kind) :: SedDenitrif
@@ -176,6 +177,7 @@ module marbl_diagnostics_mod
     integer(int_kind) :: NITRIF
     integer(int_kind) :: DENITRIF
     integer(int_kind) :: O2_PRODUCTION
+    integer(int_kind) :: O2_CONSUMPTION_SCALEF
     integer(int_kind) :: O2_CONSUMPTION
     integer(int_kind) :: AOU
     integer(int_kind) :: PAR_avg
@@ -221,7 +223,10 @@ module marbl_diagnostics_mod
     integer(int_kind) :: CaCO3_REMIN_zint_100m
 
     ! Particulate 3D diags
+    integer(int_kind) :: P_REMIN_SCALEF
     integer(int_kind) :: POC_FLUX_IN
+    integer(int_kind) :: POC_sFLUX_IN
+    integer(int_kind) :: POC_hFLUX_IN
     integer(int_kind) :: POC_PROD
     integer(int_kind) :: POC_REMIN_DOCr
     integer(int_kind) :: POC_REMIN_DIC
@@ -406,6 +411,8 @@ contains
        marbl_status_log)
 
     use marbl_settings_mod, only : ciso_on
+    use marbl_settings_mod, only : lo2_consumption_scalef
+    use marbl_settings_mod, only : lp_remin_scalef
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : particulate_flux_ref_depth
 
@@ -1240,6 +1247,18 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%calcToSed_ALT_CO2, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'POC Flux Hitting Sea Floor'
+      sname = 'pocToFloor'
+      units = 'nmol/cm^2/s'
+      vgrid = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%pocToFloor, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -2168,6 +2187,20 @@ contains
         return
       end if
 
+      if (lo2_consumption_scalef) then
+        lname = 'O2 Consumption Scale Factor'
+        sname = 'O2_CONSUMPTION_SCALEF'
+        units = '1'
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+             ind%O2_CONSUMPTION_SCALEF, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+      end if
+
       lname = 'O2 Consumption'
       sname = 'O2_CONSUMPTION'
       units = 'mmol/m^3/s'
@@ -2653,6 +2686,20 @@ contains
       end if
 
       ! Particulate 3D diags
+      if (lp_remin_scalef) then
+        lname = 'Particulate Remin Scale Factor'
+        sname = 'P_REMIN_SCALEF'
+        units = '1'
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+             ind%P_REMIN_SCALEF, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call log_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+      end if
+
       lname = 'POC Flux into Cell'
       sname = 'POC_FLUX_IN'
       units = 'mmol/m^3 cm/s'
@@ -2660,6 +2707,30 @@ contains
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%POC_FLUX_IN, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'POC sFlux into Cell'
+      sname = 'POC_sFLUX_IN'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%POC_sFLUX_IN, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call log_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'POC hFlux into Cell'
+      sname = 'POC_hFLUX_IN'
+      units = 'mmol/m^3 cm/s'
+      vgrid = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%POC_hFLUX_IN, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call log_add_diagnostics_error(marbl_status_log, sname, subname)
         return
@@ -4117,6 +4188,7 @@ contains
          zooplankton_secondary_species, marbl_interior_forcing_diags)
 
     call store_diagnostics_particulates(domain, &
+         interior_forcing_ind, interior_forcings, &
          marbl_particulate_share, &
          PON_remin, PON_sed_loss, &
          sed_denitrif, other_remin, marbl_interior_forcing_diags)
@@ -4135,6 +4207,7 @@ contains
          nitrif, denitrif, marbl_interior_forcing_diags)
 
     call store_diagnostics_oxygen(domain, &
+         interior_forcing_ind, interior_forcings, &
          interior_forcings(interior_forcing_ind%potemp_id)%field_1d(1,:), &
          interior_forcings(interior_forcing_ind%salinity_id)%field_1d(1,:), &
          column_o2, o2_production, o2_consumption, marbl_interior_forcing_diags)
@@ -4689,6 +4762,7 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_particulates(marbl_domain, &
+       interior_forcing_ind, interior_forcings, &
        marbl_particulate_share, &
        PON_remin, PON_sed_loss, &
        sed_denitrif, other_remin, marbl_interior_forcing_diags)
@@ -4698,11 +4772,15 @@ contains
     ! - Accumulte losses of BGC tracers to sediments
     !-----------------------------------------------------------------------
 
+    use marbl_interface_private_types , only : marbl_interior_forcing_indexing_type
+    use marbl_settings_mod, only : lp_remin_scalef
     use marbl_settings_mod, only : POCremin_refract
     use marbl_settings_mod, only : PONremin_refract
     use marbl_settings_mod, only : POPremin_refract
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
+    type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
+    type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
     type(marbl_particulate_share_type) , intent(in)    :: marbl_particulate_share
     real(r8), dimension(:)             , intent(in)    :: PON_remin    ! km
     real(r8), dimension(:)             , intent(in)    :: PON_sed_loss ! km
@@ -4725,8 +4803,14 @@ contains
          P_iron          => marbl_particulate_share%P_iron           &
          )
 
+    if (lp_remin_scalef) then
+       diags(ind%P_REMIN_SCALEF)%field_3d(:, 1) = &
+            interior_forcings(interior_forcing_ind%p_remin_scalef_id)%field_1d(1,:)
+    endif
     diags(ind%POC_FLUX_at_ref_depth)%field_2d(1) = POC%flux_at_ref_depth
     diags(ind%POC_FLUX_IN)%field_3d(:, 1)        = POC%sflux_in + POC%hflux_in
+    diags(ind%POC_sFLUX_IN)%field_3d(:, 1)       = POC%sflux_in
+    diags(ind%POC_hFLUX_IN)%field_3d(:, 1)       = POC%hflux_in
     diags(ind%POC_PROD)%field_3d(:, 1)           = POC%prod
     call compute_vertical_integrals(diags(ind%POC_PROD)%field_3d(:, 1), &
          delta_z, kmt, full_depth_integral=diags(ind%POC_PROD_zint)%field_2d(1), &
@@ -4781,6 +4865,7 @@ contains
     diags(ind%calcToSed)%field_2d(1)         = sum(P_CaCO3%sed_loss)
     diags(ind%calcToSed_ALT_CO2)%field_2d(1) = sum(P_CaCO3_ALT_CO2%sed_loss)
     diags(ind%bsiToSed)%field_2d(1)          = sum(P_SiO2%sed_loss)
+    diags(ind%pocToFloor)%field_2d(1)        = POC%to_floor
     diags(ind%pocToSed)%field_2d(1)          = sum(POC%sed_loss)
     diags(ind%SedDenitrif)%field_2d(1)       = sum(sed_denitrif * delta_z)
     diags(ind%OtherRemin)%field_2d(1)        = sum(other_remin * delta_z)
@@ -4795,12 +4880,17 @@ contains
 
    !***********************************************************************
 
-  subroutine store_diagnostics_oxygen(marbl_domain, potemp, salinity, &
+  subroutine store_diagnostics_oxygen(marbl_domain, &
+       interior_forcing_ind, interior_forcings, potemp, salinity, &
        column_o2, o2_production, o2_consumption, marbl_interior_diags)
 
+    use marbl_interface_private_types , only : marbl_interior_forcing_indexing_type
+    use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_oxygen, only : o2sat_scalar
 
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain
+    type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
+    type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
     real(r8)                                , intent(in)    :: potemp(:)
     real(r8)                                , intent(in)    :: salinity(:)
     real(r8)                                , intent(in)    :: column_o2(:)
@@ -4821,6 +4911,11 @@ contains
          diags       => marbl_interior_diags%diags,               &
          ind         => marbl_interior_diag_ind                   &
          )
+
+    if (lo2_consumption_scalef) then
+       diags(ind%O2_CONSUMPTION_SCALEF)%field_3d(:, 1) = &
+            interior_forcings(interior_forcing_ind%o2_consumption_scalef_id)%field_1d(1,:)
+    endif
 
     min_ind = minloc(column_o2(1:kmt), dim=1)
 

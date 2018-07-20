@@ -465,6 +465,8 @@ contains
     use marbl_interface_private_types, only : marbl_timer_indexing_type
     use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
     use marbl_restore_mod, only : marbl_restore_compute_interior_restore
+    use marbl_settings_mod, only : lo2_consumption_scalef
+    use marbl_settings_mod, only : lp_remin_scalef
 
     type    (marbl_domain_type)                 , intent(in)    :: domain
     type(marbl_forcing_fields_type)             , intent(in)    :: interior_forcings(:)
@@ -499,6 +501,8 @@ contains
 
     real (r8) :: surf_press(domain%km)       ! pressure in surface layer
     real (r8) :: temperature(domain%km)      ! in situ temperature
+    real (r8) :: o2_consumption_scalef(domain%km) ! O2 Consumption Scale Factor
+    real (r8) :: p_remin_scalef(domain%km)   ! Particulate Remin Scale Factor
     real (r8) :: O2_production(domain%km)    ! O2 production
     real (r8) :: O2_consumption(domain%km)   ! O2 consumption
     real (r8) :: nitrif(domain%km)           ! nitrification (NH4 -> NO3) (mmol N/m^3/sec)
@@ -598,6 +602,23 @@ contains
     surf_press(1:kmt) = c0
     temperature(1:kmt) = marbl_temperature_potemp(kmt, salinity, potemp, surf_press, pressure)
     temperature(kmt+1:km) = c0
+
+    !-----------------------------------------------------------------------
+    !  local copies of optional forcings
+    !  these are not handled via associate block because their forcing indices might be zero
+    !-----------------------------------------------------------------------
+
+    if (lo2_consumption_scalef) then
+       o2_consumption_scalef(:) = interior_forcings(interior_forcing_indices%o2_consumption_scalef_id)%field_1d(1,:)
+    else
+       o2_consumption_scalef(:) = c1
+    endif
+
+    if (lp_remin_scalef) then
+       p_remin_scalef(:) = interior_forcings(interior_forcing_indices%p_remin_scalef_id)%field_1d(1,:)
+    else
+       p_remin_scalef(:) = c1
+    endif
 
     !-----------------------------------------------------------------------
     !  Compute adjustment to tendencies due to tracer restoring
@@ -712,7 +733,8 @@ contains
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
        call marbl_compute_particulate_terms(k, domain,                   &
-            marbl_particulate_share, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, &
+            marbl_particulate_share, p_remin_scalef(k),                  &
+            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                          &
             P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),         &
             QA_dust_def(k), temperature(k),                              &
             tracer_local(:, k), carbonate(k), sed_denitrif(k),           &
@@ -752,6 +774,7 @@ contains
             other_remin(k), PON_remin(k), &
             interior_restore(:, k), &
             tracer_local(o2_ind, k), &
+            o2_consumption_scalef(k), &
             o2_production(k), o2_consumption(k), &
             dtracers(:, k), marbl_tracer_indices )
 
@@ -850,7 +873,12 @@ contains
 
     use marbl_settings_mod, only : parm_POC_diss
     use marbl_settings_mod, only : parm_CaCO3_diss
+    use marbl_settings_mod, only : parm_CaCO3_gamma
+    use marbl_settings_mod, only : parm_hPOC_CaCO3_ratio
     use marbl_settings_mod, only : parm_SiO2_diss
+    use marbl_settings_mod, only : parm_SiO2_gamma
+    use marbl_settings_mod, only : parm_hPOC_SiO2_ratio
+    use marbl_settings_mod, only : parm_hPOC_dust_ratio
 
     real (r8)                          , intent(in)    :: net_dust_in     ! dust flux
     type(marbl_surface_forcing_indexing_type), intent(in)   :: surface_forcing_indices
@@ -886,9 +914,9 @@ contains
     POP%rho       = c0              ! not used
 
     P_CaCO3%diss  = parm_CaCO3_diss ! diss. length (cm)
-    P_CaCO3%gamma = 0.10_r8         ! prod frac -> hard subclass
+    P_CaCO3%gamma = parm_CacO3_gamma! prod frac -> hard subclass
     P_CaCO3%mass  = 100.09_r8       ! molecular weight of CaCO
-    P_CaCO3%rho   = 0.05_r8 * P_CaCO3%mass / POC%mass ! QA mass ratio for CaCO3
+    P_CaCO3%rho   = parm_hPOC_CaCO3_ratio * P_CaCO3%mass / POC%mass ! QA mass ratio for CaCO3
 
     P_CaCO3_ALT_CO2%diss  = P_CaCO3%diss
     P_CaCO3_ALT_CO2%gamma = P_CaCO3%gamma
@@ -896,14 +924,14 @@ contains
     P_CaCO3_ALT_CO2%rho   = P_CaCO3%rho
 
     P_SiO2%diss   = parm_SiO2_diss  ! diss. length (cm), modified by TEMP
-    P_SiO2%gamma  = 0.10_r8         ! prod frac -> hard subclass
+    P_SiO2%gamma  = parm_SiO2_gamma ! prod frac -> hard subclass
     P_SiO2%mass   = 60.08_r8        ! molecular weight of SiO2
-    P_SiO2%rho    = 0.05_r8 * P_SiO2%mass / POC%mass ! QA mass ratio for SiO2
+    P_SiO2%rho    = parm_hPOC_SiO2_ratio * P_SiO2%mass / POC%mass ! QA mass ratio for SiO2
 
     dust%diss     = 40000.0_r8      ! diss. length (cm)
     dust%gamma    = 0.98_r8         ! prod frac -> hard subclass
     dust%mass     = 1.0e9_r8        ! base units are already grams
-    dust%rho      = 0.05_r8 * dust%mass / POC%mass ! QA mass ratio for dust
+    dust%rho      = parm_hPOC_dust_ratio * dust%mass / POC%mass ! QA mass ratio for dust
 
     P_iron%diss   = 60000.0_r8      ! diss. length (cm) - not used
     P_iron%gamma  = c0              ! prod frac -> hard subclass - not used
@@ -1006,7 +1034,8 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_particulate_terms(k, domain,                       &
-             marbl_particulate_share, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,     &
+             marbl_particulate_share, p_remin_scalef,                         &
+             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                              &
              P_SiO2, dust, P_iron, PON_remin, PON_sed_loss, QA_dust_def,      &
              temperature, tracer_local, carbonate, sed_denitrif, other_remin, &
              fesedflux, marbl_tracer_indices, glo_avg_fields_interior,        &
@@ -1069,9 +1098,15 @@ contains
     use marbl_settings_mod , only : caco3_bury_thres_iopt_fixed_depth
     use marbl_settings_mod , only : caco3_bury_thres_depth
     use marbl_settings_mod , only : caco3_bury_thres_omega_calc
+    use marbl_settings_mod , only : POM_bury_frac_max
+    use marbl_settings_mod , only : bSi_bury_frac_max
+    use marbl_settings_mod , only : o2_sf_o2_range_hi
+    use marbl_settings_mod , only : o2_sf_o2_range_lo
+    use marbl_settings_mod , only : o2_sf_val_lo_o2
 
     integer (int_kind)                , intent(in)    :: k                   ! vertical model level
     type(marbl_domain_type)           , intent(in)    :: domain
+    real (r8)                         , intent(in)    :: p_remin_scalef      ! Particulate Remin Scale Factor
     real (r8)                         , intent(in)    :: temperature         ! temperature for scaling functions bsi%diss
     real (r8), dimension(:)           , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
     type(carbonate_type)              , intent(in)    :: carbonate
@@ -1128,11 +1163,6 @@ contains
 
     real (r8) :: particulate_flux_ref_depth_cm
 
-    real (r8), parameter :: &  ! o2_sf is an abbreviation for o2_scalefactor
-         o2_sf_o2_range_hi = 45.0_r8, & ! apply o2_scalefactor for O2_loc less than this
-         o2_sf_o2_range_lo =  5.0_r8, & ! o2_scalefactor is constant for O2_loc < this parameter
-         o2_sf_val_lo_o2   =  3.0_r8    ! o2_scalefactor for O2_loc < o2_sf_o2_range_lo
-
     integer (int_kind) :: n     ! loop indices
 
     logical (log_kind) :: poc_error   ! POC error flag
@@ -1181,8 +1211,10 @@ contains
        end do
     endif
 
-    DECAY_Hard     = exp(-delta_z(k) / 4.0e6_r8)
-    DECAY_HardDust = exp(-delta_z(k) / 1.2e8_r8)
+    if (p_remin_scalef /= c1) scalelength = scalelength / p_remin_scalef
+
+    DECAY_Hard     = exp(-delta_z(k) * p_remin_scalef / 4.0e6_r8)
+    DECAY_HardDust = exp(-delta_z(k) * p_remin_scalef / 1.2e8_r8)
 
     !----------------------------------------------------------------------
     !   Tref = 30.0 reference temperature (degC)
@@ -1531,23 +1563,24 @@ contains
 
           ! first compute burial efficiency, then compute loss to sediments
           bury_frac = 0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2
-          POC%sed_loss(k) = POC%to_floor * min(0.8_r8, POC_bury_coeff * bury_frac)
+          if (p_remin_scalef /= c1) bury_frac = c1 - p_remin_scalef * (c1 - bury_frac)
+          POC%sed_loss(k) = POC%to_floor * min(POM_bury_frac_max, POC_bury_coeff * bury_frac)
 
           PON_sed_loss = PON_bury_coeff * Q * POC%sed_loss(k)
 
           POP%to_floor = POP%sflux_out(k) + POP%hflux_out(k)
-          POP%sed_loss(k) = POP%to_floor * min(0.8_r8, POP_bury_coeff * bury_frac)
+          POP%sed_loss(k) = POP%to_floor * min(POM_bury_frac_max, POP_bury_coeff * bury_frac)
 
           if (ladjust_bury_coeff) then
              glo_avg_fields_interior(glo_avg_field_ind_interior_POC_bury) = POC%sed_loss(k)
-             if (POC_bury_coeff * bury_frac < 0.8_r8) then
+             if (POC_bury_coeff * bury_frac < POM_bury_frac_max) then
                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = POC%to_floor * bury_frac
              else
                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = c0
              endif
 
              glo_avg_fields_interior(glo_avg_field_ind_interior_POP_bury) = POP%sed_loss(k)
-             if (POP_bury_coeff * bury_frac < 0.8_r8) then
+             if (POP_bury_coeff * bury_frac < POM_bury_frac_max) then
                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = POP%to_floor * bury_frac
              else
                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = c0
@@ -1593,11 +1626,20 @@ contains
        else
           bury_frac = 0.04_r8
        endif
-       P_SiO2%sed_loss(k) = P_SiO2%to_floor * bSi_bury_coeff * bury_frac
+       if (p_remin_scalef /= c1) bury_frac = c1 - p_remin_scalef * (c1 - bury_frac)
+       if (bSi_bury_coeff * bury_frac < bSi_bury_frac_max) then
+          P_SiO2%sed_loss(k) = P_SiO2%to_floor * bSi_bury_coeff * bury_frac
+       else
+          P_SiO2%sed_loss(k) = P_SiO2%to_floor * bSi_bury_frac_max
+       endif
 
        if (ladjust_bury_coeff) then
           glo_avg_fields_interior(glo_avg_field_ind_interior_bSi_bury) = P_SiO2%sed_loss(k)
-          glo_avg_fields_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff) = P_SiO2%to_floor * bury_frac
+          if (bSi_bury_coeff * bury_frac < bSi_bury_frac_max) then
+             glo_avg_fields_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff) = P_SiO2%to_floor * bury_frac
+          else
+             glo_avg_fields_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff) = c0
+          endif
        endif
 
        P_CaCO3%to_floor         = P_CaCO3%sflux_out(k)         + P_CaCO3%hflux_out(k)
@@ -2387,6 +2429,8 @@ contains
     use marbl_settings_mod , only : gQsi_0
     use marbl_settings_mod , only : gQsi_max
     use marbl_settings_mod , only : gQsi_min
+    use marbl_settings_mod , only : gQ_Fe_kFe_thres
+    use marbl_settings_mod , only : gQ_Si_kSi_thres
     use marbl_settings_mod , only : PquotaSlope, PquotaIntercept, PquotaMinNP
 
     implicit none
@@ -2401,8 +2445,6 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    real :: cks      ! constant used in  quota modification
-    real :: cksi     ! constant used in Si quota modification
     integer(int_kind) :: auto_ind
     !-----------------------------------------------------------------------
 
@@ -2449,9 +2491,6 @@ contains
     !  Modify the initial si/C ratio under low ambient Si conditions
     !-----------------------------------------------------------------------
 
-    cks = 10._r8
-    cksi = 5._r8
-
     do auto_ind = 1, autotroph_cnt
        if (lvariable_PtoC) then
           !-----------------------------------------------------------------------
@@ -2469,26 +2508,26 @@ contains
        !      gQp(auto_ind) = 0.00854701_r8      ! fixed Redfield C/N/P
 
        gQfe(auto_ind) = autotrophs(auto_ind)%gQfe_0
-       if (Fe_loc < cks * autotrophs(auto_ind)%kFe) then
+       if (Fe_loc < gQ_Fe_kFe_thres * autotrophs(auto_ind)%kFe) then
           gQfe(auto_ind) = &
-               max((gQfe(auto_ind) * Fe_loc / (cks * autotrophs(auto_ind)%kFe)), &
+               max((gQfe(auto_ind) * Fe_loc / (gQ_Fe_kFe_thres * autotrophs(auto_ind)%kFe)), &
                autotrophs(auto_ind)%gQfe_min)
        end if
 
        if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
           gQsi(auto_ind) = gQsi_0
-          if ((Fe_loc < cksi * autotrophs(auto_ind)%kFe) .and. &
+          if ((Fe_loc < gQ_Fe_kFe_thres * autotrophs(auto_ind)%kFe) .and. &
                (Fe_loc > c0) .and. &
-               (SiO3_loc > (cksi * autotrophs(auto_ind)%kSiO3))) then
-             gQsi(auto_ind) = min((gQsi(auto_ind) * cksi * autotrophs(auto_ind)%kFe / Fe_loc), gQsi_max)
+               (SiO3_loc > (gQ_Si_kSi_thres * autotrophs(auto_ind)%kSiO3))) then
+             gQsi(auto_ind) = min((gQsi(auto_ind) * gQ_Fe_kFe_thres * autotrophs(auto_ind)%kFe / Fe_loc), gQsi_max)
           end if
 
           if (Fe_loc == c0) then
              gQsi(auto_ind) = gQsi_max
           end if
 
-          if (SiO3_loc < (cksi * autotrophs(auto_ind)%kSiO3)) then
-             gQsi(auto_ind) = max((gQsi(auto_ind) * SiO3_loc / (cksi * autotrophs(auto_ind)%kSiO3)), &
+          if (SiO3_loc < (gQ_Si_kSi_thres * autotrophs(auto_ind)%kSiO3)) then
+             gQsi(auto_ind) = max((gQsi(auto_ind) * SiO3_loc / (gQ_Si_kSi_thres * autotrophs(auto_ind)%kSiO3)), &
                   gQsi_min)
           end if
        endif
@@ -3720,7 +3759,7 @@ contains
       if (k == 1) then
          do subcol_ind = 1, PAR_nsubcols
             if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR_in(subcol_ind) > 1.0_r8)) then
-               work = PAR_col_frac(subcol_ind) * (log(PAR_in(subcol_ind))*0.4373_r8) * (10.0e2/dz1)
+               work = PAR_col_frac(subcol_ind) * (log(PAR_in(subcol_ind))*0.4373_r8) * (10.0e2_r8/dz1)
                DOCr_reminR = DOCr_reminR + work * DOMr_reminR_photo
                DONr_reminR = DONr_reminR + work * DOMr_reminR_photo
                DOPr_reminR = DOPr_reminR + work * DOMr_reminR_photo
@@ -4135,7 +4174,7 @@ contains
        rate_per_sec = c0
        do subcol_ind = 1, PAR_nsubcols
           if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR_in(subcol_ind) > 1.0_r8)) then
-             rate_per_sec_subcol = (log(PAR_in(subcol_ind))*0.4373_r8)*(10.0e2/dz1)*((12.0_r8/3.0_r8)*yps) ! 1/(3 months)
+             rate_per_sec_subcol = (log(PAR_in(subcol_ind))*0.4373_r8)*(10.0e2_r8/dz1)*((12.0_r8/3.0_r8)*yps) ! 1/(3 months)
              rate_per_sec = rate_per_sec + PAR_col_frac(subcol_ind) * rate_per_sec_subcol
           endif
        end do
@@ -4258,7 +4297,8 @@ contains
              nitrif, denitrif, sed_denitrif, Fe_scavenge, Lig_prod, Lig_loss,   &
              P_iron_remin, POC_remin, POP_remin, P_SiO2_remin, P_CaCO3_remin,   &
              P_CaCO3_ALT_CO2_remin, other_remin, PON_remin, interior_restore,   &
-             O2_loc, o2_production, o2_consumption, dtracers, marbl_tracer_indices)
+             O2_loc, o2_consumption_scalef, o2_production, o2_consumption,      &
+             dtracers, marbl_tracer_indices)
 
     integer                                  , intent(in)  :: auto_cnt
     integer                                  , intent(in)  :: zoo_cnt
@@ -4283,6 +4323,7 @@ contains
     real(r8)                                 , intent(in)  :: PON_remin
     real(r8)                                 , intent(in)  :: interior_restore(:)
     real(r8)                                 , intent(in)  :: O2_loc
+    real(r8)                                 , intent(in)  :: o2_consumption_scalef
     real(r8)                                 , intent(out) :: o2_production
     real(r8)                                 , intent(out) :: o2_consumption
     real(r8)                                 , intent(out) :: dtracers(:)
@@ -4545,6 +4586,7 @@ contains
          + DOCr_remin - (sed_denitrif * denitrif_C_N) - other_remin + sum(zoo_loss_dic(:)) &
          + sum(zoo_graze_dic(:)) + sum(auto_loss_dic(:)) + sum(auto_graze_dic(:)) ) &
          / parm_Remin_D_C_O2 + (c2 * nitrif))
+    o2_consumption = o2_consumption_scalef * o2_consumption
 
     dtracers(o2_ind) = o2_production - o2_consumption
 

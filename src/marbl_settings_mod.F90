@@ -112,7 +112,7 @@ module marbl_settings_mod
 
   ! Misc. Rate constants
   real(r8), parameter :: &
-       dust_Fe_scavenge_scale  = 1.0e9         !dust scavenging scale factor
+       dust_Fe_scavenge_scale  = 1.0e9_r8      !dust scavenging scale factor
 
   ! dust_to_Fe: conversion of dust to iron (nmol Fe/g Dust)
   ! dust remin gDust = 0.035 gFe       mol Fe     1e9 nmolFe
@@ -146,9 +146,6 @@ module marbl_settings_mod
   real(r8), parameter :: &
       Q             = 16.0_r8 / 117.0_r8, & !N/C ratio (mmol/mmol) of phyto & zoo
       Qfe_zoo       = 3.0e-6_r8,          & !zooplankton Fe/C ratio
-      gQsi_0        = 0.137_r8,           & !initial Si/C ratio for growth
-      gQsi_max      = 0.685_r8,           & !max Si/C ratio for growth
-      gQsi_min      = 0.0457_r8,          & !min Si/C ratio for growth
       QCaCO3_max    = 0.4_r8,             & !max QCaCO3
       ! parameters in GalbraithMartiny Pquota Model^M
       PquotaSlope     = 7.0_r8,        &
@@ -223,6 +220,8 @@ module marbl_settings_mod
                                                               !   .true., bury coefficients are adjusted to preserve C, P, Si
                                                               !   inventories on timescales exceeding bury_coeff_rmean_timescale_years
                                                               !   (this is done primarily in spinup runs)
+  logical(log_kind), target :: lo2_consumption_scalef         ! Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)
+  logical(log_kind), target :: lp_remin_scalef                ! Apply p_remin_scalef to particulate remin (and request it as a forcing)
 
   character(len=char_len), target :: init_bury_coeff_opt
 
@@ -238,6 +237,11 @@ module marbl_settings_mod
        Jint_Fetot_thres,           & ! MARBL will abort if abs(Jint_Fetot) exceeds this threshold (derived from Jint_Ctot_thres)
        CISO_Jint_13Ctot_thres,     & ! MARBL will abort if abs(CISO_Jint_13Ctot) exceeds this threshold (derived from Jint_Ctot_thres)
        CISO_Jint_14Ctot_thres,     & ! MARBL will abort if abs(CISO_Jint_14Ctot) exceeds this threshold (derived from Jint_Ctot_thres)
+       gQsi_0,                     & ! initial Si/C ratio for growth
+       gQsi_max,                   & ! max Si/C ratio for growth
+       gQsi_min,                   & ! min Si/C ratio for growth
+       gQ_Fe_kFe_thres,            & ! Fe:kFe ratio threshold in uptake ratio computations
+       gQ_Si_kSi_thres,            & ! Si:kSi ratio threshold in uptake ratio computations
        parm_Fe_bioavail,           & ! fraction of Fe flux that is bioavailable
        parm_o2_min,                & ! min O2 needed for prod & consump. (nmol/cm^3)
        parm_o2_min_delta,          & ! width of min O2 range (nmol/cm^3)
@@ -256,7 +260,15 @@ module marbl_settings_mod
        parm_f_prod_sp_CaCO3,       & ! fraction of sp prod. as CaCO3 prod.
        parm_POC_diss,              & ! base POC diss len scale
        parm_SiO2_diss,             & ! base SiO2 diss len scale
+       parm_SiO2_gamma,            & ! SiO2 gamma (fraction of production -> hard subclass)
+       parm_hPOC_SiO2_ratio,       & ! hPOC to SiO2 ratio
        parm_CaCO3_diss,            & ! base CaCO3 diss len scale
+       parm_CaCO3_gamma,           & ! CaCO3 gamma (fraction of production -> hard subclass)
+       parm_hPOC_CaCO3_ratio,      & ! hPOC to CaCO3 ratio
+       parm_hPOC_dust_ratio,       & ! hPOC to dust ratio
+       o2_sf_o2_range_hi,          & ! o2_scalefactor is applied to diss length scales for O2 less than this
+       o2_sf_o2_range_lo,          & ! o2_scalefactor is constant for O2 less than this
+       o2_sf_val_lo_o2,            & ! o2_scalefactor constant for O2 less than o2_sf_o2_range_lo
        parm_sed_denitrif_coeff,    & ! global scaling factor for sed_denitrif
        bury_coeff_rmean_timescale_years
 
@@ -273,6 +285,8 @@ module marbl_settings_mod
   ! is when total C burial is matched to C riverine input
   ! -----------
   real(r8),                target :: PON_bury_coeff
+  real(r8),                target :: POM_bury_frac_max
+  real(r8),                target :: bSi_bury_frac_max
   character(len=char_len), target :: ciso_fract_factors           ! option for which biological fractionation calculation to use
 
   !  marbl_settings_define_PFT_counts
@@ -355,34 +369,51 @@ contains
     lvariable_PtoC                = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     init_bury_coeff_opt           = 'settings_file' ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    lo2_consumption_scalef        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQsi_0                        = 0.137_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQsi_max                      = 0.822_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQsi_min                      = 0.0457_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQ_Fe_kFe_thres               = 10.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQ_Si_kSi_thres               = 6.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Fe_bioavail              = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min                   = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min_delta             = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_kappa_nitrif_per_day     = 0.06_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_nitrif_par_lim           = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_labile_ratio             = 0.94_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    parm_init_POC_bury_coeff      = 1.1_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    parm_init_POP_bury_coeff      = 1.1_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    parm_init_bSi_bury_coeff      = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    parm_Fe_scavenge_rate0        = 18.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_init_POC_bury_coeff      = 2.54_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_init_POP_bury_coeff      = 0.36_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_init_bSi_bury_coeff      = 1.53_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_Fe_scavenge_rate0        = 22.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Lig_scavenge_rate0       = 0.015_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    parm_FeLig_scavenge_rate0     = 1.4_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_FeLig_scavenge_rate0     = 1.2_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Lig_degrade_rate0        = 0.000094_r8     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Fe_desorption_rate0      = 1.0e-6_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_f_prod_sp_CaCO3          = 0.070_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_POC_diss                 = 100.0e2_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    parm_SiO2_diss                = 770.0e2_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_SiO2_diss                = 650.0e2_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_SiO2_gamma               = 0.00_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_hPOC_SiO2_ratio          = 0.01_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_CaCO3_diss               = 500.0e2_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_CaCO3_gamma              = 0.02_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_hPOC_CaCO3_ratio         = 0.01_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_hPOC_dust_ratio          = 0.01_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    o2_sf_o2_range_hi             = 45.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    o2_sf_o2_range_lo             =  5.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    o2_sf_val_lo_o2               =  2.6_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_sed_denitrif_coeff       = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     bury_coeff_rmean_timescale_years = 10.0_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_scalelen_z    = (/ 100.0e2_r8, 250.0e2_r8, 500.0e2_r8, 1000.0e2_r8 /)  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    parm_scalelen_vals = (/     1.0_r8,     3.0_r8,     4.5_r8,      5.5_r8 /)  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    parm_scalelen_vals = (/     1.0_r8,     3.6_r8,     4.7_r8,      4.8_r8 /)  ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     caco3_bury_thres_opt          = 'omega_calc'    ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     caco3_bury_thres_depth        = 3000.0e2_r8     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    caco3_bury_thres_omega_calc   = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    caco3_bury_thres_omega_calc   = 0.89_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     PON_bury_coeff                = 0.5_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    POM_bury_frac_max             = 0.8_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    bSi_bury_frac_max             = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_fract_factors            = 'Laws'          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
 
   end subroutine marbl_settings_set_defaults_general_parms
@@ -611,6 +642,24 @@ contains
                         marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
+    sname     = 'lo2_consumption_scalef'
+    lname     = 'Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)'
+    units     = 'unitless'
+    datatype  = 'logical'
+    lptr      => lo2_consumption_scalef
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, lptr=lptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'lp_remin_scalef'
+    lname     = 'Apply p_remin_scalef to particulate remin (and request it as a forcing)'
+    units     = 'unitless'
+    datatype  = 'logical'
+    lptr      => lp_remin_scalef
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, lptr=lptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
     ! --------------------------
     category  = 'config strings'
     ! --------------------------
@@ -642,6 +691,51 @@ contains
     units     = 'mol m-2 yr-1'
     datatype  = 'real'
     rptr      => Jint_Ctot_thres_molpm2pyr
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'gQsi_0'
+    lname     = 'initial Si/C ratio for growth'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => gQsi_0
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'gQsi_max'
+    lname     = 'max Si/C ratio for growth'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => gQsi_max
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'gQsi_min'
+    lname     = 'min Si/C ratio for growth'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => gQsi_min
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'gQ_Fe_kFe_thres'
+    lname     = 'Fe:kFe ratio threshold in uptake ratio computations'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => gQ_Fe_kFe_thres
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'gQ_Si_kSi_thres'
+    lname     = 'Si:kSi ratio threshold in uptake ratio computations'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => gQ_Si_kSi_thres
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
@@ -799,11 +893,83 @@ contains
                         marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
+    sname     = 'parm_SiO2_gamma'
+    lname     = 'SiO2 gamma (fraction of production -> hard subclass)'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => parm_SiO2_gamma
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'parm_hPOC_SiO2_ratio'
+    lname     = 'hPOC to SiO2 ratio'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => parm_hPOC_SiO2_ratio
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
     sname     = 'parm_CaCO3_diss'
     lname     = 'base CaCO3 dissolution length scale'
     units     = 'cm'
     datatype  = 'real'
     rptr      => parm_CaCO3_diss
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'parm_CaCO3_gamma'
+    lname     = 'CaCO3 gamma (fraction of production -> hard subclass)'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => parm_CaCO3_gamma
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'parm_hPOC_CaCO3_ratio'
+    lname     = 'hPOC to CaCO3 ratio'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => parm_hPOC_CaCO3_ratio
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'parm_hPOC_dust_ratio'
+    lname     = 'hPOC to dust ratio'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => parm_hPOC_dust_ratio
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'o2_sf_o2_range_hi'
+    lname     = 'o2_scalefactor is applied to diss length scales for O2 less than this'
+    units     = 'mmol/m^3'
+    datatype  = 'real'
+    rptr      => o2_sf_o2_range_hi
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'o2_sf_o2_range_lo'
+    lname     = 'o2_scalefactor is constant for O2 less than this'
+    units     = 'mmol/m^3'
+    datatype  = 'real'
+    rptr      => o2_sf_o2_range_lo
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'o2_sf_val_lo_o2'
+    lname     = 'o2_scalefactor constant for O2 less than o2_sf_o2_range_lo'
+    units     = '1'
+    datatype  = 'real'
+    rptr      => o2_sf_val_lo_o2
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
@@ -880,6 +1046,24 @@ contains
     units     = 'unitless'
     datatype  = 'real'
     rptr      => PON_bury_coeff
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'POM_bury_frac_max'
+    lname     = 'maximum bury fraction for POM'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => POM_bury_frac_max
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'bSi_bury_frac_max'
+    lname     = 'maximum bury fraction for bSi'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => bSi_bury_frac_max
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
