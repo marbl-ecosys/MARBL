@@ -125,7 +125,7 @@ all: gnu
 
 .PHONY: gnu
 gnu:
-	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-Wall -O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
 
 .PHONY: intel
 intel:
