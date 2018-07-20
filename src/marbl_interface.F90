@@ -389,7 +389,6 @@ contains
     real(r8),                      intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_real'
-    character(len=char_len) :: log_message
 
     call this%settings%put(varname, this%StatusLog, rval=val)
     if (this%StatusLog%labort_marbl) then
@@ -408,7 +407,6 @@ contains
     integer(int_kind),             intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_integer'
-    character(len=char_len) :: log_message
 
     call this%settings%put(varname, this%StatusLog, ival=val)
     if (this%StatusLog%labort_marbl) then
@@ -427,7 +425,6 @@ contains
     logical,                       intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_logical'
-    character(len=char_len) :: log_message
 
     call this%settings%put(varname, this%StatusLog, lval=val)
     if (this%StatusLog%labort_marbl) then
@@ -446,7 +443,6 @@ contains
     character(len=*),              intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_string'
-    character(len=char_len) :: log_message
 
     call this%settings%put(varname, this%StatusLog, sval=val)
     if (this%StatusLog%labort_marbl) then
@@ -542,6 +538,8 @@ contains
     integer(int_kind)       :: n, char_ind
 
     line_loc = ''
+    ! The included PGI bugfix variable triggers a warning from gfortran unless it's used
+    if (present(pgi_bugfix_var)) line_loc=''
     ! Strip out comments (denoted by '!'); line_loc_arr(1) is the line to be processed
     call marbl_utils_str_to_substrs(line, '!', line_loc_arr)
     line_loc = line_loc_arr(1)
@@ -585,7 +583,6 @@ contains
     real(r8),                      intent(out)   :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:get_real'
-    character(len=char_len) :: log_message
 
     call this%settings%get(varname, this%StatusLog, rval=val)
     if (this%StatusLog%labort_marbl) then
@@ -604,7 +601,6 @@ contains
     integer(int_kind),             intent(out)   :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:get_integer'
-    character(len=char_len) :: log_message
 
     call this%settings%get(varname, this%StatusLog, ival=val)
     if (this%StatusLog%labort_marbl) then
@@ -623,7 +619,6 @@ contains
     logical,                       intent(out)   :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:get_logical'
-    character(len=char_len) :: log_message
 
     call this%settings%get(varname, this%StatusLog, lval=val)
     if (this%StatusLog%labort_marbl) then
@@ -729,6 +724,7 @@ contains
                                           lname    = lname,        &
                                           units    = units,        &
                                           datatype = datatype)
+    end if
 
   end subroutine inquire_settings_metadata_by_name
 
