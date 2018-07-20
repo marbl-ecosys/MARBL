@@ -64,7 +64,6 @@ contains
   subroutine marbl_init_parameters_pre_tracers(marbl_settings, marbl_status_log)
 
     use marbl_settings_mod, only : marbl_settings_type
-    use marbl_settings_mod, only : ladjust_bury_coeff
     use marbl_settings_mod, only : marbl_settings_set_defaults_general_parms
     use marbl_settings_mod, only : marbl_settings_define_general_parms
     use marbl_settings_mod, only : marbl_settings_set_defaults_PFT_counts
@@ -77,7 +76,6 @@ contains
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_pre_tracers'
-    character(len=char_len) :: log_message
 
     !---------------------------------------------------------------------------
     ! set default values for basic settings
@@ -182,11 +180,7 @@ contains
       allocate(tracer_restore_vars(tracer_indices%total_cnt))
 
     ! Set up tracer metadata
-    call marbl_init_tracer_metadata(tracer_metadata, tracer_indices, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("marbl_init_tracer_metadata()", subname)
-      return
-    end if
+    call marbl_init_tracer_metadata(tracer_metadata, tracer_indices)
     if (ciso_on) then
        call marbl_ciso_init_tracer_metadata(tracer_metadata, tracer_indices)
     end if
@@ -218,8 +212,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_tracer_metadata(marbl_tracer_metadata,                &
-             marbl_tracer_indices, marbl_status_log)
+  subroutine marbl_init_tracer_metadata(marbl_tracer_metadata, marbl_tracer_indices)
 
     !  Set tracer and forcing metadata
 
@@ -229,7 +222,6 @@ contains
 
     type (marbl_tracer_metadata_type), intent(out)   :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
-    type(marbl_log_type)             , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -308,7 +300,6 @@ contains
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_post_tracers'
-    character(len=char_len) :: log_message
 
     ! set default values for parameters
     call marbl_settings_set_defaults_tracer_dependent(marbl_status_log)

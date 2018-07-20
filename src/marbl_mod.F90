@@ -626,7 +626,6 @@ contains
 
     call marbl_restore_compute_interior_restore(            &
                tracers,                                     &
-               km,                                          &
                interior_forcings,                           &
                interior_forcing_indices,                    &
                interior_restore)
