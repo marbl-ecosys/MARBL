@@ -113,6 +113,8 @@ Step 4. Update the settings YAML files
 --------------------------------------
 
 We use a YAML file to provide an easy-to-edit and human-readable text file containing a list of all parameters and their default values.
+On the ``development`` branch, make changes to ``defaults/settings_latest.yaml``.
+Release branches may only offer specific versions of this file, such as ``defaults/settings_cesm2.1.yaml``.
 
 .. code-block:: yaml
 
