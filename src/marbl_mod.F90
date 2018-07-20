@@ -496,7 +496,6 @@ contains
     type(marbl_interior_share_type)    :: marbl_interior_share(domain%km)
     type(marbl_zooplankton_share_type) :: marbl_zooplankton_share(domain%km)
 
-    integer (int_kind) :: n         ! tracer index
     integer (int_kind) :: k         ! vertical level index
 
     real (r8) :: surf_press(domain%km)       ! pressure in surface layer
@@ -514,8 +513,6 @@ contains
     real (r8) :: Fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
     real (r8) :: Lig_scavenge(domain%km)     ! loss of Fe-binding Ligand from scavenging (mmol Fe/m^3/sec)
     real (r8) :: QA_dust_def(domain%km)
-    real (r8) :: zsat_calcite(domain%km)     ! Calcite Saturation Depth
-    real (r8) :: zsat_aragonite(domain%km)   ! Aragonite Saturation Depth
     real (r8) :: PON_remin(domain%km)        ! remin of PON
     real (r8) :: PON_sed_loss(domain%km)     ! loss of PON to sediments
     real (r8) :: Fefree(domain%km)           ! unbound Fe
@@ -645,8 +642,7 @@ contains
                             marbl_status_log)
     call marbl_compute_carbonate_chemistry(domain, temperature, pressure,     &
          salinity, tracer_local(:, :), marbl_tracer_indices, carbonate(:),    &
-         ph_prev_col(:), ph_prev_alt_co2_col(:), zsat_calcite(:),             &
-         zsat_aragonite(:), marbl_status_log)
+         ph_prev_col(:), ph_prev_alt_co2_col(:), marbl_status_log)
     call marbl_timers%stop(marbl_timer_indices%carbonate_chem_id,             &
                             marbl_status_log)
 
@@ -657,18 +653,18 @@ contains
     end if
 
     call marbl_compute_PAR(domain, interior_forcings, interior_forcing_indices, &
-                           autotroph_cnt, totalChl_local, PAR)
+                           totalChl_local, PAR)
 
     do k = 1, km
 
-       call marbl_compute_autotroph_elemental_ratios( autotroph_cnt,    &
+       call marbl_compute_autotroph_elemental_ratios(                   &
             autotrophs, autotroph_local(:, k), tracer_local(:, k),      &
             marbl_tracer_indices, autotroph_secondary_species(:, k))
 
        call marbl_compute_function_scaling(temperature(k), Tfunc(k))
 
-       call marbl_compute_Pprime(k, domain, autotroph_cnt, autotrophs, &
-            autotroph_local(:, k), temperature(k), autotroph_secondary_species(:, k))
+       call marbl_compute_Pprime(k, domain, autotroph_local(:, k),     &
+            temperature(k), autotroph_secondary_species(:, k))
 
        call marbl_compute_autotroph_uptake(autotroph_cnt, autotrophs,  &
             tracer_local(:, k), marbl_tracer_indices,                  &
@@ -701,18 +697,17 @@ contains
             zooplankton_secondary_species(:, k),                                &
             autotroph_secondary_species(:, k))
 
-       call marbl_compute_routing (autotroph_cnt, zooplankton_cnt, autotrophs, &
+       call marbl_compute_routing (autotroph_cnt, zooplankton_cnt, &
             zooplankton_secondary_species(:, k), autotroph_secondary_species(:, k))
 
-       call marbl_compute_dissolved_organic_matter (k, autotroph_cnt, zooplankton_cnt, &
-            num_PAR_subcols, autotrophs,                                               &
-            zooplankton_secondary_species(:, k), autotroph_secondary_species(:, k),    &
-            PAR%col_frac(:), PAR%interface(k-1,:), PAR%avg(k,:),                       &
-            delta_z1, tracer_local(:, k), marbl_tracer_indices,                        &
+       call marbl_compute_dissolved_organic_matter (k, num_PAR_subcols,             &
+            zooplankton_secondary_species(:, k), autotroph_secondary_species(:, k), &
+            PAR%col_frac(:), PAR%interface(k-1,:), PAR%avg(k,:),                    &
+            delta_z1, tracer_local(:, k), marbl_tracer_indices,                     &
             dissolved_organic_matter(k))
 
        call marbl_compute_scavenging(k, tracer_local(fe_ind, k),             &
-            tracer_local(lig_ind, k), POC, P_CaCO3, P_SiO2, dust, P_iron,    &
+            tracer_local(lig_ind, k), POC, P_CaCO3, P_SiO2, dust,            &
             Fefree(k), Fe_scavenge_rate(k), Fe_scavenge(k), Lig_scavenge(k), &
             marbl_status_log)
 
@@ -735,7 +730,7 @@ contains
             marbl_particulate_share, p_remin_scalef(k),                  &
             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                          &
             P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),         &
-            QA_dust_def(k), temperature(k),                              &
+            QA_dust_def(k),                                              &
             tracer_local(:, k), carbonate(k), sed_denitrif(k),           &
             other_remin(k), fesedflux(k), marbl_tracer_indices,          &
             glo_avg_fields_interior, marbl_status_log)
@@ -761,8 +756,8 @@ contains
             dissolved_organic_matter(k)%DOCr_remin, &
             POC%remin(k), other_remin(k), sed_denitrif(k), denitrif(k))
 
-       call marbl_compute_dtracer_local (autotroph_cnt, zooplankton_cnt,      &
-            autotrophs, zooplankton,           &
+       call marbl_compute_dtracer_local (autotroph_cnt, zooplankton_cnt, &
+            autotrophs, &
             autotroph_secondary_species(:, k), &
             zooplankton_secondary_species(:, k), &
             dissolved_organic_matter(k), &
@@ -771,7 +766,6 @@ contains
             P_iron%remin(k), POC%remin(k), POP%remin(k), &
             P_SiO2%remin(k), P_CaCO3%remin(k), P_CaCO3_ALT_CO2%remin(k), &
             other_remin(k), PON_remin(k), &
-            interior_restore(:, k), &
             tracer_local(o2_ind, k), &
             o2_consumption_scalef(k), &
             o2_production(k), o2_consumption(k), &
@@ -1036,7 +1030,7 @@ contains
              marbl_particulate_share, p_remin_scalef,                         &
              POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                              &
              P_SiO2, dust, P_iron, PON_remin, PON_sed_loss, QA_dust_def,      &
-             temperature, tracer_local, carbonate, sed_denitrif, other_remin, &
+             tracer_local, carbonate, sed_denitrif, other_remin,              &
              fesedflux, marbl_tracer_indices, glo_avg_fields_interior,        &
              marbl_status_log)
 
@@ -1106,7 +1100,6 @@ contains
     integer (int_kind)                , intent(in)    :: k                   ! vertical model level
     type(marbl_domain_type)           , intent(in)    :: domain
     real (r8)                         , intent(in)    :: p_remin_scalef      ! Particulate Remin Scale Factor
-    real (r8)                         , intent(in)    :: temperature         ! temperature for scaling functions bsi%diss
     real (r8), dimension(:)           , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
     type(carbonate_type)              , intent(in)    :: carbonate
     real(r8)                          , intent(in)    :: fesedflux           ! sedimentary Fe input
@@ -1200,6 +1193,7 @@ contains
     else if (zw(k) >= parm_scalelen_z(size(parm_scalelen_z))) then
        scalelength = parm_scalelen_vals(size(parm_scalelen_z))
     else
+       scalelength = c0
        do n = 2, size(parm_scalelen_z)
           if (zw(k) < parm_scalelen_z(n)) then
              scalelength = parm_scalelen_vals(n-1) &
@@ -1464,6 +1458,7 @@ contains
 
     else
 
+       dzr_loc = c0
        POC%remin(k) = c0
        POC%sflux_out(k) = c0
        POC%hflux_out(k) = c0
@@ -1723,14 +1718,12 @@ contains
 
   subroutine marbl_set_global_scalars_interior(marbl_particulate_share, &
        glo_avg_rmean_interior, glo_avg_rmean_surface,                   &
-       glo_scalar_rmean_interior, glo_scalar_rmean_surface,             &
-       glo_scalar_interior)
+       glo_scalar_rmean_interior, glo_scalar_interior)
 
     type (marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
     type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_interior(:)
     type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_surface(:)
     type (marbl_running_mean_0d_type)  , intent(in)    :: glo_scalar_rmean_interior(:)
-    type (marbl_running_mean_0d_type)  , intent(in)    :: glo_scalar_rmean_surface(:)
     real (r8)                          , intent(out)   :: glo_scalar_interior(:)
 
     if (ladjust_bury_coeff) then
@@ -1856,11 +1849,9 @@ contains
     !-----------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_mod:marbl_set_surface_forcing'
 
-    integer (int_kind) :: n                        ! loop indices
     integer (int_kind) :: auto_ind                 ! autotroph functional group index
     real (r8)          :: phlo(num_elements)       ! lower bound for ph in solver
     real (r8)          :: phhi(num_elements)       ! upper bound for ph in solver
-    real (r8)          :: ph_new(num_elements)     ! computed ph from solver
     real (r8)          :: xkw_ice(num_elements)    ! common portion of piston vel., (1-fice)*xkw (cm/s)
     real (r8)          :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (mmol/m^3)
     real (r8)          :: totalChl_loc(num_elements)  ! local value of totalChl
@@ -2344,7 +2335,7 @@ contains
     end do
 
     ! autotroph consistency check
-    call marbl_consistency_check_autotrophs(autotroph_cnt, column_kmt, &
+    call marbl_consistency_check_autotrophs(column_kmt, &
          marbl_tracer_indices, autotroph_local(:,1:column_kmt))
 
     ! set totalChl_local
@@ -2354,7 +2345,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_consistency_check_autotrophs(auto_cnt, column_kmt,         &
+  subroutine marbl_consistency_check_autotrophs(column_kmt,         &
              marbl_tracer_indices, autotroph_local)
 
     !-----------------------------------------------------------------------
@@ -2363,7 +2354,6 @@ contains
 
     implicit none
 
-    integer(int_kind)          , intent(in)    :: auto_cnt   ! autotroph_cnt
     integer(int_kind)          , intent(in)    :: column_kmt ! number of active model layers
     type(marbl_tracer_index_type) , intent(in) :: marbl_tracer_indices
     type(autotroph_local_type) , intent(inout) :: autotroph_local(autotroph_cnt, column_kmt)
@@ -2419,8 +2409,8 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_autotroph_elemental_ratios(auto_cnt, autotrophs,   &
-             autotroph_local, tracer_local, marbl_tracer_indices,             &
+  subroutine marbl_compute_autotroph_elemental_ratios(autotrophs, &
+             autotroph_local, tracer_local, marbl_tracer_indices, &
              autotroph_secondary_species)
 
     use marbl_constants_mod, only : epsC
@@ -2434,7 +2424,6 @@ contains
 
     implicit none
 
-    integer (int_kind)                    , intent(in)    :: auto_cnt
     type(autotroph_type)                  , intent(in)    :: autotrophs(:)             ! autotrophs
     type(autotroph_local_type)            , intent(in)    :: autotroph_local(:)
     real (r8)                             , intent(in)    :: tracer_local(:) ! local copies of model tracer concentrations
@@ -2549,7 +2538,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_PAR(domain, interior_forcings, interior_forcing_ind, &
-                               auto_cnt, totalChl_local, PAR)
+                               totalChl_local, PAR)
 
     !-----------------------------------------------------------------------
     !  compute PAR related quantities
@@ -2561,7 +2550,6 @@ contains
 
     ! PAR is intent(inout) because it components, while entirely set here, are allocated elsewhere
 
-    integer(int_kind)                         , intent(in)    :: auto_cnt
     type(marbl_domain_type)                   , intent(in)    :: domain
     type(marbl_forcing_fields_type)           , intent(in)    :: interior_forcings(:)
     type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_ind
@@ -2684,7 +2672,7 @@ contains
 
   subroutine marbl_compute_carbonate_chemistry(domain, temperature, press_bar, &
        salinity, tracer_local, marbl_tracer_indices, carbonate, ph_prev_col,   &
-       ph_prev_alt_co2_col, zsat_calcite, zsat_aragonite, marbl_status_log)
+       ph_prev_alt_co2_col, marbl_status_log)
 
     use marbl_co2calc_mod, only : marbl_co2calc_interior
     use marbl_co2calc_mod, only : marbl_co2calc_co3_sat_vals
@@ -2700,8 +2688,6 @@ contains
     type(carbonate_type)                    , intent(out)   :: carbonate(:)            ! km
     real(r8)                                , intent(inout) :: ph_prev_col(:)          ! km
     real(r8)                                , intent(inout) :: ph_prev_alt_co2_col(:)  ! km
-    real(r8)                                , intent(inout) :: zsat_calcite(:)         ! Calcite Saturation Depth (km)
-    real(r8)                                , intent(inout) :: zsat_aragonite(:)       ! Aragonite Saturation Depth (km)
     type(marbl_log_type)                    , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
@@ -2834,19 +2820,16 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_Pprime(k, domain, auto_cnt, autotrophs, &
-       autotroph_local, temperature, autotroph_secondary_species)
+  subroutine marbl_compute_Pprime(k, domain, autotroph_local, temperature, autotroph_secondary_species)
 
     use marbl_settings_mod, only : thres_z1_auto
     use marbl_settings_mod, only : thres_z2_auto
 
     integer(int_kind)                      , intent(in)  :: k
     type(marbl_domain_type)                , intent(in)  :: domain
-    integer(int_kind)                      , intent(in)  :: auto_cnt
-    type(autotroph_type)             , intent(in)  :: autotrophs(auto_cnt)
-    type(autotroph_local_type)             , intent(in)  :: autotroph_local(auto_cnt)
+    type(autotroph_local_type)             , intent(in)  :: autotroph_local(autotroph_cnt)
     real(r8)                               , intent(in)  :: temperature
-    type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(auto_cnt)
+    type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(autotroph_cnt)
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -2873,7 +2856,7 @@ contains
     endif
 
     !  Compute Pprime for all autotrophs, used for loss terms
-    do auto_ind = 1, auto_cnt
+    do auto_ind = 1, autotroph_cnt
        if (temperature < autotrophs(auto_ind)%temp_thres) then
           C_loss_thres = f_loss_thres * autotrophs(auto_ind)%loss_thres2
        else
@@ -3441,6 +3424,7 @@ contains
           end do
 
           ! compute grazing rate
+          graze_rate = c0
           select case (grazing(prey_ind, pred_ind)%grazing_function)
 
           case (grz_fnc_michaelis_menten)
@@ -3448,8 +3432,6 @@ contains
              if (work1 > c0) then
                 graze_rate = grazing(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_loc(pred_ind)%C &
                      * ( work1 / (work1 + grazing(prey_ind, pred_ind)%z_grz) )
-             else
-                graze_rate = c0
              end if
 
           case (grz_fnc_sigmoidal)
@@ -3457,8 +3439,6 @@ contains
              if (work1 > c0) then
                 graze_rate = grazing(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_loc(pred_ind)%C &
                      * ( work1**2 / (work1**2 + grazing(prey_ind, pred_ind)%z_grz**2) )
-             else
-                graze_rate = c0
              end if
 
           end select
@@ -3541,7 +3521,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_routing (auto_cnt, zoo_cnt,  autotrophs, &
+  subroutine marbl_compute_routing (auto_cnt, zoo_cnt, &
        zooplankton_secondary_species, autotroph_secondary_species)
 
     use marbl_settings_mod, only : parm_labile_ratio
@@ -3549,7 +3529,6 @@ contains
 
     integer(int_kind)                        , intent(in)    :: auto_cnt
     integer(int_kind)                        , intent(in)    :: zoo_cnt
-    type(autotroph_type)               , intent(in)    :: autotrophs(auto_cnt)
     type(zooplankton_secondary_species_type) , intent(inout) :: zooplankton_secondary_species(zoo_cnt)
     type(autotroph_secondary_species_type)   , intent(inout) :: autotroph_secondary_species(auto_cnt)
 
@@ -3647,9 +3626,9 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_compute_dissolved_organic_matter (k, auto_cnt, zoo_cnt,    &
-             PAR_nsubcols, autotrophs, zooplankton_secondary_species,          &
-             autotroph_secondary_species, PAR_col_frac, PAR_in, PAR_avg,      &
+  subroutine marbl_compute_dissolved_organic_matter (k, &
+             PAR_nsubcols, zooplankton_secondary_species, &
+             autotroph_secondary_species, PAR_col_frac, PAR_in, PAR_avg, &
              dz1, tracer_local, marbl_tracer_indices, dissolved_organic_matter)
 
     use marbl_settings_mod, only : Qfe_zoo
@@ -3666,10 +3645,7 @@ contains
     use marbl_settings_mod, only : DOMr_reminR_photo
 
     integer(int_kind)                       , intent(in)  :: k
-    integer                                 , intent(in)  :: auto_cnt
-    integer                                 , intent(in)  :: zoo_cnt
     integer(int_kind)                       , intent(in)  :: PAR_nsubcols
-    type(autotroph_type)              , intent(in)  :: autotrophs(:)
     type(zooplankton_secondary_species_type), intent(in)  :: zooplankton_secondary_species(:)
     type(autotroph_secondary_species_type)  , intent(in)  :: autotroph_secondary_species(:)
     real(r8)                                , intent(in)  :: PAR_col_frac(:)
@@ -3780,7 +3756,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_scavenging(k, Fe_loc, Lig_loc, &
-       POC, P_CaCO3, P_SiO2, dust, P_iron, &
+       POC, P_CaCO3, P_SiO2, dust, &
        Fefree, Fe_scavenge_rate, Fe_scavenge, Lig_scavenge, &
        marbl_status_log)
 
@@ -3798,7 +3774,6 @@ contains
     type(column_sinking_particle_type)       , intent(in)    :: P_CaCO3
     type(column_sinking_particle_type)       , intent(in)    :: P_SiO2
     type(column_sinking_particle_type)       , intent(in)    :: dust
-    type(column_sinking_particle_type)       , intent(in)    :: P_iron
     real(r8)                                 , intent(out)   :: Fefree
     real(r8)                                 , intent(out)   :: Fe_scavenge_rate
     real(r8)                                 , intent(out)   :: Fe_scavenge
@@ -4291,18 +4266,17 @@ contains
   !***********************************************************************
 
   subroutine marbl_compute_dtracer_local (auto_cnt, zoo_cnt, autotrophs,       &
-             zooplankton, autotroph_secondary_species,                  &
-             zooplankton_secondary_species, dissolved_organic_matter,           &
-             nitrif, denitrif, sed_denitrif, Fe_scavenge, Lig_prod, Lig_loss,   &
-             P_iron_remin, POC_remin, POP_remin, P_SiO2_remin, P_CaCO3_remin,   &
-             P_CaCO3_ALT_CO2_remin, other_remin, PON_remin, interior_restore,   &
-             O2_loc, o2_consumption_scalef, o2_production, o2_consumption,      &
+             autotroph_secondary_species,                                      &
+             zooplankton_secondary_species, dissolved_organic_matter,          &
+             nitrif, denitrif, sed_denitrif, Fe_scavenge, Lig_prod, Lig_loss,  &
+             P_iron_remin, POC_remin, POP_remin, P_SiO2_remin, P_CaCO3_remin,  &
+             P_CaCO3_ALT_CO2_remin, other_remin, PON_remin,                    &
+             O2_loc, o2_consumption_scalef, o2_production, o2_consumption,     &
              dtracers, marbl_tracer_indices)
 
     integer                                  , intent(in)  :: auto_cnt
     integer                                  , intent(in)  :: zoo_cnt
     type(autotroph_type)                     , intent(in)  :: autotrophs(:)
-    type(zooplankton_type)                   , intent(in)  :: zooplankton(:)
     type(zooplankton_secondary_species_type) , intent(in)  :: zooplankton_secondary_species(:)
     type(autotroph_secondary_species_type)   , intent(in)  :: autotroph_secondary_species(:)
     type(dissolved_organic_matter_type)      , intent(in)  :: dissolved_organic_matter
@@ -4320,7 +4294,6 @@ contains
     real(r8)                                 , intent(in)  :: P_CaCO3_ALT_CO2_remin
     real(r8)                                 , intent(in)  :: other_remin
     real(r8)                                 , intent(in)  :: PON_remin
-    real(r8)                                 , intent(in)  :: interior_restore(:)
     real(r8)                                 , intent(in)  :: O2_loc
     real(r8)                                 , intent(in)  :: o2_consumption_scalef
     real(r8)                                 , intent(out) :: o2_production
@@ -4653,18 +4626,6 @@ contains
   end subroutine marbl_export_zooplankton_shared_variables
 
   !***********************************************************************
-
-  subroutine log_add_forcing_field_error(marbl_status_log, varname, subname)
-
-    type(marbl_log_type), intent(inout) :: marbl_status_log
-    character(len=*),     intent(in)    :: varname
-    character(len=*),     intent(in)    :: subname
-    character(len=char_len) :: routine_name
-
-    write(routine_name,"(3A)") "forcing_fields%add(", trim(varname), ")"
-    call marbl_status_log%log_error_trace(routine_name, subname)
-
-  end subroutine log_add_forcing_field_error
 
 end module marbl_mod
 

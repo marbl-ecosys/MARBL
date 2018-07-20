@@ -725,15 +725,10 @@ contains
     end if
     if (present(id)) id = id_loc
     if (any((/present(lname), present(units), present(datatype)/))) then
-      call this%settings%inquire_metadata(id_loc, this%StatusLog,  &
+      call this%settings%inquire_metadata(id_loc,                  &
                                           lname    = lname,        &
                                           units    = units,        &
                                           datatype = datatype)
-      if (this%StatusLog%labort_marbl) then
-        call this%StatusLog%log_error_trace('settings%inquire_metadata', subname)
-        return
-      end if
-    end if
 
   end subroutine inquire_settings_metadata_by_name
 
@@ -748,15 +743,11 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata_by_id'
 
-    call this%settings%inquire_metadata(id, this%StatusLog,  &
+    call this%settings%inquire_metadata(id,                  &
                                         sname    = sname,    &
                                         lname    = lname,    &
                                         units    = units,    &
                                         datatype = datatype)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('settings%inquire_metadata', subname)
-      return
-    end if
 
   end subroutine inquire_settings_metadata_by_id
 
@@ -948,7 +939,6 @@ contains
             glo_avg_rmean_interior    = this%glo_avg_rmean_interior,    &
             glo_avg_rmean_surface     = this%glo_avg_rmean_surface,     &
             glo_scalar_rmean_interior = this%glo_scalar_rmean_interior, &
-            glo_scalar_rmean_surface  = this%glo_scalar_rmean_surface,  &
             glo_scalar_interior       = this%glo_scalar_interior)
     end if
 
