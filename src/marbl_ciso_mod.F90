@@ -96,9 +96,6 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_init_tracer_metadata'
-    character(len=char_len)     :: log_message
-
     integer (int_kind) :: n                             ! tracer index
     integer (int_kind) :: auto_ind                      ! autotroph functional group index
     !-----------------------------------------------------------------------
@@ -218,7 +215,6 @@ contains
     !  13C code is based on code from X. Giraud, ETH ZÃ¼rich, 2008, for pop1
     !  Also added biotic 14C
 
-    use marbl_settings_mod     , only : ciso_lsource_sink
     use marbl_settings_mod     , only : ciso_fract_factors
     use marbl_settings_mod     , only : f_graze_CaCO3_REMIN
     use marbl_constants_mod    , only : R13C_std
@@ -247,20 +243,15 @@ contains
     !-----------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_interior_forcing'
 
-    logical (log_kind) :: zero_mask
-
-    real (r8) :: &
-         work1,     & ! temporaries
-         ztop         ! depth of top of cell
+    real (r8) :: work1      ! temporaries
 
     integer (int_kind) :: &
-         n,m,            & ! tracer index
-         auto_ind,       & ! autotroph functional group index
+         n,               & ! tracer index
+         auto_ind,        & ! autotroph functional group index
          k                 ! index for looping over k levels
 
     real (r8), dimension(autotroph_cnt) :: &
          cell_active_C_uptake,  & ! ratio of active carbon uptake to carbon fixation
-         cell_active_C,         & ! ratio of active carbon uptake to carbon fixation
          cell_surf,             & ! surface areas of cells ( m2 )
          cell_carb_cont,        & ! cell carbon content ( mol C cell-1 )
          cell_radius,           & ! cell radius ( um )
@@ -324,7 +315,6 @@ contains
          DO14Ctot_remin,    & ! remineralization of 13C DOCtot (mmol C/m^3/sec)
          alpha_aq_g_14c,    & ! alpha for 14C, with fractionation twice as large as for 13C
          alpha_dic_g_14c,   & ! alpha for 14C, with fractionation twice as large as for 13C
-         delta_C14_Corg,    & ! deltaC14 of Net Primary Production
          delta_C14_CO2STAR, & ! deltaC14 of CO2*
          DIC_d13C,          & ! d13C of DIC
          DOCtot_d13C,       & ! d13C of DOCtot
@@ -410,7 +400,7 @@ contains
     !----------------------------------------------------------------------------------------
 
     call setup_cell_attributes(ciso_fract_factors, &
-       cell_active_C_uptake, cell_active_C, cell_surf, cell_carb_cont, &
+       cell_active_C_uptake, cell_surf, cell_carb_cont, &
        cell_radius, cell_permea, cell_eps_fix, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
@@ -892,7 +882,7 @@ contains
   !***********************************************************************
 
   subroutine setup_cell_attributes(ciso_fract_factors, &
-       cell_active_C_uptake, cell_active_C, cell_surf, cell_carb_cont, &
+       cell_active_C_uptake, cell_surf, cell_carb_cont, &
        cell_radius, cell_permea, cell_eps_fix, marbl_status_log)
 
     !----------------------------------------------------------------------------------------
@@ -903,7 +893,6 @@ contains
 
     character(len=char_len), intent(in)  :: ciso_fract_factors                  ! option for which biological fractionation calculation to use
     real (r8),               intent(out) :: cell_active_C_uptake(autotroph_cnt) ! ratio of active carbon uptake to carbon fixation
-    real (r8),               intent(out) :: cell_active_C(autotroph_cnt)        ! ratio of active carbon uptake to carbon fixation
     real (r8),               intent(out) :: cell_surf(autotroph_cnt)            ! surface areas of cells ( m2 )
     real (r8),               intent(out) :: cell_carb_cont(autotroph_cnt)       ! cell carbon content ( mol C cell-1 )
     real (r8),               intent(out) :: cell_radius(autotroph_cnt)          ! cell radius ( um )
@@ -1239,17 +1228,12 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_mod:compute_particulate_terms'
-    character(len=char_len)     :: log_message
-
     real (r8) ::              &
          dz_loc,              & ! dz at a particular i,j location
          dzr_loc,             & ! dzr at a particular i,j location
          flux_alt,           & ! flux to floor in alternative units, to match particular parameterizations
          POC_ciso_PROD_avail, & ! 13C POC production available for excess POC flux
          Rciso_POC_hflux_out, & ! ciso/12C of outgoing flux of hard POC
-         Rciso_POC_in,        & ! ciso/12C of total POC ingoing component
-         Rciso_CaCO3_in,      & ! ciso/12C of total CaCO3 ingoing component
          sed_denitrif,        & ! sedimentary denitrification (umolN/cm^2/s)
          other_remin            ! sedimentary remin not due to oxic or denitrification
     !-----------------------------------------------------------------------
@@ -1364,46 +1348,6 @@ contains
             ((POC_ciso%sflux_in(k) - POC_ciso%sflux_out(k)) + &
              (POC_ciso%hflux_in(k) - POC_ciso%hflux_out(k))) * dzr_loc
 
-       !-----------------------------------------------------------------
-       !   Option to force the 13C/12C ratio of outgoing P_CaCO3 fluxes
-       !   to equal the rate of total incoming flux
-       !-----------------------------------------------------------------
-       !
-       !   Rciso_CaCO3_in = P_CaCO3%prod(k) + &
-       !       ( P_CaCO3%sflux_in(k) + P_CaCO3%hflux_in(k) ) *  dzr_loc
-       !
-       !   if ( Rciso_CaCO3_in > c0 ) then
-       !       Rciso_CaCO3_in = ( P_CaCO3_ciso%prod(k) + &
-       !         ( P_CaCO3_ciso%sflux_in(k) + P_CaCO3_ciso%hflux_in(k) ) * dzr_loc) &
-       !          / Rciso_CaCO3_in
-       !   else
-       !           Rciso_CaCO3_in = c0
-       !   endif
-       !
-       !   P_CaCO3_ciso%sflux_out(k) = P_CaCO3%sflux_out(k) * Rciso_CaCO3_in
-       !   P_CaCO3_ciso%hflux_out(k) = P_CaCO3%hflux_out(k) * Rciso_CaCO3_in
-       !   P_CaCO3_ciso%remin(k)     = P_CaCO3%remin(k)     * Rciso_CaCO3_in
-       !
-       !-----------------------------------------------------------------
-       !   Option to force the 13C/12C ratio of outgoing POC fluxes
-       !   to equal the rate of total incoming flux
-       !-----------------------------------------------------------------
-       !
-       !   Rciso_POC_in = POC%prod(k) + ( POC%sflux_in(k) + POC%hflux_in(k) ) &
-       !                 * dzr_loc
-       !   if ( Rciso_POC_in > c0 ) then
-       !      Rciso_POC_in = ( POC_ciso%prod(k) + ( POC_ciso%sflux_in(k) + &
-       !         POC_ciso%hflux_in(k)) * dzr_loc ) / Rciso_POC_in
-       !   else
-       !      Rciso_POC_in = c0
-       !   endif
-       !
-       !   POC_ciso%sflux_out(k) = POC%sflux_out(k) * Rciso_POC_in
-       !   POC_ciso%hflux_out(k) = POC%hflux_out(k) * Rciso_POC_in
-       !   POC_ciso%remin(k)     = POC_remin(k)     * Rciso_POC_in
-       !
-       !-----------------------------------------------------------------
-
     endif
 
     !-----------------------------------------------------------------------
@@ -1513,18 +1457,6 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_surface_forcing'
-    character(len=char_len)     :: log_message
-
-    logical (log_kind), save :: &
-         first = .true.  ! Logical for first iteration test
-
-    integer (int_kind) :: &
-         n,            & ! loop indices
-         auto_ind,     & ! autotroph functional group index
-         mcdate,sec,   & ! date vals for shr_strdata_advance
-         errorCode       ! errorCode from HaloUpdate call
-
     real (r8), dimension(num_elements) :: &
          R13C_DIC,                        & ! 13C/12C ratio in DIC
          R14C_DIC,                        & ! 14C/12C ratio in total DIC
@@ -1545,8 +1477,6 @@ contains
          alpha_aq_g_surf,                 & ! alpha_xxx_g_surf => eps = ( alpa -1 ) * 1000
          eps_dic_g_surf,                  & ! equilibrium fractionation between total DIC and gaseous CO2
          alpha_dic_g_surf,                & ! alpha_xxx_g_surf => eps = ( alpa -1 ) * 1000
-         eps_hco3_g_surf,                 & ! equilibrium fractionation between bicarbonate and gaseous CO2
-         eps_co3_g_surf,                  & ! equilibrium fractionation between carbonate and gaseous CO2
          frac_co3,                        & ! carbonate fraction fCO3 = [CO3--]/DIC
          alpha_aq_g_surf_14c,             & ! for 14C, with fractionation being twice as large for 14C than for 13C
          alpha_dic_g_surf_14c               ! for 14C, with fractionation being twice as large for 14C than for 13C
@@ -1613,24 +1543,14 @@ contains
     !     gaseous CO2, temperature dependent, based on Zhang et al. 95
     !-----------------------------------------------------------------------
     eps_aq_g_surf(:)   = 0.0049_r8 * sst(:) - 1.31_r8
-    !!         eps_hco3_g_surf(:) = -0.141_r8  * SST(:) + 10.78_r8
-    !!         eps_co3_g_surf(:)  = -0.052_r8  * SST(:) + 7.22_r8
 
     !-----------------------------------------------------------------------
     !     compute the equilibrium discrimination factor between dic and
     !     gaseous CO2
     !-----------------------------------------------------------------------
-    !     solution 1 : from individual species.
-    !     Not used as Zhang et al. 95
-    !     concluded that eps_dic_g_surf can not be calculated from the sum of
-    !     the three individual species
-    !----------------------------------------------------------------------
-    !         eps_dic_g_surf(:,j) = eps_aq_g_surf(:,j) + eps_hco3_g_surf(:,j) &
-    !                                + eps_co3_g_surf(:,j)
-    !-----------------------------------------------------------------------
-    !     solution 2: function of T and carbonate fraction (frac_co3)
-    !     Using this one, which is based on the empirical relationship from
-    !     the measured e_dic_g_surf of Zhang et al. 1995
+    !     function of T and carbonate fraction (frac_co3)
+    !     based on the empirical relationship from the measured
+    !     e_dic_g_surf of Zhang et al. 1995
     !---------------------------------------------------------------------
 
     eps_dic_g_surf(:) = 0.014_r8 * sst(:) * frac_co3(:) - 0.105_r8 * sst(:) + 10.53_r8
@@ -1693,10 +1613,8 @@ contains
          flux,           &
          flux13,         &
          flux14,         &
-         flux_as,        &
          flux13_as,      &
          flux14_as,      &
-         flux_sa,        &
          flux13_sa,      &
          flux14_sa,      &
          R13C_dic,       &
