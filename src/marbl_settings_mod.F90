@@ -439,6 +439,7 @@ contains
         max_grazer_prey_cnt           = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
       case DEFAULT
         write(log_message, "(3A)") "'", trim(PFT_defaults), "'' is not a valid value for PFT_defaults"
+        call marbl_status_log%log_error(log_message, subname)
     end select
 
   end subroutine marbl_settings_set_defaults_PFT_counts
@@ -1169,7 +1170,6 @@ contains
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_define_PFT_derived_types'
-    character(len=char_len)     :: log_message
 
     character(len=char_len)          :: sname, lname, units, datatype, category
     real(r8),                pointer :: rptr => NULL()
@@ -1927,7 +1927,7 @@ contains
 
     type(marbl_single_setting_ll_type), pointer :: new_entry, ll_ptr, ll_prev
     character(len=char_len), dimension(:), pointer :: new_categories
-    integer :: cat_ind, n
+    integer :: cat_ind
     character(len=char_len) :: log_message, alternate_sname, tmp_sval
     logical :: put_success, datatype_match, nondefault_val
     logical :: allow_nondefault, require_nondefault, put_called
@@ -1967,6 +1967,7 @@ contains
 
     ! 2) Error checking
     ll_ptr => this%vars
+    nullify(ll_prev)
     do while (associated(ll_ptr))
       if (case_insensitive_eq(trim(sname), trim(ll_ptr%short_name))) then
         write(log_message, "(A,1X,A)") trim(sname), "has been added twice"
@@ -2412,7 +2413,7 @@ contains
     character(len=*), optional, intent(in)    :: sval
     character(len=*), optional, intent(in)    :: uval
 
-    type(marbl_single_setting_ll_type), pointer :: new_entry, ll_ptr
+    type(marbl_single_setting_ll_type), pointer :: new_entry
     character(len=*), parameter :: subname = 'marbl_settings_mod:put'
     character(len=char_len) :: log_message
 
@@ -2613,17 +2614,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine inquire_metadata(this, id, marbl_status_log, sname, lname, units, &
+  subroutine inquire_metadata(this, id, sname, lname, units, &
                               datatype)
 
     class(marbl_settings_type), intent(in)    :: this
     integer(int_kind),          intent(in)    :: id
-    type(marbl_log_type),       intent(inout) :: marbl_status_log
     character(len=*), optional, intent(out)   :: sname, lname, units
     character(len=*), optional, intent(out)   :: datatype
-
-    character(len=*), parameter :: subname = 'marbl_settings_mod:inquire_metadata'
-    character(len=char_len)     :: log_message
 
     if (present(sname)) then
       sname = this%varArray(id)%ptr%short_name

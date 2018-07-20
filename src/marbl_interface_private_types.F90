@@ -338,8 +338,6 @@ contains
 
     class(column_sinking_particle_type), intent(inout) :: this
 
-    integer (int_kind) :: num_levels
-
     deallocate(this%sflux_in)
     deallocate(this%hflux_in)
     deallocate(this%prod)
