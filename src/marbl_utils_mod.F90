@@ -73,6 +73,7 @@ contains
     ! Initialize some local variables and intent(out)
     linit_new_substr = .true.
     linside_delim = .false.
+    cur_pos = 1
     if (len_trim(str) .eq. 0) then
       allocate(substrs(1))
       substrs(1) = ''
