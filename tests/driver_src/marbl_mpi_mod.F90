@@ -89,10 +89,12 @@ contains
     real(r8), intent(in) :: dbl_var
     integer,  intent(in)  :: receiver
 
-#ifdef MARBL_WITH_MPI
     integer :: ierr
 
+#ifdef MARBL_WITH_MPI
     call MPI_Send(dbl_var, 1, MPI_DOUBLE_PRECISION, 0, 2017, MPI_COMM_WORLD, ierr)
+#else
+    ierr = receiver + floor(dbl_var)
 #endif
 
   end subroutine marbl_mpi_send_dbl
@@ -106,14 +108,16 @@ contains
     real(r8), intent(out) :: dbl_var
     integer,  intent(in)  :: sender
 
+    integer :: ierr
+
 #ifdef MARBL_WITH_MPI
     integer :: status(MPI_STATUS_SIZE)
-    integer :: ierr
 
     call MPI_Recv(dbl_var, 1, MPI_DOUBLE_PRECISION, sender, 2017,             &
                   MPI_COMM_WORLD, status, ierr)
 #else
     dbl_var = 0._r8
+    ierr = sender
 #endif
 
   end subroutine marbl_mpi_recv_dbl
@@ -131,7 +135,7 @@ contains
     call MPI_Bcast(str_to_bcast, len(str_to_bcast), MPI_CHARACTER, root_task, &
                    MPI_COMM_WORLD, ierr)
 #else
-    ! Avoid an empty subroutien when no MPI
+    ! Avoid an empty subroutine when no MPI
     ierr = root_task + len(str_to_bcast)
 #endif
 
@@ -150,8 +154,8 @@ contains
     call MPI_Bcast(logical_to_bcast, 1, MPI_LOGICAL, root_task, &
                    MPI_COMM_WORLD, ierr)
 #else
-    ! Avoid an empty subroutien when no MPI
-    ierr = root_task
+    ! Avoid an empty subroutine when no MPI
+    if (logical_to_bcast) ierr = root_task
 #endif
 
   end subroutine marbl_mpi_bcast_logical
@@ -169,8 +173,8 @@ contains
     call MPI_Bcast(int_to_bcast, 1, MPI_INTEGER, root_task, &
                    MPI_COMM_WORLD, ierr)
 #else
-    ! Avoid an empty subroutien when no MPI
-    ierr = root_task
+    ! Avoid an empty subroutine when no MPI
+    ierr = root_task + int_to_bcast
 #endif
 
   end subroutine marbl_mpi_bcast_integer

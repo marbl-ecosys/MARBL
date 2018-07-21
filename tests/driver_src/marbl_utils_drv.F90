@@ -18,10 +18,10 @@ contains
 
     type(marbl_log_type),        intent(inout) :: driver_status_log
 
-    real(kind=r8)               :: linear_root, expected_root
+    real(kind=r8)               :: expected_root
     real(kind=r8), dimension(2) :: x, y
     character(len=char_len)     :: str, expected_str
-    character(len=char_len), allocatable :: substrs(:), expected_substrs(:)
+    character(len=char_len), allocatable :: expected_substrs(:)
     integer                     :: test_cnt, fail_cnt, tot_fail_cnt
     character(len=*), parameter :: subname = 'marbl_utils_drv:test'
     character(len=char_len)     :: log_message
