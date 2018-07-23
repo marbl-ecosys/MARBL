@@ -5,7 +5,7 @@ module marbl_pft_mod
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : char_len
 
-  use marbl_constants_mod, only : c0, c1
+  use marbl_constants_mod, only : c1
 
   use marbl_logging, only : marbl_log_type
 

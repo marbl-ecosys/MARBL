@@ -2,8 +2,7 @@ module marbl_interface_public_types
   ! module for definitions of types that are shared between marbl interior and the driver.
 
   use marbl_kinds_mod           , only : r8, log_kind, int_kind, char_len
-  use marbl_constants_mod       , only : c0, c1
-  use marbl_interface_constants , only : marbl_str_length
+  use marbl_constants_mod       , only : c0
   use marbl_logging             , only : marbl_log_type
 
   implicit none

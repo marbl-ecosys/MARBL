@@ -101,7 +101,6 @@ module marbl_mod
   use marbl_settings_mod, only : ladjust_bury_coeff
   use marbl_settings_mod, only : autotrophs
   use marbl_settings_mod, only : zooplankton
-  use marbl_settings_mod, only : parm_Fe_bioavail
   use marbl_settings_mod, only : dust_to_Fe
   use marbl_settings_mod, only : denitrif_C_N
   use marbl_settings_mod, only : parm_Red_Fe_C
@@ -109,18 +108,6 @@ module marbl_mod
   use marbl_settings_mod, only : parm_scalelen_z
   use marbl_settings_mod, only : parm_scalelen_vals
   use marbl_settings_mod, only : caco3_poc_min
-  use marbl_settings_mod, only : CaCO3_sp_thres
-  use marbl_settings_mod, only : CaCO3_temp_thres1
-  use marbl_settings_mod, only : CaCO3_temp_thres2
-  use marbl_settings_mod, only : DOC_reminR_light
-  use marbl_settings_mod, only : DON_reminR_light
-  use marbl_settings_mod, only : DOP_reminR_light
-  use marbl_settings_mod, only : DOC_reminR_dark
-  use marbl_settings_mod, only : DON_reminR_dark
-  use marbl_settings_mod, only : DOP_reminR_dark
-  use marbl_settings_mod, only : DOCr_reminR0
-  use marbl_settings_mod, only : DONr_reminR0
-  use marbl_settings_mod, only : DOPr_reminR0
   use marbl_settings_mod, only : DOCprod_refract
   use marbl_settings_mod, only : DONprod_refract
   use marbl_settings_mod, only : DOPprod_refract
@@ -131,12 +118,8 @@ module marbl_mod
   use marbl_settings_mod, only : f_graze_CaCO3_REMIN
   use marbl_settings_mod, only : f_graze_si_remin
   use marbl_settings_mod, only : f_graze_sp_poc_lim
-  use marbl_settings_mod, only : f_photosp_CaCO3
   use marbl_settings_mod, only : bury_coeff_rmean_timescale_years
-  use marbl_settings_mod, only : parm_f_prod_sp_CaCO3
-  use marbl_settings_mod, only : parm_kappa_nitrif
   use marbl_settings_mod, only : parm_labile_ratio
-  use marbl_settings_mod, only : parm_nitrif_par_lim
   use marbl_settings_mod, only : parm_o2_min
   use marbl_settings_mod, only : parm_o2_min_delta
   use marbl_settings_mod, only : parm_red_d_c_o2
@@ -144,7 +127,6 @@ module marbl_mod
   use marbl_settings_mod, only : parm_Remin_D_C_O2
   use marbl_settings_mod, only : QCaCO3_max
   use marbl_settings_mod, only : Qfe_zoo
-  use marbl_settings_mod, only : r_Nfix_photo
   use marbl_settings_mod, only : spc_poc_fac
   use marbl_settings_mod, only : grazing
   use marbl_settings_mod, only : PON_bury_coeff
@@ -1082,7 +1064,6 @@ contains
 
     ! !USES:
 
-    use marbl_constants_mod, only : Tref
     use marbl_constants_mod, only : cmperm
     use marbl_settings_mod , only : parm_Fe_desorption_rate0
     use marbl_settings_mod , only : parm_sed_denitrif_coeff
@@ -1208,12 +1189,6 @@ contains
 
     DECAY_Hard     = exp(-delta_z(k) * p_remin_scalef / 4.0e6_r8)
     DECAY_HardDust = exp(-delta_z(k) * p_remin_scalef / 1.2e8_r8)
-
-    !----------------------------------------------------------------------
-    !   Tref = 30.0 reference temperature (degC)
-    !   not currently being applied
-    !----------------------------------------------------------------------
-!   TfuncS = 1.5_r8**(((temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
 
     poc_error = .false.
     dz_loc = delta_z(k)
@@ -1821,7 +1796,6 @@ contains
     use marbl_co2calc_mod, only : co2calc_coeffs_type
     use marbl_co2calc_mod, only : co2calc_state_type
     use marbl_oxygen, only : o2sat_surf
-    use marbl_constants_mod, only : molw_Fe
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
     use marbl_settings_mod, only : xkw_coeff
@@ -3631,7 +3605,6 @@ contains
              autotroph_secondary_species, PAR_col_frac, PAR_in, PAR_avg, &
              dz1, tracer_local, marbl_tracer_indices, dissolved_organic_matter)
 
-    use marbl_settings_mod, only : Qfe_zoo
     use marbl_settings_mod, only : Q
     use marbl_settings_mod, only : DOC_reminR_light
     use marbl_settings_mod, only : DON_reminR_light
@@ -3760,7 +3733,7 @@ contains
        Fefree, Fe_scavenge_rate, Fe_scavenge, Lig_scavenge, &
        marbl_status_log)
 
-    use marbl_constants_mod, only : c1, c2, c3, c4
+    use marbl_constants_mod, only : c3, c4
     use marbl_settings_mod , only : Lig_cnt
     use marbl_settings_mod , only : parm_Fe_scavenge_rate0
     use marbl_settings_mod , only : parm_Lig_scavenge_rate0
@@ -4102,7 +4075,6 @@ contains
         Lig_loc, Lig_scavenge, auto_cnt, photoFe,            &
         Lig_prod, Lig_photochem, Lig_deg, Lig_loss)
 
-    use marbl_constants_mod , only : c2, yps, ypd, dps
     use marbl_settings_mod  , only : remin_to_Lig
     use marbl_settings_mod  , only : parm_Lig_degrade_rate0
 

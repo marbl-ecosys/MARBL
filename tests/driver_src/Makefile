@@ -137,7 +137,7 @@ pgi:
 
 .PHONY: nag
 nag:
-	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-O2 -free -kind=byte -wmismatch=mpi_bcast" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-colour -O2 -free -kind=byte -wmismatch=mpi_bcast" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
 
 .PHONY: cray
 cray:

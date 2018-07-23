@@ -20,7 +20,6 @@ module marbl_ciso_mod
 
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : int_kind
-  use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : char_len
 
   use marbl_constants_mod, only : c0
@@ -31,8 +30,6 @@ module marbl_ciso_mod
 
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : autotrophs
-  use marbl_settings_mod, only : zooplankton
-  use marbl_settings_mod, only : grazing
 
   use marbl_logging, only : marbl_log_type
 
@@ -45,9 +42,7 @@ module marbl_ciso_mod
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_surface_forcing_share_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
-  use marbl_interface_private_types, only : carbonate_type
 
-  use marbl_pft_mod, only : autotroph_type
   use marbl_pft_mod, only : autotroph_local_type
   use marbl_pft_mod, only : marbl_zooplankton_share_type
   use marbl_pft_mod, only : autotroph_secondary_species_type
@@ -1439,7 +1434,6 @@ contains
 
     use marbl_constants_mod    , only : R13C_std
     use marbl_constants_mod    , only : R14C_std
-    use marbl_constants_mod    , only : p5
     use marbl_diagnostics_mod  , only : store_diagnostics_ciso_surface_forcing
 
     implicit none

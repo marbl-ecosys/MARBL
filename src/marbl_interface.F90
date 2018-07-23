@@ -19,7 +19,6 @@ module marbl_interface
 
   use marbl_kinds_mod, only : r8, log_kind, int_kind, log_kind, char_len
 
-  use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : marbl_settings_type
 

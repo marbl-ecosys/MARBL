@@ -39,7 +39,7 @@ Program marbl
   ! Use from libmarbl.a
   use marbl_interface, only : marbl_interface_class
   use marbl_logging,   only : marbl_log_type
-  use marbl_kinds_mod, only : r8, char_len
+  use marbl_kinds_mod, only : char_len
 
   ! Driver modules for individual tests
   use marbl_init_drv,    only : marbl_init_test    => test

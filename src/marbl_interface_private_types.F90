@@ -3,7 +3,6 @@ module marbl_interface_private_types
   ! module definitions of types that are internal to marbl
 
   use marbl_kinds_mod, only : r8
-  use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : char_len
 
@@ -547,7 +546,6 @@ contains
     ! tracer_cnt by 1 for each tracer that is included. Note that this gives an
     ! accurate count whether the carbon isotope tracers are included or not.
 
-    use marbl_constants_mod, only : c0
     use marbl_pft_mod, only : autotroph_type
     use marbl_pft_mod, only : zooplankton_type
 

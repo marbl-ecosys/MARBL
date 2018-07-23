@@ -16,8 +16,6 @@ Contains
 
   subroutine test(marbl_instance, nt, lshutdown)
 
-    use marbl_mpi_mod, only : marbl_mpi_abort
-
     type(marbl_interface_class), intent(inout) :: marbl_instance
     integer, optional,           intent(inout) :: nt
     logical, optional,           intent(in)    :: lshutdown
