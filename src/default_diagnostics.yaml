@@ -912,7 +912,7 @@ CaCO3_PROD :
    longname : CaCO3 Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : low
+   frequency : medium
    operator : average
 CaCO3_REMIN :
    longname : CaCO3 Remineralization
@@ -1302,6 +1302,22 @@ CISO_eps_dic_g :
 # Per-autotroph Diagnostics #
 #############################
 
+((autotroph_sname))_C_lim_surf :
+   dependencies :
+      ((autotroph_calcifier)) : true
+   longname : ((autotroph_lname)) C Limitation, Surface
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_C_lim_Cweight_avg_100m :
+   dependencies :
+      ((autotroph_calcifier)) : true
+   longname : ((autotroph_lname)) C Limitation, carbon biomass weighted average over 0-100m
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
 ((autotroph_sname))_N_lim_surf :
    longname : ((autotroph_lname)) N Limitation, Surface
    units : 1
