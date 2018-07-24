@@ -56,7 +56,7 @@ Program marbl
   ! MPI-related variables (if .not.mpi_on, my_task = 0 and num_tasks = 1)
   use marbl_mpi_mod, only : mpi_on, my_task, num_tasks, marbl_mpi_return_error
 
-  Implicit None
+  implicit none
 
   character(len=256), parameter :: subname = 'Program Marbl'
 

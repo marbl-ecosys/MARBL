@@ -4,9 +4,9 @@ module marbl_utils_drv
   use marbl_kinds_mod, only : char_len
   use marbl_logging,   only : marbl_log_type
 
-  Implicit None
-  Private
-  Save
+  implicit none
+  private
+  save
 
   public :: test
 

@@ -4,9 +4,9 @@ module marbl_init_drv
   use marbl_kinds_mod,     only : r8
   use marbl_constants_mod, only : c1, p5
 
-  Implicit None
-  Private
-  Save
+  implicit none
+  private
+  save
 
   integer, parameter :: km = 5
 
