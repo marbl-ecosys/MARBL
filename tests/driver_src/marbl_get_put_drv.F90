@@ -5,9 +5,9 @@ module marbl_get_put_drv
   use marbl_logging,       only : marbl_log_type
   use marbl_interface,     only : marbl_interface_class
 
-  Implicit None
-  Private
-  Save
+  implicit none
+  private
+  save
 
   ! List of keywords (from variable names) to ignore in put / get statements
   ! (necessary to prevent internal MARBL errors do to inconsistent settings)
