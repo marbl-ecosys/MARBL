@@ -1,7 +1,7 @@
 language: python
 sudo: required
 before_install:
-  - sudo apt-get install gfortran
+  - sudo apt-get install gfortran mpich
 install:
   - pip install pyyaml
   - pip install -r docs/py_requirements.txt
