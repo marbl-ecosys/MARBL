@@ -402,8 +402,6 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    integer(kind=int_kind) :: c
-
     real(kind=r8), dimension(num_elements) :: salt_lim ! bounded salt
     real(kind=r8), dimension(num_elements) :: tk       ! temperature (K)
     real(kind=r8), dimension(num_elements) :: is       ! ionic strength
@@ -416,13 +414,8 @@ contains
     real(kind=r8), dimension(num_elements) :: sqrtis
     real(kind=r8), dimension(num_elements) :: s2
     real(kind=r8), dimension(num_elements) :: sqrts
-    real(kind=r8), dimension(num_elements) :: s15
     real(kind=r8), dimension(num_elements) :: invRtk
     real(kind=r8), dimension(num_elements) :: arg
-    real(kind=r8), dimension(num_elements) :: deltaV   ! pressure correction terms
-    real(kind=r8), dimension(num_elements) :: Kappa    ! pressure correction terms
-    real(kind=r8), dimension(num_elements) :: lnKfac   ! pressure correction terms
-    real(kind=r8), dimension(num_elements) :: Kfac     ! pressure correction terms
     real(kind=r8), dimension(num_elements) :: log_1_m_1p005em3_s
     real(kind=r8), dimension(num_elements) :: log_1_p_tot_sulfate_div_ks
     !---------------------------------------------------------------------------

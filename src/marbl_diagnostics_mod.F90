@@ -4577,8 +4577,6 @@ contains
     real(r8) :: autotrophC_weight(marbl_domain%km)
     real(r8) :: autotrophC_zint_100m
     real(r8) :: limterm(marbl_domain%km)
-    real(r8) :: limterm_zint_100m
-    !-----------------------------------------------------------------------
 
     associate(                                     &
          diags   => marbl_interior_diags%diags,    &
@@ -5726,10 +5724,8 @@ contains
        FLUX,           &
        FLUX13,         &
        FLUX14,         &
-       FLUX_as,        &
        FLUX13_as,      &
        FLUX14_as,      &
-       FLUX_sa,        &
        FLUX13_sa,      &
        FLUX14_sa,      &
        R13C_DIC,       &
@@ -5751,10 +5747,8 @@ contains
     real (r8), dimension(num_elements) , intent(in)    :: FLUX           ! gas flux of CO2 (nmol/cm^2/s)
     real (r8), dimension(num_elements) , intent(in)    :: FLUX13         ! gas flux of 13CO2 (nmol/cm^2/s)
     real (r8), dimension(num_elements) , intent(in)    :: FLUX14         ! gas flux of 14CO2 (nmol/cm^2/s)
-    real (r8), dimension(num_elements) , intent(in)    :: FLUX_as        ! air-to-sea gas flux of CO2 (nmol/cm^2/s)
     real (r8), dimension(num_elements) , intent(in)    :: FLUX13_as      ! air-to-sea gas flux of 13CO2 (nmol/cm^2/s)
     real (r8), dimension(num_elements) , intent(in)    :: FLUX14_as      ! air-to-sea gas flux of 14CO2 (nmol/cm^2/s)
-    real (r8), dimension(num_elements) , intent(in)    :: FLUX_sa        ! sea-to-air gas flux of CO2 (nmol/cm^2/s)
     real (r8), dimension(num_elements) , intent(in)    :: FLUX13_sa      ! sea-to-air gas flux of 13CO2 (nmol/cm^2/s)
     real (r8), dimension(num_elements) , intent(in)    :: FLUX14_sa      ! sea-to-air gas flux of 14CO2 (nmol/cm^2/s)
     real (r8), dimension(num_elements) , intent(in)    :: R13C_DIC       ! 13C/12C ratio in DIC

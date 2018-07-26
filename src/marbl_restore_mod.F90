@@ -22,7 +22,7 @@ contains
 
 !*****************************************************************************
 
-subroutine marbl_restore_compute_interior_restore(interior_tracers, km,       &
+subroutine marbl_restore_compute_interior_restore(interior_tracers,           &
                                                   interior_forcings,          &
                                                   interior_forcing_ind,       &
                                                   interior_restore)
@@ -37,7 +37,6 @@ subroutine marbl_restore_compute_interior_restore(interior_tracers, km,       &
   !-----------------------------------------------------------------------
 
   real(kind=r8), dimension(:,:),               intent(in) :: interior_tracers
-  integer,                                     intent(in) :: km
   type(marbl_forcing_fields_type),             intent(in) :: interior_forcings(:)
   type(marbl_interior_forcing_indexing_type),  intent(in) :: interior_forcing_ind
 

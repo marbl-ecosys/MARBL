@@ -19,7 +19,6 @@ module marbl_interface
 
   use marbl_kinds_mod, only : r8, log_kind, int_kind, log_kind, char_len
 
-  use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : marbl_settings_type
 
@@ -389,7 +388,6 @@ contains
     real(r8),                      intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_real'
-    character(len=char_len) :: log_message
 
     call this%settings%put(varname, this%StatusLog, rval=val)
     if (this%StatusLog%labort_marbl) then
@@ -408,7 +406,6 @@ contains
     integer(int_kind),             intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_integer'
-    character(len=char_len) :: log_message
 
     call this%settings%put(varname, this%StatusLog, ival=val)
     if (this%StatusLog%labort_marbl) then
@@ -427,7 +424,6 @@ contains
     logical,                       intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_logical'
-    character(len=char_len) :: log_message
 
     call this%settings%put(varname, this%StatusLog, lval=val)
     if (this%StatusLog%labort_marbl) then
@@ -446,7 +442,6 @@ contains
     character(len=*),              intent(in)    :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:put_string'
-    character(len=char_len) :: log_message
 
     call this%settings%put(varname, this%StatusLog, sval=val)
     if (this%StatusLog%labort_marbl) then
@@ -542,6 +537,8 @@ contains
     integer(int_kind)       :: n, char_ind
 
     line_loc = ''
+    ! The included PGI bugfix variable triggers a warning from gfortran unless it's used
+    if (present(pgi_bugfix_var)) line_loc=''
     ! Strip out comments (denoted by '!'); line_loc_arr(1) is the line to be processed
     call marbl_utils_str_to_substrs(line, '!', line_loc_arr)
     line_loc = line_loc_arr(1)
@@ -585,7 +582,6 @@ contains
     real(r8),                      intent(out)   :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:get_real'
-    character(len=char_len) :: log_message
 
     call this%settings%get(varname, this%StatusLog, rval=val)
     if (this%StatusLog%labort_marbl) then
@@ -604,7 +600,6 @@ contains
     integer(int_kind),             intent(out)   :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:get_integer'
-    character(len=char_len) :: log_message
 
     call this%settings%get(varname, this%StatusLog, ival=val)
     if (this%StatusLog%labort_marbl) then
@@ -623,7 +618,6 @@ contains
     logical,                       intent(out)   :: val
 
     character(len=*), parameter :: subname = 'marbl_interface:get_logical'
-    character(len=char_len) :: log_message
 
     call this%settings%get(varname, this%StatusLog, lval=val)
     if (this%StatusLog%labort_marbl) then
@@ -725,14 +719,10 @@ contains
     end if
     if (present(id)) id = id_loc
     if (any((/present(lname), present(units), present(datatype)/))) then
-      call this%settings%inquire_metadata(id_loc, this%StatusLog,  &
+      call this%settings%inquire_metadata(id_loc,                  &
                                           lname    = lname,        &
                                           units    = units,        &
                                           datatype = datatype)
-      if (this%StatusLog%labort_marbl) then
-        call this%StatusLog%log_error_trace('settings%inquire_metadata', subname)
-        return
-      end if
     end if
 
   end subroutine inquire_settings_metadata_by_name
@@ -748,15 +738,11 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata_by_id'
 
-    call this%settings%inquire_metadata(id, this%StatusLog,  &
+    call this%settings%inquire_metadata(id,                  &
                                         sname    = sname,    &
                                         lname    = lname,    &
                                         units    = units,    &
                                         datatype = datatype)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('settings%inquire_metadata', subname)
-      return
-    end if
 
   end subroutine inquire_settings_metadata_by_id
 
@@ -948,7 +934,6 @@ contains
             glo_avg_rmean_interior    = this%glo_avg_rmean_interior,    &
             glo_avg_rmean_surface     = this%glo_avg_rmean_surface,     &
             glo_scalar_rmean_interior = this%glo_scalar_rmean_interior, &
-            glo_scalar_rmean_surface  = this%glo_scalar_rmean_surface,  &
             glo_scalar_interior       = this%glo_scalar_interior)
     end if
 

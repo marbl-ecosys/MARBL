@@ -109,8 +109,6 @@ Contains
 
   subroutine set_all_vals(local_instance, marbl_instance, driver_status_log)
 
-    use marbl_mpi_mod, only : marbl_mpi_abort
-
     type(marbl_interface_class),       intent(inout) :: local_instance ! inout because inquire_settings_metadata updates StatusLog
     type(marbl_interface_class),       intent(inout) :: marbl_instance
     type(marbl_log_type),              intent(inout) :: driver_status_log

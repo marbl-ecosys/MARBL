@@ -39,7 +39,7 @@ Program marbl
   ! Use from libmarbl.a
   use marbl_interface, only : marbl_interface_class
   use marbl_logging,   only : marbl_log_type
-  use marbl_kinds_mod, only : r8
+  use marbl_kinds_mod, only : char_len
 
   ! Driver modules for individual tests
   use marbl_init_drv,    only : marbl_init_test    => test
@@ -58,25 +58,23 @@ Program marbl
 
   implicit none
 
-  character(len=256), parameter :: subname = 'Program Marbl'
+  character(len=char_len), parameter :: subname = 'Program Marbl'
 
   ! Variables for processing commandline arguments
-  character(256) :: progname, argstr
-  character(256) :: namelist_file, input_file
+  character(len=char_len) :: progname, argstr
+  character(len=char_len) :: namelist_file, input_file
   integer        :: argcnt
   logical        :: labort_after_argparse, lshow_usage, lfound_file
 
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
-  integer                       :: m, n, nt, cnt
-  character(len=256)            :: input_line, testname, varname, log_message, log_out_file
+  integer                       :: n, nt, cnt
+  character(len=char_len)       :: input_line, testname, varname, log_message, log_out_file
   logical                       :: lprint_marbl_log, lhas_namelist_file, lhas_input_file
   logical                       :: ldriver_log_to_file, lsummarize_timers
 
   ! Processing input file for put calls
   integer  :: ioerr
-  integer  :: ival
-  real(r8) :: rval
 
   namelist /marbl_driver_nml/testname, log_out_file
 
@@ -416,8 +414,8 @@ Contains
     character(len=*),            intent(in)    :: input_file
     type(marbl_interface_class), intent(inout) :: marbl_instance
 
-    character(len=256), parameter :: subname = 'marbl::read_input_file'
-    character(len=256) :: input_line
+    character(len=char_len), parameter :: subname = 'marbl::read_input_file'
+    character(len=char_len) :: input_line
     integer :: ioerr
 
     if (my_task .eq. 0) open(97, file=trim(input_file), status="old", iostat=ioerr)
@@ -516,6 +514,7 @@ Contains
 
     real(r8) :: min_runtime, ind_runtime, max_runtime, tot_runtime
     character(len=15) :: int_to_str
+    integer :: m, n
 
 100 format(A, ': ', F11.3, ' seconds',A)
 
@@ -532,10 +531,10 @@ Contains
       do n=1, timers%num_timers
         ind_runtime = timers%cumulative_runtimes(n)
         if (mpi_on) then
+          min_runtime = ind_runtime
+          max_runtime = ind_runtime
+          tot_runtime = ind_runtime
           if (my_task.eq.0) then
-            min_runtime = ind_runtime
-            max_runtime = ind_runtime
-            tot_runtime = ind_runtime
             write(log_message, 100) trim(timers%names(n)), ind_runtime,       &
                                     ' (Task 0)'
             call driver_status_log%log_noerror(log_message, subname)

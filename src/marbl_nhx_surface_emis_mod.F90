@@ -84,7 +84,6 @@ contains
        kw_nh3)
 
     use marbl_schmidt_number_mod, only : schmidt_nh3_surf
-    use marbl_constants_mod     , only : c0
     use marbl_constants_mod     , only : hrps
 
     integer(int_kind)  , intent(in)  :: num_elements
@@ -121,7 +120,6 @@ contains
        kg_nh3)
 
     use marbl_schmidt_number_mod, only : schmidt_nh3_air
-    use marbl_constants_mod     , only : c0
     use marbl_constants_mod     , only : c1
     use marbl_constants_mod     , only : c2
     use marbl_constants_mod     , only : vonkar
@@ -172,7 +170,6 @@ contains
        sss,                        &
        Hstar_nhx)
 
-    use marbl_constants_mod, only : c0
     use marbl_constants_mod, only : c1
     use marbl_constants_mod, only : T0_Kelvin
 
