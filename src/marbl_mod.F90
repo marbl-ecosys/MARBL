@@ -1096,8 +1096,6 @@ contains
     character(len=*), parameter :: subname = 'marbl_mod:marbl_compute_particulate_terms'
     character(len=char_len)     :: log_message
 
-!   real (r8) :: TfuncS  ! temperature scaling from soft POM remin, not currently being applied
-
     real (r8) :: &
          DECAY_Hard,         & ! scaling factor for dissolution of Hard Ballast
          DECAY_HardDust        ! scaling factor for dissolution of Hard dust
@@ -1153,12 +1151,12 @@ contains
     !  compute scalelength and decay factors
     !-----------------------------------------------------------------------
 
+    scalelength = c1 ! avoid 'scalelength' may be used uninitialized warning from gfortran
     if (zw(k) < parm_scalelen_z(1)) then
        scalelength = parm_scalelen_vals(1)
     else if (zw(k) >= parm_scalelen_z(size(parm_scalelen_z))) then
        scalelength = parm_scalelen_vals(size(parm_scalelen_z))
     else
-       scalelength = c0
        do n = 2, size(parm_scalelen_z)
           if (zw(k) < parm_scalelen_z(n)) then
              scalelength = parm_scalelen_vals(n-1) &
@@ -1417,7 +1415,7 @@ contains
 
     else
 
-       dzr_loc = c0
+       dzr_loc = c0 ! avoid 'dzr_loc' may be used uninitialized warning from gfortran
        POC%remin(k) = c0
        POC%sflux_out(k) = c0
        POC%hflux_out(k) = c0

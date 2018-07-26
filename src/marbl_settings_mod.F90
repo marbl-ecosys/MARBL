@@ -1967,7 +1967,7 @@ contains
 
     ! 2) Error checking
     ll_ptr => this%vars
-    nullify(ll_prev)
+    nullify(ll_prev) ! avoid 'll_prev' may be used uninitialized warning from gfortran
     do while (associated(ll_ptr))
       if (case_insensitive_eq(trim(sname), trim(ll_ptr%short_name))) then
         write(log_message, "(A,1X,A)") trim(sname), "has been added twice"

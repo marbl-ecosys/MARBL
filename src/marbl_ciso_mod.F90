@@ -241,8 +241,8 @@ contains
     real (r8) :: work1      ! temporaries
 
     integer (int_kind) :: &
-         n,               & ! tracer index
-         auto_ind,        & ! autotroph functional group index
+         n,              & ! tracer index
+         auto_ind,       & ! autotroph functional group index
          k                 ! index for looping over k levels
 
     real (r8), dimension(autotroph_cnt) :: &
