@@ -530,10 +530,10 @@ Contains
       do n=1, timers%num_timers
         ind_runtime = timers%cumulative_runtimes(n)
         if (mpi_on) then
+          min_runtime = ind_runtime
+          max_runtime = ind_runtime
+          tot_runtime = ind_runtime
           if (my_task.eq.0) then
-            min_runtime = ind_runtime
-            max_runtime = ind_runtime
-            tot_runtime = ind_runtime
             write(log_message, 100) trim(timers%names(n)), ind_runtime,       &
                                     ' (Task 0)'
             call driver_status_log%log_noerror(log_message, subname)
