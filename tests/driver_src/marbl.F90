@@ -68,7 +68,7 @@ Program marbl
 
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
-  integer                       :: m, n, nt, cnt
+  integer                       :: n, nt, cnt
   character(len=char_len)       :: input_line, testname, varname, log_message, log_out_file
   logical                       :: lprint_marbl_log, lhas_namelist_file, lhas_input_file
   logical                       :: ldriver_log_to_file, lsummarize_timers
@@ -514,6 +514,7 @@ Contains
 
     real(r8) :: min_runtime, ind_runtime, max_runtime, tot_runtime
     character(len=15) :: int_to_str
+    integer :: m, n
 
 100 format(A, ': ', F11.3, ' seconds',A)
 
