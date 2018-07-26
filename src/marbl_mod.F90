@@ -150,9 +150,7 @@ module marbl_mod
   use marbl_interface_public_types, only : marbl_diagnostics_type
   use marbl_interface_public_types, only : marbl_running_mean_0d_type
 
-  use marbl_pft_mod, only : autotroph_type
   use marbl_pft_mod, only : autotroph_local_type
-  use marbl_pft_mod, only : zooplankton_type
   use marbl_pft_mod, only : autotroph_secondary_species_type
   use marbl_pft_mod, only : zooplankton_secondary_species_type
   use marbl_pft_mod, only : marbl_zooplankton_share_type
