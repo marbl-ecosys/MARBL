@@ -170,6 +170,13 @@ if [ "${STATUS}" == "PASS" ]; then
   ./requested_tracers.py
   STATUS=$(check_return $?)
   print_status "requested_tracers.py" >> $OUTFILE
+
+  # Initialize MARBL (with MPI)
+  cd ${MARBL_ROOT}/tests/regression_tests/init
+  echo "$ ./init.py --mpitasks 2"
+  ./init.py --mpitasks 2
+  STATUS=$(check_return $?)
+  print_status "init.py --mpitasks 2" >> $OUTFILE
 fi
 
 echo "----"
