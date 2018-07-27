@@ -1,4 +1,4 @@
-module marbl_interface_private_types
+module marbl_interface_private_types_mod
 
   ! module definitions of types that are internal to marbl
 
@@ -6,7 +6,7 @@ module marbl_interface_private_types
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : char_len
 
-  use marbl_logging, only : marbl_log_type
+  use marbl_logging_mod, only : marbl_log_type
 
   use marbl_timing_mod, only : marbl_internal_timers_type
   use marbl_timing_mod, only : marbl_timer_indexing_type
@@ -556,7 +556,7 @@ contains
     type(zooplankton_type),         intent(in)    :: zooplankton(:)
     type(marbl_log_type),           intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_private_types:tracer_index_constructor'
+    character(len=*), parameter :: subname = 'marbl_interface_private_types_mod:tracer_index_constructor'
     character(len=char_len) :: ind_name
     integer :: autotroph_cnt, zooplankton_cnt, n
 
@@ -689,7 +689,7 @@ contains
     integer(int_kind),              intent(out)   :: ind
     type(marbl_log_type),           intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_private_types:add_tracer_index'
+    character(len=*), parameter :: subname = 'marbl_interface_private_types_mod:add_tracer_index'
     character(len=char_len)     :: log_message
 
     ! This routine may be called multiple times after an error has been logged
@@ -733,7 +733,7 @@ contains
     integer(int_kind),              intent(in)    :: ind
     type(marbl_log_type),           intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_private_types:update_count'
+    character(len=*), parameter :: subname = 'marbl_interface_private_types_mod:update_count'
     character(len=char_len)     :: log_message
 
     ! (1) Make sure tracer modules have contiguous indices
@@ -889,7 +889,7 @@ contains
     integer(int_kind),                           intent(out)   :: num_interior_forcing_fields
     type(marbl_log_type),                        intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_private_types:interior_forcing_index_constructor'
+    character(len=*), parameter :: subname = 'marbl_interface_private_types_mod:interior_forcing_index_constructor'
     character(len=char_len)     :: log_message
 
     integer :: tracer_restore_cnt, tracer_cnt
@@ -1007,4 +1007,4 @@ contains
 
   !*****************************************************************************
 
-end module marbl_interface_private_types
+end module marbl_interface_private_types_mod

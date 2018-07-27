@@ -2,7 +2,7 @@ module marbl_utils_mod
 
   use marbl_kinds_mod, only : r8
 
-  use marbl_logging, only : marbl_log_type
+  use marbl_logging_mod, only : marbl_log_type
 
   implicit none
   public

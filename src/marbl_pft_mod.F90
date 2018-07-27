@@ -7,7 +7,7 @@ module marbl_pft_mod
 
   use marbl_constants_mod, only : c1
 
-  use marbl_logging, only : marbl_log_type
+  use marbl_logging_mod, only : marbl_log_type
 
   implicit none
   private

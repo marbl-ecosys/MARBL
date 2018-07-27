@@ -1,7 +1,7 @@
 module marbl_init_drv
 
-  use marbl_interface,     only : marbl_interface_class
-  use marbl_kinds_mod,     only : r8
+  use marbl_interface_mod, only : marbl_interface_class
+  use marbl_kinds_mod, only : r8
   use marbl_constants_mod, only : c1, p5
 
   implicit none

@@ -2,7 +2,7 @@ module marbl_utils_drv
 
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : char_len
-  use marbl_logging,   only : marbl_log_type
+  use marbl_logging_mod, only : marbl_log_type
 
   implicit none
   private

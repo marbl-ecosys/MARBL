@@ -1,6 +1,3 @@
-! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
-!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
 module marbl_diagnostics_mod
 
   use marbl_kinds_mod, only : r8
@@ -16,27 +13,27 @@ module marbl_diagnostics_mod
   use marbl_constants_mod, only : c0
   use marbl_constants_mod, only : c1
 
-  use marbl_interface_private_types, only : carbonate_type
-  use marbl_interface_private_types, only : dissolved_organic_matter_type
-  use marbl_interface_private_types, only : column_sinking_particle_type
-  use marbl_interface_private_types, only : marbl_PAR_type
-  use marbl_interface_private_types, only : marbl_particulate_share_type
-  use marbl_interface_private_types, only : marbl_interior_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
-  use marbl_interface_private_types, only : marbl_tracer_index_type
+  use marbl_interface_private_types_mod, only : carbonate_type
+  use marbl_interface_private_types_mod, only : dissolved_organic_matter_type
+  use marbl_interface_private_types_mod, only : column_sinking_particle_type
+  use marbl_interface_private_types_mod, only : marbl_PAR_type
+  use marbl_interface_private_types_mod, only : marbl_particulate_share_type
+  use marbl_interface_private_types_mod, only : marbl_interior_share_type
+  use marbl_interface_private_types_mod, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types_mod, only : marbl_surface_forcing_internal_type
+  use marbl_interface_private_types_mod, only : marbl_tracer_index_type
 
-  use marbl_interface_public_types, only : marbl_domain_type
-  use marbl_interface_public_types, only : marbl_tracer_metadata_type
-  use marbl_interface_public_types, only : marbl_forcing_fields_type
-  use marbl_interface_public_types, only : marbl_saved_state_type
-  use marbl_interface_public_types, only : marbl_diagnostics_type
+  use marbl_interface_public_types_mod, only : marbl_domain_type
+  use marbl_interface_public_types_mod, only : marbl_tracer_metadata_type
+  use marbl_interface_public_types_mod, only : marbl_forcing_fields_type
+  use marbl_interface_public_types_mod, only : marbl_saved_state_type
+  use marbl_interface_public_types_mod, only : marbl_diagnostics_type
 
   use marbl_pft_mod, only : autotroph_local_type
   use marbl_pft_mod, only : autotroph_secondary_species_type
   use marbl_pft_mod, only : zooplankton_secondary_species_type
 
-  use marbl_logging,          only : marbl_log_type
+  use marbl_logging_mod, only : marbl_log_type
 
   implicit none
   public
@@ -4117,7 +4114,7 @@ contains
        marbl_interior_forcing_diags,                  &
        marbl_status_log)
 
-    use marbl_interface_private_types , only : marbl_interior_forcing_indexing_type
+    use marbl_interface_private_types_mod, only : marbl_interior_forcing_indexing_type
 
     type (marbl_domain_type)                  , intent(in) :: domain
     type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind
@@ -4279,11 +4276,11 @@ contains
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
 
-    use marbl_interface_private_types , only : marbl_surface_forcing_indexing_type
-    use marbl_interface_private_types , only : marbl_surface_saved_state_indexing_type
-    use marbl_settings_mod   , only : lflux_gas_o2
-    use marbl_settings_mod   , only : lflux_gas_co2
-    use marbl_constants_mod  , only : mpercm
+    use marbl_interface_private_types_mod, only : marbl_surface_forcing_indexing_type
+    use marbl_interface_private_types_mod, only : marbl_surface_saved_state_indexing_type
+    use marbl_settings_mod, only : lflux_gas_o2
+    use marbl_settings_mod, only : lflux_gas_co2
+    use marbl_constants_mod, only : mpercm
 
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
     type(marbl_forcing_fields_type)           , intent(in)    :: surface_input_forcings(:)
@@ -4770,7 +4767,7 @@ contains
     ! - Accumulte losses of BGC tracers to sediments
     !-----------------------------------------------------------------------
 
-    use marbl_interface_private_types , only : marbl_interior_forcing_indexing_type
+    use marbl_interface_private_types_mod, only : marbl_interior_forcing_indexing_type
     use marbl_settings_mod, only : lp_remin_scalef
     use marbl_settings_mod, only : POCremin_refract
     use marbl_settings_mod, only : PONremin_refract
@@ -4882,9 +4879,9 @@ contains
        interior_forcing_ind, interior_forcings, potemp, salinity, &
        column_o2, o2_production, o2_consumption, marbl_interior_diags)
 
-    use marbl_interface_private_types , only : marbl_interior_forcing_indexing_type
+    use marbl_interface_private_types_mod, only : marbl_interior_forcing_indexing_type
     use marbl_settings_mod, only : lo2_consumption_scalef
-    use marbl_oxygen, only : o2sat_scalar
+    use marbl_oxygen_mod, only : o2sat_scalar
 
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain
     type(marbl_interior_forcing_indexing_type), intent(in) :: interior_forcing_ind

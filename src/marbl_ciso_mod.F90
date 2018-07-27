@@ -1,6 +1,3 @@
-! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
-!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
 module marbl_ciso_mod
 
   !-----------------------------------------------------------------------
@@ -31,17 +28,17 @@ module marbl_ciso_mod
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : autotrophs
 
-  use marbl_logging, only : marbl_log_type
+  use marbl_logging_mod, only : marbl_log_type
 
-  use marbl_interface_public_types, only : marbl_tracer_metadata_type
-  use marbl_interface_public_types, only : marbl_diagnostics_type
-  use marbl_interface_public_types, only : marbl_domain_type
+  use marbl_interface_public_types_mod, only : marbl_tracer_metadata_type
+  use marbl_interface_public_types_mod, only : marbl_diagnostics_type
+  use marbl_interface_public_types_mod, only : marbl_domain_type
 
-  use marbl_interface_private_types, only : column_sinking_particle_type
-  use marbl_interface_private_types, only : marbl_interior_share_type
-  use marbl_interface_private_types, only : marbl_particulate_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
-  use marbl_interface_private_types, only : marbl_tracer_index_type
+  use marbl_interface_private_types_mod, only : column_sinking_particle_type
+  use marbl_interface_private_types_mod, only : marbl_interior_share_type
+  use marbl_interface_private_types_mod, only : marbl_particulate_share_type
+  use marbl_interface_private_types_mod, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types_mod, only : marbl_tracer_index_type
 
   use marbl_pft_mod, only : autotroph_local_type
   use marbl_pft_mod, only : marbl_zooplankton_share_type
