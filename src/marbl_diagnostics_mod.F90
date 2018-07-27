@@ -4296,8 +4296,6 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_surface_forcing'
-    !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------------
     !  calculate gas flux quantities if necessary
@@ -5761,8 +5759,6 @@ contains
 
     !-----------------------------------------------------------------------
     !  local variables
-    !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_ciso_surface_forcing'
     !-----------------------------------------------------------------------
 
     associate(                                          &

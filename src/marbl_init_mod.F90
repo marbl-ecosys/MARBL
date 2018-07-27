@@ -227,8 +227,6 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
 
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_tracer_metadata'
-
     integer (int_kind) :: n        ! index for looping over tracers
     integer (int_kind) :: zoo_ind  ! zooplankton functional group index
     integer (int_kind) :: auto_ind ! autotroph functional group index
