@@ -12,7 +12,7 @@ module marbl_restore_mod
   use marbl_constants_mod, only : c2
   use marbl_constants_mod, only : c1000
 
-  use marbl_interface_public_types, only : marbl_domain_type
+  use marbl_interface_public_types_mod, only : marbl_domain_type
 
   implicit none
   public
@@ -29,8 +29,8 @@ subroutine marbl_restore_compute_interior_restore(interior_tracers,           &
   !
   !  restore a variable if required
   !
-  use marbl_interface_public_types, only : marbl_forcing_fields_type
-  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
+  use marbl_interface_public_types_mod, only : marbl_forcing_fields_type
+  use marbl_interface_private_types_mod, only : marbl_interior_forcing_indexing_type
 
   !-----------------------------------------------------------------------
   !  input variables

@@ -30,7 +30,7 @@ module marbl_settings_mod
   use marbl_pft_mod, only : zooplankton_type
   use marbl_pft_mod, only : grazing_type
 
-  use marbl_logging, only: marbl_log_type
+  use marbl_logging_mod, only: marbl_log_type
 
   implicit none
 

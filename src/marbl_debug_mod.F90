@@ -1,6 +1,3 @@
-! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
-!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
 module marbl_debug_mod
 
   !-----------------------------------------------------------------------------

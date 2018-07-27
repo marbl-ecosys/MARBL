@@ -36,7 +36,7 @@ module marbl_timing_mod
 
   use marbl_kinds_mod, only : char_len, r8
   use marbl_constants_mod, only : c0
-  use marbl_logging, only : marbl_log_type
+  use marbl_logging_mod, only : marbl_log_type
 #if MARBL_TIMING_OPT == CIME
   ! cime/share/timing/perf_mod.F90 wrappers to GPTL
   use perf_mod, only : t_startf, t_stopf, t_stampf
@@ -219,7 +219,7 @@ Contains
 
   subroutine extract_timer_data(self, interface_timers, marbl_status_log)
 
-    use marbl_interface_public_types, only : marbl_timers_type
+    use marbl_interface_public_types_mod, only : marbl_timers_type
 
     class(marbl_internal_timers_type), intent(in)    :: self
     type(marbl_timers_type),           intent(inout) :: interface_timers
@@ -329,7 +329,7 @@ Contains
 
   subroutine shutdown_timers(self, timer_ids, interface_timers, marbl_status_log)
 
-    use marbl_interface_public_types, only : marbl_timers_type
+    use marbl_interface_public_types_mod, only : marbl_timers_type
 
     class(marbl_internal_timers_type), intent(inout) :: self
     type(marbl_timer_indexing_type),   intent(inout) :: timer_ids

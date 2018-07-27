@@ -1,6 +1,3 @@
-! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
-!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
 module marbl_mod
 
   !  Multispecies ecosystem based on Doney et al. 1996, Moore et al., 2002
@@ -131,24 +128,24 @@ module marbl_mod
   use marbl_settings_mod, only : grazing
   use marbl_settings_mod, only : PON_bury_coeff
 
-  use marbl_interface_private_types, only : carbonate_type
-  use marbl_interface_private_types, only : dissolved_organic_matter_type
-  use marbl_interface_private_types, only : column_sinking_particle_type
-  use marbl_interface_private_types, only : marbl_PAR_type
-  use marbl_interface_private_types, only : marbl_particulate_share_type
-  use marbl_interface_private_types, only : marbl_interior_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
-  use marbl_interface_private_types, only : marbl_tracer_index_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
-  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
+  use marbl_interface_private_types_mod, only : carbonate_type
+  use marbl_interface_private_types_mod, only : dissolved_organic_matter_type
+  use marbl_interface_private_types_mod, only : column_sinking_particle_type
+  use marbl_interface_private_types_mod, only : marbl_PAR_type
+  use marbl_interface_private_types_mod, only : marbl_particulate_share_type
+  use marbl_interface_private_types_mod, only : marbl_interior_share_type
+  use marbl_interface_private_types_mod, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types_mod, only : marbl_surface_forcing_internal_type
+  use marbl_interface_private_types_mod, only : marbl_tracer_index_type
+  use marbl_interface_private_types_mod, only : marbl_surface_forcing_indexing_type
+  use marbl_interface_private_types_mod, only : marbl_interior_forcing_indexing_type
 
-  use marbl_interface_public_types, only : marbl_domain_type
-  use marbl_interface_public_types, only : marbl_saved_state_type
-  use marbl_interface_public_types, only : marbl_surface_forcing_output_type
-  use marbl_interface_public_types, only : marbl_forcing_fields_type
-  use marbl_interface_public_types, only : marbl_diagnostics_type
-  use marbl_interface_public_types, only : marbl_running_mean_0d_type
+  use marbl_interface_public_types_mod, only : marbl_domain_type
+  use marbl_interface_public_types_mod, only : marbl_saved_state_type
+  use marbl_interface_public_types_mod, only : marbl_surface_forcing_output_type
+  use marbl_interface_public_types_mod, only : marbl_forcing_fields_type
+  use marbl_interface_public_types_mod, only : marbl_diagnostics_type
+  use marbl_interface_public_types_mod, only : marbl_running_mean_0d_type
 
   use marbl_pft_mod, only : autotroph_local_type
   use marbl_pft_mod, only : autotroph_secondary_species_type
@@ -156,10 +153,10 @@ module marbl_mod
   use marbl_pft_mod, only : marbl_zooplankton_share_type
   use marbl_pft_mod, only : Qp_zoo
 
-  use marbl_diagnostics_mod , only : marbl_diagnostics_set_surface_forcing
-  use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
+  use marbl_diagnostics_mod, only : marbl_diagnostics_set_surface_forcing
+  use marbl_diagnostics_mod, only : marbl_diagnostics_set_interior_forcing
 
-  use marbl_logging         , only : marbl_log_type
+  use marbl_logging_mod, only : marbl_log_type
 
   implicit none
   private
@@ -292,7 +289,7 @@ contains
        glo_scalar_rmean_interior, &
        glo_scalar_rmean_surface)
 
-    use marbl_interface_public_types, only : marbl_running_mean_0d_type
+    use marbl_interface_public_types_mod, only : marbl_running_mean_0d_type
     use marbl_settings_mod, only : parm_init_POC_bury_coeff
     use marbl_settings_mod, only : parm_init_POP_bury_coeff
     use marbl_settings_mod, only : parm_init_bSi_bury_coeff
@@ -439,11 +436,11 @@ contains
 
     !  Compute time derivatives for ecosystem state variables
 
-    use marbl_temperature, only : marbl_temperature_potemp
+    use marbl_temperature_mod, only : marbl_temperature_potemp
     use marbl_ciso_mod, only : marbl_ciso_set_interior_forcing
-    use marbl_interface_private_types, only : marbl_internal_timers_type
-    use marbl_interface_private_types, only : marbl_timer_indexing_type
-    use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
+    use marbl_interface_private_types_mod, only : marbl_internal_timers_type
+    use marbl_interface_private_types_mod, only : marbl_timer_indexing_type
+    use marbl_interface_private_types_mod, only : marbl_interior_saved_state_indexing_type
     use marbl_restore_mod, only : marbl_restore_compute_interior_restore
     use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
@@ -1768,14 +1765,14 @@ contains
 
     !  Compute surface forcing fluxes
 
-    use marbl_interface_public_types, only : sfo_ind
-    use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
+    use marbl_interface_public_types_mod, only : sfo_ind
+    use marbl_interface_private_types_mod, only : marbl_surface_saved_state_indexing_type
     use marbl_schmidt_number_mod, only : schmidt_co2_surf
-    use marbl_oxygen, only : schmidt_o2_surf
+    use marbl_oxygen_mod, only : schmidt_o2_surf
+    use marbl_oxygen_mod, only : o2sat_surf
     use marbl_co2calc_mod, only : marbl_co2calc_surface
     use marbl_co2calc_mod, only : co2calc_coeffs_type
     use marbl_co2calc_mod, only : co2calc_state_type
-    use marbl_oxygen, only : o2sat_surf
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
     use marbl_settings_mod, only : xkw_coeff

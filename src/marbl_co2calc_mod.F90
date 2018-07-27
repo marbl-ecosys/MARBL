@@ -1,16 +1,13 @@
-! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
-!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
 module marbl_co2calc_mod
 
   !-----------------------------------------------------------------------------
   ! based upon OCMIP2 co2calc
   !-----------------------------------------------------------------------------
 
-  use marbl_kinds_mod     , only : int_kind, r8, log_kind, char_len
-  use marbl_logging       , only : marbl_log_type
-  use marbl_constants_mod , only : p001,c3, c10
-  use marbl_constants_mod , only : c0, p5, c1, c2, c1000, T0_Kelvin, rho_sw
+  use marbl_kinds_mod, only : int_kind, r8, log_kind, char_len
+  use marbl_logging_mod, only : marbl_log_type
+  use marbl_constants_mod, only : p001,c3, c10
+  use marbl_constants_mod, only : c0, p5, c1, c2, c1000, T0_Kelvin, rho_sw
 
   implicit none
 

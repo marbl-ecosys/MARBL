@@ -1,9 +1,9 @@
 module marbl_get_put_drv
 
-  use marbl_kinds_mod,     only : r8, char_len
+  use marbl_kinds_mod, only : r8, char_len
   use marbl_constants_mod, only : c1, p5
-  use marbl_logging,       only : marbl_log_type
-  use marbl_interface,     only : marbl_interface_class
+  use marbl_logging_mod, only : marbl_log_type
+  use marbl_interface_mod, only : marbl_interface_class
 
   implicit none
   private

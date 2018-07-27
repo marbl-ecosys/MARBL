@@ -1,4 +1,4 @@
-module marbl_logging
+module marbl_logging_mod
 
 ! ============
 ! Module Usage
@@ -403,4 +403,4 @@ contains
 
   end subroutine marbl_log_erase
 
-end module marbl_logging
+end module marbl_logging_mod

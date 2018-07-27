@@ -1,6 +1,4 @@
-!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
-module marbl_interface
+module marbl_interface_mod
 
   !-----------------------------------------------------------------------
   ! marbl interface
@@ -22,28 +20,28 @@ module marbl_interface
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : marbl_settings_type
 
-  use marbl_logging, only : marbl_log_type
+  use marbl_logging_mod, only : marbl_log_type
 
-  use marbl_interface_public_types, only : marbl_domain_type
-  use marbl_interface_public_types, only : marbl_tracer_metadata_type
-  use marbl_interface_public_types, only : marbl_surface_forcing_output_type
-  use marbl_interface_public_types, only : marbl_diagnostics_type
-  use marbl_interface_public_types, only : marbl_forcing_fields_type
-  use marbl_interface_public_types, only : marbl_saved_state_type
-  use marbl_interface_public_types, only : marbl_timers_type
-  use marbl_interface_public_types, only : marbl_running_mean_0d_type
+  use marbl_interface_public_types_mod, only : marbl_domain_type
+  use marbl_interface_public_types_mod, only : marbl_tracer_metadata_type
+  use marbl_interface_public_types_mod, only : marbl_surface_forcing_output_type
+  use marbl_interface_public_types_mod, only : marbl_diagnostics_type
+  use marbl_interface_public_types_mod, only : marbl_forcing_fields_type
+  use marbl_interface_public_types_mod, only : marbl_saved_state_type
+  use marbl_interface_public_types_mod, only : marbl_timers_type
+  use marbl_interface_public_types_mod, only : marbl_running_mean_0d_type
 
-  use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
-  use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
-  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
-  use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
-  use marbl_interface_private_types, only : marbl_PAR_type
-  use marbl_interface_private_types, only : marbl_particulate_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
-  use marbl_interface_private_types, only : marbl_tracer_index_type
-  use marbl_interface_private_types, only : marbl_internal_timers_type
-  use marbl_interface_private_types, only : marbl_timer_indexing_type
+  use marbl_interface_private_types_mod, only : marbl_surface_forcing_indexing_type
+  use marbl_interface_private_types_mod, only : marbl_surface_saved_state_indexing_type
+  use marbl_interface_private_types_mod, only : marbl_interior_forcing_indexing_type
+  use marbl_interface_private_types_mod, only : marbl_interior_saved_state_indexing_type
+  use marbl_interface_private_types_mod, only : marbl_PAR_type
+  use marbl_interface_private_types_mod, only : marbl_particulate_share_type
+  use marbl_interface_private_types_mod, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types_mod, only : marbl_surface_forcing_internal_type
+  use marbl_interface_private_types_mod, only : marbl_tracer_index_type
+  use marbl_interface_private_types_mod, only : marbl_internal_timers_type
+  use marbl_interface_private_types_mod, only : marbl_timer_indexing_type
 
   implicit none
 
@@ -195,7 +193,7 @@ contains
     real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
     logical,           optional,  intent(in)    :: lgcm_has_global_ops
 
-    character(len=*), parameter :: subname = 'marbl_interface:init'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:init'
     integer, parameter :: num_interior_elements = 1 ! FIXME #66: get this value from interface, let it vary
 
     !--------------------------------------------------------------------
@@ -387,7 +385,7 @@ contains
     character(len=*),              intent(in)    :: varname
     real(r8),                      intent(in)    :: val
 
-    character(len=*), parameter :: subname = 'marbl_interface:put_real'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:put_real'
 
     call this%settings%put(varname, this%StatusLog, rval=val)
     if (this%StatusLog%labort_marbl) then
@@ -405,7 +403,7 @@ contains
     character(len=*),              intent(in)    :: varname
     integer(int_kind),             intent(in)    :: val
 
-    character(len=*), parameter :: subname = 'marbl_interface:put_integer'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:put_integer'
 
     call this%settings%put(varname, this%StatusLog, ival=val)
     if (this%StatusLog%labort_marbl) then
@@ -423,7 +421,7 @@ contains
     character(len=*),              intent(in)    :: varname
     logical,                       intent(in)    :: val
 
-    character(len=*), parameter :: subname = 'marbl_interface:put_logical'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:put_logical'
 
     call this%settings%put(varname, this%StatusLog, lval=val)
     if (this%StatusLog%labort_marbl) then
@@ -441,7 +439,7 @@ contains
     character(len=*),              intent(in)    :: varname
     character(len=*),              intent(in)    :: val
 
-    character(len=*), parameter :: subname = 'marbl_interface:put_string'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:put_string'
 
     call this%settings%put(varname, this%StatusLog, sval=val)
     if (this%StatusLog%labort_marbl) then
@@ -461,7 +459,7 @@ contains
     class (marbl_interface_class),  intent(inout) :: this
     character(len=*),               intent(in)    :: varname, datatype, val
 
-    character(len=*), parameter :: subname = 'marbl_interface:put_all_string'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:put_all_string'
     character(len=char_len)     :: log_message
 
     real(r8)                :: rval
@@ -581,7 +579,7 @@ contains
     character(len=*),              intent(in)    :: varname
     real(r8),                      intent(out)   :: val
 
-    character(len=*), parameter :: subname = 'marbl_interface:get_real'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:get_real'
 
     call this%settings%get(varname, this%StatusLog, rval=val)
     if (this%StatusLog%labort_marbl) then
@@ -599,7 +597,7 @@ contains
     character(len=*),              intent(in)    :: varname
     integer(int_kind),             intent(out)   :: val
 
-    character(len=*), parameter :: subname = 'marbl_interface:get_integer'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:get_integer'
 
     call this%settings%get(varname, this%StatusLog, ival=val)
     if (this%StatusLog%labort_marbl) then
@@ -617,7 +615,7 @@ contains
     character(len=*),              intent(in)    :: varname
     logical,                       intent(out)   :: val
 
-    character(len=*), parameter :: subname = 'marbl_interface:get_logical'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:get_logical'
 
     call this%settings%get(varname, this%StatusLog, lval=val)
     if (this%StatusLog%labort_marbl) then
@@ -636,7 +634,7 @@ contains
     character(len=*),              intent(out)   :: val
     logical, optional,             intent(in)    :: linput_file_format
 
-    character(len=*), parameter :: subname = 'marbl_interface:get_string'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:get_string'
     character(len=char_len) :: log_message
 
     logical :: linput_file_format_loc
@@ -709,7 +707,7 @@ contains
     integer(int_kind), optional,   intent(out)   :: id
     character(len=*),  optional,   intent(out)   :: lname, units, datatype
 
-    character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata_by_name'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:inquire_settings_metadata_by_name'
     integer :: id_loc
 
     id_loc = this%settings%inquire_id(varname, this%StatusLog)
@@ -736,7 +734,7 @@ contains
     character(len=*), optional,    intent(out)   :: sname, lname, units
     character(len=*), optional,    intent(out)   :: datatype
 
-    character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata_by_id'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:inquire_settings_metadata_by_id'
 
     call this%settings%inquire_metadata(id,                  &
                                         sname    = sname,    &
@@ -752,7 +750,7 @@ contains
 
     class (marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:reset_timers'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:reset_timers'
 
     call this%timers%reset(this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -768,7 +766,7 @@ contains
 
     class (marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:extract_timing'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:extract_timing'
 
     call this%timers%extract(this%timer_summary, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -831,7 +829,7 @@ contains
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:set_interior_forcing'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:set_interior_forcing'
 
     call this%timers%start(this%timer_ids%interior_forcing_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -880,7 +878,7 @@ contains
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:set_surface_forcing'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:set_surface_forcing'
 
     call this%timers%start(this%timer_ids%surface_forcing_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -954,7 +952,7 @@ contains
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:shutdown'
+    character(len=*), parameter :: subname = 'marbl_interface_mod:shutdown'
     integer(int_kind) :: m,n
 
     if (allocated(this%glo_avg_fields_interior)) then
@@ -1037,4 +1035,4 @@ contains
 
   !*****************************************************************************
 
-end module marbl_interface
+end module marbl_interface_mod

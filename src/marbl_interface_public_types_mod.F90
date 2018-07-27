@@ -1,9 +1,9 @@
-module marbl_interface_public_types
+module marbl_interface_public_types_mod
   ! module for definitions of types that are shared between marbl interior and the driver.
 
-  use marbl_kinds_mod           , only : r8, log_kind, int_kind, char_len
-  use marbl_constants_mod       , only : c0
-  use marbl_logging             , only : marbl_log_type
+  use marbl_kinds_mod, only : r8, log_kind, int_kind, char_len
+  use marbl_constants_mod, only : c0
+  use marbl_logging_mod, only : marbl_log_type
 
   implicit none
 
@@ -263,7 +263,7 @@ contains
     integer,          intent(in) :: num_levels
 
     character(len=*), parameter :: subname =                                  &
-                  'marbl_interface_public_types:marbl_single_saved_state_construct'
+                  'marbl_interface_public_types_mod:marbl_single_saved_state_construct'
     character(len=char_len)     :: log_message
 
     select case (rank)
@@ -331,7 +331,7 @@ contains
     integer(int_kind), intent(in)  :: rank
     integer(int_kind), intent(out) :: id
 
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_saved_state_add'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types_mod:marbl_saved_state_add'
     character(len=char_len)     :: log_message
 
     type(marbl_single_saved_state_type), dimension(:), pointer :: new_state
@@ -399,7 +399,7 @@ contains
     type(marbl_log_type)    , intent(inout) :: marbl_status_log
     integer,       optional , intent(in)    :: ref_depth
 
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_diag_init'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types_mod:marbl_single_diag_init'
     character(len=char_len)     :: log_message
 
     ! Allocate column memory for 3D vars or num_elements memory for 2D vars
@@ -448,7 +448,7 @@ contains
     integer(int_kind),            intent(in)    :: id
     type(marbl_log_type),         intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_sfo_constructor'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types_mod:marbl_single_sfo_constructor'
     character(len=char_len)     :: log_message
 
     select case (trim(field_name))
@@ -511,7 +511,7 @@ contains
     type(marbl_log_type), intent(inout) :: marbl_status_log
     integer(int_kind),    intent(out)   :: sfo_id
 
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_sfo_add'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types_mod:marbl_sfo_add'
 
     type(marbl_single_sfo_type), dimension(:), pointer :: new_sfo
     integer :: n, old_size
@@ -576,7 +576,7 @@ contains
     class(marbl_diagnostics_type), intent(inout) :: this
     type(marbl_log_type),          intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_diagnostics_set_to_zero'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types_mod:marbl_diagnostics_set_to_zero'
     character(len=char_len)     :: log_message
 
     integer (int_kind) :: n
@@ -611,7 +611,7 @@ contains
     type(marbl_log_type)          , intent(inout) :: marbl_status_log
     integer,             optional , intent(in)    :: ref_depth
 
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_diagnostics_add'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types_mod:marbl_diagnostics_add'
     character(len=char_len)     :: log_message
 
     type(marbl_single_diagnostic_type), dimension(:), pointer :: new_diags
@@ -699,7 +699,7 @@ contains
     type(marbl_log_type),             intent(inout) :: marbl_status_log
     integer, optional,                intent(in)    :: dim1
 
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_forcing_fields_set_rank'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types_mod:marbl_forcing_fields_set_rank'
     character(len=char_len)     :: log_message
 
     this%metadata%rank = rank
@@ -759,4 +759,4 @@ contains
 
   !*****************************************************************************
 
-end module marbl_interface_public_types
+end module marbl_interface_public_types_mod

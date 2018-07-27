@@ -37,14 +37,14 @@ Program marbl
 ! *****************************************************************************
 
   ! Use from libmarbl.a
-  use marbl_interface, only : marbl_interface_class
-  use marbl_logging,   only : marbl_log_type
+  use marbl_interface_mod, only : marbl_interface_class
+  use marbl_logging_mod, only : marbl_log_type
   use marbl_kinds_mod, only : char_len
 
   ! Driver modules for individual tests
-  use marbl_init_drv,    only : marbl_init_test    => test
+  use marbl_init_drv, only : marbl_init_test    => test
   use marbl_get_put_drv, only : marbl_get_put_test => test
-  use marbl_utils_drv,   only : marbl_utils_test => test
+  use marbl_utils_drv, only : marbl_utils_test => test
 
   ! MPI wrappers (will build without MPI as well)
   use marbl_mpi_mod, only : marbl_mpi_init
@@ -464,7 +464,7 @@ Contains
 
   subroutine print_marbl_log(log_to_print, outfile)
 
-    use marbl_logging, only : marbl_status_log_entry_type
+    use marbl_logging_mod, only : marbl_status_log_entry_type
 
     class(marbl_log_type),      intent(inout) :: log_to_print
     character(len=*), optional, intent(in)    :: outfile
