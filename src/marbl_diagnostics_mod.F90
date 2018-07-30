@@ -4293,14 +4293,6 @@ contains
     type(marbl_surface_forcing_internal_type) , intent(in)    :: surface_forcing_internal
     type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
 
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-
-    !-----------------------------------------------------------------------
-    !  calculate gas flux quantities if necessary
-    !-----------------------------------------------------------------------
-
     associate(                                                                                  &
          ind_diag          => marbl_surface_forcing_diag_ind,                                   &
          ind_forc          => surface_forcing_ind,                                              &
@@ -4352,6 +4344,10 @@ contains
          donr_ind          => marbl_tracer_indices%donr_ind,                                    &
          docr_ind          => marbl_tracer_indices%docr_ind                                     &
          )
+
+    !-----------------------------------------------------------------------
+    !  calculate gas flux quantities if necessary
+    !-----------------------------------------------------------------------
 
     if (lflux_gas_o2 .or. lflux_gas_co2) then
 
@@ -4575,6 +4571,7 @@ contains
     real(r8) :: autotrophC_weight(marbl_domain%km)
     real(r8) :: autotrophC_zint_100m
     real(r8) :: limterm(marbl_domain%km)
+    !-----------------------------------------------------------------------
 
     associate(                                     &
          diags   => marbl_interior_diags%diags,    &
@@ -5757,18 +5754,10 @@ contains
     real (r8), dimension(num_elements) , intent(in)    :: eps_dic_g_surf ! equilibrium fractionation between total DIC and gaseous CO2
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_surface_forcing_diags
 
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-
     associate(                                          &
          diags => marbl_surface_forcing_diags%diags,    &
          ind   => marbl_surface_forcing_diag_ind        &
          )
-
-    !-----------------------------------------------------------------------
-    !    Tavg variables
-    !-----------------------------------------------------------------------
 
     diags(ind%CISO_DI13C_GAS_FLUX)%field_2d(:) = FLUX13(:)
     diags(ind%CISO_DI14C_GAS_FLUX)%field_2d(:) = FLUX14(:)
