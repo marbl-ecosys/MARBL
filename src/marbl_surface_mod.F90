@@ -81,45 +81,11 @@ module marbl_surface_mod
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : r8
 
-  use marbl_settings_mod, only : autotroph_cnt
-  use marbl_settings_mod, only : zooplankton_cnt
-  use marbl_settings_mod, only : max_grazer_prey_cnt
   use marbl_settings_mod, only : ciso_on
-  use marbl_settings_mod, only : lsource_sink
   use marbl_settings_mod, only : lflux_gas_o2
   use marbl_settings_mod, only : lflux_gas_co2
-  use marbl_settings_mod, only : init_bury_coeff_opt
   use marbl_settings_mod, only : ladjust_bury_coeff
-  use marbl_settings_mod, only : autotrophs
-  use marbl_settings_mod, only : zooplankton
-  use marbl_settings_mod, only : dust_to_Fe
-  use marbl_settings_mod, only : denitrif_C_N
-  use marbl_settings_mod, only : parm_Red_Fe_C
-  use marbl_settings_mod, only : Q
-  use marbl_settings_mod, only : parm_scalelen_z
-  use marbl_settings_mod, only : parm_scalelen_vals
-  use marbl_settings_mod, only : caco3_poc_min
-  use marbl_settings_mod, only : DOCprod_refract
-  use marbl_settings_mod, only : DONprod_refract
-  use marbl_settings_mod, only : DOPprod_refract
-  use marbl_settings_mod, only : POCremin_refract
-  use marbl_settings_mod, only : PONremin_refract
-  use marbl_settings_mod, only : POPremin_refract
-  use marbl_settings_mod, only : f_toDON
-  use marbl_settings_mod, only : f_graze_CaCO3_REMIN
-  use marbl_settings_mod, only : f_graze_si_remin
-  use marbl_settings_mod, only : f_graze_sp_poc_lim
-  use marbl_settings_mod, only : parm_labile_ratio
-  use marbl_settings_mod, only : parm_o2_min
-  use marbl_settings_mod, only : parm_o2_min_delta
-  use marbl_settings_mod, only : parm_red_d_c_o2
-  use marbl_settings_mod, only : parm_red_d_c_o2_diaz
-  use marbl_settings_mod, only : parm_Remin_D_C_O2
-  use marbl_settings_mod, only : QCaCO3_max
-  use marbl_settings_mod, only : Qfe_zoo
-  use marbl_settings_mod, only : spc_poc_fac
-  use marbl_settings_mod, only : grazing
-  use marbl_settings_mod, only : PON_bury_coeff
+  use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : del_ph
   use marbl_settings_mod, only : phhi_surf_init
   use marbl_settings_mod, only : phlo_surf_init
@@ -134,7 +100,6 @@ module marbl_surface_mod
   use marbl_interface_public_types, only : marbl_forcing_fields_type
 
   use marbl_diagnostics_mod , only : marbl_diagnostics_set_surface_forcing
-  use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
 
   use marbl_logging         , only : marbl_log_type
 
@@ -290,7 +255,7 @@ contains
 
     if (sfo_ind%totalChl_id.ne.0) then
       totalChl_loc = c0
-      do auto_ind = 1,size(autotrophs)
+      do auto_ind = 1,autotroph_cnt
         totalChl_loc = totalChl_loc +                                         &
           max(c0, surface_vals(:,marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind))
       end do

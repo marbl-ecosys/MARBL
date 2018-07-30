@@ -37,9 +37,6 @@ module marbl_interior_mod
   use marbl_settings_mod, only : max_grazer_prey_cnt
   use marbl_settings_mod, only : ciso_on
   use marbl_settings_mod, only : lsource_sink
-  use marbl_settings_mod, only : lflux_gas_o2
-  use marbl_settings_mod, only : lflux_gas_co2
-  use marbl_settings_mod, only : init_bury_coeff_opt
   use marbl_settings_mod, only : ladjust_bury_coeff
   use marbl_settings_mod, only : autotrophs
   use marbl_settings_mod, only : zooplankton
@@ -117,6 +114,7 @@ contains
 
     use marbl_temperature, only : marbl_temperature_potemp
     use marbl_ciso_mod, only : marbl_ciso_set_interior_forcing
+    use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
     use marbl_interface_private_types, only : marbl_internal_timers_type
     use marbl_interface_private_types, only : marbl_timer_indexing_type
     use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
