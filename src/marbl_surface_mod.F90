@@ -1,7 +1,7 @@
 ! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-module marbl_mod
+module marbl_surface_mod
 
   !  Multispecies ecosystem based on Doney et al. 1996, Moore et al., 2002
   !  Based on POP Global NCAR Nitrogen Ecosystem Model
@@ -4540,6 +4540,6 @@ contains
 
   !***********************************************************************
 
-end module marbl_mod
+end module marbl_surface_mod
 
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
