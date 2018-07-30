@@ -24,14 +24,6 @@ module marbl_init_mod
   public :: marbl_init_bury_coeff
   public :: marbl_init_forcing_fields
 
-  private :: marbl_init_tracer_metadata
-  private :: marbl_init_non_autotroph_tracer_metadata
-  private :: marbl_init_non_autotroph_tracers_metadata
-  private :: marbl_init_zooplankton_tracer_metadata
-  private :: marbl_init_autotroph_tracer_metadata
-  private :: marbl_init_surface_forcing_fields
-  private :: marbl_init_interior_forcing_fields
-
 contains
 
   !***********************************************************************

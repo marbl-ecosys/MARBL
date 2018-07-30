@@ -780,8 +780,8 @@ contains
 
   subroutine glo_vars_init(this)
 
-    use marbl_mod, only : marbl_set_glo_vars_cnt
-    use marbl_mod, only : marbl_set_rmean_init_vals
+    use marbl_glo_avg_mod, only : marbl_glo_avg_count_vars
+    use marbl_glo_avg_mod, only : marbl_glo_avg_init_rmean_vals
 
     class (marbl_interface_class), intent(inout) :: this
 
@@ -792,10 +792,10 @@ contains
 
     associate(num_surface_elements => this%domain%num_elements_surface_forcing)
 
-    call marbl_set_glo_vars_cnt(glo_avg_field_cnt_interior, &
-                                glo_avg_field_cnt_surface,  &
-                                glo_scalar_cnt_interior,    &
-                                glo_scalar_cnt_surface)
+    call marbl_glo_avg_count_vars(glo_avg_field_cnt_interior, &
+                                  glo_avg_field_cnt_surface,  &
+                                  glo_scalar_cnt_interior,    &
+                                  glo_scalar_cnt_surface)
 
     allocate(this%glo_avg_fields_interior(glo_avg_field_cnt_interior))
     allocate(this%glo_avg_averages_interior(glo_avg_field_cnt_interior))
@@ -812,10 +812,10 @@ contains
     allocate(this%glo_scalar_rmean_interior(glo_scalar_cnt_interior))
     allocate(this%glo_scalar_rmean_surface(glo_scalar_cnt_surface))
 
-    call marbl_set_rmean_init_vals(this%glo_avg_rmean_interior,    &
-                                   this%glo_avg_rmean_surface,     &
-                                   this%glo_scalar_rmean_interior, &
-                                   this%glo_scalar_rmean_surface)
+    call marbl_glo_avg_init_rmean_vals(this%glo_avg_rmean_interior,    &
+                                       this%glo_avg_rmean_surface,     &
+                                       this%glo_scalar_rmean_interior, &
+                                       this%glo_scalar_rmean_surface)
 
     end associate
 
@@ -825,7 +825,7 @@ contains
 
   subroutine set_interior_forcing(this)
 
-    use marbl_mod, only : marbl_set_interior_forcing
+    use marbl_interior_mod, only : marbl_set_interior_forcing
 
     class(marbl_interface_class), intent(inout) :: this
 
@@ -872,7 +872,7 @@ contains
 
   subroutine set_surface_forcing(this)
 
-    use marbl_mod      , only : marbl_set_surface_forcing
+    use marbl_surface_mod, only : marbl_set_surface_forcing
 
     implicit none
 
@@ -919,7 +919,7 @@ contains
 
   subroutine set_global_scalars(this, field_source)
 
-    use marbl_mod, only : marbl_set_global_scalars_interior
+    use marbl_interior_mod, only : marbl_set_global_scalars_interior
 
     implicit none
 
