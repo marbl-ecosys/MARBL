@@ -736,8 +736,6 @@ contains
     character(len=*), optional,    intent(out)   :: sname, lname, units
     character(len=*), optional,    intent(out)   :: datatype
 
-    character(len=*), parameter :: subname = 'marbl_interface:inquire_settings_metadata_by_id'
-
     call this%settings%inquire_metadata(id,                  &
                                         sname    = sname,    &
                                         lname    = lname,    &
