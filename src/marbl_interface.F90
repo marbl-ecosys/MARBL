@@ -120,8 +120,8 @@ module marbl_interface
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
      procedure, public  :: get_tracer_index
-     procedure, public  :: set_interior_forcing
-     procedure, public  :: set_surface_forcing
+     procedure, public  :: compute_tendencies
+     procedure, public  :: compute_fluxes
      procedure, public  :: set_global_scalars
      procedure, public  :: shutdown
      generic            :: inquire_settings_metadata => inquire_settings_metadata_by_name, &
@@ -156,8 +156,8 @@ module marbl_interface
   private :: reset_timers
   private :: extract_timing
   private :: glo_vars_init
-  private :: set_interior_forcing
-  private :: set_surface_forcing
+  private :: compute_tendencies
+  private :: compute_fluxes
   private :: shutdown
 
   !***********************************************************************
@@ -823,13 +823,13 @@ contains
 
   !***********************************************************************
 
-  subroutine set_interior_forcing(this)
+  subroutine compute_tendencies(this)
 
-    use marbl_interior_mod, only : marbl_set_interior_forcing
+    use marbl_interior_mod, only : marbl_interior_compute_tendencies
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:set_interior_forcing'
+    character(len=*), parameter :: subname = 'marbl_interface:compute_tendencies'
 
     call this%timers%start(this%timer_ids%interior_forcing_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -837,7 +837,7 @@ contains
       return
     end if
 
-    call marbl_set_interior_forcing(                                          &
+    call marbl_interior_compute_tendencies(                                   &
          domain                   = this%domain,                              &
          interior_forcings        = this%interior_input_forcings,             &
          saved_state              = this%interior_saved_state,                &
@@ -856,7 +856,7 @@ contains
          marbl_status_log         = this%StatusLog)
 
     if (this%StatusLog%labort_marbl) then
-       call this%StatusLog%log_error_trace("marbl_set_interior_forcing()", subname)
+       call this%StatusLog%log_error_trace("marbl_interior_compute_tendencies()", subname)
        return
     end if
 
@@ -866,19 +866,19 @@ contains
       return
     end if
 
-  end subroutine set_interior_forcing
+  end subroutine compute_tendencies
 
   !***********************************************************************
 
-  subroutine set_surface_forcing(this)
+  subroutine compute_fluxes(this)
 
-    use marbl_surface_mod, only : marbl_set_surface_forcing
+    use marbl_surface_mod, only : marbl_surface_compute_fluxes
 
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:set_surface_forcing'
+    character(len=*), parameter :: subname = 'marbl_interface:compute_fluxes'
 
     call this%timers%start(this%timer_ids%surface_forcing_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -886,7 +886,7 @@ contains
       return
     end if
 
-    call marbl_set_surface_forcing(                                           &
+    call marbl_surface_compute_fluxes(                                        &
          num_elements             = this%domain%num_elements_surface_forcing, &
          surface_forcing_ind      = this%surface_forcing_ind,                 &
          surface_input_forcings   = this%surface_input_forcings,              &
@@ -902,7 +902,7 @@ contains
          glo_avg_fields_surface   = this%glo_avg_fields_surface,              &
          marbl_status_log         = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-       call this%StatusLog%log_error_trace("marbl_set_surface_forcing()", subname)
+       call this%StatusLog%log_error_trace("marbl_surface_compute_fluxes()", subname)
        return
     end if
 
@@ -913,7 +913,7 @@ contains
       return
     end if
 
-  end subroutine set_surface_forcing
+  end subroutine compute_fluxes
 
   !***********************************************************************
 

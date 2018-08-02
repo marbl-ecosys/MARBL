@@ -110,7 +110,7 @@ module marbl_surface_mod
   !  public/private member procedure declarations
   !-----------------------------------------------------------------------
 
-  public  :: marbl_set_surface_forcing
+  public  :: marbl_surface_compute_fluxes
 
   !*****************************************************************************
 
@@ -118,7 +118,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_set_surface_forcing( &
+  subroutine marbl_surface_compute_fluxes( &
        num_elements,                    &
        surface_forcing_ind,             &
        surface_input_forcings,          &
@@ -148,7 +148,7 @@ contains
     use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
     use marbl_settings_mod, only : xkw_coeff
-    use marbl_ciso_mod, only : marbl_ciso_set_surface_forcing
+    use marbl_ciso_mod, only : marbl_ciso_compute_fluxes
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_C_input
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_P_input
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_Si_input
@@ -173,7 +173,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_mod:marbl_set_surface_forcing'
+    character(len=*), parameter :: subname = 'marbl_mod:marbl_surface_compute_fluxes'
 
     integer (int_kind) :: auto_ind                 ! autotroph functional group index
     real (r8)          :: phlo(num_elements)       ! lower bound for ph in solver
@@ -517,7 +517,7 @@ contains
 
     if (ciso_on) then
        ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
-       call marbl_ciso_set_surface_forcing(                                              &
+       call marbl_ciso_compute_fluxes(                                                   &
             num_elements                = num_elements,                                  &
             sst                         = surface_input_forcings(ind%sst_id)%field_0d,   &
             d13c                        = surface_input_forcings(ind%d13c_id)%field_0d,  &
@@ -561,7 +561,7 @@ contains
        end associate
     end if
 
-  end subroutine marbl_set_surface_forcing
+  end subroutine marbl_surface_compute_fluxes
 
   !***********************************************************************
 

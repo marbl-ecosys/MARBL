@@ -55,8 +55,8 @@ module marbl_ciso_mod
   !-----------------------------------------------------------------------
 
   public  :: marbl_ciso_init_tracer_metadata
-  public  :: marbl_ciso_set_interior_forcing
-  public  :: marbl_ciso_set_surface_forcing
+  public  :: marbl_ciso_compute_tendencies
+  public  :: marbl_ciso_compute_fluxes
 
   private :: setup_cell_attributes
   private :: fract_keller_morel
@@ -192,7 +192,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_ciso_set_interior_forcing( &
+  subroutine marbl_ciso_compute_tendencies(   &
        marbl_domain,                          &
        marbl_interior_share,                  &
        marbl_zooplankton_share,               &
@@ -236,7 +236,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_interior_forcing'
+    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_compute_tendencies'
 
     real (r8) :: work1      ! temporaries
 
@@ -872,7 +872,7 @@ contains
     call P_Ca13CO3%destruct()
     call P_Ca14CO3%destruct()
 
-  end subroutine marbl_ciso_set_interior_forcing
+  end subroutine marbl_ciso_compute_tendencies
 
   !***********************************************************************
 
@@ -1421,7 +1421,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_ciso_set_surface_forcing( &
+  subroutine marbl_ciso_compute_fluxes(      &
        num_elements        ,                 &
        sst                 ,                 &
        d13c                ,                 &
@@ -1619,6 +1619,6 @@ contains
          eps_dic_g_surf, &
          marbl_surface_forcing_diags)
 
-  end subroutine marbl_ciso_set_surface_forcing
+  end subroutine marbl_ciso_compute_fluxes
 
 end module marbl_ciso_mod

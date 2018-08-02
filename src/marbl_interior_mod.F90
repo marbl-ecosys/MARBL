@@ -85,14 +85,14 @@ module marbl_interior_mod
      real (r8) :: C  ! local copy of model zooplankton C
   end type zooplankton_local_type
 
-  public  :: marbl_set_interior_forcing
+  public  :: marbl_interior_compute_tendencies
   public  :: marbl_set_global_scalars_interior
 
 contains
 
   !***********************************************************************
 
-  subroutine marbl_set_interior_forcing( &
+  subroutine marbl_interior_compute_tendencies( &
        domain,                           &
        interior_forcings,                &
        saved_state,                      &
@@ -113,7 +113,7 @@ contains
     !  Compute time derivatives for ecosystem state variables
 
     use marbl_temperature, only : marbl_temperature_potemp
-    use marbl_ciso_mod, only : marbl_ciso_set_interior_forcing
+    use marbl_ciso_mod, only : marbl_ciso_compute_tendencies
     use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
     use marbl_interface_private_types, only : marbl_internal_timers_type
     use marbl_interface_private_types, only : marbl_timer_indexing_type
@@ -143,7 +143,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_interior_mod:marbl_set_interior_forcing'
+    character(len=*), parameter :: subname = 'marbl_interior_mod:marbl_interior_compute_tendencies'
 
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
     real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
@@ -460,7 +460,7 @@ contains
 
     !  Compute time derivatives for ecosystem carbon isotope state variables
     if (ciso_on) then
-       call marbl_ciso_set_interior_forcing(                            &
+       call marbl_ciso_compute_tendencies(                              &
             marbl_domain                 = domain,                      &
             marbl_interior_share         = marbl_interior_share,        &
             marbl_zooplankton_share      = marbl_zooplankton_share,     &
@@ -476,7 +476,7 @@ contains
 
        if (marbl_status_log%labort_marbl) then
           call marbl_status_log%log_error_trace(&
-               'marbl_ciso_set_interior_forcing()', subname)
+               'marbl_ciso_compute_tendencies()', subname)
           return
        end if
     end if
@@ -486,7 +486,7 @@ contains
     ! ADD RESTORING
     dtracers = dtracers + interior_restore
 
-  end subroutine marbl_set_interior_forcing
+  end subroutine marbl_interior_compute_tendencies
 
   !***********************************************************************
 
