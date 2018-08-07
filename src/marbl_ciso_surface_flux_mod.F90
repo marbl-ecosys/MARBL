@@ -83,10 +83,8 @@ contains
          flux,                            & ! gas flux of CO2 (nmol/cm^2/s)
          flux13,                          & ! gas flux of 13CO2 (nmol/cm^2/s)
          flux14,                          & ! gas flux of 14CO2 (nmol/cm^2/s)
-         flux_as,                         & ! air-to-sea gas flux of CO2 (nmol/cm^2/s)
          flux13_as,                       & ! air-to-sea gas flux of 13CO2 (nmol/cm^2/s)
          flux14_as,                       & ! air-to-sea gas flux of 14CO2 (nmol/cm^2/s)
-         flux_sa,                         & ! sea-to-air gas flux of CO2 (nmol/cm^2/s)
          flux13_sa,                       & ! sea-to-air gas flux of 13CO2 (nmol/cm^2/s)
          flux14_sa                          ! sea-to-air gas flux of 14CO2 (nmol/cm^2/s)
 
@@ -202,9 +200,6 @@ contains
     !-----------------------------------------------------------------------
     !     compute fluxes in and out
     !-----------------------------------------------------------------------
-
-    flux_as(:)   = pv(:) * ( dco2star(:) + co2star(:) )
-    flux_sa(:)   = pv(:) * co2star(:)
 
     flux13_as(:) = pv(:) * alpha_k     * alpha_aq_g_surf(:)     * ((co2star(:) + dco2star(:)) * r13c_atm(:))
     flux14_as(:) = pv(:) * alpha_k_14c * alpha_aq_g_surf_14c(:) * ((co2star(:) + dco2star(:)) * r14c_atm(:))
