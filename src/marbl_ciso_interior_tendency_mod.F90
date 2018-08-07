@@ -12,6 +12,7 @@ module marbl_ciso_interior_tendency_mod
 
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : autotrophs
+  use marbl_settings_mod, only : ciso_on
 
   use marbl_logging, only : marbl_log_type
 
@@ -171,6 +172,9 @@ contains
          decay_14Ctot         ! 14C decay loss term
 
     !-------------------------------------------------------------
+
+    ! Return immediately if not running with carbon isotope tracer module
+    if (.not. ciso_on) return
 
     associate(                                                                   &
          column_km          => marbl_domain%km                                 , &

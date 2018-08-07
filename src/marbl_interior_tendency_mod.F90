@@ -75,15 +75,12 @@ module marbl_interior_tendency_mod
   use marbl_pft_mod, only : marbl_zooplankton_share_type
   use marbl_pft_mod, only : autotroph_local_type
   use marbl_pft_mod, only : autotroph_secondary_species_type
+  use marbl_pft_mod, only : zooplankton_local_type
   use marbl_pft_mod, only : zooplankton_secondary_species_type
   use marbl_pft_mod, only : Qp_zoo
 
   implicit none
   private
-
-  type, private :: zooplankton_local_type
-     real (r8) :: C  ! local copy of model zooplankton C
-  end type zooplankton_local_type
 
   public  :: marbl_interior_tendency_compute
   public  :: marbl_set_global_scalars_interior
@@ -119,6 +116,8 @@ contains
     use marbl_interface_private_types, only : marbl_timer_indexing_type
     use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
     use marbl_interface_public_types, only : marbl_diagnostics_type
+    use marbl_interior_share_mod, only : marbl_interior_share_export_variables
+    use marbl_interior_share_mod, only : marbl_interior_share_export_zooplankton
     use marbl_restore_mod, only : marbl_restore_compute_interior_restore
     use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
@@ -193,8 +192,6 @@ contains
     ! NOTE(bja, 2015-07) dtracers=0 must come before the "not
     ! lsource_sink check to ensure correct answer when not doing
     ! computations.
-    ! NOTE(mvertens, 2015-12) the following includes carbon isotopes if
-    ! ciso_on is true
 
     dtracers(:, :) = c0
 
@@ -408,18 +405,16 @@ contains
             o2_production(k), o2_consumption(k), &
             dtracers(:, k), marbl_tracer_indices )
 
-       if (ciso_on) then
-          ! FIXME #28: need to pull particulate share out
-          !            of compute_particulate_terms!
-          call export_interior_shared_variables(tracer_local(:, k),             &
-               marbl_tracer_indices, carbonate(k), dissolved_organic_matter(k), &
-               QA_dust_def(k), marbl_interior_share(k))
+       ! Store any variables needed in other tracer modules
+       ! FIXME #28: need to pull particulate share out
+       !            of compute_particulate_terms!
+       call marbl_interior_share_export_variables(tracer_local(:, k),        &
+            marbl_tracer_indices, carbonate(k), dissolved_organic_matter(k), &
+            QA_dust_def(k), marbl_interior_share(k))
 
-          call export_zooplankton_shared_variables(zooplankton_local(:, k), &
-               zooplankton_secondary_species(:, k), &
-               marbl_zooplankton_share(k))
-
-       end if
+       call marbl_interior_share_export_zooplankton(zooplankton_local(:, k), &
+            zooplankton_secondary_species(:, k), &
+            marbl_zooplankton_share(k))
 
        if  (k < km) then
           call update_particulate_terms_from_prior_level(k+1, POC, POP, P_CaCO3, &
@@ -459,26 +454,24 @@ contains
     end if
 
     !  Compute time derivatives for ecosystem carbon isotope state variables
-    if (ciso_on) then
-       call marbl_ciso_compute_tendencies(                              &
-            marbl_domain                 = domain,                      &
-            marbl_interior_share         = marbl_interior_share,        &
-            marbl_zooplankton_share      = marbl_zooplankton_share,     &
-            marbl_particulate_share      = marbl_particulate_share,     &
-            autotroph_secondary_species  = autotroph_secondary_species, &
-            tracer_local                 = tracer_local,                &
-            autotroph_local              = autotroph_local,             &
-            temperature                  = temperature,                 &
-            marbl_tracer_indices         = marbl_tracer_indices,        &
-            column_dtracer               = dtracers,                    &
-            marbl_interior_diags         = interior_forcing_diags,      &
-            marbl_status_log             = marbl_status_log)
+    call marbl_ciso_compute_tendencies(                              &
+         marbl_domain                 = domain,                      &
+         marbl_interior_share         = marbl_interior_share,        &
+         marbl_zooplankton_share      = marbl_zooplankton_share,     &
+         marbl_particulate_share      = marbl_particulate_share,     &
+         autotroph_secondary_species  = autotroph_secondary_species, &
+         tracer_local                 = tracer_local,                &
+         autotroph_local              = autotroph_local,             &
+         temperature                  = temperature,                 &
+         marbl_tracer_indices         = marbl_tracer_indices,        &
+         column_dtracer               = dtracers,                    &
+         marbl_interior_diags         = interior_forcing_diags,      &
+         marbl_status_log             = marbl_status_log)
 
-       if (marbl_status_log%labort_marbl) then
-          call marbl_status_log%log_error_trace(&
-               'marbl_ciso_compute_tendencies()', subname)
-          return
-       end if
+    if (marbl_status_log%labort_marbl) then
+       call marbl_status_log%log_error_trace(&
+            'marbl_ciso_compute_tendencies()', subname)
+       return
     end if
 
     end associate
@@ -3679,66 +3672,6 @@ contains
 
      end associate
    end subroutine compute_dtracer_local
-
-   !***********************************************************************
-
-   subroutine export_interior_shared_variables (&
-        tracer_local, &
-        marbl_tracer_indices, &
-        carbonate, &
-        dissolved_organic_matter, &
-        QA_dust_def, &
-        marbl_interior_share)
-
-     real(r8)                            , intent(in)    :: tracer_local(:)
-     type(marbl_tracer_index_type)       , intent(in)    :: marbl_tracer_indices
-     type(carbonate_type)                , intent(in)    :: carbonate
-     type(dissolved_organic_matter_type) , intent(in)    :: dissolved_organic_matter
-     real(r8)                            , intent(in)    :: QA_dust_def
-     type(marbl_interior_share_type)     , intent(inout) :: marbl_interior_share
-
-     marbl_interior_share%QA_dust_def    = QA_dust_def
-
-     marbl_interior_share%CO3_fields   = carbonate%CO3
-     marbl_interior_share%HCO3_fields  = carbonate%HCO3
-     marbl_interior_share%H2CO3_fields = carbonate%H2CO3
-     marbl_interior_share%CO3_sat_calcite = carbonate%CO3_sat_calcite
-
-     marbl_interior_share%DOCtot_loc_fields = &
-          tracer_local(marbl_tracer_indices%DOC_ind) + tracer_local(marbl_tracer_indices%DOCr_ind)
-     marbl_interior_share%DOCtot_remin_fields = &
-          dissolved_organic_matter%DOC_remin + dissolved_organic_matter%DOCr_remin
-
-   end subroutine export_interior_shared_variables
-
-   !***********************************************************************
-
-   subroutine export_zooplankton_shared_variables (&
-        zooplankton_local, &
-        zooplankton_secondary_species, &
-        marbl_zooplankton_share)
-
-     type(zooplankton_local_type)             , intent(in)    :: zooplankton_local(:)
-     type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(:)
-     type(marbl_zooplankton_share_type)       , intent(inout) :: marbl_zooplankton_share
-
-     associate( &
-          share => marbl_zooplankton_share &
-          )
-
-        share%zoototC_loc_fields      = sum(zooplankton_local(:)%C)
-        share%zootot_loss_fields      = sum(zooplankton_secondary_species(:)%zoo_loss)
-        share%zootot_loss_poc_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_poc)
-        share%zootot_loss_doc_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_doc)
-        share%zootot_loss_dic_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_dic)
-        share%zootot_graze_fields     = sum(zooplankton_secondary_species(:)%zoo_graze)
-        share%zootot_graze_zoo_fields = sum(zooplankton_secondary_species(:)%zoo_graze_zoo)
-        share%zootot_graze_poc_fields = sum(zooplankton_secondary_species(:)%zoo_graze_poc)
-        share%zootot_graze_doc_fields = sum(zooplankton_secondary_species(:)%zoo_graze_doc)
-        share%zootot_graze_dic_fields = sum(zooplankton_secondary_species(:)%zoo_graze_dic)
-
-     end associate
-   end subroutine export_zooplankton_shared_variables
 
    !***********************************************************************
 

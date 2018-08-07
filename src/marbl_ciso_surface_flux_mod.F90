@@ -30,6 +30,8 @@ module marbl_ciso_surface_flux_mod
   use marbl_interface_private_types, only : marbl_surface_forcing_share_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
 
+  use marbl_settings_mod, only : ciso_on
+
   implicit none
   private
 
@@ -106,6 +108,9 @@ contains
     ! average of Zhang et al 1995 values of -0.81 at 21C and -0.95 at 5C
     real(r8), parameter :: eps_k = -0.88_r8
     !-----------------------------------------------------------------------
+
+    ! Return immediately if not running with carbon isotope tracer module
+    if (.not. ciso_on) return
 
     associate(                                                                     &
          pv                  => marbl_surface_forcing_share%pv_surf_fields       , & ! in/out
