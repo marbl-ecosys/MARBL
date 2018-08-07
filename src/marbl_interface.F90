@@ -121,7 +121,7 @@ module marbl_interface
      procedure, private :: glo_vars_init
      procedure, public  :: get_tracer_index
      procedure, public  :: compute_tendencies
-     procedure, public  :: compute_fluxes
+     procedure, public  :: surface_flux_compute
      procedure, public  :: set_global_scalars
      procedure, public  :: shutdown
      generic            :: inquire_settings_metadata => inquire_settings_metadata_by_name, &
@@ -157,7 +157,7 @@ module marbl_interface
   private :: extract_timing
   private :: glo_vars_init
   private :: compute_tendencies
-  private :: compute_fluxes
+  private :: surface_flux_compute
   private :: shutdown
 
   !***********************************************************************
@@ -870,15 +870,15 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_fluxes(this)
+  subroutine surface_flux_compute(this)
 
-    use marbl_surface_mod, only : marbl_surface_compute_fluxes
+    use marbl_surface_flux_mod, only : marbl_surface_flux_compute
 
     implicit none
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:compute_fluxes'
+    character(len=*), parameter :: subname = 'marbl_interface:surface_flux_compute'
 
     call this%timers%start(this%timer_ids%surface_forcing_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -886,7 +886,7 @@ contains
       return
     end if
 
-    call marbl_surface_compute_fluxes(                                        &
+    call marbl_surface_flux_compute(                                          &
          num_elements             = this%domain%num_elements_surface_forcing, &
          surface_forcing_ind      = this%surface_forcing_ind,                 &
          surface_input_forcings   = this%surface_input_forcings,              &
@@ -902,7 +902,7 @@ contains
          glo_avg_fields_surface   = this%glo_avg_fields_surface,              &
          marbl_status_log         = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-       call this%StatusLog%log_error_trace("marbl_surface_compute_fluxes()", subname)
+       call this%StatusLog%log_error_trace("marbl_surface_flux_compute()", subname)
        return
     end if
 
@@ -913,7 +913,7 @@ contains
       return
     end if
 
-  end subroutine compute_fluxes
+  end subroutine surface_flux_compute
 
   !***********************************************************************
 

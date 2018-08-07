@@ -1,7 +1,7 @@
 ! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-module marbl_surface_mod
+module marbl_surface_flux_mod
 
   !  Multispecies ecosystem based on Doney et al. 1996, Moore et al., 2002
   !  Based on POP Global NCAR Nitrogen Ecosystem Model
@@ -110,7 +110,7 @@ module marbl_surface_mod
   !  public/private member procedure declarations
   !-----------------------------------------------------------------------
 
-  public  :: marbl_surface_compute_fluxes
+  public  :: marbl_surface_flux_compute
 
   !*****************************************************************************
 
@@ -118,7 +118,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_surface_compute_fluxes( &
+  subroutine marbl_surface_flux_compute( &
        num_elements,                    &
        surface_forcing_ind,             &
        surface_input_forcings,          &
@@ -173,7 +173,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_mod:marbl_surface_compute_fluxes'
+    character(len=*), parameter :: subname = 'marbl_surface_flux_mod:marbl_surface_flux_compute'
 
     integer (int_kind) :: auto_ind                 ! autotroph functional group index
     real (r8)          :: phlo(num_elements)       ! lower bound for ph in solver
@@ -561,10 +561,10 @@ contains
        end associate
     end if
 
-  end subroutine marbl_surface_compute_fluxes
+  end subroutine marbl_surface_flux_compute
 
   !***********************************************************************
 
-end module marbl_surface_mod
+end module marbl_surface_flux_mod
 
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
