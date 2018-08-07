@@ -145,7 +145,7 @@ contains
     use marbl_co2calc_mod, only : co2calc_coeffs_type
     use marbl_co2calc_mod, only : co2calc_state_type
     use marbl_oxygen, only : o2sat_surf
-    use marbl_nhx_surface_emis_mod, only : marbl_comp_nhx_surface_emis
+    use marbl_nhx_surface_emis_mod, only : marbl_nhx_surface_emis_compute
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
     use marbl_settings_mod, only : xkw_coeff
     use marbl_ciso_mod, only : marbl_ciso_compute_fluxes
@@ -444,7 +444,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (lcompute_nhx_surface_emis) then
-      call marbl_comp_nhx_surface_emis(                &
+      call marbl_nhx_surface_emis_compute(             &
            num_elements     = num_elements,            &
            nh4              = surface_vals(:,nh4_ind), &
            ph               = ph_prev_surf,            &
