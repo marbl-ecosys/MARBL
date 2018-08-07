@@ -1,4 +1,4 @@
-module marbl_interior_mod
+module marbl_interior_tendency_mod
 
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : r8
@@ -85,29 +85,29 @@ module marbl_interior_mod
      real (r8) :: C  ! local copy of model zooplankton C
   end type zooplankton_local_type
 
-  public  :: marbl_interior_compute_tendencies
+  public  :: marbl_interior_tendency_compute
   public  :: marbl_set_global_scalars_interior
 
 contains
 
   !***********************************************************************
 
-  subroutine marbl_interior_compute_tendencies( &
-       domain,                           &
-       interior_forcings,                &
-       saved_state,                      &
-       saved_state_ind,                  &
-       tracers,                          &
-       surface_forcing_indices,          &
-       interior_forcing_indices,         &
-       dtracers,                         &
-       marbl_tracer_indices,             &
-       marbl_timers,                     &
-       marbl_timer_indices,              &
-       PAR,                              &
-       marbl_particulate_share,          &
-       interior_forcing_diags,           &
-       glo_avg_fields_interior,          &
+  subroutine marbl_interior_tendency_compute( &
+       domain,                                &
+       interior_forcings,                     &
+       saved_state,                           &
+       saved_state_ind,                       &
+       tracers,                               &
+       surface_forcing_indices,               &
+       interior_forcing_indices,              &
+       dtracers,                              &
+       marbl_tracer_indices,                  &
+       marbl_timers,                          &
+       marbl_timer_indices,                   &
+       PAR,                                   &
+       marbl_particulate_share,               &
+       interior_forcing_diags,                &
+       glo_avg_fields_interior,               &
        marbl_status_log)
 
     !  Compute time derivatives for ecosystem state variables
@@ -143,7 +143,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_interior_mod:marbl_interior_compute_tendencies'
+    character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:marbl_interior_tendency_compute'
 
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
     real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
@@ -486,7 +486,7 @@ contains
     ! ADD RESTORING
     dtracers = dtracers + interior_restore
 
-  end subroutine marbl_interior_compute_tendencies
+  end subroutine marbl_interior_tendency_compute
 
   !***********************************************************************
 
@@ -969,7 +969,7 @@ contains
      !-----------------------------------------------------------------------
      !  local variables
      !-----------------------------------------------------------------------
-     character(len=*), parameter :: subname = 'marbl_interior_mod:compute_carbonate_chemistry'
+     character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:compute_carbonate_chemistry'
 
      integer :: k
      type(co2calc_coeffs_type), dimension(domain%km) :: co2calc_coeffs
@@ -2220,7 +2220,7 @@ contains
      !  local variables
      !-----------------------------------------------------------------------
 
-     character(len=*), parameter :: subname = 'marbl_interior_mod:compute_scavenging'
+     character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:compute_scavenging'
      character(len=char_len)     :: log_message
 
      ! ligand binding strengths, original values are L/mol, model units are L/umol
@@ -2431,7 +2431,7 @@ contains
      !-----------------------------------------------------------------------
      !  local variables
      !-----------------------------------------------------------------------
-     character(len=*), parameter :: subname = 'marbl_interior_mod:compute_large_detritus_prod'
+     character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:compute_large_detritus_prod'
      character(len=char_len)     :: log_message
 
      integer :: auto_ind
@@ -2638,7 +2638,7 @@ contains
           caco3_diss, &
           dust_diss
 
-     character(len=*), parameter :: subname = 'marbl_interior_mod:compute_particulate_terms'
+     character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:compute_particulate_terms'
      character(len=char_len)     :: log_message
 
      real (r8) :: &
@@ -3791,4 +3791,4 @@ contains
 
    !***********************************************************************
 
-end module marbl_interior_mod
+end module marbl_interior_tendency_mod

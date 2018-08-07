@@ -120,7 +120,7 @@ module marbl_interface
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
      procedure, public  :: get_tracer_index
-     procedure, public  :: compute_tendencies
+     procedure, public  :: interior_tendency_compute
      procedure, public  :: surface_flux_compute
      procedure, public  :: set_global_scalars
      procedure, public  :: shutdown
@@ -156,7 +156,7 @@ module marbl_interface
   private :: reset_timers
   private :: extract_timing
   private :: glo_vars_init
-  private :: compute_tendencies
+  private :: interior_tendency_compute
   private :: surface_flux_compute
   private :: shutdown
 
@@ -823,13 +823,13 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_tendencies(this)
+  subroutine interior_tendency_compute(this)
 
-    use marbl_interior_mod, only : marbl_interior_compute_tendencies
+    use marbl_interior_tendency_mod, only : marbl_interior_tendency_compute
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:compute_tendencies'
+    character(len=*), parameter :: subname = 'marbl_interface:interior_tendency_compute'
 
     call this%timers%start(this%timer_ids%interior_forcing_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -837,7 +837,7 @@ contains
       return
     end if
 
-    call marbl_interior_compute_tendencies(                                   &
+    call marbl_interior_tendency_compute(                                     &
          domain                   = this%domain,                              &
          interior_forcings        = this%interior_input_forcings,             &
          saved_state              = this%interior_saved_state,                &
@@ -856,7 +856,7 @@ contains
          marbl_status_log         = this%StatusLog)
 
     if (this%StatusLog%labort_marbl) then
-       call this%StatusLog%log_error_trace("marbl_interior_compute_tendencies()", subname)
+       call this%StatusLog%log_error_trace("marbl_interior_tendency_compute()", subname)
        return
     end if
 
@@ -866,7 +866,7 @@ contains
       return
     end if
 
-  end subroutine compute_tendencies
+  end subroutine interior_tendency_compute
 
   !***********************************************************************
 
@@ -919,7 +919,7 @@ contains
 
   subroutine set_global_scalars(this, field_source)
 
-    use marbl_interior_mod, only : marbl_set_global_scalars_interior
+    use marbl_interior_tendency_mod, only : marbl_set_global_scalars_interior
 
     implicit none
 
