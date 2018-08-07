@@ -113,7 +113,7 @@ contains
     !  Compute time derivatives for ecosystem state variables
 
     use marbl_temperature, only : marbl_temperature_potemp
-    use marbl_ciso_surface_flux_mod, only : marbl_ciso_compute_tendencies
+    use marbl_ciso_interior_tendency_mod, only : marbl_ciso_compute_tendencies
     use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
     use marbl_interface_private_types, only : marbl_internal_timers_type
     use marbl_interface_private_types, only : marbl_timer_indexing_type
@@ -3745,6 +3745,8 @@ contains
    subroutine update_particulate_terms_from_prior_level(k, POC, POP, P_CaCO3, &
         P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def)
 
+     use marbl_interior_share_mod, only : marbl_interior_share_update_sinking_particle_from_level_above
+
      integer (int_kind)                 , intent(in)    :: k ! vertical model level
      type(column_sinking_particle_type) , intent(inout) :: POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron
      real(r8)                           , intent(inout) :: QA_dust_def(:) !(km)
@@ -3757,37 +3759,17 @@ contains
         !
         ! initialize loss to sediments = 0
         !-----------------------------------------------------------------------
-        call update_sinking_particle_from_prior_level(k, P_CaCO3)
-
-        call update_sinking_particle_from_prior_level(k, P_CaCO3_ALT_CO2)
-
-        call update_sinking_particle_from_prior_level(k, P_SiO2)
-
-        call update_sinking_particle_from_prior_level(k, dust)
-
-        call update_sinking_particle_from_prior_level(k, POC)
-
-        call update_sinking_particle_from_prior_level(k, POP)
-
-        call update_sinking_particle_from_prior_level(k, P_iron)
-
+        call marbl_interior_share_update_sinking_particle_from_level_above(k, P_CaCO3)
+        call marbl_interior_share_update_sinking_particle_from_level_above(k, P_CaCO3_ALT_CO2)
+        call marbl_interior_share_update_sinking_particle_from_level_above(k, P_SiO2)
+        call marbl_interior_share_update_sinking_particle_from_level_above(k, dust)
+        call marbl_interior_share_update_sinking_particle_from_level_above(k, POC)
+        call marbl_interior_share_update_sinking_particle_from_level_above(k, POP)
+        call marbl_interior_share_update_sinking_particle_from_level_above(k, P_iron)
         QA_dust_def(k) = QA_dust_def(k-1)
      end if
 
    end subroutine update_particulate_terms_from_prior_level
-
-   !***********************************************************************
-
-   subroutine update_sinking_particle_from_prior_level(k, sinking_particle)
-
-     integer (int_kind), intent(in) :: k
-     type(column_sinking_particle_type), intent(inout) :: sinking_particle
-
-     ! NOTE(bja, 201504) level k influx is equal to the level k-1 outflux.
-     sinking_particle%sflux_in(k)  = sinking_particle%sflux_out(k-1)
-     sinking_particle%hflux_in(k)  = sinking_particle%hflux_out(k-1)
-
-   end subroutine update_sinking_particle_from_prior_level
 
    !***********************************************************************
 
