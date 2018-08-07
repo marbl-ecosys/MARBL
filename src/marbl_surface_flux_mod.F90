@@ -148,7 +148,7 @@ contains
     use marbl_nhx_surface_emis_mod, only : marbl_nhx_surface_emis_compute
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
     use marbl_settings_mod, only : xkw_coeff
-    use marbl_ciso_mod, only : marbl_ciso_compute_fluxes
+    use marbl_ciso_surface_flux_mod, only : marbl_ciso_compute_fluxes
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_C_input
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_P_input
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_Si_input

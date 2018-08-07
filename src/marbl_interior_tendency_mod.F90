@@ -113,7 +113,7 @@ contains
     !  Compute time derivatives for ecosystem state variables
 
     use marbl_temperature, only : marbl_temperature_potemp
-    use marbl_ciso_mod, only : marbl_ciso_compute_tendencies
+    use marbl_ciso_surface_flux_mod, only : marbl_ciso_compute_tendencies
     use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
     use marbl_interface_private_types, only : marbl_internal_timers_type
     use marbl_interface_private_types, only : marbl_timer_indexing_type

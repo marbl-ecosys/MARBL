@@ -1,7 +1,7 @@
 ! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-module marbl_ciso_mod
+module marbl_ciso_surface_flux_mod
 
   !-----------------------------------------------------------------------
   !  Carbon 13 module and biotic 14C module
@@ -236,7 +236,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_compute_tendencies'
+    character(len=*), parameter :: subname = 'marbl_ciso_surface_flux_mod:marbl_ciso_compute_tendencies'
 
     real (r8) :: work1      ! temporaries
 
@@ -898,7 +898,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_mod:setup_cell_attributes'
+    character(len=*), parameter :: subname = 'marbl_ciso_surface_flux_mod:setup_cell_attributes'
     character(len=char_len)     :: log_message
 
     integer(int_kind) :: auto_ind           ! autotroph functional group index
@@ -1621,4 +1621,4 @@ contains
 
   end subroutine marbl_ciso_compute_fluxes
 
-end module marbl_ciso_mod
+end module marbl_ciso_surface_flux_mod

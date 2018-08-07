@@ -136,7 +136,7 @@ contains
     use marbl_settings_mod, only : autotrophs
     use marbl_settings_mod, only : zooplankton
     use marbl_settings_mod, only : tracer_restore_vars
-    use marbl_ciso_mod, only : marbl_ciso_init_tracer_metadata
+    use marbl_ciso_surface_flux_mod, only : marbl_ciso_init_tracer_metadata
 
     integer(int_kind),                             intent(in)    :: num_levels
     integer(int_kind),                             intent(in)    :: num_surface_elements
