@@ -173,9 +173,7 @@ contains
 
     ! Set up tracer metadata
     call marbl_init_tracer_metadata(tracer_metadata, tracer_indices)
-    if (ciso_on) then
-       call marbl_ciso_init_tracer_metadata(tracer_metadata, tracer_indices)
-    end if
+    call marbl_ciso_init_tracer_metadata(tracer_metadata, tracer_indices)
 
     ! Log what tracers are being used
     call marbl_status_log%log_header('MARBL Tracer indices', subname)

@@ -1,6 +1,7 @@
 module marbl_ciso_init_mod
 
   use marbl_kinds_mod, only : int_kind
+  use marbl_settings_mod, only : ciso_on
   use marbl_interface_public_types, only : marbl_tracer_metadata_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
 
@@ -31,7 +32,8 @@ contains
     !-----------------------------------------------------------------------
     integer (int_kind) :: n                             ! tracer index
     integer (int_kind) :: auto_ind                      ! autotroph functional group index
-    !-----------------------------------------------------------------------
+
+    if (.not. ciso_on) return
 
     !-----------------------------------------------------------------------
     !  initialize non-autotroph metadata values
