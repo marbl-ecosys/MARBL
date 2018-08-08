@@ -9,9 +9,7 @@ module marbl_ciso_diagnostics_mod
   use marbl_constants_mod, only : c1000
 
   use marbl_settings_mod, only : autotroph_cnt
-  use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : autotrophs
-  use marbl_settings_mod, only : zooplankton
 
   use marbl_interface_public_types, only : marbl_diagnostics_type
 
@@ -906,7 +904,7 @@ contains
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
 
-    use marbl_constants_mod, only : R13C_std, R14C_std, c1000
+    use marbl_constants_mod, only : R13C_std, R14C_std
 
     integer (int_kind)                 , intent(in)    :: num_elements
     real (r8), dimension(num_elements) , intent(in)    :: D13C           ! atm 13co2 value
