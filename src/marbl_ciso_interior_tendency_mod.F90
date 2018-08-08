@@ -62,13 +62,13 @@ contains
     !  13C code is based on code from X. Giraud, ETH ZÃ¼rich, 2008, for pop1
     !  Also added biotic 14C
 
-    use marbl_settings_mod     , only : ciso_fract_factors
-    use marbl_settings_mod     , only : f_graze_CaCO3_REMIN
-    use marbl_constants_mod    , only : R13C_std
-    use marbl_constants_mod    , only : R14C_std
-    use marbl_constants_mod    , only : spd
-    use marbl_constants_mod    , only : spy
-    use marbl_diagnostics_mod  , only : store_diagnostics_ciso_interior
+    use marbl_settings_mod, only : ciso_fract_factors
+    use marbl_settings_mod, only : f_graze_CaCO3_REMIN
+    use marbl_constants_mod, only : R13C_std
+    use marbl_constants_mod, only : R14C_std
+    use marbl_constants_mod, only : spd
+    use marbl_constants_mod, only : spy
+    use marbl_ciso_diagnostics_mod, only : store_diagnostics_ciso_interior
 
     implicit none
 

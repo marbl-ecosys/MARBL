@@ -58,9 +58,9 @@ contains
        marbl_surface_forcing_share ,         &
        marbl_surface_forcing_diags)
 
-    use marbl_constants_mod    , only : R13C_std
-    use marbl_constants_mod    , only : R14C_std
-    use marbl_diagnostics_mod  , only : store_diagnostics_ciso_surface_forcing
+    use marbl_constants_mod, only : R13C_std
+    use marbl_constants_mod, only : R14C_std
+    use marbl_ciso_diagnostics_mod, only : store_diagnostics_ciso_surface_forcing
 
     implicit none
 

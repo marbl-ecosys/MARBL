@@ -122,6 +122,8 @@ module marbl_logging
 
   !****************************************************************************
 
+  public :: marbl_logging_add_diagnostics_error
+
 contains
 
   !****************************************************************************
@@ -402,5 +404,21 @@ contains
     this%lwarning = .false.
 
   end subroutine marbl_log_erase
+
+  !*****************************************************************************
+
+  subroutine marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+
+    type(marbl_log_type),          intent(inout) :: marbl_status_log
+    character(len=*),              intent(in)    :: sname, subname
+
+    character(len=char_len) :: routine_name
+
+    write(routine_name,"(3A)") "diags%add_diagnostic(", trim(sname), ")"
+    call marbl_status_log%log_error_trace(routine_name, subname)
+
+  end subroutine marbl_logging_add_diagnostics_error
+
+  !*****************************************************************************
 
 end module marbl_logging
