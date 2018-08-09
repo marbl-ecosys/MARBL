@@ -122,7 +122,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_init_tracers(num_levels, &
-                                num_surface_elements, &
+                                num_elements_surface, &
                                 tracer_indices, &
                                 surface_vals, &
                                 surface_tracer_fluxes, &
@@ -139,7 +139,7 @@ contains
     use marbl_ciso_init_mod, only : marbl_ciso_init_tracer_metadata
 
     integer(int_kind),                             intent(in)    :: num_levels
-    integer(int_kind),                             intent(in)    :: num_surface_elements
+    integer(int_kind),                             intent(in)    :: num_elements_surface
     type(marbl_tracer_index_type),    pointer,     intent(out)   :: tracer_indices
     real(r8),                         allocatable, intent(out)   :: surface_vals(:,:)
     real(r8),                         allocatable, intent(out)   :: surface_tracer_fluxes(:,:)
@@ -163,8 +163,8 @@ contains
     end if
 
     ! Allocate memory for tracers
-    allocate(surface_vals(num_surface_elements, tracer_indices%total_cnt))
-    allocate(surface_tracer_fluxes(num_surface_elements, tracer_indices%total_cnt))
+    allocate(surface_vals(num_elements_surface, tracer_indices%total_cnt))
+    allocate(surface_tracer_fluxes(num_elements_surface, tracer_indices%total_cnt))
     allocate(column_tracers(tracer_indices%total_cnt, num_levels))
     allocate(column_dtracers(tracer_indices%total_cnt, num_levels))
     allocate(tracer_metadata(tracer_indices%total_cnt))
@@ -387,8 +387,7 @@ contains
     integer :: i
 
     associate(&
-         num_surface_elements  => domain%num_elements_surface_forcing,   &
-         num_interior_elements => domain%num_elements_interior_forcing,  &
+         num_elements_surface  => domain%num_elements_surface_flux,      &
          num_PAR_subcols       => domain%num_PAR_subcols,                &
          num_levels            => domain%km                              &
          )
@@ -410,13 +409,13 @@ contains
       end if
 
       ! Construct share / internal types for surface forcing
-      call surface_forcing_share%construct(num_surface_elements)
-      call surface_forcing_internal%construct(num_surface_elements)
+      call surface_forcing_share%construct(num_elements_surface)
+      call surface_forcing_internal%construct(num_elements_surface)
 
       ! Initialize surface forcing fields
       allocate(surface_input_forcings(num_surface_forcing_fields))
       call marbl_init_surface_forcing_fields(                                &
-           num_elements            = num_surface_elements,                   &
+           num_elements            = num_elements_surface,                   &
            surface_forcing_indices = surface_forcing_ind,                    &
            surface_forcings        = surface_input_forcings,                 &
            marbl_status_log        = marbl_status_log)
@@ -428,7 +427,7 @@ contains
       ! Initialize interior forcing fields
       allocate(interior_input_forcings(num_interior_forcing_fields))
       call marbl_init_interior_forcing_fields(                                &
-           num_elements             = num_interior_elements,                  &
+           num_elements             = domain%num_elements_interior_forcing,   &
            interior_forcing_indices = interior_forcing_ind,                   &
            tracer_metadata          = tracer_metadata,                        &
            num_PAR_subcols          = num_PAR_subcols,                        &

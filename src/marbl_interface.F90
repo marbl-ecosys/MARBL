@@ -169,7 +169,7 @@ contains
   subroutine init(this,                   &
        gcm_num_levels,                    &
        gcm_num_PAR_subcols,               &
-       gcm_num_elements_surface_forcing,  &
+       gcm_num_elements_surface_flux,     &
        gcm_delta_z,                       &
        gcm_zw,                            &
        gcm_zt,                            &
@@ -189,7 +189,7 @@ contains
     class(marbl_interface_class), intent(inout) :: this
     integer(int_kind),            intent(in)    :: gcm_num_levels
     integer(int_kind),            intent(in)    :: gcm_num_PAR_subcols
-    integer(int_kind),            intent(in)    :: gcm_num_elements_surface_forcing
+    integer(int_kind),            intent(in)    :: gcm_num_elements_surface_flux
     real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
@@ -238,7 +238,7 @@ contains
     associate(&
          num_levels            => gcm_num_levels,                              &
          num_PAR_subcols       => gcm_num_PAR_subcols,                         &
-         num_surface_elements  => gcm_num_elements_surface_forcing             &
+         num_surface_elements  => gcm_num_elements_surface_flux                &
          )
 
     !-----------------------------------------------------------------------
@@ -248,7 +248,7 @@ contains
     call this%domain%construct(                                 &
          num_levels                    = num_levels,            &
          num_PAR_subcols               = num_PAR_subcols,       &
-         num_elements_surface_forcing  = num_surface_elements,  &
+         num_elements_surface_flux     = num_surface_elements,  &
          num_elements_interior_forcing = num_interior_elements, &
          delta_z                       = gcm_delta_z,           &
          zw                            = gcm_zw,                &
@@ -790,7 +790,7 @@ contains
     integer (int_kind) :: glo_scalar_cnt_interior
     integer (int_kind) :: glo_scalar_cnt_surface
 
-    associate(num_surface_elements => this%domain%num_elements_surface_forcing)
+    associate(num_surface_elements => this%domain%num_elements_surface_flux)
 
     call marbl_glo_avg_count_vars(glo_avg_field_cnt_interior, &
                                   glo_avg_field_cnt_surface,  &
@@ -887,7 +887,7 @@ contains
     end if
 
     call marbl_surface_flux_compute(                                          &
-         num_elements             = this%domain%num_elements_surface_forcing, &
+         num_elements             = this%domain%num_elements_surface_flux,    &
          surface_forcing_ind      = this%surface_forcing_ind,                 &
          surface_input_forcings   = this%surface_input_forcings,              &
          surface_vals             = this%surface_vals,                        &

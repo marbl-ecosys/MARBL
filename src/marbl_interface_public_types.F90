@@ -53,7 +53,7 @@ module marbl_interface_public_types
 
   type, public :: marbl_domain_type
      integer(int_kind)     :: num_PAR_subcols               ! number of PAR subcols
-     integer(int_kind)     :: num_elements_surface_forcing  ! number of surface forcing columns
+     integer(int_kind)     :: num_elements_surface_flux     ! number of columns computed in surface_flux_compute
      integer(int_kind)     :: num_elements_interior_forcing ! number of interior forcing columns
      integer(int_kind)     :: km                            ! number of vertical grid cells
      integer(int_kind)     :: kmt                           ! index of ocean floor
@@ -201,13 +201,13 @@ contains
 
   subroutine marbl_domain_constructor(this, &
        num_levels, num_PAR_subcols, &
-       num_elements_surface_forcing, num_elements_interior_forcing, &
+       num_elements_surface_flux, num_elements_interior_forcing, &
        delta_z, zw, zt)
 
     class(marbl_domain_type), intent(out) :: this
     integer (int_kind),       intent(in)  :: num_levels
     integer (int_kind),       intent(in)  :: num_PAR_subcols
-    integer (int_kind),       intent(in)  :: num_elements_surface_forcing
+    integer (int_kind),       intent(in)  :: num_elements_surface_flux
     integer (int_kind),       intent(in)  :: num_elements_interior_forcing
     real (r8),                intent(in)  :: delta_z(num_levels)
     real (r8),                intent(in)  :: zw(num_levels)
@@ -221,7 +221,7 @@ contains
 
     this%km = num_levels
     this%num_PAR_subcols = num_PAR_subcols
-    this%num_elements_surface_forcing = num_elements_surface_forcing
+    this%num_elements_surface_flux = num_elements_surface_flux
     this%num_elements_interior_forcing = num_elements_interior_forcing
 
     do k = 1, num_levels
