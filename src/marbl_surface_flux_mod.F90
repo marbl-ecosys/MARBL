@@ -89,7 +89,7 @@ module marbl_surface_flux_mod
   use marbl_settings_mod, only : phhi_surf_init
   use marbl_settings_mod, only : phlo_surf_init
 
-  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types, only : marbl_surface_flux_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
   use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
@@ -128,7 +128,7 @@ contains
        saved_state_ind,                 &
        surface_flux_output,             &
        surface_flux_internal,           &
-       surface_forcing_share,           &
+       surface_flux_share,              &
        surface_forcing_diags,           &
        glo_avg_fields_surface,          &
        marbl_status_log)
@@ -165,7 +165,7 @@ contains
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_flux_internal_type)    , intent(inout) :: surface_flux_internal
     type(marbl_surface_flux_output_type)      , intent(inout) :: surface_flux_output
-    type(marbl_surface_forcing_share_type)    , intent(inout) :: surface_forcing_share
+    type(marbl_surface_flux_share_type)       , intent(inout) :: surface_flux_share
     type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
     real (r8)                                 , intent(out)   :: glo_avg_fields_surface(:,:)
     type(marbl_log_type)                      , intent(inout) :: marbl_status_log
@@ -234,11 +234,11 @@ contains
          alk_ind           => marbl_tracer_indices%alk_ind,                                     &
          alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind,                             &
 
-         pv_surf_fields       => surface_forcing_share%pv_surf_fields(:),                           & ! out
-         dic_surf_fields      => surface_forcing_share%dic_surf_fields(:),                          & ! out
-         co2star_surf_fields  => surface_forcing_share%co2star_surf_fields(:),                      & ! out
-         dco2star_surf_fields => surface_forcing_share%dco2star_surf_fields(:),                     & ! out
-         co3_surf_fields      => surface_forcing_share%co3_surf_fields(:)                           & ! out
+         pv_surf_fields       => surface_flux_share%pv_surf_fields(:),                           & ! out
+         dic_surf_fields      => surface_flux_share%dic_surf_fields(:),                          & ! out
+         co2star_surf_fields  => surface_flux_share%co2star_surf_fields(:),                      & ! out
+         dco2star_surf_fields => surface_flux_share%dco2star_surf_fields(:),                     & ! out
+         co3_surf_fields      => surface_flux_share%co3_surf_fields(:)                           & ! out
          )
 
     !-----------------------------------------------------------------------
@@ -524,7 +524,7 @@ contains
          surface_vals                = surface_vals,                                  &
          surface_fluxes              = surface_fluxes,                                &
          marbl_tracer_indices        = marbl_tracer_indices,                          &
-         marbl_surface_forcing_share = surface_forcing_share,                         &
+         marbl_surface_flux_share    = surface_flux_share,                            &
          marbl_surface_forcing_diags = surface_forcing_diags)
 
     !-----------------------------------------------------------------------

@@ -21,7 +21,6 @@ module marbl_diagnostics_mod
   use marbl_interface_private_types, only : marbl_PAR_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_interior_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
 

@@ -351,7 +351,7 @@ contains
   subroutine marbl_init_forcing_fields(domain, &
                                        tracer_metadata, &
                                        surface_forcing_ind, &
-                                       surface_forcing_share, &
+                                       surface_flux_share, &
                                        surface_flux_internal, &
                                        surface_input_forcings, &
                                        interior_forcing_ind, &
@@ -360,7 +360,7 @@ contains
 
     use marbl_interface_public_types, only : marbl_domain_type
     use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
-    use marbl_interface_private_types, only : marbl_surface_forcing_share_type
+    use marbl_interface_private_types, only : marbl_surface_flux_share_type
     use marbl_interface_private_types, only : marbl_surface_flux_internal_type
     use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
     use marbl_settings_mod, only : ciso_on
@@ -372,7 +372,7 @@ contains
     type(marbl_domain_type),                      intent(in)    :: domain
     type(marbl_tracer_metadata_type),             intent(in)    :: tracer_metadata(:)
     type(marbl_surface_forcing_indexing_type),    intent(out)   :: surface_forcing_ind
-    type(marbl_surface_forcing_share_type),       intent(out)   :: surface_forcing_share
+    type(marbl_surface_flux_share_type),          intent(out)   :: surface_flux_share
     type(marbl_surface_flux_internal_type),       intent(out)   :: surface_flux_internal
     type(marbl_forcing_fields_type), allocatable, intent(out)   :: surface_input_forcings(:)
     type(marbl_interior_forcing_indexing_type),   intent(out)   :: interior_forcing_ind
@@ -409,7 +409,7 @@ contains
       end if
 
       ! Construct share / internal types for surface forcing
-      call surface_forcing_share%construct(num_elements_surface)
+      call surface_flux_share%construct(num_elements_surface)
       call surface_flux_internal%construct(num_elements_surface)
 
       ! Initialize surface forcing fields

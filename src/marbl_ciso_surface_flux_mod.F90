@@ -27,7 +27,7 @@ module marbl_ciso_surface_flux_mod
 
   use marbl_interface_public_types, only : marbl_diagnostics_type
 
-  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types, only : marbl_surface_flux_share_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
 
   use marbl_settings_mod, only : ciso_on
@@ -55,7 +55,7 @@ contains
        surface_vals        ,                 &
        surface_fluxes      ,                 &
        marbl_tracer_indices,                 &
-       marbl_surface_forcing_share ,         &
+       marbl_surface_flux_share,             &
        marbl_surface_forcing_diags)
 
     use marbl_constants_mod, only : R13C_std
@@ -69,7 +69,7 @@ contains
     real(r8)                               , intent(in)    :: d13c(num_elements)  ! atm 13co2 value
     real(r8)                               , intent(in)    :: d14c(num_elements)  ! atm 14co2 value
     real(r8)                               , intent(in)    :: surface_vals(:,:)
-    type(marbl_surface_forcing_share_type) , intent(in)    :: marbl_surface_forcing_share
+    type(marbl_surface_flux_share_type)    , intent(in)    :: marbl_surface_flux_share
     real(r8)                               , intent(inout) :: surface_fluxes(:, :)
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_surface_forcing_diags
@@ -112,12 +112,12 @@ contains
     ! Return immediately if not running with carbon isotope tracer module
     if (.not. ciso_on) return
 
-    associate(                                                                     &
-         pv                  => marbl_surface_forcing_share%pv_surf_fields       , & ! in/out
-         dic                 => marbl_surface_forcing_share%dic_surf_fields      , & ! in/out DIC values for solver
-         co2star             => marbl_surface_forcing_share%co2star_surf_fields  , & ! in/out CO2STAR from solver
-         dco2star            => marbl_surface_forcing_share%dco2star_surf_fields , & ! in/out DCO2STAR from solver
-         co3_surf_fields     => marbl_surface_forcing_share%co3_surf_fields      , & ! in/out
+    associate(                                                                  &
+         pv                  => marbl_surface_flux_share%pv_surf_fields       , & ! in/out
+         dic                 => marbl_surface_flux_share%dic_surf_fields      , & ! in/out DIC values for solver
+         co2star             => marbl_surface_flux_share%co2star_surf_fields  , & ! in/out CO2STAR from solver
+         dco2star            => marbl_surface_flux_share%dco2star_surf_fields , & ! in/out DCO2STAR from solver
+         co3_surf_fields     => marbl_surface_flux_share%co3_surf_fields      , & ! in/out
 
          di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
          do13ctot_ind       => marbl_tracer_indices%do13ctot_ind               , &

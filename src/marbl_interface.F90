@@ -39,7 +39,7 @@ module marbl_interface
   use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
   use marbl_interface_private_types, only : marbl_PAR_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
+  use marbl_interface_private_types, only : marbl_surface_flux_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
   use marbl_interface_private_types, only : marbl_internal_timers_type
@@ -106,7 +106,7 @@ module marbl_interface
      ! private data
      type(marbl_PAR_type)                      , private              :: PAR
      type(marbl_particulate_share_type)        , private              :: particulate_share
-     type(marbl_surface_forcing_share_type)    , private              :: surface_forcing_share
+     type(marbl_surface_flux_share_type)       , private              :: surface_flux_share
      type(marbl_surface_flux_internal_type)    , private              :: surface_flux_internal
      logical                                   , private              :: lallow_glo_ops
      type(marbl_internal_timers_type)          , private              :: timers
@@ -335,7 +335,7 @@ contains
     call marbl_init_forcing_fields(this%domain, &
                                    this%tracer_metadata, &
                                    this%surface_forcing_ind, &
-                                   this%surface_forcing_share, &
+                                   this%surface_flux_share, &
                                    this%surface_flux_internal, &
                                    this%surface_input_forcings, &
                                    this%interior_forcing_ind, &
@@ -896,8 +896,8 @@ contains
          saved_state              = this%surface_saved_state,                 &
          saved_state_ind          = this%surf_state_ind,                      &
          surface_flux_output      = this%surface_flux_output,                 &
-         surface_flux_internal    = this%surface_flux_internal,            &
-         surface_forcing_share    = this%surface_forcing_share,               &
+         surface_flux_internal    = this%surface_flux_internal,               &
+         surface_flux_share       = this%surface_flux_share,                  &
          surface_forcing_diags    = this%surface_forcing_diags,               &
          glo_avg_fields_surface   = this%glo_avg_fields_surface,              &
          marbl_status_log         = this%StatusLog)
@@ -988,7 +988,7 @@ contains
       deallocate(this%surface_input_forcings)
     end if
     call this%surface_flux_internal%destruct()
-    call this%surface_forcing_share%destruct()
+    call this%surface_flux_share%destruct()
     if (allocated(this%surface_vals)) then
       deallocate(this%surface_vals)
       deallocate(this%surface_fluxes)

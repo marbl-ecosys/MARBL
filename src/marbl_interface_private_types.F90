@@ -153,16 +153,16 @@ module marbl_interface_private_types
 
   !***********************************************************************
 
-  type, public :: marbl_surface_forcing_share_type
+  type, public :: marbl_surface_flux_share_type
      real(r8), allocatable :: PV_SURF_fields       (:) ! piston velocity (cm/s)
      real(r8), allocatable :: DIC_SURF_fields      (:) ! surface values of DIC for solver
      real(r8), allocatable :: CO2STAR_SURF_fields  (:) ! CO2STAR from solver
      real(r8), allocatable :: DCO2STAR_SURF_fields (:) ! DCO2STAR from solver
      real(r8), allocatable :: CO3_SURF_fields      (:) ! Surface carbonate ion
    contains
-     procedure, public :: construct => marbl_surface_forcing_share_constructor
-     procedure, public :: destruct => marbl_surface_forcing_share_destructor
-  end type marbl_surface_forcing_share_type
+     procedure, public :: construct => marbl_surface_flux_share_constructor
+     procedure, public :: destruct => marbl_surface_flux_share_destructor
+  end type marbl_surface_flux_share_type
 
   !*****************************************************************************
 
@@ -403,9 +403,9 @@ contains
 
   !***********************************************************************
 
-   subroutine marbl_surface_forcing_share_constructor(this, num_elements)
+   subroutine marbl_surface_flux_share_constructor(this, num_elements)
 
-     class(marbl_surface_forcing_share_type), intent(out) :: this
+     class(marbl_surface_flux_share_type), intent(out) :: this
 
      integer (int_kind) , intent(in) :: num_elements
 
@@ -415,13 +415,13 @@ contains
      allocate(this%DCO2STAR_SURF_fields (num_elements)) ! DCO2STAR from solver
      allocate(this%CO3_SURF_fields      (num_elements)) ! Surface carbonate ion
 
-   end subroutine marbl_surface_forcing_share_constructor
+   end subroutine marbl_surface_flux_share_constructor
 
    !***********************************************************************
 
-   subroutine marbl_surface_forcing_share_destructor(this)
+   subroutine marbl_surface_flux_share_destructor(this)
 
-     class(marbl_surface_forcing_share_type), intent(inout) :: this
+     class(marbl_surface_flux_share_type), intent(inout) :: this
 
      if (allocated(this%PV_SURF_fields)) then
        deallocate(this%PV_SURF_fields      ) ! piston velocity (cm/s)
