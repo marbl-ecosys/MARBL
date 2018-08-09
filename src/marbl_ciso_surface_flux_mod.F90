@@ -60,7 +60,7 @@ contains
 
     use marbl_constants_mod, only : R13C_std
     use marbl_constants_mod, only : R14C_std
-    use marbl_ciso_diagnostics_mod, only : store_diagnostics_ciso_surface_forcing
+    use marbl_ciso_diagnostics_mod, only : marbl_ciso_diagnostics_surface_flux_compute
 
     implicit none
 
@@ -224,7 +224,7 @@ contains
     ! update carbon isotope diagnostics
     ! FIXME #18: the following arguments need to be group into a derived type
 
-    call store_diagnostics_ciso_surface_forcing( &
+    call marbl_ciso_diagnostics_surface_flux_compute( &
          num_elements,   &
          d13c,           &
          d14c,           &

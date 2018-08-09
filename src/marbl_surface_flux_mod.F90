@@ -98,7 +98,7 @@ module marbl_surface_flux_mod
   use marbl_interface_public_types, only : marbl_surface_flux_output_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
 
-  use marbl_diagnostics_mod , only : marbl_diagnostics_set_surface_forcing
+  use marbl_diagnostics_mod , only : marbl_diagnostics_surface_flux_compute
 
   use marbl_logging         , only : marbl_log_type
 
@@ -502,7 +502,7 @@ contains
     ! Set surface forcing diagnostics
     !-----------------------------------------------------------------------
 
-    call marbl_diagnostics_set_surface_forcing(               &
+    call marbl_diagnostics_surface_flux_compute(              &
          surface_forcing_ind      = ind,                      &
          surface_input_forcings   = surface_input_forcings,   &
          surface_flux_internal    = surface_flux_internal,    &

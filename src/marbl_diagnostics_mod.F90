@@ -50,7 +50,7 @@ module marbl_diagnostics_mod
 
   public :: marbl_diagnostics_init
   public :: marbl_diagnostics_set_interior_forcing
-  public :: marbl_diagnostics_set_surface_forcing
+  public :: marbl_diagnostics_surface_flux_compute
 
   private :: store_diagnostics_carbonate
   private :: store_diagnostics_nitrification
@@ -3128,7 +3128,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_diagnostics_set_surface_forcing( &
+  subroutine marbl_diagnostics_surface_flux_compute( &
        surface_forcing_ind,                         &
        surface_input_forcings,                      &
        surface_flux_internal,                       &
@@ -3280,7 +3280,7 @@ contains
 
     end associate
 
-  end subroutine marbl_diagnostics_set_surface_forcing
+  end subroutine marbl_diagnostics_surface_flux_compute
 
   !***********************************************************************
 

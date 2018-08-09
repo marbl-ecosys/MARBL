@@ -24,7 +24,7 @@ module marbl_ciso_diagnostics_mod
   private
 
   public :: marbl_ciso_diagnostics_init
-  public :: store_diagnostics_ciso_surface_forcing
+  public :: marbl_ciso_diagnostics_surface_flux_compute
   public :: store_diagnostics_ciso_interior
 
 contains
@@ -882,7 +882,7 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_ciso_surface_forcing( &
+  subroutine marbl_ciso_diagnostics_surface_flux_compute( &
        num_elements,   &
        D13C,           &
        D14C,           &
@@ -960,7 +960,7 @@ contains
 
     end associate
 
-  end subroutine store_diagnostics_ciso_surface_forcing
+  end subroutine marbl_ciso_diagnostics_surface_flux_compute
 
   !*****************************************************************************
 
