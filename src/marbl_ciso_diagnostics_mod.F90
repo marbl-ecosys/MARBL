@@ -16,7 +16,7 @@ module marbl_ciso_diagnostics_mod
   use marbl_logging, only : marbl_log_type
   use marbl_logging, only : marbl_logging_add_diagnostics_error
 
-  use marbl_diagnostics_share_mod, only : marbl_surface_forcing_diag_ind
+  use marbl_diagnostics_share_mod, only : marbl_surface_flux_diag_ind
   use marbl_diagnostics_share_mod, only : marbl_interior_diag_ind
   use marbl_diagnostics_share_mod, only : marbl_diagnostics_share_compute_vertical_integrals
 
@@ -33,14 +33,14 @@ contains
 
   subroutine marbl_ciso_diagnostics_init( &
        marbl_interior_forcing_diags, &
-       marbl_surface_forcing_diags,  &
+       marbl_surface_flux_diags,  &
        marbl_status_log)
 
     use marbl_settings_mod, only : ciso_on
 
-    type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_forcing_diags
-    type(marbl_diagnostics_type)      , intent(inout) :: marbl_surface_forcing_diags
-    type(marbl_log_type)              , intent(inout) :: marbl_status_log
+    type(marbl_diagnostics_type), intent(inout) :: marbl_interior_forcing_diags
+    type(marbl_diagnostics_type), intent(inout) :: marbl_surface_flux_diags
+    type(marbl_log_type),         intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -56,9 +56,9 @@ contains
     ! Surface forcing diagnostics
     !-----------------------------------------------------------------
 
-    associate(                                  &
-              ind => marbl_surface_forcing_diag_ind, &
-              diags => marbl_surface_forcing_diags   &
+    associate(                                    &
+              ind => marbl_surface_flux_diag_ind, &
+              diags => marbl_surface_flux_diags   &
              )
 
       lname    = 'DI13C Surface Gas Flux'
@@ -899,7 +899,7 @@ contains
        R14C_atm,       &
        eps_aq_g_surf,  &
        eps_dic_g_surf, &
-       marbl_surface_forcing_diags)
+       marbl_surface_flux_diags)
 
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
@@ -922,11 +922,11 @@ contains
     real (r8), dimension(num_elements) , intent(in)    :: R14C_atm       ! 14C/12C ratio in atmospheric CO2
     real (r8), dimension(num_elements) , intent(in)    :: eps_aq_g_surf  ! equilibrium fractionation (CO2_gaseous <-> CO2_aq)
     real (r8), dimension(num_elements) , intent(in)    :: eps_dic_g_surf ! equilibrium fractionation between total DIC and gaseous CO2
-    type(marbl_diagnostics_type)       , intent(inout) :: marbl_surface_forcing_diags
+    type(marbl_diagnostics_type)       , intent(inout) :: marbl_surface_flux_diags
 
-    associate(                                          &
-         diags => marbl_surface_forcing_diags%diags,    &
-         ind   => marbl_surface_forcing_diag_ind        &
+    associate(                                       &
+         diags => marbl_surface_flux_diags%diags,    &
+         ind   => marbl_surface_flux_diag_ind        &
          )
 
     diags(ind%CISO_DI13C_GAS_FLUX)%field_2d(:) = FLUX13(:)

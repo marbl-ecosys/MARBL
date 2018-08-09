@@ -56,7 +56,7 @@ contains
        surface_fluxes      ,                 &
        marbl_tracer_indices,                 &
        marbl_surface_flux_share,             &
-       marbl_surface_forcing_diags)
+       marbl_surface_flux_diags)
 
     use marbl_constants_mod, only : R13C_std
     use marbl_constants_mod, only : R14C_std
@@ -72,7 +72,7 @@ contains
     type(marbl_surface_flux_share_type)    , intent(in)    :: marbl_surface_flux_share
     real(r8)                               , intent(inout) :: surface_fluxes(:, :)
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
-    type(marbl_diagnostics_type)           , intent(inout) :: marbl_surface_forcing_diags
+    type(marbl_diagnostics_type)           , intent(inout) :: marbl_surface_flux_diags
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -241,7 +241,7 @@ contains
          R14C_atm,       &
          eps_aq_g_surf,  &
          eps_dic_g_surf, &
-         marbl_surface_forcing_diags)
+         marbl_surface_flux_diags)
 
   end subroutine marbl_ciso_compute_fluxes
 

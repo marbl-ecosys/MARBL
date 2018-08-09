@@ -85,7 +85,7 @@ module marbl_interface
      type(marbl_forcing_fields_type)           , public, allocatable  :: surface_input_forcings(:) ! input  *
      real (r8)                                 , public, allocatable  :: surface_fluxes(:,:)         ! output *
      type(marbl_surface_flux_output_type)      , public               :: surface_flux_output         ! output
-     type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
+     type(marbl_diagnostics_type)              , public               :: surface_flux_diags       ! output
 
      ! public data - global averages
      real (r8)                                 , public, allocatable  :: glo_avg_fields_interior(:)   ! output (nfields)
@@ -300,7 +300,7 @@ contains
          marbl_tracer_metadata        = this%tracer_metadata,                 &
          marbl_tracer_indices         = this%tracer_indices,                  &
          marbl_interior_forcing_diags = this%interior_forcing_diags,          &
-         marbl_surface_forcing_diags  = this%surface_forcing_diags,           &
+         marbl_surface_flux_diags     = this%surface_flux_diags,              &
          marbl_status_log             = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_diagnostics_init()", subname)
@@ -898,7 +898,7 @@ contains
          surface_flux_output      = this%surface_flux_output,                 &
          surface_flux_internal    = this%surface_flux_internal,               &
          surface_flux_share       = this%surface_flux_share,                  &
-         surface_forcing_diags    = this%surface_forcing_diags,               &
+         surface_flux_diags       = this%surface_flux_diags,                  &
          glo_avg_fields_surface   = this%glo_avg_fields_surface,              &
          marbl_status_log         = this%StatusLog)
     if (this%StatusLog%labort_marbl) then

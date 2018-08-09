@@ -129,7 +129,7 @@ contains
        surface_flux_output,             &
        surface_flux_internal,           &
        surface_flux_share,              &
-       surface_forcing_diags,           &
+       surface_flux_diags,              &
        glo_avg_fields_surface,          &
        marbl_status_log)
 
@@ -166,7 +166,7 @@ contains
     type(marbl_surface_flux_internal_type)    , intent(inout) :: surface_flux_internal
     type(marbl_surface_flux_output_type)      , intent(inout) :: surface_flux_output
     type(marbl_surface_flux_share_type)       , intent(inout) :: surface_flux_share
-    type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
+    type(marbl_diagnostics_type)              , intent(inout) :: surface_flux_diags
     real (r8)                                 , intent(out)   :: glo_avg_fields_surface(:,:)
     type(marbl_log_type)                      , intent(inout) :: marbl_status_log
 
@@ -509,7 +509,7 @@ contains
          marbl_tracer_indices     = marbl_tracer_indices,     &
          saved_state              = saved_state,              &
          saved_state_ind          = saved_state_ind,          &
-         surface_forcing_diags    = surface_forcing_diags)
+         surface_flux_diags       = surface_flux_diags)
 
     !-----------------------------------------------------------------------
     ! Compute carbon isotopes surface fluxes
@@ -525,7 +525,7 @@ contains
          surface_fluxes              = surface_fluxes,                                &
          marbl_tracer_indices        = marbl_tracer_indices,                          &
          marbl_surface_flux_share    = surface_flux_share,                            &
-         marbl_surface_forcing_diags = surface_forcing_diags)
+         marbl_surface_flux_diags    = surface_flux_diags)
 
     !-----------------------------------------------------------------------
 

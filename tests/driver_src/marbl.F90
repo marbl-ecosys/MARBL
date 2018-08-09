@@ -289,7 +289,7 @@ Program marbl
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instance, lshutdown = .false.)
       ! Log surface forcing diagnostics passed back to driver
-      associate(diags => marbl_instance%surface_forcing_diags%diags)
+      associate(diags => marbl_instance%surface_flux_diags%diags)
         call driver_status_log%log_header('Surface forcing diagnostics', subname)
         do n=1, size(diags)
           write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &

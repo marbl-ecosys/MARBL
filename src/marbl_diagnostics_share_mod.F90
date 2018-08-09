@@ -9,7 +9,7 @@ module marbl_diagnostics_share_mod
   implicit none
   private
 
-  type :: marbl_surface_forcing_diagnostics_indexing_type
+  type :: marbl_surface_flux_diagnostics_indexing_type
      integer(int_kind) :: ECOSYS_IFRAC
      integer(int_kind) :: ECOSYS_XKW
      integer(int_kind) :: ECOSYS_ATM_PRESS
@@ -54,7 +54,7 @@ module marbl_diagnostics_share_mod
      integer(int_kind) :: CISO_D14C_atm             ! atmospheric delta14C in permil
      integer(int_kind) :: CISO_eps_aq_g_surf        ! tavg id for eps_aq_g_surf
      integer(int_kind) :: CISO_eps_dic_g_surf       ! tavg id for eps_dic_g_surf
-  end type marbl_surface_forcing_diagnostics_indexing_type
+  end type marbl_surface_flux_diagnostics_indexing_type
 
   type :: marbl_interior_diagnostics_indexing_type
     ! General 2D diags
@@ -331,10 +331,10 @@ module marbl_diagnostics_share_mod
   !  Indices for diagnostic values written to tavg files
   !-----------------------------------------------------------------------
 
-  type(marbl_surface_forcing_diagnostics_indexing_type) :: marbl_surface_forcing_diag_ind
+  type(marbl_surface_flux_diagnostics_indexing_type) :: marbl_surface_flux_diag_ind
   type(marbl_interior_diagnostics_indexing_type) :: marbl_interior_diag_ind
 
-  public :: marbl_surface_forcing_diag_ind
+  public :: marbl_surface_flux_diag_ind
   public :: marbl_interior_diag_ind
   public :: marbl_diagnostics_share_compute_vertical_integrals
 

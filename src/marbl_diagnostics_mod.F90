@@ -37,7 +37,7 @@ module marbl_diagnostics_mod
   use marbl_logging, only : marbl_log_type
   use marbl_logging, only : marbl_logging_add_diagnostics_error
 
-  use marbl_diagnostics_share_mod, only : marbl_surface_forcing_diag_ind
+  use marbl_diagnostics_share_mod, only : marbl_surface_flux_diag_ind
   use marbl_diagnostics_share_mod, only : marbl_interior_diag_ind
   use marbl_diagnostics_share_mod, only : marbl_diagnostics_share_compute_vertical_integrals
 
@@ -79,7 +79,7 @@ contains
        marbl_tracer_metadata,        &
        marbl_tracer_indices,         &
        marbl_interior_forcing_diags, &
-       marbl_surface_forcing_diags,  &
+       marbl_surface_flux_diags,     &
        marbl_status_log)
 
     use marbl_settings_mod, only : lo2_consumption_scalef
@@ -92,7 +92,7 @@ contains
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_forcing_diags
-    type(marbl_diagnostics_type)      , intent(inout) :: marbl_surface_forcing_diags
+    type(marbl_diagnostics_type)      , intent(inout) :: marbl_surface_flux_diags
     type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
@@ -110,12 +110,12 @@ contains
     ! Surface forcing diagnostics
     !-----------------------------------------------------------------
 
-    call marbl_surface_forcing_diags%construct(marbl_domain%num_elements_surface_flux, marbl_domain%km)
+    call marbl_surface_flux_diags%construct(marbl_domain%num_elements_surface_flux, marbl_domain%km)
     call marbl_interior_forcing_diags%construct(marbl_domain%num_elements_interior_forcing, marbl_domain%km)
 
-    associate(                                  &
-              ind => marbl_surface_forcing_diag_ind, &
-              diags => marbl_surface_forcing_diags   &
+    associate(                                    &
+              ind => marbl_surface_flux_diag_ind, &
+              diags => marbl_surface_flux_diags   &
              )
 
       lname    = 'Ice Fraction for ecosys fluxes'
@@ -2898,7 +2898,7 @@ contains
       ! CISO diagnostics
       !-----------------------------------------------------------------
 
-      call marbl_ciso_diagnostics_init(marbl_interior_forcing_diags, marbl_surface_forcing_diags, marbl_status_log)
+      call marbl_ciso_diagnostics_init(marbl_interior_forcing_diags, marbl_surface_flux_diags, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call marbl_status_log%log_error_trace("marbl_ciso_diagnostics_init()", subname)
         return
@@ -2943,10 +2943,10 @@ contains
            'marbl_interior_forcing_diags%set_to_zero', subname)
       return
     end if
-    call marbl_surface_forcing_diags%set_to_zero(marbl_status_log)
+    call marbl_surface_flux_diags%set_to_zero(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace(&
-           'marbl_surface_forcing_diags%set_to_zero', subname)
+           'marbl_surface_flux_diags%set_to_zero', subname)
       return
     end if
 
@@ -3135,7 +3135,7 @@ contains
        marbl_tracer_indices,                        &
        saved_state,                                 &
        saved_state_ind,                             &
-       surface_forcing_diags)
+       surface_flux_diags)
 
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
@@ -3152,13 +3152,13 @@ contains
     type(marbl_saved_state_type)              , intent(in)    :: saved_state
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_flux_internal_type)    , intent(in)    :: surface_flux_internal
-    type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
+    type(marbl_diagnostics_type)              , intent(inout) :: surface_flux_diags
 
     associate(                                                                                  &
-         ind_diag          => marbl_surface_forcing_diag_ind,                                   &
+         ind_diag          => marbl_surface_flux_diag_ind,                                      &
          ind_forc          => surface_forcing_ind,                                              &
 
-         diags             => surface_forcing_diags%diags(:),                                   &
+         diags             => surface_flux_diags%diags(:),                                             &
          u10_sqr           => surface_input_forcings(surface_forcing_ind%u10_sqr_id)%field_0d,         &
          xco2              => surface_input_forcings(surface_forcing_ind%xco2_id)%field_0d,            &
          xco2_alt_co2      => surface_input_forcings(surface_forcing_ind%xco2_alt_co2_id)%field_0d,    &
