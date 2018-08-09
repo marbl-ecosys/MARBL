@@ -52,7 +52,9 @@ module marbl_interface_private_types
 
   !****************************************************************************
 
-  type, public :: marbl_surface_forcing_internal_type
+  ! This datatype is used to store internal surface flux computations in a way
+  ! that makes it easy to pass to the diagnostics
+  type, public :: marbl_surface_flux_internal_type
      real (r8), allocatable, dimension(:)   :: piston_velocity
      real (r8), allocatable, dimension(:)   :: flux_co2
      real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (nmol/cm^2/s)
@@ -72,9 +74,9 @@ module marbl_interface_private_types
      real (r8), allocatable, dimension(:)   :: o2sat        ! used O2 saturation (mmol/m^3)
      real (r8), allocatable, dimension(:)   :: nhx_surface_emis
    contains
-     procedure, public :: construct => marbl_surface_forcing_internal_constructor
-     procedure, public :: destruct => marbl_surface_forcing_internal_destructor
-  end type marbl_surface_forcing_internal_type
+     procedure, public :: construct => marbl_surface_flux_internal_constructor
+     procedure, public :: destruct => marbl_surface_flux_internal_destructor
+  end type marbl_surface_flux_internal_type
 
   !****************************************************************************
   !
@@ -461,12 +463,12 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_surface_forcing_internal_constructor(this, num_elements)
+  subroutine marbl_surface_flux_internal_constructor(this, num_elements)
 
     use marbl_constants_mod, only : c0
 
-    class(marbl_surface_forcing_internal_type), intent(out) :: this
-    integer (int_kind),                         intent(in)  :: num_elements
+    class(marbl_surface_flux_internal_type), intent(out) :: this
+    integer (int_kind),                      intent(in)  :: num_elements
 
     allocate(this%piston_velocity (num_elements))
     this%piston_velocity  = c0
@@ -505,13 +507,13 @@ contains
     allocate(this%nhx_surface_emis(num_elements))
     this%nhx_surface_emis = c0
 
-  end subroutine marbl_surface_forcing_internal_constructor
+  end subroutine marbl_surface_flux_internal_constructor
 
   !***********************************************************************
 
-  subroutine marbl_surface_forcing_internal_destructor(this)
+  subroutine marbl_surface_flux_internal_destructor(this)
 
-    class(marbl_surface_forcing_internal_type) , intent(inout) :: this
+    class(marbl_surface_flux_internal_type), intent(inout) :: this
 
     if (allocated(this%piston_velocity)) then
       deallocate(this%piston_velocity )
@@ -534,7 +536,7 @@ contains
       deallocate(this%nhx_surface_emis)
     end if
 
-  end subroutine marbl_surface_forcing_internal_destructor
+  end subroutine marbl_surface_flux_internal_destructor
 
   !*****************************************************************************
 

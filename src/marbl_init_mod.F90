@@ -352,7 +352,7 @@ contains
                                        tracer_metadata, &
                                        surface_forcing_ind, &
                                        surface_forcing_share, &
-                                       surface_forcing_internal, &
+                                       surface_flux_internal, &
                                        surface_input_forcings, &
                                        interior_forcing_ind, &
                                        interior_input_forcings, &
@@ -361,7 +361,7 @@ contains
     use marbl_interface_public_types, only : marbl_domain_type
     use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
     use marbl_interface_private_types, only : marbl_surface_forcing_share_type
-    use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
+    use marbl_interface_private_types, only : marbl_surface_flux_internal_type
     use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lflux_gas_o2
@@ -373,7 +373,7 @@ contains
     type(marbl_tracer_metadata_type),             intent(in)    :: tracer_metadata(:)
     type(marbl_surface_forcing_indexing_type),    intent(out)   :: surface_forcing_ind
     type(marbl_surface_forcing_share_type),       intent(out)   :: surface_forcing_share
-    type(marbl_surface_forcing_internal_type),    intent(out)   :: surface_forcing_internal
+    type(marbl_surface_flux_internal_type),       intent(out)   :: surface_flux_internal
     type(marbl_forcing_fields_type), allocatable, intent(out)   :: surface_input_forcings(:)
     type(marbl_interior_forcing_indexing_type),   intent(out)   :: interior_forcing_ind
     type(marbl_forcing_fields_type), allocatable, intent(out)   :: interior_input_forcings(:)
@@ -410,7 +410,7 @@ contains
 
       ! Construct share / internal types for surface forcing
       call surface_forcing_share%construct(num_elements_surface)
-      call surface_forcing_internal%construct(num_elements_surface)
+      call surface_flux_internal%construct(num_elements_surface)
 
       ! Initialize surface forcing fields
       allocate(surface_input_forcings(num_surface_forcing_fields))

@@ -22,7 +22,7 @@ module marbl_diagnostics_mod
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_interior_share_type
   use marbl_interface_private_types, only : marbl_surface_forcing_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
+  use marbl_interface_private_types, only : marbl_surface_flux_internal_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
 
   use marbl_interface_public_types, only : marbl_domain_type
@@ -3132,7 +3132,7 @@ contains
   subroutine marbl_diagnostics_set_surface_forcing( &
        surface_forcing_ind,                         &
        surface_input_forcings,                      &
-       surface_forcing_internal,                    &
+       surface_flux_internal,                       &
        marbl_tracer_indices,                        &
        saved_state,                                 &
        saved_state_ind,                             &
@@ -3152,7 +3152,7 @@ contains
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(in)    :: saved_state
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
-    type(marbl_surface_forcing_internal_type) , intent(in)    :: surface_forcing_internal
+    type(marbl_surface_flux_internal_type)    , intent(in)    :: surface_flux_internal
     type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
 
     associate(                                                                                  &
@@ -3168,23 +3168,23 @@ contains
          dust_flux_in      => surface_input_forcings(surface_forcing_ind%dust_flux_id)%field_0d,       &
          iron_flux_in      => surface_input_forcings(surface_forcing_ind%iron_flux_id)%field_0d,       &
 
-         piston_velocity   => surface_forcing_internal%piston_velocity,                         &
-         flux_co2          => surface_forcing_internal%flux_co2,                                &
-         flux_alt_co2      => surface_forcing_internal%flux_alt_co2,                            &
-         co2star           => surface_forcing_internal%co2star,                                 &
-         dco2star          => surface_forcing_internal%dco2star,                                &
-         pco2surf          => surface_forcing_internal%pco2surf,                                &
-         dpco2             => surface_forcing_internal%dpco2,                                   &
-         co2star_alt       => surface_forcing_internal%co2star_alt,                             &
-         dco2star_alt      => surface_forcing_internal%dco2star_alt,                            &
-         pco2surf_alt      => surface_forcing_internal%pco2surf_alt,                            &
-         dpco2_alt         => surface_forcing_internal%dpco2_alt,                               &
-         pv_co2            => surface_forcing_internal%pv_co2,                                  &
-         pv_o2             => surface_forcing_internal%pv_o2,                                   &
-         schmidt_co2       => surface_forcing_internal%schmidt_co2,                             &
-         schmidt_o2        => surface_forcing_internal%schmidt_o2,                              &
-         o2sat             => surface_forcing_internal%o2sat,                                   &
-         nhx_surface_emis  => surface_forcing_internal%nhx_surface_emis,                        &
+         piston_velocity   => surface_flux_internal%piston_velocity,                         &
+         flux_co2          => surface_flux_internal%flux_co2,                                &
+         flux_alt_co2      => surface_flux_internal%flux_alt_co2,                            &
+         co2star           => surface_flux_internal%co2star,                                 &
+         dco2star          => surface_flux_internal%dco2star,                                &
+         pco2surf          => surface_flux_internal%pco2surf,                                &
+         dpco2             => surface_flux_internal%dpco2,                                   &
+         co2star_alt       => surface_flux_internal%co2star_alt,                             &
+         dco2star_alt      => surface_flux_internal%dco2star_alt,                            &
+         pco2surf_alt      => surface_flux_internal%pco2surf_alt,                            &
+         dpco2_alt         => surface_flux_internal%dpco2_alt,                               &
+         pv_co2            => surface_flux_internal%pv_co2,                                  &
+         pv_o2             => surface_flux_internal%pv_o2,                                   &
+         schmidt_co2       => surface_flux_internal%schmidt_co2,                             &
+         schmidt_o2        => surface_flux_internal%schmidt_o2,                              &
+         o2sat             => surface_flux_internal%o2sat,                                   &
+         nhx_surface_emis  => surface_flux_internal%nhx_surface_emis,                        &
 
 
          ph_prev           => saved_state%state(saved_state_ind%ph_surf)%field_2d,              &
