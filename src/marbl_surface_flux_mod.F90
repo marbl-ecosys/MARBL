@@ -95,7 +95,7 @@ module marbl_surface_flux_mod
   use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
 
   use marbl_interface_public_types, only : marbl_saved_state_type
-  use marbl_interface_public_types, only : marbl_surface_forcing_output_type
+  use marbl_interface_public_types, only : marbl_surface_flux_output_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
 
   use marbl_diagnostics_mod , only : marbl_diagnostics_set_surface_forcing
@@ -126,7 +126,7 @@ contains
        marbl_tracer_indices,            &
        saved_state,                     &
        saved_state_ind,                 &
-       surface_forcing_output,          &
+       surface_flux_output,             &
        surface_forcing_internal,        &
        surface_forcing_share,           &
        surface_forcing_diags,           &
@@ -164,7 +164,7 @@ contains
     type(marbl_saved_state_type)              , intent(inout) :: saved_state
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_forcing_internal_type) , intent(inout) :: surface_forcing_internal
-    type(marbl_surface_forcing_output_type)   , intent(inout) :: surface_forcing_output
+    type(marbl_surface_flux_output_type)      , intent(inout) :: surface_flux_output
     type(marbl_surface_forcing_share_type)    , intent(inout) :: surface_forcing_share
     type(marbl_diagnostics_type)              , intent(inout) :: surface_forcing_diags
     real (r8)                                 , intent(out)   :: glo_avg_fields_surface(:,:)
@@ -259,7 +259,7 @@ contains
         totalChl_loc = totalChl_loc +                                         &
           max(c0, surface_vals(:,marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind))
       end do
-      surface_forcing_output%sfo(sfo_ind%totalChl_id)%forcing_field = totalChl_loc
+      surface_flux_output%sfo(sfo_ind%totalChl_id)%forcing_field = totalChl_loc
     end if
 
     !-----------------------------------------------------------------------
@@ -293,7 +293,7 @@ contains
           flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - surface_vals(:, o2_ind))
           stf(:, o2_ind) = stf(:, o2_ind) + flux_o2_loc(:)
           if (sfo_ind%flux_o2_id.ne.0) then
-            surface_forcing_output%sfo(sfo_ind%flux_o2_id)%forcing_field = flux_o2_loc
+            surface_flux_output%sfo(sfo_ind%flux_o2_id)%forcing_field = flux_o2_loc
           end if
        else
           schmidt_o2(:) = c0
@@ -359,7 +359,7 @@ contains
 
           flux_co2(:) = pv_co2(:) * dco2star(:)
           if (sfo_ind%flux_co2_id.ne.0) then
-            surface_forcing_output%sfo(sfo_ind%flux_co2_id)%forcing_field = flux_co2
+            surface_flux_output%sfo(sfo_ind%flux_co2_id)%forcing_field = flux_co2
           end if
 
           !-------------------------------------------------------------------
@@ -456,7 +456,7 @@ contains
            nhx_surface_emis = nhx_surface_emis)
 
       if (sfo_ind%flux_nhx_id.ne.0) then
-         surface_forcing_output%sfo(sfo_ind%flux_nhx_id)%forcing_field = nhx_surface_emis
+         surface_flux_output%sfo(sfo_ind%flux_nhx_id)%forcing_field = nhx_surface_emis
       end if
 
       stf(:, nh4_ind) = stf(:, nh4_ind) - nhx_surface_emis(:)

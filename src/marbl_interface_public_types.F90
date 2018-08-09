@@ -11,17 +11,17 @@ module marbl_interface_public_types
 
   !****************************************************************************
 
-  ! NOTE: when adding a new surface forcing output field (a field that the GCM
+  ! NOTE: when adding a new surface flux output field (a field that the GCM
   !       may need to pass to flux coupler), remember to add a new index for it
   !       as well.
-  type, public :: marbl_surface_forcing_output_indexing_type
+  type, public :: marbl_surface_flux_output_indexing_type
     integer(int_kind) :: flux_o2_id = 0
     integer(int_kind) :: flux_co2_id = 0
     integer(int_kind) :: flux_nhx_id = 0
     integer(int_kind) :: totalChl_id = 0
-  end type marbl_surface_forcing_output_indexing_type
+  end type marbl_surface_flux_output_indexing_type
 
-  type(marbl_surface_forcing_output_indexing_type), public :: sfo_ind
+  type(marbl_surface_flux_output_indexing_type), public :: sfo_ind
 
   !*****************************************************************************
 
@@ -123,8 +123,8 @@ module marbl_interface_public_types
      ! a private type, this contains both the metadata
      ! and the actual data for a single surface forcing
      ! field that needs to be passed to the GCM / flux
-     ! coupler. Data must be accesed via the
-     ! marbl_surface_forcing_output_type data structure.
+     ! coupler. Data must be accessed via the
+     ! marbl_surface_flux_output_type data structure.
      character (len=char_len)            :: long_name
      character (len=char_len)            :: short_name
      character (len=char_len)            :: units
@@ -134,13 +134,13 @@ module marbl_interface_public_types
   end type marbl_single_sfo_type
   !*****************************************************************************
 
-  type, public :: marbl_surface_forcing_output_type
+  type, public :: marbl_surface_flux_output_type
      integer :: sfo_cnt
      integer :: num_elements
      type(marbl_single_sfo_type), dimension(:), pointer :: sfo => NULL()
    contains
      procedure, public :: add_sfo => marbl_sfo_add
-  end type marbl_surface_forcing_output_type
+  end type marbl_surface_flux_output_type
 
   !*****************************************************************************
 
@@ -505,7 +505,7 @@ contains
   ! If the number of possible surface forcing output fields grows, this workflow
   ! may need to be replaced with something that is not O(N^2).
 
-    class(marbl_surface_forcing_output_type), intent(inout) :: this
+    class(marbl_surface_flux_output_type), intent(inout) :: this
     character(len=*),     intent(in)    :: field_name
     integer(int_kind),    intent(in)    :: num_elements
     type(marbl_log_type), intent(inout) :: marbl_status_log

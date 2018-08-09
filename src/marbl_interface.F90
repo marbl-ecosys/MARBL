@@ -26,7 +26,7 @@ module marbl_interface
 
   use marbl_interface_public_types, only : marbl_domain_type
   use marbl_interface_public_types, only : marbl_tracer_metadata_type
-  use marbl_interface_public_types, only : marbl_surface_forcing_output_type
+  use marbl_interface_public_types, only : marbl_surface_flux_output_type
   use marbl_interface_public_types, only : marbl_diagnostics_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
   use marbl_interface_public_types, only : marbl_saved_state_type
@@ -84,7 +84,7 @@ module marbl_interface
      type(marbl_surface_forcing_indexing_type) , public               :: surface_forcing_ind         !
      type(marbl_forcing_fields_type)           , public, allocatable  :: surface_input_forcings(:) ! input  *
      real (r8)                                 , public, allocatable  :: surface_tracer_fluxes(:,:)  ! output *
-     type(marbl_surface_forcing_output_type)   , public               :: surface_forcing_output      ! output
+     type(marbl_surface_flux_output_type)      , public               :: surface_flux_output         ! output
      type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
 
      ! public data - global averages
@@ -895,7 +895,7 @@ contains
          marbl_tracer_indices     = this%tracer_indices,                      &
          saved_state              = this%surface_saved_state,                 &
          saved_state_ind          = this%surf_state_ind,                      &
-         surface_forcing_output   = this%surface_forcing_output,              &
+         surface_flux_output      = this%surface_flux_output,                 &
          surface_forcing_internal = this%surface_forcing_internal,            &
          surface_forcing_share    = this%surface_forcing_share,               &
          surface_forcing_diags    = this%surface_forcing_diags,               &
