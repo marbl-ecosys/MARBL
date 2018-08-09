@@ -53,7 +53,7 @@ contains
        d13c                ,                 &
        d14c                ,                 &
        surface_vals        ,                 &
-       stf                 ,                 &
+       surface_fluxes      ,                 &
        marbl_tracer_indices,                 &
        marbl_surface_forcing_share ,         &
        marbl_surface_forcing_diags)
@@ -70,7 +70,7 @@ contains
     real(r8)                               , intent(in)    :: d14c(num_elements)  ! atm 14co2 value
     real(r8)                               , intent(in)    :: surface_vals(:,:)
     type(marbl_surface_forcing_share_type) , intent(in)    :: marbl_surface_forcing_share
-    real(r8)                               , intent(inout) :: stf(:, :)
+    real(r8)                               , intent(inout) :: surface_fluxes(:, :)
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_surface_forcing_diags
 
@@ -131,7 +131,7 @@ contains
     !  ciso fluxes initially set to 0
     !-----------------------------------------------------------------------
 
-    stf(:,ciso_ind_beg:ciso_ind_end) = c0
+    surface_fluxes(:,ciso_ind_beg:ciso_ind_end) = c0
 
     !-----------------------------------------------------------------------
     !     initialize R13C_atm  and R14C_atm
@@ -216,8 +216,8 @@ contains
     !     end of 13C computation for gass exchange
     !-----------------------------------------------------------------------
 
-    stf(:,di13c_ind) = stf(:,di13c_ind) + flux13(:)
-    stf(:,di14c_ind) = stf(:,di14c_ind) + flux14(:)
+    surface_fluxes(:,di13c_ind) = surface_fluxes(:,di13c_ind) + flux13(:)
+    surface_fluxes(:,di14c_ind) = surface_fluxes(:,di14c_ind) + flux14(:)
 
     end associate
 

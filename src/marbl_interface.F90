@@ -83,7 +83,7 @@ module marbl_interface
      real (r8)                                 , public, allocatable  :: surface_vals(:,:)           ! input  *
      type(marbl_surface_forcing_indexing_type) , public               :: surface_forcing_ind         !
      type(marbl_forcing_fields_type)           , public, allocatable  :: surface_input_forcings(:) ! input  *
-     real (r8)                                 , public, allocatable  :: surface_tracer_fluxes(:,:)  ! output *
+     real (r8)                                 , public, allocatable  :: surface_fluxes(:,:)         ! output *
      type(marbl_surface_flux_output_type)      , public               :: surface_flux_output         ! output
      type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
 
@@ -265,7 +265,7 @@ contains
     !-----------------------------------------------------------------------
 
     call marbl_init_tracers(num_levels, num_surface_elements, &
-                            this%tracer_indices, this%surface_vals, this%surface_tracer_fluxes, &
+                            this%tracer_indices, this%surface_vals, this%surface_fluxes, &
                             this%column_tracers, this%column_dtracers, this%tracer_metadata,    &
                             this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -891,7 +891,7 @@ contains
          surface_forcing_ind      = this%surface_forcing_ind,                 &
          surface_input_forcings   = this%surface_input_forcings,              &
          surface_vals             = this%surface_vals,                        &
-         surface_tracer_fluxes    = this%surface_tracer_fluxes,               &
+         surface_fluxes           = this%surface_fluxes,                      &
          marbl_tracer_indices     = this%tracer_indices,                      &
          saved_state              = this%surface_saved_state,                 &
          saved_state_ind          = this%surf_state_ind,                      &
@@ -991,7 +991,7 @@ contains
     call this%surface_forcing_share%destruct()
     if (allocated(this%surface_vals)) then
       deallocate(this%surface_vals)
-      deallocate(this%surface_tracer_fluxes)
+      deallocate(this%surface_fluxes)
       deallocate(this%column_tracers)
       deallocate(this%column_dtracers)
       deallocate(this%tracer_metadata)

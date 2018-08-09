@@ -125,7 +125,7 @@ contains
                                 num_elements_surface, &
                                 tracer_indices, &
                                 surface_vals, &
-                                surface_tracer_fluxes, &
+                                surface_fluxes, &
                                 column_tracers, &
                                 column_dtracers, &
                                 tracer_metadata, &
@@ -142,7 +142,7 @@ contains
     integer(int_kind),                             intent(in)    :: num_elements_surface
     type(marbl_tracer_index_type),    pointer,     intent(out)   :: tracer_indices
     real(r8),                         allocatable, intent(out)   :: surface_vals(:,:)
-    real(r8),                         allocatable, intent(out)   :: surface_tracer_fluxes(:,:)
+    real(r8),                         allocatable, intent(out)   :: surface_fluxes(:,:)
     real(r8),                         allocatable, intent(out)   :: column_tracers(:,:)
     real(r8),                         allocatable, intent(out)   :: column_dtracers(:,:)
     type(marbl_tracer_metadata_type), allocatable, intent(out)   :: tracer_metadata(:)
@@ -164,7 +164,7 @@ contains
 
     ! Allocate memory for tracers
     allocate(surface_vals(num_elements_surface, tracer_indices%total_cnt))
-    allocate(surface_tracer_fluxes(num_elements_surface, tracer_indices%total_cnt))
+    allocate(surface_fluxes(num_elements_surface, tracer_indices%total_cnt))
     allocate(column_tracers(tracer_indices%total_cnt, num_levels))
     allocate(column_dtracers(tracer_indices%total_cnt, num_levels))
     allocate(tracer_metadata(tracer_indices%total_cnt))

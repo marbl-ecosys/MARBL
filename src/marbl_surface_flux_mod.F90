@@ -122,7 +122,7 @@ contains
        surface_forcing_ind,             &
        surface_input_forcings,          &
        surface_vals,                    &
-       surface_tracer_fluxes,           &
+       surface_fluxes,                  &
        marbl_tracer_indices,            &
        saved_state,                     &
        saved_state_ind,                 &
@@ -159,7 +159,7 @@ contains
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
     type(marbl_forcing_fields_type)           , intent(in)    :: surface_input_forcings(:)
     real (r8)                                 , intent(in)    :: surface_vals(:,:)
-    real (r8)                                 , intent(out)   :: surface_tracer_fluxes(:,:)
+    real (r8)                                 , intent(out)   :: surface_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(inout) :: saved_state
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
@@ -220,8 +220,6 @@ contains
          flux_alt_co2         => surface_forcing_internal%flux_alt_co2(:),                          &
          nhx_surface_emis     => surface_forcing_internal%nhx_surface_emis(:),                      &
 
-         stf                  => surface_tracer_fluxes(:,:),                                        &
-
          ph_prev_surf         => saved_state%state(saved_state_ind%ph_surf)%field_2d,               &
          ph_prev_alt_co2_surf => saved_state%state(saved_state_ind%ph_alt_co2_surf)%field_2d,       &
 
@@ -247,7 +245,7 @@ contains
     !  fluxes initially set to 0
     !-----------------------------------------------------------------------
 
-    stf(:, :) = c0
+    surface_fluxes(:, :) = c0
 
     !-----------------------------------------------------------------------
     !  Compute total chlorophyll
@@ -291,7 +289,7 @@ contains
           pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
           o2sat(:) = ap_used(:) * o2sat_1atm(:)
           flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - surface_vals(:, o2_ind))
-          stf(:, o2_ind) = stf(:, o2_ind) + flux_o2_loc(:)
+          surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
           if (sfo_ind%flux_o2_id.ne.0) then
             surface_flux_output%sfo(sfo_ind%flux_o2_id)%forcing_field = flux_o2_loc
           end if
@@ -428,8 +426,8 @@ contains
           !  nmol/cm^2/s (positive down) to kg CO2/m^2/s (positive down)
           !-----------------------------------------------------------------------
 
-          stf(:, dic_ind)         = stf(:, dic_ind)         + flux_co2(:)
-          stf(:, dic_alt_co2_ind) = stf(:, dic_alt_co2_ind) + FLUX_ALT_CO2(:)
+          surface_fluxes(:, dic_ind)         = surface_fluxes(:, dic_ind)         + flux_co2(:)
+          surface_fluxes(:, dic_alt_co2_ind) = surface_fluxes(:, dic_alt_co2_ind) + FLUX_ALT_CO2(:)
 
        else
           schmidt_co2(:) = c0
@@ -459,14 +457,14 @@ contains
          surface_flux_output%sfo(sfo_ind%flux_nhx_id)%forcing_field = nhx_surface_emis
       end if
 
-      stf(:, nh4_ind) = stf(:, nh4_ind) - nhx_surface_emis(:)
+      surface_fluxes(:, nh4_ind) = surface_fluxes(:, nh4_ind) - nhx_surface_emis(:)
     endif
 
     !-----------------------------------------------------------------------
     !  calculate iron and dust fluxes if necessary
     !-----------------------------------------------------------------------
 
-    stf(:, fe_ind) = stf(:, fe_ind) + iron_flux_in(:)
+    surface_fluxes(:, fe_ind) = surface_fluxes(:, fe_ind) + iron_flux_in(:)
 
     !-----------------------------------------------------------------------
     !  Add phosphate and silicate from dust after Krishnamurthy et al. (2010)
@@ -475,28 +473,30 @@ contains
     !  (Si frac in dust by weight) * (Si solubility) / (Si molecular weight) * (mol->nmol)
     !-----------------------------------------------------------------------
 
-    stf(:, po4_ind) = stf(:, po4_ind)   + (dust_flux_in * (0.00105_r8 *  0.15_r8 / 30.974_r8 * 1.0e9_r8))
+    surface_fluxes(:, po4_ind) = surface_fluxes(:, po4_ind)   + (dust_flux_in * (0.00105_r8 *  0.15_r8 / 30.974_r8 * 1.0e9_r8))
 
-    stf(:, sio3_ind) = stf(:, sio3_ind) + (dust_flux_in * (  0.308_r8 * 0.075_r8 / 28.085_r8 * 1.0e9_r8))
+    surface_fluxes(:, sio3_ind) = surface_fluxes(:, sio3_ind) + (dust_flux_in * (  0.308_r8 * 0.075_r8 / 28.085_r8 * 1.0e9_r8))
 
     !-----------------------------------------------------------------------
     !  calculate nox and nhy fluxes if necessary
     !-----------------------------------------------------------------------
 
     if (surface_forcing_ind%nox_flux_id.ne.0) then
-      stf(:, no3_ind) = stf(:, no3_ind) + nox_flux(:)
+      surface_fluxes(:, no3_ind) = surface_fluxes(:, no3_ind) + nox_flux(:)
     endif
 
     if (surface_forcing_ind%nhy_flux_id.ne.0) then
-      stf(:, nh4_ind) = stf(:, nh4_ind) + nhy_flux(:)
+      surface_fluxes(:, nh4_ind) = surface_fluxes(:, nh4_ind) + nhy_flux(:)
     endif
 
     !-----------------------------------------------------------------------
     !  Apply NO & NH fluxes to alkalinity
     !-----------------------------------------------------------------------
 
-    stf(:, alk_ind)         = stf(:, alk_ind)         + stf(:, nh4_ind) - stf(:, no3_ind)
-    stf(:, alk_alt_co2_ind) = stf(:, alk_alt_co2_ind) + stf(:, nh4_ind) - stf(:, no3_ind)
+    surface_fluxes(:, alk_ind)         = surface_fluxes(:, alk_ind) + &
+         surface_fluxes(:, nh4_ind) - surface_fluxes(:, no3_ind)
+    surface_fluxes(:, alk_alt_co2_ind) = surface_fluxes(:, alk_alt_co2_ind) + &
+         surface_fluxes(:, nh4_ind) - surface_fluxes(:, no3_ind)
 
     !-----------------------------------------------------------------------
     ! Set surface forcing diagnostics
@@ -522,7 +522,7 @@ contains
          d13c                        = surface_input_forcings(ind%d13c_id)%field_0d,  &
          d14c                        = surface_input_forcings(ind%d14c_id)%field_0d,  &
          surface_vals                = surface_vals,                                  &
-         stf                         = surface_tracer_fluxes,                         &
+         surface_fluxes              = surface_fluxes,                                &
          marbl_tracer_indices        = marbl_tracer_indices,                          &
          marbl_surface_forcing_share = surface_forcing_share,                         &
          marbl_surface_forcing_diags = surface_forcing_diags)
@@ -533,7 +533,6 @@ contains
 
     if (ladjust_bury_coeff) then
        associate(                                                                              &
-          stf          => surface_tracer_fluxes(:,:),                                          &
           flux_co2     => surface_forcing_internal%flux_co2(:),                                &
           ext_C_flux   => surface_input_forcings(surface_forcing_ind%ext_C_flux_id)%field_0d,  &
           ext_P_flux   => surface_input_forcings(surface_forcing_ind%ext_P_flux_id)%field_0d,  &
@@ -549,13 +548,13 @@ contains
           )
 
           glo_avg_fields_surface(:,glo_avg_field_ind_surface_C_input) = &
-             ext_C_flux(:) + stf(:,dic_ind) - flux_co2(:) + stf(:,doc_ind) + stf(:,docr_ind)
+             ext_C_flux(:) + surface_fluxes(:,dic_ind) - flux_co2(:) + surface_fluxes(:,doc_ind) + surface_fluxes(:,docr_ind)
 
           glo_avg_fields_surface(:,glo_avg_field_ind_surface_P_input) = &
-             ext_P_flux(:) + stf(:,po4_ind) + stf(:,dop_ind) + stf(:,dopr_ind)
+             ext_P_flux(:) + surface_fluxes(:,po4_ind) + surface_fluxes(:,dop_ind) + surface_fluxes(:,dopr_ind)
 
           glo_avg_fields_surface(:,glo_avg_field_ind_surface_Si_input) = &
-             ext_Si_flux(:) + stf(:,sio3_ind)
+             ext_Si_flux(:) + surface_fluxes(:,sio3_ind)
        end associate
     end if
 
