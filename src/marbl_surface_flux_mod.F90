@@ -148,7 +148,7 @@ contains
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
     use marbl_settings_mod, only : xkw_coeff
     use marbl_settings_mod, only : ciso_on
-    use marbl_ciso_surface_flux_mod, only : marbl_ciso_compute_fluxes
+    use marbl_ciso_surface_flux_mod, only : marbl_ciso_surface_flux_compute
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_C_input
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_P_input
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_Si_input
@@ -515,12 +515,10 @@ contains
     ! Compute carbon isotopes surface fluxes
     !-----------------------------------------------------------------------
 
-    ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
-    call marbl_ciso_compute_fluxes(                                                   &
+    call marbl_ciso_surface_flux_compute(                                             &
          num_elements                = num_elements,                                  &
-         sst                         = surface_input_forcings(ind%sst_id)%field_0d,   &
-         d13c                        = surface_input_forcings(ind%d13c_id)%field_0d,  &
-         d14c                        = surface_input_forcings(ind%d14c_id)%field_0d,  &
+         surface_forcing_ind         = surface_forcing_ind,                           &
+         surface_input_forcings      = surface_input_forcings,                        &
          surface_vals                = surface_vals,                                  &
          surface_fluxes              = surface_fluxes,                                &
          marbl_tracer_indices        = marbl_tracer_indices,                          &

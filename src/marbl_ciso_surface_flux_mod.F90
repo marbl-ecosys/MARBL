@@ -39,7 +39,7 @@ module marbl_ciso_surface_flux_mod
   !  public/private declarations
   !-----------------------------------------------------------------------
 
-  public  :: marbl_ciso_compute_fluxes
+  public  :: marbl_ciso_surface_flux_compute
 
   !***********************************************************************
 
@@ -47,11 +47,10 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_ciso_compute_fluxes(      &
+  subroutine marbl_ciso_surface_flux_compute(&
        num_elements        ,                 &
-       sst                 ,                 &
-       d13c                ,                 &
-       d14c                ,                 &
+       surface_forcing_ind,                  &
+       surface_input_forcings,               &
        surface_vals        ,                 &
        surface_fluxes      ,                 &
        marbl_tracer_indices,                 &
@@ -60,19 +59,20 @@ contains
 
     use marbl_constants_mod, only : R13C_std
     use marbl_constants_mod, only : R14C_std
+    use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
     use marbl_ciso_diagnostics_mod, only : marbl_ciso_diagnostics_surface_flux_compute
+    use marbl_interface_public_types, only : marbl_forcing_fields_type
 
     implicit none
 
-    integer (int_kind)                     , intent(in)    :: num_elements
-    real(r8)                               , intent(in)    :: sst(num_elements)
-    real(r8)                               , intent(in)    :: d13c(num_elements)  ! atm 13co2 value
-    real(r8)                               , intent(in)    :: d14c(num_elements)  ! atm 14co2 value
-    real(r8)                               , intent(in)    :: surface_vals(:,:)
-    type(marbl_surface_flux_share_type)    , intent(in)    :: marbl_surface_flux_share
-    real(r8)                               , intent(inout) :: surface_fluxes(:, :)
-    type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
-    type(marbl_diagnostics_type)           , intent(inout) :: marbl_surface_flux_diags
+    integer (int_kind),                        intent(in)    :: num_elements
+    type(marbl_surface_forcing_indexing_type), intent(in)    :: surface_forcing_ind
+    type(marbl_forcing_fields_type),           intent(in)    :: surface_input_forcings(:)
+    real(r8),                                  intent(in)    :: surface_vals(:,:)
+    type(marbl_surface_flux_share_type),       intent(in)    :: marbl_surface_flux_share
+    real(r8),                                  intent(inout) :: surface_fluxes(:, :)
+    type(marbl_tracer_index_type),             intent(in)    :: marbl_tracer_indices
+    type(marbl_diagnostics_type),              intent(inout) :: marbl_surface_flux_diags
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -113,6 +113,10 @@ contains
     if (.not. ciso_on) return
 
     associate(                                                                  &
+         sst  => surface_input_forcings(surface_forcing_ind%sst_id)%field_0d,   &
+         d13c => surface_input_forcings(surface_forcing_ind%d13c_id)%field_0d,  &
+         d14c => surface_input_forcings(surface_forcing_ind%d14c_id)%field_0d,  &
+
          pv                  => marbl_surface_flux_share%pv_surf_fields       , & ! in/out
          dic                 => marbl_surface_flux_share%dic_surf_fields      , & ! in/out DIC values for solver
          co2star             => marbl_surface_flux_share%co2star_surf_fields  , & ! in/out CO2STAR from solver
@@ -219,8 +223,6 @@ contains
     surface_fluxes(:,di13c_ind) = surface_fluxes(:,di13c_ind) + flux13(:)
     surface_fluxes(:,di14c_ind) = surface_fluxes(:,di14c_ind) + flux14(:)
 
-    end associate
-
     ! update carbon isotope diagnostics
     ! FIXME #18: the following arguments need to be group into a derived type
 
@@ -243,6 +245,8 @@ contains
          eps_dic_g_surf, &
          marbl_surface_flux_diags)
 
-  end subroutine marbl_ciso_compute_fluxes
+    end associate
+
+  end subroutine marbl_ciso_surface_flux_compute
 
 end module marbl_ciso_surface_flux_mod
