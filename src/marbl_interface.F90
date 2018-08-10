@@ -82,7 +82,7 @@ module marbl_interface
      ! public data related to computing surface fluxes
      real (r8)                                 , public, allocatable  :: surface_vals(:,:)           ! input
      type(marbl_surface_forcing_indexing_type) , public               :: surface_forcing_ind         !
-     type(marbl_forcing_fields_type)           , public, allocatable  :: surface_input_forcings(:)   ! input
+     type(marbl_forcing_fields_type)           , public, allocatable  :: surface_forcings(:)   ! input
      real (r8)                                 , public, allocatable  :: surface_fluxes(:,:)         ! output
      type(marbl_surface_flux_output_type)      , public               :: surface_flux_output         ! output
      type(marbl_diagnostics_type)              , public               :: surface_flux_diags          ! output
@@ -337,7 +337,7 @@ contains
                                    this%surface_forcing_ind, &
                                    this%surface_flux_share, &
                                    this%surface_flux_internal, &
-                                   this%surface_input_forcings, &
+                                   this%surface_forcings, &
                                    this%interior_forcing_ind, &
                                    this%interior_input_forcings, &
                                    this%StatusLog)
@@ -889,7 +889,7 @@ contains
     call marbl_surface_flux_compute(                                          &
          num_elements             = this%domain%num_elements_surface_flux,    &
          surface_forcing_ind      = this%surface_forcing_ind,                 &
-         surface_input_forcings   = this%surface_input_forcings,              &
+         surface_forcings         = this%surface_forcings,                    &
          surface_vals             = this%surface_vals,                        &
          surface_fluxes           = this%surface_fluxes,                      &
          marbl_tracer_indices     = this%tracer_indices,                      &
@@ -985,7 +985,7 @@ contains
 
     if (allocated(this%interior_input_forcings)) then
       deallocate(this%interior_input_forcings)
-      deallocate(this%surface_input_forcings)
+      deallocate(this%surface_forcings)
     end if
     call this%surface_flux_internal%destruct()
     call this%surface_flux_share%destruct()

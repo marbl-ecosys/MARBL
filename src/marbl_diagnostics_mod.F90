@@ -3130,7 +3130,7 @@ contains
 
   subroutine marbl_diagnostics_surface_flux_compute( &
        surface_forcing_ind,                         &
-       surface_input_forcings,                      &
+       surface_forcings,                            &
        surface_flux_internal,                       &
        marbl_tracer_indices,                        &
        saved_state,                                 &
@@ -3147,7 +3147,7 @@ contains
     use marbl_constants_mod  , only : mpercm
 
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
-    type(marbl_forcing_fields_type)           , intent(in)    :: surface_input_forcings(:)
+    type(marbl_forcing_fields_type)           , intent(in)    :: surface_forcings(:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(in)    :: saved_state
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
@@ -3156,16 +3156,16 @@ contains
 
     associate(                                                                                  &
          ind_diag          => marbl_surface_flux_diag_ind,                                      &
-         ind_forc          => surface_forcing_ind,                                              &
 
-         diags             => surface_flux_diags%diags(:),                                             &
-         u10_sqr           => surface_input_forcings(surface_forcing_ind%u10_sqr_id)%field_0d,         &
-         xco2              => surface_input_forcings(surface_forcing_ind%xco2_id)%field_0d,            &
-         xco2_alt_co2      => surface_input_forcings(surface_forcing_ind%xco2_alt_co2_id)%field_0d,    &
-         ap_used           => surface_input_forcings(surface_forcing_ind%atm_pressure_id)%field_0d,    &
-         ifrac             => surface_input_forcings(surface_forcing_ind%ifrac_id)%field_0d,           &
-         dust_flux_in      => surface_input_forcings(surface_forcing_ind%dust_flux_id)%field_0d,       &
-         iron_flux_in      => surface_input_forcings(surface_forcing_ind%iron_flux_id)%field_0d,       &
+         diags             => surface_flux_diags%diags(:),                                       &
+         xco2              => surface_forcings(surface_forcing_ind%xco2_id)%field_0d,            &
+         xco2_alt_co2      => surface_forcings(surface_forcing_ind%xco2_alt_co2_id)%field_0d,    &
+         ap_used           => surface_forcings(surface_forcing_ind%atm_pressure_id)%field_0d,    &
+         ifrac             => surface_forcings(surface_forcing_ind%ifrac_id)%field_0d,           &
+         dust_flux_in      => surface_forcings(surface_forcing_ind%dust_flux_id)%field_0d,       &
+         iron_flux_in      => surface_forcings(surface_forcing_ind%iron_flux_id)%field_0d,       &
+         nox_flux          => surface_forcings(surface_forcing_ind%nox_flux_id)%field_0d,        &
+         nhy_flux          => surface_forcings(surface_forcing_ind%nhy_flux_id)%field_0d,        &
 
          piston_velocity   => surface_flux_internal%piston_velocity,                         &
          flux_co2          => surface_flux_internal%flux_co2,                                &
@@ -3255,28 +3255,22 @@ contains
     endif  !  lflux_gas_co2
 
     !-----------------------------------------------------------------------
-    !  calculate iron and dust fluxes if necessary
+    !  calculate nox and nhy fluxes and nhx emissions
     !-----------------------------------------------------------------------
 
-    ! multiply IRON flux by mpercm (.01) to convert from model units (cm/s)(mmol/m^3) to mmol/s/m^2
-
-   if (ind_diag%IRON_FLUX.ne.0) then
-       diags(ind_diag%IRON_FLUX)%field_2d(:) = iron_flux_in(:) * mpercm
-   endif
-
-    !-----------------------------------------------------------------------
-    !  calculate nox and nhy fluxes if necessary
-    !-----------------------------------------------------------------------
-
-    if (ind_forc%nox_flux_id.ne.0) then
-       diags(ind_diag%NOx_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%nox_flux_id)%field_0d
-    endif
-    if (ind_forc%nox_flux_id.ne.0) then
-       diags(ind_diag%NHy_FLUX)%field_2d(:) = surface_input_forcings(ind_forc%nhy_flux_id)%field_0d
-    endif
-
+    diags(ind_diag%NOx_FLUX)%field_2d(:) = nox_flux
+    diags(ind_diag%NHy_FLUX)%field_2d(:) = nhy_flux
     diags(ind_diag%NHx_SURFACE_EMIS)%field_2d(:) = nhx_surface_emis(:)
+
+    !-----------------------------------------------------------------------
+    !  calculate dust flux and, if necessary, iron flux
+    !-----------------------------------------------------------------------
+
     diags(ind_diag%DUST_FLUX)%field_2d(:) = DUST_FLUX_IN(:)
+    ! multiply IRON flux by mpercm (.01) to convert from model units (cm/s)(mmol/m^3) to mmol/s/m^2
+    if (ind_diag%IRON_FLUX.ne.0) then
+       diags(ind_diag%IRON_FLUX)%field_2d(:) = iron_flux_in(:) * mpercm
+    endif
 
     end associate
 

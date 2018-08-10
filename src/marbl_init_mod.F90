@@ -353,7 +353,7 @@ contains
                                        surface_forcing_ind, &
                                        surface_flux_share, &
                                        surface_flux_internal, &
-                                       surface_input_forcings, &
+                                       surface_forcings, &
                                        interior_forcing_ind, &
                                        interior_input_forcings, &
                                        marbl_status_log)
@@ -374,7 +374,7 @@ contains
     type(marbl_surface_forcing_indexing_type),    intent(out)   :: surface_forcing_ind
     type(marbl_surface_flux_share_type),          intent(out)   :: surface_flux_share
     type(marbl_surface_flux_internal_type),       intent(out)   :: surface_flux_internal
-    type(marbl_forcing_fields_type), allocatable, intent(out)   :: surface_input_forcings(:)
+    type(marbl_forcing_fields_type), allocatable, intent(out)   :: surface_forcings(:)
     type(marbl_interior_forcing_indexing_type),   intent(out)   :: interior_forcing_ind
     type(marbl_forcing_fields_type), allocatable, intent(out)   :: interior_input_forcings(:)
     type(marbl_log_type),                         intent(inout) :: marbl_status_log
@@ -413,11 +413,11 @@ contains
       call surface_flux_internal%construct(num_elements_surface)
 
       ! Initialize surface forcing fields
-      allocate(surface_input_forcings(num_surface_forcing_fields))
+      allocate(surface_forcings(num_surface_forcing_fields))
       call marbl_init_surface_forcing_fields(                                &
            num_elements            = num_elements_surface,                   &
            surface_forcing_indices = surface_forcing_ind,                    &
-           surface_forcings        = surface_input_forcings,                 &
+           surface_forcings        = surface_forcings,                       &
            marbl_status_log        = marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call marbl_status_log%log_error_trace("marbl_init_surface_forcing_fields()", subname)
@@ -445,8 +445,8 @@ contains
 
       call marbl_status_log%log_header('MARBL-Required Forcing Fields', subname)
       call marbl_status_log%log_noerror('Surface:', subname)
-      do i=1,size(surface_input_forcings)
-        write(log_message, "(2A)") '* ', trim(surface_input_forcings(i)%metadata%varname)
+      do i=1,size(surface_forcings)
+        write(log_message, "(2A)") '* ', trim(surface_forcings(i)%metadata%varname)
         call marbl_status_log%log_noerror(log_message, subname)
       end do
 

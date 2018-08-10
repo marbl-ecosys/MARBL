@@ -120,7 +120,7 @@ contains
   subroutine marbl_surface_flux_compute( &
        num_elements,                    &
        surface_forcing_ind,             &
-       surface_input_forcings,          &
+       surface_forcings,                &
        surface_vals,                    &
        surface_fluxes,                  &
        marbl_tracer_indices,            &
@@ -157,7 +157,7 @@ contains
 
     integer (int_kind)                        , intent(in)    :: num_elements
     type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
-    type(marbl_forcing_fields_type)           , intent(in)    :: surface_input_forcings(:)
+    type(marbl_forcing_fields_type)           , intent(in)    :: surface_forcings(:)
     real (r8)                                 , intent(in)    :: surface_vals(:,:)
     real (r8)                                 , intent(out)   :: surface_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
@@ -189,17 +189,17 @@ contains
     associate(                                                                                      &
          ind                  => surface_forcing_ind,                                               &
 
-         ifrac        => surface_input_forcings(surface_forcing_ind%ifrac_id)%field_0d,            &
-         sst          => surface_input_forcings(surface_forcing_ind%sst_id)%field_0d,              &
-         sss          => surface_input_forcings(surface_forcing_ind%sss_id)%field_0d,              &
-         xco2         => surface_input_forcings(surface_forcing_ind%xco2_id)%field_0d,             &
-         xco2_alt_co2 => surface_input_forcings(surface_forcing_ind%xco2_alt_co2_id)%field_0d,     &
-         ap_used      => surface_input_forcings(surface_forcing_ind%atm_pressure_id)%field_0d,     &
-         u10_sqr      => surface_input_forcings(surface_forcing_ind%u10_sqr_id)%field_0d,          &
-         dust_flux_in => surface_input_forcings(surface_forcing_ind%dust_flux_id)%field_0d,        &
-         iron_flux_in => surface_input_forcings(surface_forcing_ind%iron_flux_id)%field_0d,        &
-         nox_flux     => surface_input_forcings(surface_forcing_ind%nox_flux_id)%field_0d,         &
-         nhy_flux     => surface_input_forcings(surface_forcing_ind%nhy_flux_id)%field_0d,         &
+         ifrac        => surface_forcings(surface_forcing_ind%ifrac_id)%field_0d,            &
+         sst          => surface_forcings(surface_forcing_ind%sst_id)%field_0d,              &
+         sss          => surface_forcings(surface_forcing_ind%sss_id)%field_0d,              &
+         xco2         => surface_forcings(surface_forcing_ind%xco2_id)%field_0d,             &
+         xco2_alt_co2 => surface_forcings(surface_forcing_ind%xco2_alt_co2_id)%field_0d,     &
+         ap_used      => surface_forcings(surface_forcing_ind%atm_pressure_id)%field_0d,     &
+         u10_sqr      => surface_forcings(surface_forcing_ind%u10_sqr_id)%field_0d,          &
+         dust_flux_in => surface_forcings(surface_forcing_ind%dust_flux_id)%field_0d,        &
+         iron_flux_in => surface_forcings(surface_forcing_ind%iron_flux_id)%field_0d,        &
+         nox_flux     => surface_forcings(surface_forcing_ind%nox_flux_id)%field_0d,         &
+         nhy_flux     => surface_forcings(surface_forcing_ind%nhy_flux_id)%field_0d,         &
 
          piston_velocity      => surface_flux_internal%piston_velocity(:),                       &
          flux_co2             => surface_flux_internal%flux_co2(:),                              &
@@ -322,18 +322,18 @@ contains
           end where
 
           ! Note the following computes a new ph_prev_surf
-          ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
+          ! pass in sections of surface_forcings instead of associated vars because of problems with intel/15.0.3
           call marbl_co2calc_surface(                                      &
                num_elements     = num_elements,                            &
                lcomp_co2calc_coeffs = .true.,                              &
                dic_in     = surface_vals(:,dic_ind),                       &
-               xco2_in    = surface_input_forcings(ind%xco2_id)%field_0d,  &
+               xco2_in    = surface_forcings(ind%xco2_id)%field_0d,        &
                ta_in      = surface_vals(:,alk_ind),                       &
                pt_in      = surface_vals(:,po4_ind),                       &
                sit_in     = surface_vals(:,sio3_ind),                      &
-               temp       = surface_input_forcings(ind%sst_id)%field_0d,   &
-               salt       = surface_input_forcings(ind%sss_id)%field_0d,   &
-               atmpres    = surface_input_forcings(ind%atm_pressure_id)%field_0d, &
+               temp       = surface_forcings(ind%sst_id)%field_0d,         &
+               salt       = surface_forcings(ind%sss_id)%field_0d,         &
+               atmpres    = surface_forcings(ind%atm_pressure_id)%field_0d,       &
                co2calc_coeffs = co2calc_coeffs,                            &
                co2calc_state = co2calc_state,                              &
                co3        = co3,                                           &
@@ -386,18 +386,18 @@ contains
           end where
 
           ! Note the following computes a new ph_prev_alt_co2
-          ! pass in sections of surface_input_forcings instead of associated vars because of problems with intel/15.0.3
+          ! pass in sections of surface_forcings instead of associated vars because of problems with intel/15.0.3
           call marbl_co2calc_surface(                                      &
                num_elements     = num_elements,                            &
                lcomp_co2calc_coeffs = .false.,                             &
                dic_in     = surface_vals(:,dic_alt_co2_ind),               &
-               xco2_in    = surface_input_forcings(ind%xco2_alt_co2_id)%field_0d, &
+               xco2_in    = surface_forcings(ind%xco2_alt_co2_id)%field_0d, &
                ta_in      = surface_vals(:,alk_alt_co2_ind),               &
                pt_in      = surface_vals(:,po4_ind),                       &
                sit_in     = surface_vals(:,sio3_ind),                      &
-               temp       = surface_input_forcings(ind%sst_id)%field_0d,   &
-               salt       = surface_input_forcings(ind%sss_id)%field_0d,   &
-               atmpres    = surface_input_forcings(ind%atm_pressure_id)%field_0d, &
+               temp       = surface_forcings(ind%sst_id)%field_0d,         &
+               salt       = surface_forcings(ind%sss_id)%field_0d,         &
+               atmpres    = surface_forcings(ind%atm_pressure_id)%field_0d, &
                co2calc_coeffs = co2calc_coeffs,                            &
                co2calc_state = co2calc_state,                              &
                co3        = co3,                                           &
@@ -478,16 +478,11 @@ contains
     surface_fluxes(:, sio3_ind) = surface_fluxes(:, sio3_ind) + (dust_flux_in * (  0.308_r8 * 0.075_r8 / 28.085_r8 * 1.0e9_r8))
 
     !-----------------------------------------------------------------------
-    !  calculate nox and nhy fluxes if necessary
+    !  calculate nox and nhy fluxes
     !-----------------------------------------------------------------------
 
-    if (surface_forcing_ind%nox_flux_id.ne.0) then
-      surface_fluxes(:, no3_ind) = surface_fluxes(:, no3_ind) + nox_flux(:)
-    endif
-
-    if (surface_forcing_ind%nhy_flux_id.ne.0) then
-      surface_fluxes(:, nh4_ind) = surface_fluxes(:, nh4_ind) + nhy_flux(:)
-    endif
+    surface_fluxes(:, no3_ind) = surface_fluxes(:, no3_ind) + nox_flux(:)
+    surface_fluxes(:, nh4_ind) = surface_fluxes(:, nh4_ind) + nhy_flux(:)
 
     !-----------------------------------------------------------------------
     !  Apply NO & NH fluxes to alkalinity
@@ -504,7 +499,7 @@ contains
 
     call marbl_diagnostics_surface_flux_compute(              &
          surface_forcing_ind      = ind,                      &
-         surface_input_forcings   = surface_input_forcings,   &
+         surface_forcings         = surface_forcings,         &
          surface_flux_internal    = surface_flux_internal,    &
          marbl_tracer_indices     = marbl_tracer_indices,     &
          saved_state              = saved_state,              &
@@ -518,7 +513,7 @@ contains
     call marbl_ciso_surface_flux_compute(                                             &
          num_elements                = num_elements,                                  &
          surface_forcing_ind         = surface_forcing_ind,                           &
-         surface_input_forcings      = surface_input_forcings,                        &
+         surface_forcings            = surface_forcings,                              &
          surface_vals                = surface_vals,                                  &
          surface_fluxes              = surface_fluxes,                                &
          marbl_tracer_indices        = marbl_tracer_indices,                          &
@@ -530,11 +525,11 @@ contains
     end associate
 
     if (ladjust_bury_coeff) then
-       associate(                                                                              &
-          flux_co2     => surface_flux_internal%flux_co2(:),                                   &
-          ext_C_flux   => surface_input_forcings(surface_forcing_ind%ext_C_flux_id)%field_0d,  &
-          ext_P_flux   => surface_input_forcings(surface_forcing_ind%ext_P_flux_id)%field_0d,  &
-          ext_Si_flux  => surface_input_forcings(surface_forcing_ind%ext_Si_flux_id)%field_0d, &
+       associate(                                                                        &
+          flux_co2     => surface_flux_internal%flux_co2(:),                             &
+          ext_C_flux   => surface_forcings(surface_forcing_ind%ext_C_flux_id)%field_0d,  &
+          ext_P_flux   => surface_forcings(surface_forcing_ind%ext_P_flux_id)%field_0d,  &
+          ext_Si_flux  => surface_forcings(surface_forcing_ind%ext_Si_flux_id)%field_0d, &
 
           dic_ind      => marbl_tracer_indices%dic_ind,                                        &
           doc_ind      => marbl_tracer_indices%doc_ind,                                        &
