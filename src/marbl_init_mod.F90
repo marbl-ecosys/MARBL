@@ -408,7 +408,7 @@ contains
         return
       end if
 
-      ! Construct share / internal types for surface forcing
+      ! Construct share / internal types for surface flux computation
       call surface_flux_share%construct(num_elements_surface)
       call surface_flux_internal%construct(num_elements_surface)
 

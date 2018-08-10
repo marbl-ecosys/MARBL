@@ -121,10 +121,10 @@ module marbl_interface_public_types
   type, public :: marbl_single_sfo_type
      ! marbl_single_sfo :
      ! a private type, this contains both the metadata
-     ! and the actual data for a single surface forcing
-     ! field that needs to be passed to the GCM / flux
-     ! coupler. Data must be accessed via the
-     ! marbl_surface_flux_output_type data structure.
+     ! and the actual data for a single field computed
+     ! in surface_flux_compute() that needs to be passed
+     ! to the GCM / flux coupler. Data must be accessed
+     ! via the marbl_surface_flux_output_type data structure.
      character (len=char_len)            :: long_name
      character (len=char_len)            :: short_name
      character (len=char_len)            :: units
@@ -473,12 +473,11 @@ contains
         this%units      = "mg/m^3"
         sfo_ind%totalChl_id = id
       case DEFAULT
-        write(log_message, "(2A)") trim(field_name),                            &
-                                 " is not a valid surface forcing field name"
+        write(log_message, "(2A)") trim(field_name), " is not a valid surface flux output field name"
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
-    write(log_message, "(3A)") "Adding ", trim(field_name), " to surface forcing outputs"
+    write(log_message, "(3A)") "Adding ", trim(field_name), " to surface flux outputs"
     call marbl_status_log%log_noerror(log_message, subname)
 
     allocate(this%forcing_field(num_elements))
@@ -498,11 +497,11 @@ contains
   !
   ! 1) allocate new_sfo to be size N (one element larger than this%sfo)
   ! 2) copy this%sfo into first N-1 elements of new_sfo
-  ! 3) newest surface forcing output (field_name) is Nth element of new_sfo
+  ! 3) newest surface flux output (field_name) is Nth element of new_sfo
   ! 4) deallocate / nullify this%sfo
   ! 5) point this%sfo => new_sfo
   !
-  ! If the number of possible surface forcing output fields grows, this workflow
+  ! If the number of possible surface flux output fields grows, this workflow
   ! may need to be replaced with something that is not O(N^2).
 
     class(marbl_surface_flux_output_type), intent(inout) :: this
@@ -536,7 +535,7 @@ contains
       deallocate(this%sfo(n)%forcing_field)
     end do
 
-    ! 3) newest surface forcing output (field_name) is Nth element of new_sfo
+    ! 3) newest surface flux output (field_name) is Nth element of new_sfo
     call new_sfo(sfo_id)%construct(num_elements, field_name, sfo_id,          &
                                    marbl_status_log)
     if (marbl_status_log%labort_marbl) then

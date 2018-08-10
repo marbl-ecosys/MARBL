@@ -761,7 +761,7 @@ contains
   subroutine surface_forcing_index_constructor(this, ciso_on, lflux_gas_o2,   &
              lflux_gas_co2, ladjust_bury_coeff, num_surface_forcing_fields)
 
-    ! This subroutine sets the surface forcing indexes, which are used to
+    ! This subroutine sets the surface forcing indices, which are used to
     ! determine what forcing fields are required from the driver.
 
     class(marbl_surface_forcing_indexing_type), intent(out) :: this

@@ -73,19 +73,19 @@ module marbl_interface
      type(marbl_timers_type)                   , public               :: timer_summary
 
      ! public data - interior forcing
-     real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input  *
-     real (r8)                                 , public, allocatable  :: column_dtracers(:,:)    ! output *
+     real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input
+     real (r8)                                 , public, allocatable  :: column_dtracers(:,:)    ! output
      type(marbl_interior_forcing_indexing_type), public               :: interior_forcing_ind         !
      type(marbl_forcing_fields_type)           , public, allocatable  :: interior_input_forcings(:)
      type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
 
-     ! public data surface forcing
-     real (r8)                                 , public, allocatable  :: surface_vals(:,:)           ! input  *
+     ! public data related to computing surface fluxes
+     real (r8)                                 , public, allocatable  :: surface_vals(:,:)           ! input
      type(marbl_surface_forcing_indexing_type) , public               :: surface_forcing_ind         !
-     type(marbl_forcing_fields_type)           , public, allocatable  :: surface_input_forcings(:) ! input  *
-     real (r8)                                 , public, allocatable  :: surface_fluxes(:,:)         ! output *
+     type(marbl_forcing_fields_type)           , public, allocatable  :: surface_input_forcings(:)   ! input
+     real (r8)                                 , public, allocatable  :: surface_fluxes(:,:)         ! output
      type(marbl_surface_flux_output_type)      , public               :: surface_flux_output         ! output
-     type(marbl_diagnostics_type)              , public               :: surface_flux_diags       ! output
+     type(marbl_diagnostics_type)              , public               :: surface_flux_diags          ! output
 
      ! public data - global averages
      real (r8)                                 , public, allocatable  :: glo_avg_fields_interior(:)   ! output (nfields)

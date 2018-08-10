@@ -133,7 +133,7 @@ contains
        glo_avg_fields_surface,          &
        marbl_status_log)
 
-    !  Compute surface forcing fluxes
+    !  Compute surface fluxes for base tracers
 
     use marbl_interface_public_types, only : sfo_ind
     use marbl_interface_public_types, only : marbl_diagnostics_type
@@ -499,7 +499,7 @@ contains
          surface_fluxes(:, nh4_ind) - surface_fluxes(:, no3_ind)
 
     !-----------------------------------------------------------------------
-    ! Set surface forcing diagnostics
+    ! Compute surface flux-related diagnostics
     !-----------------------------------------------------------------------
 
     call marbl_diagnostics_surface_flux_compute(              &
