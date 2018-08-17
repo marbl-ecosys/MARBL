@@ -327,10 +327,10 @@ Program marbl
       call marbl_init_test(marbl_instance, lshutdown=.false.)
       ! Log requested surface forcing fields
       call driver_status_log%log_header('Requested surface forcing fields', subname)
-      do n=1,size(marbl_instance%surface_forcings)
+      do n=1,size(marbl_instance%surface_flux_forcings)
         write(log_message, "(I0, 5A)") n, '. ', &
-              trim(marbl_instance%surface_forcings(n)%metadata%varname), &
-              ' (units: ', trim(marbl_instance%surface_forcings(n)%metadata%field_units),')'
+              trim(marbl_instance%surface_flux_forcings(n)%metadata%varname), &
+              ' (units: ', trim(marbl_instance%surface_flux_forcings(n)%metadata%field_units),')'
         call driver_status_log%log_noerror(log_message, subname)
       end do
       ! Log requested interior forcing fields

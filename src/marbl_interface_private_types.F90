@@ -242,7 +242,7 @@ module marbl_interface_private_types
 
   !****************************************************************************
 
-  type, public :: marbl_surface_forcing_indexing_type
+  type, public :: marbl_surface_flux_forcing_indexing_type
      integer(int_kind) :: u10_sqr_id           = 0
      integer(int_kind) :: ifrac_id             = 0
      integer(int_kind) :: sst_id               = 0
@@ -260,8 +260,8 @@ module marbl_interface_private_types
      integer(int_kind) :: d13c_id              = 0
      integer(int_kind) :: d14c_id              = 0
    contains
-     procedure, public :: construct => surface_forcing_index_constructor
-  end type marbl_surface_forcing_indexing_type
+     procedure, public :: construct => surface_flux_forcing_index_constructor
+  end type marbl_surface_flux_forcing_indexing_type
 
   !****************************************************************************
 
@@ -758,20 +758,20 @@ contains
 
   !*****************************************************************************
 
-  subroutine surface_forcing_index_constructor(this, ciso_on, lflux_gas_o2,   &
-             lflux_gas_co2, ladjust_bury_coeff, num_surface_forcing_fields)
+  subroutine surface_flux_forcing_index_constructor(this, ciso_on, lflux_gas_o2,   &
+             lflux_gas_co2, ladjust_bury_coeff, num_surface_flux_forcing_fields)
 
     ! This subroutine sets the surface forcing indices, which are used to
     ! determine what forcing fields are required from the driver.
 
-    class(marbl_surface_forcing_indexing_type), intent(out) :: this
-    logical,                                    intent(in)  :: ciso_on
-    logical,                                    intent(in)  :: lflux_gas_o2
-    logical,                                    intent(in)  :: lflux_gas_co2
-    logical,                                    intent(in)  :: ladjust_bury_coeff
-    integer,                                    intent(out) :: num_surface_forcing_fields
+    class(marbl_surface_flux_forcing_indexing_type), intent(out) :: this
+    logical,                                         intent(in)  :: ciso_on
+    logical,                                         intent(in)  :: lflux_gas_o2
+    logical,                                         intent(in)  :: lflux_gas_co2
+    logical,                                         intent(in)  :: ladjust_bury_coeff
+    integer,                                         intent(out) :: num_surface_flux_forcing_fields
 
-    associate(forcing_cnt => num_surface_forcing_fields)
+    associate(forcing_cnt => num_surface_flux_forcing_fields)
 
       forcing_cnt = 0
 
@@ -867,7 +867,7 @@ contains
 
     end associate
 
-  end subroutine surface_forcing_index_constructor
+  end subroutine surface_flux_forcing_index_constructor
 
   !*****************************************************************************
 

@@ -16,7 +16,7 @@ module marbl_interior_tendency_mod
   use marbl_constants_mod, only : yps
 
   use marbl_interface_private_types, only : marbl_PAR_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
+  use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
@@ -95,7 +95,7 @@ contains
        saved_state,                           &
        saved_state_ind,                       &
        tracers,                               &
-       surface_forcing_indices,               &
+       surface_flux_forcing_indices,          &
        interior_forcing_indices,              &
        dtracers,                              &
        marbl_tracer_indices,                  &
@@ -125,7 +125,7 @@ contains
     type    (marbl_domain_type)                 , intent(in)    :: domain
     type(marbl_forcing_fields_type)             , intent(in)    :: interior_forcings(:)
     real    (r8)                                , intent(in)    :: tracers(:,: )         ! (tracer_cnt, km) tracer values
-    type(marbl_surface_forcing_indexing_type)   , intent(in)    :: surface_forcing_indices
+    type(marbl_surface_flux_forcing_indexing_type), intent(in)  :: surface_flux_forcing_indices
     type(marbl_interior_forcing_indexing_type)  , intent(in)    :: interior_forcing_indices
     type    (marbl_PAR_type)                    , intent(inout) :: PAR
     type    (marbl_saved_state_type)            , intent(inout) :: saved_state
@@ -287,7 +287,7 @@ contains
          tracers(:,:), tracer_local(:,:), zooplankton_local(:,:), &
          autotroph_local(:,:), totalChl_local)
 
-    call set_surface_particulate_terms(surface_forcing_indices, POC, POP, P_CaCO3, &
+    call set_surface_particulate_terms(surface_flux_forcing_indices, POC, POP, P_CaCO3, &
          P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
 
     call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
@@ -814,7 +814,7 @@ contains
 
    !***********************************************************************
 
-   subroutine set_surface_particulate_terms(surface_forcing_indices, POC, POP, P_CaCO3, &
+   subroutine set_surface_particulate_terms(surface_flux_forcing_indices, POC, POP, P_CaCO3, &
         P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def, NET_DUST_IN)
 
      !  Set incoming fluxes (put into outgoing flux for first level usage).
@@ -835,7 +835,7 @@ contains
      use marbl_settings_mod, only : parm_hPOC_dust_ratio
 
      real (r8)                          , intent(in)    :: net_dust_in     ! dust flux
-     type(marbl_surface_forcing_indexing_type), intent(in)   :: surface_forcing_indices
+     type(marbl_surface_flux_forcing_indexing_type), intent(in)   :: surface_flux_forcing_indices
      type(column_sinking_particle_type) , intent(inout) :: POC             ! base units = nmol C
      type(column_sinking_particle_type) , intent(inout) :: POP             ! base units = nmol P
      type(column_sinking_particle_type) , intent(inout) :: P_CaCO3         ! base units = nmol CaCO3
@@ -907,7 +907,7 @@ contains
      P_SiO2%sflux_in(ksurf) = c0
      P_SiO2%hflux_in(ksurf) = c0
 
-     if (surface_forcing_indices%dust_flux_id.ne.0) then
+     if (surface_flux_forcing_indices%dust_flux_id.ne.0) then
         dust%sflux_in(ksurf) = (c1 - dust%gamma) * net_dust_in
         dust%hflux_in(ksurf) = dust%gamma * net_dust_in
      else

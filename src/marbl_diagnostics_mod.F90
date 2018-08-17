@@ -3129,8 +3129,8 @@ contains
   !***********************************************************************
 
   subroutine marbl_diagnostics_surface_flux_compute( &
-       surface_forcing_ind,                         &
-       surface_forcings,                            &
+       surface_flux_forcing_ind,                    &
+       surface_flux_forcings,                       &
        surface_flux_internal,                       &
        marbl_tracer_indices,                        &
        saved_state,                                 &
@@ -3140,14 +3140,14 @@ contains
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
 
-    use marbl_interface_private_types , only : marbl_surface_forcing_indexing_type
+    use marbl_interface_private_types , only : marbl_surface_flux_forcing_indexing_type
     use marbl_interface_private_types , only : marbl_surface_saved_state_indexing_type
     use marbl_settings_mod   , only : lflux_gas_o2
     use marbl_settings_mod   , only : lflux_gas_co2
     use marbl_constants_mod  , only : mpercm
 
-    type(marbl_surface_forcing_indexing_type) , intent(in)    :: surface_forcing_ind
-    type(marbl_forcing_fields_type)           , intent(in)    :: surface_forcings(:)
+    type(marbl_surface_flux_forcing_indexing_type), intent(in) :: surface_flux_forcing_ind
+    type(marbl_forcing_fields_type)           , intent(in)    :: surface_flux_forcings(:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(in)    :: saved_state
     type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
@@ -3157,15 +3157,15 @@ contains
     associate(                                                                                  &
          ind_diag          => marbl_surface_flux_diag_ind,                                      &
 
-         diags             => surface_flux_diags%diags(:),                                       &
-         xco2              => surface_forcings(surface_forcing_ind%xco2_id)%field_0d,            &
-         xco2_alt_co2      => surface_forcings(surface_forcing_ind%xco2_alt_co2_id)%field_0d,    &
-         ap_used           => surface_forcings(surface_forcing_ind%atm_pressure_id)%field_0d,    &
-         ifrac             => surface_forcings(surface_forcing_ind%ifrac_id)%field_0d,           &
-         dust_flux_in      => surface_forcings(surface_forcing_ind%dust_flux_id)%field_0d,       &
-         iron_flux_in      => surface_forcings(surface_forcing_ind%iron_flux_id)%field_0d,       &
-         nox_flux          => surface_forcings(surface_forcing_ind%nox_flux_id)%field_0d,        &
-         nhy_flux          => surface_forcings(surface_forcing_ind%nhy_flux_id)%field_0d,        &
+         diags             => surface_flux_diags%diags(:),                                              &
+         xco2              => surface_flux_forcings(surface_flux_forcing_ind%xco2_id)%field_0d,         &
+         xco2_alt_co2      => surface_flux_forcings(surface_flux_forcing_ind%xco2_alt_co2_id)%field_0d, &
+         ap_used           => surface_flux_forcings(surface_flux_forcing_ind%atm_pressure_id)%field_0d, &
+         ifrac             => surface_flux_forcings(surface_flux_forcing_ind%ifrac_id)%field_0d,        &
+         dust_flux_in      => surface_flux_forcings(surface_flux_forcing_ind%dust_flux_id)%field_0d,    &
+         iron_flux_in      => surface_flux_forcings(surface_flux_forcing_ind%iron_flux_id)%field_0d,    &
+         nox_flux          => surface_flux_forcings(surface_flux_forcing_ind%nox_flux_id)%field_0d,     &
+         nhy_flux          => surface_flux_forcings(surface_flux_forcing_ind%nhy_flux_id)%field_0d,     &
 
          piston_velocity   => surface_flux_internal%piston_velocity,                         &
          flux_co2          => surface_flux_internal%flux_co2,                                &

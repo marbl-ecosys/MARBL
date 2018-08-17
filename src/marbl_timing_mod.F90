@@ -79,7 +79,7 @@ module marbl_timing_mod
 
   type, public :: marbl_timer_indexing_type
     integer :: init_timer_id
-    integer :: surface_forcing_id
+    integer :: surface_flux_id
     integer :: interior_forcing_id
     integer :: carbonate_chem_id
   contains
@@ -276,7 +276,7 @@ Contains
       return
     end if
 
-    call self%add('MARBL set_sflux', timer_ids%surface_forcing_id,            &
+    call self%add('MARBL surface_flux_compute', timer_ids%surface_flux_id, &
                          marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("timers%add()", subname)
@@ -377,7 +377,7 @@ Contains
     class(marbl_timer_indexing_type), intent(inout) :: self
 
     self%init_timer_id = 0
-    self%surface_forcing_id = 0
+    self%surface_flux_id = 0
     self%interior_forcing_id = 0
     self%carbonate_chem_id = 0
 

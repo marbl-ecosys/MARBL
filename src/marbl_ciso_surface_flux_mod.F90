@@ -49,8 +49,8 @@ contains
 
   subroutine marbl_ciso_surface_flux_compute(&
        num_elements,                         &
-       surface_forcing_ind,                  &
-       surface_forcings,                     &
+       surface_flux_forcing_ind,             &
+       surface_flux_forcings,                &
        surface_vals,                         &
        surface_fluxes,                       &
        marbl_tracer_indices,                 &
@@ -61,20 +61,20 @@ contains
 
     use marbl_constants_mod, only : R13C_std
     use marbl_constants_mod, only : R14C_std
-    use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
     use marbl_ciso_diagnostics_mod, only : marbl_ciso_diagnostics_surface_flux_compute
     use marbl_interface_public_types, only : marbl_forcing_fields_type
 
     implicit none
 
-    integer (int_kind),                        intent(in)    :: num_elements
-    type(marbl_surface_forcing_indexing_type), intent(in)    :: surface_forcing_ind
-    type(marbl_forcing_fields_type),           intent(in)    :: surface_forcings(:)
-    real(r8),                                  intent(in)    :: surface_vals(:,:)
-    type(marbl_surface_flux_share_type),       intent(in)    :: marbl_surface_flux_share
-    real(r8),                                  intent(inout) :: surface_fluxes(:, :)
-    type(marbl_tracer_index_type),             intent(in)    :: marbl_tracer_indices
-    type(marbl_diagnostics_type),              intent(inout) :: marbl_surface_flux_diags
+    integer (int_kind),                             intent(in)    :: num_elements
+    type(marbl_surface_flux_forcing_indexing_type), intent(in)    :: surface_flux_forcing_ind
+    type(marbl_forcing_fields_type),                intent(in)    :: surface_flux_forcings(:)
+    real(r8),                                       intent(in)    :: surface_vals(:,:)
+    type(marbl_surface_flux_share_type),            intent(in)    :: marbl_surface_flux_share
+    real(r8),                                       intent(inout) :: surface_fluxes(:, :)
+    type(marbl_tracer_index_type),                  intent(in)    :: marbl_tracer_indices
+    type(marbl_diagnostics_type),                   intent(inout) :: marbl_surface_flux_diags
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -114,10 +114,10 @@ contains
     ! Return immediately if not running with carbon isotope tracer module
     if (.not. ciso_on) return
 
-    associate(                                                            &
-         sst  => surface_forcings(surface_forcing_ind%sst_id)%field_0d,   &
-         d13c => surface_forcings(surface_forcing_ind%d13c_id)%field_0d,  &
-         d14c => surface_forcings(surface_forcing_ind%d14c_id)%field_0d,  &
+    associate(                                                                      &
+         sst  => surface_flux_forcings(surface_flux_forcing_ind%sst_id)%field_0d,   &
+         d13c => surface_flux_forcings(surface_flux_forcing_ind%d13c_id)%field_0d,  &
+         d14c => surface_flux_forcings(surface_flux_forcing_ind%d14c_id)%field_0d,  &
 
          pv                  => marbl_surface_flux_share%pv_surf_fields       , & ! in/out
          dic                 => marbl_surface_flux_share%dic_surf_fields      , & ! in/out DIC values for solver

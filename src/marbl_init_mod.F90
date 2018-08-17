@@ -350,16 +350,16 @@ contains
 
   subroutine marbl_init_forcing_fields(domain, &
                                        tracer_metadata, &
-                                       surface_forcing_ind, &
+                                       surface_flux_forcing_ind, &
                                        surface_flux_share, &
                                        surface_flux_internal, &
-                                       surface_forcings, &
+                                       surface_flux_forcings, &
                                        interior_forcing_ind, &
                                        interior_input_forcings, &
                                        marbl_status_log)
 
     use marbl_interface_public_types, only : marbl_domain_type
-    use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
     use marbl_interface_private_types, only : marbl_surface_flux_share_type
     use marbl_interface_private_types, only : marbl_surface_flux_internal_type
     use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
@@ -371,10 +371,10 @@ contains
 
     type(marbl_domain_type),                      intent(in)    :: domain
     type(marbl_tracer_metadata_type),             intent(in)    :: tracer_metadata(:)
-    type(marbl_surface_forcing_indexing_type),    intent(out)   :: surface_forcing_ind
+    type(marbl_surface_flux_forcing_indexing_type), intent(out)   :: surface_flux_forcing_ind
     type(marbl_surface_flux_share_type),          intent(out)   :: surface_flux_share
     type(marbl_surface_flux_internal_type),       intent(out)   :: surface_flux_internal
-    type(marbl_forcing_fields_type), allocatable, intent(out)   :: surface_forcings(:)
+    type(marbl_forcing_fields_type), allocatable, intent(out)   :: surface_flux_forcings(:)
     type(marbl_interior_forcing_indexing_type),   intent(out)   :: interior_forcing_ind
     type(marbl_forcing_fields_type), allocatable, intent(out)   :: interior_input_forcings(:)
     type(marbl_log_type),                         intent(inout) :: marbl_status_log
@@ -382,7 +382,7 @@ contains
     ! Local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_forcing_fields'
     character(len=char_len) :: log_message
-    integer :: num_surface_forcing_fields
+    integer :: num_surface_flux_forcing_fields
     integer :: num_interior_forcing_fields
     integer :: i
 
@@ -393,11 +393,11 @@ contains
          )
 
       ! Construct indices for surface and interior forcing
-      call surface_forcing_ind%construct(ciso_on,                             &
-                                         lflux_gas_o2,                        &
-                                         lflux_gas_co2,                       &
-                                         ladjust_bury_coeff,                  &
-                                         num_surface_forcing_fields)
+      call surface_flux_forcing_ind%construct(ciso_on,                        &
+                                              lflux_gas_o2,                   &
+                                              lflux_gas_co2,                  &
+                                              ladjust_bury_coeff,             &
+                                              num_surface_flux_forcing_fields)
       call interior_forcing_ind%construct(tracer_metadata%short_name,         &
                                           tracer_restore_vars,                &
                                           domain%num_PAR_subcols,             &
@@ -413,14 +413,14 @@ contains
       call surface_flux_internal%construct(num_elements_surface)
 
       ! Initialize surface forcing fields
-      allocate(surface_forcings(num_surface_forcing_fields))
-      call marbl_init_surface_forcing_fields(                                &
-           num_elements            = num_elements_surface,                   &
-           surface_forcing_indices = surface_forcing_ind,                    &
-           surface_forcings        = surface_forcings,                       &
-           marbl_status_log        = marbl_status_log)
+      allocate(surface_flux_forcings(num_surface_flux_forcing_fields))
+      call marbl_init_surface_flux_forcing_fields(                  &
+           num_elements                 = num_elements_surface,     &
+           surface_flux_forcing_indices = surface_flux_forcing_ind, &
+           surface_flux_forcings        = surface_flux_forcings,    &
+           marbl_status_log             = marbl_status_log)
       if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace("marbl_init_surface_forcing_fields()", subname)
+        call marbl_status_log%log_error_trace("marbl_init_surface_flux_forcing_fields()", subname)
         return
       end if
 
@@ -445,8 +445,8 @@ contains
 
       call marbl_status_log%log_header('MARBL-Required Forcing Fields', subname)
       call marbl_status_log%log_noerror('Surface:', subname)
-      do i=1,size(surface_forcings)
-        write(log_message, "(2A)") '* ', trim(surface_forcings(i)%metadata%varname)
+      do i=1,size(surface_flux_forcings)
+        write(log_message, "(2A)") '* ', trim(surface_flux_forcings(i)%metadata%varname)
         call marbl_status_log%log_noerror(log_message, subname)
       end do
 
@@ -654,148 +654,148 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_surface_forcing_fields(num_elements, surface_forcing_indices, &
-                                        surface_forcings, marbl_status_log)
+  subroutine marbl_init_surface_flux_forcing_fields(num_elements, surface_flux_forcing_indices, &
+                                        surface_flux_forcings, marbl_status_log)
 
     !  Initialize the surface forcing_fields datatype with information from the
     !  namelist read
     !
 
-    use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
 
     implicit none
 
-    integer,                                   intent(in)    :: num_elements
-    type(marbl_surface_forcing_indexing_type), intent(in)    :: surface_forcing_indices
-    type(marbl_forcing_fields_type),           intent(out)   :: surface_forcings(:)
-    type(marbl_log_type),                      intent(inout) :: marbl_status_log
+    integer,                                        intent(in)    :: num_elements
+    type(marbl_surface_flux_forcing_indexing_type), intent(in)    :: surface_flux_forcing_indices
+    type(marbl_forcing_fields_type),                intent(out)   :: surface_flux_forcings(:)
+    type(marbl_log_type),                           intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_surface_forcing_fields'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_surface_flux_forcing_fields'
     character(len=char_len)     :: log_message
 
     integer :: id
     logical :: found
     !-----------------------------------------------------------------------
 
-    associate(ind => surface_forcing_indices)
+    associate(ind => surface_flux_forcing_indices)
 
-      surface_forcings(:)%metadata%varname = ''
-      do id=1,size(surface_forcings)
+      surface_flux_forcings(:)%metadata%varname = ''
+      do id=1,size(surface_flux_forcings)
         found = .false.
 
         ! Square of 10m wind
         if (id .eq. ind%u10_sqr_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'u10_sqr'
-          surface_forcings(id)%metadata%field_units   = 'cm^2/s^2'
+          surface_flux_forcings(id)%metadata%varname       = 'u10_sqr'
+          surface_flux_forcings(id)%metadata%field_units   = 'cm^2/s^2'
         end if
 
         ! Sea-surface salinity
         if (id .eq. ind%sss_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'sss'
-          surface_forcings(id)%metadata%field_units   = 'psu'
+          surface_flux_forcings(id)%metadata%varname       = 'sss'
+          surface_flux_forcings(id)%metadata%field_units   = 'psu'
         end if
 
         ! Sea-surface temperature
         if (id .eq. ind%sst_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'sst'
-          surface_forcings(id)%metadata%field_units   = 'degC'
+          surface_flux_forcings(id)%metadata%varname       = 'sst'
+          surface_flux_forcings(id)%metadata%field_units   = 'degC'
         end if
 
         ! Ice Fraction
         if (id .eq. ind%ifrac_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'Ice Fraction'
-          surface_forcings(id)%metadata%field_units   = 'unitless'
+          surface_flux_forcings(id)%metadata%varname       = 'Ice Fraction'
+          surface_flux_forcings(id)%metadata%field_units   = 'unitless'
         end if
 
         ! Dust Flux
         if (id .eq. ind%dust_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'Dust Flux'
-          surface_forcings(id)%metadata%field_units   = 'g/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'Dust Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'g/cm^2/s'
         end if
 
         ! Iron Flux
         if (id .eq. ind%iron_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'Iron Flux'
-          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'Iron Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! NOx Flux
         if (id .eq. ind%nox_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'NOx Flux'
-          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'NOx Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! NHy Flux
         if (id .eq. ind%nhy_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'NHy Flux'
-          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'NHy Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! external C Flux
         if (id .eq. ind%ext_C_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'external C Flux'
-          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'external C Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! external P Flux
         if (id .eq. ind%ext_P_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'external P Flux'
-          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'external P Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! external Si Flux
         if (id .eq. ind%ext_Si_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'external Si Flux'
-          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'external Si Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! atm pressure
         if (id .eq. ind%atm_pressure_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'Atmospheric Pressure'
-          surface_forcings(id)%metadata%field_units   = 'atmospheres'
+          surface_flux_forcings(id)%metadata%varname       = 'Atmospheric Pressure'
+          surface_flux_forcings(id)%metadata%field_units   = 'atmospheres'
         end if
 
         ! xco2
         if (id .eq. ind%xco2_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'xco2'
-          surface_forcings(id)%metadata%field_units   = 'ppmv'
+          surface_flux_forcings(id)%metadata%varname       = 'xco2'
+          surface_flux_forcings(id)%metadata%field_units   = 'ppmv'
         end if
 
         ! xco2_alt_co2
         if (id .eq. ind%xco2_alt_co2_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'xco2_alt_co2'
-          surface_forcings(id)%metadata%field_units   = 'ppmv'
+          surface_flux_forcings(id)%metadata%varname       = 'xco2_alt_co2'
+          surface_flux_forcings(id)%metadata%field_units   = 'ppmv'
         end if
 
         ! d13c
         if (id .eq. ind%d13c_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'd13c'
-          surface_forcings(id)%metadata%field_units   = 'permil'
+          surface_flux_forcings(id)%metadata%varname       = 'd13c'
+          surface_flux_forcings(id)%metadata%field_units   = 'permil'
         end if
 
         ! d14c
         if (id .eq. ind%d14c_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'd14c'
-          surface_forcings(id)%metadata%field_units   = 'permil'
+          surface_flux_forcings(id)%metadata%varname       = 'd14c'
+          surface_flux_forcings(id)%metadata%field_units   = 'permil'
         end if
 
         if (.not.found) then
@@ -807,7 +807,7 @@ contains
 
         ! All surface forcing fields are rank 0; if that changes, make this
         ! call from inside each "if (id .eq. *)" block
-        call surface_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
+        call surface_flux_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
 
       end do
 
@@ -816,7 +816,7 @@ contains
     ! FIXME #26: do we have any forcing fields that are required to be set?
     !            If so, check to make sure those indices are not zero here.
 
-  end subroutine marbl_init_surface_forcing_fields
+  end subroutine marbl_init_surface_flux_forcing_fields
 
   !*****************************************************************************
 
