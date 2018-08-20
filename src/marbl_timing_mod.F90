@@ -80,7 +80,7 @@ module marbl_timing_mod
   type, public :: marbl_timer_indexing_type
     integer :: init_timer_id
     integer :: surface_flux_id
-    integer :: interior_forcing_id
+    integer :: interior_tendency_id
     integer :: carbonate_chem_id
   contains
     procedure :: set_to_zero => timer_indexing_zero
@@ -283,7 +283,7 @@ Contains
       return
     end if
 
-    call self%add('MARBL set_interior', timer_ids%interior_forcing_id,        &
+    call self%add('MARBL interior_tendency_compute', timer_ids%interior_tendency_id, &
                          marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("timers%add()", subname)
@@ -378,7 +378,7 @@ Contains
 
     self%init_timer_id = 0
     self%surface_flux_id = 0
-    self%interior_forcing_id = 0
+    self%interior_tendency_id = 0
     self%carbonate_chem_id = 0
 
   end subroutine timer_indexing_zero

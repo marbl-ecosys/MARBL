@@ -831,7 +831,7 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_interface:interior_tendency_compute'
 
-    call this%timers%start(this%timer_ids%interior_forcing_id, this%StatusLog)
+    call this%timers%start(this%timer_ids%interior_tendency_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%start()", subname)
       return
@@ -860,7 +860,7 @@ contains
        return
     end if
 
-    call this%timers%stop(this%timer_ids%interior_forcing_id, this%StatusLog)
+    call this%timers%stop(this%timer_ids%interior_tendency_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%stop()", subname)
       return
