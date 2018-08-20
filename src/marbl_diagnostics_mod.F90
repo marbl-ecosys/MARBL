@@ -49,7 +49,7 @@ module marbl_diagnostics_mod
   !-----------------------------------------------------------------------
 
   public :: marbl_diagnostics_init
-  public :: marbl_diagnostics_set_interior_forcing
+  public :: marbl_diagnostics_interior_tendency_compute
   public :: marbl_diagnostics_surface_flux_compute
 
   private :: store_diagnostics_carbonate
@@ -2954,7 +2954,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_diagnostics_set_interior_forcing ( &
+  subroutine marbl_diagnostics_interior_tendency_compute ( &
        domain,                                        &
        interior_forcing_ind,                          &
        interior_forcings,                             &
@@ -3016,7 +3016,7 @@ contains
     type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_tendency_diags
     type (marbl_log_type)                     , intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_interior_forcing'
+    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_interior_tendency_compute'
 
     !-----------------------------------------------------------------
 
@@ -3124,7 +3124,7 @@ contains
     call store_diagnostics_interior_restore(interior_restore,                 &
                                             marbl_interior_tendency_diags)
 
-  end subroutine marbl_diagnostics_set_interior_forcing
+  end subroutine marbl_diagnostics_interior_tendency_compute
 
   !***********************************************************************
 

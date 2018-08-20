@@ -31,7 +31,7 @@ module marbl_ciso_interior_tendency_mod
   implicit none
   private
 
-  public  :: marbl_ciso_compute_tendencies
+  public :: marbl_ciso_interior_tendency_compute
 
   !-----------------------------------------------------------------------
   !  scalar constants for 14C decay calculation
@@ -44,7 +44,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_ciso_compute_tendencies(   &
+  subroutine marbl_ciso_interior_tendency_compute( &
        marbl_domain,                          &
        marbl_interior_share,                  &
        marbl_zooplankton_share,               &
@@ -88,7 +88,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_surface_flux_mod:marbl_ciso_compute_tendencies'
+    character(len=*), parameter :: subname = 'marbl_ciso_interior_tendency_mod:marbl_ciso_interior_tendency_compute'
 
     real (r8) :: work1      ! temporaries
 
@@ -727,7 +727,7 @@ contains
     call P_Ca13CO3%destruct()
     call P_Ca14CO3%destruct()
 
-  end subroutine marbl_ciso_compute_tendencies
+  end subroutine marbl_ciso_interior_tendency_compute
 
   !***********************************************************************
 
@@ -753,7 +753,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_surface_flux_mod:setup_cell_attributes'
+    character(len=*), parameter :: subname = 'marbl_ciso_interior_tendency_mod:setup_cell_attributes'
     character(len=char_len)     :: log_message
 
     integer(int_kind) :: auto_ind           ! autotroph functional group index

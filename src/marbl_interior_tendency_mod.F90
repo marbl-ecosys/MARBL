@@ -110,8 +110,8 @@ contains
     !  Compute time derivatives for ecosystem state variables
 
     use marbl_temperature, only : marbl_temperature_potemp
-    use marbl_ciso_interior_tendency_mod, only : marbl_ciso_compute_tendencies
-    use marbl_diagnostics_mod , only : marbl_diagnostics_set_interior_forcing
+    use marbl_ciso_interior_tendency_mod, only : marbl_ciso_interior_tendency_compute
+    use marbl_diagnostics_mod , only : marbl_diagnostics_interior_tendency_compute
     use marbl_interface_private_types, only : marbl_internal_timers_type
     use marbl_interface_private_types, only : marbl_timer_indexing_type
     use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
@@ -424,7 +424,7 @@ contains
     end do ! k
 
     ! Compute interior diagnostics
-    call marbl_diagnostics_set_interior_forcing(            &
+    call marbl_diagnostics_interior_tendency_compute(       &
          domain,                                            &
          interior_forcing_indices,                          &
          interior_forcings,                                 &
@@ -449,12 +449,12 @@ contains
          marbl_status_log)
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace(&
-            'marbl_diagnostics_set_interior_foricng()', subname)
+            'marbl_diagnostics_interior_tendency_compute()', subname)
        return
     end if
 
     !  Compute time derivatives for ecosystem carbon isotope state variables
-    call marbl_ciso_compute_tendencies(                              &
+    call marbl_ciso_interior_tendency_compute(                       &
          marbl_domain                 = domain,                      &
          marbl_interior_share         = marbl_interior_share,        &
          marbl_zooplankton_share      = marbl_zooplankton_share,     &
@@ -470,7 +470,7 @@ contains
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace(&
-            'marbl_ciso_compute_tendencies()', subname)
+            'marbl_ciso_interior_tendency_compute()', subname)
        return
     end if
 
