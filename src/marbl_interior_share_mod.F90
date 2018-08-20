@@ -6,7 +6,7 @@ module marbl_interior_share_mod
   use marbl_interface_private_types, only : marbl_tracer_index_type
   use marbl_interface_private_types, only : carbonate_type
   use marbl_interface_private_types, only : dissolved_organic_matter_type
-  use marbl_interface_private_types, only : marbl_interior_share_type
+  use marbl_interface_private_types, only : marbl_interior_tendency_share_type
   use marbl_pft_mod, only : zooplankton_local_type
   use marbl_pft_mod, only : zooplankton_secondary_species_type
   use marbl_pft_mod, only : marbl_zooplankton_share_type
@@ -42,28 +42,28 @@ contains
        carbonate, &
        dissolved_organic_matter, &
        QA_dust_def, &
-       marbl_interior_share)
+       marbl_interior_tendency_share)
 
-    real(r8)                            , intent(in)    :: tracer_local(:)
-    type(marbl_tracer_index_type)       , intent(in)    :: marbl_tracer_indices
-    type(carbonate_type)                , intent(in)    :: carbonate
-    type(dissolved_organic_matter_type) , intent(in)    :: dissolved_organic_matter
-    real(r8)                            , intent(in)    :: QA_dust_def
-    type(marbl_interior_share_type)     , intent(inout) :: marbl_interior_share
+    real(r8),                                 intent(in)    :: tracer_local(:)
+    type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
+    type(carbonate_type),                     intent(in)    :: carbonate
+    type(dissolved_organic_matter_type),      intent(in)    :: dissolved_organic_matter
+    real(r8),                                 intent(in)    :: QA_dust_def
+    type(marbl_interior_tendency_share_type), intent(inout) :: marbl_interior_tendency_share
 
     ! Only populate this datatype if running with carbon isotopes
     if (.not. ciso_on) return
 
-    marbl_interior_share%QA_dust_def    = QA_dust_def
+    marbl_interior_tendency_share%QA_dust_def    = QA_dust_def
 
-    marbl_interior_share%CO3_fields   = carbonate%CO3
-    marbl_interior_share%HCO3_fields  = carbonate%HCO3
-    marbl_interior_share%H2CO3_fields = carbonate%H2CO3
-    marbl_interior_share%CO3_sat_calcite = carbonate%CO3_sat_calcite
+    marbl_interior_tendency_share%CO3_fields   = carbonate%CO3
+    marbl_interior_tendency_share%HCO3_fields  = carbonate%HCO3
+    marbl_interior_tendency_share%H2CO3_fields = carbonate%H2CO3
+    marbl_interior_tendency_share%CO3_sat_calcite = carbonate%CO3_sat_calcite
 
-    marbl_interior_share%DOCtot_loc_fields = &
+    marbl_interior_tendency_share%DOCtot_loc_fields = &
          tracer_local(marbl_tracer_indices%DOC_ind) + tracer_local(marbl_tracer_indices%DOCr_ind)
-    marbl_interior_share%DOCtot_remin_fields = &
+    marbl_interior_tendency_share%DOCtot_remin_fields = &
          dissolved_organic_matter%DOC_remin + dissolved_organic_matter%DOCr_remin
 
   end subroutine marbl_interior_share_export_variables

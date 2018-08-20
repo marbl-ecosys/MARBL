@@ -20,7 +20,7 @@ module marbl_interior_tendency_mod
   use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
-  use marbl_interface_private_types, only : marbl_interior_share_type
+  use marbl_interface_private_types, only : marbl_interior_tendency_share_type
   use marbl_interface_private_types, only : dissolved_organic_matter_type
   use marbl_interface_private_types, only : carbonate_type
   use marbl_interface_private_types, only : column_sinking_particle_type
@@ -147,8 +147,8 @@ contains
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
     real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
 
-    type(marbl_interior_share_type)    :: marbl_interior_share(domain%km)
-    type(marbl_zooplankton_share_type) :: marbl_zooplankton_share(domain%km)
+    type(marbl_interior_tendency_share_type) :: marbl_interior_tendency_share(domain%km)
+    type(marbl_zooplankton_share_type)       :: marbl_zooplankton_share(domain%km)
 
     integer (int_kind) :: k         ! vertical level index
 
@@ -410,7 +410,7 @@ contains
        !            of compute_particulate_terms!
        call marbl_interior_share_export_variables(tracer_local(:, k),        &
             marbl_tracer_indices, carbonate(k), dissolved_organic_matter(k), &
-            QA_dust_def(k), marbl_interior_share(k))
+            QA_dust_def(k), marbl_interior_tendency_share(k))
 
        call marbl_interior_share_export_zooplankton(zooplankton_local(:, k), &
             zooplankton_secondary_species(:, k), &
@@ -456,7 +456,7 @@ contains
     !  Compute time derivatives for ecosystem carbon isotope state variables
     call marbl_ciso_interior_tendency_compute(                       &
          marbl_domain                 = domain,                      &
-         marbl_interior_share         = marbl_interior_share,        &
+         marbl_interior_tendency_share = marbl_interior_tendency_share, &
          marbl_zooplankton_share      = marbl_zooplankton_share,     &
          marbl_particulate_share      = marbl_particulate_share,     &
          autotroph_secondary_species  = autotroph_secondary_species, &

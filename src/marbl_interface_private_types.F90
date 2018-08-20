@@ -84,7 +84,7 @@ module marbl_interface_private_types
   !
   !****************************************************************************
 
-  type, public :: marbl_interior_share_type
+  type, public :: marbl_interior_tendency_share_type
      real(r8) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux
      real(r8) :: CO3_fields
      real(r8) :: HCO3_fields         ! bicarbonate ion
@@ -92,7 +92,7 @@ module marbl_interface_private_types
      real(r8) :: CO3_sat_calcite
      real(r8) :: DOCtot_loc_fields   ! local copy of model DOC+DOCr
      real(r8) :: DOCtot_remin_fields ! remineralization of DOC+DOCr (mmol C/m^3/sec)
-  end type marbl_interior_share_type
+  end type marbl_interior_tendency_share_type
 
   !***********************************************************************
 
