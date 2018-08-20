@@ -9,7 +9,7 @@ module marbl_saved_state_mod
 Contains
 
   subroutine marbl_saved_state_init(surface_state, interior_state, surf_ind,  &
-             interior_ind, num_levels, num_surface_elements,                  &
+             interior_ind, num_levels, num_elements_surface,                  &
              num_interior_forcing, marbl_status_log)
 
     use marbl_interface_public_types, only : marbl_saved_state_type
@@ -24,7 +24,7 @@ Contains
     type(marbl_surface_saved_state_indexing_type),  intent(inout) :: surf_ind
     type(marbl_interior_saved_state_indexing_type), intent(inout) :: interior_ind
     integer,                      intent(in)    :: num_levels
-    integer,                      intent(in)    :: num_surface_elements
+    integer,                      intent(in)    :: num_elements_surface
     integer,                      intent(in)    :: num_interior_forcing
     type(marbl_log_type),         intent(inout) :: marbl_status_log
 
@@ -33,7 +33,7 @@ Contains
     character(len=char_len) :: lname, sname, units, vgrid
     integer :: rank
 
-    call surface_state%construct(num_surface_elements, num_levels)
+    call surface_state%construct(num_elements_surface, num_levels)
 
     lname = 'surface pH'
     sname = 'PH_SURF'

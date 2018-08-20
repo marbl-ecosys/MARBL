@@ -427,7 +427,7 @@ contains
       ! Initialize interior forcing fields
       allocate(interior_input_forcings(num_interior_forcing_fields))
       call marbl_init_interior_forcing_fields(                                &
-           num_elements             = domain%num_elements_interior_forcing,   &
+           num_elements             = domain%num_elements_interior_tendency,  &
            interior_forcing_indices = interior_forcing_ind,                   &
            tracer_metadata          = tracer_metadata,                        &
            num_PAR_subcols          = num_PAR_subcols,                        &

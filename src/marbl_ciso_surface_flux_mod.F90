@@ -3,21 +3,6 @@
 
 module marbl_ciso_surface_flux_mod
 
-  !-----------------------------------------------------------------------
-  !  Carbon 13 module and biotic 14C module
-  !  13C code is based on code form G. Xavier, ETH, 2010, which
-  !  was written for pop1 (CCSM3)
-  !  This code needs the ecosystem model to run, as it uses several
-  !  variables computed there.
-  !  This module adds 7 carbon pools for 13C and another 7 for 14C
-  !
-  !   References
-  !   Jahn, A., K. Lindsay, X. Giraud, N. Gruber, B. L. Otto-Bliesner, Z. Liu,
-  !   E. C. Brady, 2015. Carbon isotopes in the ocean model of the Community
-  !   Earth System Model (CESM1). Geosci. Model Dev., 8: 2419-2434.
-  !   doi:10.5194/gmd-8-2419-2015
-  !-----------------------------------------------------------------------
-
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : int_kind
 

@@ -111,7 +111,7 @@ contains
     !-----------------------------------------------------------------
 
     call marbl_surface_flux_diags%construct(marbl_domain%num_elements_surface_flux, marbl_domain%km)
-    call marbl_interior_forcing_diags%construct(marbl_domain%num_elements_interior_forcing, marbl_domain%km)
+    call marbl_interior_forcing_diags%construct(marbl_domain%num_elements_interior_tendency, marbl_domain%km)
 
     associate(                                    &
               ind => marbl_surface_flux_diag_ind, &

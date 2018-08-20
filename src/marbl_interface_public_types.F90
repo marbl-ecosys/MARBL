@@ -52,14 +52,14 @@ module marbl_interface_public_types
   !*****************************************************************************
 
   type, public :: marbl_domain_type
-     integer(int_kind)     :: num_PAR_subcols               ! number of PAR subcols
-     integer(int_kind)     :: num_elements_surface_flux     ! number of columns computed in surface_flux_compute
-     integer(int_kind)     :: num_elements_interior_forcing ! number of interior forcing columns
-     integer(int_kind)     :: km                            ! number of vertical grid cells
-     integer(int_kind)     :: kmt                           ! index of ocean floor
-     real(r8), allocatable :: zt(:)                         ! (km) vert dist from sfc to midpoint of layer
-     real(r8), allocatable :: zw(:)                         ! (km) vert dist from sfc to bottom of layer
-     real(r8), allocatable :: delta_z(:)                    ! (km) delta z - different values for partial bottom cells
+     integer(int_kind)     :: num_PAR_subcols                ! number of PAR subcols
+     integer(int_kind)     :: num_elements_surface_flux      ! number of columns computed in surface_flux_compute
+     integer(int_kind)     :: num_elements_interior_tendency ! number of interior forcing columns
+     integer(int_kind)     :: km                             ! number of vertical grid cells
+     integer(int_kind)     :: kmt                            ! index of ocean floor
+     real(r8), allocatable :: zt(:)                          ! (km) vert dist from sfc to midpoint of layer
+     real(r8), allocatable :: zw(:)                          ! (km) vert dist from sfc to bottom of layer
+     real(r8), allocatable :: delta_z(:)                     ! (km) delta z - different values for partial bottom cells
    contains
      procedure, public :: construct => marbl_domain_constructor
      procedure, public :: destruct => marbl_domain_destructor
@@ -201,14 +201,14 @@ contains
 
   subroutine marbl_domain_constructor(this, &
        num_levels, num_PAR_subcols, &
-       num_elements_surface_flux, num_elements_interior_forcing, &
+       num_elements_surface_flux, num_elements_interior_tendency, &
        delta_z, zw, zt)
 
     class(marbl_domain_type), intent(out) :: this
     integer (int_kind),       intent(in)  :: num_levels
     integer (int_kind),       intent(in)  :: num_PAR_subcols
     integer (int_kind),       intent(in)  :: num_elements_surface_flux
-    integer (int_kind),       intent(in)  :: num_elements_interior_forcing
+    integer (int_kind),       intent(in)  :: num_elements_interior_tendency
     real (r8),                intent(in)  :: delta_z(num_levels)
     real (r8),                intent(in)  :: zw(num_levels)
     real (r8),                intent(in)  :: zt(num_levels)
@@ -222,7 +222,7 @@ contains
     this%km = num_levels
     this%num_PAR_subcols = num_PAR_subcols
     this%num_elements_surface_flux = num_elements_surface_flux
-    this%num_elements_interior_forcing = num_elements_interior_forcing
+    this%num_elements_interior_tendency = num_elements_interior_tendency
 
     do k = 1, num_levels
        this%delta_z(k) = delta_z(k)
