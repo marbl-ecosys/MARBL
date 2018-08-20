@@ -77,7 +77,7 @@ module marbl_interface
      real (r8)                                 , public, allocatable  :: column_dtracers(:,:)    ! output
      type(marbl_interior_forcing_indexing_type), public               :: interior_forcing_ind         !
      type(marbl_forcing_fields_type)           , public, allocatable  :: interior_input_forcings(:)
-     type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
+     type(marbl_diagnostics_type)              , public               :: interior_tendency_diags ! output
 
      ! public data related to computing surface fluxes
      real (r8)                                      , public, allocatable  :: surface_vals(:,:)           ! input
@@ -296,12 +296,12 @@ contains
     !--------------------------------------------------------------------
 
     call marbl_diagnostics_init(                                              &
-         marbl_domain                 = this%domain,                          &
-         marbl_tracer_metadata        = this%tracer_metadata,                 &
-         marbl_tracer_indices         = this%tracer_indices,                  &
-         marbl_interior_forcing_diags = this%interior_forcing_diags,          &
-         marbl_surface_flux_diags     = this%surface_flux_diags,              &
-         marbl_status_log             = this%StatusLog)
+         marbl_domain                  = this%domain,                         &
+         marbl_tracer_metadata         = this%tracer_metadata,                &
+         marbl_tracer_indices          = this%tracer_indices,                 &
+         marbl_interior_tendency_diags = this%interior_tendency_diags,        &
+         marbl_surface_flux_diags      = this%surface_flux_diags,             &
+         marbl_status_log              = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_diagnostics_init()", subname)
       return
@@ -851,7 +851,7 @@ contains
          marbl_timer_indices          = this%timer_ids,                           &
          PAR                          = this%PAR,                                 &
          marbl_particulate_share      = this%particulate_share,                   &
-         interior_forcing_diags       = this%interior_forcing_diags,              &
+         interior_tendency_diags      = this%interior_tendency_diags,             &
          glo_avg_fields_interior      = this%glo_avg_fields_interior,             &
          marbl_status_log             = this%StatusLog)
 

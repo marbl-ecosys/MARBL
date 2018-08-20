@@ -32,13 +32,13 @@ contains
   !***********************************************************************
 
   subroutine marbl_ciso_diagnostics_init( &
-       marbl_interior_forcing_diags, &
+       marbl_interior_tendency_diags, &
        marbl_surface_flux_diags,  &
        marbl_status_log)
 
     use marbl_settings_mod, only : ciso_on
 
-    type(marbl_diagnostics_type), intent(inout) :: marbl_interior_forcing_diags
+    type(marbl_diagnostics_type), intent(inout) :: marbl_interior_tendency_diags
     type(marbl_diagnostics_type), intent(inout) :: marbl_surface_flux_diags
     type(marbl_log_type),         intent(inout) :: marbl_status_log
 
@@ -259,9 +259,9 @@ contains
     ! Interior diagnostics
     !-----------------------------------------------------------------
 
-    associate(                                 &
-              ind => marbl_interior_diag_ind,       &
-              diags => marbl_interior_forcing_diags &
+    associate(                                       &
+              ind => marbl_interior_diag_ind,        &
+              diags => marbl_interior_tendency_diags &
              )
 
       !  nonstandard 3D fields

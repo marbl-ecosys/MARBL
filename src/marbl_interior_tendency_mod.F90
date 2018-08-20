@@ -103,7 +103,7 @@ contains
        marbl_timer_indices,                   &
        PAR,                                   &
        marbl_particulate_share,               &
-       interior_forcing_diags,                &
+       interior_tendency_diags,               &
        glo_avg_fields_interior,               &
        marbl_status_log)
 
@@ -135,7 +135,7 @@ contains
     type    (marbl_internal_timers_type)        , intent(inout) :: marbl_timers
     type    (marbl_timer_indexing_type)         , intent(in)    :: marbl_timer_indices
     type    (marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
-    type    (marbl_diagnostics_type)            , intent(inout) :: interior_forcing_diags
+    type    (marbl_diagnostics_type)            , intent(inout) :: interior_tendency_diags
     real    (r8)                                , intent(out)   :: glo_avg_fields_interior(:)
     type(marbl_log_type)                        , intent(inout) :: marbl_status_log
 
@@ -445,7 +445,7 @@ contains
          Lig_prod, Lig_loss, Lig_scavenge, Fefree,          &
          Lig_photochem, Lig_deg,                            &
          interior_restore,                                  &
-         interior_forcing_diags, &
+         interior_tendency_diags,                           &
          marbl_status_log)
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace(&
@@ -465,7 +465,7 @@ contains
          temperature                  = temperature,                 &
          marbl_tracer_indices         = marbl_tracer_indices,        &
          column_dtracer               = dtracers,                    &
-         marbl_interior_diags         = interior_forcing_diags,      &
+         marbl_interior_diags         = interior_tendency_diags,     &
          marbl_status_log             = marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then

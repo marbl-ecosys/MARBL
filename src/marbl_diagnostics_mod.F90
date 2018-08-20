@@ -74,12 +74,12 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_diagnostics_init( &
-       marbl_domain,                 &
-       marbl_tracer_metadata,        &
-       marbl_tracer_indices,         &
-       marbl_interior_forcing_diags, &
-       marbl_surface_flux_diags,     &
+  subroutine marbl_diagnostics_init(  &
+       marbl_domain,                  &
+       marbl_tracer_metadata,         &
+       marbl_tracer_indices,          &
+       marbl_interior_tendency_diags, &
+       marbl_surface_flux_diags,      &
        marbl_status_log)
 
     use marbl_settings_mod, only : lo2_consumption_scalef
@@ -91,7 +91,7 @@ contains
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
-    type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_forcing_diags
+    type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_tendency_diags
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_surface_flux_diags
     type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
@@ -111,7 +111,7 @@ contains
     !-----------------------------------------------------------------
 
     call marbl_surface_flux_diags%construct(marbl_domain%num_elements_surface_flux, marbl_domain%km)
-    call marbl_interior_forcing_diags%construct(marbl_domain%num_elements_interior_tendency, marbl_domain%km)
+    call marbl_interior_tendency_diags%construct(marbl_domain%num_elements_interior_tendency, marbl_domain%km)
 
     associate(                                    &
               ind => marbl_surface_flux_diag_ind, &
@@ -448,9 +448,9 @@ contains
     ! Interior diagnostics
     !-----------------------------------------------------------------
 
-    associate(                                 &
-              ind => marbl_interior_diag_ind,       &
-              diags => marbl_interior_forcing_diags &
+    associate(                                       &
+              ind => marbl_interior_diag_ind,        &
+              diags => marbl_interior_tendency_diags &
              )
 
       ! General 2D diags
@@ -2898,7 +2898,7 @@ contains
       ! CISO diagnostics
       !-----------------------------------------------------------------
 
-      call marbl_ciso_diagnostics_init(marbl_interior_forcing_diags, marbl_surface_flux_diags, marbl_status_log)
+      call marbl_ciso_diagnostics_init(marbl_interior_tendency_diags, marbl_surface_flux_diags, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call marbl_status_log%log_error_trace("marbl_ciso_diagnostics_init()", subname)
         return
@@ -2937,10 +2937,10 @@ contains
     ! Initialize all diagnostics to zero
     !-----------------------------------------------------------------
 
-    call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)
+    call marbl_interior_tendency_diags%set_to_zero(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace(&
-           'marbl_interior_forcing_diags%set_to_zero', subname)
+           'marbl_interior_tendency_diags%set_to_zero', subname)
       return
     end if
     call marbl_surface_flux_diags%set_to_zero(marbl_status_log)
@@ -2975,7 +2975,7 @@ contains
        Lig_prod, Lig_loss, Lig_scavenge, Fefree,      &
        Lig_photochem, Lig_deg,                        &
        interior_restore,                              &
-       marbl_interior_forcing_diags,                  &
+       marbl_interior_tendency_diags,                 &
        marbl_status_log)
 
     use marbl_interface_private_types , only : marbl_interior_forcing_indexing_type
@@ -3013,51 +3013,51 @@ contains
     real (r8)                                 , intent(in) :: Lig_photochem(domain%km)
     real (r8)                                 , intent(in) :: Lig_deg(domain%km)
     real (r8)                                 , intent(in) :: interior_restore(:,:)       ! (tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
-    type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_forcing_diags
+    type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_tendency_diags
     type (marbl_log_type)                     , intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_set_interior_forcing'
 
     !-----------------------------------------------------------------
 
-    call marbl_interior_forcing_diags%set_to_zero(marbl_status_log)
+    call marbl_interior_tendency_diags%set_to_zero(marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace(&
-           'marbl_interior_forcing_diags%set_to_zero', subname)
+           'marbl_interior_tendency_diags%set_to_zero', subname)
       return
     end if
 
     associate( &
          kmt   => domain%kmt, &
-         diags => marbl_interior_forcing_diags%diags, &
+         diags => marbl_interior_tendency_diags%diags, &
          ind   => marbl_interior_diag_ind &
          )
     diags(ind%insitu_temp)%field_3d(1:kmt, 1) = temperature(1:kmt)
     end associate
 
     call store_diagnostics_carbonate(domain, carbonate,                       &
-         marbl_interior_forcing_diags, marbl_status_log)
+         marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_carbonate', subname)
       return
     end if
 
     call store_diagnostics_autotrophs(domain, &
-         autotroph_local, autotroph_secondary_species, marbl_interior_forcing_diags)
+         autotroph_local, autotroph_secondary_species, marbl_interior_tendency_diags)
 
     call store_diagnostics_zooplankton(domain, &
-         zooplankton_secondary_species, marbl_interior_forcing_diags)
+         zooplankton_secondary_species, marbl_interior_tendency_diags)
 
     call store_diagnostics_particulates(domain, &
          interior_forcing_ind, interior_forcings, &
          marbl_particulate_share, &
          PON_remin, PON_sed_loss, &
-         sed_denitrif, other_remin, marbl_interior_forcing_diags)
+         sed_denitrif, other_remin, marbl_interior_tendency_diags)
 
     associate( POC     => marbl_particulate_share%POC, &
                P_CaCO3 => marbl_particulate_share%P_CaCO3 )
     call store_diagnostics_carbon_fluxes(domain, POC, P_CaCO3, dtracers, &
-         marbl_tracer_indices, marbl_interior_forcing_diags, marbl_status_log)
+         marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_carbon_fluxes', subname)
       return
@@ -3065,27 +3065,27 @@ contains
     end associate
 
     call store_diagnostics_nitrification(&
-         nitrif, denitrif, marbl_interior_forcing_diags)
+         nitrif, denitrif, marbl_interior_tendency_diags)
 
     call store_diagnostics_oxygen(domain, &
          interior_forcing_ind, interior_forcings, &
          interior_forcings(interior_forcing_ind%potemp_id)%field_1d(1,:), &
          interior_forcings(interior_forcing_ind%salinity_id)%field_1d(1,:), &
-         column_o2, o2_production, o2_consumption, marbl_interior_forcing_diags)
+         column_o2, o2_production, o2_consumption, marbl_interior_tendency_diags)
 
     call store_diagnostics_PAR(domain, &
-         PAR%col_frac(:), PAR%avg(:,:), marbl_interior_forcing_diags)
+         PAR%col_frac(:), PAR%avg(:,:), marbl_interior_tendency_diags)
 
     call store_diagnostics_dissolved_organic_matter(domain, &
-         dissolved_organic_matter, marbl_interior_forcing_diags)
+         dissolved_organic_matter, marbl_interior_tendency_diags)
 
     call store_diagnostics_iron_cycle(domain, &
          fe_scavenge, fe_scavenge_rate, Lig_prod, Lig_loss, Lig_scavenge, &
-         Fefree, Lig_photochem, Lig_deg, marbl_interior_forcing_diags)
+         Fefree, Lig_photochem, Lig_deg, marbl_interior_tendency_diags)
 
     call store_diagnostics_nitrogen_fluxes(domain, &
          PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, dtracers, &
-         marbl_tracer_indices, marbl_interior_forcing_diags, marbl_status_log)
+         marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_nitrogen_fluxes', subname)
       return
@@ -3094,7 +3094,7 @@ contains
     associate( POP => marbl_particulate_share%POP )
     call store_diagnostics_phosphorus_fluxes(domain, POP, &
          autotroph_secondary_species, dtracers, &
-         marbl_tracer_indices, marbl_interior_forcing_diags, marbl_status_log)
+         marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_phosphorus_fluxes', subname)
       return
@@ -3103,7 +3103,7 @@ contains
 
     associate( P_SiO2 => marbl_particulate_share%P_SiO2 )
     call store_diagnostics_silicon_fluxes(domain, P_SiO2, dtracers,           &
-         marbl_tracer_indices, marbl_interior_forcing_diags, marbl_status_log)
+         marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_silicon_fluxes', subname)
       return
@@ -3114,7 +3114,7 @@ contains
                P_iron => marbl_particulate_share%P_iron )
     call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
          interior_forcings(interior_forcing_ind%fesedflux_id)%field_1d(1,:),  &
-         dtracers, marbl_tracer_indices, marbl_interior_forcing_diags, marbl_status_log)
+         dtracers, marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_iron_fluxes', subname)
       return
@@ -3122,7 +3122,7 @@ contains
     end associate
 
     call store_diagnostics_interior_restore(interior_restore,                 &
-                                            marbl_interior_forcing_diags)
+                                            marbl_interior_tendency_diags)
 
   end subroutine marbl_diagnostics_set_interior_forcing
 
@@ -3615,7 +3615,7 @@ contains
        interior_forcing_ind, interior_forcings, &
        marbl_particulate_share, &
        PON_remin, PON_sed_loss, &
-       sed_denitrif, other_remin, marbl_interior_forcing_diags)
+       sed_denitrif, other_remin, marbl_interior_tendency_diags)
 
     !-----------------------------------------------------------------------
     ! - Set tavg variables.
@@ -3636,11 +3636,11 @@ contains
     real(r8), dimension(:)             , intent(in)    :: PON_sed_loss ! km
     real(r8), dimension(:)             , intent(in)    :: sed_denitrif ! km
     real(r8), dimension(:)             , intent(in)    :: other_remin  ! km
-    type(marbl_diagnostics_type)       , intent(inout) :: marbl_interior_forcing_diags
+    type(marbl_diagnostics_type)       , intent(inout) :: marbl_interior_tendency_diags
 
     associate(                                                       &
          ind             => marbl_interior_diag_ind,                 &
-         diags           => marbl_interior_forcing_diags%diags,      &
+         diags           => marbl_interior_tendency_diags%diags,     &
          delta_z         => marbl_domain%delta_z,                    &
          kmt             => marbl_domain%kmt,                        &
          zw              => marbl_domain%zw,                         &
