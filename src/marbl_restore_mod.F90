@@ -23,7 +23,7 @@ contains
 !*****************************************************************************
 
 subroutine marbl_restore_compute_interior_restore(interior_tracers,              &
-                                                  interior_forcings,             &
+                                                  interior_tendency_forcings,    &
                                                   interior_tendency_forcing_ind, &
                                                   interior_restore)
   !
@@ -37,7 +37,7 @@ subroutine marbl_restore_compute_interior_restore(interior_tracers,             
   !-----------------------------------------------------------------------
 
   real(kind=r8), dimension(:,:),                        intent(in) :: interior_tracers
-  type(marbl_forcing_fields_type),                      intent(in) :: interior_forcings(:)
+  type(marbl_forcing_fields_type),                      intent(in) :: interior_tendency_forcings(:)
   type(marbl_interior_tendency_forcing_indexing_type),  intent(in) :: interior_tendency_forcing_ind
 
   !-----------------------------------------------------------------------
@@ -60,8 +60,8 @@ subroutine marbl_restore_compute_interior_restore(interior_tracers,             
 
   do m=1,size(interior_tendency_forcing_ind%tracer_id)
     n = interior_tendency_forcing_ind%tracer_id(m)
-    associate(restore_field => interior_forcings(restoring_inds(n))%field_1d, &
-              inv_tau       =>  interior_forcings(inv_tau_inds(n))%field_1d)
+    associate(restore_field => interior_tendency_forcings(restoring_inds(n))%field_1d, &
+              inv_tau       => interior_tendency_forcings(inv_tau_inds(n))%field_1d)
       interior_restore(n,:) = (restore_field(1,:) - interior_tracers(n,:)) * inv_tau(1,:)
     end associate
   end do

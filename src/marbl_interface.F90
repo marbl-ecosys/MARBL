@@ -839,7 +839,7 @@ contains
 
     call marbl_interior_tendency_compute(                                         &
          domain                       = this%domain,                              &
-         interior_forcings            = this%interior_tendency_forcings,          &
+         interior_tendency_forcings   = this%interior_tendency_forcings,          &
          saved_state                  = this%interior_saved_state,                &
          saved_state_ind              = this%interior_state_ind,                  &
          tracers                      = this%column_tracers,                      &

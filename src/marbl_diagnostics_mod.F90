@@ -2956,7 +2956,7 @@ contains
   subroutine marbl_diagnostics_interior_tendency_compute ( &
        domain,                                        &
        interior_tendency_forcing_ind,                 &
-       interior_forcings,                             &
+       interior_tendency_forcings,                    &
        temperature,                                   &
        interior_tendencies,                           &
        marbl_tracer_indices,                          &
@@ -2982,7 +2982,7 @@ contains
     type (marbl_domain_type)                  , intent(in) :: domain
     type(marbl_interior_tendency_forcing_indexing_type), intent(in) :: interior_tendency_forcing_ind
 
-    type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
+    type(marbl_forcing_fields_type)           , intent(in) :: interior_tendency_forcings(:)
     real (r8)                                 , intent(in) :: temperature(domain%km) ! in situ temperature
     real(r8), intent(in) :: interior_tendencies(:,:) ! (tracer_cnt, km) computed source/sink terms
 
@@ -3048,7 +3048,7 @@ contains
          zooplankton_secondary_species, marbl_interior_tendency_diags)
 
     call store_diagnostics_particulates(domain, &
-         interior_tendency_forcing_ind, interior_forcings, &
+         interior_tendency_forcing_ind, interior_tendency_forcings, &
          marbl_particulate_share, &
          PON_remin, PON_sed_loss, &
          sed_denitrif, other_remin, marbl_interior_tendency_diags)
@@ -3067,9 +3067,9 @@ contains
          nitrif, denitrif, marbl_interior_tendency_diags)
 
     call store_diagnostics_oxygen(domain, &
-         interior_tendency_forcing_ind, interior_forcings, &
-         interior_forcings(interior_tendency_forcing_ind%potemp_id)%field_1d(1,:), &
-         interior_forcings(interior_tendency_forcing_ind%salinity_id)%field_1d(1,:), &
+         interior_tendency_forcing_ind, interior_tendency_forcings, &
+         interior_tendency_forcings(interior_tendency_forcing_ind%potemp_id)%field_1d(1,:), &
+         interior_tendency_forcings(interior_tendency_forcing_ind%salinity_id)%field_1d(1,:), &
          column_o2, o2_production, o2_consumption, marbl_interior_tendency_diags)
 
     call store_diagnostics_PAR(domain, &
@@ -3112,7 +3112,7 @@ contains
     associate( dust   => marbl_particulate_share%dust, &
                P_iron => marbl_particulate_share%P_iron )
     call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
-         interior_forcings(interior_tendency_forcing_ind%fesedflux_id)%field_1d(1,:),  &
+         interior_tendency_forcings(interior_tendency_forcing_ind%fesedflux_id)%field_1d(1,:),  &
          interior_tendencies, marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_iron_fluxes', subname)
@@ -3611,7 +3611,7 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_particulates(marbl_domain, &
-       interior_tendency_forcing_ind, interior_forcings, &
+       interior_tendency_forcing_ind, interior_tendency_forcings, &
        marbl_particulate_share, &
        PON_remin, PON_sed_loss, &
        sed_denitrif, other_remin, marbl_interior_tendency_diags)
@@ -3629,7 +3629,7 @@ contains
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(marbl_interior_tendency_forcing_indexing_type), intent(in) :: interior_tendency_forcing_ind
-    type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
+    type(marbl_forcing_fields_type)           , intent(in) :: interior_tendency_forcings(:)
     type(marbl_particulate_share_type) , intent(in)    :: marbl_particulate_share
     real(r8), dimension(:)             , intent(in)    :: PON_remin    ! km
     real(r8), dimension(:)             , intent(in)    :: PON_sed_loss ! km
@@ -3654,7 +3654,7 @@ contains
 
     if (lp_remin_scalef) then
        diags(ind%P_REMIN_SCALEF)%field_3d(:, 1) = &
-            interior_forcings(interior_tendency_forcing_ind%p_remin_scalef_id)%field_1d(1,:)
+            interior_tendency_forcings(interior_tendency_forcing_ind%p_remin_scalef_id)%field_1d(1,:)
     endif
     diags(ind%POC_FLUX_at_ref_depth)%field_2d(1) = POC%flux_at_ref_depth
     diags(ind%POC_FLUX_IN)%field_3d(:, 1)        = POC%sflux_in + POC%hflux_in
@@ -3730,7 +3730,7 @@ contains
    !***********************************************************************
 
   subroutine store_diagnostics_oxygen(marbl_domain, &
-       interior_tendency_forcing_ind, interior_forcings, potemp, salinity, &
+       interior_tendency_forcing_ind, interior_tendency_forcings, potemp, salinity, &
        column_o2, o2_production, o2_consumption, marbl_interior_diags)
 
     use marbl_interface_private_types , only : marbl_interior_tendency_forcing_indexing_type
@@ -3739,7 +3739,7 @@ contains
 
     type(marbl_domain_type)                 , intent(in)    :: marbl_domain
     type(marbl_interior_tendency_forcing_indexing_type), intent(in) :: interior_tendency_forcing_ind
-    type(marbl_forcing_fields_type)           , intent(in) :: interior_forcings(:)
+    type(marbl_forcing_fields_type)           , intent(in) :: interior_tendency_forcings(:)
     real(r8)                                , intent(in)    :: potemp(:)
     real(r8)                                , intent(in)    :: salinity(:)
     real(r8)                                , intent(in)    :: column_o2(:)
@@ -3763,7 +3763,7 @@ contains
 
     if (lo2_consumption_scalef) then
        diags(ind%O2_CONSUMPTION_SCALEF)%field_3d(:, 1) = &
-            interior_forcings(interior_tendency_forcing_ind%o2_consumption_scalef_id)%field_1d(1,:)
+            interior_tendency_forcings(interior_tendency_forcing_ind%o2_consumption_scalef_id)%field_1d(1,:)
     endif
 
     min_ind = minloc(column_o2(1:kmt), dim=1)

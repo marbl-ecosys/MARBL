@@ -426,16 +426,16 @@ contains
 
       ! Initialize interior forcing fields
       allocate(interior_tendency_forcings(num_interior_tendency_forcing_fields))
-      call marbl_init_interior_forcing_fields(                                &
-           num_elements             = domain%num_elements_interior_tendency,  &
-           interior_tendency_forcing_indices = interior_tendency_forcing_ind, &
-           tracer_metadata          = tracer_metadata,                        &
-           num_PAR_subcols          = num_PAR_subcols,                        &
-           num_levels               = num_levels,                             &
-           interior_forcings        = interior_tendency_forcings,             &
-           marbl_status_log         = marbl_status_log)
+      call marbl_init_interior_tendency_forcing_fields(                               &
+           num_elements                      = domain%num_elements_interior_tendency, &
+           interior_tendency_forcing_indices = interior_tendency_forcing_ind,         &
+           tracer_metadata                   = tracer_metadata,                       &
+           num_PAR_subcols                   = num_PAR_subcols,                       &
+           num_levels                        = num_levels,                            &
+           interior_tendency_forcings        = interior_tendency_forcings,            &
+           marbl_status_log                  = marbl_status_log)
       if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace("marbl_init_interior_forcing_fields()", subname)
+        call marbl_status_log%log_error_trace("marbl_init_interior_tendency_forcing_fields()", subname)
         return
       end if
 
@@ -820,13 +820,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_init_interior_forcing_fields(&
+  subroutine marbl_init_interior_tendency_forcing_fields(&
        num_elements, &
        interior_tendency_forcing_indices, &
        tracer_metadata, &
        num_PAR_subcols, &
        num_levels, &
-       interior_forcings, &
+       interior_tendency_forcings, &
        marbl_status_log)
 
     !  Initialize the interior forcing_fields datatype with information from the
@@ -841,13 +841,13 @@ contains
     type(marbl_tracer_metadata_type),           intent(in)    :: tracer_metadata(:)
     integer,                                    intent(in)    :: num_PAR_subcols
     integer,                                    intent(in)    :: num_levels
-    type(marbl_forcing_fields_type),            intent(out)   :: interior_forcings(:)
+    type(marbl_forcing_fields_type),            intent(out)   :: interior_tendency_forcings(:)
     type(marbl_log_type),                       intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_interior_forcing_fields'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_interior_tendency_forcing_fields'
     character(len=char_len)     :: log_message
 
     ! NAG didn't like associating to tracer_metadata(:)%*
@@ -859,89 +859,81 @@ contains
 
     associate(ind => interior_tendency_forcing_indices)
 
-      interior_forcings(:)%metadata%varname = ''
+      interior_tendency_forcings(:)%metadata%varname = ''
 
       ! Surface fluxes that influence interior forcing
-      do id=1,size(interior_forcings)
+      do id=1,size(interior_tendency_forcings)
         found = .false.
         ! Dust Flux
         if (id .eq. ind%dustflux_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Dust Flux'
-          interior_forcings(id)%metadata%field_units = 'g/cm^2/s'
-          call interior_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
+          interior_tendency_forcings(id)%metadata%varname     = 'Dust Flux'
+          interior_tendency_forcings(id)%metadata%field_units = 'g/cm^2/s'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
         end if
 
         ! PAR Column Fraction and Shortwave Radiation
         if (id .eq. ind%PAR_col_frac_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'PAR Column Fraction'
-          interior_forcings(id)%metadata%field_units = 'unitless'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_PAR_subcols)
+          interior_tendency_forcings(id)%metadata%varname     = 'PAR Column Fraction'
+          interior_tendency_forcings(id)%metadata%field_units = 'unitless'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_PAR_subcols)
         end if
 
         if (id .eq. ind%surf_shortwave_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Surface Shortwave'
-          interior_forcings(id)%metadata%field_units = 'W/m^2'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_PAR_subcols)
+          interior_tendency_forcings(id)%metadata%varname     = 'Surface Shortwave'
+          interior_tendency_forcings(id)%metadata%field_units = 'W/m^2'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_PAR_subcols)
         end if
 
 
         ! Temperature
         if (id .eq. ind%potemp_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Potential Temperature'
-          interior_forcings(id)%metadata%field_units = 'degC'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_levels)
+          interior_tendency_forcings(id)%metadata%varname     = 'Potential Temperature'
+          interior_tendency_forcings(id)%metadata%field_units = 'degC'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
         ! Salinity
         if (id .eq. ind%salinity_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Salinity'
-          interior_forcings(id)%metadata%field_units = 'psu'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_levels)
+          interior_tendency_forcings(id)%metadata%varname     = 'Salinity'
+          interior_tendency_forcings(id)%metadata%field_units = 'psu'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
         ! Pressure
         if (id .eq. ind%pressure_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Pressure'
-          interior_forcings(id)%metadata%field_units = 'bars'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_levels)
+          interior_tendency_forcings(id)%metadata%varname     = 'Pressure'
+          interior_tendency_forcings(id)%metadata%field_units = 'bars'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
         ! Iron Sediment Flux
         if (id .eq. ind%fesedflux_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
-          interior_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_levels)
+          interior_tendency_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
+          interior_tendency_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
         ! O2 Consumption Scale Factor
         if (id .eq. ind%o2_consumption_scalef_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'O2 Consumption Scale Factor'
-          interior_forcings(id)%metadata%field_units = '1'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_levels)
+          interior_tendency_forcings(id)%metadata%varname     = 'O2 Consumption Scale Factor'
+          interior_tendency_forcings(id)%metadata%field_units = '1'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
         ! Particulate Remin Scale Factor
         if (id .eq. ind%p_remin_scalef_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Particulate Remin Scale Factor'
-          interior_forcings(id)%metadata%field_units = '1'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_levels)
+          interior_tendency_forcings(id)%metadata%varname     = 'Particulate Remin Scale Factor'
+          interior_tendency_forcings(id)%metadata%field_units = '1'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
         ! Interior Tracer Restoring
@@ -950,25 +942,25 @@ contains
             tracer_name = tracer_metadata(n)%short_name
             tracer_units = tracer_metadata(n)%units
             found = .true.
-            write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
+            write(interior_tendency_forcings(id)%metadata%varname,"(A,1X,A)")            &
                   trim(tracer_name), 'Restoring Field'
-            interior_forcings(id)%metadata%field_units = tracer_units
-            call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
+            interior_tendency_forcings(id)%metadata%field_units = tracer_units
+            call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                 dim1 = num_levels)
           end if
           if (id .eq. ind%inv_tau_id(n)) then
             found = .true.
-            write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
+            write(interior_tendency_forcings(id)%metadata%varname,"(A,1X,A)")            &
                   trim(tracer_name), 'Restoring Inverse Timescale'
-            interior_forcings(id)%metadata%field_units = '1/s'
-            call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
+            interior_tendency_forcings(id)%metadata%field_units = '1/s'
+            call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                 dim1 = num_levels)
           end if
         end do
 
         ! Check to see if %set_rank() returned an error
         if (marbl_status_log%labort_marbl) then
-          write(log_message, "(2A)") trim(interior_forcings(id)%metadata%varname), &
+          write(log_message, "(2A)") trim(interior_tendency_forcings(id)%metadata%varname), &
                                      ' set_rank()'
           call marbl_status_log%log_error_trace(log_message, subname)
           return
@@ -989,7 +981,7 @@ contains
     ! FIXME #26: do we have any forcing fields that are required to be set?
     !            If so, check to make sure those indices are not zero here.
 
-  end subroutine marbl_init_interior_forcing_fields
+  end subroutine marbl_init_interior_tendency_forcing_fields
 
   !*****************************************************************************
 
