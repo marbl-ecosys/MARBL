@@ -383,7 +383,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_forcing_fields'
     character(len=char_len) :: log_message
     integer :: num_surface_flux_forcing_fields
-    integer :: num_interior_forcing_fields
+    integer :: num_interior_tendency_forcing_fields
     integer :: i
 
     associate(&
@@ -398,10 +398,10 @@ contains
                                               lflux_gas_co2,                  &
                                               ladjust_bury_coeff,             &
                                               num_surface_flux_forcing_fields)
-      call interior_tendency_forcing_ind%construct(tracer_metadata%short_name,  &
-                                                   tracer_restore_vars,         &
-                                                   domain%num_PAR_subcols,      &
-                                                   num_interior_forcing_fields, &
+      call interior_tendency_forcing_ind%construct(tracer_metadata%short_name,           &
+                                                   tracer_restore_vars,                  &
+                                                   domain%num_PAR_subcols,               &
+                                                   num_interior_tendency_forcing_fields, &
                                                    marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call marbl_status_log%log_error_trace("interior_tendency_forcing_ind%construct", subname)
@@ -425,7 +425,7 @@ contains
       end if
 
       ! Initialize interior forcing fields
-      allocate(interior_tendency_forcings(num_interior_forcing_fields))
+      allocate(interior_tendency_forcings(num_interior_tendency_forcing_fields))
       call marbl_init_interior_forcing_fields(                                &
            num_elements             = domain%num_elements_interior_tendency,  &
            interior_tendency_forcing_indices = interior_tendency_forcing_ind, &

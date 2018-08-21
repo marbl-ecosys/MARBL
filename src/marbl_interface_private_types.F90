@@ -871,11 +871,11 @@ contains
 
   !*****************************************************************************
 
-  subroutine interior_tendency_forcing_index_constructor(this,                         &
-                                                         tracer_names,                 &
-                                                         tracer_restore_vars,          &
-                                                         num_PAR_subcols,              &
-                                                         num_interior_forcing_fields,  &
+  subroutine interior_tendency_forcing_index_constructor(this,                                 &
+                                                         tracer_names,                         &
+                                                         tracer_restore_vars,                  &
+                                                         num_PAR_subcols,                      &
+                                                         num_interior_tendency_forcing_fields, &
                                                          marbl_status_log)
 
     ! This subroutine sets the interior forcing indexes, which are used to
@@ -888,7 +888,7 @@ contains
     character(len=char_len), dimension(:),                intent(in)    :: tracer_names
     character(len=char_len), dimension(:),                intent(in)    :: tracer_restore_vars
     integer(int_kind),                                    intent(in)    :: num_PAR_subcols
-    integer(int_kind),                                    intent(out)   :: num_interior_forcing_fields
+    integer(int_kind),                                    intent(out)   :: num_interior_tendency_forcing_fields
     type(marbl_log_type),                                 intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_interface_private_types:interior_tendency_forcing_index_constructor'
@@ -897,7 +897,7 @@ contains
     integer :: tracer_restore_cnt, tracer_cnt
     integer :: m, n
 
-    associate(forcing_cnt => num_interior_forcing_fields)
+    associate(forcing_cnt => num_interior_tendency_forcing_fields)
 
       tracer_cnt = size(tracer_names)
 
