@@ -74,7 +74,7 @@ module marbl_interface
 
      ! public data related to computing interior tendencies
      real (r8), allocatable                             , public  :: column_tracers(:,:)           ! input
-     type(marbl_forcing_fields_type), allocatable       , public  :: interior_input_forcings(:)    ! input
+     type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! output
      type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
@@ -339,7 +339,7 @@ contains
                                    this%surface_flux_internal, &
                                    this%surface_flux_forcings, &
                                    this%interior_tendency_forcing_ind, &
-                                   this%interior_input_forcings, &
+                                   this%interior_tendency_forcings, &
                                    this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_forcing_fields", subname)
@@ -839,7 +839,7 @@ contains
 
     call marbl_interior_tendency_compute(                                         &
          domain                       = this%domain,                              &
-         interior_forcings            = this%interior_input_forcings,             &
+         interior_forcings            = this%interior_tendency_forcings,          &
          saved_state                  = this%interior_saved_state,                &
          saved_state_ind              = this%interior_state_ind,                  &
          tracers                      = this%column_tracers,                      &
@@ -983,8 +983,8 @@ contains
     end if
     call marbl_interior_diag_ind%destruct()
 
-    if (allocated(this%interior_input_forcings)) then
-      deallocate(this%interior_input_forcings)
+    if (allocated(this%interior_tendency_forcings)) then
+      deallocate(this%interior_tendency_forcings)
       deallocate(this%surface_flux_forcings)
     end if
     call this%surface_flux_internal%destruct()

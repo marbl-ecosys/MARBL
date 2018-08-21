@@ -355,7 +355,7 @@ contains
                                        surface_flux_internal, &
                                        surface_flux_forcings, &
                                        interior_tendency_forcing_ind, &
-                                       interior_input_forcings, &
+                                       interior_tendency_forcings, &
                                        marbl_status_log)
 
     use marbl_interface_public_types, only : marbl_domain_type
@@ -376,7 +376,7 @@ contains
     type(marbl_surface_flux_internal_type),              intent(out)   :: surface_flux_internal
     type(marbl_forcing_fields_type), allocatable,        intent(out)   :: surface_flux_forcings(:)
     type(marbl_interior_tendency_forcing_indexing_type), intent(out)   :: interior_tendency_forcing_ind
-    type(marbl_forcing_fields_type), allocatable,        intent(out)   :: interior_input_forcings(:)
+    type(marbl_forcing_fields_type), allocatable,        intent(out)   :: interior_tendency_forcings(:)
     type(marbl_log_type),                                intent(inout) :: marbl_status_log
 
     ! Local variables
@@ -425,14 +425,14 @@ contains
       end if
 
       ! Initialize interior forcing fields
-      allocate(interior_input_forcings(num_interior_forcing_fields))
+      allocate(interior_tendency_forcings(num_interior_forcing_fields))
       call marbl_init_interior_forcing_fields(                                &
            num_elements             = domain%num_elements_interior_tendency,  &
            interior_tendency_forcing_indices = interior_tendency_forcing_ind, &
            tracer_metadata          = tracer_metadata,                        &
            num_PAR_subcols          = num_PAR_subcols,                        &
            num_levels               = num_levels,                             &
-           interior_forcings        = interior_input_forcings,                &
+           interior_forcings        = interior_tendency_forcings,             &
            marbl_status_log         = marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call marbl_status_log%log_error_trace("marbl_init_interior_forcing_fields()", subname)
@@ -452,8 +452,8 @@ contains
 
       call marbl_status_log%log_noerror('', subname)
       call marbl_status_log%log_noerror('Interior:', subname)
-      do i=1,size(interior_input_forcings)
-        write(log_message, "(2A)") '* ', trim(interior_input_forcings(i)%metadata%varname)
+      do i=1,size(interior_tendency_forcings)
+        write(log_message, "(2A)") '* ', trim(interior_tendency_forcings(i)%metadata%varname)
         call marbl_status_log%log_noerror(log_message, subname)
       end do
 

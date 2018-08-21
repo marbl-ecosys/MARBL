@@ -335,10 +335,10 @@ Program marbl
       end do
       ! Log requested interior forcing fields
       call driver_status_log%log_header('Requested interior forcing fields', subname)
-      do n=1,size(marbl_instance%interior_input_forcings)
-        write(log_message, "(I0, 5A)") n, '. ',                               &
-             trim(marbl_instance%interior_input_forcings(n)%metadata%varname), &
-             ' (units: ', trim(marbl_instance%interior_input_forcings(n)%metadata%field_units),')'
+      do n=1,size(marbl_instance%interior_tendency_forcings)
+        write(log_message, "(I0, 5A)") n, '. ', &
+             trim(marbl_instance%interior_tendency_forcings(n)%metadata%varname), &
+             ' (units: ', trim(marbl_instance%interior_tendency_forcings(n)%metadata%field_units),')'
         call driver_status_log%log_noerror(log_message, subname)
       end do
       call marbl_instance%shutdown()
@@ -351,8 +351,8 @@ Program marbl
       ! Log tracers requested for restoring
       call driver_status_log%log_header('Requested tracers to restore', subname)
       cnt = 0
-      do n=1,size(marbl_instance%interior_input_forcings)
-        varname = marbl_instance%interior_input_forcings(n)%metadata%varname
+      do n=1,size(marbl_instance%interior_tendency_forcings)
+        varname = marbl_instance%interior_tendency_forcings(n)%metadata%varname
         if (index(varname, 'Restoring Field').gt.0) then
           cnt = cnt + 1
           varname = varname(1:scan(varname,' ')-1)
