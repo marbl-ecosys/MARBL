@@ -354,7 +354,7 @@ contains
                                        surface_flux_share, &
                                        surface_flux_internal, &
                                        surface_flux_forcings, &
-                                       interior_forcing_ind, &
+                                       interior_tendency_forcing_ind, &
                                        interior_input_forcings, &
                                        marbl_status_log)
 
@@ -362,22 +362,22 @@ contains
     use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
     use marbl_interface_private_types, only : marbl_surface_flux_share_type
     use marbl_interface_private_types, only : marbl_surface_flux_internal_type
-    use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lflux_gas_o2
     use marbl_settings_mod, only : lflux_gas_co2
     use marbl_settings_mod, only : ladjust_bury_coeff
     use marbl_settings_mod, only : tracer_restore_vars
 
-    type(marbl_domain_type),                      intent(in)    :: domain
-    type(marbl_tracer_metadata_type),             intent(in)    :: tracer_metadata(:)
-    type(marbl_surface_flux_forcing_indexing_type), intent(out)   :: surface_flux_forcing_ind
-    type(marbl_surface_flux_share_type),          intent(out)   :: surface_flux_share
-    type(marbl_surface_flux_internal_type),       intent(out)   :: surface_flux_internal
-    type(marbl_forcing_fields_type), allocatable, intent(out)   :: surface_flux_forcings(:)
-    type(marbl_interior_forcing_indexing_type),   intent(out)   :: interior_forcing_ind
-    type(marbl_forcing_fields_type), allocatable, intent(out)   :: interior_input_forcings(:)
-    type(marbl_log_type),                         intent(inout) :: marbl_status_log
+    type(marbl_domain_type),                             intent(in)    :: domain
+    type(marbl_tracer_metadata_type),                    intent(in)    :: tracer_metadata(:)
+    type(marbl_surface_flux_forcing_indexing_type),      intent(out)   :: surface_flux_forcing_ind
+    type(marbl_surface_flux_share_type),                 intent(out)   :: surface_flux_share
+    type(marbl_surface_flux_internal_type),              intent(out)   :: surface_flux_internal
+    type(marbl_forcing_fields_type), allocatable,        intent(out)   :: surface_flux_forcings(:)
+    type(marbl_interior_tendency_forcing_indexing_type), intent(out)   :: interior_tendency_forcing_ind
+    type(marbl_forcing_fields_type), allocatable,        intent(out)   :: interior_input_forcings(:)
+    type(marbl_log_type),                                intent(inout) :: marbl_status_log
 
     ! Local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_forcing_fields'
@@ -398,13 +398,13 @@ contains
                                               lflux_gas_co2,                  &
                                               ladjust_bury_coeff,             &
                                               num_surface_flux_forcing_fields)
-      call interior_forcing_ind%construct(tracer_metadata%short_name,         &
-                                          tracer_restore_vars,                &
-                                          domain%num_PAR_subcols,             &
-                                          num_interior_forcing_fields,        &
-                                          marbl_status_log)
+      call interior_tendency_forcing_ind%construct(tracer_metadata%short_name,  &
+                                                   tracer_restore_vars,         &
+                                                   domain%num_PAR_subcols,      &
+                                                   num_interior_forcing_fields, &
+                                                   marbl_status_log)
       if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace("interior_forcing_ind%construct", subname)
+        call marbl_status_log%log_error_trace("interior_tendency_forcing_ind%construct", subname)
         return
       end if
 
@@ -428,7 +428,7 @@ contains
       allocate(interior_input_forcings(num_interior_forcing_fields))
       call marbl_init_interior_forcing_fields(                                &
            num_elements             = domain%num_elements_interior_tendency,  &
-           interior_forcing_indices = interior_forcing_ind,                   &
+           interior_tendency_forcing_indices = interior_tendency_forcing_ind, &
            tracer_metadata          = tracer_metadata,                        &
            num_PAR_subcols          = num_PAR_subcols,                        &
            num_levels               = num_levels,                             &
@@ -822,7 +822,7 @@ contains
 
   subroutine marbl_init_interior_forcing_fields(&
        num_elements, &
-       interior_forcing_indices, &
+       interior_tendency_forcing_indices, &
        tracer_metadata, &
        num_PAR_subcols, &
        num_levels, &
@@ -832,12 +832,12 @@ contains
     !  Initialize the interior forcing_fields datatype with information from the
     !  namelist read
     !
-    use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
 
     implicit none
 
     integer,                                    intent(in)    :: num_elements
-    type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_indices
+    type(marbl_interior_tendency_forcing_indexing_type), intent(in)    :: interior_tendency_forcing_indices
     type(marbl_tracer_metadata_type),           intent(in)    :: tracer_metadata(:)
     integer,                                    intent(in)    :: num_PAR_subcols
     integer,                                    intent(in)    :: num_levels
@@ -857,7 +857,7 @@ contains
     logical                 :: found
     !-----------------------------------------------------------------------
 
-    associate(ind => interior_forcing_indices)
+    associate(ind => interior_tendency_forcing_indices)
 
       interior_forcings(:)%metadata%varname = ''
 

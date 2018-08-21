@@ -35,7 +35,7 @@ module marbl_interface
 
   use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
-  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
+  use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
   use marbl_interface_private_types, only : marbl_PAR_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
@@ -72,17 +72,17 @@ module marbl_interface
      type(marbl_interior_saved_state_indexing_type), public           :: interior_state_ind
      type(marbl_timers_type)                   , public               :: timer_summary
 
-     ! public data - interior forcing
-     real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input
-     real (r8)                                 , public, allocatable  :: column_dtracers(:,:)    ! output
-     type(marbl_interior_forcing_indexing_type), public               :: interior_forcing_ind         !
-     type(marbl_forcing_fields_type)           , public, allocatable  :: interior_input_forcings(:)
-     type(marbl_diagnostics_type)              , public               :: interior_tendency_diags ! output
+     ! public data related to computing interior tendencies
+     real (r8), allocatable                             , public  :: column_tracers(:,:)           ! input
+     type(marbl_forcing_fields_type), allocatable       , public  :: interior_input_forcings(:)    ! input
+     real (r8), allocatable                             , public  :: column_dtracers(:,:)          ! output
+     type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! output
+     type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
 
      ! public data related to computing surface fluxes
      real (r8)                                      , public, allocatable  :: surface_vals(:,:)           ! input
-     type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind    !
      type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)    ! input
+     type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind    ! output
      real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)         ! output
      type(marbl_surface_flux_output_type)           , public               :: surface_flux_output         ! output
      type(marbl_diagnostics_type)                   , public               :: surface_flux_diags          ! output
@@ -338,7 +338,7 @@ contains
                                    this%surface_flux_share, &
                                    this%surface_flux_internal, &
                                    this%surface_flux_forcings, &
-                                   this%interior_forcing_ind, &
+                                   this%interior_tendency_forcing_ind, &
                                    this%interior_input_forcings, &
                                    this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -844,7 +844,7 @@ contains
          saved_state_ind              = this%interior_state_ind,                  &
          tracers                      = this%column_tracers,                      &
          surface_flux_forcing_indices = this%surface_flux_forcing_ind,            &
-         interior_forcing_indices     = this%interior_forcing_ind,                &
+         interior_tendency_forcing_indices = this%interior_tendency_forcing_ind,  &
          dtracers                     = this%column_dtracers,                     &
          marbl_tracer_indices         = this%tracer_indices,                      &
          marbl_timers                 = this%timers,                              &

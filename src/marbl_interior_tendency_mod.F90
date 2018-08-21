@@ -17,7 +17,7 @@ module marbl_interior_tendency_mod
 
   use marbl_interface_private_types, only : marbl_PAR_type
   use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
-  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
+  use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_interior_tendency_share_type
@@ -96,7 +96,7 @@ contains
        saved_state_ind,                       &
        tracers,                               &
        surface_flux_forcing_indices,          &
-       interior_forcing_indices,              &
+       interior_tendency_forcing_indices,     &
        dtracers,                              &
        marbl_tracer_indices,                  &
        marbl_timers,                          &
@@ -126,7 +126,7 @@ contains
     type(marbl_forcing_fields_type)             , intent(in)    :: interior_forcings(:)
     real    (r8)                                , intent(in)    :: tracers(:,: )         ! (tracer_cnt, km) tracer values
     type(marbl_surface_flux_forcing_indexing_type), intent(in)  :: surface_flux_forcing_indices
-    type(marbl_interior_forcing_indexing_type)  , intent(in)    :: interior_forcing_indices
+    type(marbl_interior_tendency_forcing_indexing_type), intent(in) :: interior_tendency_forcing_indices
     type    (marbl_PAR_type)                    , intent(inout) :: PAR
     type    (marbl_saved_state_type)            , intent(inout) :: saved_state
     type    (marbl_interior_saved_state_indexing_type), intent(in) :: saved_state_ind
@@ -220,11 +220,11 @@ contains
          ph_prev_alt_co2_col => saved_state%state(saved_state_ind%ph_alt_co2_col)%field_3d(:,1), &
 
          ! Hard-coding in that there is only 1 column passed in at a time!
-         dust_flux_in        => interior_forcings(interior_forcing_indices%dustflux_id)%field_0d(1),   &
-         potemp              => interior_forcings(interior_forcing_indices%potemp_id)%field_1d(1,:),   &
-         pressure            => interior_forcings(interior_forcing_indices%pressure_id)%field_1d(1,:),   &
-         salinity            => interior_forcings(interior_forcing_indices%salinity_id)%field_1d(1,:),   &
-         fesedflux           => interior_forcings(interior_forcing_indices%fesedflux_id)%field_1d(1,:),   &
+         dust_flux_in        => interior_forcings(interior_tendency_forcing_indices%dustflux_id)%field_0d(1),   &
+         potemp              => interior_forcings(interior_tendency_forcing_indices%potemp_id)%field_1d(1,:),   &
+         pressure            => interior_forcings(interior_tendency_forcing_indices%pressure_id)%field_1d(1,:),   &
+         salinity            => interior_forcings(interior_tendency_forcing_indices%salinity_id)%field_1d(1,:),   &
+         fesedflux           => interior_forcings(interior_tendency_forcing_indices%fesedflux_id)%field_1d(1,:),   &
 
          po4_ind           => marbl_tracer_indices%po4_ind,         &
          no3_ind           => marbl_tracer_indices%no3_ind,         &
@@ -258,13 +258,13 @@ contains
     !-----------------------------------------------------------------------
 
     if (lo2_consumption_scalef) then
-       o2_consumption_scalef(:) = interior_forcings(interior_forcing_indices%o2_consumption_scalef_id)%field_1d(1,:)
+       o2_consumption_scalef(:) = interior_forcings(interior_tendency_forcing_indices%o2_consumption_scalef_id)%field_1d(1,:)
     else
        o2_consumption_scalef(:) = c1
     endif
 
     if (lp_remin_scalef) then
-       p_remin_scalef(:) = interior_forcings(interior_forcing_indices%p_remin_scalef_id)%field_1d(1,:)
+       p_remin_scalef(:) = interior_forcings(interior_tendency_forcing_indices%p_remin_scalef_id)%field_1d(1,:)
     else
        p_remin_scalef(:) = c1
     endif
@@ -276,7 +276,7 @@ contains
     call marbl_restore_compute_interior_restore(            &
                tracers,                                     &
                interior_forcings,                           &
-               interior_forcing_indices,                    &
+               interior_tendency_forcing_indices,           &
                interior_restore)
 
     !-----------------------------------------------------------------------
@@ -304,7 +304,7 @@ contains
        return
     end if
 
-    call compute_PAR(domain, interior_forcings, interior_forcing_indices, &
+    call compute_PAR(domain, interior_forcings, interior_tendency_forcing_indices, &
                      totalChl_local, PAR)
 
     do k = 1, km
@@ -426,7 +426,7 @@ contains
     ! Compute interior diagnostics
     call marbl_diagnostics_interior_tendency_compute(       &
          domain,                                            &
-         interior_forcing_indices,                          &
+         interior_tendency_forcing_indices,                &
          interior_forcings,                                 &
          temperature,                                       &
          dtracers,                                          &
@@ -503,7 +503,7 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_PAR(domain, interior_forcings, interior_forcing_ind, &
+  subroutine compute_PAR(domain, interior_forcings, interior_tendency_forcing_ind, &
                          totalChl_local, PAR)
 
     !-----------------------------------------------------------------------
@@ -518,7 +518,7 @@ contains
 
     type(marbl_domain_type)                   , intent(in)    :: domain
     type(marbl_forcing_fields_type)           , intent(in)    :: interior_forcings(:)
-    type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_ind
+    type(marbl_interior_tendency_forcing_indexing_type), intent(in) :: interior_tendency_forcing_ind
     real(r8)                                  , intent(in)    :: totalChl_local(:)
     type(marbl_PAR_type)                      , intent(inout) :: PAR
 
@@ -546,15 +546,15 @@ contains
     ! ignore provided shortwave where col_frac == 0
     !-----------------------------------------------------------------------
 
-    if (interior_forcing_ind%PAR_col_frac_id .ne. 0) then
-      PAR%col_frac(:) = interior_forcings(interior_forcing_ind%PAR_col_frac_id)%field_1d(1,:)
+    if (interior_tendency_forcing_ind%PAR_col_frac_id .ne. 0) then
+      PAR%col_frac(:) = interior_forcings(interior_tendency_forcing_ind%PAR_col_frac_id)%field_1d(1,:)
     else
       PAR%col_frac(:) = c1
     end if
 
     where (PAR%col_frac(:) > c0)
        PAR%interface(0,:) = f_qsw_par *                                       &
-              interior_forcings(interior_forcing_ind%surf_shortwave_id)%field_1d(1,:)
+              interior_forcings(interior_tendency_forcing_ind%surf_shortwave_id)%field_1d(1,:)
     elsewhere
        PAR%interface(0,:) = c0
     endwhere

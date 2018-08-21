@@ -22,23 +22,23 @@ contains
 
 !*****************************************************************************
 
-subroutine marbl_restore_compute_interior_restore(interior_tracers,           &
-                                                  interior_forcings,          &
-                                                  interior_forcing_ind,       &
+subroutine marbl_restore_compute_interior_restore(interior_tracers,              &
+                                                  interior_forcings,             &
+                                                  interior_tendency_forcing_ind, &
                                                   interior_restore)
   !
   !  restore a variable if required
   !
   use marbl_interface_public_types, only : marbl_forcing_fields_type
-  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
+  use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
 
   !-----------------------------------------------------------------------
   !  input variables
   !-----------------------------------------------------------------------
 
-  real(kind=r8), dimension(:,:),               intent(in) :: interior_tracers
-  type(marbl_forcing_fields_type),             intent(in) :: interior_forcings(:)
-  type(marbl_interior_forcing_indexing_type),  intent(in) :: interior_forcing_ind
+  real(kind=r8), dimension(:,:),                        intent(in) :: interior_tracers
+  type(marbl_forcing_fields_type),                      intent(in) :: interior_forcings(:)
+  type(marbl_interior_tendency_forcing_indexing_type),  intent(in) :: interior_tendency_forcing_ind
 
   !-----------------------------------------------------------------------
   !  output variables
@@ -55,11 +55,11 @@ subroutine marbl_restore_compute_interior_restore(interior_tracers,           &
   !-----------------------------------------------------------------------
 
   interior_restore = c0
-  restoring_inds => interior_forcing_ind%tracer_restore_id
-  inv_tau_inds   => interior_forcing_ind%inv_tau_id
+  restoring_inds => interior_tendency_forcing_ind%tracer_restore_id
+  inv_tau_inds   => interior_tendency_forcing_ind%inv_tau_id
 
-  do m=1,size(interior_forcing_ind%tracer_id)
-    n = interior_forcing_ind%tracer_id(m)
+  do m=1,size(interior_tendency_forcing_ind%tracer_id)
+    n = interior_tendency_forcing_ind%tracer_id(m)
     associate(restore_field => interior_forcings(restoring_inds(n))%field_1d, &
               inv_tau       =>  interior_forcings(inv_tau_inds(n))%field_1d)
       interior_restore(n,:) = (restore_field(1,:) - interior_tracers(n,:)) * inv_tau(1,:)

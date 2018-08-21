@@ -265,7 +265,7 @@ module marbl_interface_private_types
 
   !****************************************************************************
 
-  type, public :: marbl_interior_forcing_indexing_type
+  type, public :: marbl_interior_tendency_forcing_indexing_type
      ! Surface forcing fields that affect interior forcings
      integer(int_kind) :: dustflux_id        = 0
      integer(int_kind) :: PAR_col_frac_id    = 0
@@ -289,8 +289,8 @@ module marbl_interface_private_types
      integer(int_kind), pointer :: inv_tau_id(:)
      integer(int_kind), pointer :: tracer_id(:)
    contains
-     procedure, public :: construct => interior_forcing_index_constructor
-  end type marbl_interior_forcing_indexing_type
+     procedure, public :: construct => interior_tendency_forcing_index_constructor
+  end type marbl_interior_tendency_forcing_indexing_type
 
   !*****************************************************************************
 
@@ -871,12 +871,12 @@ contains
 
   !*****************************************************************************
 
-  subroutine interior_forcing_index_constructor(this,                         &
-                                                tracer_names,                 &
-                                                tracer_restore_vars,          &
-                                                num_PAR_subcols,              &
-                                                num_interior_forcing_fields,  &
-                                                marbl_status_log)
+  subroutine interior_tendency_forcing_index_constructor(this,                         &
+                                                         tracer_names,                 &
+                                                         tracer_restore_vars,          &
+                                                         num_PAR_subcols,              &
+                                                         num_interior_forcing_fields,  &
+                                                         marbl_status_log)
 
     ! This subroutine sets the interior forcing indexes, which are used to
     ! determine what forcing fields are required from the driver.
@@ -884,14 +884,14 @@ contains
     use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
 
-    class(marbl_interior_forcing_indexing_type), intent(out)   :: this
-    character(len=char_len), dimension(:),       intent(in)    :: tracer_names
-    character(len=char_len), dimension(:),       intent(in)    :: tracer_restore_vars
-    integer(int_kind),                           intent(in)    :: num_PAR_subcols
-    integer(int_kind),                           intent(out)   :: num_interior_forcing_fields
-    type(marbl_log_type),                        intent(inout) :: marbl_status_log
+    class(marbl_interior_tendency_forcing_indexing_type), intent(out)   :: this
+    character(len=char_len), dimension(:),                intent(in)    :: tracer_names
+    character(len=char_len), dimension(:),                intent(in)    :: tracer_restore_vars
+    integer(int_kind),                                    intent(in)    :: num_PAR_subcols
+    integer(int_kind),                                    intent(out)   :: num_interior_forcing_fields
+    type(marbl_log_type),                                 intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_private_types:interior_forcing_index_constructor'
+    character(len=*), parameter :: subname = 'marbl_interface_private_types:interior_tendency_forcing_index_constructor'
     character(len=char_len)     :: log_message
 
     integer :: tracer_restore_cnt, tracer_cnt
@@ -1005,7 +1005,7 @@ contains
 
     end associate
 
-  end subroutine interior_forcing_index_constructor
+  end subroutine interior_tendency_forcing_index_constructor
 
   !*****************************************************************************
 
