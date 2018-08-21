@@ -73,16 +73,16 @@ module marbl_interface
      type(marbl_timers_type)                   , public               :: timer_summary
 
      ! public data related to computing interior tendencies
-     real (r8), allocatable                             , public  :: column_tracers(:,:)           ! input
+     real (r8), allocatable                             , public  :: tracers(:,:)                  ! input
      type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
-     type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! output
+     type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
      type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
 
      ! public data related to computing surface fluxes
-     real (r8)                                      , public, allocatable  :: surface_vals(:,:)           ! input
+     real (r8)                                      , public, allocatable  :: tracers_at_surface(:,:)     ! input
      type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)    ! input
-     type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind    ! output
+     type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind    ! FIXME #311: should be private
      real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)         ! output
      type(marbl_surface_flux_output_type)           , public               :: surface_flux_output         ! output
      type(marbl_diagnostics_type)                   , public               :: surface_flux_diags          ! output
@@ -265,8 +265,8 @@ contains
     !-----------------------------------------------------------------------
 
     call marbl_init_tracers(num_levels, num_elements_surface, &
-                            this%tracer_indices, this%surface_vals, this%surface_fluxes, &
-                            this%column_tracers, this%interior_tendencies, this%tracer_metadata, &
+                            this%tracer_indices, this%tracers_at_surface, this%surface_fluxes, &
+                            this%tracers, this%interior_tendencies, this%tracer_metadata, &
                             this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_tracers", subname)
@@ -842,7 +842,7 @@ contains
          interior_tendency_forcings   = this%interior_tendency_forcings,          &
          saved_state                  = this%interior_saved_state,                &
          saved_state_ind              = this%interior_state_ind,                  &
-         tracers                      = this%column_tracers,                      &
+         tracers                      = this%tracers,                             &
          surface_flux_forcing_indices = this%surface_flux_forcing_ind,            &
          interior_tendency_forcing_indices = this%interior_tendency_forcing_ind,  &
          interior_tendencies          = this%interior_tendencies,                 &
@@ -890,7 +890,7 @@ contains
          num_elements             = this%domain%num_elements_surface_flux,    &
          surface_flux_forcing_ind = this%surface_flux_forcing_ind,            &
          surface_flux_forcings    = this%surface_flux_forcings,               &
-         surface_vals             = this%surface_vals,                        &
+         tracers_at_surface       = this%tracers_at_surface,                  &
          surface_fluxes           = this%surface_fluxes,                      &
          marbl_tracer_indices     = this%tracer_indices,                      &
          saved_state              = this%surface_saved_state,                 &
@@ -989,10 +989,10 @@ contains
     end if
     call this%surface_flux_internal%destruct()
     call this%surface_flux_share%destruct()
-    if (allocated(this%surface_vals)) then
-      deallocate(this%surface_vals)
+    if (allocated(this%tracers_at_surface)) then
+      deallocate(this%tracers_at_surface)
       deallocate(this%surface_fluxes)
-      deallocate(this%column_tracers)
+      deallocate(this%tracers)
       deallocate(this%interior_tendencies)
       deallocate(this%tracer_metadata)
       deallocate(tracer_restore_vars)

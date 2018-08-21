@@ -36,7 +36,7 @@ contains
        num_elements,                         &
        surface_flux_forcing_ind,             &
        surface_flux_forcings,                &
-       surface_vals,                         &
+       tracers_at_surface,                   &
        surface_fluxes,                       &
        marbl_tracer_indices,                 &
        marbl_surface_flux_share,             &
@@ -55,7 +55,7 @@ contains
     integer (int_kind),                             intent(in)    :: num_elements
     type(marbl_surface_flux_forcing_indexing_type), intent(in)    :: surface_flux_forcing_ind
     type(marbl_forcing_fields_type),                intent(in)    :: surface_flux_forcings(:)
-    real(r8),                                       intent(in)    :: surface_vals(:,:)
+    real(r8),                                       intent(in)    :: tracers_at_surface(:,:)
     type(marbl_surface_flux_share_type),            intent(in)    :: marbl_surface_flux_share
     real(r8),                                       intent(inout) :: surface_fluxes(:, :)
     type(marbl_tracer_index_type),                  intent(in)    :: marbl_tracer_indices
@@ -141,8 +141,8 @@ contains
     !-----------------------------------------------------------------------
 
     where ( dic(:) /= c0 )
-       R13C_dic(:) = surface_vals(:,di13c_ind) / dic(:)
-       R14C_dic(:) = surface_vals(:,di14c_ind) / dic(:)
+       R13C_dic(:) = tracers_at_surface(:,di13c_ind) / dic(:)
+       R14C_dic(:) = tracers_at_surface(:,di14c_ind) / dic(:)
        frac_co3(:) = CO3_SURF_fields(:) / dic(:)
     elsewhere
        R13C_dic(:) = c0

@@ -55,7 +55,7 @@ contains
        num_elements,                    &
        surface_flux_forcing_ind,        &
        surface_flux_forcings,           &
-       surface_vals,                    &
+       tracers_at_surface,              &
        surface_fluxes,                  &
        marbl_tracer_indices,            &
        saved_state,                     &
@@ -92,7 +92,7 @@ contains
     integer (int_kind)                        , intent(in)    :: num_elements
     type(marbl_surface_flux_forcing_indexing_type), intent(in) :: surface_flux_forcing_ind
     type(marbl_forcing_fields_type)           , intent(in)    :: surface_flux_forcings(:)
-    real (r8)                                 , intent(in)    :: surface_vals(:,:)
+    real (r8)                                 , intent(in)    :: tracers_at_surface(:,:)
     real (r8)                                 , intent(out)   :: surface_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(inout) :: saved_state
@@ -189,7 +189,7 @@ contains
       totalChl_loc = c0
       do auto_ind = 1,autotroph_cnt
         totalChl_loc = totalChl_loc +                                         &
-          max(c0, surface_vals(:,marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind))
+          max(c0, tracers_at_surface(:,marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind))
       end do
       surface_flux_output%sfo(sfo_ind%totalChl_id)%forcing_field = totalChl_loc
     end if
@@ -222,7 +222,7 @@ contains
 
           pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
           o2sat(:) = ap_used(:) * o2sat_1atm(:)
-          flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - surface_vals(:, o2_ind))
+          flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - tracers_at_surface(:, o2_ind))
           surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
           if (sfo_ind%flux_o2_id.ne.0) then
             surface_flux_output%sfo(sfo_ind%flux_o2_id)%forcing_field = flux_o2_loc
@@ -260,11 +260,11 @@ contains
           call marbl_co2calc_surface(                                      &
                num_elements     = num_elements,                            &
                lcomp_co2calc_coeffs = .true.,                              &
-               dic_in     = surface_vals(:,dic_ind),                       &
+               dic_in     = tracers_at_surface(:,dic_ind),                 &
                xco2_in    = surface_flux_forcings(ind%xco2_id)%field_0d,   &
-               ta_in      = surface_vals(:,alk_ind),                       &
-               pt_in      = surface_vals(:,po4_ind),                       &
-               sit_in     = surface_vals(:,sio3_ind),                      &
+               ta_in      = tracers_at_surface(:,alk_ind),                 &
+               pt_in      = tracers_at_surface(:,po4_ind),                 &
+               sit_in     = tracers_at_surface(:,sio3_ind),                &
                temp       = surface_flux_forcings(ind%sst_id)%field_0d,    &
                salt       = surface_flux_forcings(ind%sss_id)%field_0d,    &
                atmpres    = surface_flux_forcings(ind%atm_pressure_id)%field_0d, &
@@ -301,7 +301,7 @@ contains
 
           if (ciso_on) then
              pv_surf_fields(:)       = pv_co2(:)
-             dic_surf_fields(:)      = surface_vals(:,dic_ind)
+             dic_surf_fields(:)      = tracers_at_surface(:,dic_ind)
              co2star_surf_fields(:)  = co2star(:)
              dco2star_surf_fields(:) = dco2star(:)
              co3_surf_fields(:)      = co3(:)
@@ -324,11 +324,11 @@ contains
           call marbl_co2calc_surface(                                      &
                num_elements     = num_elements,                            &
                lcomp_co2calc_coeffs = .false.,                             &
-               dic_in     = surface_vals(:,dic_alt_co2_ind),               &
+               dic_in     = tracers_at_surface(:,dic_alt_co2_ind),         &
                xco2_in    = surface_flux_forcings(ind%xco2_alt_co2_id)%field_0d, &
-               ta_in      = surface_vals(:,alk_alt_co2_ind),               &
-               pt_in      = surface_vals(:,po4_ind),                       &
-               sit_in     = surface_vals(:,sio3_ind),                      &
+               ta_in      = tracers_at_surface(:,alk_alt_co2_ind),         &
+               pt_in      = tracers_at_surface(:,po4_ind),                 &
+               sit_in     = tracers_at_surface(:,sio3_ind),                &
                temp       = surface_flux_forcings(ind%sst_id)%field_0d,    &
                salt       = surface_flux_forcings(ind%sss_id)%field_0d,    &
                atmpres    = surface_flux_forcings(ind%atm_pressure_id)%field_0d, &
@@ -376,15 +376,15 @@ contains
     !-----------------------------------------------------------------------
 
     if (lcompute_nhx_surface_emis) then
-      call marbl_nhx_surface_emis_compute(             &
-           num_elements     = num_elements,            &
-           nh4              = surface_vals(:,nh4_ind), &
-           ph               = ph_prev_surf,            &
-           sst              = sst,                     &
-           sss              = sss,                     &
-           u10_sqr          = u10_sqr,                 &
-           atmpres          = ap_used,                 &
-           ifrac            = ifrac,                   &
+      call marbl_nhx_surface_emis_compute(                   &
+           num_elements     = num_elements,                  &
+           nh4              = tracers_at_surface(:,nh4_ind), &
+           ph               = ph_prev_surf,                  &
+           sst              = sst,                           &
+           sss              = sss,                           &
+           u10_sqr          = u10_sqr,                       &
+           atmpres          = ap_used,                       &
+           ifrac            = ifrac,                         &
            nhx_surface_emis = nhx_surface_emis)
 
       if (sfo_ind%flux_nhx_id.ne.0) then
@@ -448,7 +448,7 @@ contains
          num_elements                = num_elements,                                  &
          surface_flux_forcing_ind    = surface_flux_forcing_ind,                      &
          surface_flux_forcings       = surface_flux_forcings,                         &
-         surface_vals                = surface_vals,                                  &
+         tracers_at_surface          = tracers_at_surface,                            &
          surface_fluxes              = surface_fluxes,                                &
          marbl_tracer_indices        = marbl_tracer_indices,                          &
          marbl_surface_flux_share    = surface_flux_share,                            &

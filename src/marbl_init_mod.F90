@@ -124,9 +124,9 @@ contains
   subroutine marbl_init_tracers(num_levels, &
                                 num_elements_surface, &
                                 tracer_indices, &
-                                surface_vals, &
+                                tracers_at_surface, &
                                 surface_fluxes, &
-                                column_tracers, &
+                                tracers, &
                                 interior_tendencies, &
                                 tracer_metadata, &
                                 marbl_status_log)
@@ -141,9 +141,9 @@ contains
     integer(int_kind),                             intent(in)    :: num_levels
     integer(int_kind),                             intent(in)    :: num_elements_surface
     type(marbl_tracer_index_type),    pointer,     intent(out)   :: tracer_indices
-    real(r8),                         allocatable, intent(out)   :: surface_vals(:,:)
+    real(r8),                         allocatable, intent(out)   :: tracers_at_surface(:,:)
     real(r8),                         allocatable, intent(out)   :: surface_fluxes(:,:)
-    real(r8),                         allocatable, intent(out)   :: column_tracers(:,:)
+    real(r8),                         allocatable, intent(out)   :: tracers(:,:)
     real(r8),                         allocatable, intent(out)   :: interior_tendencies(:,:)
     type(marbl_tracer_metadata_type), allocatable, intent(out)   :: tracer_metadata(:)
     type(marbl_log_type),                          intent(inout) :: marbl_status_log
@@ -163,9 +163,9 @@ contains
     end if
 
     ! Allocate memory for tracers
-    allocate(surface_vals(num_elements_surface, tracer_indices%total_cnt))
+    allocate(tracers_at_surface(num_elements_surface, tracer_indices%total_cnt))
     allocate(surface_fluxes(num_elements_surface, tracer_indices%total_cnt))
-    allocate(column_tracers(tracer_indices%total_cnt, num_levels))
+    allocate(tracers(tracer_indices%total_cnt, num_levels))
     allocate(interior_tendencies(tracer_indices%total_cnt, num_levels))
     allocate(tracer_metadata(tracer_indices%total_cnt))
     if (.not.allocated(tracer_restore_vars)) &
