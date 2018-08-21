@@ -97,7 +97,7 @@ contains
        tracers,                               &
        surface_flux_forcing_indices,          &
        interior_tendency_forcing_indices,     &
-       dtracers,                              &
+       interior_tendencies,                   &
        marbl_tracer_indices,                  &
        marbl_timers,                          &
        marbl_timer_indices,                   &
@@ -130,7 +130,7 @@ contains
     type    (marbl_PAR_type)                    , intent(inout) :: PAR
     type    (marbl_saved_state_type)            , intent(inout) :: saved_state
     type    (marbl_interior_saved_state_indexing_type), intent(in) :: saved_state_ind
-    real    (r8)                                , intent(out)   :: dtracers(:,:)          ! (tracer_cnt, km) computed source/sink terms
+    real    (r8)                                , intent(out)   :: interior_tendencies(:,:)          ! (tracer_cnt, km) computed source/sink terms
     type    (marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
     type    (marbl_internal_timers_type)        , intent(inout) :: marbl_timers
     type    (marbl_timer_indexing_type)         , intent(in)    :: marbl_timer_indices
@@ -189,11 +189,11 @@ contains
     ! can probably be vectorized over k and / or c!
     !-----------------------------------------------------------------------
 
-    ! NOTE(bja, 2015-07) dtracers=0 must come before the "not
+    ! NOTE(bja, 2015-07) interior_tendencies=0 must come before the "not
     ! lsource_sink check to ensure correct answer when not doing
     ! computations.
 
-    dtracers(:, :) = c0
+    interior_tendencies(:, :) = c0
 
     if (.not. lsource_sink) then
        !-----------------------------------------------------------------------
@@ -392,7 +392,7 @@ contains
             dissolved_organic_matter(k)%DOCr_remin, &
             POC%remin(k), other_remin(k), sed_denitrif(k), denitrif(k))
 
-       call compute_dtracer_local (autotroph_secondary_species(:, k), &
+       call compute_local_tendencies(autotroph_secondary_species(:, k), &
             zooplankton_secondary_species(:, k), &
             dissolved_organic_matter(k), &
             nitrif(k), denitrif(k), sed_denitrif(k), &
@@ -403,7 +403,7 @@ contains
             tracer_local(o2_ind, k), &
             o2_consumption_scalef(k), &
             o2_production(k), o2_consumption(k), &
-            dtracers(:, k), marbl_tracer_indices )
+            interior_tendencies(:, k), marbl_tracer_indices )
 
        ! Store any variables needed in other tracer modules
        ! FIXME #28: need to pull particulate share out
@@ -426,10 +426,10 @@ contains
     ! Compute interior diagnostics
     call marbl_diagnostics_interior_tendency_compute(       &
          domain,                                            &
-         interior_tendency_forcing_indices,                &
+         interior_tendency_forcing_indices,                 &
          interior_forcings,                                 &
          temperature,                                       &
-         dtracers,                                          &
+         interior_tendencies,                               &
          marbl_tracer_indices,                              &
          carbonate,                                         &
          autotroph_local,                                   &
@@ -464,7 +464,7 @@ contains
          autotroph_local              = autotroph_local,             &
          temperature                  = temperature,                 &
          marbl_tracer_indices         = marbl_tracer_indices,        &
-         column_dtracer               = dtracers,                    &
+         interior_tendencies          = interior_tendencies,         &
          marbl_interior_diags         = interior_tendency_diags,     &
          marbl_status_log             = marbl_status_log)
 
@@ -477,7 +477,7 @@ contains
     end associate
 
     ! ADD RESTORING
-    dtracers = dtracers + interior_restore
+    interior_tendencies = interior_tendencies + interior_restore
 
   end subroutine marbl_interior_tendency_compute
 
@@ -3377,13 +3377,13 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_dtracer_local (autotroph_secondary_species,               &
+   subroutine compute_local_tendencies(autotroph_secondary_species,             &
               zooplankton_secondary_species, dissolved_organic_matter,          &
               nitrif, denitrif, sed_denitrif, Fe_scavenge, Lig_prod, Lig_loss,  &
               P_iron_remin, POC_remin, POP_remin, P_SiO2_remin, P_CaCO3_remin,  &
               P_CaCO3_ALT_CO2_remin, other_remin, PON_remin,                    &
               O2_loc, o2_consumption_scalef, o2_production, o2_consumption,     &
-              dtracers, marbl_tracer_indices)
+              interior_tendencies, marbl_tracer_indices)
 
      type(zooplankton_secondary_species_type) , intent(in)  :: zooplankton_secondary_species(:)
      type(autotroph_secondary_species_type)   , intent(in)  :: autotroph_secondary_species(autotroph_cnt)
@@ -3406,7 +3406,7 @@ contains
      real(r8)                                 , intent(in)  :: o2_consumption_scalef
      real(r8)                                 , intent(out) :: o2_production
      real(r8)                                 , intent(out) :: o2_consumption
-     real(r8)                                 , intent(out) :: dtracers(:)
+     real(r8)                                 , intent(out) :: interior_tendencies(:)
      type(marbl_tracer_index_type)            , intent(in)  :: marbl_tracer_indices
 
      !-----------------------------------------------------------------------
@@ -3487,16 +3487,16 @@ contains
      !  nitrate & ammonium
      !-----------------------------------------------------------------------
 
-     dtracers(no3_ind) = nitrif - denitrif - sed_denitrif - sum(NO3_V(:))
+     interior_tendencies(no3_ind) = nitrif - denitrif - sed_denitrif - sum(NO3_V(:))
 
-     dtracers(nh4_ind) = -sum(NH4_V(:)) - nitrif + DON_remin + DONr_remin  &
+     interior_tendencies(nh4_ind) = -sum(NH4_V(:)) - nitrif + DON_remin + DONr_remin  &
           + Q * (sum(zoo_loss_dic(:)) + sum(zoo_graze_dic(:)) + sum(auto_loss_dic(:)) + sum(auto_graze_dic(:)) &
                  + DOC_prod*(c1 - f_toDON)) &
           + PON_remin * (c1 - PONremin_refract)
 
      do auto_ind = 1, autotroph_cnt
         if (autotrophs(auto_ind)%Nfixer) then
-           dtracers(nh4_ind) = dtracers(nh4_ind) + Nexcrete(auto_ind)
+           interior_tendencies(nh4_ind) = interior_tendencies(nh4_ind) + Nexcrete(auto_ind)
         end if
      end do
 
@@ -3504,11 +3504,11 @@ contains
      !  dissolved iron
      !-----------------------------------------------------------------------
 
-     dtracers(fe_ind) = P_iron_remin - sum(photofe(:)) - Fe_scavenge &
+     interior_tendencies(fe_ind) = P_iron_remin - sum(photofe(:)) - Fe_scavenge &
         + Qfe_zoo * ( sum(zoo_loss_dic(:)) + sum(zoo_loss_doc(:)) + sum(zoo_graze_dic(:)) + sum(zoo_graze_doc(:)) )
 
      do auto_ind = 1, autotroph_cnt
-        dtracers(fe_ind) = dtracers(fe_ind) &
+        interior_tendencies(fe_ind) = interior_tendencies(fe_ind) &
              + (Qfe(auto_ind) * (auto_loss_dic(auto_ind) + auto_graze_dic(auto_ind))) &
              + auto_graze_zoo(auto_ind) * (Qfe(auto_ind) - Qfe_zoo) &
              + (Qfe(auto_ind) * (auto_loss_doc(auto_ind) + auto_graze_doc(auto_ind)))
@@ -3518,17 +3518,17 @@ contains
      !  iron binding ligand
      !-----------------------------------------------------------------------
 
-     dtracers(lig_ind) = Lig_prod - Lig_loss
+     interior_tendencies(lig_ind) = Lig_prod - Lig_loss
 
      !-----------------------------------------------------------------------
      !  dissolved SiO3
      !-----------------------------------------------------------------------
 
-     dtracers(sio3_ind) = P_SiO2_remin
+     interior_tendencies(sio3_ind) = P_SiO2_remin
 
      do auto_ind = 1, autotroph_cnt
         if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-           dtracers(sio3_ind) = dtracers(sio3_ind) &
+           interior_tendencies(sio3_ind) = interior_tendencies(sio3_ind) &
                 - photoSi(auto_ind) + Qsi(auto_ind) * (f_graze_si_remin * auto_graze(auto_ind) &
                 + (c1 - autotrophs(auto_ind)%loss_poc) * auto_loss(auto_ind))
         endif
@@ -3538,7 +3538,7 @@ contains
      !  phosphate
      !-----------------------------------------------------------------------
 
-     dtracers(po4_ind) = DOP_remin + DOPr_remin - sum(PO4_V(:)) &
+     interior_tendencies(po4_ind) = DOP_remin + DOPr_remin - sum(PO4_V(:)) &
           + (c1 - POPremin_refract) * POP_remin + sum(remaining_P_dip(:)) &
           + Qp_zoo * ( sum(zoo_loss_dic(:)) + sum(zoo_graze_dic(:)) )
 
@@ -3547,7 +3547,7 @@ contains
      !-----------------------------------------------------------------------
      do zoo_ind = 1, zooplankton_cnt
         n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
-        dtracers(n) = x_graze_zoo(zoo_ind) - zoo_graze(zoo_ind) - zoo_loss(zoo_ind)
+        interior_tendencies(n) = x_graze_zoo(zoo_ind) - zoo_graze(zoo_ind) - zoo_loss(zoo_ind)
      end do
 
      !-----------------------------------------------------------------------
@@ -3563,27 +3563,27 @@ contains
         auto_sum = auto_graze(auto_ind) + auto_loss(auto_ind) + auto_agg(auto_ind)
 
         n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
-        dtracers(n) = photoC(auto_ind) - auto_sum
+        interior_tendencies(n) = photoC(auto_ind) - auto_sum
 
         n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
         if (n > 0) then
-           dtracers(n) = PO4_V(auto_ind) + DOP_V(auto_ind) - Qp(auto_ind) * auto_sum
+           interior_tendencies(n) = PO4_V(auto_ind) + DOP_V(auto_ind) - Qp(auto_ind) * auto_sum
         endif
 
         n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
-        dtracers(n) = photoacc(auto_ind) - thetaC(auto_ind) * auto_sum
+        interior_tendencies(n) = photoacc(auto_ind) - thetaC(auto_ind) * auto_sum
 
         n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
-        dtracers(n) =  photoFe(auto_ind) - Qfe(auto_ind) * auto_sum
+        interior_tendencies(n) =  photoFe(auto_ind) - Qfe(auto_ind) * auto_sum
 
         n = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
         if (n > 0) then
-           dtracers(n) =  photoSi(auto_ind) - Qsi(auto_ind) * auto_sum
+           interior_tendencies(n) =  photoSi(auto_ind) - Qsi(auto_ind) * auto_sum
         endif
 
         n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
         if (n > 0) then
-           dtracers(n) = CaCO3_form(auto_ind) - QCaCO3(auto_ind) * auto_sum
+           interior_tendencies(n) = CaCO3_form(auto_ind) - QCaCO3(auto_ind) * auto_sum
         endif
      end do
 
@@ -3593,50 +3593,50 @@ contains
      !  from sinking remin small fraction to refractory pool
      !-----------------------------------------------------------------------
 
-     dtracers(doc_ind) = DOC_prod * (c1 - DOCprod_refract) - DOC_remin
+     interior_tendencies(doc_ind) = DOC_prod * (c1 - DOCprod_refract) - DOC_remin
 
-     dtracers(docr_ind) = DOC_prod * DOCprod_refract - DOCr_remin + (POC_remin * POCremin_refract)
+     interior_tendencies(docr_ind) = DOC_prod * DOCprod_refract - DOCr_remin + (POC_remin * POCremin_refract)
 
-     dtracers(don_ind) = (DON_prod * (c1 - DONprod_refract)) - DON_remin
+     interior_tendencies(don_ind) = (DON_prod * (c1 - DONprod_refract)) - DON_remin
 
-     dtracers(donr_ind) = (DON_prod * DONprod_refract) - DONr_remin + (PON_remin * PONremin_refract)
+     interior_tendencies(donr_ind) = (DON_prod * DONprod_refract) - DONr_remin + (PON_remin * PONremin_refract)
 
-     dtracers(dop_ind) = (DOP_prod * (c1 - DOPprod_refract)) - DOP_remin - sum(DOP_V(:)) - DOP_loss_P_bal
+     interior_tendencies(dop_ind) = (DOP_prod * (c1 - DOPprod_refract)) - DOP_remin - sum(DOP_V(:)) - DOP_loss_P_bal
 
-     dtracers(dopr_ind) = (DOP_prod * DOPprod_refract) - DOPr_remin + (POP_remin * POPremin_refract)
+     interior_tendencies(dopr_ind) = (DOP_prod * DOPprod_refract) - DOPr_remin + (POP_remin * POPremin_refract)
 
      !-----------------------------------------------------------------------
      !  dissolved inorganic Carbon
      !-----------------------------------------------------------------------
 
-     dtracers(dic_ind) = &
+     interior_tendencies(dic_ind) = &
           sum(auto_loss_dic(:)) + sum(auto_graze_dic(:)) - sum(photoC(:)) &
              + DOC_remin + POC_remin * (c1 - POCremin_refract) + sum(zoo_loss_dic(:)) &
              + sum(zoo_graze_dic(:)) + P_CaCO3_remin + DOCr_remin
 
      do auto_ind = 1, autotroph_cnt
         if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
-           dtracers(dic_ind) = dtracers(dic_ind) &
+           interior_tendencies(dic_ind) = interior_tendencies(dic_ind) &
                 + f_graze_CaCO3_REMIN * auto_graze(auto_ind) * QCaCO3(auto_ind) - CaCO3_form(auto_ind)
         end if
      end do
 
-     dtracers(dic_alt_co2_ind) = dtracers(dic_ind) + (P_CaCO3_ALT_CO2_remin - P_CaCO3_remin)
+     interior_tendencies(dic_alt_co2_ind) = interior_tendencies(dic_ind) + (P_CaCO3_ALT_CO2_remin - P_CaCO3_remin)
 
      !-----------------------------------------------------------------------
      !  alkalinity
      !-----------------------------------------------------------------------
 
-     dtracers(alk_ind) = -dtracers(no3_ind) + dtracers(nh4_ind) + c2 * P_CaCO3_remin
+     interior_tendencies(alk_ind) = -interior_tendencies(no3_ind) + interior_tendencies(nh4_ind) + c2 * P_CaCO3_remin
 
      do auto_ind = 1, autotroph_cnt
         if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
-           dtracers(alk_ind) = dtracers(alk_ind) &
+           interior_tendencies(alk_ind) = interior_tendencies(alk_ind) &
                 + c2 * (f_graze_CaCO3_REMIN * auto_graze(auto_ind) * QCaCO3(auto_ind) - CaCO3_form(auto_ind))
         end if
      end do
 
-     dtracers(alk_alt_co2_ind) = dtracers(alk_ind) + c2 * (P_CaCO3_ALT_CO2_remin - P_CaCO3_remin)
+     interior_tendencies(alk_alt_co2_ind) = interior_tendencies(alk_ind) + c2 * (P_CaCO3_ALT_CO2_remin - P_CaCO3_remin)
 
      !-----------------------------------------------------------------------
      !  oxygen
@@ -3668,10 +3668,10 @@ contains
           / parm_Remin_D_C_O2 + (c2 * nitrif))
      o2_consumption = o2_consumption_scalef * o2_consumption
 
-     dtracers(o2_ind) = o2_production - o2_consumption
+     interior_tendencies(o2_ind) = o2_production - o2_consumption
 
      end associate
-   end subroutine compute_dtracer_local
+   end subroutine compute_local_tendencies
 
    !***********************************************************************
 

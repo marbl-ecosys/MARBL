@@ -54,7 +54,7 @@ contains
        autotroph_secondary_species,           &
        temperature,                           &
        marbl_tracer_indices,                  &
-       column_dtracer,                        &
+       interior_tendencies,                   &
        marbl_interior_diags,                  &
        marbl_status_log)
 
@@ -81,7 +81,7 @@ contains
     type(autotroph_secondary_species_type),   intent(in)    :: autotroph_secondary_species(:,:)
     real (r8),                                intent(in)    :: temperature(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
-    real (r8),                                intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
+    real (r8),                                intent(inout) :: interior_tendencies(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
     type(marbl_diagnostics_type),             intent(inout) :: marbl_interior_diags
     type(marbl_log_type),                     intent(inout) :: marbl_status_log
 
@@ -563,7 +563,7 @@ contains
             marbl_interior_tendency_share(k), marbl_particulate_share, PO14C, P_Ca14CO3)
 
        !-----------------------------------------------------------------------
-       ! Update column_dtracer for the 7 carbon pools for each Carbon isotope
+       ! Update interior_tendencies for the 7 carbon pools for each Carbon isotope
        !-----------------------------------------------------------------------
 
        decay_14Ctot(k) = c0
@@ -576,23 +576,23 @@ contains
           work1 = auto_graze(auto_ind,k) + auto_loss(auto_ind,k) + auto_agg(auto_ind,k)
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
-          column_dtracer(n,k) = photo13C(auto_ind,k) - work1 * R13C_autotroph(auto_ind,k)
+          interior_tendencies(n,k) = photo13C(auto_ind,k) - work1 * R13C_autotroph(auto_ind,k)
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
-          column_dtracer(n,k) = photo14C(auto_ind,k) - work1 * R14C_autotroph(auto_ind,k) - &
+          interior_tendencies(n,k) = photo14C(auto_ind,k) - work1 * R14C_autotroph(auto_ind,k) - &
                c14_lambda_inv_sec * autotroph_local(auto_ind,k)%C14
 
           decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local(auto_ind,k)%C14
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
           if (n > 0) then
-             column_dtracer(n,k) = Ca13CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
+             interior_tendencies(n,k) = Ca13CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
                   * work1 * R13C_autotrophCaCO3(auto_ind,k)
           endif
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
           if (n > 0) then
-             column_dtracer(n,k) = Ca14CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
+             interior_tendencies(n,k) = Ca14CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
                   * work1 * R14C_autotrophCaCO3(auto_ind,k)      &
                   - c14_lambda_inv_sec * autotroph_local(auto_ind,k)%Ca14CO3
 
@@ -601,15 +601,15 @@ contains
        end do
 
        !-----------------------------------------------------------------------
-       !  column_dtracer: zoo 13 and 14 Carbon
+       !  interior_tendencies: zoo 13 and 14 Carbon
        !-----------------------------------------------------------------------
 
-       column_dtracer(zootot13C_ind,k) = &
+       interior_tendencies(zootot13C_ind,k) = &
               sum(auto_graze_zoo(:,k) * R13C_autotroph(:,k),dim=1) &
             + (zootot_graze_zoo(k) - zootot_graze(k) - zootot_loss(k)) &
             * R13C_zoototC(k)
 
-       column_dtracer(zootot14C_ind,k) = &
+       interior_tendencies(zootot14C_ind,k) = &
               sum(auto_graze_zoo(:,k) * R14C_autotroph(:,k),dim=1) &
             + (zootot_graze_zoo(k) - zootot_graze(k) - zootot_loss(k)) &
             * R14C_zoototC(k) - c14_lambda_inv_sec * zootot14C_loc(k)
@@ -617,27 +617,27 @@ contains
        decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * zootot14C_loc(k)
 
        !-----------------------------------------------------------------------
-       !  column_dtracer: dissolved organic Matter 13C and 14C
+       !  interior_tendencies: dissolved organic Matter 13C and 14C
        !-----------------------------------------------------------------------
 
-       column_dtracer(do13ctot_ind,k) = DO13Ctot_prod(k) - DO13Ctot_remin(k)
+       interior_tendencies(do13ctot_ind,k) = DO13Ctot_prod(k) - DO13Ctot_remin(k)
 
-       column_dtracer(do14ctot_ind,k) = DO14Ctot_prod(k) - DO14Ctot_remin(k) - c14_lambda_inv_sec * DO14Ctot_loc(k)
+       interior_tendencies(do14ctot_ind,k) = DO14Ctot_prod(k) - DO14Ctot_remin(k) - c14_lambda_inv_sec * DO14Ctot_loc(k)
 
        decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * DO14Ctot_loc(k)
 
        !-----------------------------------------------------------------------
-       !   column_dtracer: dissolved inorganic Carbon 13 and 14
+       !   interior_tendencies: dissolved inorganic Carbon 13 and 14
        !-----------------------------------------------------------------------
 
-       column_dtracer(di13c_ind,k) = &
+       interior_tendencies(di13c_ind,k) = &
             sum((auto_loss_dic(:,k) + auto_graze_dic(:,k))*R13C_autotroph(:,k),dim=1) &
           - sum(photo13C(:,k),dim=1) &
           + DO13Ctot_remin(k) + PO13C%remin(k) &
           + (zootot_loss_dic(k) + zootot_graze_dic(k)) * R13C_zoototC(k) &
           + P_Ca13CO3%remin(k)
 
-       column_dtracer(di14c_ind,k) = &
+       interior_tendencies(di14c_ind,k) = &
             sum((auto_loss_dic(:,k) + auto_graze_dic(:,k))*R14C_autotroph(:,k),dim=1) &
           - sum(photo14C(:,k),dim=1) &
           + DO14Ctot_remin(k) + PO14C%remin(k) &
@@ -649,13 +649,13 @@ contains
 
        do auto_ind = 1, autotroph_cnt
           if (marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind > 0) then
-             column_dtracer(di13c_ind,k) = column_dtracer(di13c_ind,k)            &
+             interior_tendencies(di13c_ind,k) = interior_tendencies(di13c_ind,k)  &
                   + f_graze_CaCO3_REMIN * auto_graze(auto_ind,k)                  &
                   * QCaCO3(auto_ind,k) * R13C_autotrophCaCO3(auto_ind,k)          &
                   - Ca13CO3_PROD(auto_ind,k)
           endif
           if (marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind > 0) then
-             column_dtracer(di14c_ind,k) = column_dtracer(di14c_ind,k)            &
+             interior_tendencies(di14c_ind,k) = interior_tendencies(di14c_ind,k)  &
                   + f_graze_CaCO3_REMIN * auto_graze(auto_ind,k)                  &
                   * QCaCO3(auto_ind,k) * R14C_autotrophCaCO3(auto_ind,k)          &
                   - Ca14CO3_PROD(auto_ind,k)
@@ -708,7 +708,7 @@ contains
        PO14C,               &
        P_Ca13CO3,           &
        P_Ca14CO3,           &
-       column_dtracer,      &
+       interior_tendencies, &
        marbl_tracer_indices,&
        marbl_interior_diags,&
        marbl_status_log)

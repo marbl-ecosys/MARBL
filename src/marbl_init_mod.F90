@@ -127,7 +127,7 @@ contains
                                 surface_vals, &
                                 surface_fluxes, &
                                 column_tracers, &
-                                column_dtracers, &
+                                interior_tendencies, &
                                 tracer_metadata, &
                                 marbl_status_log)
 
@@ -144,7 +144,7 @@ contains
     real(r8),                         allocatable, intent(out)   :: surface_vals(:,:)
     real(r8),                         allocatable, intent(out)   :: surface_fluxes(:,:)
     real(r8),                         allocatable, intent(out)   :: column_tracers(:,:)
-    real(r8),                         allocatable, intent(out)   :: column_dtracers(:,:)
+    real(r8),                         allocatable, intent(out)   :: interior_tendencies(:,:)
     type(marbl_tracer_metadata_type), allocatable, intent(out)   :: tracer_metadata(:)
     type(marbl_log_type),                          intent(inout) :: marbl_status_log
 
@@ -166,7 +166,7 @@ contains
     allocate(surface_vals(num_elements_surface, tracer_indices%total_cnt))
     allocate(surface_fluxes(num_elements_surface, tracer_indices%total_cnt))
     allocate(column_tracers(tracer_indices%total_cnt, num_levels))
-    allocate(column_dtracers(tracer_indices%total_cnt, num_levels))
+    allocate(interior_tendencies(tracer_indices%total_cnt, num_levels))
     allocate(tracer_metadata(tracer_indices%total_cnt))
     if (.not.allocated(tracer_restore_vars)) &
       allocate(tracer_restore_vars(tracer_indices%total_cnt))

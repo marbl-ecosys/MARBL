@@ -75,7 +75,7 @@ module marbl_interface
      ! public data related to computing interior tendencies
      real (r8), allocatable                             , public  :: column_tracers(:,:)           ! input
      type(marbl_forcing_fields_type), allocatable       , public  :: interior_input_forcings(:)    ! input
-     real (r8), allocatable                             , public  :: column_dtracers(:,:)          ! output
+     real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! output
      type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
 
@@ -266,7 +266,7 @@ contains
 
     call marbl_init_tracers(num_levels, num_elements_surface, &
                             this%tracer_indices, this%surface_vals, this%surface_fluxes, &
-                            this%column_tracers, this%column_dtracers, this%tracer_metadata,    &
+                            this%column_tracers, this%interior_tendencies, this%tracer_metadata, &
                             this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_tracers", subname)
@@ -845,7 +845,7 @@ contains
          tracers                      = this%column_tracers,                      &
          surface_flux_forcing_indices = this%surface_flux_forcing_ind,            &
          interior_tendency_forcing_indices = this%interior_tendency_forcing_ind,  &
-         dtracers                     = this%column_dtracers,                     &
+         interior_tendencies          = this%interior_tendencies,                 &
          marbl_tracer_indices         = this%tracer_indices,                      &
          marbl_timers                 = this%timers,                              &
          marbl_timer_indices          = this%timer_ids,                           &
@@ -993,7 +993,7 @@ contains
       deallocate(this%surface_vals)
       deallocate(this%surface_fluxes)
       deallocate(this%column_tracers)
-      deallocate(this%column_dtracers)
+      deallocate(this%interior_tendencies)
       deallocate(this%tracer_metadata)
       deallocate(tracer_restore_vars)
     end if
