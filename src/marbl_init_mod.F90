@@ -208,8 +208,6 @@ contains
 
     use marbl_settings_mod, only : lecovars_full_depth_tavg
 
-    implicit none
-
     type (marbl_tracer_metadata_type), intent(out)   :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
 
@@ -471,8 +469,6 @@ contains
     !  non_living_biomass_ecosys_tracer_cnt
     !-----------------------------------------------------------------------
 
-    implicit none
-
     character(len=*),                 intent(in)    :: short_name
     character(len=*),                 intent(in)    :: long_name
     type(marbl_tracer_metadata_type), intent(inout) :: marbl_tracer_metadata
@@ -501,8 +497,6 @@ contains
     !  initialize non-autotroph tracer_d values and accumulate
     !  non_living_biomass_ecosys_tracer_cnt
     !-----------------------------------------------------------------------
-
-    implicit none
 
     type(marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
     type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
@@ -556,8 +550,6 @@ contains
 
     use marbl_settings_mod, only : zooplankton
 
-    implicit none
-
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
     type (marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
 
@@ -588,8 +580,6 @@ contains
     !-----------------------------------------------------------------------
 
     use marbl_settings_mod, only : autotrophs
-
-    implicit none
 
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type    (marbl_tracer_index_type) , intent(in)    :: marbl_tracer_indices
@@ -662,8 +652,6 @@ contains
     !
 
     use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
-
-    implicit none
 
     integer,                                        intent(in)    :: num_elements
     type(marbl_surface_flux_forcing_indexing_type), intent(in)    :: surface_flux_forcing_indices
@@ -833,8 +821,6 @@ contains
     !  namelist read
     !
     use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
-
-    implicit none
 
     integer,                                    intent(in)    :: num_elements
     type(marbl_interior_tendency_forcing_indexing_type), intent(in)    :: interior_tendency_forcing_indices

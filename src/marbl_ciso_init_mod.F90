@@ -22,8 +22,6 @@ contains
     use marbl_settings_mod, only : autotroph_cnt
     use marbl_settings_mod, only : autotrophs
 
-    implicit none
-
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
 

@@ -874,8 +874,6 @@ contains
 
     use marbl_surface_flux_mod, only : marbl_surface_flux_compute
 
-    implicit none
-
     class(marbl_interface_class), intent(inout) :: this
 
     character(len=*), parameter :: subname = 'marbl_interface:surface_flux_compute'
@@ -921,8 +919,6 @@ contains
 
     use marbl_interior_tendency_mod, only : marbl_set_global_scalars_interior
 
-    implicit none
-
     class(marbl_interface_class), intent(inout) :: this
     character(len=*),             intent(in)    :: field_source ! 'interior' or 'surface'
 
@@ -947,8 +943,6 @@ contains
     use marbl_settings_mod, only : grazing
     use marbl_settings_mod, only : tracer_restore_vars
     use marbl_diagnostics_mod, only : marbl_interior_diag_ind
-
-    implicit none
 
     class(marbl_interface_class), intent(inout) :: this
 

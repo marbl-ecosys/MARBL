@@ -50,8 +50,6 @@ contains
     use marbl_ciso_diagnostics_mod, only : marbl_ciso_diagnostics_surface_flux_compute
     use marbl_interface_public_types, only : marbl_forcing_fields_type
 
-    implicit none
-
     integer (int_kind),                             intent(in)    :: num_elements
     type(marbl_surface_flux_forcing_indexing_type), intent(in)    :: surface_flux_forcing_ind
     type(marbl_forcing_fields_type),                intent(in)    :: surface_flux_forcings(:)

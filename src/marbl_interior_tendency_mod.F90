@@ -719,8 +719,6 @@ contains
      !  treat negative values as zero,  apply mask to local copies
      !-----------------------------------------------------------------------
 
-     implicit none
-
      integer(int_kind)            , intent(in)  :: column_kmt
      type(marbl_tracer_index_type), intent(in)  :: marbl_tracer_indices
      real (r8)                    , intent(in)  :: tracers(:,:)
@@ -1076,8 +1074,6 @@ contains
      !  If any phyto box are zero, set others to zeros.
      !-----------------------------------------------------------------------
 
-     implicit none
-
      integer(int_kind)          , intent(in)    :: column_kmt ! number of active model layers
      type(marbl_tracer_index_type) , intent(in) :: marbl_tracer_indices
      type(autotroph_local_type) , intent(inout) :: autotroph_local(autotroph_cnt, column_kmt)
@@ -1144,8 +1140,6 @@ contains
      use marbl_settings_mod , only : gQ_Fe_kFe_thres
      use marbl_settings_mod , only : gQ_Si_kSi_thres
      use marbl_settings_mod , only : PquotaSlope, PquotaIntercept, PquotaMinNP
-
-     implicit none
 
      type(autotroph_local_type)            , intent(in)    :: autotroph_local(:)
      real (r8)                             , intent(in)    :: tracer_local(:) ! local copies of model tracer concentrations

@@ -70,8 +70,6 @@ contains
     use marbl_constants_mod, only : spy
     use marbl_ciso_diagnostics_mod, only : store_diagnostics_ciso_interior
 
-    implicit none
-
     type(marbl_domain_type),                  intent(in)    :: marbl_domain
     type(marbl_interior_tendency_share_type), intent(in)    :: marbl_interior_tendency_share(:)
     type(marbl_zooplankton_share_type),       intent(in)    :: marbl_zooplankton_share(:)
@@ -739,8 +737,6 @@ contains
     ! For Keller and Morel, set cell attributes based on autotroph type (from observations)
     !----------------------------------------------------------------------------------------
 
-    implicit none
-
     character(len=char_len), intent(in)  :: ciso_fract_factors                  ! option for which biological fractionation calculation to use
     real (r8),               intent(out) :: cell_active_C_uptake(autotroph_cnt) ! ratio of active carbon uptake to carbon fixation
     real (r8),               intent(out) :: cell_surf(autotroph_cnt)            ! surface areas of cells ( m2 )
@@ -870,8 +866,6 @@ contains
 
     use marbl_constants_mod, only : pi, c4, c3
 
-    implicit none
-
     real (r8), intent(in) :: &
          mui_to_co2star,        & ! mui_to_co2star = mu_i / [CO2*] (m3 / mol C / s)
          cell_active_C_uptake,  & ! ratio of active carbon uptake to carbon fixation
@@ -960,8 +954,6 @@ contains
     !  Set dissolution length, production fraction and mass terms.
     !---------------------------------------------------------------------
 
-    implicit none
-
     type(column_sinking_particle_type), intent(inout) :: POC_ciso     ! base units = nmol C_ciso
     type(column_sinking_particle_type), intent(inout) :: P_CaCO3_ciso ! base units = nmol C_ciso
 
@@ -1015,8 +1007,6 @@ contains
 
     use marbl_interior_share_mod, only : marbl_interior_share_update_sinking_particle_from_level_above
 
-    implicit none
-
     integer (int_kind)                 , intent(in)    :: k ! vertical model level
     type(column_sinking_particle_type) , intent(inout) :: POC_ciso
     type(column_sinking_particle_type) , intent(inout) :: P_CaCO3_ciso
@@ -1049,8 +1039,6 @@ contains
     use marbl_settings_mod , only : caco3_bury_thres_iopt_fixed_depth
     use marbl_settings_mod , only : caco3_bury_thres_depth
     use marbl_settings_mod , only : caco3_bury_thres_omega_calc
-
-    implicit none
 
     integer (int_kind),                       intent(in)    :: k                 ! vertical model level
     type(marbl_domain_type),                  intent(in)    :: domain

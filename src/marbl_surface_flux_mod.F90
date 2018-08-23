@@ -87,8 +87,6 @@ contains
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_P_input
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_Si_input
 
-    implicit none
-
     integer (int_kind)                        , intent(in)    :: num_elements
     type(marbl_surface_flux_forcing_indexing_type), intent(in) :: surface_flux_forcing_ind
     type(marbl_forcing_fields_type)           , intent(in)    :: surface_flux_forcings(:)
