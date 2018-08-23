@@ -920,9 +920,9 @@ contains
     use marbl_interior_tendency_mod, only : marbl_set_global_scalars_interior
 
     class(marbl_interface_class), intent(inout) :: this
-    character(len=*),             intent(in)    :: field_source ! 'interior' or 'surface'
+    character(len=*),             intent(in)    :: field_source ! 'interior_tendency' or 'surface_flux`'
 
-    if (field_source == 'interior') then
+    if (field_source == 'interior_tendency') then
        call marbl_set_global_scalars_interior(                          &
             marbl_particulate_share   = this%particulate_share,         &
             glo_avg_rmean_interior    = this%glo_avg_rmean_interior,    &
