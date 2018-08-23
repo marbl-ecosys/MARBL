@@ -166,7 +166,7 @@ module marbl_interface_private_types
 
   !*****************************************************************************
 
-  type, private :: marbl_living_tracer_index_type
+  type, public :: marbl_living_tracer_index_type
      integer (KIND=int_kind) :: Chl_ind     = 0  ! tracer indices for Chl content
      integer (KIND=int_kind) :: C_ind       = 0  ! tracer indices for C content
      integer (KIND=int_kind) :: P_ind       = 0  ! tracer indices for P content

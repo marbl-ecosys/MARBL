@@ -804,7 +804,7 @@ contains
      end do
 
      ! autotroph consistency check
-     call consistency_check_autotrophs(column_kmt, marbl_tracer_indices, &
+     call autotroph_zero_consistency_enforce(column_kmt, marbl_tracer_indices, &
           autotroph_local(:,1:column_kmt))
 
      ! set totalChl_local
@@ -1068,7 +1068,9 @@ contains
 
    !***********************************************************************
 
-   subroutine consistency_check_autotrophs(column_kmt, marbl_tracer_indices, autotroph_local)
+   subroutine autotroph_zero_consistency_enforce(column_kmt, marbl_tracer_indices, autotroph_local)
+
+     use marbl_ciso_interior_tendency_mod, only : marbl_ciso_interior_tendency_autotroph_set_to_zero
 
      !-----------------------------------------------------------------------
      !  If any phyto box are zero, set others to zeros.
@@ -1109,23 +1111,14 @@ contains
               end if
 
               ! carbon isotope components of autotroph_local_type
-              if (ciso_on) then
-                 autotroph_local(auto_ind,k)%C13 = c0
-                 autotroph_local(auto_ind,k)%C14 = c0
-
-                 if (marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind > 0) then
-                    autotroph_local(auto_ind,k)%Ca13CO3 = c0
-                 end if
-                 if (marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind > 0) then
-                    autotroph_local(auto_ind,k)%Ca14CO3 = c0
-                 end if
-              end if
+              ! FIXME #278: this interface will change when logical checks are not index-based
+              call marbl_ciso_interior_tendency_autotroph_set_to_zero(marbl_tracer_indices%auto_inds(auto_ind), &
+                   autotroph_local(auto_ind, k))
            end if
-
         end do
      end do
 
-   end subroutine consistency_check_autotrophs
+   end subroutine autotroph_zero_consistency_enforce
 
    !***********************************************************************
 
