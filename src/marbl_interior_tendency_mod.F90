@@ -116,8 +116,8 @@ contains
     use marbl_interface_private_types, only : marbl_timer_indexing_type
     use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
     use marbl_interface_public_types, only : marbl_diagnostics_type
-    use marbl_interior_share_mod, only : marbl_interior_share_export_variables
-    use marbl_interior_share_mod, only : marbl_interior_share_export_zooplankton
+    use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_variables
+    use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_zooplankton
     use marbl_restore_mod, only : marbl_restore_compute_interior_restore
     use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
@@ -410,13 +410,12 @@ contains
        ! Store any variables needed in other tracer modules
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
-       call marbl_interior_share_export_variables(tracer_local(:, k),        &
-            marbl_tracer_indices, carbonate(k), dissolved_organic_matter(k), &
+       call marbl_interior_tendency_share_export_variables(tracer_local(:, k), &
+            marbl_tracer_indices, carbonate(k), dissolved_organic_matter(k),   &
             QA_dust_def(k), marbl_interior_tendency_share(k))
 
-       call marbl_interior_share_export_zooplankton(zooplankton_local(:, k), &
-            zooplankton_secondary_species(:, k), &
-            marbl_zooplankton_share(k))
+       call marbl_interior_tendency_share_export_zooplankton(zooplankton_local(:, k), &
+            zooplankton_secondary_species(:, k), marbl_zooplankton_share(k))
 
        if  (k < km) then
           call update_particulate_terms_from_prior_level(k+1, POC, POP, P_CaCO3, &
@@ -3667,7 +3666,7 @@ contains
    subroutine update_particulate_terms_from_prior_level(k, POC, POP, P_CaCO3, &
         P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def)
 
-     use marbl_interior_share_mod, only : marbl_interior_share_update_sinking_particle_from_level_above
+     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_update_sinking_particle_from_level_above
 
      integer (int_kind)                 , intent(in)    :: k ! vertical model level
      type(column_sinking_particle_type) , intent(inout) :: POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron
@@ -3681,13 +3680,13 @@ contains
         !
         ! initialize loss to sediments = 0
         !-----------------------------------------------------------------------
-        call marbl_interior_share_update_sinking_particle_from_level_above(k, P_CaCO3)
-        call marbl_interior_share_update_sinking_particle_from_level_above(k, P_CaCO3_ALT_CO2)
-        call marbl_interior_share_update_sinking_particle_from_level_above(k, P_SiO2)
-        call marbl_interior_share_update_sinking_particle_from_level_above(k, dust)
-        call marbl_interior_share_update_sinking_particle_from_level_above(k, POC)
-        call marbl_interior_share_update_sinking_particle_from_level_above(k, POP)
-        call marbl_interior_share_update_sinking_particle_from_level_above(k, P_iron)
+        call marbl_interior_tendency_share_update_sinking_particle_from_level_above(k, P_CaCO3)
+        call marbl_interior_tendency_share_update_sinking_particle_from_level_above(k, P_CaCO3_ALT_CO2)
+        call marbl_interior_tendency_share_update_sinking_particle_from_level_above(k, P_SiO2)
+        call marbl_interior_tendency_share_update_sinking_particle_from_level_above(k, dust)
+        call marbl_interior_tendency_share_update_sinking_particle_from_level_above(k, POC)
+        call marbl_interior_tendency_share_update_sinking_particle_from_level_above(k, POP)
+        call marbl_interior_tendency_share_update_sinking_particle_from_level_above(k, P_iron)
         QA_dust_def(k) = QA_dust_def(k-1)
      end if
 

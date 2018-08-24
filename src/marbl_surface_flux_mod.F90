@@ -81,7 +81,7 @@ contains
     use marbl_nhx_surface_emis_mod, only : marbl_nhx_surface_emis_compute
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
     use marbl_settings_mod, only : xkw_coeff
-    use marbl_settings_mod, only : ciso_on
+    use marbl_surface_flux_share_mod, only : marbl_surface_flux_share_export_variables
     use marbl_ciso_surface_flux_mod, only : marbl_ciso_surface_flux_compute
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_C_input
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_P_input
@@ -164,13 +164,7 @@ contains
          dic_ind           => marbl_tracer_indices%dic_ind,                                     &
          dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind,                             &
          alk_ind           => marbl_tracer_indices%alk_ind,                                     &
-         alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind,                             &
-
-         pv_surf_fields       => surface_flux_share%pv_surf_fields(:),                           & ! out
-         dic_surf_fields      => surface_flux_share%dic_surf_fields(:),                          & ! out
-         co2star_surf_fields  => surface_flux_share%co2star_surf_fields(:),                      & ! out
-         dco2star_surf_fields => surface_flux_share%dco2star_surf_fields(:),                     & ! out
-         co3_surf_fields      => surface_flux_share%co3_surf_fields(:)                           & ! out
+         alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind                              &
          )
 
     !-----------------------------------------------------------------------
@@ -297,13 +291,8 @@ contains
           !  and are now defined in marbl_share as targets.
           !-------------------------------------------------------------------
 
-          if (ciso_on) then
-             pv_surf_fields(:)       = pv_co2(:)
-             dic_surf_fields(:)      = tracers_at_surface(:,dic_ind)
-             co2star_surf_fields(:)  = co2star(:)
-             dco2star_surf_fields(:) = dco2star(:)
-             co3_surf_fields(:)      = co3(:)
-          endif
+          call marbl_surface_flux_share_export_variables(surface_flux_internal, tracers_at_surface, &
+               marbl_tracer_indices, surface_flux_share)
 
           !-----------------------------------------------------------------------
           !  Set flux_alt_co2
