@@ -35,7 +35,6 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : max_grazer_prey_cnt
-  use marbl_settings_mod, only : ciso_on
   use marbl_settings_mod, only : lsource_sink
   use marbl_settings_mod, only : ladjust_bury_coeff
   use marbl_settings_mod, only : autotrophs
@@ -2568,18 +2567,18 @@ contains
      ! !USES:
 
      use marbl_constants_mod, only : cmperm
-     use marbl_settings_mod , only : parm_Fe_desorption_rate0
-     use marbl_settings_mod , only : parm_sed_denitrif_coeff
-     use marbl_settings_mod , only : particulate_flux_ref_depth
-     use marbl_settings_mod , only : caco3_bury_thres_iopt
-     use marbl_settings_mod , only : caco3_bury_thres_iopt_fixed_depth
-     use marbl_settings_mod , only : caco3_bury_thres_depth
-     use marbl_settings_mod , only : caco3_bury_thres_omega_calc
-     use marbl_settings_mod , only : POM_bury_frac_max
-     use marbl_settings_mod , only : bSi_bury_frac_max
-     use marbl_settings_mod , only : o2_sf_o2_range_hi
-     use marbl_settings_mod , only : o2_sf_o2_range_lo
-     use marbl_settings_mod , only : o2_sf_val_lo_o2
+     use marbl_settings_mod, only : parm_Fe_desorption_rate0
+     use marbl_settings_mod, only : parm_sed_denitrif_coeff
+     use marbl_settings_mod, only : particulate_flux_ref_depth
+     use marbl_settings_mod, only : caco3_bury_thres_iopt
+     use marbl_settings_mod, only : caco3_bury_thres_iopt_fixed_depth
+     use marbl_settings_mod, only : caco3_bury_thres_depth
+     use marbl_settings_mod, only : caco3_bury_thres_omega_calc
+     use marbl_settings_mod, only : POM_bury_frac_max
+     use marbl_settings_mod, only : bSi_bury_frac_max
+     use marbl_settings_mod, only : o2_sf_o2_range_hi
+     use marbl_settings_mod, only : o2_sf_o2_range_lo
+     use marbl_settings_mod, only : o2_sf_val_lo_o2
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_CaCO3_bury
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_POC_bury
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_POP_bury
@@ -2587,6 +2586,7 @@ contains
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff
+     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_particulate
 
      integer (int_kind)                , intent(in)    :: k                   ! vertical model level
      type(marbl_domain_type)           , intent(in)    :: domain
@@ -2655,13 +2655,6 @@ contains
           zw                       => domain%zw,                                        &
           O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind),        &
           NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind),       &
-          POC_PROD_avail_fields    => marbl_particulate_share%POC_PROD_avail_fields,    & ! IN/OUT
-          decay_POC_E_fields       => marbl_particulate_share%decay_POC_E_fields,       & ! IN/OUT
-          decay_CaCO3_fields       => marbl_particulate_share%decay_CaCO3_fields,       & ! IN/OUT
-          poc_diss_fields          => marbl_particulate_share%poc_diss_fields,          & ! IN/OUT
-          caco3_diss_fields        => marbl_particulate_share%caco3_diss_fields,        & ! IN/OUT
-          POC_remin_fields         => marbl_particulate_share%POC_remin_fields,         & ! IN/OUT
-          DECAY_Hard_fields        => marbl_particulate_share%DECAY_Hard_fields,        & ! IN/OUT
           POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff,           & ! IN/OUT
           POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff,           & ! IN/OUT
           bSi_bury_coeff           => marbl_particulate_share%bSi_bury_coeff            & ! IN/OUT
@@ -2820,15 +2813,6 @@ contains
 
         QA_dust_def = new_QA_dust_def
 
-        ! Save certain fields for use by other modules
-        if (ciso_on) then
-           POC_PROD_avail_fields(k) = POC_PROD_avail
-           decay_POC_E_fields(k)    = decay_POC_E
-           decay_CaCO3_fields(k)    = decay_CaCO3
-           poc_diss_fields(k)       = poc_diss
-           caco3_diss_fields(k)     = caco3_diss
-        endif
-
         !-----------------------------------------------------------------------
         !  Compute outgoing POC fluxes. QA POC flux is computing using
         !  ballast fluxes and new_QA_dust_def. If no QA POC flux came in
@@ -2949,10 +2933,9 @@ contains
      endif
 
      ! Save some fields for use by other modules
-     if (ciso_on) then
-        POC_remin_fields(k)         = POC%remin(k)
-        DECAY_Hard_fields(k)        = DECAY_Hard
-     endif
+     call marbl_interior_tendency_share_export_particulate(k, POC, DECAY_Hard, &
+          POC_PROD_avail, decay_POC_E, decay_CaCO3, poc_diss, caco3_diss, &
+          marbl_particulate_share)
 
      ! extract particulate fluxes at particulate_flux_ref_depth, if this layer contains that depth
      if (k .gt. 1) then

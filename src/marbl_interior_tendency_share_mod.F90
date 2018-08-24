@@ -2,14 +2,6 @@ module marbl_interior_tendency_share_mod
 
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : r8
-  use marbl_interface_private_types, only : column_sinking_particle_type
-  use marbl_interface_private_types, only : marbl_tracer_index_type
-  use marbl_interface_private_types, only : carbonate_type
-  use marbl_interface_private_types, only : dissolved_organic_matter_type
-  use marbl_interface_private_types, only : marbl_interior_tendency_share_type
-  use marbl_pft_mod, only : zooplankton_local_type
-  use marbl_pft_mod, only : zooplankton_secondary_species_type
-  use marbl_pft_mod, only : marbl_zooplankton_share_type
   use marbl_settings_mod, only : ciso_on
 
   implicit none
@@ -18,12 +10,15 @@ module marbl_interior_tendency_share_mod
   public :: marbl_interior_tendency_share_update_sinking_particle_from_level_above
   public :: marbl_interior_tendency_share_export_variables
   public :: marbl_interior_tendency_share_export_zooplankton
+  public :: marbl_interior_tendency_share_export_particulate
 
 contains
 
   !***********************************************************************
 
   subroutine marbl_interior_tendency_share_update_sinking_particle_from_level_above(k, sinking_particle)
+
+    use marbl_interface_private_types, only : column_sinking_particle_type
 
     integer (int_kind), intent(in) :: k
     type(column_sinking_particle_type), intent(inout) :: sinking_particle
@@ -43,6 +38,11 @@ contains
        dissolved_organic_matter, &
        QA_dust_def, &
        marbl_interior_tendency_share)
+
+    use marbl_interface_private_types, only : marbl_tracer_index_type
+    use marbl_interface_private_types, only : carbonate_type
+    use marbl_interface_private_types, only : dissolved_organic_matter_type
+    use marbl_interface_private_types, only : marbl_interior_tendency_share_type
 
     real(r8),                                 intent(in)    :: tracer_local(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
@@ -73,6 +73,10 @@ contains
        zooplankton_secondary_species, &
        marbl_zooplankton_share)
 
+    use marbl_pft_mod, only : zooplankton_local_type
+    use marbl_pft_mod, only : zooplankton_secondary_species_type
+    use marbl_pft_mod, only : marbl_zooplankton_share_type
+
     type(zooplankton_local_type)             , intent(in)    :: zooplankton_local(:)
     type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(:)
     type(marbl_zooplankton_share_type)       , intent(inout) :: marbl_zooplankton_share
@@ -95,6 +99,35 @@ contains
 
   end subroutine marbl_interior_tendency_share_export_zooplankton
 
+  !***********************************************************************
+
+  subroutine marbl_interior_tendency_share_export_particulate(k, POC, DECAY_Hard, &
+       POC_PROD_avail, decay_POC_E, decay_CaCO3, poc_diss, caco3_diss, &
+       marbl_particulate_share)
+
+    use marbl_interface_private_types, only : column_sinking_particle_type
+    use marbl_interface_private_types, only : marbl_particulate_share_type
+
+    integer,                            intent(in)    :: k
+    type(column_sinking_particle_type), intent(in)    :: POC
+    real(r8),                           intent(in)    :: DECAY_Hard
+    real(r8),                           intent(in)    :: POC_PROD_avail
+    real(r8),                           intent(in)    :: decay_POC_E
+    real(r8),                           intent(in)    :: decay_CaCO3
+    real(r8),                           intent(in)    :: poc_diss
+    real(r8),                           intent(in)    :: caco3_diss
+    type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
+
+    if (ciso_on) then
+       marbl_particulate_share%POC_remin_fields(k)      = POC%remin(k)
+       marbl_particulate_share%DECAY_Hard_fields(k)     = DECAY_Hard
+       marbl_particulate_share%POC_PROD_avail_fields(k) = POC_PROD_avail
+       marbl_particulate_share%decay_POC_E_fields(k)    = decay_POC_E
+       marbl_particulate_share%decay_CaCO3_fields(k)    = decay_CaCO3
+       marbl_particulate_share%poc_diss_fields(k)       = poc_diss
+       marbl_particulate_share%caco3_diss_fields(k)     = caco3_diss
+    endif
+  end subroutine marbl_interior_tendency_share_export_particulate
   !***********************************************************************
 
 end module marbl_interior_tendency_share_mod
