@@ -7,7 +7,7 @@ module marbl_interior_tendency_share_mod
   implicit none
   private
 
-  public :: marbl_interior_tendency_share_update_sinking_particle_from_level_above
+  public :: marbl_interior_tendency_share_update_particle_flux_from_above
   public :: marbl_interior_tendency_share_export_variables
   public :: marbl_interior_tendency_share_export_zooplankton
   public :: marbl_interior_tendency_share_export_particulate
@@ -16,7 +16,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_interior_tendency_share_update_sinking_particle_from_level_above(k, sinking_particle)
+  subroutine marbl_interior_tendency_share_update_particle_flux_from_above(k, sinking_particle)
 
     use marbl_interface_private_types, only : column_sinking_particle_type
 
@@ -27,7 +27,7 @@ contains
     sinking_particle%sflux_in(k)  = sinking_particle%sflux_out(k-1)
     sinking_particle%hflux_in(k)  = sinking_particle%hflux_out(k-1)
 
-  end subroutine marbl_interior_tendency_share_update_sinking_particle_from_level_above
+  end subroutine marbl_interior_tendency_share_update_particle_flux_from_above
 
   !***********************************************************************
 

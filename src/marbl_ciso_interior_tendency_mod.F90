@@ -1029,7 +1029,7 @@ contains
     ! Assume that k == ksurf condition was handled by call to set_surface_particulate_terms()
     !-----------------------------------------------------------------------
 
-    use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_update_sinking_particle_from_level_above
+    use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_update_particle_flux_from_above
 
     integer (int_kind)                 , intent(in)    :: k ! vertical model level
     type(column_sinking_particle_type) , intent(inout) :: POC_ciso
@@ -1037,8 +1037,8 @@ contains
     !-----------------------------------------------------------------------
 
     if (k > 1) then
-       call marbl_interior_tendency_share_update_sinking_particle_from_level_above(k, POC_ciso)
-       call marbl_interior_tendency_share_update_sinking_particle_from_level_above(k, P_CaCO3_ciso)
+       call marbl_interior_tendency_share_update_particle_flux_from_above(k, POC_ciso)
+       call marbl_interior_tendency_share_update_particle_flux_from_above(k, P_CaCO3_ciso)
     end if
 
   end subroutine update_particulate_terms_from_prior_level
