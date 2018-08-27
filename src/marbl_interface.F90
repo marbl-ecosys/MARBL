@@ -942,7 +942,7 @@ contains
     use marbl_settings_mod, only : zooplankton
     use marbl_settings_mod, only : grazing
     use marbl_settings_mod, only : tracer_restore_vars
-    use marbl_diagnostics_mod, only : marbl_interior_diag_ind
+    use marbl_diagnostics_mod, only : marbl_interior_tendency_diag_ind
 
     class(marbl_interface_class), intent(inout) :: this
 
@@ -975,7 +975,7 @@ contains
       end do
       deallocate(grazing)
     end if
-    call marbl_interior_diag_ind%destruct()
+    call marbl_interior_tendency_diag_ind%destruct()
 
     if (allocated(this%interior_tendency_forcings)) then
       deallocate(this%interior_tendency_forcings)

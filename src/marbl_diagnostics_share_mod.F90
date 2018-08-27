@@ -56,7 +56,7 @@ module marbl_diagnostics_share_mod
      integer(int_kind) :: CISO_eps_dic_g_surf       ! tavg id for eps_dic_g_surf
   end type marbl_surface_flux_diagnostics_indexing_type
 
-  type :: marbl_interior_diagnostics_indexing_type
+  type :: marbl_interior_tendency_diagnostics_indexing_type
     ! General 2D diags
     integer(int_kind) :: zsatcalc
     integer(int_kind) :: zsatarag
@@ -325,17 +325,17 @@ module marbl_diagnostics_share_mod
    contains
      procedure, public :: lconstructed => interior_diag_ind_constructed
      procedure, public :: destruct => interior_diag_ind_destructor
-  end type marbl_interior_diagnostics_indexing_type
+  end type marbl_interior_tendency_diagnostics_indexing_type
 
   !-----------------------------------------------------------------------
   !  Indices for diagnostic values written to tavg files
   !-----------------------------------------------------------------------
 
-  type(marbl_surface_flux_diagnostics_indexing_type) :: marbl_surface_flux_diag_ind
-  type(marbl_interior_diagnostics_indexing_type) :: marbl_interior_diag_ind
+  type(marbl_surface_flux_diagnostics_indexing_type)      :: marbl_surface_flux_diag_ind
+  type(marbl_interior_tendency_diagnostics_indexing_type) :: marbl_interior_tendency_diag_ind
 
   public :: marbl_surface_flux_diag_ind
-  public :: marbl_interior_diag_ind
+  public :: marbl_interior_tendency_diag_ind
   public :: marbl_diagnostics_share_compute_vertical_integrals
 
   !***********************************************************************
@@ -408,7 +408,7 @@ contains
 
   function interior_diag_ind_constructed(this) result(constructed)
 
-    class(marbl_interior_diagnostics_indexing_type), intent(inout) :: this
+    class(marbl_interior_tendency_diagnostics_indexing_type), intent(inout) :: this
     logical(log_kind) :: constructed
 
     constructed = allocated(this%restore_tend)
@@ -421,7 +421,7 @@ contains
 
     use marbl_settings_mod, only : ciso_on
 
-    class(marbl_interior_diagnostics_indexing_type), intent(inout) :: this
+    class(marbl_interior_tendency_diagnostics_indexing_type), intent(inout) :: this
 
     if (this%lconstructed()) then
       deallocate(this%N_lim_surf)

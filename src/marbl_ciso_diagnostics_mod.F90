@@ -17,7 +17,7 @@ module marbl_ciso_diagnostics_mod
   use marbl_logging, only : marbl_logging_add_diagnostics_error
 
   use marbl_diagnostics_share_mod, only : marbl_surface_flux_diag_ind
-  use marbl_diagnostics_share_mod, only : marbl_interior_diag_ind
+  use marbl_diagnostics_share_mod, only : marbl_interior_tendency_diag_ind
   use marbl_diagnostics_share_mod, only : marbl_diagnostics_share_compute_vertical_integrals
 
   implicit none
@@ -259,9 +259,9 @@ contains
     ! Interior diagnostics
     !-----------------------------------------------------------------
 
-    associate(                                       &
-              ind => marbl_interior_diag_ind,        &
-              diags => marbl_interior_tendency_diags &
+    associate(                                         &
+              ind => marbl_interior_tendency_diag_ind, &
+              diags => marbl_interior_tendency_diags   &
              )
 
       !  nonstandard 3D fields
@@ -1067,13 +1067,13 @@ contains
          zw      => marbl_domain%zw,         &
          delta_z => marbl_domain%delta_z,    &
          diags   => marbl_diags%diags,       &
-         ind     => marbl_interior_diag_ind, &
-         di13c_ind     => marbl_tracer_indices%di13c_ind,    &
-         do13ctot_ind  => marbl_tracer_indices%do13ctot_ind, &
-         zootot13C_ind    => marbl_tracer_indices%zootot13C_ind,   &
-         di14c_ind     => marbl_tracer_indices%di14c_ind,    &
-         do14ctot_ind  => marbl_tracer_indices%do14ctot_ind, &
-         zootot14C_ind    => marbl_tracer_indices%zootot14C_ind    &
+         ind     => marbl_interior_tendency_diag_ind, &
+         di13c_ind     => marbl_tracer_indices%di13c_ind,        &
+         do13ctot_ind  => marbl_tracer_indices%do13ctot_ind,     &
+         zootot13C_ind => marbl_tracer_indices%zootot13C_ind,    &
+         di14c_ind     => marbl_tracer_indices%di14c_ind,        &
+         do14ctot_ind  => marbl_tracer_indices%do14ctot_ind,     &
+         zootot14C_ind => marbl_tracer_indices%zootot14C_ind     &
          )
 
     diags(ind%calcToSed_13C)%field_2d(1) = sum(P_Ca13CO3%sed_loss)

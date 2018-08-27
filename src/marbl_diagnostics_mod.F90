@@ -37,7 +37,7 @@ module marbl_diagnostics_mod
   use marbl_logging, only : marbl_logging_add_diagnostics_error
 
   use marbl_diagnostics_share_mod, only : marbl_surface_flux_diag_ind
-  use marbl_diagnostics_share_mod, only : marbl_interior_diag_ind
+  use marbl_diagnostics_share_mod, only : marbl_interior_tendency_diag_ind
   use marbl_diagnostics_share_mod, only : marbl_diagnostics_share_compute_vertical_integrals
 
   implicit none
@@ -447,9 +447,9 @@ contains
     ! Interior diagnostics
     !-----------------------------------------------------------------
 
-    associate(                                       &
-              ind => marbl_interior_diag_ind,        &
-              diags => marbl_interior_tendency_diags &
+    associate(                                         &
+              ind => marbl_interior_tendency_diag_ind, &
+              diags => marbl_interior_tendency_diags   &
              )
 
       ! General 2D diags
@@ -3029,7 +3029,7 @@ contains
     associate( &
          kmt   => domain%kmt, &
          diags => marbl_interior_tendency_diags%diags, &
-         ind   => marbl_interior_diag_ind &
+         ind   => marbl_interior_tendency_diag_ind &
          )
     diags(ind%insitu_temp)%field_3d(1:kmt, 1) = temperature(1:kmt)
     end associate
@@ -3293,13 +3293,13 @@ contains
     integer(int_kind) :: k
     !-----------------------------------------------------------------------
 
-    associate(                                               &
-         km                => marbl_domain%km,               &
-         diags             => marbl_interior_diags%diags,    &
-         ind               => marbl_interior_diag_ind,       &
-         CO3               => carbonate(:)%CO3,              &
-         CO3_sat_calcite   => carbonate(:)%CO3_sat_calcite,  &
-         CO3_sat_aragonite => carbonate(:)%CO3_sat_aragonite &
+    associate(                                                  &
+         km                => marbl_domain%km,                  &
+         diags             => marbl_interior_diags%diags,       &
+         ind               => marbl_interior_tendency_diag_ind, &
+         CO3               => carbonate(:)%CO3,                 &
+         CO3_sat_calcite   => carbonate(:)%CO3_sat_calcite,     &
+         CO3_sat_aragonite => carbonate(:)%CO3_sat_aragonite    &
          )
 
     ! Find depth where CO3 = CO3_sat_calcite or CO3_sat_argonite
@@ -3396,9 +3396,9 @@ contains
     real(r8)                     , intent(in)    :: denitrif(:)
     type(marbl_diagnostics_type) , intent(inout) :: marbl_interior_diags
 
-    associate(                                   &
-         diags => marbl_interior_diags%diags,    &
-         ind   => marbl_interior_diag_ind        &
+    associate(                                     &
+         diags => marbl_interior_diags%diags,      &
+         ind   => marbl_interior_tendency_diag_ind &
          )
 
     diags(ind%NITRIF)%field_3d(:, 1)   = nitrif
@@ -3427,11 +3427,11 @@ contains
     real(r8) :: limterm(marbl_domain%km)
     !-----------------------------------------------------------------------
 
-    associate(                                     &
-         diags   => marbl_interior_diags%diags,    &
-         ind     => marbl_interior_diag_ind,       &
-         kmt     => marbl_domain%kmt,              &
-         delta_z => marbl_domain%delta_z           &
+    associate(                                        &
+         diags   => marbl_interior_diags%diags,       &
+         ind     => marbl_interior_tendency_diag_ind, &
+         kmt     => marbl_domain%kmt,                 &
+         delta_z => marbl_domain%delta_z              &
          )
 
     diags(ind%tot_bSi_form)%field_3d(:, 1) = c0
@@ -3638,7 +3638,7 @@ contains
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_interior_tendency_diags
 
     associate(                                                       &
-         ind             => marbl_interior_diag_ind,                 &
+         ind             => marbl_interior_tendency_diag_ind,        &
          diags           => marbl_interior_tendency_diags%diags,     &
          delta_z         => marbl_domain%delta_z,                    &
          kmt             => marbl_domain%kmt,                        &
@@ -3758,7 +3758,7 @@ contains
          kmt         => marbl_domain%kmt,                         &
          zt          => marbl_domain%zt,                          &
          diags       => marbl_interior_diags%diags,               &
-         ind         => marbl_interior_diag_ind                   &
+         ind         => marbl_interior_tendency_diag_ind          &
          )
 
     if (lo2_consumption_scalef) then
@@ -3797,10 +3797,10 @@ contains
     integer :: k
     !-----------------------------------------------------------------------
 
-    associate(                                   &
-         km    => marbl_domain%km,               &
-         diags => marbl_interior_diags%diags,    &
-         ind   => marbl_interior_diag_ind        &
+    associate(                                     &
+         km    => marbl_domain%km,                 &
+         diags => marbl_interior_diags%diags,      &
+         ind   => marbl_interior_tendency_diag_ind &
          )
 
     do k=1,km
@@ -3826,11 +3826,11 @@ contains
     integer(int_kind) :: n
     !-----------------------------------------------------------------------
 
-    associate(                                     &
-         diags   => marbl_interior_diags%diags,    &
-         ind     => marbl_interior_diag_ind,       &
-         kmt     => marbl_domain%kmt,              &
-         delta_z => marbl_domain%delta_z           &
+    associate(                                        &
+         diags   => marbl_interior_diags%diags,       &
+         ind     => marbl_interior_tendency_diag_ind, &
+         kmt     => marbl_domain%kmt,                 &
+         delta_z => marbl_domain%delta_z              &
          )
 
     do n = 1, zooplankton_cnt
@@ -3897,12 +3897,12 @@ contains
     integer(int_kind) :: k
     !-----------------------------------------------------------------------
 
-    associate(                               &
-         km      => marbl_domain%km,         &
-         delta_z => marbl_domain%delta_z,    &
-         kmt     => marbl_domain%kmt,        &
-         diags   => marbl_diags%diags,       &
-         ind     => marbl_interior_diag_ind  &
+    associate(                                       &
+         km      => marbl_domain%km,                 &
+         delta_z => marbl_domain%delta_z,            &
+         kmt     => marbl_domain%kmt,                &
+         diags   => marbl_diags%diags,               &
+         ind     => marbl_interior_tendency_diag_ind &
          )
 
     do k = 1, km
@@ -3957,10 +3957,10 @@ contains
     integer(int_kind) :: k
     !-----------------------------------------------------------------------
 
-    associate(                            &
-         km    => marbl_domain%km,        &
-         diags => marbl_diags%diags,      &
-         ind   => marbl_interior_diag_ind &
+    associate(                                     &
+         km    => marbl_domain%km,                 &
+         diags => marbl_diags%diags,               &
+         ind   => marbl_interior_tendency_diag_ind &
          )
 
     do k = 1, km
@@ -4002,15 +4002,16 @@ contains
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
 
-    associate(                               &
-         diags   => marbl_diags%diags,       &
-         ind     => marbl_interior_diag_ind, &
-         kmt     => marbl_domain%kmt,        &
-         delta_z => marbl_domain%delta_z,    &
+    associate(                                        &
+         diags   => marbl_diags%diags,                &
+         ind     => marbl_interior_tendency_diag_ind, &
 
-         dic_ind  => marbl_tracer_indices%dic_ind,                            &
-         doc_ind  => marbl_tracer_indices%doc_ind,                            &
-         docr_ind => marbl_tracer_indices%docr_ind                            &
+         kmt     => marbl_domain%kmt,     &
+         delta_z => marbl_domain%delta_z, &
+
+         dic_ind  => marbl_tracer_indices%dic_ind, &
+         doc_ind  => marbl_tracer_indices%doc_ind, &
+         docr_ind => marbl_tracer_indices%docr_ind &
          )
 
     ! vertical integrals
@@ -4070,16 +4071,17 @@ contains
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
 
-    associate(                               &
-         diags   => marbl_diags%diags,       &
-         ind     => marbl_interior_diag_ind, &
-         kmt     => marbl_domain%kmt,        &
-         delta_z => marbl_domain%delta_z,    &
+    associate(                                        &
+         diags   => marbl_diags%diags,                &
+         ind     => marbl_interior_tendency_diag_ind, &
 
-         no3_ind  => marbl_tracer_indices%no3_ind,                            &
-         nh4_ind  => marbl_tracer_indices%nh4_ind,                            &
-         don_ind  => marbl_tracer_indices%don_ind,                            &
-         donr_ind => marbl_tracer_indices%donr_ind                            &
+         kmt     => marbl_domain%kmt,     &
+         delta_z => marbl_domain%delta_z, &
+
+         no3_ind  => marbl_tracer_indices%no3_ind, &
+         nh4_ind  => marbl_tracer_indices%nh4_ind, &
+         don_ind  => marbl_tracer_indices%don_ind, &
+         donr_ind => marbl_tracer_indices%donr_ind &
          )
 
     ! vertical integrals
@@ -4139,14 +4141,14 @@ contains
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
 
-    associate(                                       &
-         diags    => marbl_diags%diags,              &
-         ind      => marbl_interior_diag_ind,        &
-         kmt      => marbl_domain%kmt,               &
-         delta_z  => marbl_domain%delta_z,           &
-         po4_ind  => marbl_tracer_indices%po4_ind,   &
-         dop_ind  => marbl_tracer_indices%dop_ind,   &
-         dopr_ind => marbl_tracer_indices%dopr_ind   &
+    associate(                                         &
+         diags    => marbl_diags%diags,                &
+         ind      => marbl_interior_tendency_diag_ind, &
+         kmt      => marbl_domain%kmt,                 &
+         delta_z  => marbl_domain%delta_z,             &
+         po4_ind  => marbl_tracer_indices%po4_ind,     &
+         dop_ind  => marbl_tracer_indices%dop_ind,     &
+         dopr_ind => marbl_tracer_indices%dopr_ind     &
          )
 
     ! vertical integrals
@@ -4200,12 +4202,12 @@ contains
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
 
-    associate(                               &
-         diags   => marbl_diags%diags,       &
-         ind     => marbl_interior_diag_ind, &
-         kmt     => marbl_domain%kmt,        &
-         zw      => marbl_domain%zw,         &
-         delta_z => marbl_domain%delta_z     &
+    associate(                                        &
+         diags   => marbl_diags%diags,                &
+         ind     => marbl_interior_tendency_diag_ind, &
+         kmt     => marbl_domain%kmt,                 &
+         zw      => marbl_domain%zw,                  &
+         delta_z => marbl_domain%delta_z              &
          )
 
     ! vertical integrals
@@ -4259,13 +4261,13 @@ contains
     real(r8), dimension(marbl_domain%km) :: work
     !-----------------------------------------------------------------------
 
-    associate(                               &
-         diags   => marbl_diags%diags,       &
-         ind     => marbl_interior_diag_ind, &
-         kmt     => marbl_domain%kmt,        &
-         zw      => marbl_domain%zw,         &
-         delta_z => marbl_domain%delta_z,    &
-         fe_ind  => marbl_tracer_indices%fe_ind &
+    associate(                                        &
+         diags   => marbl_diags%diags,                &
+         ind     => marbl_interior_tendency_diag_ind, &
+         kmt     => marbl_domain%kmt,                 &
+         zw      => marbl_domain%zw,                  &
+         delta_z => marbl_domain%delta_z,             &
+         fe_ind  => marbl_tracer_indices%fe_ind       &
          )
 
     diags(ind%fesedflux)%field_3d(:,1) = fesedflux(:)
@@ -4300,9 +4302,9 @@ contains
 
     integer :: n
 
-    associate(                               &
-         diags   => marbl_diags%diags,       &
-         ind     => marbl_interior_diag_ind  &
+    associate(                                       &
+         diags   => marbl_diags%diags,               &
+         ind     => marbl_interior_tendency_diag_ind &
          )
 
     do n=1, size(ind%restore_tend)
