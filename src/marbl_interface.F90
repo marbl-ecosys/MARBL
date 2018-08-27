@@ -917,13 +917,13 @@ contains
 
   subroutine set_global_scalars(this, field_source)
 
-    use marbl_interior_tendency_mod, only : marbl_set_global_scalars_interior
+    use marbl_interior_tendency_mod, only : marbl_interior_tendency_adjust_bury_coeff
 
     class(marbl_interface_class), intent(inout) :: this
     character(len=*),             intent(in)    :: field_source ! 'interior_tendency' or 'surface_flux`'
 
     if (field_source == 'interior_tendency') then
-       call marbl_set_global_scalars_interior(                          &
+       call marbl_interior_tendency_adjust_bury_coeff(                  &
             marbl_particulate_share   = this%particulate_share,         &
             glo_avg_rmean_interior    = this%glo_avg_rmean_interior,    &
             glo_avg_rmean_surface     = this%glo_avg_rmean_surface,     &

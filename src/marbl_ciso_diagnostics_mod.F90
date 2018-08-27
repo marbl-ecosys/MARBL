@@ -1055,7 +1055,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_ciso_interior'
+    character(len=*), parameter :: subname = 'marbl_ciso_diagnostics_mod:store_diagnostics_ciso_interior'
     character(len=char_len)     :: log_message
     integer (int_kind) :: k, n, auto_ind
     real (r8)          :: work(marbl_domain%km)

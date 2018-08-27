@@ -82,7 +82,7 @@ module marbl_interior_tendency_mod
   private
 
   public  :: marbl_interior_tendency_compute
-  public  :: marbl_set_global_scalars_interior
+  public  :: marbl_interior_tendency_adjust_bury_coeff
 
 contains
 
@@ -483,26 +483,6 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_set_global_scalars_interior(marbl_particulate_share, &
-       glo_avg_rmean_interior, glo_avg_rmean_surface,                   &
-       glo_scalar_rmean_interior, glo_scalar_interior)
-
-    type (marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
-    type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_interior(:)
-    type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_surface(:)
-    type (marbl_running_mean_0d_type)  , intent(in)    :: glo_scalar_rmean_interior(:)
-    real (r8)                          , intent(out)   :: glo_scalar_interior(:)
-
-    if (ladjust_bury_coeff) then
-       call adjust_bury_coeff(marbl_particulate_share,       &
-            glo_avg_rmean_interior, glo_avg_rmean_surface,   &
-            glo_scalar_rmean_interior, glo_scalar_interior)
-    end if
-
-  end subroutine marbl_set_global_scalars_interior
-
-  !***********************************************************************
-
   subroutine compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_ind, &
                          totalChl_local, PAR)
 
@@ -636,8 +616,8 @@ contains
 
    !***********************************************************************
 
-   subroutine adjust_bury_coeff(marbl_particulate_share, &
-        glo_avg_rmean_interior, glo_avg_rmean_surface,   &
+   subroutine marbl_interior_tendency_adjust_bury_coeff(marbl_particulate_share, &
+        glo_avg_rmean_interior, glo_avg_rmean_surface, &
         glo_scalar_rmean_interior, glo_scalar_interior)
 
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_CaCO3_bury
@@ -661,6 +641,8 @@ contains
      real (r8)                          , intent(inout) :: glo_scalar_interior(:)
 
      !-----------------------------------------------------------------------
+
+     if (.not. ladjust_bury_coeff) return
 
      associate( &
           POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff, &
@@ -705,7 +687,7 @@ contains
 
      end associate
 
-   end subroutine adjust_bury_coeff
+   end subroutine marbl_interior_tendency_adjust_bury_coeff
 
    !***********************************************************************
 
