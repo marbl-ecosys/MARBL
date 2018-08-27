@@ -113,7 +113,7 @@ contains
     use marbl_diagnostics_mod , only : marbl_diagnostics_interior_tendency_compute
     use marbl_interface_private_types, only : marbl_internal_timers_type
     use marbl_interface_private_types, only : marbl_timer_indexing_type
-    use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
+    use marbl_interface_private_types, only : marbl_interior_tendency_saved_state_indexing_type
     use marbl_interface_public_types, only : marbl_diagnostics_type
     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_variables
     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_zooplankton
@@ -128,7 +128,7 @@ contains
     type(marbl_interior_tendency_forcing_indexing_type), intent(in) :: interior_tendency_forcing_indices
     type    (marbl_PAR_type)                    , intent(inout) :: PAR
     type    (marbl_saved_state_type)            , intent(inout) :: saved_state
-    type    (marbl_interior_saved_state_indexing_type), intent(in) :: saved_state_ind
+    type    (marbl_interior_tendency_saved_state_indexing_type), intent(in) :: saved_state_ind
     real    (r8)                                , intent(out)   :: interior_tendencies(:,:)          ! (tracer_cnt, km) computed source/sink terms
     type    (marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
     type    (marbl_internal_timers_type)        , intent(inout) :: marbl_timers

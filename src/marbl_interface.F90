@@ -34,9 +34,9 @@ module marbl_interface
   use marbl_interface_public_types, only : marbl_running_mean_0d_type
 
   use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
-  use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
+  use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
   use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
-  use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
+  use marbl_interface_private_types, only : marbl_interior_tendency_saved_state_indexing_type
   use marbl_interface_private_types, only : marbl_PAR_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_share_type
@@ -66,10 +66,10 @@ module marbl_interface
      type(marbl_tracer_index_type)     , pointer    , public  :: tracer_indices => NULL()
      type(marbl_log_type)                           , public  :: StatusLog
 
-     type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
-     type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
-     type(marbl_surface_saved_state_indexing_type), public            :: surf_state_ind
-     type(marbl_interior_saved_state_indexing_type), public           :: interior_state_ind
+     type(marbl_saved_state_type)              , public               :: surface_flux_saved_state             ! input/output
+     type(marbl_saved_state_type)              , public               :: interior_tendency_saved_state        ! input/output
+     type(marbl_surface_flux_saved_state_indexing_type), public       :: surf_state_ind
+     type(marbl_interior_tendency_saved_state_indexing_type), public  :: interior_state_ind
      type(marbl_timers_type)                   , public               :: timer_summary
 
      ! public data related to computing interior tendencies
@@ -277,8 +277,8 @@ contains
     ! set up saved state variables
     !--------------------------------------------------------------------
 
-    call marbl_saved_state_init(this%surface_saved_state,                     &
-                                this%interior_saved_state,                    &
+    call marbl_saved_state_init(this%surface_flux_saved_state,                &
+                                this%interior_tendency_saved_state,           &
                                 this%surf_state_ind,                          &
                                 this%interior_state_ind,                      &
                                 num_levels,                                   &
@@ -840,7 +840,7 @@ contains
     call marbl_interior_tendency_compute(                                         &
          domain                       = this%domain,                              &
          interior_tendency_forcings   = this%interior_tendency_forcings,          &
-         saved_state                  = this%interior_saved_state,                &
+         saved_state                  = this%interior_tendency_saved_state,       &
          saved_state_ind              = this%interior_state_ind,                  &
          tracers                      = this%tracers,                             &
          surface_flux_forcing_indices = this%surface_flux_forcing_ind,            &
@@ -891,7 +891,7 @@ contains
          tracers_at_surface       = this%tracers_at_surface,                  &
          surface_fluxes           = this%surface_fluxes,                      &
          marbl_tracer_indices     = this%tracer_indices,                      &
-         saved_state              = this%surface_saved_state,                 &
+         saved_state              = this%surface_flux_saved_state,            &
          saved_state_ind          = this%surf_state_ind,                      &
          surface_flux_output      = this%surface_flux_output,                 &
          surface_flux_internal    = this%surface_flux_internal,               &

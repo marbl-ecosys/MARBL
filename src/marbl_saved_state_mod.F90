@@ -13,16 +13,16 @@ Contains
              num_elements_interior_tendency, marbl_status_log)
 
     use marbl_interface_public_types, only : marbl_saved_state_type
-    use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
-    use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
+    use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
+    use marbl_interface_private_types, only : marbl_interior_tendency_saved_state_indexing_type
     use marbl_logging, only : marbl_log_type
     use marbl_kinds_mod, only : char_len
 
 
     type(marbl_saved_state_type), intent(inout) :: surface_state
     type(marbl_saved_state_type), intent(inout) :: interior_state
-    type(marbl_surface_saved_state_indexing_type),  intent(inout) :: surf_ind
-    type(marbl_interior_saved_state_indexing_type), intent(inout) :: interior_ind
+    type(marbl_surface_flux_saved_state_indexing_type),  intent(inout) :: surf_ind
+    type(marbl_interior_tendency_saved_state_indexing_type), intent(inout) :: interior_ind
     integer,                      intent(in)    :: num_levels
     integer,                      intent(in)    :: num_elements_surface_flux
     integer,                      intent(in)    :: num_elements_interior_tendency

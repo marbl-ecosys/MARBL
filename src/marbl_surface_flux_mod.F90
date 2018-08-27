@@ -71,7 +71,7 @@ contains
 
     use marbl_interface_public_types, only : sfo_ind
     use marbl_interface_public_types, only : marbl_diagnostics_type
-    use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
+    use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
     use marbl_schmidt_number_mod, only : schmidt_co2_surf
     use marbl_oxygen, only : schmidt_o2_surf
     use marbl_co2calc_mod, only : marbl_co2calc_surface
@@ -94,7 +94,7 @@ contains
     real (r8)                                 , intent(out)   :: surface_fluxes(:,:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(inout) :: saved_state
-    type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
+    type(marbl_surface_flux_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_flux_internal_type)    , intent(inout) :: surface_flux_internal
     type(marbl_surface_flux_output_type)      , intent(inout) :: surface_flux_output
     type(marbl_surface_flux_share_type)       , intent(inout) :: surface_flux_share

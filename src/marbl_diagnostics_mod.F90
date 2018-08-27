@@ -3140,7 +3140,7 @@ contains
     !  Compute surface fluxes for ecosys tracer module.
 
     use marbl_interface_private_types , only : marbl_surface_flux_forcing_indexing_type
-    use marbl_interface_private_types , only : marbl_surface_saved_state_indexing_type
+    use marbl_interface_private_types , only : marbl_surface_flux_saved_state_indexing_type
     use marbl_settings_mod   , only : lflux_gas_o2
     use marbl_settings_mod   , only : lflux_gas_co2
     use marbl_constants_mod  , only : mpercm
@@ -3149,7 +3149,7 @@ contains
     type(marbl_forcing_fields_type)           , intent(in)    :: surface_flux_forcings(:)
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(in)    :: saved_state
-    type(marbl_surface_saved_state_indexing_type), intent(in) :: saved_state_ind
+    type(marbl_surface_flux_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_flux_internal_type)    , intent(in)    :: surface_flux_internal
     type(marbl_diagnostics_type)              , intent(inout) :: surface_flux_diags
 

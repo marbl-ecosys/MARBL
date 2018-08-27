@@ -294,17 +294,17 @@ module marbl_interface_private_types
 
   !*****************************************************************************
 
-  type, public :: marbl_surface_saved_state_indexing_type
+  type, public :: marbl_surface_flux_saved_state_indexing_type
     integer :: ph_surf = 0
     integer :: ph_alt_co2_surf = 0
-  end type marbl_surface_saved_state_indexing_type
+  end type marbl_surface_flux_saved_state_indexing_type
 
   !*****************************************************************************
 
-  type, public :: marbl_interior_saved_state_indexing_type
+  type, public :: marbl_interior_tendency_saved_state_indexing_type
     integer :: ph_col = 0
     integer :: ph_alt_co2_col = 0
-  end type marbl_interior_saved_state_indexing_type
+  end type marbl_interior_tendency_saved_state_indexing_type
 
   !***********************************************************************
 
