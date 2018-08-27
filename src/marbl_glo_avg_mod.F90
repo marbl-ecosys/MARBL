@@ -27,10 +27,10 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_glo_avg_count_vars(   &
-       glo_avg_field_cnt_interior,       &
-       glo_avg_field_cnt_surface,        &
-       glo_scalar_cnt_interior,          &
+  subroutine marbl_glo_avg_var_cnts_compute( &
+       glo_avg_field_cnt_interior,           &
+       glo_avg_field_cnt_surface,            &
+       glo_scalar_cnt_interior,              &
        glo_scalar_cnt_surface)
 
     use marbl_settings_mod, only : ladjust_bury_coeff
@@ -88,7 +88,7 @@ contains
        glo_scalar_ind_interior_bSi_bury_coeff = glo_scalar_cnt_interior
     end if
 
-  end subroutine marbl_glo_avg_count_vars
+  end subroutine marbl_glo_avg_var_cnts_compute
 
   !***********************************************************************
 

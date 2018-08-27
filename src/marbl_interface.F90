@@ -780,7 +780,7 @@ contains
 
   subroutine glo_vars_init(this)
 
-    use marbl_glo_avg_mod, only : marbl_glo_avg_count_vars
+    use marbl_glo_avg_mod, only : marbl_glo_avg_var_cnts_compute
     use marbl_glo_avg_mod, only : marbl_glo_avg_init_rmean_vals
 
     class (marbl_interface_class), intent(inout) :: this
@@ -792,10 +792,10 @@ contains
 
     associate(num_elements_surface_flux => this%domain%num_elements_surface_flux)
 
-    call marbl_glo_avg_count_vars(glo_avg_field_cnt_interior, &
-                                  glo_avg_field_cnt_surface,  &
-                                  glo_scalar_cnt_interior,    &
-                                  glo_scalar_cnt_surface)
+    call marbl_glo_avg_var_cnts_compute(glo_avg_field_cnt_interior, &
+                                        glo_avg_field_cnt_surface,  &
+                                        glo_scalar_cnt_interior,    &
+                                        glo_scalar_cnt_surface)
 
     allocate(this%glo_avg_fields_interior(glo_avg_field_cnt_interior))
     allocate(this%glo_avg_averages_interior(glo_avg_field_cnt_interior))
