@@ -121,8 +121,10 @@ contains
 
   !***********************************************************************
 
+  ! FIXME #81: Will need to pass num_elements_interior_tendency to this routine
+  !            (And add a dimension to tracers to count elements)
   subroutine marbl_init_tracers(num_levels, &
-                                num_elements_surface, &
+                                num_elements_surface_flux, &
                                 tracer_indices, &
                                 tracers_at_surface, &
                                 surface_fluxes, &
@@ -139,7 +141,7 @@ contains
     use marbl_ciso_init_mod, only : marbl_ciso_init_tracer_metadata
 
     integer(int_kind),                             intent(in)    :: num_levels
-    integer(int_kind),                             intent(in)    :: num_elements_surface
+    integer(int_kind),                             intent(in)    :: num_elements_surface_flux
     type(marbl_tracer_index_type),    pointer,     intent(out)   :: tracer_indices
     real(r8),                         allocatable, intent(out)   :: tracers_at_surface(:,:)
     real(r8),                         allocatable, intent(out)   :: surface_fluxes(:,:)
@@ -163,8 +165,8 @@ contains
     end if
 
     ! Allocate memory for tracers
-    allocate(tracers_at_surface(num_elements_surface, tracer_indices%total_cnt))
-    allocate(surface_fluxes(num_elements_surface, tracer_indices%total_cnt))
+    allocate(tracers_at_surface(num_elements_surface_flux, tracer_indices%total_cnt))
+    allocate(surface_fluxes(num_elements_surface_flux, tracer_indices%total_cnt))
     allocate(tracers(tracer_indices%total_cnt, num_levels))
     allocate(interior_tendencies(tracer_indices%total_cnt, num_levels))
     allocate(tracer_metadata(tracer_indices%total_cnt))
@@ -385,7 +387,7 @@ contains
     integer :: i
 
     associate(&
-         num_elements_surface  => domain%num_elements_surface_flux,      &
+         num_elements_surface_flux  => domain%num_elements_surface_flux, &
          num_PAR_subcols       => domain%num_PAR_subcols,                &
          num_levels            => domain%km                              &
          )
@@ -407,15 +409,15 @@ contains
       end if
 
       ! Construct share / internal types for surface flux computation
-      call surface_flux_share%construct(num_elements_surface)
-      call surface_flux_internal%construct(num_elements_surface)
+      call surface_flux_share%construct(num_elements_surface_flux)
+      call surface_flux_internal%construct(num_elements_surface_flux)
 
       ! Initialize surface forcing fields
       allocate(surface_flux_forcings(num_surface_flux_forcing_fields))
-      call marbl_init_surface_flux_forcing_fields(                  &
-           num_elements                 = num_elements_surface,     &
-           surface_flux_forcing_indices = surface_flux_forcing_ind, &
-           surface_flux_forcings        = surface_flux_forcings,    &
+      call marbl_init_surface_flux_forcing_fields(                   &
+           num_elements                 = num_elements_surface_flux, &
+           surface_flux_forcing_indices = surface_flux_forcing_ind,  &
+           surface_flux_forcings        = surface_flux_forcings,     &
            marbl_status_log             = marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call marbl_status_log%log_error_trace("marbl_init_surface_flux_forcing_fields()", subname)

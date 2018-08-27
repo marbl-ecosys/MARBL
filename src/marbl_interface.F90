@@ -196,7 +196,7 @@ contains
     logical,           optional,  intent(in)    :: lgcm_has_global_ops
 
     character(len=*), parameter :: subname = 'marbl_interface:init'
-    integer, parameter :: num_elements_interior = 1 ! FIXME #66: get this value from interface, let it vary
+    integer, parameter :: num_elements_interior_tendency = 1 ! FIXME #66: get this value from interface, let it vary
 
     !--------------------------------------------------------------------
     ! initialize status log and timers
@@ -238,20 +238,20 @@ contains
     associate(&
          num_levels            => gcm_num_levels,                              &
          num_PAR_subcols       => gcm_num_PAR_subcols,                         &
-         num_elements_surface  => gcm_num_elements_surface_flux                &
+         num_elements_surface_flux  => gcm_num_elements_surface_flux           &
          )
 
     !-----------------------------------------------------------------------
     !  Set up domain type
     !-----------------------------------------------------------------------
 
-    call this%domain%construct(                                  &
-         num_levels                     = num_levels,            &
-         num_PAR_subcols                = num_PAR_subcols,       &
-         num_elements_surface_flux      = num_elements_surface,  &
-         num_elements_interior_tendency = num_elements_interior, &
-         delta_z                        = gcm_delta_z,           &
-         zw                             = gcm_zw,                &
+    call this%domain%construct(                                           &
+         num_levels                     = num_levels,                     &
+         num_PAR_subcols                = num_PAR_subcols,                &
+         num_elements_surface_flux      = num_elements_surface_flux,      &
+         num_elements_interior_tendency = num_elements_interior_tendency, &
+         delta_z                        = gcm_delta_z,                    &
+         zw                             = gcm_zw,                         &
          zt                             = gcm_zt)
 
     !--------------------------------------------------------------------
@@ -264,7 +264,7 @@ contains
     !  Set up tracers
     !-----------------------------------------------------------------------
 
-    call marbl_init_tracers(num_levels, num_elements_surface, &
+    call marbl_init_tracers(num_levels, num_elements_surface_flux, &
                             this%tracer_indices, this%tracers_at_surface, this%surface_fluxes, &
                             this%tracers, this%interior_tendencies, this%tracer_metadata, &
                             this%StatusLog)
@@ -282,8 +282,8 @@ contains
                                 this%surf_state_ind,                          &
                                 this%interior_state_ind,                      &
                                 num_levels,                                   &
-                                num_elements_surface,                         &
-                                num_elements_interior,                        &
+                                num_elements_surface_flux,                    &
+                                num_elements_interior_tendency,               &
                                 this%StatusLog)
 
     if (this%StatusLog%labort_marbl) then
@@ -790,7 +790,7 @@ contains
     integer (int_kind) :: glo_scalar_cnt_interior
     integer (int_kind) :: glo_scalar_cnt_surface
 
-    associate(num_elements_surface => this%domain%num_elements_surface_flux)
+    associate(num_elements_surface_flux => this%domain%num_elements_surface_flux)
 
     call marbl_glo_avg_count_vars(glo_avg_field_cnt_interior, &
                                   glo_avg_field_cnt_surface,  &
@@ -800,7 +800,7 @@ contains
     allocate(this%glo_avg_fields_interior(glo_avg_field_cnt_interior))
     allocate(this%glo_avg_averages_interior(glo_avg_field_cnt_interior))
 
-    allocate(this%glo_avg_fields_surface(num_elements_surface, glo_avg_field_cnt_surface))
+    allocate(this%glo_avg_fields_surface(num_elements_surface_flux, glo_avg_field_cnt_surface))
     allocate(this%glo_avg_averages_surface(glo_avg_field_cnt_surface))
 
     allocate(this%glo_scalar_interior(glo_scalar_cnt_interior))

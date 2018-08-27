@@ -9,8 +9,8 @@ module marbl_saved_state_mod
 Contains
 
   subroutine marbl_saved_state_init(surface_state, interior_state, surf_ind,  &
-             interior_ind, num_levels, num_elements_surface,                  &
-             num_interior_tendency_forcings, marbl_status_log)
+             interior_ind, num_levels, num_elements_surface_flux,             &
+             num_elements_interior_tendency, marbl_status_log)
 
     use marbl_interface_public_types, only : marbl_saved_state_type
     use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
@@ -24,8 +24,8 @@ Contains
     type(marbl_surface_saved_state_indexing_type),  intent(inout) :: surf_ind
     type(marbl_interior_saved_state_indexing_type), intent(inout) :: interior_ind
     integer,                      intent(in)    :: num_levels
-    integer,                      intent(in)    :: num_elements_surface
-    integer,                      intent(in)    :: num_interior_tendency_forcings
+    integer,                      intent(in)    :: num_elements_surface_flux
+    integer,                      intent(in)    :: num_elements_interior_tendency
     type(marbl_log_type),         intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_saved_state_mod:marbl_saved_state_init'
@@ -33,7 +33,7 @@ Contains
     character(len=char_len) :: lname, sname, units, vgrid
     integer :: rank
 
-    call surface_state%construct(num_elements_surface, num_levels)
+    call surface_state%construct(num_elements_surface_flux, num_levels)
 
     lname = 'surface pH'
     sname = 'PH_SURF'
@@ -59,7 +59,7 @@ Contains
       return
     end if
 
-    call interior_state%construct(num_interior_tendency_forcings, num_levels)
+    call interior_state%construct(num_elements_interior_tendency, num_levels)
 
     lname = '3D pH'
     sname = 'PH_3D'
