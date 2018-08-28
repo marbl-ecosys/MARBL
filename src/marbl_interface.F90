@@ -923,12 +923,12 @@ contains
     character(len=*),             intent(in)    :: field_source ! 'interior_tendency' or 'surface_flux`'
 
     if (field_source == 'interior_tendency') then
-       call marbl_interior_tendency_adjust_bury_coeff(                  &
-            marbl_particulate_share   = this%particulate_share,         &
-            glo_avg_rmean_interior    = this%glo_avg_rmean_interior,    &
-            glo_avg_rmean_surface     = this%glo_avg_rmean_surface,     &
-            glo_scalar_rmean_interior = this%glo_scalar_rmean_interior, &
-            glo_scalar_interior       = this%glo_scalar_interior)
+       call marbl_interior_tendency_adjust_bury_coeff(                           &
+            marbl_particulate_share            = this%particulate_share,         &
+            glo_avg_rmean_interior_tendency    = this%glo_avg_rmean_interior,    &
+            glo_avg_rmean_surface_flux         = this%glo_avg_rmean_surface,     &
+            glo_scalar_rmean_interior_tendency = this%glo_scalar_rmean_interior, &
+            glo_scalar_interior_tendency       = this%glo_scalar_interior)
     end if
 
   end subroutine set_global_scalars

@@ -617,51 +617,54 @@ contains
    !***********************************************************************
 
    subroutine marbl_interior_tendency_adjust_bury_coeff(marbl_particulate_share, &
-        glo_avg_rmean_interior, glo_avg_rmean_surface, &
-        glo_scalar_rmean_interior, glo_scalar_interior)
+        glo_avg_rmean_interior_tendency, glo_avg_rmean_surface_flux, &
+        glo_scalar_rmean_interior_tendency, glo_scalar_interior_tendency)
 
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_CaCO3_bury
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_POC_bury
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_POP_bury
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_bSi_bury
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_C_input
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_P_input
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_Si_input
-     use marbl_glo_avg_mod, only : glo_scalar_ind_interior_POC_bury_coeff
-     use marbl_glo_avg_mod, only : glo_scalar_ind_interior_POP_bury_coeff
-     use marbl_glo_avg_mod, only : glo_scalar_ind_interior_bSi_bury_coeff
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_CaCO3_bury
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_POC_bury
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_POP_bury
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_bSi_bury
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_flux_C_input
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_flux_P_input
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_flux_Si_input
+     use marbl_glo_avg_mod, only : glo_scalar_ind_interior_tendency_POC_bury_coeff
+     use marbl_glo_avg_mod, only : glo_scalar_ind_interior_tendency_POP_bury_coeff
+     use marbl_glo_avg_mod, only : glo_scalar_ind_interior_tendency_bSi_bury_coeff
 
      type (marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
-     type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_interior(:)
-     type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_surface(:)
-     type (marbl_running_mean_0d_type)  , intent(in)    :: glo_scalar_rmean_interior(:)
-     real (r8)                          , intent(inout) :: glo_scalar_interior(:)
+     type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_interior_tendency(:)
+     type (marbl_running_mean_0d_type)  , intent(in)    :: glo_avg_rmean_surface_flux(:)
+     type (marbl_running_mean_0d_type)  , intent(in)    :: glo_scalar_rmean_interior_tendency(:)
+     real (r8)                          , intent(inout) :: glo_scalar_interior_tendency(:)
 
      !-----------------------------------------------------------------------
 
      if (.not. ladjust_bury_coeff) return
 
      associate( &
-          POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff, &
-          POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff, &
-          bSi_bury_coeff           => marbl_particulate_share%bSi_bury_coeff, &
-          rmean_CaCO3_bury_avg     => glo_avg_rmean_interior(glo_avg_field_ind_interior_CaCO3_bury)%rmean, &
-          rmean_POC_bury_avg       => glo_avg_rmean_interior(glo_avg_field_ind_interior_POC_bury)%rmean, &
-          rmean_POP_bury_avg       => glo_avg_rmean_interior(glo_avg_field_ind_interior_POP_bury)%rmean, &
-          rmean_bSi_bury_avg       => glo_avg_rmean_interior(glo_avg_field_ind_interior_bSi_bury)%rmean, &
-          rmean_POC_bury_deriv_avg => glo_avg_rmean_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff)%rmean, &
-          rmean_POP_bury_deriv_avg => glo_avg_rmean_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff)%rmean, &
-          rmean_bSi_bury_deriv_avg => glo_avg_rmean_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff)%rmean, &
-          rmean_C_input_avg        => glo_avg_rmean_surface(glo_avg_field_ind_surface_C_input)%rmean, &
-          rmean_P_input_avg        => glo_avg_rmean_surface(glo_avg_field_ind_surface_P_input)%rmean, &
-          rmean_Si_input_avg       => glo_avg_rmean_surface(glo_avg_field_ind_surface_Si_input)%rmean, &
-          rmean_POC_bury_coeff     => glo_scalar_rmean_interior(glo_scalar_ind_interior_POC_bury_coeff)%rmean, &
-          rmean_POP_bury_coeff     => glo_scalar_rmean_interior(glo_scalar_ind_interior_POP_bury_coeff)%rmean, &
-          rmean_bSi_bury_coeff     => glo_scalar_rmean_interior(glo_scalar_ind_interior_bSi_bury_coeff)%rmean &
-          )
+       POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff, &
+       POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff, &
+       bSi_bury_coeff           => marbl_particulate_share%bSi_bury_coeff, &
+       rmean_CaCO3_bury_avg     => glo_avg_rmean_interior_tendency(glo_avg_field_ind_interior_tendency_CaCO3_bury)%rmean, &
+       rmean_POC_bury_avg       => glo_avg_rmean_interior_tendency(glo_avg_field_ind_interior_tendency_POC_bury)%rmean, &
+       rmean_POP_bury_avg       => glo_avg_rmean_interior_tendency(glo_avg_field_ind_interior_tendency_POP_bury)%rmean, &
+       rmean_bSi_bury_avg       => glo_avg_rmean_interior_tendency(glo_avg_field_ind_interior_tendency_bSi_bury)%rmean, &
+       rmean_POC_bury_deriv_avg => &
+            glo_avg_rmean_interior_tendency(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff)%rmean, &
+       rmean_POP_bury_deriv_avg => &
+            glo_avg_rmean_interior_tendency(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff)%rmean, &
+       rmean_bSi_bury_deriv_avg => &
+            glo_avg_rmean_interior_tendency(glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff)%rmean, &
+       rmean_C_input_avg        => glo_avg_rmean_surface_flux(glo_avg_field_ind_surface_flux_C_input)%rmean, &
+       rmean_P_input_avg        => glo_avg_rmean_surface_flux(glo_avg_field_ind_surface_flux_P_input)%rmean, &
+       rmean_Si_input_avg       => glo_avg_rmean_surface_flux(glo_avg_field_ind_surface_flux_Si_input)%rmean, &
+       rmean_POC_bury_coeff     => glo_scalar_rmean_interior_tendency(glo_scalar_ind_interior_tendency_POC_bury_coeff)%rmean, &
+       rmean_POP_bury_coeff     => glo_scalar_rmean_interior_tendency(glo_scalar_ind_interior_tendency_POP_bury_coeff)%rmean, &
+       rmean_bSi_bury_coeff     => glo_scalar_rmean_interior_tendency(glo_scalar_ind_interior_tendency_bSi_bury_coeff)%rmean &
+     )
 
      ! Newton's method for POC_bury(coeff) + CaCO3_bury - C_input = 0
 
@@ -681,9 +684,9 @@ contains
 
      ! copy computed bury coefficients into output argument
 
-     glo_scalar_interior(glo_scalar_ind_interior_POC_bury_coeff) = POC_bury_coeff
-     glo_scalar_interior(glo_scalar_ind_interior_POP_bury_coeff) = POP_bury_coeff
-     glo_scalar_interior(glo_scalar_ind_interior_bSi_bury_coeff) = bSi_bury_coeff
+     glo_scalar_interior_tendency(glo_scalar_ind_interior_tendency_POC_bury_coeff) = POC_bury_coeff
+     glo_scalar_interior_tendency(glo_scalar_ind_interior_tendency_POP_bury_coeff) = POP_bury_coeff
+     glo_scalar_interior_tendency(glo_scalar_ind_interior_tendency_bSi_bury_coeff) = bSi_bury_coeff
 
      end associate
 
@@ -2561,13 +2564,13 @@ contains
      use marbl_settings_mod, only : o2_sf_o2_range_hi
      use marbl_settings_mod, only : o2_sf_o2_range_lo
      use marbl_settings_mod, only : o2_sf_val_lo_o2
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_CaCO3_bury
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_POC_bury
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_POP_bury
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_bSi_bury
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff
-     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_CaCO3_bury
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_POC_bury
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_POP_bury
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_bSi_bury
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff
+     use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff
      use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_particulate
 
      integer (int_kind)                , intent(in)    :: k                   ! vertical model level
@@ -3014,18 +3017,20 @@ contains
            POP%sed_loss(k) = POP%to_floor * min(POM_bury_frac_max, POP_bury_coeff * bury_frac)
 
            if (ladjust_bury_coeff) then
-              glo_avg_fields_interior(glo_avg_field_ind_interior_POC_bury) = POC%sed_loss(k)
+              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_POC_bury) = POC%sed_loss(k)
               if (POC_bury_coeff * bury_frac < POM_bury_frac_max) then
-                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = POC%to_floor * bury_frac
+                 glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = &
+                      POC%to_floor * bury_frac
               else
-                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = c0
+                 glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = c0
               endif
 
-              glo_avg_fields_interior(glo_avg_field_ind_interior_POP_bury) = POP%sed_loss(k)
+              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_POP_bury) = POP%sed_loss(k)
               if (POP_bury_coeff * bury_frac < POM_bury_frac_max) then
-                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = POP%to_floor * bury_frac
+                 glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = &
+                      POP%to_floor * bury_frac
               else
-                 glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = c0
+                 glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = c0
               endif
            endif
 
@@ -3051,11 +3056,11 @@ contains
            POP%to_floor = POP%sflux_out(k) + POP%hflux_out(k)
 
            if (ladjust_bury_coeff) then
-              glo_avg_fields_interior(glo_avg_field_ind_interior_POC_bury) = c0
-              glo_avg_fields_interior(glo_avg_field_ind_interior_d_POC_bury_d_bury_coeff) = c0
+              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_POC_bury) = c0
+              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = c0
 
-              glo_avg_fields_interior(glo_avg_field_ind_interior_POP_bury) = c0
-              glo_avg_fields_interior(glo_avg_field_ind_interior_d_POP_bury_d_bury_coeff) = c0
+              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_POP_bury) = c0
+              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = c0
            endif
 
         endif
@@ -3076,11 +3081,11 @@ contains
         endif
 
         if (ladjust_bury_coeff) then
-           glo_avg_fields_interior(glo_avg_field_ind_interior_bSi_bury) = P_SiO2%sed_loss(k)
+           glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_bSi_bury) = P_SiO2%sed_loss(k)
            if (bSi_bury_coeff * bury_frac < bSi_bury_frac_max) then
-              glo_avg_fields_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff) = P_SiO2%to_floor * bury_frac
+              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff) = P_SiO2%to_floor * bury_frac
            else
-              glo_avg_fields_interior(glo_avg_field_ind_interior_d_bSi_bury_d_bury_coeff) = c0
+              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff) = c0
            endif
         endif
 
@@ -3102,7 +3107,7 @@ contains
         endif
 
         if (ladjust_bury_coeff) then
-           glo_avg_fields_interior(glo_avg_field_ind_interior_CaCO3_bury) = P_CaCO3%sed_loss(k)
+           glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_CaCO3_bury) = P_CaCO3%sed_loss(k)
         endif
 
         !----------------------------------------------------------------------------------
