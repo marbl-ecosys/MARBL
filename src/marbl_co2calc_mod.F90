@@ -110,8 +110,6 @@ contains
     ! salinity (s), etc.
     !---------------------------------------------------------------------------
 
-    implicit none
-
     integer(kind=int_kind)        , intent(in)    :: num_elements
     logical(kind=log_kind)        , intent(in)    :: lcomp_co2calc_coeffs
     real(kind=r8)                 , intent(in)    :: dic_in(num_elements)   ! total inorganic carbon (nmol/cm^3)
@@ -256,8 +254,6 @@ contains
     ! Calculate H2CO3, HCO3, CO3 from total alkalinity, total CO2, temp, salinity (s), etc.
     !---------------------------------------------------------------------------
 
-    implicit none
-
     integer(kind=int_kind)    , intent(in)    :: num_elements
     integer(kind=int_kind)    , intent(in)    :: num_active_elements
     logical(kind=log_kind)    , intent(in)    :: lcomp_co2calc_coeffs
@@ -391,8 +387,6 @@ contains
     ! FIXME #20: the computations for the individual constants need to
     !            be broken out into separate functions and unit tested
     !---------------------------------------------------------------------------
-
-    implicit none
 
     integer(kind=int_kind)    , intent(in)  :: num_elements
     type(co2calc_state_type)  , intent(in)  :: co2calc_state_in(num_elements)
@@ -819,8 +813,6 @@ contains
     !      In that case, bisection method is used.
     !---------------------------------------------------------------------------
 
-    implicit none
-
     integer(kind=int_kind)        , intent(in)    :: num_elements
     integer(kind=int_kind)        , intent(in)    :: num_active_elements
     real(kind=r8)                 , intent(in)    :: k1(num_elements)
@@ -1026,8 +1018,6 @@ contains
     !   TA and "df" is the value for dTA/dhtotal.
     !---------------------------------------------------------------------------
 
-    implicit none
-
     integer(kind=int_kind)    , intent(in)  :: num_elements
     logical(kind=log_kind)    , intent(in)  :: mask(num_elements)
     real(kind=r8)             , intent(in)  :: k1(num_elements)
@@ -1141,8 +1131,6 @@ contains
     ! from temp, salinity (s), press
     !---------------------------------------------------------------------------
 
-    implicit none
-
     integer(kind=int_kind)                           , intent(in)  :: num_elements
     integer(kind=int_kind)                           , intent(in)  :: num_active_elements
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: temp         ! temperature (degC)
@@ -1240,8 +1228,6 @@ contains
 
   subroutine apply_pressure_correction(num_elements, temp, invRtk, &
        deltaV_coefs, Kappa_coefs, therm_coef, press_bar)
-
-    implicit none
 
     integer,       intent(in)    :: num_elements
     real(kind=r8), intent(in)    :: temp(num_elements)

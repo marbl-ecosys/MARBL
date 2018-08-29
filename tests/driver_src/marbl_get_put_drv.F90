@@ -53,7 +53,7 @@ Contains
     ! Call marbl_loc%init
     call marbl_instance_loc%init(gcm_num_levels = km,                         &
                                  gcm_num_PAR_subcols = 1,                     &
-                                 gcm_num_elements_surface_forcing = 1,        &
+                                 gcm_num_elements_surface_flux = 1,           &
                                  gcm_delta_z = delta_z,                       &
                                  gcm_zw = zw,                                 &
                                  gcm_zt = zt)
@@ -79,7 +79,7 @@ Contains
     ! Call marbl%init
     call marbl_instance%init(gcm_num_levels = km,                             &
                              gcm_num_PAR_subcols = 1,                         &
-                             gcm_num_elements_surface_forcing = 1,            &
+                             gcm_num_elements_surface_flux = 1,               &
                              gcm_delta_z = delta_z,                           &
                              gcm_zw = zw,                                     &
                              gcm_zt = zt,                                     &

@@ -56,12 +56,13 @@ How to Call an Object-oriented Subroutine
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A subroutine inside a class is referenced just like any other member, via the ``%`` character.
-For example, MARBL times the call to the subroutine ``marbl_compute_carbonate_chemistry()`` from the subroutine ``marbl_set_interior_forcing()`` (part of ``marbl_mod.F90``).
+For example, MARBL times the call to the subroutine ``marbl_compute_carbonate_chemistry()`` from
+the subroutine ``marbl_interior_tendency_compute()`` (part of ``marbl_interior_tendency_mod.F90``).
 The timer calls look like this:
 
 .. code-block:: fortran
 
-  subroutine marbl_set_interior_forcing( &
+  subroutine marbl_interior_tendency_compute( &
   .
   .
   .

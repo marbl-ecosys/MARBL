@@ -26,21 +26,21 @@ module marbl_interface
 
   use marbl_interface_public_types, only : marbl_domain_type
   use marbl_interface_public_types, only : marbl_tracer_metadata_type
-  use marbl_interface_public_types, only : marbl_surface_forcing_output_type
+  use marbl_interface_public_types, only : marbl_surface_flux_output_type
   use marbl_interface_public_types, only : marbl_diagnostics_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
   use marbl_interface_public_types, only : marbl_saved_state_type
   use marbl_interface_public_types, only : marbl_timers_type
   use marbl_interface_public_types, only : marbl_running_mean_0d_type
 
-  use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
-  use marbl_interface_private_types, only : marbl_surface_saved_state_indexing_type
-  use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
-  use marbl_interface_private_types, only : marbl_interior_saved_state_indexing_type
+  use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
+  use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
+  use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
+  use marbl_interface_private_types, only : marbl_interior_tendency_saved_state_indexing_type
   use marbl_interface_private_types, only : marbl_PAR_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
+  use marbl_interface_private_types, only : marbl_surface_flux_share_type
+  use marbl_interface_private_types, only : marbl_surface_flux_internal_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
   use marbl_interface_private_types, only : marbl_internal_timers_type
   use marbl_interface_private_types, only : marbl_timer_indexing_type
@@ -66,48 +66,48 @@ module marbl_interface
      type(marbl_tracer_index_type)     , pointer    , public  :: tracer_indices => NULL()
      type(marbl_log_type)                           , public  :: StatusLog
 
-     type(marbl_saved_state_type)              , public               :: surface_saved_state             ! input/output
-     type(marbl_saved_state_type)              , public               :: interior_saved_state             ! input/output
-     type(marbl_surface_saved_state_indexing_type), public            :: surf_state_ind
-     type(marbl_interior_saved_state_indexing_type), public           :: interior_state_ind
+     type(marbl_saved_state_type)              , public               :: surface_flux_saved_state             ! input/output
+     type(marbl_saved_state_type)              , public               :: interior_tendency_saved_state        ! input/output
+     type(marbl_surface_flux_saved_state_indexing_type), public       :: surf_state_ind
+     type(marbl_interior_tendency_saved_state_indexing_type), public  :: interior_state_ind
      type(marbl_timers_type)                   , public               :: timer_summary
 
-     ! public data - interior forcing
-     real (r8)                                 , public, allocatable  :: column_tracers(:,:)     ! input  *
-     real (r8)                                 , public, allocatable  :: column_dtracers(:,:)    ! output *
-     type(marbl_interior_forcing_indexing_type), public               :: interior_forcing_ind         !
-     type(marbl_forcing_fields_type)           , public, allocatable  :: interior_input_forcings(:)
-     type(marbl_diagnostics_type)              , public               :: interior_forcing_diags  ! output
+     ! public data related to computing interior tendencies
+     real (r8), allocatable                             , public  :: tracers(:,:)                  ! input
+     type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
+     real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
+     type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
+     type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
 
-     ! public data surface forcing
-     real (r8)                                 , public, allocatable  :: surface_vals(:,:)           ! input  *
-     type(marbl_surface_forcing_indexing_type) , public               :: surface_forcing_ind         !
-     type(marbl_forcing_fields_type)           , public, allocatable  :: surface_input_forcings(:) ! input  *
-     real (r8)                                 , public, allocatable  :: surface_tracer_fluxes(:,:)  ! output *
-     type(marbl_surface_forcing_output_type)   , public               :: surface_forcing_output      ! output
-     type(marbl_diagnostics_type)              , public               :: surface_forcing_diags       ! output
+     ! public data related to computing surface fluxes
+     real (r8)                                      , public, allocatable  :: tracers_at_surface(:,:)     ! input
+     type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)    ! input
+     type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind    ! FIXME #311: should be private
+     real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)         ! output
+     type(marbl_surface_flux_output_type)           , public               :: surface_flux_output         ! output
+     type(marbl_diagnostics_type)                   , public               :: surface_flux_diags          ! output
 
      ! public data - global averages
-     real (r8)                                 , public, allocatable  :: glo_avg_fields_interior(:)   ! output (nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_averages_interior(:) ! input (nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_fields_surface(:,:)  ! output (num_elements,nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_averages_surface(:)  ! input (nfields)
+     real (r8)                                 , public, allocatable  :: glo_avg_fields_interior_tendency(:)   ! output (nfields)
+     real (r8)                                 , public, allocatable  :: glo_avg_averages_interior_tendency(:) ! input (nfields)
+     real (r8)                                 , public, allocatable  :: glo_avg_fields_surface_flux(:,:)      ! output (num_elements,nfields)
+     real (r8)                                 , public, allocatable  :: glo_avg_averages_surface_flux(:)      ! input (nfields)
 
      ! FIXME #77: for now, running means are being computed in the driver
      !            they will eventually be moved from the interface to inside MARBL
-     real (r8)                                 , public, allocatable  :: glo_scalar_interior(:)
-     real (r8)                                 , public, allocatable  :: glo_scalar_surface(:)
+     real (r8)                                 , public, allocatable  :: glo_scalar_interior_tendency(:)
+     real (r8)                                 , public, allocatable  :: glo_scalar_surface_flux(:)
 
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_interior(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_surface(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_interior(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface(:)
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_interior_tendency(:)
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_surface_flux(:)
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_interior_tendency(:)
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
      type(marbl_PAR_type)                      , private              :: PAR
      type(marbl_particulate_share_type)        , private              :: particulate_share
-     type(marbl_surface_forcing_share_type)    , private              :: surface_forcing_share
-     type(marbl_surface_forcing_internal_type) , private              :: surface_forcing_internal
+     type(marbl_surface_flux_share_type)       , private              :: surface_flux_share
+     type(marbl_surface_flux_internal_type)    , private              :: surface_flux_internal
      logical                                   , private              :: lallow_glo_ops
      type(marbl_internal_timers_type)          , private              :: timers
      type(marbl_timer_indexing_type)           , private              :: timer_ids
@@ -120,8 +120,8 @@ module marbl_interface
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
      procedure, public  :: get_tracer_index
-     procedure, public  :: set_interior_forcing
-     procedure, public  :: set_surface_forcing
+     procedure, public  :: interior_tendency_compute
+     procedure, public  :: surface_flux_compute
      procedure, public  :: set_global_scalars
      procedure, public  :: shutdown
      generic            :: inquire_settings_metadata => inquire_settings_metadata_by_name, &
@@ -156,8 +156,8 @@ module marbl_interface
   private :: reset_timers
   private :: extract_timing
   private :: glo_vars_init
-  private :: set_interior_forcing
-  private :: set_surface_forcing
+  private :: interior_tendency_compute
+  private :: surface_flux_compute
   private :: shutdown
 
   !***********************************************************************
@@ -169,7 +169,7 @@ contains
   subroutine init(this,                   &
        gcm_num_levels,                    &
        gcm_num_PAR_subcols,               &
-       gcm_num_elements_surface_forcing,  &
+       gcm_num_elements_surface_flux,     &
        gcm_delta_z,                       &
        gcm_zw,                            &
        gcm_zt,                            &
@@ -189,14 +189,14 @@ contains
     class(marbl_interface_class), intent(inout) :: this
     integer(int_kind),            intent(in)    :: gcm_num_levels
     integer(int_kind),            intent(in)    :: gcm_num_PAR_subcols
-    integer(int_kind),            intent(in)    :: gcm_num_elements_surface_forcing
+    integer(int_kind),            intent(in)    :: gcm_num_elements_surface_flux
     real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
     logical,           optional,  intent(in)    :: lgcm_has_global_ops
 
     character(len=*), parameter :: subname = 'marbl_interface:init'
-    integer, parameter :: num_interior_elements = 1 ! FIXME #66: get this value from interface, let it vary
+    integer, parameter :: num_elements_interior_tendency = 1 ! FIXME #66: get this value from interface, let it vary
 
     !--------------------------------------------------------------------
     ! initialize status log and timers
@@ -238,21 +238,21 @@ contains
     associate(&
          num_levels            => gcm_num_levels,                              &
          num_PAR_subcols       => gcm_num_PAR_subcols,                         &
-         num_surface_elements  => gcm_num_elements_surface_forcing             &
+         num_elements_surface_flux  => gcm_num_elements_surface_flux           &
          )
 
     !-----------------------------------------------------------------------
     !  Set up domain type
     !-----------------------------------------------------------------------
 
-    call this%domain%construct(                                 &
-         num_levels                    = num_levels,            &
-         num_PAR_subcols               = num_PAR_subcols,       &
-         num_elements_surface_forcing  = num_surface_elements,  &
-         num_elements_interior_forcing = num_interior_elements, &
-         delta_z                       = gcm_delta_z,           &
-         zw                            = gcm_zw,                &
-         zt                            = gcm_zt)
+    call this%domain%construct(                                           &
+         num_levels                     = num_levels,                     &
+         num_PAR_subcols                = num_PAR_subcols,                &
+         num_elements_surface_flux      = num_elements_surface_flux,      &
+         num_elements_interior_tendency = num_elements_interior_tendency, &
+         delta_z                        = gcm_delta_z,                    &
+         zw                             = gcm_zw,                         &
+         zt                             = gcm_zt)
 
     !--------------------------------------------------------------------
     ! call constructors and allocate memory
@@ -264,9 +264,9 @@ contains
     !  Set up tracers
     !-----------------------------------------------------------------------
 
-    call marbl_init_tracers(num_levels, num_surface_elements, &
-                            this%tracer_indices, this%surface_vals, this%surface_tracer_fluxes, &
-                            this%column_tracers, this%column_dtracers, this%tracer_metadata,    &
+    call marbl_init_tracers(num_levels, num_elements_surface_flux, &
+                            this%tracer_indices, this%tracers_at_surface, this%surface_fluxes, &
+                            this%tracers, this%interior_tendencies, this%tracer_metadata, &
                             this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_tracers", subname)
@@ -277,13 +277,13 @@ contains
     ! set up saved state variables
     !--------------------------------------------------------------------
 
-    call marbl_saved_state_init(this%surface_saved_state,                     &
-                                this%interior_saved_state,                    &
+    call marbl_saved_state_init(this%surface_flux_saved_state,                &
+                                this%interior_tendency_saved_state,           &
                                 this%surf_state_ind,                          &
                                 this%interior_state_ind,                      &
                                 num_levels,                                   &
-                                num_surface_elements,                         &
-                                num_interior_elements,                        &
+                                num_elements_surface_flux,                    &
+                                num_elements_interior_tendency,               &
                                 this%StatusLog)
 
     if (this%StatusLog%labort_marbl) then
@@ -296,12 +296,12 @@ contains
     !--------------------------------------------------------------------
 
     call marbl_diagnostics_init(                                              &
-         marbl_domain                 = this%domain,                          &
-         marbl_tracer_metadata        = this%tracer_metadata,                 &
-         marbl_tracer_indices         = this%tracer_indices,                  &
-         marbl_interior_forcing_diags = this%interior_forcing_diags,          &
-         marbl_surface_forcing_diags  = this%surface_forcing_diags,           &
-         marbl_status_log             = this%StatusLog)
+         marbl_domain                  = this%domain,                         &
+         marbl_tracer_metadata         = this%tracer_metadata,                &
+         marbl_tracer_indices          = this%tracer_indices,                 &
+         marbl_interior_tendency_diags = this%interior_tendency_diags,        &
+         marbl_surface_flux_diags      = this%surface_flux_diags,             &
+         marbl_status_log              = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_diagnostics_init()", subname)
       return
@@ -334,12 +334,12 @@ contains
 
     call marbl_init_forcing_fields(this%domain, &
                                    this%tracer_metadata, &
-                                   this%surface_forcing_ind, &
-                                   this%surface_forcing_share, &
-                                   this%surface_forcing_internal, &
-                                   this%surface_input_forcings, &
-                                   this%interior_forcing_ind, &
-                                   this%interior_input_forcings, &
+                                   this%surface_flux_forcing_ind, &
+                                   this%surface_flux_share, &
+                                   this%surface_flux_internal, &
+                                   this%surface_flux_forcings, &
+                                   this%interior_tendency_forcing_ind, &
+                                   this%interior_tendency_forcings, &
                                    this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_forcing_fields", subname)
@@ -780,42 +780,42 @@ contains
 
   subroutine glo_vars_init(this)
 
-    use marbl_mod, only : marbl_set_glo_vars_cnt
-    use marbl_mod, only : marbl_set_rmean_init_vals
+    use marbl_glo_avg_mod, only : marbl_glo_avg_var_cnts_compute
+    use marbl_glo_avg_mod, only : marbl_glo_avg_init_rmean_vals
 
     class (marbl_interface_class), intent(inout) :: this
 
-    integer (int_kind) :: glo_avg_field_cnt_interior
-    integer (int_kind) :: glo_avg_field_cnt_surface
-    integer (int_kind) :: glo_scalar_cnt_interior
-    integer (int_kind) :: glo_scalar_cnt_surface
+    integer (int_kind) :: glo_avg_field_cnt_interior_tendency
+    integer (int_kind) :: glo_avg_field_cnt_surface_flux
+    integer (int_kind) :: glo_scalar_cnt_interior_tendency
+    integer (int_kind) :: glo_scalar_cnt_surface_flux
 
-    associate(num_surface_elements => this%domain%num_elements_surface_forcing)
+    associate(num_elements_surface_flux => this%domain%num_elements_surface_flux)
 
-    call marbl_set_glo_vars_cnt(glo_avg_field_cnt_interior, &
-                                glo_avg_field_cnt_surface,  &
-                                glo_scalar_cnt_interior,    &
-                                glo_scalar_cnt_surface)
+    call marbl_glo_avg_var_cnts_compute(glo_avg_field_cnt_interior_tendency, &
+                                        glo_avg_field_cnt_surface_flux,      &
+                                        glo_scalar_cnt_interior_tendency,    &
+                                        glo_scalar_cnt_surface_flux)
 
-    allocate(this%glo_avg_fields_interior(glo_avg_field_cnt_interior))
-    allocate(this%glo_avg_averages_interior(glo_avg_field_cnt_interior))
+    allocate(this%glo_avg_fields_interior_tendency(glo_avg_field_cnt_interior_tendency))
+    allocate(this%glo_avg_averages_interior_tendency(glo_avg_field_cnt_interior_tendency))
 
-    allocate(this%glo_avg_fields_surface(num_surface_elements, glo_avg_field_cnt_surface))
-    allocate(this%glo_avg_averages_surface(glo_avg_field_cnt_surface))
+    allocate(this%glo_avg_fields_surface_flux(num_elements_surface_flux, glo_avg_field_cnt_surface_flux))
+    allocate(this%glo_avg_averages_surface_flux(glo_avg_field_cnt_surface_flux))
 
-    allocate(this%glo_scalar_interior(glo_scalar_cnt_interior))
+    allocate(this%glo_scalar_interior_tendency(glo_scalar_cnt_interior_tendency))
 
-    allocate(this%glo_scalar_surface(glo_scalar_cnt_surface))
+    allocate(this%glo_scalar_surface_flux(glo_scalar_cnt_surface_flux))
 
-    allocate(this%glo_avg_rmean_interior(glo_avg_field_cnt_interior))
-    allocate(this%glo_avg_rmean_surface(glo_avg_field_cnt_surface))
-    allocate(this%glo_scalar_rmean_interior(glo_scalar_cnt_interior))
-    allocate(this%glo_scalar_rmean_surface(glo_scalar_cnt_surface))
+    allocate(this%glo_avg_rmean_interior_tendency(glo_avg_field_cnt_interior_tendency))
+    allocate(this%glo_avg_rmean_surface_flux(glo_avg_field_cnt_surface_flux))
+    allocate(this%glo_scalar_rmean_interior_tendency(glo_scalar_cnt_interior_tendency))
+    allocate(this%glo_scalar_rmean_surface_flux(glo_scalar_cnt_surface_flux))
 
-    call marbl_set_rmean_init_vals(this%glo_avg_rmean_interior,    &
-                                   this%glo_avg_rmean_surface,     &
-                                   this%glo_scalar_rmean_interior, &
-                                   this%glo_scalar_rmean_surface)
+    call marbl_glo_avg_init_rmean_vals(this%glo_avg_rmean_interior_tendency,    &
+                                       this%glo_avg_rmean_surface_flux,         &
+                                       this%glo_scalar_rmean_interior_tendency, &
+                                       this%glo_scalar_rmean_surface_flux)
 
     end associate
 
@@ -823,116 +823,112 @@ contains
 
   !***********************************************************************
 
-  subroutine set_interior_forcing(this)
+  subroutine interior_tendency_compute(this)
 
-    use marbl_mod, only : marbl_set_interior_forcing
+    use marbl_interior_tendency_mod, only : marbl_interior_tendency_compute
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:set_interior_forcing'
+    character(len=*), parameter :: subname = 'marbl_interface:interior_tendency_compute'
 
-    call this%timers%start(this%timer_ids%interior_forcing_id, this%StatusLog)
+    call this%timers%start(this%timer_ids%interior_tendency_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%start()", subname)
       return
     end if
 
-    call marbl_set_interior_forcing(                                          &
-         domain                   = this%domain,                              &
-         interior_forcings        = this%interior_input_forcings,             &
-         saved_state              = this%interior_saved_state,                &
-         saved_state_ind          = this%interior_state_ind,                  &
-         tracers                  = this%column_tracers,                      &
-         surface_forcing_indices  = this%surface_forcing_ind,                 &
-         interior_forcing_indices = this%interior_forcing_ind,                &
-         dtracers                 = this%column_dtracers,                     &
-         marbl_tracer_indices     = this%tracer_indices,                      &
-         marbl_timers             = this%timers,                              &
-         marbl_timer_indices      = this%timer_ids,                           &
-         PAR                      = this%PAR,                                 &
-         marbl_particulate_share  = this%particulate_share,                   &
-         interior_forcing_diags   = this%interior_forcing_diags,              &
-         glo_avg_fields_interior  = this%glo_avg_fields_interior,             &
-         marbl_status_log         = this%StatusLog)
+    call marbl_interior_tendency_compute(                                         &
+         domain                       = this%domain,                              &
+         interior_tendency_forcings   = this%interior_tendency_forcings,          &
+         saved_state                  = this%interior_tendency_saved_state,       &
+         saved_state_ind              = this%interior_state_ind,                  &
+         tracers                      = this%tracers,                             &
+         surface_flux_forcing_indices = this%surface_flux_forcing_ind,            &
+         interior_tendency_forcing_indices = this%interior_tendency_forcing_ind,  &
+         interior_tendencies          = this%interior_tendencies,                 &
+         marbl_tracer_indices         = this%tracer_indices,                      &
+         marbl_timers                 = this%timers,                              &
+         marbl_timer_indices          = this%timer_ids,                           &
+         PAR                          = this%PAR,                                 &
+         marbl_particulate_share      = this%particulate_share,                   &
+         interior_tendency_diags      = this%interior_tendency_diags,             &
+         glo_avg_fields_interior_tendency = this%glo_avg_fields_interior_tendency,&
+         marbl_status_log             = this%StatusLog)
 
     if (this%StatusLog%labort_marbl) then
-       call this%StatusLog%log_error_trace("marbl_set_interior_forcing()", subname)
+       call this%StatusLog%log_error_trace("marbl_interior_tendency_compute()", subname)
        return
     end if
 
-    call this%timers%stop(this%timer_ids%interior_forcing_id, this%StatusLog)
+    call this%timers%stop(this%timer_ids%interior_tendency_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%stop()", subname)
       return
     end if
 
-  end subroutine set_interior_forcing
+  end subroutine interior_tendency_compute
 
   !***********************************************************************
 
-  subroutine set_surface_forcing(this)
+  subroutine surface_flux_compute(this)
 
-    use marbl_mod      , only : marbl_set_surface_forcing
-
-    implicit none
+    use marbl_surface_flux_mod, only : marbl_surface_flux_compute
 
     class(marbl_interface_class), intent(inout) :: this
 
-    character(len=*), parameter :: subname = 'marbl_interface:set_surface_forcing'
+    character(len=*), parameter :: subname = 'marbl_interface:surface_flux_compute'
 
-    call this%timers%start(this%timer_ids%surface_forcing_id, this%StatusLog)
+    call this%timers%start(this%timer_ids%surface_flux_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%start()", subname)
       return
     end if
 
-    call marbl_set_surface_forcing(                                           &
-         num_elements             = this%domain%num_elements_surface_forcing, &
-         surface_forcing_ind      = this%surface_forcing_ind,                 &
-         surface_input_forcings   = this%surface_input_forcings,              &
-         surface_vals             = this%surface_vals,                        &
-         surface_tracer_fluxes    = this%surface_tracer_fluxes,               &
+    call marbl_surface_flux_compute(                                          &
+         num_elements             = this%domain%num_elements_surface_flux,    &
+         surface_flux_forcing_ind = this%surface_flux_forcing_ind,            &
+         surface_flux_forcings    = this%surface_flux_forcings,               &
+         tracers_at_surface       = this%tracers_at_surface,                  &
+         surface_fluxes           = this%surface_fluxes,                      &
          marbl_tracer_indices     = this%tracer_indices,                      &
-         saved_state              = this%surface_saved_state,                 &
+         saved_state              = this%surface_flux_saved_state,            &
          saved_state_ind          = this%surf_state_ind,                      &
-         surface_forcing_output   = this%surface_forcing_output,              &
-         surface_forcing_internal = this%surface_forcing_internal,            &
-         surface_forcing_share    = this%surface_forcing_share,               &
-         surface_forcing_diags    = this%surface_forcing_diags,               &
-         glo_avg_fields_surface   = this%glo_avg_fields_surface,              &
+         surface_flux_output      = this%surface_flux_output,                 &
+         surface_flux_internal    = this%surface_flux_internal,               &
+         surface_flux_share       = this%surface_flux_share,                  &
+         surface_flux_diags       = this%surface_flux_diags,                  &
+         glo_avg_fields_surface_flux = this%glo_avg_fields_surface_flux,      &
          marbl_status_log         = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
-       call this%StatusLog%log_error_trace("marbl_set_surface_forcing()", subname)
+       call this%StatusLog%log_error_trace("marbl_surface_flux_compute()", subname)
        return
     end if
 
 
-    call this%timers%stop(this%timer_ids%surface_forcing_id, this%StatusLog)
+    call this%timers%stop(this%timer_ids%surface_flux_id, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("timers%stop()", subname)
       return
     end if
 
-  end subroutine set_surface_forcing
+  end subroutine surface_flux_compute
 
   !***********************************************************************
 
   subroutine set_global_scalars(this, field_source)
 
-    use marbl_mod, only : marbl_set_global_scalars_interior
-
-    implicit none
+    use marbl_interior_tendency_mod, only : marbl_interior_tendency_adjust_bury_coeff
 
     class(marbl_interface_class), intent(inout) :: this
-    character(len=*),             intent(in)    :: field_source ! 'interior' or 'surface'
+    character(len=*),             intent(in)    :: field_source ! 'interior_tendency' or 'surface_flux`'
 
-    if (field_source == 'interior') then
-       call marbl_set_global_scalars_interior(                          &
-            marbl_particulate_share   = this%particulate_share,         &
-            glo_avg_rmean_interior    = this%glo_avg_rmean_interior,    &
-            glo_avg_rmean_surface     = this%glo_avg_rmean_surface,     &
-            glo_scalar_rmean_interior = this%glo_scalar_rmean_interior, &
-            glo_scalar_interior       = this%glo_scalar_interior)
+    if (field_source == 'interior_tendency') then
+       call marbl_interior_tendency_adjust_bury_coeff(                                    &
+            marbl_particulate_share            = this%particulate_share,                  &
+            glo_avg_rmean_interior_tendency    = this%glo_avg_rmean_interior_tendency,    &
+            glo_avg_rmean_surface_flux         = this%glo_avg_rmean_surface_flux,         &
+            glo_scalar_rmean_interior_tendency = this%glo_scalar_rmean_interior_tendency, &
+            glo_scalar_interior_tendency       = this%glo_scalar_interior_tendency)
     end if
 
   end subroutine set_global_scalars
@@ -946,26 +942,24 @@ contains
     use marbl_settings_mod, only : zooplankton
     use marbl_settings_mod, only : grazing
     use marbl_settings_mod, only : tracer_restore_vars
-    use marbl_diagnostics_mod, only : marbl_interior_diag_ind
-
-    implicit none
+    use marbl_diagnostics_mod, only : marbl_interior_tendency_diag_ind
 
     class(marbl_interface_class), intent(inout) :: this
 
     character(len=*), parameter :: subname = 'marbl_interface:shutdown'
     integer(int_kind) :: m,n
 
-    if (allocated(this%glo_avg_fields_interior)) then
-      deallocate(this%glo_avg_fields_interior)
-      deallocate(this%glo_avg_averages_interior)
-      deallocate(this%glo_avg_fields_surface)
-      deallocate(this%glo_avg_averages_surface)
-      deallocate(this%glo_scalar_interior)
-      deallocate(this%glo_scalar_surface)
-      deallocate(this%glo_avg_rmean_interior)
-      deallocate(this%glo_avg_rmean_surface)
-      deallocate(this%glo_scalar_rmean_interior)
-      deallocate(this%glo_scalar_rmean_surface)
+    if (allocated(this%glo_avg_fields_interior_tendency)) then
+      deallocate(this%glo_avg_fields_interior_tendency)
+      deallocate(this%glo_avg_averages_interior_tendency)
+      deallocate(this%glo_avg_fields_surface_flux)
+      deallocate(this%glo_avg_averages_surface_flux)
+      deallocate(this%glo_scalar_interior_tendency)
+      deallocate(this%glo_scalar_surface_flux)
+      deallocate(this%glo_avg_rmean_interior_tendency)
+      deallocate(this%glo_avg_rmean_surface_flux)
+      deallocate(this%glo_scalar_rmean_interior_tendency)
+      deallocate(this%glo_scalar_rmean_surface_flux)
     end if
 
     ! free dynamically allocated memory, etc
@@ -981,19 +975,19 @@ contains
       end do
       deallocate(grazing)
     end if
-    call marbl_interior_diag_ind%destruct()
+    call marbl_interior_tendency_diag_ind%destruct()
 
-    if (allocated(this%interior_input_forcings)) then
-      deallocate(this%interior_input_forcings)
-      deallocate(this%surface_input_forcings)
+    if (allocated(this%interior_tendency_forcings)) then
+      deallocate(this%interior_tendency_forcings)
+      deallocate(this%surface_flux_forcings)
     end if
-    call this%surface_forcing_internal%destruct()
-    call this%surface_forcing_share%destruct()
-    if (allocated(this%surface_vals)) then
-      deallocate(this%surface_vals)
-      deallocate(this%surface_tracer_fluxes)
-      deallocate(this%column_tracers)
-      deallocate(this%column_dtracers)
+    call this%surface_flux_internal%destruct()
+    call this%surface_flux_share%destruct()
+    if (allocated(this%tracers_at_surface)) then
+      deallocate(this%tracers_at_surface)
+      deallocate(this%surface_fluxes)
+      deallocate(this%tracers)
+      deallocate(this%interior_tendencies)
       deallocate(this%tracer_metadata)
       deallocate(tracer_restore_vars)
     end if

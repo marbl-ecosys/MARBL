@@ -19,7 +19,7 @@ module marbl_nhx_surface_emis_mod
   ! public member procedure declarations
   !-----------------------------------------------------------------------
 
-  public :: marbl_comp_nhx_surface_emis
+  public :: marbl_nhx_surface_emis_compute
 
   !***********************************************************************
 
@@ -27,15 +27,15 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_comp_nhx_surface_emis( &
-       num_elements,                      &
-       nh4,                               &
-       ph,                                &
-       sst,                               &
-       sss,                               &
-       u10_sqr,                           &
-       atmpres,                           &
-       ifrac,                             &
+  subroutine marbl_nhx_surface_emis_compute( &
+       num_elements,                         &
+       nh4,                                  &
+       ph,                                   &
+       sst,                                  &
+       sss,                                  &
+       u10_sqr,                              &
+       atmpres,                              &
+       ifrac,                                &
        nhx_surface_emis)
 
     use marbl_constants_mod, only : c0
@@ -73,7 +73,7 @@ contains
     K(:) = c1 / (c1 / kg_nh3(:) + Hstar_nhx / kw_nh3(:))
     nhx_surface_emis(:) = (c1 - ifrac(:)) * K(:) * Hstar_nhx(:) * max(nh4(:),c0)
 
-  end subroutine marbl_comp_nhx_surface_emis
+  end subroutine marbl_nhx_surface_emis_compute
 
   !***********************************************************************
 

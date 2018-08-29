@@ -190,6 +190,13 @@ module marbl_settings_mod
        PONremin_refract = DONprod_refract * 0.03_r8, & ! fraction of POCremin to refractory pool
        POPremin_refract = DOPprod_refract * 0.06_r8    ! fraction of POCremin to refractory pool
 
+  ! pH parameters
+  real (r8), parameter :: phlo_surf_init = 7.0_r8 ! low bound for surface ph for no prev soln
+  real (r8), parameter :: phhi_surf_init = 9.0_r8 ! high bound for surface ph for no prev soln
+  real (r8), parameter :: phlo_3d_init = 6.0_r8   ! low bound for subsurface ph for no prev soln
+  real (r8), parameter :: phhi_3d_init = 9.0_r8   ! high bound for subsurface ph for no prev soln
+  real (r8), parameter :: del_ph = 0.20_r8        ! delta-ph for prev soln
+
   !---------------------------------------------------------------------------------------------
   !  Variables defined in marbl_settings_define_general_parms, marbl_settings_define_PFT_counts,
   !  marbl_settings_define_PFT_derived_types, or marbl_settings_define_tracer_dependent

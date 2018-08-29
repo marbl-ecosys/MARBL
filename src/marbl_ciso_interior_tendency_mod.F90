@@ -1,22 +1,4 @@
-! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
-!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
-module marbl_ciso_mod
-
-  !-----------------------------------------------------------------------
-  !  Carbon 13 module and biotic 14C module
-  !  13C code is based on code form G. Xavier, ETH, 2010, which
-  !  was written for pop1 (CCSM3)
-  !  This code needs the ecosystem model to run, as it uses several
-  !  variables computed there.
-  !  This module adds 7 carbon pools for 13C and another 7 for 14C
-  !
-  !   References
-  !   Jahn, A., K. Lindsay, X. Giraud, N. Gruber, B. L. Otto-Bliesner, Z. Liu,
-  !   E. C. Brady, 2015. Carbon isotopes in the ocean model of the Community
-  !   Earth System Model (CESM1). Geosci. Model Dev., 8: 2419-2434.
-  !   doi:10.5194/gmd-8-2419-2015
-  !-----------------------------------------------------------------------
+module marbl_ciso_interior_tendency_mod
 
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : int_kind
@@ -30,17 +12,16 @@ module marbl_ciso_mod
 
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : autotrophs
+  use marbl_settings_mod, only : ciso_on
 
   use marbl_logging, only : marbl_log_type
 
-  use marbl_interface_public_types, only : marbl_tracer_metadata_type
   use marbl_interface_public_types, only : marbl_diagnostics_type
   use marbl_interface_public_types, only : marbl_domain_type
 
   use marbl_interface_private_types, only : column_sinking_particle_type
-  use marbl_interface_private_types, only : marbl_interior_share_type
+  use marbl_interface_private_types, only : marbl_interior_tendency_share_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
-  use marbl_interface_private_types, only : marbl_surface_forcing_share_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
 
   use marbl_pft_mod, only : autotroph_local_type
@@ -50,18 +31,8 @@ module marbl_ciso_mod
   implicit none
   private
 
-  !-----------------------------------------------------------------------
-  !  public/private declarations
-  !-----------------------------------------------------------------------
-
-  public  :: marbl_ciso_init_tracer_metadata
-  public  :: marbl_ciso_set_interior_forcing
-  public  :: marbl_ciso_set_surface_forcing
-
-  private :: setup_cell_attributes
-  private :: fract_keller_morel
-  private :: set_surface_particulate_terms
-  private :: compute_particulate_terms
+  public :: marbl_ciso_interior_tendency_compute
+  public :: marbl_ciso_interior_tendency_autotroph_set_to_zero
 
   !-----------------------------------------------------------------------
   !  scalar constants for 14C decay calculation
@@ -70,131 +41,13 @@ module marbl_ciso_mod
    real (r8), parameter :: c14_halflife_years = 5730.0_r8 !C14 half file
    real (r8) :: c14_lambda_inv_sec           ! Decay variable in seconds
 
-  !***********************************************************************
-
 contains
 
-  !*****************************************************************************
-
-  subroutine marbl_ciso_init_tracer_metadata(marbl_tracer_metadata,           &
-                                             marbl_tracer_indices)
-
-    !  Set tracer and forcing metadata
-
-    use marbl_settings_mod, only : ciso_lecovars_full_depth_tavg
-
-    implicit none
-
-    type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
-    type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer (int_kind) :: n                             ! tracer index
-    integer (int_kind) :: auto_ind                      ! autotroph functional group index
-    !-----------------------------------------------------------------------
-
-    !-----------------------------------------------------------------------
-    !  initialize non-autotroph metadata values
-    !-----------------------------------------------------------------------
-
-    associate(di13c_ind         => marbl_tracer_indices%di13c_ind,            &
-              do13ctot_ind      => marbl_tracer_indices%do13ctot_ind,         &
-              zootot13C_ind     => marbl_tracer_indices%zootot13C_ind,        &
-              di14c_ind         => marbl_tracer_indices%di14c_ind,            &
-              do14ctot_ind      => marbl_tracer_indices%do14ctot_ind,         &
-              zootot14C_ind     => marbl_tracer_indices%zootot14C_ind,        &
-              ciso_ind_beg      => marbl_tracer_indices%ciso%ind_beg,         &
-              ciso_ind_end      => marbl_tracer_indices%ciso%ind_end          &
-             )
-
-    ! All CISO tracers share units, tend_units, flux_units, and
-    ! tracer_module_name
-    do n=ciso_ind_beg,ciso_ind_end
-      marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-      marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-      marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-      marbl_tracer_metadata(n)%tracer_module_name = 'ciso'
-    end do
-    marbl_tracer_metadata(di13c_ind)%short_name='DI13C'
-    marbl_tracer_metadata(di13c_ind)%long_name='Dissolved Inorganic Carbon-13'
-
-    marbl_tracer_metadata(do13ctot_ind)%short_name='DO13Ctot'
-    marbl_tracer_metadata(do13ctot_ind)%long_name='Dissolved Organic Carbon-13 (semi-labile+refractory)'
-
-    marbl_tracer_metadata(zootot13C_ind)%short_name='zootot13C'
-    marbl_tracer_metadata(zootot13C_ind)%long_name='Zooplankton Carbon-13 (sum over all zooplankton)'
-
-    marbl_tracer_metadata(di14c_ind)%short_name='DI14C'
-    marbl_tracer_metadata(di14c_ind)%long_name='Dissolved Inorganic Carbon-14'
-
-    marbl_tracer_metadata(do14ctot_ind)%short_name='DO14Ctot'
-    marbl_tracer_metadata(do14ctot_ind)%long_name='Dissolved Organic Carbon-14 (semi-labile+refractory)'
-
-    marbl_tracer_metadata(zootot14C_ind)%short_name='zootot14C'
-    marbl_tracer_metadata(zootot14C_ind)%long_name='Zooplankton Carbon-14 (sum over all zooplankton)'
-
-    !-----------------------------------------------------------------------
-    !  initialize autotroph tracer_d values and tracer indices
-    !-----------------------------------------------------------------------
-
-    do auto_ind = 1, autotroph_cnt
-       n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '13C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon-13'
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '14C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon-14'
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
-       if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Ca13CO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Ca13CO3'
-        end if
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
-       if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Ca14CO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Ca14CO3'
-       endif
-    end do
-
-    !-----------------------------------------------------------------------
-    !  set lfull_depth_tavg flag for short-lived ecosystem tracers
-    !-----------------------------------------------------------------------
-
-    marbl_tracer_metadata(zootot13C_ind)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
-    marbl_tracer_metadata(zootot14C_ind)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
-
-    do auto_ind = 1, autotroph_cnt
-       n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
-       marbl_tracer_metadata(n)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
-       marbl_tracer_metadata(n)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
-       if (n > 0) then
-          marbl_tracer_metadata(n)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
-       endif
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
-       if (n > 0) then
-          marbl_tracer_metadata(n)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
-       endif
-    end do
-
-    end associate
-
-  end subroutine marbl_ciso_init_tracer_metadata
-
   !***********************************************************************
 
-  subroutine marbl_ciso_set_interior_forcing( &
+  subroutine marbl_ciso_interior_tendency_compute( &
        marbl_domain,                          &
-       marbl_interior_share,                  &
+       marbl_interior_tendency_share,         &
        marbl_zooplankton_share,               &
        marbl_particulate_share,               &
        tracer_local,                          &
@@ -202,7 +55,7 @@ contains
        autotroph_secondary_species,           &
        temperature,                           &
        marbl_tracer_indices,                  &
-       column_dtracer,                        &
+       interior_tendencies,                   &
        marbl_interior_diags,                  &
        marbl_status_log)
 
@@ -210,33 +63,31 @@ contains
     !  13C code is based on code from X. Giraud, ETH ZÃ¼rich, 2008, for pop1
     !  Also added biotic 14C
 
-    use marbl_settings_mod     , only : ciso_fract_factors
-    use marbl_settings_mod     , only : f_graze_CaCO3_REMIN
-    use marbl_constants_mod    , only : R13C_std
-    use marbl_constants_mod    , only : R14C_std
-    use marbl_constants_mod    , only : spd
-    use marbl_constants_mod    , only : spy
-    use marbl_diagnostics_mod  , only : store_diagnostics_ciso_interior
+    use marbl_settings_mod, only : ciso_fract_factors
+    use marbl_settings_mod, only : f_graze_CaCO3_REMIN
+    use marbl_constants_mod, only : R13C_std
+    use marbl_constants_mod, only : R14C_std
+    use marbl_constants_mod, only : spd
+    use marbl_constants_mod, only : spy
+    use marbl_ciso_diagnostics_mod, only : store_diagnostics_ciso_interior
 
-    implicit none
-
-    type(marbl_domain_type)               , intent(in)    :: marbl_domain
-    type(marbl_interior_share_type)       , intent(in)    :: marbl_interior_share(:)
-    type(marbl_zooplankton_share_type)    , intent(in)    :: marbl_zooplankton_share(:)
-    type(marbl_particulate_share_type)    , intent(in)    :: marbl_particulate_share
-    real (r8)                             , intent(in)    :: tracer_local(:,:)
-    type(autotroph_local_type)            , intent(in)    :: autotroph_local(:,:)
-    type(autotroph_secondary_species_type), intent(in)    :: autotroph_secondary_species(:,:)
-    real (r8)                             , intent(in)    :: temperature(:)
-    type(marbl_tracer_index_type)         , intent(in)    :: marbl_tracer_indices
-    real (r8)                             , intent(inout) :: column_dtracer(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
-    type(marbl_diagnostics_type)          , intent(inout) :: marbl_interior_diags
-    type(marbl_log_type)                  , intent(inout) :: marbl_status_log
+    type(marbl_domain_type),                  intent(in)    :: marbl_domain
+    type(marbl_interior_tendency_share_type), intent(in)    :: marbl_interior_tendency_share(:)
+    type(marbl_zooplankton_share_type),       intent(in)    :: marbl_zooplankton_share(:)
+    type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
+    real (r8),                                intent(in)    :: tracer_local(:,:)
+    type(autotroph_local_type),               intent(in)    :: autotroph_local(:,:)
+    type(autotroph_secondary_species_type),   intent(in)    :: autotroph_secondary_species(:,:)
+    real (r8),                                intent(in)    :: temperature(:)
+    type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
+    real (r8),                                intent(inout) :: interior_tendencies(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
+    type(marbl_diagnostics_type),             intent(inout) :: marbl_interior_diags
+    type(marbl_log_type),                     intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_mod:marbl_ciso_set_interior_forcing'
+    character(len=*), parameter :: subname = 'marbl_ciso_interior_tendency_mod:marbl_ciso_interior_tendency_compute'
 
     real (r8) :: work1      ! temporaries
 
@@ -321,15 +172,18 @@ contains
 
     !-------------------------------------------------------------
 
+    ! Return immediately if not running with carbon isotope tracer module
+    if (.not. ciso_on) return
+
     associate(                                                                   &
          column_km          => marbl_domain%km                                 , &
          column_kmt         => marbl_domain%kmt                                , &
 
-         CO3                => marbl_interior_share%CO3_fields                 , & ! INPUT carbonate ion
-         HCO3               => marbl_interior_share%HCO3_fields                , & ! INPUT bicarbonate ion
-         H2CO3              => marbl_interior_share%H2CO3_fields               , & ! INPUT carbonic acid
-         DOCtot_remin       => marbl_interior_share%DOCtot_remin_fields        , & ! INPUT remineralization of DOCtot (mmol C/m^3/sec)
-         DOCtot_loc         => marbl_interior_share%DOCtot_loc_fields          , & ! INPUT local copy of model DOCtot
+         CO3                => marbl_interior_tendency_share%CO3_fields        , & ! INPUT carbonate ion
+         HCO3               => marbl_interior_tendency_share%HCO3_fields       , & ! INPUT bicarbonate ion
+         H2CO3              => marbl_interior_tendency_share%H2CO3_fields      , & ! INPUT carbonic acid
+         DOCtot_remin       => marbl_interior_tendency_share%DOCtot_remin_fields, & ! INPUT remineralization of DOCtot (mmol C/m^3/sec)
+         DOCtot_loc         => marbl_interior_tendency_share%DOCtot_loc_fields , & ! INPUT local copy of model DOCtot
          DO13Ctot_loc       => tracer_local(marbl_tracer_indices%DO13Ctot_ind,:) , & ! local copy of model DO14Ctot
          DO14Ctot_loc       => tracer_local(marbl_tracer_indices%DO14Ctot_ind,:) , & ! local copy of model DO14Ctot
          DIC_loc            => tracer_local(marbl_tracer_indices%DIC_ind,:)    , & ! INPUT local copy of model DIC
@@ -702,13 +556,13 @@ contains
        !-----------------------------------------------------------------------
 
        call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            marbl_interior_share(k), marbl_particulate_share, PO13C, P_Ca13CO3)
+            marbl_interior_tendency_share(k), marbl_particulate_share, PO13C, P_Ca13CO3)
 
        call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            marbl_interior_share(k), marbl_particulate_share, PO14C, P_Ca14CO3)
+            marbl_interior_tendency_share(k), marbl_particulate_share, PO14C, P_Ca14CO3)
 
        !-----------------------------------------------------------------------
-       ! Update column_dtracer for the 7 carbon pools for each Carbon isotope
+       ! Update interior_tendencies for the 7 carbon pools for each Carbon isotope
        !-----------------------------------------------------------------------
 
        decay_14Ctot(k) = c0
@@ -721,23 +575,23 @@ contains
           work1 = auto_graze(auto_ind,k) + auto_loss(auto_ind,k) + auto_agg(auto_ind,k)
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
-          column_dtracer(n,k) = photo13C(auto_ind,k) - work1 * R13C_autotroph(auto_ind,k)
+          interior_tendencies(n,k) = photo13C(auto_ind,k) - work1 * R13C_autotroph(auto_ind,k)
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
-          column_dtracer(n,k) = photo14C(auto_ind,k) - work1 * R14C_autotroph(auto_ind,k) - &
+          interior_tendencies(n,k) = photo14C(auto_ind,k) - work1 * R14C_autotroph(auto_ind,k) - &
                c14_lambda_inv_sec * autotroph_local(auto_ind,k)%C14
 
           decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local(auto_ind,k)%C14
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
           if (n > 0) then
-             column_dtracer(n,k) = Ca13CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
+             interior_tendencies(n,k) = Ca13CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
                   * work1 * R13C_autotrophCaCO3(auto_ind,k)
           endif
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
           if (n > 0) then
-             column_dtracer(n,k) = Ca14CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
+             interior_tendencies(n,k) = Ca14CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
                   * work1 * R14C_autotrophCaCO3(auto_ind,k)      &
                   - c14_lambda_inv_sec * autotroph_local(auto_ind,k)%Ca14CO3
 
@@ -746,15 +600,15 @@ contains
        end do
 
        !-----------------------------------------------------------------------
-       !  column_dtracer: zoo 13 and 14 Carbon
+       !  interior_tendencies: zoo 13 and 14 Carbon
        !-----------------------------------------------------------------------
 
-       column_dtracer(zootot13C_ind,k) = &
+       interior_tendencies(zootot13C_ind,k) = &
               sum(auto_graze_zoo(:,k) * R13C_autotroph(:,k),dim=1) &
             + (zootot_graze_zoo(k) - zootot_graze(k) - zootot_loss(k)) &
             * R13C_zoototC(k)
 
-       column_dtracer(zootot14C_ind,k) = &
+       interior_tendencies(zootot14C_ind,k) = &
               sum(auto_graze_zoo(:,k) * R14C_autotroph(:,k),dim=1) &
             + (zootot_graze_zoo(k) - zootot_graze(k) - zootot_loss(k)) &
             * R14C_zoototC(k) - c14_lambda_inv_sec * zootot14C_loc(k)
@@ -762,27 +616,27 @@ contains
        decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * zootot14C_loc(k)
 
        !-----------------------------------------------------------------------
-       !  column_dtracer: dissolved organic Matter 13C and 14C
+       !  interior_tendencies: dissolved organic Matter 13C and 14C
        !-----------------------------------------------------------------------
 
-       column_dtracer(do13ctot_ind,k) = DO13Ctot_prod(k) - DO13Ctot_remin(k)
+       interior_tendencies(do13ctot_ind,k) = DO13Ctot_prod(k) - DO13Ctot_remin(k)
 
-       column_dtracer(do14ctot_ind,k) = DO14Ctot_prod(k) - DO14Ctot_remin(k) - c14_lambda_inv_sec * DO14Ctot_loc(k)
+       interior_tendencies(do14ctot_ind,k) = DO14Ctot_prod(k) - DO14Ctot_remin(k) - c14_lambda_inv_sec * DO14Ctot_loc(k)
 
        decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * DO14Ctot_loc(k)
 
        !-----------------------------------------------------------------------
-       !   column_dtracer: dissolved inorganic Carbon 13 and 14
+       !   interior_tendencies: dissolved inorganic Carbon 13 and 14
        !-----------------------------------------------------------------------
 
-       column_dtracer(di13c_ind,k) = &
+       interior_tendencies(di13c_ind,k) = &
             sum((auto_loss_dic(:,k) + auto_graze_dic(:,k))*R13C_autotroph(:,k),dim=1) &
           - sum(photo13C(:,k),dim=1) &
           + DO13Ctot_remin(k) + PO13C%remin(k) &
           + (zootot_loss_dic(k) + zootot_graze_dic(k)) * R13C_zoototC(k) &
           + P_Ca13CO3%remin(k)
 
-       column_dtracer(di14c_ind,k) = &
+       interior_tendencies(di14c_ind,k) = &
             sum((auto_loss_dic(:,k) + auto_graze_dic(:,k))*R14C_autotroph(:,k),dim=1) &
           - sum(photo14C(:,k),dim=1) &
           + DO14Ctot_remin(k) + PO14C%remin(k) &
@@ -794,13 +648,13 @@ contains
 
        do auto_ind = 1, autotroph_cnt
           if (marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind > 0) then
-             column_dtracer(di13c_ind,k) = column_dtracer(di13c_ind,k)            &
+             interior_tendencies(di13c_ind,k) = interior_tendencies(di13c_ind,k)  &
                   + f_graze_CaCO3_REMIN * auto_graze(auto_ind,k)                  &
                   * QCaCO3(auto_ind,k) * R13C_autotrophCaCO3(auto_ind,k)          &
                   - Ca13CO3_PROD(auto_ind,k)
           endif
           if (marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind > 0) then
-             column_dtracer(di14c_ind,k) = column_dtracer(di14c_ind,k)            &
+             interior_tendencies(di14c_ind,k) = interior_tendencies(di14c_ind,k)  &
                   + f_graze_CaCO3_REMIN * auto_graze(auto_ind,k)                  &
                   * QCaCO3(auto_ind,k) * R14C_autotrophCaCO3(auto_ind,k)          &
                   - Ca14CO3_PROD(auto_ind,k)
@@ -812,9 +666,9 @@ contains
        !-----------------------------------------------------------------------
 
        if  (k < column_km) then
-          call marbl_update_particulate_terms_from_prior_level(k+1, PO13C, P_Ca13CO3)
+          call update_particulate_terms_from_prior_level(k+1, PO13C, P_Ca13CO3)
 
-          call marbl_update_particulate_terms_from_prior_level(k+1, PO14C, P_Ca14CO3)
+          call update_particulate_terms_from_prior_level(k+1, PO14C, P_Ca14CO3)
        endif
 
     end do ! end of loop over k levels
@@ -853,7 +707,7 @@ contains
        PO14C,               &
        P_Ca13CO3,           &
        P_Ca14CO3,           &
-       column_dtracer,      &
+       interior_tendencies, &
        marbl_tracer_indices,&
        marbl_interior_diags,&
        marbl_status_log)
@@ -872,7 +726,30 @@ contains
     call P_Ca13CO3%destruct()
     call P_Ca14CO3%destruct()
 
-  end subroutine marbl_ciso_set_interior_forcing
+  end subroutine marbl_ciso_interior_tendency_compute
+
+  !***********************************************************************
+
+  subroutine marbl_ciso_interior_tendency_autotroph_set_to_zero(autotroph_tracer_indices, autotroph_local)
+
+    use marbl_interface_private_types, only : marbl_living_tracer_index_type
+
+    type(marbl_living_tracer_index_type), intent(in)    :: autotroph_tracer_indices
+    type(autotroph_local_type),           intent(inout) :: autotroph_local
+
+    if (.not. ciso_on) return
+
+    autotroph_local%C13 = c0
+    autotroph_local%C14 = c0
+
+    if (autotroph_tracer_indices%Ca13CO3_ind > 0) then
+      autotroph_local%Ca13CO3 = c0
+    end if
+    if (autotroph_tracer_indices%Ca14CO3_ind > 0) then
+      autotroph_local%Ca14CO3 = c0
+    end if
+
+  end subroutine marbl_ciso_interior_tendency_autotroph_set_to_zero
 
   !***********************************************************************
 
@@ -883,8 +760,6 @@ contains
     !----------------------------------------------------------------------------------------
     ! For Keller and Morel, set cell attributes based on autotroph type (from observations)
     !----------------------------------------------------------------------------------------
-
-    implicit none
 
     character(len=char_len), intent(in)  :: ciso_fract_factors                  ! option for which biological fractionation calculation to use
     real (r8),               intent(out) :: cell_active_C_uptake(autotroph_cnt) ! ratio of active carbon uptake to carbon fixation
@@ -898,7 +773,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_mod:setup_cell_attributes'
+    character(len=*), parameter :: subname = 'marbl_ciso_interior_tendency_mod:setup_cell_attributes'
     character(len=char_len)     :: log_message
 
     integer(int_kind) :: auto_ind           ! autotroph functional group index
@@ -1015,8 +890,6 @@ contains
 
     use marbl_constants_mod, only : pi, c4, c3
 
-    implicit none
-
     real (r8), intent(in) :: &
          mui_to_co2star,        & ! mui_to_co2star = mu_i / [CO2*] (m3 / mol C / s)
          cell_active_C_uptake,  & ! ratio of active carbon uptake to carbon fixation
@@ -1105,8 +978,6 @@ contains
     !  Set dissolution length, production fraction and mass terms.
     !---------------------------------------------------------------------
 
-    implicit none
-
     type(column_sinking_particle_type), intent(inout) :: POC_ciso     ! base units = nmol C_ciso
     type(column_sinking_particle_type), intent(inout) :: P_CaCO3_ciso ! base units = nmol C_ciso
 
@@ -1150,7 +1021,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_update_particulate_terms_from_prior_level(k, POC_ciso, P_CaCO3_ciso)
+  subroutine update_particulate_terms_from_prior_level(k, POC_ciso, P_CaCO3_ciso)
 
     !-----------------------------------------------------------------------
     ! NOTE: incoming fluxes are outgoing fluxes from previous level
@@ -1158,7 +1029,7 @@ contains
     ! Assume that k == ksurf condition was handled by call to set_surface_particulate_terms()
     !-----------------------------------------------------------------------
 
-    implicit none
+    use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_update_particle_flux_from_above
 
     integer (int_kind)                 , intent(in)    :: k ! vertical model level
     type(column_sinking_particle_type) , intent(inout) :: POC_ciso
@@ -1166,32 +1037,16 @@ contains
     !-----------------------------------------------------------------------
 
     if (k > 1) then
-       call marbl_update_sinking_particle_from_prior_level(k, POC_ciso)
-       call marbl_update_sinking_particle_from_prior_level(k, P_CaCO3_ciso)
+       call marbl_interior_tendency_share_update_particle_flux_from_above(k, POC_ciso)
+       call marbl_interior_tendency_share_update_particle_flux_from_above(k, P_CaCO3_ciso)
     end if
 
-  end subroutine marbl_update_particulate_terms_from_prior_level
-
-  !***********************************************************************
-
-  subroutine marbl_update_sinking_particle_from_prior_level(k, sinking_particle)
-
-    implicit none
-
-    integer (int_kind), intent(in) :: k
-    type(column_sinking_particle_type), intent(inout) :: sinking_particle
-    !-----------------------------------------------------------------------
-
-    ! NOTE: level k influx is equal to the level k-1 outflux.
-    sinking_particle%sflux_in(k)  = sinking_particle%sflux_out(k-1)
-    sinking_particle%hflux_in(k)  = sinking_particle%hflux_out(k-1)
-
-  end subroutine marbl_update_sinking_particle_from_prior_level
+  end subroutine update_particulate_terms_from_prior_level
 
   !***********************************************************************
 
   subroutine compute_particulate_terms(k, domain, tracer_local, marbl_tracer_indices, &
-             marbl_interior_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
+             marbl_interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
 
     !----------------------------------------------------------------------------------------
     !  Compute outgoing fluxes and remineralization terms for Carbon isotopes.
@@ -1209,16 +1064,14 @@ contains
     use marbl_settings_mod , only : caco3_bury_thres_depth
     use marbl_settings_mod , only : caco3_bury_thres_omega_calc
 
-    implicit none
-
-    integer (int_kind)                , intent(in)    :: k                 ! vertical model level
-    type(marbl_domain_type)           , intent(in)    :: domain
-    real(r8)                          , intent(in)    :: tracer_local(:)
-    type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
-    type(marbl_interior_share_type)   , intent(in)    :: marbl_interior_share
-    type(marbl_particulate_share_type), intent(in)    :: marbl_particulate_share
-    type(column_sinking_particle_type), intent(inout) :: POC_ciso          ! base units = nmol particulate organic Carbon isotope
-    type(column_sinking_particle_type), intent(inout) :: P_CaCO3_ciso      ! base units = nmol CaCO3 Carbon isotope
+    integer (int_kind),                       intent(in)    :: k                 ! vertical model level
+    type(marbl_domain_type),                  intent(in)    :: domain
+    real(r8),                                 intent(in)    :: tracer_local(:)
+    type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
+    type(marbl_interior_tendency_share_type), intent(in)    :: marbl_interior_tendency_share
+    type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
+    type(column_sinking_particle_type),       intent(inout) :: POC_ciso          ! base units = nmol particulate organic Carbon isotope
+    type(column_sinking_particle_type),       intent(inout) :: P_CaCO3_ciso      ! base units = nmol CaCO3 Carbon isotope
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -1240,8 +1093,8 @@ contains
          column_zw         => domain%zw(k)                                  , & ! IN
          O2_loc            => tracer_local(marbl_tracer_indices%O2_ind)     , & ! IN
          NO3_loc           => tracer_local(marbl_tracer_indices%NO3_ind)    , & ! IN
-         CO3               => marbl_interior_share%CO3_fields               , & ! IN
-         CO3_sat_calcite   => marbl_interior_share%CO3_sat_calcite          , & ! IN
+         CO3               => marbl_interior_tendency_share%CO3_fields      , & ! IN
+         CO3_sat_calcite   => marbl_interior_tendency_share%CO3_sat_calcite , & ! IN
          decay_CaCO3       => marbl_particulate_share%decay_CaCO3_fields    , & ! IN
          DECAY_Hard        => marbl_particulate_share%DECAY_Hard_fields     , & ! IN
          decay_POC_E       => marbl_particulate_share%decay_POC_E_fields    , & ! IN
@@ -1421,204 +1274,4 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_ciso_set_surface_forcing( &
-       num_elements        ,                 &
-       sst                 ,                 &
-       d13c                ,                 &
-       d14c                ,                 &
-       surface_vals        ,                 &
-       stf                 ,                 &
-       marbl_tracer_indices,                 &
-       marbl_surface_forcing_share ,         &
-       marbl_surface_forcing_diags)
-
-    use marbl_constants_mod    , only : R13C_std
-    use marbl_constants_mod    , only : R14C_std
-    use marbl_diagnostics_mod  , only : store_diagnostics_ciso_surface_forcing
-
-    implicit none
-
-    integer (int_kind)                     , intent(in)    :: num_elements
-    real(r8)                               , intent(in)    :: sst(num_elements)
-    real(r8)                               , intent(in)    :: d13c(num_elements)  ! atm 13co2 value
-    real(r8)                               , intent(in)    :: d14c(num_elements)  ! atm 14co2 value
-    real(r8)                               , intent(in)    :: surface_vals(:,:)
-    type(marbl_surface_forcing_share_type) , intent(in)    :: marbl_surface_forcing_share
-    real(r8)                               , intent(inout) :: stf(:, :)
-    type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
-    type(marbl_diagnostics_type)           , intent(inout) :: marbl_surface_forcing_diags
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    real (r8), dimension(num_elements) :: &
-         R13C_DIC,                        & ! 13C/12C ratio in DIC
-         R14C_DIC,                        & ! 14C/12C ratio in total DIC
-         R13C_atm,                        & ! 13C/12C ratio in atmospheric CO2
-         R14C_atm,                        & ! 14C/12C ratio in atmospheric CO2
-         flux,                            & ! gas flux of CO2 (nmol/cm^2/s)
-         flux13,                          & ! gas flux of 13CO2 (nmol/cm^2/s)
-         flux14,                          & ! gas flux of 14CO2 (nmol/cm^2/s)
-         flux_as,                         & ! air-to-sea gas flux of CO2 (nmol/cm^2/s)
-         flux13_as,                       & ! air-to-sea gas flux of 13CO2 (nmol/cm^2/s)
-         flux14_as,                       & ! air-to-sea gas flux of 14CO2 (nmol/cm^2/s)
-         flux_sa,                         & ! sea-to-air gas flux of CO2 (nmol/cm^2/s)
-         flux13_sa,                       & ! sea-to-air gas flux of 13CO2 (nmol/cm^2/s)
-         flux14_sa                          ! sea-to-air gas flux of 14CO2 (nmol/cm^2/s)
-
-    real (r8), dimension(num_elements) :: &
-         eps_aq_g_surf,                   & ! equilibrium fractionation (CO2_gaseous <-> CO2_aq)
-         alpha_aq_g_surf,                 & ! alpha_xxx_g_surf => eps = ( alpa -1 ) * 1000
-         eps_dic_g_surf,                  & ! equilibrium fractionation between total DIC and gaseous CO2
-         alpha_dic_g_surf,                & ! alpha_xxx_g_surf => eps = ( alpa -1 ) * 1000
-         frac_co3,                        & ! carbonate fraction fCO3 = [CO3--]/DIC
-         alpha_aq_g_surf_14c,             & ! for 14C, with fractionation being twice as large for 14C than for 13C
-         alpha_dic_g_surf_14c               ! for 14C, with fractionation being twice as large for 14C than for 13C
-
-    ! local parameters for 13C, Zhang et al, 1995, Geochim. et Cosmochim. Acta, 59 (1), 107-114
-    real(r8) ::            &
-         alpha_k,          & ! eps = ( alpa -1 ) * 1000
-         alpha_k_14c         ! for 14C, with fractionation being twice as large for 14C than for 13C
-
-    ! kinetic fraction during gas transfer (per mil) (air-sea CO2 exchange)
-    ! average of Zhang et al 1995 values of -0.81 at 21C and -0.95 at 5C
-    real(r8), parameter :: eps_k = -0.88_r8
-    !-----------------------------------------------------------------------
-
-    associate(                                                                     &
-         pv                  => marbl_surface_forcing_share%pv_surf_fields       , & ! in/out
-         dic                 => marbl_surface_forcing_share%dic_surf_fields      , & ! in/out DIC values for solver
-         co2star             => marbl_surface_forcing_share%co2star_surf_fields  , & ! in/out CO2STAR from solver
-         dco2star            => marbl_surface_forcing_share%dco2star_surf_fields , & ! in/out DCO2STAR from solver
-         co3_surf_fields     => marbl_surface_forcing_share%co3_surf_fields      , & ! in/out
-
-         di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
-         do13ctot_ind       => marbl_tracer_indices%do13ctot_ind               , &
-         di14c_ind          => marbl_tracer_indices%di14c_ind                  , &
-         do14ctot_ind       => marbl_tracer_indices%do14ctot_ind               , &
-         ciso_ind_beg       => marbl_tracer_indices%ciso%ind_beg               , &
-         ciso_ind_end       => marbl_tracer_indices%ciso%ind_end                 &
-         )
-
-    !-----------------------------------------------------------------------
-    !  ciso fluxes initially set to 0
-    !-----------------------------------------------------------------------
-
-    stf(:,ciso_ind_beg:ciso_ind_end) = c0
-
-    !-----------------------------------------------------------------------
-    !     initialize R13C_atm  and R14C_atm
-    !-----------------------------------------------------------------------
-
-    R13C_atm(:) = R13C_std * ( c1 + d13c(:) / c1000 )
-    R14C_atm(:) = R14C_std * ( c1 + d14c(:) / c1000 )
-
-    !-----------------------------------------------------------------------
-    !     compute 13C02 flux, based on CO2 flux calculated in ecosystem model
-    !     Zhang et al, 1995, Geochim. et Cosmochim. Acta, 59 (1), 107-114
-    !-----------------------------------------------------------------------
-
-    !-----------------------------------------------------------------------
-    !     compute R13C_DIC in surface ocean (assuming that DIC is 12C)
-    !-----------------------------------------------------------------------
-
-    where ( dic(:) /= c0 )
-       R13C_dic(:) = surface_vals(:,di13c_ind) / dic(:)
-       R14C_dic(:) = surface_vals(:,di14c_ind) / dic(:)
-       frac_co3(:) = CO3_SURF_fields(:) / dic(:)
-    elsewhere
-       R13C_dic(:) = c0
-       R14C_dic(:) = c0
-       frac_co3(:) = c0
-    end where
-
-    !-----------------------------------------------------------------------
-    !     individal discrimination factor of each species with respect to
-    !     gaseous CO2, temperature dependent, based on Zhang et al. 95
-    !-----------------------------------------------------------------------
-    eps_aq_g_surf(:)   = 0.0049_r8 * sst(:) - 1.31_r8
-
-    !-----------------------------------------------------------------------
-    !     compute the equilibrium discrimination factor between dic and
-    !     gaseous CO2
-    !-----------------------------------------------------------------------
-    !     function of T and carbonate fraction (frac_co3)
-    !     based on the empirical relationship from the measured
-    !     e_dic_g_surf of Zhang et al. 1995
-    !---------------------------------------------------------------------
-
-    eps_dic_g_surf(:) = 0.014_r8 * sst(:) * frac_co3(:) - 0.105_r8 * sst(:) + 10.53_r8
-
-    !-----------------------------------------------------------------------
-    !     compute alpha coefficients from eps :  eps = ( alpha -1 ) * 1000
-    !     => alpha = 1 + eps / 1000
-    !-----------------------------------------------------------------------
-
-    alpha_k             = c1 + eps_k             / c1000
-    alpha_aq_g_surf(:)  = c1 + eps_aq_g_surf(:)  / c1000
-    alpha_dic_g_surf(:) = c1 + eps_dic_g_surf(:) / c1000
-
-    ! Fractionation is twice as large for 14C than for 13C, so eps needs to be multiplied by 2 for 14C
-    alpha_k_14c             = c1 + eps_k * 2.0_r8            / c1000
-    alpha_aq_g_surf_14c(:)  = c1 + eps_aq_g_surf(:) *2.0_r8  / c1000
-    alpha_dic_g_surf_14c(:) = c1 + eps_dic_g_surf(:) *2.0_r8 / c1000
-
-    !-----------------------------------------------------------------------
-    !     compute 13C flux and C flux
-    !-----------------------------------------------------------------------
-
-    flux13(:) = pv(:) * alpha_k * alpha_aq_g_surf(:) * &
-         (( co2star(:) + dco2star(:) ) * r13c_atm(:) - co2star(:) * r13c_dic(:) / alpha_dic_g_surf(:))
-
-    flux14(:) = pv(:) * alpha_k_14c * alpha_aq_g_surf_14c(:) * &
-         (( co2star(:) + dco2star(:) ) * r14c_atm(:) - co2star(:) * r14c_dic(:) / alpha_dic_g_surf_14c(:))
-
-    flux(:) = pv(:) * dco2star(:)
-
-    !-----------------------------------------------------------------------
-    !     compute fluxes in and out
-    !-----------------------------------------------------------------------
-
-    flux_as(:)   = pv(:) * ( dco2star(:) + co2star(:) )
-    flux_sa(:)   = pv(:) * co2star(:)
-
-    flux13_as(:) = pv(:) * alpha_k     * alpha_aq_g_surf(:)     * ((co2star(:) + dco2star(:)) * r13c_atm(:))
-    flux14_as(:) = pv(:) * alpha_k_14c * alpha_aq_g_surf_14c(:) * ((co2star(:) + dco2star(:)) * r14c_atm(:))
-
-    flux13_sa(:) = pv(:) * alpha_k     * alpha_aq_g_surf(:)     * (co2star(:) * r13c_dic(:) / alpha_dic_g_surf(:))
-    flux14_sa(:) = pv(:) * alpha_k_14c * alpha_aq_g_surf_14c(:) * (co2star(:) * r14c_dic(:) / alpha_dic_g_surf_14c(:))
-
-    !-----------------------------------------------------------------------
-    !     end of 13C computation for gass exchange
-    !-----------------------------------------------------------------------
-
-    stf(:,di13c_ind) = stf(:,di13c_ind) + flux13(:)
-    stf(:,di14c_ind) = stf(:,di14c_ind) + flux14(:)
-
-    end associate
-
-    ! update carbon isotope diagnostics
-    ! FIXME #18: the following arguments need to be group into a derived type
-
-    call store_diagnostics_ciso_surface_forcing( &
-         num_elements,   &
-         d13c,           &
-         d14c,           &
-         flux,           &
-         flux13,         &
-         flux14,         &
-         flux13_as,      &
-         flux14_as,      &
-         flux13_sa,      &
-         flux14_sa,      &
-         R13C_dic,       &
-         R14C_dic,       &
-         R13C_atm,       &
-         R14C_atm,       &
-         eps_aq_g_surf,  &
-         eps_dic_g_surf, &
-         marbl_surface_forcing_diags)
-
-  end subroutine marbl_ciso_set_surface_forcing
-
-end module marbl_ciso_mod
+end module marbl_ciso_interior_tendency_mod

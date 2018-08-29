@@ -5,7 +5,9 @@ Adding a Diagnostic
 ===================
 
 This is a five step process.
-There are three changes to make in the Fortran code, all of which are made in ``marbl_diagnostics_mod.F90``.
+There are three changes to make in the Fortran code.
+The indexing type is in ``marbl_interface_private_types.F90``, and the rest of the code is in ``marbl_diagnostics_mod.F90``.
+(If your diagnostic is part of the carbon isotope tracer module, that code belongs in ``marbl_ciso_diagnostics_mod.F90``.)
 There are also two steps to make sure the diagnostic is known the GCM so it is included in the output.
 
 For this example, we follow the in situ temperature, which uses the ``insitu_temp`` index.
@@ -18,12 +20,12 @@ Step 1. Add to MARBL diagnostic indexing type
 
 To reduce the number of string comparisons inside routines called every time-step, MARBL uses integer indices to track many different variables.
 These indices are packed into datatypes to group common indices together.
-So the indices for diagnostics variables are split into ``marbl_surface_forcing_diagnostics_indexing_type`` and ``marbl_interior_forcing_diagnostics_indexing_type``.
+So the indices for diagnostics variables are split into ``marbl_surface_flux_diagnostics_indexing_type`` and ``marbl_interior_tendency_diagnostics_indexing_type``.
 ``insitu_temp`` is an interior forcing diagnostic.
 
 .. code-block:: fortran
 
-   type, private :: marbl_interior_diagnostics_indexing_type
+   type, private :: marbl_interior_tendency_diagnostics_indexing_type
      ! General 2D diags
      integer(int_kind) :: zsatcalc
      integer(int_kind) :: zsatarag
@@ -35,7 +37,7 @@ So the indices for diagnostics variables are split into ``marbl_surface_forcing_
      .
      .
      .
-   end type marbl_surface_forcing_diagnostics_indexing_type
+   end type marbl_interior_tendency_diagnostics_indexing_type
 
 -----------------------------------
 Step 2. Add to diagnostic structure
@@ -78,10 +80,10 @@ This step copies data only available in MARBL into the datatype that is availabl
   end associate
 
 .. note::
-  In situ temperature is copied to the diagnostic type in ``marbl_diagnostics_set_interior_forcing()``.
+  In situ temperature is copied to the diagnostic type in ``marbl_diagnostics_interior_tendency_compute()``.
   This subroutine also calls many different ``store_diagnostics_*`` subroutines, but in a future release the ``store_diagnostics`` routines will be condensed into a smaller subset of routines.
   Regardless, find the routine that makes the most sense for your diagnostic variable.
-  (Surface forcing fields are copied to the diagnostic type in ``marbl_diagnostics_set_surface_forcing()``.)
+  (Surface forcing fields are copied to the diagnostic type in ``marbl_diagnostics_surface_flux_compute()``.)
 
 -----------------------------------------
 Step 4. Update the Diagnostics YAML files
