@@ -4,20 +4,20 @@
 Compute Interior Tracer Tendencies
 ==================================
 
-``set_interior_forcing()`` computes interior tracer tendencies (and related diagnostics) for a single column.
-(Recall that ``num_interior_forcing_elements = 1``, per :ref:`ref-init-interface`.)
+``interior_tendency_compute()`` computes interior tracer tendencies (and related diagnostics) for a single column.
+(Recall that ``num_elements_interior_tendency = 1``, per :ref:`ref-init-interface`.)
 The stand-alone test suite does not yet call this routine, so examples come from the POP driver.
 The call to the routine is straightforward:
 
 .. code-block:: fortran
 
-       call marbl_instances(iblock)%set_interior_forcing()
+       call marbl_instances(iblock)%interior_tendency_compute()
 
 As with :ref:`ref-compute-surface-fluxes`, the details are in the surrounding calls.
 
-------------------------------------------------------
-What MARBL needs prior to calling set_interior_forcing
-------------------------------------------------------
+-----------------------------------------------------------
+What MARBL needs prior to calling interior_tendency_compute
+-----------------------------------------------------------
 
 The GCM needs to make sure the MARBL instance has all the data it needs to compute interior tendencies correctly.
 Specifically it needs to to the following.
@@ -30,7 +30,7 @@ If MARBL is configured with ``ladjust_bury_coeff = .true.`` then it will request
 
 .. code-block:: fortran
 
-       call marbl_instances(iblock)%set_global_scalars('interior')
+       call marbl_instances(iblock)%set_global_scalars('interior_tendency')
 
 Note that at this point, MARBL is responsible for both the global averaging and keeping the running means; in the future running means will be computed in MARBL (and requested as part of saved state).
 
@@ -52,31 +52,31 @@ For each column, MARBL needs to know the following:
 
   marbl_instances(bid)%domain%kmt = KMT(i, c, bid)
   if (partial_bottom_cells) then
-     marbl_instances(bid)%domain%delta_z(:) = DZT(i, c, :, bid)
+    marbl_instances(bid)%domain%delta_z(:) = DZT(i, c, :, bid)
   end if
 
   ! --- set forcing fields ---
 
-  do n = 1, size(interior_forcing_fields)
-    if (interior_forcing_fields(n)%rank == 2) then
-      marbl_instances(bid)%interior_input_forcings(n)%field_0d(1) = &
-           interior_forcing_fields(n)%field_0d(i,c,bid)
-    else
-      marbl_instances(bid)%interior_input_forcings(n)%field_1d(1,:) = &
-           interior_forcing_fields(n)%field_1d(i,c,:,bid)
-    end if
+  do n = 1, size(interior_tendency_forcings)
+   if (interior_tendency_forcings(n)%rank == 2) then
+     marbl_instances(bid)%interior_tendency_forcings(n)%field_0d(1) = &
+          interior_tendency_forcings(n)%field_0d(i,c,bid)
+   else
+     marbl_instances(bid)%interior_tendency_forcings(n)%field_1d(1,:) = &
+          interior_tendency_forcings(n)%field_1d(i,c,:,bid)
+   end if
   end do
 
   ! --- set column tracers, averaging 2 time levels into 1 ---
 
   do n = 1, ecosys_tracer_cnt
-     marbl_instances(bid)%column_tracers(n, :) = p5*(tracer_module_old(i, c, :, n) + tracer_module_cur(i, c, :, n))
+    marbl_instances(bid)%tracers(n, :) = p5*(tracer_module_old(i, c, :, n) + tracer_module_cur(i, c, :, n))
   end do
 
   ! --- copy data from slab to column for marbl_saved_state ---
-  do n=1,size(saved_state_interior)
-    marbl_instances(bid)%interior_saved_state%state(n)%field_3d(:,1) = &
-      saved_state_interior(n)%field_3d(:,i,c,bid)
+  do n=1,size(interior_tendency_saved_state)
+   marbl_instances(bid)%interior_tendency_saved_state%state(n)%field_3d(:,1) = &
+     interior_tendency_saved_state(n)%field_3d(:,i,c,bid)
   end do
 
 --------------------------------------
@@ -84,19 +84,43 @@ What the GCM needs after MARBL returns
 --------------------------------------
 
 MARBL returns tracer tendencies on a per-column basis, and that needs to be stored in the GCM.
+POP checks to ensure that MARBL does set any values to ``NaN``, other GCMs may or may not want to do so as well.
 Additionally, saved state needs to be saved so it is available in the next time step and any fields that are globally averaged also need to be stored.
 
 .. code-block:: fortran
 
-             do n=1,size(saved_state_interior)
-               saved_state_interior(n)%field_3d(:,i,c,bid) =               &
-                 marbl_instances(bid)%interior_saved_state%state(n)%field_3d(:,1)
-             end do
+  do k = 1, KMT(i, c, bid)
+     if (any(shr_infnan_isnan(marbl_instances(bid)%interior_tendencies(:, k)))) then
+        write(stdout, *) subname, ': NaN in dtracer_module, (i,j,k)=(', &
+           this_block%i_glob(i), ',', this_block%j_glob(c), ',', k, ')'
+        write(stdout, *) '(lon,lat)=(', TLOND(i,c,bid), ',', TLATD(i,c,bid), ')'
+        do n = 1, ecosys_tracer_cnt
+           write(stdout, *) trim(marbl_instances(1)%tracer_metadata(n)%short_name), ' ', &
+              marbl_instances(bid)%tracers(n, k), ' ', &
+              marbl_instances(bid)%interior_tendencies(n, k)
+        end do
+        do n = 1, size(interior_tendency_forcings)
+           associate (forcing_field => interior_tendency_forcings(n))
+              write(stdout, *) trim(forcing_field%metadata%marbl_varname)
+              if (forcing_field%rank == 2) then
+                 write(stdout, *) forcing_field%field_0d(i,c,bid)
+              else
+                 if (forcing_field%ldim3_is_depth) then
+                    write(stdout, *) forcing_field%field_1d(i,c,k,bid)
+                 else
+                    write(stdout, *) forcing_field%field_1d(i,c,:,bid)
+                 end if
+              end if
+           end associate
+        end do
+        call exit_POP(sigAbort, 'Stopping in ' // subname)
+     end if
+  end do
 
-             do n = 1, ecosys_tracer_cnt
-                dtracer_module(i, c, :, n) = marbl_instances(bid)%column_dtracers(n, :)
-             end do
+  do n = 1, ecosys_tracer_cnt
+     dtracer_module(i, c, 1:KMT(i, c, bid), n) = marbl_instances(bid)%interior_tendencies(n, 1:KMT(i, c, bid))
+  end do
 
-             ! copy values to be used in computing requested global averages
-             ! arrays have zero extent if none are requested
-             glo_avg_fields_interior(i, c, bid, :) = marbl_instances(bid)%glo_avg_fields_interior(:)
+  ! copy values to be used in computing requested global averages
+  ! arrays have zero extent if none are requested
+  glo_avg_fields_interior(i, c, bid, :) = marbl_instances(bid)%glo_avg_fields_interior_tendency(:)

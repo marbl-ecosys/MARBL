@@ -75,8 +75,8 @@ MARBL splits the saved state fields between those needed for computing surface f
 
 .. code-block:: fortran
 
-  marbl_instance%surface_saved_state
-  marbl_instance%interior_saved_state
+  marbl_instance%surface_flux_saved_state
+  marbl_instance%interior_tendency_saved_state
 
 Both of these are of type ``marbl_saved_state_type``:
 
@@ -110,9 +110,10 @@ Both of these are of type ``marbl_saved_state_type``:
 What Should the GCM Do?
 -----------------------
 
-After ``marbl_instance%set_surface_forcing()`` returns, the GCM needs to process ``marbl_intance%surface_saved_state``.
-That means looping through each element in the ``marbl_instance%surface_saved_state%state(:)`` array, checking ``state(n)%rank``, and then storing either ``state(n)%field_2d`` or ``state(n)%field_3d`` in a global array.
-Before calling ``set_surface_forcing()`` in the next time step, these saved values should be copied back into ``marbl_intance%surface_saved_state``.
+After ``marbl_instance%surface_flux_compute()`` returns, the GCM needs to process ``marbl_instance%surface_flux_saved_state``.
+That means looping through each element in the ``marbl_instance%surface_flux_saved_state%state(:)`` array, checking ``state(n)%rank``,
+and then storing either ``state(n)%field_2d`` or ``state(n)%field_3d`` in a global array.
+Before calling ``surface_flux_compute()`` in the next time step, these saved values should be copied back into ``marbl_intance%surface_flux_saved_state``.
 
-Similar actions must be taken with ``marbl_instance%interior_saved_state`` before / after calls to ``marbl_instance%set_interior_forcing()``.
+Similar actions must be taken with ``marbl_instance%interior_tendency_saved_state`` before / after calls to ``marbl_instance%interior_tendency_compute()``.
 

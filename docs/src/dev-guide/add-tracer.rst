@@ -138,11 +138,11 @@ Step 4. Compute surface flux for new tracer (if necessary)
 
 Not all tracers return a surface flux, so this may not be necessary for your tracer.
 For this example, we will follow the oxygen tracer.
-Surface fluxes are computed in ``marbl_mod::marbl_set_surface_forcing``:
+Surface fluxes are computed in ``marbl_surface_flux_mod::marbl_surface_flux_compute``:
 
 .. code-block:: fortran
 
-  subroutine marbl_set_surface_forcing( &
+  subroutine marbl_surface_flux_compute( &
   .
   .
   .
@@ -150,10 +150,6 @@ Surface fluxes are computed in ``marbl_mod::marbl_set_surface_forcing``:
     .
     .
     .
-         stf                  => surface_tracer_fluxes(:,:),                                        &
-         .
-         .
-         .
          o2_ind            => marbl_tracer_indices%o2_ind,                                      &
          .
          .
@@ -164,7 +160,7 @@ Surface fluxes are computed in ``marbl_mod::marbl_set_surface_forcing``:
     !  fluxes initially set to 0
     !-----------------------------------------------------------------------
 
-    stf(:, :) = c0
+    surface_fluxes(:, :) = c0
     .
     .
     .
@@ -183,10 +179,7 @@ Surface fluxes are computed in ``marbl_mod::marbl_set_surface_forcing``:
        pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
        o2sat(:) = ap_used(:) * o2sat_1atm(:)
        flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - surface_vals(:, o2_ind))
-       stf(:, o2_ind) = stf(:, o2_ind) + flux_o2_loc(:)
-
-.. note::
-  This subroutine will be renamed ``marbl_compute_surface_fluxes`` to better reflect what the code is doing.
+       surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 5. Compute tracer tendency
@@ -194,11 +187,11 @@ Step 5. Compute tracer tendency
 
 The tracer tendencies are computed in a two step process - MARBL computes the tracer tendency terms from a variety of processes and then combines the terms in the end.
 Given the modular nature of MARBL, the tendencies from each process are computed in their own routine.
-This is done in ``marbl_mod::set_interior_forcing``:
+This is done in ``marbl_interior_tendency_mod::interior_tendency_compute``:
 
 .. code-block:: fortran
 
-  subroutine marbl_set_interior_forcing( &
+  subroutine marbl_interior_tendency_compute( &
   .
   .
   .
@@ -276,8 +269,7 @@ So you will need to update ``marbl_compute_dtracer_local`` to compute the tracer
     dtracers(o2_ind) = o2_production - o2_consumption
 
 .. note::
-  #. This subroutine will be renamed ``marbl_compute_interior_tendencies`` to better reflect what the code is doing.
-  #. The ``k`` loop in the example may be removed in favor of doing per-process computations on an entire column at once.
+  The ``k`` loop in the example may be removed in favor of doing per-process computations on an entire column at once.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 6. Add any necessary diagnostics
