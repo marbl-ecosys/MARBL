@@ -98,10 +98,10 @@ module marbl_interface
      real (r8)                                 , public, allocatable  :: glo_scalar_interior(:)
      real (r8)                                 , public, allocatable  :: glo_scalar_surface(:)
 
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_interior(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_surface(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_interior(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface(:)
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_interior_tendency(:)
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_surface_flux(:)
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_interior_tendency(:)
+     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
      type(marbl_PAR_type)                      , private              :: PAR
@@ -807,15 +807,15 @@ contains
 
     allocate(this%glo_scalar_surface(glo_scalar_cnt_surface_flux))
 
-    allocate(this%glo_avg_rmean_interior(glo_avg_field_cnt_interior_tendency))
-    allocate(this%glo_avg_rmean_surface(glo_avg_field_cnt_surface_flux))
-    allocate(this%glo_scalar_rmean_interior(glo_scalar_cnt_interior_tendency))
-    allocate(this%glo_scalar_rmean_surface(glo_scalar_cnt_surface_flux))
+    allocate(this%glo_avg_rmean_interior_tendency(glo_avg_field_cnt_interior_tendency))
+    allocate(this%glo_avg_rmean_surface_flux(glo_avg_field_cnt_surface_flux))
+    allocate(this%glo_scalar_rmean_interior_tendency(glo_scalar_cnt_interior_tendency))
+    allocate(this%glo_scalar_rmean_surface_flux(glo_scalar_cnt_surface_flux))
 
-    call marbl_glo_avg_init_rmean_vals(this%glo_avg_rmean_interior,    &
-                                       this%glo_avg_rmean_surface,     &
-                                       this%glo_scalar_rmean_interior, &
-                                       this%glo_scalar_rmean_surface)
+    call marbl_glo_avg_init_rmean_vals(this%glo_avg_rmean_interior_tendency,    &
+                                       this%glo_avg_rmean_surface_flux,         &
+                                       this%glo_scalar_rmean_interior_tendency, &
+                                       this%glo_scalar_rmean_surface_flux)
 
     end associate
 
@@ -923,11 +923,11 @@ contains
     character(len=*),             intent(in)    :: field_source ! 'interior_tendency' or 'surface_flux`'
 
     if (field_source == 'interior_tendency') then
-       call marbl_interior_tendency_adjust_bury_coeff(                           &
-            marbl_particulate_share            = this%particulate_share,         &
-            glo_avg_rmean_interior_tendency    = this%glo_avg_rmean_interior,    &
-            glo_avg_rmean_surface_flux         = this%glo_avg_rmean_surface,     &
-            glo_scalar_rmean_interior_tendency = this%glo_scalar_rmean_interior, &
+       call marbl_interior_tendency_adjust_bury_coeff(                                    &
+            marbl_particulate_share            = this%particulate_share,                  &
+            glo_avg_rmean_interior_tendency    = this%glo_avg_rmean_interior_tendency,    &
+            glo_avg_rmean_surface_flux         = this%glo_avg_rmean_surface_flux,         &
+            glo_scalar_rmean_interior_tendency = this%glo_scalar_rmean_interior_tendency, &
             glo_scalar_interior_tendency       = this%glo_scalar_interior)
     end if
 
@@ -956,10 +956,10 @@ contains
       deallocate(this%glo_avg_averages_surface_flux)
       deallocate(this%glo_scalar_interior)
       deallocate(this%glo_scalar_surface)
-      deallocate(this%glo_avg_rmean_interior)
-      deallocate(this%glo_avg_rmean_surface)
-      deallocate(this%glo_scalar_rmean_interior)
-      deallocate(this%glo_scalar_rmean_surface)
+      deallocate(this%glo_avg_rmean_interior_tendency)
+      deallocate(this%glo_avg_rmean_surface_flux)
+      deallocate(this%glo_scalar_rmean_interior_tendency)
+      deallocate(this%glo_scalar_rmean_surface_flux)
     end if
 
     ! free dynamically allocated memory, etc
