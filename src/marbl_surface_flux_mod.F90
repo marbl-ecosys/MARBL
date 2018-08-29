@@ -64,7 +64,7 @@ contains
        surface_flux_internal,           &
        surface_flux_share,              &
        surface_flux_diags,              &
-       glo_avg_fields_surface,          &
+       glo_avg_fields_surface_flux,     &
        marbl_status_log)
 
     !  Compute surface fluxes for base tracers
@@ -99,7 +99,7 @@ contains
     type(marbl_surface_flux_output_type)      , intent(inout) :: surface_flux_output
     type(marbl_surface_flux_share_type)       , intent(inout) :: surface_flux_share
     type(marbl_diagnostics_type)              , intent(inout) :: surface_flux_diags
-    real (r8)                                 , intent(out)   :: glo_avg_fields_surface(:,:)
+    real (r8)                                 , intent(out)   :: glo_avg_fields_surface_flux(:,:)
     type(marbl_log_type)                      , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
@@ -461,13 +461,13 @@ contains
           sio3_ind     => marbl_tracer_indices%sio3_ind                                        &
           )
 
-          glo_avg_fields_surface(:,glo_avg_field_ind_surface_flux_C_input) = &
+          glo_avg_fields_surface_flux(:,glo_avg_field_ind_surface_flux_C_input) = &
              ext_C_flux(:) + surface_fluxes(:,dic_ind) - flux_co2(:) + surface_fluxes(:,doc_ind) + surface_fluxes(:,docr_ind)
 
-          glo_avg_fields_surface(:,glo_avg_field_ind_surface_flux_P_input) = &
+          glo_avg_fields_surface_flux(:,glo_avg_field_ind_surface_flux_P_input) = &
              ext_P_flux(:) + surface_fluxes(:,po4_ind) + surface_fluxes(:,dop_ind) + surface_fluxes(:,dopr_ind)
 
-          glo_avg_fields_surface(:,glo_avg_field_ind_surface_flux_Si_input) = &
+          glo_avg_fields_surface_flux(:,glo_avg_field_ind_surface_flux_Si_input) = &
              ext_Si_flux(:) + surface_fluxes(:,sio3_ind)
        end associate
     end if

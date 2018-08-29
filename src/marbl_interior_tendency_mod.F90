@@ -103,7 +103,7 @@ contains
        PAR,                                   &
        marbl_particulate_share,               &
        interior_tendency_diags,               &
-       glo_avg_fields_interior,               &
+       glo_avg_fields_interior_tendency,      &
        marbl_status_log)
 
     !  Compute time derivatives for ecosystem state variables
@@ -135,7 +135,7 @@ contains
     type    (marbl_timer_indexing_type)         , intent(in)    :: marbl_timer_indices
     type    (marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
     type    (marbl_diagnostics_type)            , intent(inout) :: interior_tendency_diags
-    real    (r8)                                , intent(out)   :: glo_avg_fields_interior(:)
+    real    (r8)                                , intent(out)   :: glo_avg_fields_interior_tendency(:)
     type(marbl_log_type)                        , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
@@ -371,7 +371,7 @@ contains
             QA_dust_def(k),                                        &
             tracer_local(:, k), carbonate(k), sed_denitrif(k),     &
             other_remin(k), fesedflux(k), marbl_tracer_indices,    &
-            glo_avg_fields_interior, marbl_status_log)
+            glo_avg_fields_interior_tendency, marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
           call marbl_status_log%log_error_trace('compute_particulate_terms()', subname)
@@ -2500,8 +2500,8 @@ contains
               POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                         &
               P_SiO2, dust, P_iron, PON_remin, PON_sed_loss, QA_dust_def, &
               tracer_local, carbonate, sed_denitrif, other_remin,         &
-              fesedflux, marbl_tracer_indices, glo_avg_fields_interior,   &
-              marbl_status_log)
+              fesedflux, marbl_tracer_indices,                            &
+              glo_avg_fields_interior_tendency, marbl_status_log)
 
      !  Compute outgoing fluxes and remineralization terms. Assumes that
      !  production terms have been set. Incoming fluxes are assumed to be the
@@ -2593,7 +2593,7 @@ contains
      real (r8)                         , intent(out)   :: other_remin         ! sedimentary remin not due to oxic or denitrification
      type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
      type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
-     real (r8)                         , intent(inout) :: glo_avg_fields_interior(:)
+     real (r8)                         , intent(inout) :: glo_avg_fields_interior_tendency(:)
      type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
      !-----------------------------------------------------------------------
@@ -3017,20 +3017,20 @@ contains
            POP%sed_loss(k) = POP%to_floor * min(POM_bury_frac_max, POP_bury_coeff * bury_frac)
 
            if (ladjust_bury_coeff) then
-              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_POC_bury) = POC%sed_loss(k)
+              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_POC_bury) = POC%sed_loss(k)
               if (POC_bury_coeff * bury_frac < POM_bury_frac_max) then
-                 glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = &
+                 glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = &
                       POC%to_floor * bury_frac
               else
-                 glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = c0
+                 glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = c0
               endif
 
-              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_POP_bury) = POP%sed_loss(k)
+              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_POP_bury) = POP%sed_loss(k)
               if (POP_bury_coeff * bury_frac < POM_bury_frac_max) then
-                 glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = &
+                 glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = &
                       POP%to_floor * bury_frac
               else
-                 glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = c0
+                 glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = c0
               endif
            endif
 
@@ -3056,11 +3056,11 @@ contains
            POP%to_floor = POP%sflux_out(k) + POP%hflux_out(k)
 
            if (ladjust_bury_coeff) then
-              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_POC_bury) = c0
-              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = c0
+              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_POC_bury) = c0
+              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = c0
 
-              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_POP_bury) = c0
-              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = c0
+              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_POP_bury) = c0
+              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = c0
            endif
 
         endif
@@ -3081,11 +3081,12 @@ contains
         endif
 
         if (ladjust_bury_coeff) then
-           glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_bSi_bury) = P_SiO2%sed_loss(k)
+           glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_bSi_bury) = P_SiO2%sed_loss(k)
            if (bSi_bury_coeff * bury_frac < bSi_bury_frac_max) then
-              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff) = P_SiO2%to_floor * bury_frac
+              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff) = &
+                   P_SiO2%to_floor * bury_frac
            else
-              glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff) = c0
+              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff) = c0
            endif
         endif
 
@@ -3107,7 +3108,7 @@ contains
         endif
 
         if (ladjust_bury_coeff) then
-           glo_avg_fields_interior(glo_avg_field_ind_interior_tendency_CaCO3_bury) = P_CaCO3%sed_loss(k)
+           glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_CaCO3_bury) = P_CaCO3%sed_loss(k)
         endif
 
         !----------------------------------------------------------------------------------
