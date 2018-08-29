@@ -95,8 +95,8 @@ module marbl_interface
 
      ! FIXME #77: for now, running means are being computed in the driver
      !            they will eventually be moved from the interface to inside MARBL
-     real (r8)                                 , public, allocatable  :: glo_scalar_interior(:)
-     real (r8)                                 , public, allocatable  :: glo_scalar_surface(:)
+     real (r8)                                 , public, allocatable  :: glo_scalar_interior_tendency(:)
+     real (r8)                                 , public, allocatable  :: glo_scalar_surface_flux(:)
 
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_interior_tendency(:)
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_surface_flux(:)
@@ -803,9 +803,9 @@ contains
     allocate(this%glo_avg_fields_surface_flux(num_elements_surface_flux, glo_avg_field_cnt_surface_flux))
     allocate(this%glo_avg_averages_surface_flux(glo_avg_field_cnt_surface_flux))
 
-    allocate(this%glo_scalar_interior(glo_scalar_cnt_interior_tendency))
+    allocate(this%glo_scalar_interior_tendency(glo_scalar_cnt_interior_tendency))
 
-    allocate(this%glo_scalar_surface(glo_scalar_cnt_surface_flux))
+    allocate(this%glo_scalar_surface_flux(glo_scalar_cnt_surface_flux))
 
     allocate(this%glo_avg_rmean_interior_tendency(glo_avg_field_cnt_interior_tendency))
     allocate(this%glo_avg_rmean_surface_flux(glo_avg_field_cnt_surface_flux))
@@ -928,7 +928,7 @@ contains
             glo_avg_rmean_interior_tendency    = this%glo_avg_rmean_interior_tendency,    &
             glo_avg_rmean_surface_flux         = this%glo_avg_rmean_surface_flux,         &
             glo_scalar_rmean_interior_tendency = this%glo_scalar_rmean_interior_tendency, &
-            glo_scalar_interior_tendency       = this%glo_scalar_interior)
+            glo_scalar_interior_tendency       = this%glo_scalar_interior_tendency)
     end if
 
   end subroutine set_global_scalars
@@ -954,8 +954,8 @@ contains
       deallocate(this%glo_avg_averages_interior_tendency)
       deallocate(this%glo_avg_fields_surface_flux)
       deallocate(this%glo_avg_averages_surface_flux)
-      deallocate(this%glo_scalar_interior)
-      deallocate(this%glo_scalar_surface)
+      deallocate(this%glo_scalar_interior_tendency)
+      deallocate(this%glo_scalar_surface_flux)
       deallocate(this%glo_avg_rmean_interior_tendency)
       deallocate(this%glo_avg_rmean_surface_flux)
       deallocate(this%glo_scalar_rmean_interior_tendency)
