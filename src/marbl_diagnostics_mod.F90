@@ -19,6 +19,7 @@ module marbl_diagnostics_mod
   use marbl_interface_private_types, only : dissolved_organic_matter_type
   use marbl_interface_private_types, only : column_sinking_particle_type
   use marbl_interface_private_types, only : marbl_PAR_type
+  use marbl_interface_private_types, only : autotroph_secondary_species_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
@@ -30,7 +31,6 @@ module marbl_diagnostics_mod
   use marbl_interface_public_types, only : marbl_diagnostics_type
 
   use marbl_pft_mod, only : autotroph_local_type
-  use marbl_pft_mod, only : autotroph_secondary_species_type
   use marbl_pft_mod, only : zooplankton_secondary_species_type
 
   use marbl_logging, only : marbl_log_type
@@ -2989,7 +2989,7 @@ contains
     type(marbl_tracer_index_type)             , intent(in) :: marbl_tracer_indices
     type (carbonate_type)                     , intent(in) :: carbonate(domain%km)
     type (autotroph_local_type)               , intent(in) :: autotroph_local(autotroph_cnt, domain%km)
-    type (autotroph_secondary_species_type)   , intent(in) :: autotroph_secondary_species(autotroph_cnt, domain%km)
+    type (autotroph_secondary_species_type)   , intent(in) :: autotroph_secondary_species
     type (zooplankton_secondary_species_type) , intent(in) :: zooplankton_secondary_species(zooplankton_cnt, domain%km)
     type (dissolved_organic_matter_type)      , intent(in) :: dissolved_organic_matter(domain%km)
     type (marbl_particulate_share_type)       , intent(in) :: marbl_particulate_share
@@ -3415,7 +3415,7 @@ contains
 
     type(marbl_domain_type)                , intent(in)    :: marbl_domain
     type(autotroph_local_type)             , intent(in)    :: autotroph_local(:,:) ! autotroph_cnt, km
-    type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:) ! autotroph_cnt, km
+    type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_interior_diags
 
     !-----------------------------------------------------------------------
@@ -3462,81 +3462,81 @@ contains
        ! normalize weight, so that its integral is 1
        autotrophC_weight(:) = autotrophC_weight(:) / autotrophC_zint_100m
 
-       diags(ind%N_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VNtot
-       limterm = autotroph_secondary_species(n,:)%VNtot * autotrophC_weight(:)
+       diags(ind%N_lim_surf(n))%field_2d(1) = autotroph_secondary_species%VNtot(n,1)
+       limterm = autotroph_secondary_species%VNtot(n,:) * autotrophC_weight(:)
        call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%N_lim_Cweight_avg_100m(n))%field_2d(1))
 
-       diags(ind%P_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VPtot
-       limterm = autotroph_secondary_species(n,:)%VPtot * autotrophC_weight(:)
+       diags(ind%P_lim_surf(n))%field_2d(1) = autotroph_secondary_species%VPtot(n,1)
+       limterm = autotroph_secondary_species%VPtot(n,:) * autotrophC_weight(:)
        call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%P_lim_Cweight_avg_100m(n))%field_2d(1))
 
-       diags(ind%Fe_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VFe
-       limterm = autotroph_secondary_species(n,:)%VFe * autotrophC_weight(:)
+       diags(ind%Fe_lim_surf(n))%field_2d(1) = autotroph_secondary_species%VFe(n,1)
+       limterm = autotroph_secondary_species%VFe(n,:) * autotrophC_weight(:)
        call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%Fe_lim_Cweight_avg_100m(n))%field_2d(1))
 
        if (ind%SiO3_lim_surf(n).ne.-1) then
-          diags(ind%SiO3_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VSiO3
+          diags(ind%SiO3_lim_surf(n))%field_2d(1) = autotroph_secondary_species%VSiO3(n,1)
        endif
        if (ind%SiO3_lim_Cweight_avg_100m(n).ne.-1) then
-          limterm = autotroph_secondary_species(n,:)%VSiO3 * autotrophC_weight(:)
+          limterm = autotroph_secondary_species%VSiO3(n,:) * autotrophC_weight(:)
           call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
                near_surface_integral=diags(ind%SiO3_lim_Cweight_avg_100m(n))%field_2d(1))
        endif
 
-       diags(ind%light_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%light_lim
-       limterm = autotroph_secondary_species(n,:)%light_lim * autotrophC_weight(:)
+       diags(ind%light_lim_surf(n))%field_2d(1) = autotroph_secondary_species%light_lim(n,1)
+       limterm = autotroph_secondary_species%light_lim(n,:) * autotrophC_weight(:)
        call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%light_lim_Cweight_avg_100m(n))%field_2d(1))
 
        if (ind%Qp(n).ne.-1) then
-         diags(ind%Qp(n))%field_3d(:, 1)        = autotroph_secondary_species(n,:)%Qp
+         diags(ind%Qp(n))%field_3d(:, 1)        = autotroph_secondary_species%Qp(n,:)
        end if
 
-       diags(ind%photoNO3(n))%field_3d(:, 1)    = autotroph_secondary_species(n,:)%NO3_V
-       diags(ind%photoNH4(n))%field_3d(:, 1)    = autotroph_secondary_species(n,:)%NH4_V
-       diags(ind%PO4_uptake(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%PO4_V
-       diags(ind%DOP_uptake(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%DOP_V
-       diags(ind%photoFE(n))%field_3d(:, 1)     = autotroph_secondary_species(n,:)%photoFe
+       diags(ind%photoNO3(n))%field_3d(:, 1)    = autotroph_secondary_species%NO3_V(n,:)
+       diags(ind%photoNH4(n))%field_3d(:, 1)    = autotroph_secondary_species%NH4_V(n,:)
+       diags(ind%PO4_uptake(n))%field_3d(:, 1)  = autotroph_secondary_species%PO4_V(n,:)
+       diags(ind%DOP_uptake(n))%field_3d(:, 1)  = autotroph_secondary_species%DOP_V(n,:)
+       diags(ind%photoFE(n))%field_3d(:, 1)     = autotroph_secondary_species%photoFe(n,:)
 
        if (ind%bSi_form(n).ne.-1) then
-          diags(ind%bSi_form(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%photoSi
+          diags(ind%bSi_form(n))%field_3d(:, 1)  = autotroph_secondary_species%photoSi(n,:)
           diags(ind%tot_bSi_form)%field_3d(:, 1) = diags(ind%tot_bSi_form)%field_3d(:, 1) + &
                diags(ind%bSi_form(n))%field_3d(:, 1)
        endif
 
        if (ind%CaCO3_form(n).ne.-1) then
-          diags(ind%CaCO3_form(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%CaCO3_form
+          diags(ind%CaCO3_form(n))%field_3d(:, 1)  = autotroph_secondary_species%CaCO3_form(n,:)
           diags(ind%tot_CaCO3_form)%field_3d(:, 1) = diags(ind%tot_CaCO3_form)%field_3d(:, 1) + &
                diags(ind%CaCO3_form(n))%field_3d(:, 1)
        end if
 
        if (ind%Nfix(n).ne.-1) then
-          diags(ind%Nfix(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%Nfix
+          diags(ind%Nfix(n))%field_3d(:, 1)  = autotroph_secondary_species%Nfix(n,:)
           diags(ind%tot_Nfix)%field_3d(:, 1) = diags(ind%tot_Nfix)%field_3d(:, 1) + &
                diags(ind%Nfix(n))%field_3d(:, 1)
        end if
 
-       diags(ind%auto_graze(n))%field_3d(:, 1)     = autotroph_secondary_species(n,:)%auto_graze
+       diags(ind%auto_graze(n))%field_3d(:, 1)     = autotroph_secondary_species%auto_graze(n,:)
        diags(ind%auto_graze_TOT)%field_3d(:, 1)    = diags(ind%auto_graze_TOT)%field_3d(:, 1) + &
-            autotroph_secondary_species(n,:)%auto_graze
-       diags(ind%auto_graze_poc(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%auto_graze_poc
-       diags(ind%auto_graze_doc(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%auto_graze_doc
-       diags(ind%auto_graze_zoo(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%auto_graze_zoo
-       diags(ind%auto_loss(n))%field_3d(:, 1)      = autotroph_secondary_species(n,:)%auto_loss
-       diags(ind%auto_loss_poc(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%auto_loss_poc
-       diags(ind%auto_loss_doc(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%auto_loss_doc
-       diags(ind%auto_agg(n))%field_3d(:, 1)       = autotroph_secondary_species(n,:)%auto_agg
-       diags(ind%photoC(n))%field_3d(:, 1)         = autotroph_secondary_species(n,:)%photoC
+            autotroph_secondary_species%auto_graze(n,:)
+       diags(ind%auto_graze_poc(n))%field_3d(:, 1) = autotroph_secondary_species%auto_graze_poc(n,:)
+       diags(ind%auto_graze_doc(n))%field_3d(:, 1) = autotroph_secondary_species%auto_graze_doc(n,:)
+       diags(ind%auto_graze_zoo(n))%field_3d(:, 1) = autotroph_secondary_species%auto_graze_zoo(n,:)
+       diags(ind%auto_loss(n))%field_3d(:, 1)      = autotroph_secondary_species%auto_loss(n,:)
+       diags(ind%auto_loss_poc(n))%field_3d(:, 1)  = autotroph_secondary_species%auto_loss_poc(n,:)
+       diags(ind%auto_loss_doc(n))%field_3d(:, 1)  = autotroph_secondary_species%auto_loss_doc(n,:)
+       diags(ind%auto_agg(n))%field_3d(:, 1)       = autotroph_secondary_species%auto_agg(n,:)
+       diags(ind%photoC(n))%field_3d(:, 1)         = autotroph_secondary_species%photoC(n,:)
        diags(ind%photoC_TOT)%field_3d(:, 1)        = diags(ind%photoC_TOT)%field_3d(:, 1) + &
-            autotroph_secondary_species(n,:)%photoC
+            autotroph_secondary_species%photoC(n,:)
 
        diags(ind%photoC_NO3(n))%field_3d(:, 1) = c0
-       where (autotroph_secondary_species(n,:)%VNtot > c0)
-          diags(ind%photoC_NO3(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%photoC * &
-               (autotroph_secondary_species(n,:)%VNO3 / autotroph_secondary_species(n,:)%VNtot)
+       where (autotroph_secondary_species%VNtot(n,:) > c0)
+          diags(ind%photoC_NO3(n))%field_3d(:, 1) = autotroph_secondary_species%photoC(n,:) * &
+               (autotroph_secondary_species%VNO3(n,:) / autotroph_secondary_species%VNtot(n,:))
 
           diags(ind%photoC_NO3_TOT)%field_3d(:, 1) = diags(ind%photoC_NO3_TOT)%field_3d(:, 1) + &
                diags(ind%photoC_NO3(n))%field_3d(:, 1)
@@ -3544,7 +3544,7 @@ contains
 
        ! per-autotroph vertical integrals and their sums
        if (ind%CaCO3_form_zint(n).ne.-1) then
-          call marbl_diagnostics_share_compute_vertical_integrals(autotroph_secondary_species(n,:)%CaCO3_form, &
+          call marbl_diagnostics_share_compute_vertical_integrals(autotroph_secondary_species%CaCO3_form(n,:), &
                delta_z, kmt, full_depth_integral=diags(ind%CaCO3_form_zint(n))%field_2d(1), &
                near_surface_integral=diags(ind%CaCO3_form_zint_100m(n))%field_2d(1))
 
@@ -3555,7 +3555,7 @@ contains
                diags(ind%CaCO3_form_zint_100m(n))%field_2d(1)
        end if
 
-       call marbl_diagnostics_share_compute_vertical_integrals(autotroph_secondary_species(n,:)%photoC, &
+       call marbl_diagnostics_share_compute_vertical_integrals(autotroph_secondary_species%photoC(n,:), &
             delta_z, kmt, full_depth_integral=diags(ind%photoC_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%photoC_zint_100m(n))%field_2d(1))
 
@@ -4056,7 +4056,7 @@ contains
     real(r8)                               , intent(in)    :: PON_sed_loss(:) ! km
     real(r8)                               , intent(in)    :: denitrif(:)     ! km
     real(r8)                               , intent(in)    :: sed_denitrif(:) ! km
-    type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:)
+    type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species
     real(r8)                               , intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
@@ -4094,7 +4094,7 @@ contains
     ! subtract out N fixation
     do n = 1, autotroph_cnt
        if (autotrophs(n)%Nfixer) then
-          work = work - autotroph_secondary_species(n,:)%Nfix
+          work = work - autotroph_secondary_species%Nfix(n,:)
        end if
     end do
 
@@ -4126,7 +4126,7 @@ contains
 
     type(marbl_domain_type)                , intent(in)    :: marbl_domain
     type(column_sinking_particle_type)     , intent(in)    :: POP
-    type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:)
+    type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species
     real(r8)                               , intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
@@ -4159,7 +4159,7 @@ contains
        work = work + sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%P_ind,:),dim=1)
     else
        do n = 1, autotroph_cnt
-          work = work + autotroph_secondary_species(n,:)%Qp * interior_tendencies(marbl_tracer_indices%auto_inds(n)%C_ind,:)
+          work = work + autotroph_secondary_species%Qp(n,:) * interior_tendencies(marbl_tracer_indices%auto_inds(n)%C_ind,:)
        end do
     endif
 

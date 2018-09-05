@@ -23,10 +23,10 @@ module marbl_ciso_interior_tendency_mod
   use marbl_interface_private_types, only : marbl_interior_tendency_share_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
+  use marbl_interface_private_types, only : autotroph_secondary_species_type
 
   use marbl_pft_mod, only : autotroph_local_type
   use marbl_pft_mod, only : marbl_zooplankton_share_type
-  use marbl_pft_mod, only : autotroph_secondary_species_type
 
   implicit none
   private
@@ -77,7 +77,7 @@ contains
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
     real (r8),                                intent(in)    :: tracer_local(:,:)
     type(autotroph_local_type),               intent(in)    :: autotroph_local(:,:)
-    type(autotroph_secondary_species_type),   intent(in)    :: autotroph_secondary_species(:,:)
+    type(autotroph_secondary_species_type),   intent(in)    :: autotroph_secondary_species
     real (r8),                                intent(in)    :: temperature(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
     real (r8),                                intent(inout) :: interior_tendencies(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)

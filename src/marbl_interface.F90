@@ -38,6 +38,7 @@ module marbl_interface
   use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_interior_tendency_saved_state_indexing_type
   use marbl_interface_private_types, only : marbl_PAR_type
+  use marbl_interface_private_types, only : autotroph_secondary_species_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
@@ -104,14 +105,15 @@ module marbl_interface
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
-     type(marbl_PAR_type)                      , private              :: PAR
-     type(marbl_particulate_share_type)        , private              :: particulate_share
-     type(marbl_surface_flux_share_type)       , private              :: surface_flux_share
-     type(marbl_surface_flux_internal_type)    , private              :: surface_flux_internal
-     logical                                   , private              :: lallow_glo_ops
-     type(marbl_internal_timers_type)          , private              :: timers
-     type(marbl_timer_indexing_type)           , private              :: timer_ids
-     type(marbl_settings_type)                 , private              :: settings
+     type(marbl_PAR_type),                   private :: PAR
+     type(autotroph_secondary_species_type), private :: autotroph_secondary_species
+     type(marbl_particulate_share_type),     private :: particulate_share
+     type(marbl_surface_flux_share_type),    private :: surface_flux_share
+     type(marbl_surface_flux_internal_type), private :: surface_flux_internal
+     logical,                                private :: lallow_glo_ops
+     type(marbl_internal_timers_type),       private :: timers
+     type(marbl_timer_indexing_type),        private :: timer_ids
+     type(marbl_settings_type),              private :: settings
 
    contains
 
@@ -183,6 +185,7 @@ contains
     use marbl_init_mod, only : marbl_init_forcing_fields
     use marbl_settings_mod, only : marbl_settings_set_all_derived
     use marbl_settings_mod, only : marbl_settings_consistency_check
+    use marbl_settings_mod, only : autotroph_cnt
     use marbl_diagnostics_mod, only : marbl_diagnostics_init
     use marbl_saved_state_mod, only : marbl_saved_state_init
 
@@ -259,6 +262,7 @@ contains
     !--------------------------------------------------------------------
 
     call this%PAR%construct(num_levels, num_PAR_subcols)
+    call this%autotroph_secondary_species%construct(autotroph_cnt, num_levels)
 
     !-----------------------------------------------------------------------
     !  Set up tracers
@@ -837,23 +841,24 @@ contains
       return
     end if
 
-    call marbl_interior_tendency_compute(                                         &
-         domain                       = this%domain,                              &
-         interior_tendency_forcings   = this%interior_tendency_forcings,          &
-         saved_state                  = this%interior_tendency_saved_state,       &
-         saved_state_ind              = this%interior_state_ind,                  &
-         tracers                      = this%tracers,                             &
-         surface_flux_forcing_indices = this%surface_flux_forcing_ind,            &
-         interior_tendency_forcing_indices = this%interior_tendency_forcing_ind,  &
-         interior_tendencies          = this%interior_tendencies,                 &
-         marbl_tracer_indices         = this%tracer_indices,                      &
-         marbl_timers                 = this%timers,                              &
-         marbl_timer_indices          = this%timer_ids,                           &
-         PAR                          = this%PAR,                                 &
-         marbl_particulate_share      = this%particulate_share,                   &
-         interior_tendency_diags      = this%interior_tendency_diags,             &
-         glo_avg_fields_interior_tendency = this%glo_avg_fields_interior_tendency,&
-         marbl_status_log             = this%StatusLog)
+    call marbl_interior_tendency_compute(                                           &
+         domain                            = this%domain,                           &
+         interior_tendency_forcings        = this%interior_tendency_forcings,       &
+         tracers                           = this%tracers,                          &
+         surface_flux_forcing_indices      = this%surface_flux_forcing_ind,         &
+         interior_tendency_forcing_indices = this%interior_tendency_forcing_ind,    &
+         saved_state_ind                   = this%interior_state_ind,               &
+         marbl_tracer_indices              = this%tracer_indices,                   &
+         marbl_timer_indices               = this%timer_ids,                        &
+         PAR                               = this%PAR,                              &
+         autotroph_secondary_species       = this%autotroph_secondary_species,      &
+         saved_state                       = this%interior_tendency_saved_state,    &
+         marbl_timers                      = this%timers,                           &
+         marbl_particulate_share           = this%particulate_share,                &
+         interior_tendency_diags           = this%interior_tendency_diags,          &
+         interior_tendencies               = this%interior_tendencies,              &
+         glo_avg_fields_interior_tendency  = this%glo_avg_fields_interior_tendency, &
+         marbl_status_log                  = this%StatusLog)
 
     if (this%StatusLog%labort_marbl) then
        call this%StatusLog%log_error_trace("marbl_interior_tendency_compute()", subname)
@@ -996,6 +1001,7 @@ contains
     call this%settings%destruct()
     call this%particulate_share%destruct()
     call this%PAR%destruct()
+    call this%autotroph_secondary_species%destruct()
     call this%domain%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)

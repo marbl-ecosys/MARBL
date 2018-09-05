@@ -16,6 +16,7 @@ module marbl_interior_tendency_mod
   use marbl_constants_mod, only : yps
 
   use marbl_interface_private_types, only : marbl_PAR_type
+  use marbl_interface_private_types, only : autotroph_secondary_species_type
   use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
@@ -73,7 +74,6 @@ module marbl_interior_tendency_mod
 
   use marbl_pft_mod, only : marbl_zooplankton_share_type
   use marbl_pft_mod, only : autotroph_local_type
-  use marbl_pft_mod, only : autotroph_secondary_species_type
   use marbl_pft_mod, only : zooplankton_local_type
   use marbl_pft_mod, only : zooplankton_secondary_species_type
   use marbl_pft_mod, only : Qp_zoo
@@ -91,18 +91,19 @@ contains
   subroutine marbl_interior_tendency_compute( &
        domain,                                &
        interior_tendency_forcings,            &
-       saved_state,                           &
-       saved_state_ind,                       &
        tracers,                               &
        surface_flux_forcing_indices,          &
        interior_tendency_forcing_indices,     &
-       interior_tendencies,                   &
+       saved_state_ind,                       &
        marbl_tracer_indices,                  &
-       marbl_timers,                          &
        marbl_timer_indices,                   &
        PAR,                                   &
+       autotroph_secondary_species,           &
+       saved_state,                           &
+       marbl_timers,                          &
        marbl_particulate_share,               &
        interior_tendency_diags,               &
+       interior_tendencies,                   &
        glo_avg_fields_interior_tendency,      &
        marbl_status_log)
 
@@ -121,22 +122,23 @@ contains
     use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
 
-    type    (marbl_domain_type)                 , intent(in)    :: domain
-    type(marbl_forcing_fields_type)             , intent(in)    :: interior_tendency_forcings(:)
-    real    (r8)                                , intent(in)    :: tracers(:,: )         ! (tracer_cnt, km) tracer values
-    type(marbl_surface_flux_forcing_indexing_type), intent(in)  :: surface_flux_forcing_indices
-    type(marbl_interior_tendency_forcing_indexing_type), intent(in) :: interior_tendency_forcing_indices
-    type    (marbl_PAR_type)                    , intent(inout) :: PAR
-    type    (marbl_saved_state_type)            , intent(inout) :: saved_state
-    type    (marbl_interior_tendency_saved_state_indexing_type), intent(in) :: saved_state_ind
-    real    (r8)                                , intent(out)   :: interior_tendencies(:,:)          ! (tracer_cnt, km) computed source/sink terms
-    type    (marbl_tracer_index_type)           , intent(in)    :: marbl_tracer_indices
-    type    (marbl_internal_timers_type)        , intent(inout) :: marbl_timers
-    type    (marbl_timer_indexing_type)         , intent(in)    :: marbl_timer_indices
-    type    (marbl_particulate_share_type)      , intent(inout) :: marbl_particulate_share
-    type    (marbl_diagnostics_type)            , intent(inout) :: interior_tendency_diags
-    real    (r8)                                , intent(out)   :: glo_avg_fields_interior_tendency(:)
-    type(marbl_log_type)                        , intent(inout) :: marbl_status_log
+    type(marbl_domain_type),                                 intent(in)    :: domain
+    type(marbl_forcing_fields_type),                         intent(in)    :: interior_tendency_forcings(:)
+    real(r8),                                                intent(in)    :: tracers(:,:)         ! (tracer_cnt, km) tracer values
+    type(marbl_surface_flux_forcing_indexing_type),          intent(in)    :: surface_flux_forcing_indices
+    type(marbl_interior_tendency_forcing_indexing_type),     intent(in)    :: interior_tendency_forcing_indices
+    type(marbl_interior_tendency_saved_state_indexing_type), intent(in)    :: saved_state_ind
+    type(marbl_tracer_index_type),                           intent(in)    :: marbl_tracer_indices
+    type(marbl_timer_indexing_type),                         intent(in)    :: marbl_timer_indices
+    type(marbl_PAR_type),                                    intent(inout) :: PAR
+    type(autotroph_secondary_species_type),                  intent(inout) :: autotroph_secondary_species
+    type(marbl_saved_state_type),                            intent(inout) :: saved_state
+    type(marbl_internal_timers_type),                        intent(inout) :: marbl_timers
+    type(marbl_particulate_share_type),                      intent(inout) :: marbl_particulate_share
+    type(marbl_diagnostics_type),                            intent(inout) :: interior_tendency_diags
+    real(r8),                                                intent(out)   :: interior_tendencies(:,:)          ! (tracer_cnt, km) computed source/sink terms
+    real(r8),                                                intent(out)   :: glo_avg_fields_interior_tendency(:)
+    type(marbl_log_type),                                    intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -177,7 +179,6 @@ contains
 
     type(zooplankton_local_type)             :: zooplankton_local(zooplankton_cnt, domain%km)
     type(autotroph_local_type)               :: autotroph_local(autotroph_cnt, domain%km)
-    type(autotroph_secondary_species_type)   :: autotroph_secondary_species(autotroph_cnt, domain%km)
     type(zooplankton_secondary_species_type) :: zooplankton_secondary_species(zooplankton_cnt, domain%km)
     type(dissolved_organic_matter_type)      :: dissolved_organic_matter(domain%km)
     type(carbonate_type)                     :: carbonate(domain%km)
@@ -310,41 +311,41 @@ contains
 
     do k = 1, km
 
-       call compute_autotroph_elemental_ratios(                         &
+       call compute_autotroph_elemental_ratios(k,                       &
             autotroph_local(:, k), tracer_local(:, k),                  &
-            marbl_tracer_indices, autotroph_secondary_species(:, k))
+            marbl_tracer_indices, autotroph_secondary_species)
 
        call compute_function_scaling(temperature(k), Tfunc(k))
 
        call compute_Pprime(k, domain, autotroph_local(:, k),     &
-            temperature(k), autotroph_secondary_species(:, k))
+            temperature(k), autotroph_secondary_species)
 
-       call compute_autotroph_uptake(tracer_local(:, k), marbl_tracer_indices, &
-            autotroph_secondary_species(:, k))
+       call compute_autotroph_uptake(k, tracer_local(:, k), marbl_tracer_indices, &
+            autotroph_secondary_species)
 
-       call compute_autotroph_photosynthesis(num_PAR_subcols, autotroph_local(:, k), temperature(k), &
-            Tfunc(k), PAR%col_frac(:), PAR%avg(k,:), autotroph_secondary_species(:, k))
+       call compute_autotroph_photosynthesis(k, num_PAR_subcols, autotroph_local(:, k), temperature(k), &
+            Tfunc(k), PAR%col_frac(:), PAR%avg(k,:), autotroph_secondary_species)
 
-       call compute_autotroph_phyto_diatoms (marbl_tracer_indices, autotroph_secondary_species(:, k))
+       call compute_autotroph_phyto_diatoms(k, marbl_tracer_indices, autotroph_secondary_species)
 
-       call compute_autotroph_calcification(autotroph_local(:, k), temperature(k), &
-            autotroph_secondary_species(:, k))
+       call compute_autotroph_calcification(k, autotroph_local(:, k), temperature(k), &
+            autotroph_secondary_species)
 
-       call compute_autotroph_nfixation(autotroph_secondary_species(:, k))
+       call compute_autotroph_nfixation(k, autotroph_secondary_species)
 
-       call compute_autotroph_loss(Tfunc(k), autotroph_secondary_species(:, k))
+       call compute_autotroph_loss(k, Tfunc(k), autotroph_secondary_species)
 
        call compute_Zprime(k, domain, zooplankton_local(:, k)%C, Tfunc(k), zooplankton_secondary_species(:, k))
 
-       call compute_grazing(Tfunc(k), zooplankton_local(:, k), &
-            zooplankton_secondary_species(:, k), autotroph_secondary_species(:, k))
+       call compute_grazing(k, Tfunc(k), zooplankton_local(:, k), &
+            zooplankton_secondary_species(:, k), autotroph_secondary_species)
 
-       call compute_routing(zooplankton_secondary_species(:, k), autotroph_secondary_species(:, k))
+       call compute_routing(k, zooplankton_secondary_species(:, k), autotroph_secondary_species)
 
-       call compute_dissolved_organic_matter (k, num_PAR_subcols,                   &
-            zooplankton_secondary_species(:, k), autotroph_secondary_species(:, k), &
-            PAR%col_frac(:), PAR%interface(k-1,:), PAR%avg(k,:),                    &
-            delta_z1, tracer_local(:, k), marbl_tracer_indices,                     &
+       call compute_dissolved_organic_matter (k, num_PAR_subcols,             &
+            zooplankton_secondary_species(:, k), autotroph_secondary_species, &
+            PAR%col_frac(:), PAR%interface(k-1,:), PAR%avg(k,:),              &
+            delta_z1, tracer_local(:, k), marbl_tracer_indices,               &
             dissolved_organic_matter(k))
 
        call compute_scavenging(k, tracer_local(fe_ind, k),                   &
@@ -358,8 +359,8 @@ contains
        end if
 
        call compute_large_detritus_prod(k, domain, marbl_tracer_indices, zooplankton_secondary_species(:, k), &
-            autotroph_secondary_species(:, k), Fe_scavenge(k),                &
-            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron,         &
+            autotroph_secondary_species, Fe_scavenge(k),                &
+            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron,   &
             dissolved_organic_matter(k)%DOP_loss_P_bal, marbl_status_log)
 
        ! FIXME #28: need to pull particulate share out
@@ -381,7 +382,7 @@ contains
        call compute_Lig_terms(k, POC%remin(k), dissolved_organic_matter(k)%DOC_prod, &
             num_PAR_subcols, PAR%col_frac(:), PAR%interface(k-1,:), delta_z1, &
             tracer_local(lig_ind,k), Lig_scavenge(k), &
-            autotroph_secondary_species(:,k)%photoFe, &
+            autotroph_secondary_species%photoFe(:,k), &
             Lig_prod(k), Lig_photochem(k), Lig_deg(k), Lig_loss(k))
 
        call compute_nitrif(k, num_PAR_subcols, kmt, &
@@ -393,7 +394,7 @@ contains
             dissolved_organic_matter(k)%DOCr_remin, &
             POC%remin(k), other_remin(k), sed_denitrif(k), denitrif(k))
 
-       call compute_local_tendencies(autotroph_secondary_species(:, k), &
+       call compute_local_tendencies(k, autotroph_secondary_species, &
             zooplankton_secondary_species(:, k), &
             dissolved_organic_matter(k), &
             nitrif(k), denitrif(k), sed_denitrif(k), &
@@ -1105,7 +1106,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_autotroph_elemental_ratios(autotroph_local, tracer_local, marbl_tracer_indices, &
+   subroutine compute_autotroph_elemental_ratios(k, autotroph_local, tracer_local, marbl_tracer_indices, &
               autotroph_secondary_species)
 
      use marbl_constants_mod, only : epsC
@@ -1117,10 +1118,11 @@ contains
      use marbl_settings_mod , only : gQ_Si_kSi_thres
      use marbl_settings_mod , only : PquotaSlope, PquotaIntercept, PquotaMinNP
 
-     type(autotroph_local_type)            , intent(in)    :: autotroph_local(:)
-     real (r8)                             , intent(in)    :: tracer_local(:) ! local copies of model tracer concentrations
-     type(marbl_tracer_index_type)         , intent(in)    :: marbl_tracer_indices
-     type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species(:)
+     integer,                                intent(in)    :: k
+     type(autotroph_local_type),             intent(in)    :: autotroph_local(:)
+     real (r8),                              intent(in)    :: tracer_local(:) ! local copies of model tracer concentrations
+     type(marbl_tracer_index_type),          intent(in)    :: marbl_tracer_indices
+     type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -1138,14 +1140,14 @@ contains
           auto_Fe    => autotroph_local(:)%Fe,                  &
           auto_Si    => autotroph_local(:)%Si,                  &
           auto_CaCO3 => autotroph_local(:)%CaCO3,               &
-          thetaC     => autotroph_secondary_species(:)%thetaC , & ! current Chl/C ratio (mg Chl/mmol C)
-          QCaCO3     => autotroph_secondary_species(:)%QCaCO3 , & ! currenc CaCO3/C ratio (mmol CaCO3/mmol C)
-          Qp         => autotroph_secondary_species(:)%Qp,      & ! current P/C ratio (mmol P/mmol C)
-          gQp        => autotroph_secondary_species(:)%gQp,     & ! P/C for growth
-          Qfe        => autotroph_secondary_species(:)%Qfe,     & ! current Fe/C ratio (mmol Fe/mmol C)
-          gQfe       => autotroph_secondary_species(:)%gQfe,    & ! Fe/C for growth
-          Qsi        => autotroph_secondary_species(:)%Qsi,     & ! current Si/C ratio (mmol Si/mmol C)
-          gQsi       => autotroph_secondary_species(:)%gQsi     & ! diatom Si/C ratio for growth (new biomass)
+          thetaC     => autotroph_secondary_species%thetaC(:,k), & ! current Chl/C ratio (mg Chl/mmol C)
+          QCaCO3     => autotroph_secondary_species%QCaCO3(:,k), & ! currenc CaCO3/C ratio (mmol CaCO3/mmol C)
+          Qp         => autotroph_secondary_species%Qp(:,k),     & ! current P/C ratio (mmol P/mmol C)
+          gQp        => autotroph_secondary_species%gQp(:,k),    & ! P/C for growth
+          Qfe        => autotroph_secondary_species%Qfe(:,k),    & ! current Fe/C ratio (mmol Fe/mmol C)
+          gQfe       => autotroph_secondary_species%gQfe(:,k),   & ! Fe/C for growth
+          Qsi        => autotroph_secondary_species%Qsi(:,k),    & ! current Si/C ratio (mmol Si/mmol C)
+          gQsi       => autotroph_secondary_species%gQsi(:,k)    & ! diatom Si/C ratio for growth (new biomass)
           )
 
      !-----------------------------------------------------------------------
@@ -1255,11 +1257,11 @@ contains
      use marbl_settings_mod, only : thres_z1_auto
      use marbl_settings_mod, only : thres_z2_auto
 
-     integer(int_kind)                      , intent(in)  :: k
-     type(marbl_domain_type)                , intent(in)  :: domain
-     type(autotroph_local_type)             , intent(in)  :: autotroph_local(autotroph_cnt)
-     real(r8)                               , intent(in)  :: temperature
-     type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(autotroph_cnt)
+     integer(int_kind),                      intent(in)    :: k
+     type(marbl_domain_type),                intent(in)    :: domain
+     type(autotroph_local_type),             intent(in)    :: autotroph_local(autotroph_cnt)
+     real(r8),                               intent(in)    :: temperature
+     type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -1269,9 +1271,9 @@ contains
      real(r8) :: C_loss_thres
      !-----------------------------------------------------------------------
 
-     associate(                                           &
-          zt     => domain%zt(:),                         &
-          Pprime => autotroph_secondary_species(:)%Pprime & ! output
+     associate(                                             &
+          zt     => domain%zt(:),                           &
+          Pprime => autotroph_secondary_species%Pprime(:,k) & ! output
           )
 
      !  calculate the loss threshold interpolation factor
@@ -1301,7 +1303,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_autotroph_photosynthesis (PAR_nsubcols,  &
+   subroutine compute_autotroph_photosynthesis (k, PAR_nsubcols,  &
         autotroph_local, temperature, Tfunc, PAR_col_frac, PAR_avg,  &
         autotroph_secondary_species)
 
@@ -1311,13 +1313,14 @@ contains
 
      use marbl_constants_mod, only : epsTinv
 
-     integer(int_kind)                      , intent(in)    :: PAR_nsubcols
-     type(autotroph_local_type)             , intent(in)    :: autotroph_local(autotroph_cnt)
-     real(r8)                               , intent(in)    :: temperature
-     real(r8)                               , intent(in)    :: Tfunc
-     real(r8)                               , intent(in)    :: PAR_col_frac(PAR_nsubcols)
-     real(r8)                               , intent(in)    :: PAR_avg(PAR_nsubcols)
-     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(autotroph_cnt)
+     integer(int_kind),                      intent(in)    :: k
+     integer(int_kind),                      intent(in)    :: PAR_nsubcols
+     type(autotroph_local_type),             intent(in)    :: autotroph_local(autotroph_cnt)
+     real(r8),                               intent(in)    :: temperature
+     real(r8),                               intent(in)    :: Tfunc
+     real(r8),                               intent(in)    :: PAR_col_frac(PAR_nsubcols)
+     real(r8),                               intent(in)    :: PAR_avg(PAR_nsubcols)
+     type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -1332,17 +1335,17 @@ contains
 
      do auto_ind = 1, autotroph_cnt
 
-        associate(                                                         &
+        associate(                                                            &
              ! current Chl/C ratio (mg Chl / mmol C)
-             thetaC    => autotroph_secondary_species(auto_ind)%thetaC,    &
-             f_nut     => autotroph_secondary_species(auto_ind)%f_nut,     &
-             VNtot     => autotroph_secondary_species(auto_ind)%VNtot,     &
-             light_lim => autotroph_secondary_species(auto_ind)%light_lim, &
-             PCPhoto   => autotroph_secondary_species(auto_ind)%PCPhoto,   &
-             photoC    => autotroph_secondary_species(auto_ind)%photoC,    &
-             photoacc  => autotroph_secondary_species(auto_ind)%photoacc,  &
-             PCref     => autotrophs(auto_ind)%PCref,                      &
-             alphaPI   => autotrophs(auto_ind)%alphaPI                     &
+             thetaC    => autotroph_secondary_species%thetaC(auto_ind, k),    &
+             f_nut     => autotroph_secondary_species%f_nut(auto_ind, k),     &
+             VNtot     => autotroph_secondary_species%VNtot(auto_ind, k),     &
+             light_lim => autotroph_secondary_species%light_lim(auto_ind, k), &
+             PCPhoto   => autotroph_secondary_species%PCPhoto(auto_ind, k),   &
+             photoC    => autotroph_secondary_species%photoC(auto_ind, k),    &
+             photoacc  => autotroph_secondary_species%photoacc(auto_ind, k),  &
+             PCref     => autotrophs(auto_ind)%PCref,                         &
+             alphaPI   => autotrophs(auto_ind)%alphaPI                        &
              )
 
         PCmax = PCref * f_nut * Tfunc
@@ -1388,7 +1391,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_autotroph_calcification (autotroph_local, temperature, autotroph_secondary_species)
+   subroutine compute_autotroph_calcification (k, autotroph_local, temperature, autotroph_secondary_species)
 
      !-----------------------------------------------------------------------
      !  CaCO3 Production, parameterized as function of small phyto production
@@ -1403,9 +1406,10 @@ contains
      use marbl_settings_mod, only : CaCO3_temp_thres2
      use marbl_settings_mod, only : f_photosp_CaCO3
 
-     type(autotroph_local_type)             , intent(in)    :: autotroph_local(autotroph_cnt)
-     real(r8)                               , intent(in)    :: temperature
-     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(autotroph_cnt)
+     integer,                                intent(in)    :: k
+     type(autotroph_local_type),             intent(in)    :: autotroph_local(autotroph_cnt)
+     real(r8),                               intent(in)    :: temperature
+     type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -1413,10 +1417,10 @@ contains
      integer  :: auto_ind
      !-----------------------------------------------------------------------
 
-     associate(                                                       &
-          f_nut      => autotroph_secondary_species(:)%f_nut,     & ! input
-          photoC     => autotroph_secondary_species(:)%photoC,    & ! input
-          CaCO3_form => autotroph_secondary_species(:)%CaCO3_form & ! output
+     associate(                                                     &
+          f_nut      => autotroph_secondary_species%f_nut(:,k),     & ! input
+          photoC     => autotroph_secondary_species%photoC(:,k),    & ! input
+          CaCO3_form => autotroph_secondary_species%CaCO3_form(:,k) & ! output
           )
 
      do auto_ind = 1, autotroph_cnt
@@ -1441,11 +1445,12 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_autotroph_uptake (tracer_local, marbl_tracer_indices, autotroph_secondary_species)
+   subroutine compute_autotroph_uptake (k, tracer_local, marbl_tracer_indices, autotroph_secondary_species)
 
-     real(r8)                               , intent(in)  :: tracer_local(:)
-     type(marbl_tracer_index_type)          , intent(in)  :: marbl_tracer_indices
-     type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(:)
+     integer,                                intent(in)    :: k
+     real(r8),                               intent(in)    :: tracer_local(:)
+     type(marbl_tracer_index_type),          intent(in)    :: marbl_tracer_indices
+     type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -1469,15 +1474,15 @@ contains
                   Fe_loc   => tracer_local(marbl_tracer_indices%fe_ind),       &
                   SiO3_loc => tracer_local(marbl_tracer_indices%sio3_ind),     &
                   ! OUTPUTS
-                  VNO3  => autotroph_secondary_species(auto_ind)%VNO3,         &
-                  VNH4  => autotroph_secondary_species(auto_ind)%VNH4,         &
-                  VNtot => autotroph_secondary_species(auto_ind)%VNtot,        &
-                  VFe   => autotroph_secondary_species(auto_ind)%VFe,          &
-                  f_nut => autotroph_secondary_species(auto_ind)%f_nut,        &
-                  VDOP  => autotroph_secondary_species(auto_ind)%VDOP,         &
-                  VPO4  => autotroph_secondary_species(auto_ind)%VPO4,         &
-                  VPtot => autotroph_secondary_species(auto_ind)%VPtot,        &
-                  VSiO3 => autotroph_secondary_species(auto_ind)%VSiO3,        &
+                  VNO3  => autotroph_secondary_species%VNO3(auto_ind, k),      &
+                  VNH4  => autotroph_secondary_species%VNH4(auto_ind, k),      &
+                  VNtot => autotroph_secondary_species%VNtot(auto_ind, k),     &
+                  VFe   => autotroph_secondary_species%VFe(auto_ind, k),       &
+                  f_nut => autotroph_secondary_species%f_nut(auto_ind, k),     &
+                  VDOP  => autotroph_secondary_species%VDOP(auto_ind, k),      &
+                  VPO4  => autotroph_secondary_species%VPO4(auto_ind, k),      &
+                  VPtot => autotroph_secondary_species%VPtot(auto_ind, k),     &
+                  VSiO3 => autotroph_secondary_species%VSiO3(auto_ind, k),     &
                   ! AUTOTROPHS
                   Nfixer     => autotrophs(auto_ind)%Nfixer,                   &
                   silicifier => autotrophs(auto_ind)%silicifier,               &
@@ -1520,7 +1525,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_autotroph_nfixation (autotroph_secondary_species)
+   subroutine compute_autotroph_nfixation(k, autotroph_secondary_species)
 
      !-----------------------------------------------------------------------
      !  Get N fixation by diazotrophs based on C fixation,
@@ -1530,7 +1535,8 @@ contains
      use marbl_settings_mod, only : Q
      use marbl_settings_mod, only : r_Nfix_photo
 
-     type(autotroph_secondary_species_type) , intent(out) :: autotroph_secondary_species(autotroph_cnt)
+     integer,                                intent(in)    :: k
+     type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -1539,12 +1545,12 @@ contains
      real(r8) :: work1
      !-----------------------------------------------------------------------
 
-     associate(                                                   &
-          photoC   => autotroph_secondary_species(:)%photoC,  & ! input
-          NO3_V    => autotroph_secondary_species(:)%NO3_V ,  & ! input
-          NH4_V    => autotroph_secondary_species(:)%NH4_V ,  & ! input
-          Nfix     => autotroph_secondary_species(:)%Nfix  ,  & ! output total Nitrogen fixation (mmol N/m^3/sec)
-          Nexcrete => autotroph_secondary_species(:)%Nexcrete & ! output fixed N excretion
+     associate(                                                  &
+          photoC   => autotroph_secondary_species%photoC(:, k),  & ! input
+          NO3_V    => autotroph_secondary_species%NO3_V(:, k),   & ! input
+          NH4_V    => autotroph_secondary_species%NH4_V(:, k),   & ! input
+          Nfix     => autotroph_secondary_species%Nfix(:, k),    & ! output total Nitrogen fixation (mmol N/m^3/sec)
+          Nexcrete => autotroph_secondary_species%Nexcrete(:, k) & ! output fixed N excretion
           )
 
      do auto_ind = 1, autotroph_cnt
@@ -1560,7 +1566,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_autotroph_phyto_diatoms (marbl_tracer_indices, autotroph_secondary_species)
+   subroutine compute_autotroph_phyto_diatoms(k, marbl_tracer_indices, autotroph_secondary_species)
 
      !-----------------------------------------------------------------------
      !  Get nutrient uptakes by small phyto based on calculated C fixation
@@ -1568,8 +1574,9 @@ contains
 
      use marbl_settings_mod, only : Q
 
-     type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
-     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(autotroph_cnt)
+     integer,                                intent(in)    :: k
+     type(marbl_tracer_index_type),          intent(in)    :: marbl_tracer_indices
+     type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -1577,23 +1584,23 @@ contains
      integer  :: auto_ind
      !-----------------------------------------------------------------------
 
-     associate(                                               &
-          gQp      => autotroph_secondary_species(:)%gQp,     & ! p/C for growth
-          gQfe     => autotroph_secondary_species(:)%gQfe,    & ! fe/C for growth
-          gQsi     => autotroph_secondary_species(:)%gQsi,    & ! diatom Si/C ratio for growth (new biomass)
-          VNO3     => autotroph_secondary_species(:)%VNO3,    & ! input
-          VNH4     => autotroph_secondary_species(:)%VNH4,    & ! input
-          VNtot    => autotroph_secondary_species(:)%VNtot,   & ! input
-          VPO4     => autotroph_secondary_species(:)%VPO4,    & ! input
-          VDOP     => autotroph_secondary_species(:)%VDOP,    & ! input
-          VPtot    => autotroph_secondary_species(:)%VPtot,   & ! input
-          photoC   => autotroph_secondary_species(:)%photoC,  & ! input
-          NO3_V    => autotroph_secondary_species(:)%NO3_V,   & ! output
-          NH4_V    => autotroph_secondary_species(:)%NH4_V,   & ! output
-          PO4_V    => autotroph_secondary_species(:)%PO4_V,   & ! output
-          DOP_V    => autotroph_secondary_species(:)%DOP_V,   & ! output
-          photoFe  => autotroph_secondary_species(:)%photoFe, & ! output
-          photoSi  => autotroph_secondary_species(:)%photoSi  & ! output
+     associate(                                                  &
+          gQp      => autotroph_secondary_species%gQp(:, k),     & ! p/C for growth
+          gQfe     => autotroph_secondary_species%gQfe(:, k),    & ! fe/C for growth
+          gQsi     => autotroph_secondary_species%gQsi(:, k),    & ! diatom Si/C ratio for growth (new biomass)
+          VNO3     => autotroph_secondary_species%VNO3(:, k),    & ! input
+          VNH4     => autotroph_secondary_species%VNH4(:, k),    & ! input
+          VNtot    => autotroph_secondary_species%VNtot(:, k),   & ! input
+          VPO4     => autotroph_secondary_species%VPO4(:, k),    & ! input
+          VDOP     => autotroph_secondary_species%VDOP(:, k),    & ! input
+          VPtot    => autotroph_secondary_species%VPtot(:, k),   & ! input
+          photoC   => autotroph_secondary_species%photoC(:, k),  & ! input
+          NO3_V    => autotroph_secondary_species%NO3_V(:, k),   & ! output
+          NH4_V    => autotroph_secondary_species%NH4_V(:, k),   & ! output
+          PO4_V    => autotroph_secondary_species%PO4_V(:, k),   & ! output
+          DOP_V    => autotroph_secondary_species%DOP_V(:, k),   & ! output
+          photoFe  => autotroph_secondary_species%photoFe(:, k), & ! output
+          photoSi  => autotroph_secondary_species%photoSi(:, k)  & ! output
           )
 
      do auto_ind = 1, autotroph_cnt
@@ -1632,15 +1639,16 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_autotroph_loss (Tfunc, autotroph_secondary_species)
+   subroutine compute_autotroph_loss (k, Tfunc, autotroph_secondary_species)
 
      !-----------------------------------------------------------------------
      ! Compute autotroph-loss, autotroph aggregation loss and routine of
      ! loss terms
      !-----------------------------------------------------------------------
 
-     real(r8)                               , intent(in)    :: Tfunc
-     type(autotroph_secondary_species_type) , intent(inout) :: autotroph_secondary_species(autotroph_cnt)
+     integer,                                intent(in)    :: k
+     real(r8),                               intent(in)    :: Tfunc
+     type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -1648,14 +1656,14 @@ contains
      integer  :: auto_ind
      !-----------------------------------------------------------------------
 
-     associate(                                                               &
-          QCaCO3        => autotroph_secondary_species(:)%QCaCO3        , & ! input
-          Pprime        => autotroph_secondary_species(:)%Pprime        , & ! input
-          auto_loss     => autotroph_secondary_species(:)%auto_loss     , & ! output
-          auto_loss_poc => autotroph_secondary_species(:)%auto_loss_poc , & ! output
-          auto_loss_dic => autotroph_secondary_species(:)%auto_loss_dic , & ! output
-          auto_loss_doc => autotroph_secondary_species(:)%auto_loss_doc , & ! output
-          auto_agg      => autotroph_secondary_species(:)%auto_agg        & ! output
+     associate(                                                             &
+          QCaCO3        => autotroph_secondary_species%QCaCO3(:, k)       , & ! input
+          Pprime        => autotroph_secondary_species%Pprime(:, k)       , & ! input
+          auto_loss     => autotroph_secondary_species%auto_loss(:, k)    , & ! output
+          auto_loss_poc => autotroph_secondary_species%auto_loss_poc(:, k), & ! output
+          auto_loss_dic => autotroph_secondary_species%auto_loss_dic(:, k), & ! output
+          auto_loss_doc => autotroph_secondary_species%auto_loss_doc(:, k), & ! output
+          auto_agg      => autotroph_secondary_species%auto_agg(:, k)       & ! output
           )
 
      do auto_ind = 1, autotroph_cnt
@@ -1739,7 +1747,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_grazing(Tfunc, zooplankton_loc, &
+   subroutine compute_grazing(k, Tfunc, zooplankton_loc, &
         zooplankton_secondary_species, autotroph_secondary_species)
 
      !-----------------------------------------------------------------------
@@ -1759,10 +1767,11 @@ contains
      use marbl_pft_mod, only : grz_fnc_michaelis_menten
      use marbl_pft_mod, only : grz_fnc_sigmoidal
 
-     real(r8)                                 , intent(in)    :: Tfunc
-     type(zooplankton_local_type)             , intent(in)    :: zooplankton_loc(zooplankton_cnt)
-     type(zooplankton_secondary_species_type) , intent(inout) :: zooplankton_secondary_species(zooplankton_cnt)
-     type(autotroph_secondary_species_type)   , intent(inout) :: autotroph_secondary_species(autotroph_cnt)
+     integer,                                  intent(in)    :: k
+     real(r8),                                 intent(in)    :: Tfunc
+     type(zooplankton_local_type),             intent(in)    :: zooplankton_loc(zooplankton_cnt)
+     type(zooplankton_secondary_species_type), intent(inout) :: zooplankton_secondary_species(zooplankton_cnt)
+     type(autotroph_secondary_species_type),   intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -1776,14 +1785,14 @@ contains
      !-----------------------------------------------------------------------
 
      associate(                                                              &
-          Pprime         => autotroph_secondary_species(:)%Pprime          , & ! input
-          QCaCO3         => autotroph_secondary_species(:)%QCaCO3          , & ! input
+          Pprime         => autotroph_secondary_species%Pprime(:,k)        , & ! input
+          QCaCO3         => autotroph_secondary_species%QCaCO3(:,k)        , & ! input
           Zprime         => zooplankton_secondary_species(:)%Zprime        , & ! input
-          auto_graze     => autotroph_secondary_species(:)%auto_graze      , & ! output
-          auto_graze_poc => autotroph_secondary_species(:)%auto_graze_poc  , & ! output
-          auto_graze_dic => autotroph_secondary_species(:)%auto_graze_dic  , & ! output
-          auto_graze_doc => autotroph_secondary_species(:)%auto_graze_doc  , & ! output
-          auto_graze_zoo => autotroph_secondary_species(:)%auto_graze_zoo  , & ! output
+          auto_graze     => autotroph_secondary_species%auto_graze(:,k)    , & ! output
+          auto_graze_poc => autotroph_secondary_species%auto_graze_poc(:,k), & ! output
+          auto_graze_dic => autotroph_secondary_species%auto_graze_dic(:,k), & ! output
+          auto_graze_doc => autotroph_secondary_species%auto_graze_doc(:,k), & ! output
+          auto_graze_zoo => autotroph_secondary_species%auto_graze_zoo(:,k), & ! output
           zoo_graze      => zooplankton_secondary_species(:)%zoo_graze     , & ! output
           zoo_graze_poc  => zooplankton_secondary_species(:)%zoo_graze_poc , & ! output
           zoo_graze_dic  => zooplankton_secondary_species(:)%zoo_graze_dic , & ! output
@@ -1926,13 +1935,14 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_routing (zooplankton_secondary_species, autotroph_secondary_species)
+   subroutine compute_routing (k, zooplankton_secondary_species, autotroph_secondary_species)
 
      use marbl_settings_mod, only : parm_labile_ratio
      use marbl_settings_mod, only : f_toDOP
 
-     type(zooplankton_secondary_species_type) , intent(inout) :: zooplankton_secondary_species(zooplankton_cnt)
-     type(autotroph_secondary_species_type)   , intent(inout) :: autotroph_secondary_species(autotroph_cnt)
+     integer,                                  intent(in)    :: k
+     type(zooplankton_secondary_species_type), intent(inout) :: zooplankton_secondary_species(zooplankton_cnt)
+     type(autotroph_secondary_species_type),   intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -1942,32 +1952,31 @@ contains
      !-----------------------------------------------------------------------
 
      associate(                                                               &
-          Qp              => autotroph_secondary_species(:)%Qp              , & ! input
-          auto_graze      => autotroph_secondary_species(:)%auto_graze      , & ! input
-          auto_graze_zoo  => autotroph_secondary_species(:)%auto_graze_zoo  , & ! input
-          auto_graze_poc  => autotroph_secondary_species(:)%auto_graze_poc  , & ! input
-          auto_graze_doc  => autotroph_secondary_species(:)%auto_graze_doc  , & ! input
-          auto_loss       => autotroph_secondary_species(:)%auto_loss       , & ! input
-          auto_loss_poc   => autotroph_secondary_species(:)%auto_loss_poc   , & ! input
-          auto_agg        => autotroph_secondary_species(:)%auto_agg        , & ! input
+          Qp              => autotroph_secondary_species%Qp(:,k),             & ! input
+          auto_graze      => autotroph_secondary_species%auto_graze(:,k),     & ! input
+          auto_graze_zoo  => autotroph_secondary_species%auto_graze_zoo(:,k), & ! input
+          auto_graze_poc  => autotroph_secondary_species%auto_graze_poc(:,k), & ! input
+          auto_graze_doc  => autotroph_secondary_species%auto_graze_doc(:,k), & ! input
+          auto_loss       => autotroph_secondary_species%auto_loss(:,k),      & ! input
+          auto_loss_poc   => autotroph_secondary_species%auto_loss_poc(:,k),  & ! input
+          auto_agg        => autotroph_secondary_species%auto_agg(:,k),       & ! input
 
-          zoo_graze       => zooplankton_secondary_species(:)%zoo_graze     , & ! input
-          zoo_graze_poc   => zooplankton_secondary_species(:)%zoo_graze_poc , & ! input
-          zoo_graze_doc   => zooplankton_secondary_species(:)%zoo_graze_doc , & ! input
-          zoo_graze_zoo   => zooplankton_secondary_species(:)%zoo_graze_zoo , & ! input
-          zoo_loss        => zooplankton_secondary_species(:)%zoo_loss      , & ! input
-          f_zoo_detr      => zooplankton_secondary_species(:)%f_zoo_detr    , & ! input
+          zoo_graze       => zooplankton_secondary_species(:)%zoo_graze,     & ! input
+          zoo_graze_poc   => zooplankton_secondary_species(:)%zoo_graze_poc, & ! input
+          zoo_graze_doc   => zooplankton_secondary_species(:)%zoo_graze_doc, & ! input
+          zoo_graze_zoo   => zooplankton_secondary_species(:)%zoo_graze_zoo, & ! input
+          zoo_loss        => zooplankton_secondary_species(:)%zoo_loss,      & ! input
+          f_zoo_detr      => zooplankton_secondary_species(:)%f_zoo_detr,    & ! input
 
-          auto_graze_dic  => autotroph_secondary_species(:)%auto_graze_dic  , & ! output
+          auto_graze_dic  => autotroph_secondary_species%auto_graze_dic(:,k),  & ! output
+          remaining_P_dop => autotroph_secondary_species%remaining_P_dop(:,k), & ! output
+          remaining_P_pop => autotroph_secondary_species%remaining_P_pop(:,k), & ! output
+          remaining_P_dip => autotroph_secondary_species%remaining_P_dip(:,k), & ! output
 
-          remaining_P_dop => autotroph_secondary_species(:)%remaining_P_dop , & ! output
-          remaining_P_pop => autotroph_secondary_species(:)%remaining_P_pop , & ! output
-          remaining_P_dip => autotroph_secondary_species(:)%remaining_P_dip , & ! output
-
-          zoo_graze_dic   => zooplankton_secondary_species(:)%zoo_graze_dic , & ! output
-          zoo_loss_poc    => zooplankton_secondary_species(:)%zoo_loss_poc  , & ! output
-          zoo_loss_doc    => zooplankton_secondary_species(:)%zoo_loss_doc  , & ! output
-          zoo_loss_dic    => zooplankton_secondary_species(:)%zoo_loss_dic    & ! output
+          zoo_graze_dic   => zooplankton_secondary_species(:)%zoo_graze_dic, & ! output
+          zoo_loss_poc    => zooplankton_secondary_species(:)%zoo_loss_poc,  & ! output
+          zoo_loss_doc    => zooplankton_secondary_species(:)%zoo_loss_doc,  & ! output
+          zoo_loss_dic    => zooplankton_secondary_species(:)%zoo_loss_dic   & ! output
           )
 
      !-----------------------------------------------------------------------
@@ -2048,7 +2057,7 @@ contains
      integer(int_kind)                       , intent(in)  :: k
      integer(int_kind)                       , intent(in)  :: PAR_nsubcols
      type(zooplankton_secondary_species_type), intent(in)  :: zooplankton_secondary_species(:)
-     type(autotroph_secondary_species_type)  , intent(in)  :: autotroph_secondary_species(:)
+     type(autotroph_secondary_species_type)  , intent(in)  :: autotroph_secondary_species
      real(r8)                                , intent(in)  :: PAR_col_frac(:)
      real(r8)                                , intent(in)  :: PAR_in(:)
      real(r8)                                , intent(in)  :: PAR_avg(:)
@@ -2070,28 +2079,31 @@ contains
      real(r8) :: DOPr_reminR       ! remineralization rate (1/sec)
      !-----------------------------------------------------------------------
 
-     associate(                                                               &
-          DOC_loc         => tracer_local(marbl_tracer_indices%doc_ind)     , &
-          DON_loc         => tracer_local(marbl_tracer_indices%don_ind)     , &
-          DOP_loc         => tracer_local(marbl_tracer_indices%dop_ind)     , &
-          DONr_loc        => tracer_local(marbl_tracer_indices%donr_ind)    , &
-          DOPr_loc        => tracer_local(marbl_tracer_indices%dopr_ind)    , &
-          DOCr_loc        => tracer_local(marbl_tracer_indices%docr_ind)    , &
-          Qfe             => autotroph_secondary_species(:)%Qfe             , & ! input
-          remaining_P_dop => autotroph_secondary_species(:)%remaining_P_dop , & ! input
-          auto_loss_doc   => autotroph_secondary_species(:)%auto_loss_doc   , & ! input
-          auto_graze_doc  => autotroph_secondary_species(:)%auto_graze_doc  , & ! input
-          zoo_loss_doc    => zooplankton_secondary_species(:)%zoo_loss_doc  , & ! input
-          zoo_graze_doc   => zooplankton_secondary_species(:)%zoo_graze_doc , & ! input
-          DOC_prod        => dissolved_organic_matter%DOC_prod              , & ! output production of DOC (mmol C/m^3/sec)
-          DOC_remin       => dissolved_organic_matter%DOC_remin             , & ! output remineralization of DOC (mmol C/m^3/sec)
-          DOCr_remin      => dissolved_organic_matter%DOCr_remin            , & ! output remineralization of DOCr
-          DON_prod        => dissolved_organic_matter%DON_prod              , & ! output production of DON
-          DON_remin       => dissolved_organic_matter%DON_remin             , & ! output remineralization of DON
-          DONr_remin      => dissolved_organic_matter%DONr_remin            , & ! output remineralization of DONr
-          DOP_prod        => dissolved_organic_matter%DOP_prod              , & ! output production of DOP
-          DOP_remin       => dissolved_organic_matter%DOP_remin             , & ! output remineralization of DOP
-          DOPr_remin      => dissolved_organic_matter%DOPr_remin              & ! output remineralization of DOPr
+     associate(                                                           &
+          DOC_loc         => tracer_local(marbl_tracer_indices%doc_ind),  &
+          DON_loc         => tracer_local(marbl_tracer_indices%don_ind),  &
+          DOP_loc         => tracer_local(marbl_tracer_indices%dop_ind),  &
+          DONr_loc        => tracer_local(marbl_tracer_indices%donr_ind), &
+          DOPr_loc        => tracer_local(marbl_tracer_indices%dopr_ind), &
+          DOCr_loc        => tracer_local(marbl_tracer_indices%docr_ind), &
+
+          Qfe             => autotroph_secondary_species%Qfe(:,k),             & ! input
+          remaining_P_dop => autotroph_secondary_species%remaining_P_dop(:,k), & ! input
+          auto_loss_doc   => autotroph_secondary_species%auto_loss_doc(:,k),   & ! input
+          auto_graze_doc  => autotroph_secondary_species%auto_graze_doc(:,k),  & ! input
+
+          zoo_loss_doc    => zooplankton_secondary_species(:)%zoo_loss_doc,  & ! input
+          zoo_graze_doc   => zooplankton_secondary_species(:)%zoo_graze_doc, & ! input
+
+          DOC_prod        => dissolved_organic_matter%DOC_prod,   & ! output production of DOC (mmol C/m^3/sec)
+          DOC_remin       => dissolved_organic_matter%DOC_remin,  & ! output remineralization of DOC (mmol C/m^3/sec)
+          DOCr_remin      => dissolved_organic_matter%DOCr_remin, & ! output remineralization of DOCr
+          DON_prod        => dissolved_organic_matter%DON_prod,   & ! output production of DON
+          DON_remin       => dissolved_organic_matter%DON_remin,  & ! output remineralization of DON
+          DONr_remin      => dissolved_organic_matter%DONr_remin, & ! output remineralization of DONr
+          DOP_prod        => dissolved_organic_matter%DOP_prod,   & ! output production of DOP
+          DOP_remin       => dissolved_organic_matter%DOP_remin,  & ! output remineralization of DOP
+          DOPr_remin      => dissolved_organic_matter%DOPr_remin  & ! output remineralization of DOPr
           )
 
        !-----------------------------------------------------------------------
@@ -2381,7 +2393,7 @@ contains
      type(marbl_domain_type)                  , intent(in)    :: domain
      type(marbl_tracer_index_type)            , intent(in)    :: marbl_tracer_indices
      type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(zooplankton_cnt)
-     type(autotroph_secondary_species_type)   , intent(in)    :: autotroph_secondary_species(autotroph_cnt)
+     type(autotroph_secondary_species_type)   , intent(in)    :: autotroph_secondary_species
      real(r8)                                 , intent(in)    :: Fe_scavenge
      type(column_sinking_particle_type)       , intent(inout) :: POC
      type(column_sinking_particle_type)       , intent(inout) :: POP
@@ -2403,18 +2415,18 @@ contains
 
      !-----------------------------------------------------------------------
 
-     associate(                                                             &
-          QCaCO3          => autotroph_secondary_species(:)%QCaCO3          , & ! input
-          Qsi             => autotroph_secondary_species(:)%Qsi             , & ! input
-          Qfe             => autotroph_secondary_species(:)%Qfe             , & ! input
-          auto_graze      => autotroph_secondary_species(:)%auto_graze      , & ! input
-          auto_graze_poc  => autotroph_secondary_species(:)%auto_graze_poc  , & ! input
-          auto_agg        => autotroph_secondary_species(:)%auto_agg        , & ! input
-          auto_loss       => autotroph_secondary_species(:)%auto_loss       , & ! input
-          auto_loss_poc   => autotroph_secondary_species(:)%auto_loss_poc   , & ! input
-          remaining_P_pop => autotroph_secondary_species(:)%remaining_P_pop , & ! input
-          zoo_loss_poc    => zooplankton_secondary_species(:)%zoo_loss_poc  , & ! input
-          zoo_graze_poc   => zooplankton_secondary_species(:)%zoo_graze_poc   & ! input
+     associate(                                                                &
+          QCaCO3          => autotroph_secondary_species%QCaCO3(:,k),          & ! input
+          Qsi             => autotroph_secondary_species%Qsi(:,k),             & ! input
+          Qfe             => autotroph_secondary_species%Qfe(:,k),             & ! input
+          auto_graze      => autotroph_secondary_species%auto_graze(:,k),      & ! input
+          auto_graze_poc  => autotroph_secondary_species%auto_graze_poc(:,k),  & ! input
+          auto_agg        => autotroph_secondary_species%auto_agg(:,k),        & ! input
+          auto_loss       => autotroph_secondary_species%auto_loss(:,k),       & ! input
+          auto_loss_poc   => autotroph_secondary_species%auto_loss_poc(:,k),   & ! input
+          remaining_P_pop => autotroph_secondary_species%remaining_P_pop(:,k), & ! input
+          zoo_loss_poc    => zooplankton_secondary_species(:)%zoo_loss_poc,    & ! input
+          zoo_graze_poc   => zooplankton_secondary_species(:)%zoo_graze_poc    & ! input
           )
 
      !-----------------------------------------------------------------------
@@ -3336,7 +3348,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_local_tendencies(autotroph_secondary_species,             &
+   subroutine compute_local_tendencies(k, autotroph_secondary_species,          &
               zooplankton_secondary_species, dissolved_organic_matter,          &
               nitrif, denitrif, sed_denitrif, Fe_scavenge, Lig_prod, Lig_loss,  &
               P_iron_remin, POC_remin, POP_remin, P_SiO2_remin, P_CaCO3_remin,  &
@@ -3344,29 +3356,30 @@ contains
               O2_loc, o2_consumption_scalef, o2_production, o2_consumption,     &
               interior_tendencies, marbl_tracer_indices)
 
-     type(zooplankton_secondary_species_type) , intent(in)  :: zooplankton_secondary_species(:)
-     type(autotroph_secondary_species_type)   , intent(in)  :: autotroph_secondary_species(autotroph_cnt)
-     type(dissolved_organic_matter_type)      , intent(in)  :: dissolved_organic_matter
-     real(r8)                                 , intent(in)  :: nitrif
-     real(r8)                                 , intent(in)  :: denitrif
-     real(r8)                                 , intent(in)  :: sed_denitrif
-     real(r8)                                 , intent(in)  :: Fe_scavenge
-     real(r8)                                 , intent(in)  :: Lig_prod
-     real(r8)                                 , intent(in)  :: Lig_loss
-     real(r8)                                 , intent(in)  :: P_iron_remin
-     real(r8)                                 , intent(in)  :: POC_remin
-     real(r8)                                 , intent(in)  :: POP_remin
-     real(r8)                                 , intent(in)  :: P_SiO2_remin
-     real(r8)                                 , intent(in)  :: P_CaCO3_remin
-     real(r8)                                 , intent(in)  :: P_CaCO3_ALT_CO2_remin
-     real(r8)                                 , intent(in)  :: other_remin
-     real(r8)                                 , intent(in)  :: PON_remin
-     real(r8)                                 , intent(in)  :: O2_loc
-     real(r8)                                 , intent(in)  :: o2_consumption_scalef
-     real(r8)                                 , intent(out) :: o2_production
-     real(r8)                                 , intent(out) :: o2_consumption
-     real(r8)                                 , intent(out) :: interior_tendencies(:)
-     type(marbl_tracer_index_type)            , intent(in)  :: marbl_tracer_indices
+     integer,                                  intent(in)  :: k
+     type(autotroph_secondary_species_type),   intent(in)  :: autotroph_secondary_species
+     type(zooplankton_secondary_species_type), intent(in)  :: zooplankton_secondary_species(:)
+     type(dissolved_organic_matter_type),      intent(in)  :: dissolved_organic_matter
+     real(r8),                                 intent(in)  :: nitrif
+     real(r8),                                 intent(in)  :: denitrif
+     real(r8),                                 intent(in)  :: sed_denitrif
+     real(r8),                                 intent(in)  :: Fe_scavenge
+     real(r8),                                 intent(in)  :: Lig_prod
+     real(r8),                                 intent(in)  :: Lig_loss
+     real(r8),                                 intent(in)  :: P_iron_remin
+     real(r8),                                 intent(in)  :: POC_remin
+     real(r8),                                 intent(in)  :: POP_remin
+     real(r8),                                 intent(in)  :: P_SiO2_remin
+     real(r8),                                 intent(in)  :: P_CaCO3_remin
+     real(r8),                                 intent(in)  :: P_CaCO3_ALT_CO2_remin
+     real(r8),                                 intent(in)  :: other_remin
+     real(r8),                                 intent(in)  :: PON_remin
+     real(r8),                                 intent(in)  :: O2_loc
+     real(r8),                                 intent(in)  :: o2_consumption_scalef
+     real(r8),                                 intent(out) :: o2_production
+     real(r8),                                 intent(out) :: o2_consumption
+     real(r8),                                 intent(out) :: interior_tendencies(:)
+     type(marbl_tracer_index_type),            intent(in)  :: marbl_tracer_indices
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -3375,53 +3388,53 @@ contains
      real(r8) :: auto_sum
      !-----------------------------------------------------------------------
 
-     associate(                                                            &
-          thetaC          => autotroph_secondary_species(:)%thetaC          , & ! current Chl/C ratio (mg Chl/mmol C)
-          QCaCO3          => autotroph_secondary_species(:)%QCaCO3          , & ! current CaCO3/C ratio (mmol CaCO3/mmol C)
-          Qp              => autotroph_secondary_species(:)%Qp              , & ! current P/C ratio (mmol P/mmol C)
-          Qfe             => autotroph_secondary_species(:)%Qfe             , & ! current Fe/C ratio (mmol Fe/mmol C)
-          Qsi             => autotroph_secondary_species(:)%Qsi             , & ! current Si/C ratio (mmol Si/mmol C)
-          NO3_V           => autotroph_secondary_species(:)%NO3_V           , & ! nitrate uptake (mmol NO3/m^3/sec)
-          NH4_V           => autotroph_secondary_species(:)%NH4_V           , & ! ammonium uptake (mmol NH4/m^3/sec)
-          PO4_V           => autotroph_secondary_species(:)%PO4_V           , & ! PO4 uptake (mmol PO4/m^3/sec)
-          DOP_V           => autotroph_secondary_species(:)%DOP_V           , & ! DOP uptake (mmol DOP/m^3/sec)
-          photoC          => autotroph_secondary_species(:)%photoC          , & ! C-fixation (mmol C/m^3/sec)
-          photoFe         => autotroph_secondary_species(:)%photoFe         , & ! iron uptake
-          photoSi         => autotroph_secondary_species(:)%photoSi         , & ! silicon uptake (mmol Si/m^3/sec)
-          photoacc        => autotroph_secondary_species(:)%photoacc        , & ! Chl synth. term in photoadapt. (GD98) (mg Chl/m^3/sec)
-          auto_loss       => autotroph_secondary_species(:)%auto_loss       , & ! autotroph non-grazing mort (mmol C/m^3/sec)
-          auto_loss_dic   => autotroph_secondary_species(:)%auto_loss_dic   , & ! auto_loss routed to dic (mmol C/m^3/sec)
-          auto_loss_doc   => autotroph_secondary_species(:)%auto_loss_doc   , & ! auto_loss routed to doc (mmol C/m^3/sec)
-          auto_agg        => autotroph_secondary_species(:)%auto_agg        , & ! autotroph aggregation (mmol C/m^3/sec)
-          auto_graze      => autotroph_secondary_species(:)%auto_graze      , & ! autotroph grazing rate (mmol C/m^3/sec)
-          auto_graze_zoo  => autotroph_secondary_species(:)%auto_graze_zoo  , & ! auto_graze routed to zoo (mmol C/m^3/sec)
-          auto_graze_dic  => autotroph_secondary_species(:)%auto_graze_dic  , & ! auto_graze routed to dic (mmol C/m^3/sec)
-          auto_graze_doc  => autotroph_secondary_species(:)%auto_graze_doc  , & ! auto_graze routed to doc (mmol C/m^3/sec)
-          CaCO3_form      => autotroph_secondary_species(:)%CaCO3_form      , & ! prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-          Nfix            => autotroph_secondary_species(:)%Nfix            , & ! total Nitrogen fixation (mmol N/m^3/sec)
-          Nexcrete        => autotroph_secondary_species(:)%Nexcrete        , & ! fixed N excretion
-          remaining_P_dip => autotroph_secondary_species(:)%remaining_P_dip , & ! remaining_P from mort routed to remin
+     associate(                                                                &
+          thetaC          => autotroph_secondary_species%thetaC(:,k),          & ! current Chl/C ratio (mg Chl/mmol C)
+          QCaCO3          => autotroph_secondary_species%QCaCO3(:,k),          & ! current CaCO3/C ratio (mmol CaCO3/mmol C)
+          Qp              => autotroph_secondary_species%Qp(:,k),              & ! current P/C ratio (mmol P/mmol C)
+          Qfe             => autotroph_secondary_species%Qfe(:,k),             & ! current Fe/C ratio (mmol Fe/mmol C)
+          Qsi             => autotroph_secondary_species%Qsi(:,k),             & ! current Si/C ratio (mmol Si/mmol C)
+          NO3_V           => autotroph_secondary_species%NO3_V(:,k),           & ! nitrate uptake (mmol NO3/m^3/sec)
+          NH4_V           => autotroph_secondary_species%NH4_V(:,k),           & ! ammonium uptake (mmol NH4/m^3/sec)
+          PO4_V           => autotroph_secondary_species%PO4_V(:,k),           & ! PO4 uptake (mmol PO4/m^3/sec)
+          DOP_V           => autotroph_secondary_species%DOP_V(:,k),           & ! DOP uptake (mmol DOP/m^3/sec)
+          photoC          => autotroph_secondary_species%photoC(:,k),          & ! C-fixation (mmol C/m^3/sec)
+          photoFe         => autotroph_secondary_species%photoFe(:,k),         & ! iron uptake
+          photoSi         => autotroph_secondary_species%photoSi(:,k),         & ! silicon uptake (mmol Si/m^3/sec)
+          photoacc        => autotroph_secondary_species%photoacc(:,k),        & ! Chl synth. term in photoadapt. (GD98) (mg Chl/m^3/sec)
+          auto_loss       => autotroph_secondary_species%auto_loss(:,k),       & ! autotroph non-grazing mort (mmol C/m^3/sec)
+          auto_loss_dic   => autotroph_secondary_species%auto_loss_dic(:,k),   & ! auto_loss routed to dic (mmol C/m^3/sec)
+          auto_loss_doc   => autotroph_secondary_species%auto_loss_doc(:,k),   & ! auto_loss routed to doc (mmol C/m^3/sec)
+          auto_agg        => autotroph_secondary_species%auto_agg(:,k),        & ! autotroph aggregation (mmol C/m^3/sec)
+          auto_graze      => autotroph_secondary_species%auto_graze(:,k),      & ! autotroph grazing rate (mmol C/m^3/sec)
+          auto_graze_zoo  => autotroph_secondary_species%auto_graze_zoo(:,k),  & ! auto_graze routed to zoo (mmol C/m^3/sec)
+          auto_graze_dic  => autotroph_secondary_species%auto_graze_dic(:,k),  & ! auto_graze routed to dic (mmol C/m^3/sec)
+          auto_graze_doc  => autotroph_secondary_species%auto_graze_doc(:,k),  & ! auto_graze routed to doc (mmol C/m^3/sec)
+          CaCO3_form      => autotroph_secondary_species%CaCO3_form(:,k),      & ! prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
+          Nfix            => autotroph_secondary_species%Nfix(:,k),            & ! total Nitrogen fixation (mmol N/m^3/sec)
+          Nexcrete        => autotroph_secondary_species%Nexcrete(:,k),        & ! fixed N excretion
+          remaining_P_dip => autotroph_secondary_species%remaining_P_dip(:,k), & ! remaining_P from mort routed to remin
 
-          f_zoo_detr      => zooplankton_secondary_species(:)%f_zoo_detr    , & ! frac of zoo losses into large detrital pool (non-dim)
-          x_graze_zoo     => zooplankton_secondary_species(:)%x_graze_zoo   , & ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
-          zoo_graze       => zooplankton_secondary_species(:)%zoo_graze     , & ! zooplankton losses due to grazing (mmol C/m^3/sec)
-          zoo_graze_zoo   => zooplankton_secondary_species(:)%zoo_graze_zoo , & ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
-          zoo_graze_dic   => zooplankton_secondary_species(:)%zoo_graze_dic , & ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
-          zoo_graze_doc   => zooplankton_secondary_species(:)%zoo_graze_doc , & ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
-          zoo_loss        => zooplankton_secondary_species(:)%zoo_loss      , & ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-          zoo_loss_dic    => zooplankton_secondary_species(:)%zoo_loss_dic  , & ! zoo_loss routed to dic (mmol C/m^3/sec)
-          zoo_loss_doc    => zooplankton_secondary_species(:)%zoo_loss_doc  , & ! zoo_loss routed to doc (mmol C/m^3/sec)
+          f_zoo_detr      => zooplankton_secondary_species(:)%f_zoo_detr,    & ! frac of zoo losses into large detrital pool (non-dim)
+          x_graze_zoo     => zooplankton_secondary_species(:)%x_graze_zoo,   & ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
+          zoo_graze       => zooplankton_secondary_species(:)%zoo_graze,     & ! zooplankton losses due to grazing (mmol C/m^3/sec)
+          zoo_graze_zoo   => zooplankton_secondary_species(:)%zoo_graze_zoo, & ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+          zoo_graze_dic   => zooplankton_secondary_species(:)%zoo_graze_dic, & ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
+          zoo_graze_doc   => zooplankton_secondary_species(:)%zoo_graze_doc, & ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
+          zoo_loss        => zooplankton_secondary_species(:)%zoo_loss,      & ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+          zoo_loss_dic    => zooplankton_secondary_species(:)%zoo_loss_dic,  & ! zoo_loss routed to dic (mmol C/m^3/sec)
+          zoo_loss_doc    => zooplankton_secondary_species(:)%zoo_loss_doc,  & ! zoo_loss routed to doc (mmol C/m^3/sec)
 
-          DOC_prod        => dissolved_organic_matter%DOC_prod        , & ! production of DOC (mmol C/m^3/sec)
-          DOC_remin       => dissolved_organic_matter%DOC_remin       , & ! remineralization of DOC (mmol C/m^3/sec)
-          DOCr_remin      => dissolved_organic_matter%DOCr_remin      , & ! remineralization of DOCr
-          DON_prod        => dissolved_organic_matter%DON_prod        , & ! production of DON
-          DON_remin       => dissolved_organic_matter%DON_remin       , & ! remineralization of DON
-          DONr_remin      => dissolved_organic_matter%DONr_remin      , & ! remineralization of DONr
-          DOP_prod        => dissolved_organic_matter%DOP_prod        , & ! production of DOP
-          DOP_remin       => dissolved_organic_matter%DOP_remin       , & ! remineralization of DOP
-          DOPr_remin      => dissolved_organic_matter%DOPr_remin      , & ! remineralization of DOPr
-          DOP_loss_P_bal  => dissolved_organic_matter%DOP_loss_P_bal  , & ! DOP loss, due to P budget balancing
+          DOC_prod        => dissolved_organic_matter%DOC_prod,       & ! production of DOC (mmol C/m^3/sec)
+          DOC_remin       => dissolved_organic_matter%DOC_remin,      & ! remineralization of DOC (mmol C/m^3/sec)
+          DOCr_remin      => dissolved_organic_matter%DOCr_remin,     & ! remineralization of DOCr
+          DON_prod        => dissolved_organic_matter%DON_prod,       & ! production of DON
+          DON_remin       => dissolved_organic_matter%DON_remin,      & ! remineralization of DON
+          DONr_remin      => dissolved_organic_matter%DONr_remin,     & ! remineralization of DONr
+          DOP_prod        => dissolved_organic_matter%DOP_prod,       & ! production of DOP
+          DOP_remin       => dissolved_organic_matter%DOP_remin,      & ! remineralization of DOP
+          DOPr_remin      => dissolved_organic_matter%DOPr_remin,     & ! remineralization of DOPr
+          DOP_loss_P_bal  => dissolved_organic_matter%DOP_loss_P_bal, & ! DOP loss, due to P budget balancing
 
           po4_ind           => marbl_tracer_indices%po4_ind,         &
           no3_ind           => marbl_tracer_indices%no3_ind,         &

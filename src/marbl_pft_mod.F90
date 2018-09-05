@@ -117,55 +117,6 @@ module marbl_pft_mod
 
   !*****************************************************************************
 
-  type, public :: autotroph_secondary_species_type
-     real(r8) :: thetaC          ! current Chl/C ratio (mg Chl/mmol C)
-     real(r8) :: QCaCO3          ! current CaCO3/C ratio (mmol CaCO3/mmol C)
-     real(r8) :: Qp              ! current P/C ratio (mmol P/mmol C)
-     real(r8) :: gQp             ! P/C for growth
-     real(r8) :: Qfe             ! current Fe/C ratio (mmol Fe/mmol C)
-     real(r8) :: gQfe            ! fe/C for growth
-     real(r8) :: Qsi             ! current Si/C ratio (mmol Si/mmol C)
-     real(r8) :: gQsi            ! diatom Si/C ratio for growth (new biomass)
-     real(r8) :: VNO3            ! NH4 uptake rate (non-dim)
-     real(r8) :: VNH4            ! NO3 uptake rate (non-dim)
-     real(r8) :: VNtot           ! total N uptake rate (non-dim)
-     real(r8) :: NO3_V           ! nitrate uptake (mmol NO3/m^3/sec)
-     real(r8) :: NH4_V           ! ammonium uptake (mmol NH4/m^3/sec)
-     real(r8) :: PO4_V           ! PO4 uptake (mmol PO4/m^3/sec)
-     real(r8) :: DOP_V           ! DOP uptake (mmol DOP/m^3/sec)
-     real(r8) :: VPO4            ! C-specific PO4 uptake (non-dim)
-     real(r8) :: VDOP            ! C-specific DOP uptake rate (non-dim)
-     real(r8) :: VPtot           ! total P uptake rate (non-dim)
-     real(r8) :: f_nut           ! nut limitation factor, modifies C fixation (non-dim)
-     real(r8) :: VFe             ! C-specific Fe uptake (non-dim)
-     real(r8) :: VSiO3           ! C-specific SiO3 uptake (non-dim)
-     real(r8) :: light_lim       ! light limitation factor
-     real(r8) :: PCphoto         ! C-specific rate of photosynth. (1/sec)
-     real(r8) :: photoC          ! C-fixation (mmol C/m^3/sec)
-     real(r8) :: photoFe         ! iron uptake
-     real(r8) :: photoSi         ! silicon uptake (mmol Si/m^3/sec)
-     real(r8) :: photoacc        ! Chl synth. term in photoadapt. (GD98) (mg Chl/m^3/sec)
-     real(r8) :: auto_loss       ! autotroph non-grazing mort (mmol C/m^3/sec)
-     real(r8) :: auto_loss_poc   ! auto_loss routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_doc   ! auto_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_dic   ! auto_loss routed to dic (mmol C/m^3/sec)
-     real(r8) :: auto_agg        ! autotroph aggregation (mmol C/m^3/sec)
-     real(r8) :: auto_graze      ! autotroph grazing rate (mmol C/m^3/sec)
-     real(r8) :: auto_graze_zoo  ! auto_graze routed to zoo (mmol C/m^3/sec)
-     real(r8) :: auto_graze_poc  ! auto_graze routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_doc  ! auto_graze routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_dic  ! auto_graze routed to dic (mmol C/m^3/sec)
-     real(r8) :: Pprime          ! used to limit autotroph mort at low biomass (mmol C/m^3)
-     real(r8) :: CaCO3_form      ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-     real(r8) :: Nfix            ! total Nitrogen fixation (mmol N/m^3/sec)
-     real(r8) :: Nexcrete        ! fixed N excretion
-     real(r8) :: remaining_P_dop ! remaining_P from grazing routed to DOP pool
-     real(r8) :: remaining_P_pop ! remaining_P from grazing routed to POP pool
-     real(r8) :: remaining_P_dip ! remaining_P from grazing routed to remin
-  end type autotroph_secondary_species_type
-
-  !*****************************************************************************
-
   type, public :: zooplankton_secondary_species_type
      real(r8) :: f_zoo_detr       ! frac of zoo losses into large detrital pool (non-dim)
      real(r8) :: x_graze_zoo      ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
