@@ -20,6 +20,7 @@ module marbl_diagnostics_mod
   use marbl_interface_private_types, only : column_sinking_particle_type
   use marbl_interface_private_types, only : marbl_PAR_type
   use marbl_interface_private_types, only : autotroph_secondary_species_type
+  use marbl_interface_private_types, only : zooplankton_secondary_species_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
@@ -31,7 +32,6 @@ module marbl_diagnostics_mod
   use marbl_interface_public_types, only : marbl_diagnostics_type
 
   use marbl_pft_mod, only : autotroph_local_type
-  use marbl_pft_mod, only : zooplankton_secondary_species_type
 
   use marbl_logging, only : marbl_log_type
   use marbl_logging, only : marbl_logging_add_diagnostics_error
@@ -2990,7 +2990,7 @@ contains
     type (carbonate_type)                     , intent(in) :: carbonate(domain%km)
     type (autotroph_local_type)               , intent(in) :: autotroph_local(autotroph_cnt, domain%km)
     type (autotroph_secondary_species_type)   , intent(in) :: autotroph_secondary_species
-    type (zooplankton_secondary_species_type) , intent(in) :: zooplankton_secondary_species(zooplankton_cnt, domain%km)
+    type (zooplankton_secondary_species_type) , intent(in) :: zooplankton_secondary_species
     type (dissolved_organic_matter_type)      , intent(in) :: dissolved_organic_matter(domain%km)
     type (marbl_particulate_share_type)       , intent(in) :: marbl_particulate_share
     type (marbl_PAR_type)                     , intent(in) :: PAR
@@ -3817,7 +3817,7 @@ contains
        zooplankton_secondary_species, marbl_interior_diags)
 
     type(marbl_domain_type)                  , intent(in)    :: marbl_domain
-    type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(:,:)
+    type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species
     type(marbl_diagnostics_type)             , intent(inout) :: marbl_interior_diags
 
     !-----------------------------------------------------------------------
@@ -3834,14 +3834,14 @@ contains
          )
 
     do n = 1, zooplankton_cnt
-       diags(ind%zoo_loss(n))%field_3d(:, 1)      = zooplankton_secondary_species(n,:)%zoo_loss
-       diags(ind%zoo_loss_poc(n))%field_3d(:, 1)  = zooplankton_secondary_species(n,:)%zoo_loss_poc
-       diags(ind%zoo_loss_doc(n))%field_3d(:, 1)  = zooplankton_secondary_species(n,:)%zoo_loss_doc
-       diags(ind%zoo_graze(n))%field_3d(:, 1)     = zooplankton_secondary_species(n,:)%zoo_graze
-       diags(ind%zoo_graze_poc(n))%field_3d(:, 1) = zooplankton_secondary_species(n,:)%zoo_graze_poc
-       diags(ind%zoo_graze_doc(n))%field_3d(:, 1) = zooplankton_secondary_species(n,:)%zoo_graze_doc
-       diags(ind%zoo_graze_zoo(n))%field_3d(:, 1) = zooplankton_secondary_species(n,:)%zoo_graze_zoo
-       diags(ind%x_graze_zoo(n))%field_3d(:, 1)   = zooplankton_secondary_species(n,:)%x_graze_zoo
+       diags(ind%zoo_loss(n))%field_3d(:, 1)      = zooplankton_secondary_species%zoo_loss(n,:)
+       diags(ind%zoo_loss_poc(n))%field_3d(:, 1)  = zooplankton_secondary_species%zoo_loss_poc(n,:)
+       diags(ind%zoo_loss_doc(n))%field_3d(:, 1)  = zooplankton_secondary_species%zoo_loss_doc(n,:)
+       diags(ind%zoo_graze(n))%field_3d(:, 1)     = zooplankton_secondary_species%zoo_graze(n,:)
+       diags(ind%zoo_graze_poc(n))%field_3d(:, 1) = zooplankton_secondary_species%zoo_graze_poc(n,:)
+       diags(ind%zoo_graze_doc(n))%field_3d(:, 1) = zooplankton_secondary_species%zoo_graze_doc(n,:)
+       diags(ind%zoo_graze_zoo(n))%field_3d(:, 1) = zooplankton_secondary_species%zoo_graze_zoo(n,:)
+       diags(ind%x_graze_zoo(n))%field_3d(:, 1)   = zooplankton_secondary_species%x_graze_zoo(n,:)
 
        ! vertical integrals
 

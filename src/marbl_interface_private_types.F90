@@ -33,54 +33,74 @@ module marbl_interface_private_types
   !*****************************************************************************
 
   type, public :: autotroph_secondary_species_type
-     real(r8), allocatable :: thetaC(:,:)          ! current Chl/C ratio (mg Chl/mmol C)
-     real(r8), allocatable :: QCaCO3(:,:)          ! current CaCO3/C ratio (mmol CaCO3/mmol C)
-     real(r8), allocatable :: Qp(:,:)              ! current P/C ratio (mmol P/mmol C)
-     real(r8), allocatable :: gQp(:,:)             ! P/C for growth
-     real(r8), allocatable :: Qfe(:,:)             ! current Fe/C ratio (mmol Fe/mmol C)
-     real(r8), allocatable :: gQfe(:,:)            ! fe/C for growth
-     real(r8), allocatable :: Qsi(:,:)             ! current Si/C ratio (mmol Si/mmol C)
-     real(r8), allocatable :: gQsi(:,:)            ! diatom Si/C ratio for growth (new biomass)
-     real(r8), allocatable :: VNO3(:,:)            ! NH4 uptake rate (non-dim)
-     real(r8), allocatable :: VNH4(:,:)            ! NO3 uptake rate (non-dim)
-     real(r8), allocatable :: VNtot(:,:)           ! total N uptake rate (non-dim)
-     real(r8), allocatable :: NO3_V(:,:)           ! nitrate uptake (mmol NO3/m^3/sec)
-     real(r8), allocatable :: NH4_V(:,:)           ! ammonium uptake (mmol NH4/m^3/sec)
-     real(r8), allocatable :: PO4_V(:,:)           ! PO4 uptake (mmol PO4/m^3/sec)
-     real(r8), allocatable :: DOP_V(:,:)           ! DOP uptake (mmol DOP/m^3/sec)
-     real(r8), allocatable :: VPO4(:,:)            ! C-specific PO4 uptake (non-dim)
-     real(r8), allocatable :: VDOP(:,:)            ! C-specific DOP uptake rate (non-dim)
-     real(r8), allocatable :: VPtot(:,:)           ! total P uptake rate (non-dim)
-     real(r8), allocatable :: f_nut(:,:)           ! nut limitation factor, modifies C fixation (non-dim)
-     real(r8), allocatable :: VFe(:,:)             ! C-specific Fe uptake (non-dim)
-     real(r8), allocatable :: VSiO3(:,:)           ! C-specific SiO3 uptake (non-dim)
-     real(r8), allocatable :: light_lim(:,:)       ! light limitation factor
-     real(r8), allocatable :: PCphoto(:,:)         ! C-specific rate of photosynth. (1/sec)
-     real(r8), allocatable :: photoC(:,:)          ! C-fixation (mmol C/m^3/sec)
-     real(r8), allocatable :: photoFe(:,:)         ! iron uptake
-     real(r8), allocatable :: photoSi(:,:)         ! silicon uptake (mmol Si/m^3/sec)
-     real(r8), allocatable :: photoacc(:,:)        ! Chl synth. term in photoadapt. (GD98) (mg Chl/m^3/sec)
-     real(r8), allocatable :: auto_loss(:,:)       ! autotroph non-grazing mort (mmol C/m^3/sec)
-     real(r8), allocatable :: auto_loss_poc(:,:)   ! auto_loss routed to poc (mmol C/m^3/sec)
-     real(r8), allocatable :: auto_loss_doc(:,:)   ! auto_loss routed to doc (mmol C/m^3/sec)
-     real(r8), allocatable :: auto_loss_dic(:,:)   ! auto_loss routed to dic (mmol C/m^3/sec)
-     real(r8), allocatable :: auto_agg(:,:)        ! autotroph aggregation (mmol C/m^3/sec)
-     real(r8), allocatable :: auto_graze(:,:)      ! autotroph grazing rate (mmol C/m^3/sec)
-     real(r8), allocatable :: auto_graze_zoo(:,:)  ! auto_graze routed to zoo (mmol C/m^3/sec)
-     real(r8), allocatable :: auto_graze_poc(:,:)  ! auto_graze routed to poc (mmol C/m^3/sec)
-     real(r8), allocatable :: auto_graze_doc(:,:)  ! auto_graze routed to doc (mmol C/m^3/sec)
-     real(r8), allocatable :: auto_graze_dic(:,:)  ! auto_graze routed to dic (mmol C/m^3/sec)
-     real(r8), allocatable :: Pprime(:,:)          ! used to limit autotroph mort at low biomass (mmol C/m^3)
-     real(r8), allocatable :: CaCO3_form(:,:)      ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-     real(r8), allocatable :: Nfix(:,:)            ! total Nitrogen fixation (mmol N/m^3/sec)
-     real(r8), allocatable :: Nexcrete(:,:)        ! fixed N excretion
-     real(r8), allocatable :: remaining_P_dop(:,:) ! remaining_P from grazing routed to DOP pool
-     real(r8), allocatable :: remaining_P_pop(:,:) ! remaining_P from grazing routed to POP pool
-     real(r8), allocatable :: remaining_P_dip(:,:) ! remaining_P from grazing routed to remin
+    real(r8), allocatable :: thetaC(:,:)          ! current Chl/C ratio (mg Chl/mmol C)
+    real(r8), allocatable :: QCaCO3(:,:)          ! current CaCO3/C ratio (mmol CaCO3/mmol C)
+    real(r8), allocatable :: Qp(:,:)              ! current P/C ratio (mmol P/mmol C)
+    real(r8), allocatable :: gQp(:,:)             ! P/C for growth
+    real(r8), allocatable :: Qfe(:,:)             ! current Fe/C ratio (mmol Fe/mmol C)
+    real(r8), allocatable :: gQfe(:,:)            ! fe/C for growth
+    real(r8), allocatable :: Qsi(:,:)             ! current Si/C ratio (mmol Si/mmol C)
+    real(r8), allocatable :: gQsi(:,:)            ! diatom Si/C ratio for growth (new biomass)
+    real(r8), allocatable :: VNO3(:,:)            ! NH4 uptake rate (non-dim)
+    real(r8), allocatable :: VNH4(:,:)            ! NO3 uptake rate (non-dim)
+    real(r8), allocatable :: VNtot(:,:)           ! total N uptake rate (non-dim)
+    real(r8), allocatable :: NO3_V(:,:)           ! nitrate uptake (mmol NO3/m^3/sec)
+    real(r8), allocatable :: NH4_V(:,:)           ! ammonium uptake (mmol NH4/m^3/sec)
+    real(r8), allocatable :: PO4_V(:,:)           ! PO4 uptake (mmol PO4/m^3/sec)
+    real(r8), allocatable :: DOP_V(:,:)           ! DOP uptake (mmol DOP/m^3/sec)
+    real(r8), allocatable :: VPO4(:,:)            ! C-specific PO4 uptake (non-dim)
+    real(r8), allocatable :: VDOP(:,:)            ! C-specific DOP uptake rate (non-dim)
+    real(r8), allocatable :: VPtot(:,:)           ! total P uptake rate (non-dim)
+    real(r8), allocatable :: f_nut(:,:)           ! nut limitation factor, modifies C fixation (non-dim)
+    real(r8), allocatable :: VFe(:,:)             ! C-specific Fe uptake (non-dim)
+    real(r8), allocatable :: VSiO3(:,:)           ! C-specific SiO3 uptake (non-dim)
+    real(r8), allocatable :: light_lim(:,:)       ! light limitation factor
+    real(r8), allocatable :: PCphoto(:,:)         ! C-specific rate of photosynth. (1/sec)
+    real(r8), allocatable :: photoC(:,:)          ! C-fixation (mmol C/m^3/sec)
+    real(r8), allocatable :: photoFe(:,:)         ! iron uptake
+    real(r8), allocatable :: photoSi(:,:)         ! silicon uptake (mmol Si/m^3/sec)
+    real(r8), allocatable :: photoacc(:,:)        ! Chl synth. term in photoadapt. (GD98) (mg Chl/m^3/sec)
+    real(r8), allocatable :: auto_loss(:,:)       ! autotroph non-grazing mort (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_loss_poc(:,:)   ! auto_loss routed to poc (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_loss_doc(:,:)   ! auto_loss routed to doc (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_loss_dic(:,:)   ! auto_loss routed to dic (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_agg(:,:)        ! autotroph aggregation (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze(:,:)      ! autotroph grazing rate (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze_zoo(:,:)  ! auto_graze routed to zoo (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze_poc(:,:)  ! auto_graze routed to poc (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze_doc(:,:)  ! auto_graze routed to doc (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze_dic(:,:)  ! auto_graze routed to dic (mmol C/m^3/sec)
+    real(r8), allocatable :: Pprime(:,:)          ! used to limit autotroph mort at low biomass (mmol C/m^3)
+    real(r8), allocatable :: CaCO3_form(:,:)      ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
+    real(r8), allocatable :: Nfix(:,:)            ! total Nitrogen fixation (mmol N/m^3/sec)
+    real(r8), allocatable :: Nexcrete(:,:)        ! fixed N excretion
+    real(r8), allocatable :: remaining_P_dop(:,:) ! remaining_P from grazing routed to DOP pool
+    real(r8), allocatable :: remaining_P_pop(:,:) ! remaining_P from grazing routed to POP pool
+    real(r8), allocatable :: remaining_P_dip(:,:) ! remaining_P from grazing routed to remin
   contains
-     procedure, public :: construct => autotroph_secondary_species_constructor
-     procedure, public :: destruct => autotroph_secondary_species_destructor
+    procedure, public :: construct => autotroph_secondary_species_constructor
+    procedure, public :: destruct => autotroph_secondary_species_destructor
   end type autotroph_secondary_species_type
+
+  !*****************************************************************************
+
+  type, public :: zooplankton_secondary_species_type
+    real(r8), allocatable :: f_zoo_detr(:,:)       ! frac of zoo losses into large detrital pool (non-dim)
+    real(r8), allocatable :: x_graze_zoo(:,:)      ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze(:,:)        ! zooplankton losses due to grazing (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze_zoo(:,:)    ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze_poc(:,:)    ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze_doc(:,:)    ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze_dic(:,:)    ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss(:,:)         ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss_poc(:,:)     ! zoo_loss routed to poc (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss_doc(:,:)     ! zoo_loss routed to doc (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss_dic(:,:)     ! zoo_loss routed to dic (mmol C/m^3/sec)
+    real(r8), allocatable :: Zprime(:,:)           ! used to limit zoo mort at low biomass (mmol C/m^3)
+  contains
+    procedure, public :: construct => zooplankton_secondary_species_constructor
+    procedure, public :: destruct => zooplankton_secondary_species_destructor
+  end type zooplankton_secondary_species_type
 
   !****************************************************************************
 
@@ -944,6 +964,50 @@ contains
     deallocate(self%remaining_P_dip)
 
   end subroutine autotroph_secondary_species_destructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_secondary_species_constructor(self, zooplankton_cnt, km)
+
+    class(zooplankton_secondary_species_type), intent(inout) :: self
+    integer,                                   intent(in)    :: zooplankton_cnt
+    integer,                                   intent(in)    :: km
+
+    allocate(self%f_zoo_detr(zooplankton_cnt, km))
+    allocate(self%x_graze_zoo(zooplankton_cnt, km))
+    allocate(self%zoo_graze(zooplankton_cnt, km))
+    allocate(self%zoo_graze_zoo(zooplankton_cnt, km))
+    allocate(self%zoo_graze_poc(zooplankton_cnt, km))
+    allocate(self%zoo_graze_doc(zooplankton_cnt, km))
+    allocate(self%zoo_graze_dic(zooplankton_cnt, km))
+    allocate(self%zoo_loss(zooplankton_cnt, km))
+    allocate(self%zoo_loss_poc(zooplankton_cnt, km))
+    allocate(self%zoo_loss_doc(zooplankton_cnt, km))
+    allocate(self%zoo_loss_dic(zooplankton_cnt, km))
+    allocate(self%Zprime(zooplankton_cnt, km))
+
+  end subroutine zooplankton_secondary_species_constructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_secondary_species_destructor(self)
+
+    class(zooplankton_secondary_species_type), intent(inout) :: self
+
+    deallocate(self%f_zoo_detr)
+    deallocate(self%x_graze_zoo)
+    deallocate(self%zoo_graze)
+    deallocate(self%zoo_graze_zoo)
+    deallocate(self%zoo_graze_poc)
+    deallocate(self%zoo_graze_doc)
+    deallocate(self%zoo_graze_dic)
+    deallocate(self%zoo_loss)
+    deallocate(self%zoo_loss_poc)
+    deallocate(self%zoo_loss_doc)
+    deallocate(self%zoo_loss_dic)
+    deallocate(self%Zprime)
+
+  end subroutine zooplankton_secondary_species_destructor
 
   !*****************************************************************************
 

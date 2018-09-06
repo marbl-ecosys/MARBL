@@ -17,6 +17,7 @@ module marbl_interior_tendency_mod
 
   use marbl_interface_private_types, only : marbl_PAR_type
   use marbl_interface_private_types, only : autotroph_secondary_species_type
+  use marbl_interface_private_types, only : zooplankton_secondary_species_type
   use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
@@ -75,7 +76,6 @@ module marbl_interior_tendency_mod
   use marbl_pft_mod, only : marbl_zooplankton_share_type
   use marbl_pft_mod, only : autotroph_local_type
   use marbl_pft_mod, only : zooplankton_local_type
-  use marbl_pft_mod, only : zooplankton_secondary_species_type
   use marbl_pft_mod, only : Qp_zoo
 
   implicit none
@@ -99,6 +99,7 @@ contains
        marbl_timer_indices,                   &
        PAR,                                   &
        autotroph_secondary_species,           &
+       zooplankton_secondary_species,         &
        saved_state,                           &
        marbl_timers,                          &
        marbl_particulate_share,               &
@@ -132,6 +133,7 @@ contains
     type(marbl_timer_indexing_type),                         intent(in)    :: marbl_timer_indices
     type(marbl_PAR_type),                                    intent(inout) :: PAR
     type(autotroph_secondary_species_type),                  intent(inout) :: autotroph_secondary_species
+    type(zooplankton_secondary_species_type),                intent(inout) :: zooplankton_secondary_species
     type(marbl_saved_state_type),                            intent(inout) :: saved_state
     type(marbl_internal_timers_type),                        intent(inout) :: marbl_timers
     type(marbl_particulate_share_type),                      intent(inout) :: marbl_particulate_share
@@ -179,7 +181,6 @@ contains
 
     type(zooplankton_local_type)             :: zooplankton_local(zooplankton_cnt, domain%km)
     type(autotroph_local_type)               :: autotroph_local(autotroph_cnt, domain%km)
-    type(zooplankton_secondary_species_type) :: zooplankton_secondary_species(zooplankton_cnt, domain%km)
     type(dissolved_organic_matter_type)      :: dissolved_organic_matter(domain%km)
     type(carbonate_type)                     :: carbonate(domain%km)
 
@@ -335,17 +336,17 @@ contains
 
        call compute_autotroph_loss(k, Tfunc(k), autotroph_secondary_species)
 
-       call compute_Zprime(k, domain, zooplankton_local(:, k)%C, Tfunc(k), zooplankton_secondary_species(:, k))
+       call compute_Zprime(k, domain, zooplankton_local(:, k)%C, Tfunc(k), zooplankton_secondary_species)
 
        call compute_grazing(k, Tfunc(k), zooplankton_local(:, k), &
-            zooplankton_secondary_species(:, k), autotroph_secondary_species)
+            zooplankton_secondary_species, autotroph_secondary_species)
 
-       call compute_routing(k, zooplankton_secondary_species(:, k), autotroph_secondary_species)
+       call compute_routing(k, zooplankton_secondary_species, autotroph_secondary_species)
 
-       call compute_dissolved_organic_matter (k, num_PAR_subcols,             &
-            zooplankton_secondary_species(:, k), autotroph_secondary_species, &
-            PAR%col_frac(:), PAR%interface(k-1,:), PAR%avg(k,:),              &
-            delta_z1, tracer_local(:, k), marbl_tracer_indices,               &
+       call compute_dissolved_organic_matter (k, num_PAR_subcols,       &
+            zooplankton_secondary_species, autotroph_secondary_species, &
+            PAR%col_frac(:), PAR%interface(k-1,:), PAR%avg(k,:),        &
+            delta_z1, tracer_local(:, k), marbl_tracer_indices,         &
             dissolved_organic_matter(k))
 
        call compute_scavenging(k, tracer_local(fe_ind, k),                   &
@@ -358,7 +359,7 @@ contains
           return
        end if
 
-       call compute_large_detritus_prod(k, domain, marbl_tracer_indices, zooplankton_secondary_species(:, k), &
+       call compute_large_detritus_prod(k, domain, marbl_tracer_indices, zooplankton_secondary_species, &
             autotroph_secondary_species, Fe_scavenge(k),                &
             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron,   &
             dissolved_organic_matter(k)%DOP_loss_P_bal, marbl_status_log)
@@ -395,7 +396,7 @@ contains
             POC%remin(k), other_remin(k), sed_denitrif(k), denitrif(k))
 
        call compute_local_tendencies(k, autotroph_secondary_species, &
-            zooplankton_secondary_species(:, k), &
+            zooplankton_secondary_species, &
             dissolved_organic_matter(k), &
             nitrif(k), denitrif(k), sed_denitrif(k), &
             Fe_scavenge(k), Lig_prod(k), Lig_loss(k), &
@@ -414,8 +415,8 @@ contains
             marbl_tracer_indices, carbonate(k), dissolved_organic_matter(k),   &
             QA_dust_def(k), marbl_interior_tendency_share(k))
 
-       call marbl_interior_tendency_share_export_zooplankton(zooplankton_local(:, k), &
-            zooplankton_secondary_species(:, k), marbl_zooplankton_share(k))
+       call marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local(:, k), &
+            zooplankton_secondary_species, marbl_zooplankton_share(k))
 
        if  (k < km) then
           call update_particulate_terms_from_prior_level(k+1, POC, POP, P_CaCO3, &
@@ -1707,7 +1708,7 @@ contains
      type(marbl_domain_type)                  , intent(in)    :: domain
      real(r8)                                 , intent(in)    :: zooC(zooplankton_cnt)
      real(r8)                                 , intent(in)    :: Tfunc
-     type(zooplankton_secondary_species_type) , intent(inout) :: zooplankton_secondary_species(zooplankton_cnt)
+     type(zooplankton_secondary_species_type) , intent(inout) :: zooplankton_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
@@ -1717,10 +1718,10 @@ contains
      real(r8) :: C_loss_thres
      !-----------------------------------------------------------------------
 
-     associate(                                                  &
-          zt       => domain%zt(:),                              & !(km)
-          Zprime   => zooplankton_secondary_species(:)%Zprime,   & !(zooplankton_cnt)
-          zoo_loss => zooplankton_secondary_species(:)%zoo_loss  & !(zooplankton_cnt) output
+     associate(                                                   &
+          zt       => domain%zt(:),                               & !(km)
+          Zprime   => zooplankton_secondary_species%Zprime(:,k),  & !(zooplankton_cnt)
+          zoo_loss => zooplankton_secondary_species%zoo_loss(:,k) & !(zooplankton_cnt) output
           )
 
      !  calculate the loss threshold interpolation factor
@@ -1770,7 +1771,7 @@ contains
      integer,                                  intent(in)    :: k
      real(r8),                                 intent(in)    :: Tfunc
      type(zooplankton_local_type),             intent(in)    :: zooplankton_loc(zooplankton_cnt)
-     type(zooplankton_secondary_species_type), intent(inout) :: zooplankton_secondary_species(zooplankton_cnt)
+     type(zooplankton_secondary_species_type), intent(inout) :: zooplankton_secondary_species
      type(autotroph_secondary_species_type),   intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
@@ -1784,22 +1785,22 @@ contains
      real(r8) :: graze_rate
      !-----------------------------------------------------------------------
 
-     associate(                                                              &
-          Pprime         => autotroph_secondary_species%Pprime(:,k)        , & ! input
-          QCaCO3         => autotroph_secondary_species%QCaCO3(:,k)        , & ! input
-          Zprime         => zooplankton_secondary_species(:)%Zprime        , & ! input
-          auto_graze     => autotroph_secondary_species%auto_graze(:,k)    , & ! output
-          auto_graze_poc => autotroph_secondary_species%auto_graze_poc(:,k), & ! output
-          auto_graze_dic => autotroph_secondary_species%auto_graze_dic(:,k), & ! output
-          auto_graze_doc => autotroph_secondary_species%auto_graze_doc(:,k), & ! output
-          auto_graze_zoo => autotroph_secondary_species%auto_graze_zoo(:,k), & ! output
-          zoo_graze      => zooplankton_secondary_species(:)%zoo_graze     , & ! output
-          zoo_graze_poc  => zooplankton_secondary_species(:)%zoo_graze_poc , & ! output
-          zoo_graze_dic  => zooplankton_secondary_species(:)%zoo_graze_dic , & ! output
-          zoo_graze_doc  => zooplankton_secondary_species(:)%zoo_graze_doc , & ! output
-          zoo_graze_zoo  => zooplankton_secondary_species(:)%zoo_graze_zoo , & ! output
-          x_graze_zoo    => zooplankton_secondary_species(:)%x_graze_zoo   , & ! output
-          f_zoo_detr     => zooplankton_secondary_species(:)%f_zoo_detr      & ! output
+     associate(                                                               &
+          Pprime         => autotroph_secondary_species%Pprime(:,k),          & ! input
+          QCaCO3         => autotroph_secondary_species%QCaCO3(:,k),          & ! input
+          Zprime         => zooplankton_secondary_species%Zprime(:,k),        & ! input
+          auto_graze     => autotroph_secondary_species%auto_graze(:,k),      & ! output
+          auto_graze_poc => autotroph_secondary_species%auto_graze_poc(:,k),  & ! output
+          auto_graze_dic => autotroph_secondary_species%auto_graze_dic(:,k),  & ! output
+          auto_graze_doc => autotroph_secondary_species%auto_graze_doc(:,k),  & ! output
+          auto_graze_zoo => autotroph_secondary_species%auto_graze_zoo(:,k),  & ! output
+          zoo_graze      => zooplankton_secondary_species%zoo_graze(:,k),     & ! output
+          zoo_graze_poc  => zooplankton_secondary_species%zoo_graze_poc(:,k), & ! output
+          zoo_graze_dic  => zooplankton_secondary_species%zoo_graze_dic(:,k), & ! output
+          zoo_graze_doc  => zooplankton_secondary_species%zoo_graze_doc(:,k), & ! output
+          zoo_graze_zoo  => zooplankton_secondary_species%zoo_graze_zoo(:,k), & ! output
+          x_graze_zoo    => zooplankton_secondary_species%x_graze_zoo(:,k),   & ! output
+          f_zoo_detr     => zooplankton_secondary_species%f_zoo_detr(:,k)     & ! output
           )
 
      auto_graze(:)     = c0 ! total grazing losses from autotroph pool at auto_ind
@@ -1941,7 +1942,7 @@ contains
      use marbl_settings_mod, only : f_toDOP
 
      integer,                                  intent(in)    :: k
-     type(zooplankton_secondary_species_type), intent(inout) :: zooplankton_secondary_species(zooplankton_cnt)
+     type(zooplankton_secondary_species_type), intent(inout) :: zooplankton_secondary_species
      type(autotroph_secondary_species_type),   intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
@@ -1961,22 +1962,22 @@ contains
           auto_loss_poc   => autotroph_secondary_species%auto_loss_poc(:,k),  & ! input
           auto_agg        => autotroph_secondary_species%auto_agg(:,k),       & ! input
 
-          zoo_graze       => zooplankton_secondary_species(:)%zoo_graze,     & ! input
-          zoo_graze_poc   => zooplankton_secondary_species(:)%zoo_graze_poc, & ! input
-          zoo_graze_doc   => zooplankton_secondary_species(:)%zoo_graze_doc, & ! input
-          zoo_graze_zoo   => zooplankton_secondary_species(:)%zoo_graze_zoo, & ! input
-          zoo_loss        => zooplankton_secondary_species(:)%zoo_loss,      & ! input
-          f_zoo_detr      => zooplankton_secondary_species(:)%f_zoo_detr,    & ! input
+          zoo_graze       => zooplankton_secondary_species%zoo_graze(:,k),     & ! input
+          zoo_graze_poc   => zooplankton_secondary_species%zoo_graze_poc(:,k), & ! input
+          zoo_graze_doc   => zooplankton_secondary_species%zoo_graze_doc(:,k), & ! input
+          zoo_graze_zoo   => zooplankton_secondary_species%zoo_graze_zoo(:,k), & ! input
+          zoo_loss        => zooplankton_secondary_species%zoo_loss(:,k),      & ! input
+          f_zoo_detr      => zooplankton_secondary_species%f_zoo_detr(:,k),    & ! input
 
           auto_graze_dic  => autotroph_secondary_species%auto_graze_dic(:,k),  & ! output
           remaining_P_dop => autotroph_secondary_species%remaining_P_dop(:,k), & ! output
           remaining_P_pop => autotroph_secondary_species%remaining_P_pop(:,k), & ! output
           remaining_P_dip => autotroph_secondary_species%remaining_P_dip(:,k), & ! output
 
-          zoo_graze_dic   => zooplankton_secondary_species(:)%zoo_graze_dic, & ! output
-          zoo_loss_poc    => zooplankton_secondary_species(:)%zoo_loss_poc,  & ! output
-          zoo_loss_doc    => zooplankton_secondary_species(:)%zoo_loss_doc,  & ! output
-          zoo_loss_dic    => zooplankton_secondary_species(:)%zoo_loss_dic   & ! output
+          zoo_graze_dic   => zooplankton_secondary_species%zoo_graze_dic(:,k), & ! output
+          zoo_loss_poc    => zooplankton_secondary_species%zoo_loss_poc(:,k),  & ! output
+          zoo_loss_doc    => zooplankton_secondary_species%zoo_loss_doc(:,k),  & ! output
+          zoo_loss_dic    => zooplankton_secondary_species%zoo_loss_dic(:,k)   & ! output
           )
 
      !-----------------------------------------------------------------------
@@ -2056,7 +2057,7 @@ contains
 
      integer(int_kind)                       , intent(in)  :: k
      integer(int_kind)                       , intent(in)  :: PAR_nsubcols
-     type(zooplankton_secondary_species_type), intent(in)  :: zooplankton_secondary_species(:)
+     type(zooplankton_secondary_species_type), intent(in)  :: zooplankton_secondary_species
      type(autotroph_secondary_species_type)  , intent(in)  :: autotroph_secondary_species
      real(r8)                                , intent(in)  :: PAR_col_frac(:)
      real(r8)                                , intent(in)  :: PAR_in(:)
@@ -2092,8 +2093,8 @@ contains
           auto_loss_doc   => autotroph_secondary_species%auto_loss_doc(:,k),   & ! input
           auto_graze_doc  => autotroph_secondary_species%auto_graze_doc(:,k),  & ! input
 
-          zoo_loss_doc    => zooplankton_secondary_species(:)%zoo_loss_doc,  & ! input
-          zoo_graze_doc   => zooplankton_secondary_species(:)%zoo_graze_doc, & ! input
+          zoo_loss_doc    => zooplankton_secondary_species%zoo_loss_doc(:,k),  & ! input
+          zoo_graze_doc   => zooplankton_secondary_species%zoo_graze_doc(:,k), & ! input
 
           DOC_prod        => dissolved_organic_matter%DOC_prod,   & ! output production of DOC (mmol C/m^3/sec)
           DOC_remin       => dissolved_organic_matter%DOC_remin,  & ! output remineralization of DOC (mmol C/m^3/sec)
@@ -2392,7 +2393,7 @@ contains
      integer                                  , intent(in)    :: k
      type(marbl_domain_type)                  , intent(in)    :: domain
      type(marbl_tracer_index_type)            , intent(in)    :: marbl_tracer_indices
-     type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(zooplankton_cnt)
+     type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species
      type(autotroph_secondary_species_type)   , intent(in)    :: autotroph_secondary_species
      real(r8)                                 , intent(in)    :: Fe_scavenge
      type(column_sinking_particle_type)       , intent(inout) :: POC
@@ -2425,8 +2426,8 @@ contains
           auto_loss       => autotroph_secondary_species%auto_loss(:,k),       & ! input
           auto_loss_poc   => autotroph_secondary_species%auto_loss_poc(:,k),   & ! input
           remaining_P_pop => autotroph_secondary_species%remaining_P_pop(:,k), & ! input
-          zoo_loss_poc    => zooplankton_secondary_species(:)%zoo_loss_poc,    & ! input
-          zoo_graze_poc   => zooplankton_secondary_species(:)%zoo_graze_poc    & ! input
+          zoo_loss_poc    => zooplankton_secondary_species%zoo_loss_poc(:,k),  & ! input
+          zoo_graze_poc   => zooplankton_secondary_species%zoo_graze_poc(:,k)  & ! input
           )
 
      !-----------------------------------------------------------------------
@@ -3358,7 +3359,7 @@ contains
 
      integer,                                  intent(in)  :: k
      type(autotroph_secondary_species_type),   intent(in)  :: autotroph_secondary_species
-     type(zooplankton_secondary_species_type), intent(in)  :: zooplankton_secondary_species(:)
+     type(zooplankton_secondary_species_type), intent(in)  :: zooplankton_secondary_species
      type(dissolved_organic_matter_type),      intent(in)  :: dissolved_organic_matter
      real(r8),                                 intent(in)  :: nitrif
      real(r8),                                 intent(in)  :: denitrif
@@ -3415,15 +3416,15 @@ contains
           Nexcrete        => autotroph_secondary_species%Nexcrete(:,k),        & ! fixed N excretion
           remaining_P_dip => autotroph_secondary_species%remaining_P_dip(:,k), & ! remaining_P from mort routed to remin
 
-          f_zoo_detr      => zooplankton_secondary_species(:)%f_zoo_detr,    & ! frac of zoo losses into large detrital pool (non-dim)
-          x_graze_zoo     => zooplankton_secondary_species(:)%x_graze_zoo,   & ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
-          zoo_graze       => zooplankton_secondary_species(:)%zoo_graze,     & ! zooplankton losses due to grazing (mmol C/m^3/sec)
-          zoo_graze_zoo   => zooplankton_secondary_species(:)%zoo_graze_zoo, & ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
-          zoo_graze_dic   => zooplankton_secondary_species(:)%zoo_graze_dic, & ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
-          zoo_graze_doc   => zooplankton_secondary_species(:)%zoo_graze_doc, & ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
-          zoo_loss        => zooplankton_secondary_species(:)%zoo_loss,      & ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-          zoo_loss_dic    => zooplankton_secondary_species(:)%zoo_loss_dic,  & ! zoo_loss routed to dic (mmol C/m^3/sec)
-          zoo_loss_doc    => zooplankton_secondary_species(:)%zoo_loss_doc,  & ! zoo_loss routed to doc (mmol C/m^3/sec)
+          f_zoo_detr      => zooplankton_secondary_species%f_zoo_detr(:,k),    & ! frac of zoo losses into large detrital pool (non-dim)
+          x_graze_zoo     => zooplankton_secondary_species%x_graze_zoo(:,k),   & ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
+          zoo_graze       => zooplankton_secondary_species%zoo_graze(:,k),     & ! zooplankton losses due to grazing (mmol C/m^3/sec)
+          zoo_graze_zoo   => zooplankton_secondary_species%zoo_graze_zoo(:,k), & ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+          zoo_graze_dic   => zooplankton_secondary_species%zoo_graze_dic(:,k), & ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
+          zoo_graze_doc   => zooplankton_secondary_species%zoo_graze_doc(:,k), & ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
+          zoo_loss        => zooplankton_secondary_species%zoo_loss(:,k),      & ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+          zoo_loss_dic    => zooplankton_secondary_species%zoo_loss_dic(:,k),  & ! zoo_loss routed to dic (mmol C/m^3/sec)
+          zoo_loss_doc    => zooplankton_secondary_species%zoo_loss_doc(:,k),  & ! zoo_loss routed to doc (mmol C/m^3/sec)
 
           DOC_prod        => dissolved_organic_matter%DOC_prod,       & ! production of DOC (mmol C/m^3/sec)
           DOC_remin       => dissolved_organic_matter%DOC_remin,      & ! remineralization of DOC (mmol C/m^3/sec)

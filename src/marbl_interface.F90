@@ -39,6 +39,7 @@ module marbl_interface
   use marbl_interface_private_types, only : marbl_interior_tendency_saved_state_indexing_type
   use marbl_interface_private_types, only : marbl_PAR_type
   use marbl_interface_private_types, only : autotroph_secondary_species_type
+  use marbl_interface_private_types, only : zooplankton_secondary_species_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
@@ -105,15 +106,16 @@ module marbl_interface
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
-     type(marbl_PAR_type),                   private :: PAR
-     type(autotroph_secondary_species_type), private :: autotroph_secondary_species
-     type(marbl_particulate_share_type),     private :: particulate_share
-     type(marbl_surface_flux_share_type),    private :: surface_flux_share
-     type(marbl_surface_flux_internal_type), private :: surface_flux_internal
-     logical,                                private :: lallow_glo_ops
-     type(marbl_internal_timers_type),       private :: timers
-     type(marbl_timer_indexing_type),        private :: timer_ids
-     type(marbl_settings_type),              private :: settings
+     type(marbl_PAR_type),                     private :: PAR
+     type(autotroph_secondary_species_type),   private :: autotroph_secondary_species
+     type(zooplankton_secondary_species_type), private :: zooplankton_secondary_species
+     type(marbl_particulate_share_type),       private :: particulate_share
+     type(marbl_surface_flux_share_type),      private :: surface_flux_share
+     type(marbl_surface_flux_internal_type),   private :: surface_flux_internal
+     logical,                                  private :: lallow_glo_ops
+     type(marbl_internal_timers_type),         private :: timers
+     type(marbl_timer_indexing_type),          private :: timer_ids
+     type(marbl_settings_type),                private :: settings
 
    contains
 
@@ -263,6 +265,7 @@ contains
 
     call this%PAR%construct(num_levels, num_PAR_subcols)
     call this%autotroph_secondary_species%construct(autotroph_cnt, num_levels)
+    call this%zooplankton_secondary_species%construct(zooplankton_cnt, num_levels)
 
     !-----------------------------------------------------------------------
     !  Set up tracers
@@ -852,6 +855,7 @@ contains
          marbl_timer_indices               = this%timer_ids,                        &
          PAR                               = this%PAR,                              &
          autotroph_secondary_species       = this%autotroph_secondary_species,      &
+         zooplankton_secondary_species     = this%zooplankton_secondary_species,    &
          saved_state                       = this%interior_tendency_saved_state,    &
          marbl_timers                      = this%timers,                           &
          marbl_particulate_share           = this%particulate_share,                &
@@ -1002,6 +1006,7 @@ contains
     call this%particulate_share%destruct()
     call this%PAR%destruct()
     call this%autotroph_secondary_species%destruct()
+    call this%zooplankton_secondary_species%destruct()
     call this%domain%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)
