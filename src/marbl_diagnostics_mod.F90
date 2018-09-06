@@ -19,6 +19,7 @@ module marbl_diagnostics_mod
   use marbl_interface_private_types, only : dissolved_organic_matter_type
   use marbl_interface_private_types, only : column_sinking_particle_type
   use marbl_interface_private_types, only : marbl_PAR_type
+  use marbl_interface_private_types, only : autotroph_local_type
   use marbl_interface_private_types, only : autotroph_secondary_species_type
   use marbl_interface_private_types, only : zooplankton_secondary_species_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
@@ -30,8 +31,6 @@ module marbl_diagnostics_mod
   use marbl_interface_public_types, only : marbl_forcing_fields_type
   use marbl_interface_public_types, only : marbl_saved_state_type
   use marbl_interface_public_types, only : marbl_diagnostics_type
-
-  use marbl_pft_mod, only : autotroph_local_type
 
   use marbl_logging, only : marbl_log_type
   use marbl_logging, only : marbl_logging_add_diagnostics_error
@@ -2988,7 +2987,7 @@ contains
 
     type(marbl_tracer_index_type)             , intent(in) :: marbl_tracer_indices
     type (carbonate_type)                     , intent(in) :: carbonate(domain%km)
-    type (autotroph_local_type)               , intent(in) :: autotroph_local(autotroph_cnt, domain%km)
+    type (autotroph_local_type)               , intent(in) :: autotroph_local
     type (autotroph_secondary_species_type)   , intent(in) :: autotroph_secondary_species
     type (zooplankton_secondary_species_type) , intent(in) :: zooplankton_secondary_species
     type (dissolved_organic_matter_type)      , intent(in) :: dissolved_organic_matter(domain%km)
@@ -3414,7 +3413,7 @@ contains
        autotroph_local, autotroph_secondary_species, marbl_interior_diags)
 
     type(marbl_domain_type)                , intent(in)    :: marbl_domain
-    type(autotroph_local_type)             , intent(in)    :: autotroph_local(:,:) ! autotroph_cnt, km
+    type(autotroph_local_type)             , intent(in)    :: autotroph_local
     type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species
     type(marbl_diagnostics_type)           , intent(inout) :: marbl_interior_diags
 
@@ -3448,7 +3447,7 @@ contains
 
     do n = 1, autotroph_cnt
        ! compute biomass weighted average of limitation terms over 0..100m
-       autotrophC_weight(:) = autotroph_local(n,:)%C
+       autotrophC_weight(:) = autotroph_local%C(n,:)
        call marbl_diagnostics_share_compute_vertical_integrals(autotrophC_weight, delta_z, kmt, &
             near_surface_integral=autotrophC_zint_100m)
 

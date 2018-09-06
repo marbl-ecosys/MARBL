@@ -82,6 +82,24 @@ module marbl_interface_private_types
     procedure, public :: destruct => autotroph_secondary_species_destructor
   end type autotroph_secondary_species_type
 
+  !****************************************************************************
+
+  type, public :: autotroph_local_type
+    real(r8), allocatable :: Chl(:,:)     ! local copy of model autotroph Chl
+    real(r8), allocatable :: C(:,:)       ! local copy of model autotroph C
+    real(r8), allocatable :: P(:,:)       ! local copy of model autotroph P
+    real(r8), allocatable :: Fe(:,:)      ! local copy of model autotroph Fe
+    real(r8), allocatable :: Si(:,:)      ! local copy of model autotroph Si
+    real(r8), allocatable :: CaCO3(:,:)   ! local copy of model autotroph CaCO3
+    real(r8), allocatable :: C13(:,:)     ! local copy of model autotroph C13
+    real(r8), allocatable :: C14(:,:)     ! local copy of model autotroph C14
+    real(r8), allocatable :: Ca13CO3(:,:) ! local copy of model autotroph Ca13CO3
+    real(r8), allocatable :: Ca14CO3(:,:) ! local copy of model autotroph Ca14CO3
+  contains
+    procedure, public :: construct => autotroph_local_constructor
+    procedure, public :: destruct => autotroph_local_destructor
+  end type autotroph_local_type
+
   !*****************************************************************************
 
   type, public :: zooplankton_secondary_species_type
@@ -964,6 +982,54 @@ contains
     deallocate(self%remaining_P_dip)
 
   end subroutine autotroph_secondary_species_destructor
+
+  !***********************************************************************
+
+  subroutine autotroph_local_constructor(self, ciso_on, autotroph_cnt, km)
+
+    class(autotroph_local_type), intent(inout) :: self
+    logical,                     intent(in)    :: ciso_on
+    integer,                     intent(in)    :: autotroph_cnt
+    integer,                     intent(in)    :: km
+
+    allocate(self%Chl(autotroph_cnt, km))
+    allocate(self%C(autotroph_cnt, km))
+    allocate(self%P(autotroph_cnt, km))
+    allocate(self%Fe(autotroph_cnt, km))
+    allocate(self%Si(autotroph_cnt, km))
+    allocate(self%CaCO3(autotroph_cnt, km))
+    if (ciso_on) then
+      allocate(self%C13(autotroph_cnt, km))
+      allocate(self%C14(autotroph_cnt, km))
+      allocate(self%Ca13CO3(autotroph_cnt, km))
+      allocate(self%Ca14CO3(autotroph_cnt, km))
+    else
+      allocate(self%C13(0,0))
+      allocate(self%C14(0,0))
+      allocate(self%Ca13CO3(0,0))
+      allocate(self%Ca14CO3(0,0))
+    end if
+
+  end subroutine autotroph_local_constructor
+
+  !***********************************************************************
+
+  subroutine autotroph_local_destructor(self)
+
+    class(autotroph_local_type), intent(inout) :: self
+
+    deallocate(self%Chl)
+    deallocate(self%C)
+    deallocate(self%P)
+    deallocate(self%Fe)
+    deallocate(self%Si)
+    deallocate(self%CaCO3)
+    deallocate(self%C13)
+    deallocate(self%C14)
+    deallocate(self%Ca13CO3)
+    deallocate(self%Ca14CO3)
+
+  end subroutine autotroph_local_destructor
 
   !***********************************************************************
 

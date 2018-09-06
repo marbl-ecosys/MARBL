@@ -39,6 +39,7 @@ module marbl_interface
   use marbl_interface_private_types, only : marbl_interior_tendency_saved_state_indexing_type
   use marbl_interface_private_types, only : marbl_PAR_type
   use marbl_interface_private_types, only : autotroph_secondary_species_type
+  use marbl_interface_private_types, only : autotroph_local_type
   use marbl_interface_private_types, only : zooplankton_secondary_species_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_share_type
@@ -108,6 +109,7 @@ module marbl_interface
      ! private data
      type(marbl_PAR_type),                     private :: PAR
      type(autotroph_secondary_species_type),   private :: autotroph_secondary_species
+     type(autotroph_local_type),               private :: autotroph_local
      type(zooplankton_secondary_species_type), private :: zooplankton_secondary_species
      type(marbl_particulate_share_type),       private :: particulate_share
      type(marbl_surface_flux_share_type),      private :: surface_flux_share
@@ -188,6 +190,7 @@ contains
     use marbl_settings_mod, only : marbl_settings_set_all_derived
     use marbl_settings_mod, only : marbl_settings_consistency_check
     use marbl_settings_mod, only : autotroph_cnt
+    use marbl_settings_mod, only : ciso_on
     use marbl_diagnostics_mod, only : marbl_diagnostics_init
     use marbl_saved_state_mod, only : marbl_saved_state_init
 
@@ -265,6 +268,7 @@ contains
 
     call this%PAR%construct(num_levels, num_PAR_subcols)
     call this%autotroph_secondary_species%construct(autotroph_cnt, num_levels)
+    call this%autotroph_local%construct(ciso_on, autotroph_cnt, num_levels)
     call this%zooplankton_secondary_species%construct(zooplankton_cnt, num_levels)
 
     !-----------------------------------------------------------------------
@@ -855,6 +859,7 @@ contains
          marbl_timer_indices               = this%timer_ids,                        &
          PAR                               = this%PAR,                              &
          autotroph_secondary_species       = this%autotroph_secondary_species,      &
+         autotroph_local                   = this%autotroph_local,                  &
          zooplankton_secondary_species     = this%zooplankton_secondary_species,    &
          saved_state                       = this%interior_tendency_saved_state,    &
          marbl_timers                      = this%timers,                           &
@@ -1006,6 +1011,7 @@ contains
     call this%particulate_share%destruct()
     call this%PAR%destruct()
     call this%autotroph_secondary_species%destruct()
+    call this%autotroph_local%destruct()
     call this%zooplankton_secondary_species%destruct()
     call this%domain%destruct()
 

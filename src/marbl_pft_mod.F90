@@ -45,19 +45,6 @@ module marbl_pft_mod
     procedure, public :: set_to_default => autotroph_set_to_default
   end type autotroph_type
 
-  type, public :: autotroph_local_type
-     real (r8) :: Chl   ! local copy of model autotroph Chl
-     real (r8) :: C     ! local copy of model autotroph C
-     real (r8) :: P     ! local copy of model autotroph P
-     real (r8) :: Fe    ! local copy of model autotroph Fe
-     real (r8) :: Si    ! local copy of model autotroph Si
-     real (r8) :: CaCO3 ! local copy of model autotroph CaCO3
-     real (r8) :: C13     ! local copy of model autotroph C13
-     real (r8) :: C14     ! local copy of model autotroph C14
-     real (r8) :: Ca13CO3 ! local copy of model autotroph Ca13CO3
-     real (r8) :: Ca14CO3 ! local copy of model autotroph Ca14CO3
-  end type autotroph_local_type
-
   !****************************************************************************
   ! derived types for zooplankton
 

@@ -19,13 +19,13 @@ module marbl_ciso_interior_tendency_mod
   use marbl_interface_public_types, only : marbl_diagnostics_type
   use marbl_interface_public_types, only : marbl_domain_type
 
+  use marbl_interface_private_types, only : autotroph_local_type
   use marbl_interface_private_types, only : column_sinking_particle_type
   use marbl_interface_private_types, only : marbl_interior_tendency_share_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
   use marbl_interface_private_types, only : autotroph_secondary_species_type
 
-  use marbl_pft_mod, only : autotroph_local_type
   use marbl_pft_mod, only : marbl_zooplankton_share_type
 
   implicit none
@@ -76,7 +76,7 @@ contains
     type(marbl_zooplankton_share_type),       intent(in)    :: marbl_zooplankton_share(:)
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
     real (r8),                                intent(in)    :: tracer_local(:,:)
-    type(autotroph_local_type),               intent(in)    :: autotroph_local(:,:)
+    type(autotroph_local_type),               intent(in)    :: autotroph_local
     type(autotroph_secondary_species_type),   intent(in)    :: autotroph_secondary_species
     real (r8),                                intent(in)    :: temperature(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
@@ -303,18 +303,18 @@ contains
        end if
 
        do auto_ind = 1, autotroph_cnt
-          if (autotroph_local(auto_ind,k)%C > c0) then
-             R13C_autotroph(auto_ind,k) = autotroph_local(auto_ind,k)%C13 / autotroph_local(auto_ind,k)%C
-             R14C_autotroph(auto_ind,k) = autotroph_local(auto_ind,k)%C14 / autotroph_local(auto_ind,k)%C
+          if (autotroph_local%C(auto_ind,k) > c0) then
+             R13C_autotroph(auto_ind,k) = autotroph_local%C13(auto_ind,k) / autotroph_local%C(auto_ind,k)
+             R14C_autotroph(auto_ind,k) = autotroph_local%C14(auto_ind,k) / autotroph_local%C(auto_ind,k)
           else
              R13C_autotroph(auto_ind,k) = c0
              R14C_autotroph(auto_ind,k) = c0
           end if
 
           if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
-             if (autotroph_local(auto_ind,k)%CaCO3 > c0) then
-                R13C_autotrophCaCO3(auto_ind,k) = autotroph_local(auto_ind,k)%Ca13CO3 / autotroph_local(auto_ind,k)%CaCO3
-                R14C_autotrophCaCO3(auto_ind,k) = autotroph_local(auto_ind,k)%Ca14CO3 / autotroph_local(auto_ind,k)%CaCO3
+             if (autotroph_local%CaCO3(auto_ind,k) > c0) then
+                R13C_autotrophCaCO3(auto_ind,k) = autotroph_local%Ca13CO3(auto_ind,k) / autotroph_local%CaCO3(auto_ind,k)
+                R14C_autotrophCaCO3(auto_ind,k) = autotroph_local%Ca14CO3(auto_ind,k) / autotroph_local%CaCO3(auto_ind,k)
              else
                 R13C_autotrophCaCO3(auto_ind,k) = c0
                 R14C_autotrophCaCO3(auto_ind,k) = c0
@@ -579,9 +579,9 @@ contains
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
           interior_tendencies(n,k) = photo14C(auto_ind,k) - work1 * R14C_autotroph(auto_ind,k) - &
-               c14_lambda_inv_sec * autotroph_local(auto_ind,k)%C14
+               c14_lambda_inv_sec * autotroph_local%C14(auto_ind,k)
 
-          decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local(auto_ind,k)%C14
+          decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local%C14(auto_ind,k)
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
           if (n > 0) then
@@ -593,9 +593,9 @@ contains
           if (n > 0) then
              interior_tendencies(n,k) = Ca14CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
                   * work1 * R14C_autotrophCaCO3(auto_ind,k)      &
-                  - c14_lambda_inv_sec * autotroph_local(auto_ind,k)%Ca14CO3
+                  - c14_lambda_inv_sec * autotroph_local%Ca14CO3(auto_ind,k)
 
-             decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local(auto_ind,k)%Ca14CO3
+             decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local%Ca14CO3(auto_ind,k)
           endif
        end do
 
@@ -730,23 +730,25 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_ciso_interior_tendency_autotroph_set_to_zero(autotroph_tracer_indices, autotroph_local)
+  subroutine marbl_ciso_interior_tendency_autotroph_set_to_zero(autotroph_tracer_indices, auto_ind, k, autotroph_local)
 
     use marbl_interface_private_types, only : marbl_living_tracer_index_type
 
     type(marbl_living_tracer_index_type), intent(in)    :: autotroph_tracer_indices
+    integer,                              intent(in)    :: auto_ind
+    integer,                              intent(in)    :: k
     type(autotroph_local_type),           intent(inout) :: autotroph_local
 
     if (.not. ciso_on) return
 
-    autotroph_local%C13 = c0
-    autotroph_local%C14 = c0
+    autotroph_local%C13(auto_ind,k) = c0
+    autotroph_local%C14(auto_ind,k) = c0
 
     if (autotroph_tracer_indices%Ca13CO3_ind > 0) then
-      autotroph_local%Ca13CO3 = c0
+      autotroph_local%Ca13CO3(auto_ind,k) = c0
     end if
     if (autotroph_tracer_indices%Ca14CO3_ind > 0) then
-      autotroph_local%Ca14CO3 = c0
+      autotroph_local%Ca14CO3(auto_ind,k) = c0
     end if
 
   end subroutine marbl_ciso_interior_tendency_autotroph_set_to_zero
