@@ -287,9 +287,8 @@ contains
     !  create local copies of model tracers
     !-----------------------------------------------------------------------
 
-    call setup_local_tracers(kmt, marbl_tracer_indices, &
-         tracers(:,:), tracer_local(:,:), zooplankton_local(:,:), &
-         autotroph_local, totalChl_local)
+    call setup_local_tracers(kmt, marbl_tracer_indices, tracers(:,:), autotroph_local, &
+         tracer_local(:,:), zooplankton_local(:,:), totalChl_local)
 
     call set_surface_particulate_terms(surface_flux_forcing_indices, POC, POP, P_CaCO3, &
          P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
@@ -698,20 +697,20 @@ contains
    !***********************************************************************
 
    subroutine setup_local_tracers(column_kmt, marbl_tracer_indices, tracers, &
-              tracer_local, zooplankton_local, autotroph_local, totalChl_local)
+              autotroph_local, tracer_local, zooplankton_local, totalChl_local)
 
      !-----------------------------------------------------------------------
      !  create local copies of model tracers
      !  treat negative values as zero,  apply mask to local copies
      !-----------------------------------------------------------------------
 
-     integer(int_kind)            , intent(in)  :: column_kmt
-     type(marbl_tracer_index_type), intent(in)  :: marbl_tracer_indices
-     real (r8)                    , intent(in)  :: tracers(:,:)
-     real (r8)                    , intent(out) :: tracer_local(:,:)
-     type(zooplankton_local_type) , intent(out) :: zooplankton_local(:,:)
-     type(autotroph_local_type)   , intent(out) :: autotroph_local
-     real (r8)                    , intent(out) :: totalChl_local(:)
+     integer(int_kind)            , intent(in)    :: column_kmt
+     type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
+     real (r8)                    , intent(in)    :: tracers(:,:)
+     type(autotroph_local_type)   , intent(inout) :: autotroph_local
+     real (r8)                    , intent(out)   :: tracer_local(:,:)
+     type(zooplankton_local_type) , intent(out)   :: zooplankton_local(:,:)
+     real (r8)                    , intent(out)   :: totalChl_local(:)
 
      !-----------------------------------------------------------------------
      !  local variables
