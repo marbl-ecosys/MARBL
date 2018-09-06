@@ -310,16 +310,14 @@ contains
     call compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_indices, &
                      totalChl_local, PAR)
 
+    call compute_autotroph_elemental_ratios(km, autotroph_local, tracer_local, marbl_tracer_indices, &
+         autotroph_secondary_species)
+
+    call compute_function_scaling(temperature, Tfunc)
+
+    call compute_Pprime(domain, autotroph_local, temperature, autotroph_secondary_species)
+
     do k = 1, km
-
-       call compute_autotroph_elemental_ratios(k,                 &
-            autotroph_local, tracer_local(:, k),                  &
-            marbl_tracer_indices, autotroph_secondary_species)
-
-       call compute_function_scaling(temperature(k), Tfunc(k))
-
-       call compute_Pprime(k, domain, autotroph_local,     &
-            temperature(k), autotroph_secondary_species)
 
        call compute_autotroph_uptake(k, tracer_local(:, k), marbl_tracer_indices, &
             autotroph_secondary_species)
@@ -1107,7 +1105,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_autotroph_elemental_ratios(k, autotroph_local, tracer_local, marbl_tracer_indices, &
+   subroutine compute_autotroph_elemental_ratios(km, autotroph_local, tracer_local, marbl_tracer_indices, &
               autotroph_secondary_species)
 
      use marbl_constants_mod, only : epsC
@@ -1119,22 +1117,23 @@ contains
      use marbl_settings_mod , only : gQ_Si_kSi_thres
      use marbl_settings_mod , only : PquotaSlope, PquotaIntercept, PquotaMinNP
 
-     integer,                                intent(in)    :: k
+     integer,                                intent(in)    :: km
      type(autotroph_local_type),             intent(in)    :: autotroph_local
-     real (r8),                              intent(in)    :: tracer_local(:) ! local copies of model tracer concentrations
+     real (r8),                              intent(in)    :: tracer_local(:,:) ! local copies of model tracer concentrations
      type(marbl_tracer_index_type),          intent(in)    :: marbl_tracer_indices
      type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
      !-----------------------------------------------------------------------
-     integer(int_kind) :: auto_ind
+     integer(int_kind) :: k, auto_ind
      !-----------------------------------------------------------------------
 
+     do k=1,km
      associate(                                                 &
-          PO4_loc    => tracer_local(marbl_tracer_indices%po4_ind),                  &
-          Fe_loc     => tracer_local(marbl_tracer_indices%fe_ind),                   &
-          SiO3_loc   => tracer_local(marbl_tracer_indices%sio3_ind),                 &
+          PO4_loc    => tracer_local(marbl_tracer_indices%po4_ind,k),                  &
+          Fe_loc     => tracer_local(marbl_tracer_indices%fe_ind,k),                   &
+          SiO3_loc   => tracer_local(marbl_tracer_indices%sio3_ind,k),                 &
           auto_C     => autotroph_local%C(:,k),                  &
           auto_P     => autotroph_local%P(:,k),                  &
           auto_Chl   => autotroph_local%Chl(:,k),                &
@@ -1228,6 +1227,7 @@ contains
         end if
      end do
      end associate
+     end do
    end subroutine compute_autotroph_elemental_ratios
 
    !***********************************************************************
@@ -1244,8 +1244,8 @@ contains
      use marbl_constants_mod, only : Tref
      use marbl_constants_mod, only : c10
 
-     real(r8), intent(in)  :: temperature
-     real(r8), intent(out) :: Tfunc
+     real(r8), intent(in)  :: temperature(:)
+     real(r8), intent(out) :: Tfunc(:)
 
      Tfunc = Q_10**(((temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
 
@@ -1253,49 +1253,46 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_Pprime(k, domain, autotroph_local, temperature, autotroph_secondary_species)
+   subroutine compute_Pprime(domain, autotroph_local, temperature, autotroph_secondary_species)
 
      use marbl_settings_mod, only : thres_z1_auto
      use marbl_settings_mod, only : thres_z2_auto
 
-     integer(int_kind),                      intent(in)    :: k
      type(marbl_domain_type),                intent(in)    :: domain
      type(autotroph_local_type),             intent(in)    :: autotroph_local
-     real(r8),                               intent(in)    :: temperature
+     real(r8),                               intent(in)    :: temperature(:)
      type(autotroph_secondary_species_type), intent(inout) :: autotroph_secondary_species
 
      !-----------------------------------------------------------------------
      !  local variables
      !-----------------------------------------------------------------------
      integer  :: auto_ind
-     real(r8) :: f_loss_thres
-     real(r8) :: C_loss_thres
+     real(r8) :: f_loss_thres(domain%km)
+     real(r8) :: C_loss_thres(domain%km)
      !-----------------------------------------------------------------------
 
      associate(                                             &
           zt     => domain%zt(:),                           &
-          Pprime => autotroph_secondary_species%Pprime(:,k) & ! output
+          Pprime => autotroph_secondary_species%Pprime(:,:) & ! output
           )
 
      !  calculate the loss threshold interpolation factor
-     if (zt(k) > thres_z1_auto) then
-        if (zt(k) < thres_z2_auto) then
-           f_loss_thres = (thres_z2_auto - zt(k))/(thres_z2_auto - thres_z1_auto)
-        else
-           f_loss_thres = c0
-        endif
-     else
-        f_loss_thres = c1
-     endif
+     where (zt >= thres_z2_auto)
+       f_loss_thres = c0
+     else where (zt > thres_z1_auto)
+       f_loss_thres = (thres_z2_auto - zt)/(thres_z2_auto - thres_z1_auto)
+     else where
+       f_loss_thres = c1
+     end where
 
      !  Compute Pprime for all autotrophs, used for loss terms
      do auto_ind = 1, autotroph_cnt
-        if (temperature < autotrophs(auto_ind)%temp_thres) then
+        where (temperature < autotrophs(auto_ind)%temp_thres)
            C_loss_thres = f_loss_thres * autotrophs(auto_ind)%loss_thres2
-        else
+        else where
            C_loss_thres = f_loss_thres * autotrophs(auto_ind)%loss_thres
-        end if
-        Pprime(auto_ind) = max(autotroph_local%C(auto_ind,k) - C_loss_thres, c0)
+        end where
+        Pprime(auto_ind,:) = max(autotroph_local%C(auto_ind,:) - C_loss_thres, c0)
      end do
 
      end associate
