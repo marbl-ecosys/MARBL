@@ -69,30 +69,30 @@ contains
   !***********************************************************************
 
   subroutine marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local, &
-       zooplankton_secondary_species, marbl_zooplankton_share)
+       zooplankton_derived_terms, marbl_zooplankton_share)
 
-    use marbl_interface_private_types, only : zooplankton_secondary_species_type
+    use marbl_interface_private_types, only : zooplankton_derived_terms_type
     use marbl_pft_mod, only : zooplankton_local_type
     use marbl_pft_mod, only : marbl_zooplankton_share_type
 
-    integer,                                   intent(in)    :: k
-    type(zooplankton_local_type)             , intent(in)    :: zooplankton_local(:)
-    type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species
-    type(marbl_zooplankton_share_type)       , intent(inout) :: marbl_zooplankton_share
+    integer,                              intent(in)    :: k
+    type(zooplankton_local_type),         intent(in)    :: zooplankton_local(:)
+    type(zooplankton_derived_terms_type), intent(in)    :: zooplankton_derived_terms
+    type(marbl_zooplankton_share_type),   intent(inout) :: marbl_zooplankton_share
 
     ! Populate fields used by carbon isotopes if running with ciso module
     if (ciso_on) then
       associate(share => marbl_zooplankton_share)
          share%zoototC_loc_fields      = sum(zooplankton_local(:)%C)
-         share%zootot_loss_fields      = sum(zooplankton_secondary_species%zoo_loss(:,k))
-         share%zootot_loss_poc_fields  = sum(zooplankton_secondary_species%zoo_loss_poc(:,k))
-         share%zootot_loss_doc_fields  = sum(zooplankton_secondary_species%zoo_loss_doc(:,k))
-         share%zootot_loss_dic_fields  = sum(zooplankton_secondary_species%zoo_loss_dic(:,k))
-         share%zootot_graze_fields     = sum(zooplankton_secondary_species%zoo_graze(:,k))
-         share%zootot_graze_zoo_fields = sum(zooplankton_secondary_species%zoo_graze_zoo(:,k))
-         share%zootot_graze_poc_fields = sum(zooplankton_secondary_species%zoo_graze_poc(:,k))
-         share%zootot_graze_doc_fields = sum(zooplankton_secondary_species%zoo_graze_doc(:,k))
-         share%zootot_graze_dic_fields = sum(zooplankton_secondary_species%zoo_graze_dic(:,k))
+         share%zootot_loss_fields      = sum(zooplankton_derived_terms%zoo_loss(:,k))
+         share%zootot_loss_poc_fields  = sum(zooplankton_derived_terms%zoo_loss_poc(:,k))
+         share%zootot_loss_doc_fields  = sum(zooplankton_derived_terms%zoo_loss_doc(:,k))
+         share%zootot_loss_dic_fields  = sum(zooplankton_derived_terms%zoo_loss_dic(:,k))
+         share%zootot_graze_fields     = sum(zooplankton_derived_terms%zoo_graze(:,k))
+         share%zootot_graze_zoo_fields = sum(zooplankton_derived_terms%zoo_graze_zoo(:,k))
+         share%zootot_graze_poc_fields = sum(zooplankton_derived_terms%zoo_graze_poc(:,k))
+         share%zootot_graze_doc_fields = sum(zooplankton_derived_terms%zoo_graze_doc(:,k))
+         share%zootot_graze_dic_fields = sum(zooplankton_derived_terms%zoo_graze_dic(:,k))
       end associate
     end if
 

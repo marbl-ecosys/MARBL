@@ -32,7 +32,7 @@ module marbl_interface_private_types
 
   !*****************************************************************************
 
-  type, public :: autotroph_secondary_species_type
+  type, public :: autotroph_derived_terms_type
     real(r8), allocatable :: thetaC(:,:)          ! current Chl/C ratio (mg Chl/mmol C)
     real(r8), allocatable :: QCaCO3(:,:)          ! current CaCO3/C ratio (mmol CaCO3/mmol C)
     real(r8), allocatable :: Qp(:,:)              ! current P/C ratio (mmol P/mmol C)
@@ -78,13 +78,14 @@ module marbl_interface_private_types
     real(r8), allocatable :: remaining_P_pop(:,:) ! remaining_P from grazing routed to POP pool
     real(r8), allocatable :: remaining_P_dip(:,:) ! remaining_P from grazing routed to remin
   contains
-    procedure, public :: construct => autotroph_secondary_species_constructor
-    procedure, public :: destruct => autotroph_secondary_species_destructor
-  end type autotroph_secondary_species_type
+    procedure, public :: construct => autotroph_derived_terms_constructor
+    procedure, public :: destruct => autotroph_derived_terms_destructor
+  end type autotroph_derived_terms_type
 
   !****************************************************************************
 
   type, public :: autotroph_local_type
+    ! FIXME #316: replace with indices into tracer_local
     real(r8), allocatable :: Chl(:,:)     ! local copy of model autotroph Chl
     real(r8), allocatable :: C(:,:)       ! local copy of model autotroph C
     real(r8), allocatable :: P(:,:)       ! local copy of model autotroph P
@@ -102,7 +103,7 @@ module marbl_interface_private_types
 
   !*****************************************************************************
 
-  type, public :: zooplankton_secondary_species_type
+  type, public :: zooplankton_derived_terms_type
     real(r8), allocatable :: f_zoo_detr(:,:)       ! frac of zoo losses into large detrital pool (non-dim)
     real(r8), allocatable :: x_graze_zoo(:,:)      ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_graze(:,:)        ! zooplankton losses due to grazing (mmol C/m^3/sec)
@@ -116,9 +117,9 @@ module marbl_interface_private_types
     real(r8), allocatable :: zoo_loss_dic(:,:)     ! zoo_loss routed to dic (mmol C/m^3/sec)
     real(r8), allocatable :: Zprime(:,:)           ! used to limit zoo mort at low biomass (mmol C/m^3)
   contains
-    procedure, public :: construct => zooplankton_secondary_species_constructor
-    procedure, public :: destruct => zooplankton_secondary_species_destructor
-  end type zooplankton_secondary_species_type
+    procedure, public :: construct => zooplankton_derived_terms_constructor
+    procedure, public :: destruct => zooplankton_derived_terms_destructor
+  end type zooplankton_derived_terms_type
 
   !****************************************************************************
 
@@ -877,11 +878,11 @@ contains
 
   !***********************************************************************
 
-  subroutine autotroph_secondary_species_constructor(self, autotroph_cnt, km)
+  subroutine autotroph_derived_terms_constructor(self, autotroph_cnt, km)
 
-    class(autotroph_secondary_species_type), intent(inout) :: self
-    integer,                                 intent(in)    :: autotroph_cnt
-    integer,                                 intent(in)    :: km
+    class(autotroph_derived_terms_type), intent(inout) :: self
+    integer,                             intent(in)    :: autotroph_cnt
+    integer,                             intent(in)    :: km
 
     allocate(self%thetaC(autotroph_cnt, km))
     allocate(self%QCaCO3(autotroph_cnt, km))
@@ -928,13 +929,13 @@ contains
     allocate(self%remaining_P_pop(autotroph_cnt, km))
     allocate(self%remaining_P_dip(autotroph_cnt, km))
 
-  end subroutine autotroph_secondary_species_constructor
+  end subroutine autotroph_derived_terms_constructor
 
   !*****************************************************************************
 
-  subroutine autotroph_secondary_species_destructor(self)
+  subroutine autotroph_derived_terms_destructor(self)
 
-    class(autotroph_secondary_species_type), intent(inout) :: self
+    class(autotroph_derived_terms_type), intent(inout) :: self
 
     deallocate(self%thetaC)
     deallocate(self%QCaCO3)
@@ -981,7 +982,7 @@ contains
     deallocate(self%remaining_P_pop)
     deallocate(self%remaining_P_dip)
 
-  end subroutine autotroph_secondary_species_destructor
+  end subroutine autotroph_derived_terms_destructor
 
   !***********************************************************************
 
@@ -1033,11 +1034,11 @@ contains
 
   !***********************************************************************
 
-  subroutine zooplankton_secondary_species_constructor(self, zooplankton_cnt, km)
+  subroutine zooplankton_derived_terms_constructor(self, zooplankton_cnt, km)
 
-    class(zooplankton_secondary_species_type), intent(inout) :: self
-    integer,                                   intent(in)    :: zooplankton_cnt
-    integer,                                   intent(in)    :: km
+    class(zooplankton_derived_terms_type), intent(inout) :: self
+    integer,                               intent(in)    :: zooplankton_cnt
+    integer,                               intent(in)    :: km
 
     allocate(self%f_zoo_detr(zooplankton_cnt, km))
     allocate(self%x_graze_zoo(zooplankton_cnt, km))
@@ -1052,13 +1053,13 @@ contains
     allocate(self%zoo_loss_dic(zooplankton_cnt, km))
     allocate(self%Zprime(zooplankton_cnt, km))
 
-  end subroutine zooplankton_secondary_species_constructor
+  end subroutine zooplankton_derived_terms_constructor
 
   !***********************************************************************
 
-  subroutine zooplankton_secondary_species_destructor(self)
+  subroutine zooplankton_derived_terms_destructor(self)
 
-    class(zooplankton_secondary_species_type), intent(inout) :: self
+    class(zooplankton_derived_terms_type), intent(inout) :: self
 
     deallocate(self%f_zoo_detr)
     deallocate(self%x_graze_zoo)
@@ -1073,7 +1074,7 @@ contains
     deallocate(self%zoo_loss_dic)
     deallocate(self%Zprime)
 
-  end subroutine zooplankton_secondary_species_destructor
+  end subroutine zooplankton_derived_terms_destructor
 
   !*****************************************************************************
 
@@ -1154,7 +1155,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs, &
+  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotroph_settings, &
              zooplankton, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
@@ -1162,13 +1163,13 @@ contains
     ! tracer_cnt by 1 for each tracer that is included. Note that this gives an
     ! accurate count whether the carbon isotope tracers are included or not.
 
-    use marbl_pft_mod, only : autotroph_type
+    use marbl_pft_mod, only : autotroph_settings_type
     use marbl_pft_mod, only : zooplankton_type
 
     class(marbl_tracer_index_type), intent(out)   :: this
     logical,                        intent(in)    :: ciso_on
     logical,                        intent(in)    :: lvariable_PtoC
-    type(autotroph_type),           intent(in)    :: autotrophs(:)
+    type(autotroph_settings_type),  intent(in)    :: autotroph_settings(:)
     type(zooplankton_type),         intent(in)    :: zooplankton(:)
     type(marbl_log_type),           intent(inout) :: marbl_status_log
 
@@ -1176,7 +1177,7 @@ contains
     character(len=char_len) :: ind_name
     integer :: autotroph_cnt, zooplankton_cnt, n
 
-    autotroph_cnt = size(autotrophs)
+    autotroph_cnt = size(autotroph_settings)
     zooplankton_cnt = size(zooplankton)
 
     !Allocate memory
@@ -1208,28 +1209,28 @@ contains
     end do
 
     do n=1,autotroph_cnt
-      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Chl"
+      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Chl"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Chl_ind, marbl_status_log)
 
-      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C"
+      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%C_ind, marbl_status_log)
 
       if (lvariable_PtoC) then
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "P"
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "P"
         call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%P_ind, marbl_status_log)
       end if
 
-      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Fe"
+      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Fe"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Fe_ind, marbl_status_log)
 
-      if (autotrophs(n)%silicifier) then
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Si"
+      if (autotroph_settings(n)%silicifier) then
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Si"
         call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Si_ind, marbl_status_log)
       end if
 
-      if (autotrophs(n)%imp_calcifier.or.                            &
-          autotrophs(n)%exp_calcifier) then
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "CaCO3"
+      if (autotroph_settings(n)%imp_calcifier.or. &
+          autotroph_settings(n)%exp_calcifier) then
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "CaCO3"
         call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
       end if
     end do
@@ -1243,18 +1244,18 @@ contains
       call this%add_tracer_index('zootot14C',   'ciso', this%zootot14C_ind,   marbl_status_log)
 
       do n=1,autotroph_cnt
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C13"
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C13"
         call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C13_ind, marbl_status_log)
 
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C14"
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C14"
         call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C14_ind, marbl_status_log)
 
-        if (autotrophs(n)%imp_calcifier .or. &
-            autotrophs(n)%exp_calcifier) then
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Ca13CO3"
+        if (autotroph_settings(n)%imp_calcifier .or. &
+            autotroph_settings(n)%exp_calcifier) then
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca13CO3"
           call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca13CO3_ind, marbl_status_log)
 
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Ca14CO3"
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca14CO3"
           call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca14CO3_ind, marbl_status_log)
         end if
       end do

@@ -20,7 +20,7 @@ contains
     !  Set tracer and forcing metadata
     use marbl_settings_mod, only : ciso_lecovars_full_depth_tavg
     use marbl_settings_mod, only : autotroph_cnt
-    use marbl_settings_mod, only : autotrophs
+    use marbl_settings_mod, only : autotroph_settings
 
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
@@ -79,23 +79,23 @@ contains
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '13C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon-13'
+       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // '13C'
+       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Carbon-13'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // '14C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon-14'
+       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // '14C'
+       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Carbon-14'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
        if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Ca13CO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Ca13CO3'
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Ca13CO3'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Ca13CO3'
         end if
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
        if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Ca14CO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Ca14CO3'
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Ca14CO3'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Ca14CO3'
        endif
     end do
 

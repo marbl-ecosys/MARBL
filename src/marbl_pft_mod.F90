@@ -15,9 +15,9 @@ module marbl_pft_mod
   real(r8), parameter :: UnsetValue = 1e34_r8
 
   !****************************************************************************
-  ! derived types for autotrophs
+  ! derived types for autotroph settings
 
-  type, public :: autotroph_type
+  type, public :: autotroph_settings_type
     character(len=char_len) :: sname
     character(len=char_len) :: lname
     logical(log_kind)       :: Nfixer                             ! flag set to true if this autotroph fixes N2
@@ -43,7 +43,7 @@ module marbl_pft_mod
     real(r8)                :: loss_poc                           ! routing of loss term
   contains
     procedure, public :: set_to_default => autotroph_set_to_default
-  end type autotroph_type
+  end type autotroph_settings_type
 
   !****************************************************************************
   ! derived types for zooplankton
@@ -61,7 +61,8 @@ module marbl_pft_mod
   end type zooplankton_type
 
   type, public :: zooplankton_local_type
-     real (r8) :: C  ! local copy of model zooplankton C
+    ! FIXME #316: replace with indices into tracer_local
+    real (r8) :: C  ! local copy of model zooplankton C
   end type zooplankton_local_type
 
   !****************************************************************************
@@ -70,8 +71,8 @@ module marbl_pft_mod
   type, public :: grazing_type
     character(len=char_len) :: sname
     character(len=char_len) :: lname
-    integer(int_kind)       :: auto_ind_cnt     ! number of autotrophs in prey-clase auto_ind
-    integer(int_kind)       :: zoo_ind_cnt      ! number of zooplankton in prey-clase zoo_ind
+    integer(int_kind)       :: auto_ind_cnt     ! number of autotrophs in prey-class auto_ind
+    integer(int_kind)       :: zoo_ind_cnt      ! number of zooplankton in prey-class zoo_ind
     integer(int_kind)       :: grazing_function ! functional form of grazing parameterization
     real(r8)                :: z_umax_0_per_day ! max zoo growth rate at tref (1/day)
     real(r8)                :: z_umax_0         ! max zoo growth rate at tref (1/sec) (derived from z_umax_0_per_day)
@@ -117,9 +118,9 @@ contains
 
   subroutine autotroph_set_to_default(self, autotroph_id, marbl_status_log)
 
-    class(autotroph_type), intent(out)   :: self
-    character(len=*),      intent(in)    :: autotroph_id
-    type(marbl_log_type),  intent(inout) :: marbl_status_log
+    class(autotroph_settings_type), intent(out)   :: self
+    character(len=*),               intent(in)    :: autotroph_id
+    type(marbl_log_type),           intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_pft_mod:autotroph_set_to_default'
     character(len=char_len)     :: log_message

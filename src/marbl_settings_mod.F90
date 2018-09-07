@@ -26,7 +26,7 @@ module marbl_settings_mod
   use marbl_constants_mod, only : dps
   use marbl_constants_mod, only : molw_Fe
 
-  use marbl_pft_mod, only : autotroph_type
+  use marbl_pft_mod, only : autotroph_settings_type
   use marbl_pft_mod, only : zooplankton_type
   use marbl_pft_mod, only : grazing_type
 
@@ -220,7 +220,7 @@ module marbl_settings_mod
   logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lcompute_nhx_surface_emis      ! control if NHx emissions are computed
-  logical(log_kind), target :: lvariable_PtoC                 ! control if PtoC ratios in autotrophs vary
+  logical(log_kind), target :: lvariable_PtoC                 ! control if PtoC ratios in autotroph_settings vary
   logical(log_kind), target :: ladjust_bury_coeff             ! control if bury coefficients are adjusted (rather than constant)
                                                               !   bury coefficients (POC_bury_coeff, POP_bury_coeff, bSi_bury_coeff)
                                                               !   reside in marbl_particulate_share_type; when ladjust_bury_coeff is
@@ -311,7 +311,7 @@ module marbl_settings_mod
   !     are max_grazer_prey_cnt are known)
   !-------------------------------------------------------------
 
-  type(autotroph_type),   allocatable, target :: autotrophs(:)
+  type(autotroph_settings_type),   allocatable, target :: autotroph_settings(:)
   type(zooplankton_type), allocatable, target :: zooplankton(:)
   type(grazing_type),     allocatable, target :: grazing(:,:)
 
@@ -461,24 +461,24 @@ contains
     character(len=char_len)     :: log_message
     integer                     :: m, n
 
-    if (.not. all((/allocated(autotrophs), allocated(zooplankton), allocated(grazing)/))) then
-      write(log_message, '(A)') 'autotrophs, zooplankton, and grazing have not been allocated!'
+    if (.not. all((/allocated(autotroph_settings), allocated(zooplankton), allocated(grazing)/))) then
+      write(log_message, '(A)') 'autotroph_settings, zooplankton, and grazing have not been allocated!'
       call marbl_status_log%log_error(log_message, subname)
       return
     end if
 
     select case (trim(PFT_defaults))
       case ('CESM2')
-        call autotrophs(1)%set_to_default('sp', marbl_status_log)
-        call autotrophs(2)%set_to_default('diat', marbl_status_log)
-        call autotrophs(3)%set_to_default('diaz', marbl_status_log)
+        call autotroph_settings(1)%set_to_default('sp', marbl_status_log)
+        call autotroph_settings(2)%set_to_default('diat', marbl_status_log)
+        call autotroph_settings(3)%set_to_default('diaz', marbl_status_log)
         call zooplankton(1)%set_to_default('zoo', marbl_status_log)
         call grazing(1,1)%set_to_default('sp_zoo', marbl_status_log)
         call grazing(2,1)%set_to_default('diat_zoo', marbl_status_log)
         call grazing(3,1)%set_to_default('diaz_zoo', marbl_status_log)
       case ('user-specified')
         do m=1,autotroph_cnt
-          call autotrophs(m)%set_to_default('unset', marbl_status_log)
+          call autotroph_settings(m)%set_to_default('unset', marbl_status_log)
         end do
         do n=1,zooplankton_cnt
           call zooplankton(n)%set_to_default('unset', marbl_status_log)
@@ -1149,8 +1149,8 @@ contains
     if (marbl_status_log%labort_marbl) return
 
     ! FIXME #69: this is not ideal for threaded runs
-    if (.not. allocated(autotrophs)) &
-      allocate(autotrophs(autotroph_cnt))
+    if (.not. allocated(autotroph_settings)) &
+      allocate(autotroph_settings(autotroph_cnt))
     if (.not. allocated(zooplankton)) &
       allocate(zooplankton(zooplankton_cnt))
     if (.not. allocated(grazing)) then
@@ -1190,14 +1190,14 @@ contains
 
     labort_marbl_loc = .false.
     do n=1,autotroph_cnt
-      write(prefix, "(A,I0,A)") 'autotrophs(', n, ')%'
+      write(prefix, "(A,I0,A)") 'autotroph_settings(', n, ')%'
       write(category, "(A,1X,I0)") 'autotroph', n
 
       write(sname, "(2A)") trim(prefix), 'sname'
       lname    = 'Short name of autotroph'
       units    = 'unitless'
       datatype = 'string'
-      sptr     => autotrophs(n)%sname
+      sptr     => autotroph_settings(n)%sname
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, sptr=sptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1207,7 +1207,7 @@ contains
       lname    = 'Long name of autotroph'
       units    = 'unitless'
       datatype = 'string'
-      sptr     => autotrophs(n)%lname
+      sptr     => autotroph_settings(n)%lname
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, sptr=sptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1217,7 +1217,7 @@ contains
       lname    = 'Flag is true if this autotroph fixes N2'
       units    = 'unitless'
       datatype = 'logical'
-      lptr     => autotrophs(n)%Nfixer
+      lptr     => autotroph_settings(n)%Nfixer
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, lptr=lptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1227,7 +1227,7 @@ contains
       lname    = 'Flag is true if this autotroph implicitly handles calcification'
       units    = 'unitless'
       datatype = 'logical'
-      lptr     => autotrophs(n)%imp_calcifier
+      lptr     => autotroph_settings(n)%imp_calcifier
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, lptr=lptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1237,7 +1237,7 @@ contains
       lname    = 'Flag is true if this autotroph explicitly handles calcification'
       units    = 'unitless'
       datatype = 'logical'
-      lptr     => autotrophs(n)%exp_calcifier
+      lptr     => autotroph_settings(n)%exp_calcifier
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, lptr=lptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1247,7 +1247,7 @@ contains
       lname    = 'Flag is true if this autotroph is a silicifier'
       units    = 'unitless'
       datatype = 'logical'
-      lptr     => autotrophs(n)%silicifier
+      lptr     => autotroph_settings(n)%silicifier
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, lptr=lptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1257,7 +1257,7 @@ contains
       lname    = 'nutrient uptake half-sat constants'
       units    = 'nmol/cm^3'
       datatype = 'real'
-      rptr     => autotrophs(n)%kFe
+      rptr     => autotroph_settings(n)%kFe
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1267,7 +1267,7 @@ contains
       lname    = 'nutrient uptake half-sat constants'
       units    = 'nmol/cm^3'
       datatype = 'real'
-      rptr     => autotrophs(n)%kPO4
+      rptr     => autotroph_settings(n)%kPO4
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1277,7 +1277,7 @@ contains
       lname    = 'nutrient uptake half-sat constants'
       units    = 'nmol/cm^3'
       datatype = 'real'
-      rptr     => autotrophs(n)%kDOP
+      rptr     => autotroph_settings(n)%kDOP
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1287,7 +1287,7 @@ contains
       lname    = 'nutrient uptake half-sat constants'
       units    = 'nmol/cm^3'
       datatype = 'real'
-      rptr     => autotrophs(n)%kNO3
+      rptr     => autotroph_settings(n)%kNO3
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1297,7 +1297,7 @@ contains
       lname    = 'nutrient uptake half-sat constants'
       units    = 'nmol/cm^3'
       datatype = 'real'
-      rptr     => autotrophs(n)%kNH4
+      rptr     => autotroph_settings(n)%kNH4
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1307,7 +1307,7 @@ contains
       lname    = 'nutrient uptake half-sat constants'
       units    = 'nmol/cm^3'
       datatype = 'real'
-      rptr     => autotrophs(n)%kSiO3
+      rptr     => autotroph_settings(n)%kSiO3
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1317,7 +1317,7 @@ contains
       lname    = 'P/C ratio when using fixed P/C ratios'
       units    = 'unitless'
       datatype = 'real'
-      rptr     => autotrophs(n)%Qp_fixed
+      rptr     => autotroph_settings(n)%Qp_fixed
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1327,7 +1327,7 @@ contains
       lname    = 'initial Fe/C ratio for growth'
       units    = 'unitless'
       datatype = 'real'
-      rptr     => autotrophs(n)%gQFe_0
+      rptr     => autotroph_settings(n)%gQFe_0
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1337,7 +1337,7 @@ contains
       lname    = 'minimum Fe/C ratio for growth'
       units    = 'unitless'
       datatype = 'real'
-      rptr     => autotrophs(n)%gQFe_min
+      rptr     => autotroph_settings(n)%gQFe_min
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1347,7 +1347,7 @@ contains
       lname    = 'Initial slope of P_I curve (GD98)'
       units    = 'mmol m^2 / (mg Chl W day)'
       datatype = 'real'
-      rptr     => autotrophs(n)%alphaPi_per_day
+      rptr     => autotroph_settings(n)%alphaPi_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1357,7 +1357,7 @@ contains
       lname    = 'max C-spec growth rate at Tref'
       units    = '1/day'
       datatype = 'real'
-      rptr     => autotrophs(n)%PCref_per_day
+      rptr     => autotroph_settings(n)%PCref_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1367,7 +1367,7 @@ contains
       lname    = 'max thetaN (Chl/N)'
       units    = 'mg Chl / mmol'
       datatype = 'real'
-      rptr     => autotrophs(n)%thetaN_max
+      rptr     => autotroph_settings(n)%thetaN_max
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1377,7 +1377,7 @@ contains
       lname    = 'concentration where losses go to zero'
       units    = 'nmol/cm^3'
       datatype = 'real'
-      rptr     => autotrophs(n)%loss_thres
+      rptr     => autotroph_settings(n)%loss_thres
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1387,7 +1387,7 @@ contains
       lname    = 'concentration where losses go to zero'
       units    = 'nmol/cm^3'
       datatype = 'real'
-      rptr     => autotrophs(n)%loss_thres2
+      rptr     => autotroph_settings(n)%loss_thres2
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1397,7 +1397,7 @@ contains
       lname    = 'Temperature where concentration threshold and photosynthesis rate drop'
       units    = 'degC'
       datatype = 'real'
-      rptr     => autotrophs(n)%temp_thres
+      rptr     => autotroph_settings(n)%temp_thres
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1407,7 +1407,7 @@ contains
       lname    = 'linear mortality rate'
       units    = '1/day'
       datatype = 'real'
-      rptr     => autotrophs(n)%mort_per_day
+      rptr     => autotroph_settings(n)%mort_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1417,7 +1417,7 @@ contains
       lname    = 'quadratic mortality rate'
       units    = '1/day/(mmol/m^3)'
       datatype = 'real'
-      rptr     => autotrophs(n)%mort2_per_day
+      rptr     => autotroph_settings(n)%mort2_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1427,7 +1427,7 @@ contains
       lname    = 'Maximum agg rate'
       units    = '1/d'
       datatype = 'real'
-      rptr     => autotrophs(n)%agg_rate_max
+      rptr     => autotroph_settings(n)%agg_rate_max
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1437,7 +1437,7 @@ contains
       lname    = 'Minimum agg rate'
       units    = '1/d'
       datatype = 'real'
-      rptr     => autotrophs(n)%agg_rate_min
+      rptr     => autotroph_settings(n)%agg_rate_min
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1447,7 +1447,7 @@ contains
       lname    = 'routing of loss term'
       units    = 'unitless'
       datatype = 'real'
-      rptr     => autotrophs(n)%loss_poc
+      rptr     => autotroph_settings(n)%loss_poc
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1537,7 +1537,7 @@ contains
         call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'auto_ind_cnt'
-        lname    = 'number of autotrophs in prey-clase auto_ind'
+        lname    = 'number of autotrophs in prey-class auto_ind'
         units    = 'unitless'
         datatype = 'integer'
         iptr     => grazing(m,n)%auto_ind_cnt
@@ -1547,7 +1547,7 @@ contains
         call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'zoo_ind_cnt'
-        lname    = 'number of zooplankton in prey-clase auto_ind'
+        lname    = 'number of zooplankton in prey-class auto_ind'
         units    = 'unitless'
         datatype = 'integer'
         iptr     => grazing(m,n)%zoo_ind_cnt
@@ -1754,29 +1754,29 @@ contains
     call marbl_status_log%log_noerror('', subname)
 
     do n = 1, autotroph_cnt
-       autotrophs(n)%alphaPI = dps * autotrophs(n)%alphaPI_per_day
-       write(sname_in,  "(A,I0,A)") 'autotrophs(', n, ')%alphaPI_per_day'
-       write(sname_out, "(A,I0,A)") 'autotrophs(', n, ')%alphaPI'
+       autotroph_settings(n)%alphaPI = dps * autotroph_settings(n)%alphaPI_per_day
+       write(sname_in,  "(A,I0,A)") 'autotroph_settings(', n, ')%alphaPI_per_day'
+       write(sname_out, "(A,I0,A)") 'autotroph_settings(', n, ')%alphaPI'
        call print_single_derived_parm(sname_in, sname_out, &
-            autotrophs(n)%alphaPI, subname, marbl_status_log)
+            autotroph_settings(n)%alphaPI, subname, marbl_status_log)
 
-       autotrophs(n)%PCref = dps * autotrophs(n)%PCref_per_day
-       write(sname_in,  "(A,I0,A)") 'autotrophs(', n, ')%PCref_per_day'
-       write(sname_out, "(A,I0,A)") 'autotrophs(', n, ')%PCref'
+       autotroph_settings(n)%PCref = dps * autotroph_settings(n)%PCref_per_day
+       write(sname_in,  "(A,I0,A)") 'autotroph_settings(', n, ')%PCref_per_day'
+       write(sname_out, "(A,I0,A)") 'autotroph_settings(', n, ')%PCref'
        call print_single_derived_parm(sname_in, sname_out, &
-            autotrophs(n)%PCref, subname, marbl_status_log)
+            autotroph_settings(n)%PCref, subname, marbl_status_log)
 
-       autotrophs(n)%mort = dps * autotrophs(n)%mort_per_day
-       write(sname_in,  "(A,I0,A)") 'autotrophs(', n, ')%mort_per_day'
-       write(sname_out, "(A,I0,A)") 'autotrophs(', n, ')%mort'
+       autotroph_settings(n)%mort = dps * autotroph_settings(n)%mort_per_day
+       write(sname_in,  "(A,I0,A)") 'autotroph_settings(', n, ')%mort_per_day'
+       write(sname_out, "(A,I0,A)") 'autotroph_settings(', n, ')%mort'
        call print_single_derived_parm(sname_in, sname_out, &
-            autotrophs(n)%mort, subname, marbl_status_log)
+            autotroph_settings(n)%mort, subname, marbl_status_log)
 
-       autotrophs(n)%mort2 = dps * autotrophs(n)%mort2_per_day
-       write(sname_in,  "(A,I0,A)") 'autotrophs(', n, ')%mort2_per_day'
-       write(sname_out, "(A,I0,A)") 'autotrophs(', n, ')%mort2'
+       autotroph_settings(n)%mort2 = dps * autotroph_settings(n)%mort2_per_day
+       write(sname_in,  "(A,I0,A)") 'autotroph_settings(', n, ')%mort2_per_day'
+       write(sname_out, "(A,I0,A)") 'autotroph_settings(', n, ')%mort2'
        call print_single_derived_parm(sname_in, sname_out, &
-            autotrophs(n)%mort2, subname, marbl_status_log)
+            autotroph_settings(n)%mort2, subname, marbl_status_log)
     end do
 
     call marbl_status_log%log_noerror('', subname)

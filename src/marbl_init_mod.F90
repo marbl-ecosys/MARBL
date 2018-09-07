@@ -135,7 +135,7 @@ contains
 
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lvariable_PtoC
-    use marbl_settings_mod, only : autotrophs
+    use marbl_settings_mod, only : autotroph_settings
     use marbl_settings_mod, only : zooplankton
     use marbl_settings_mod, only : tracer_restore_vars
     use marbl_ciso_init_mod, only : marbl_ciso_init_tracer_metadata
@@ -157,7 +157,7 @@ contains
 
     ! Construct tracer indices
     allocate(tracer_indices)
-    call tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs, zooplankton, &
+    call tracer_indices%construct(ciso_on, lvariable_PtoC, autotroph_settings, zooplankton, &
                                   marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
@@ -581,7 +581,7 @@ contains
     !  initialize autotroph tracer_d values and tracer indices
     !-----------------------------------------------------------------------
 
-    use marbl_settings_mod, only : autotrophs
+    use marbl_settings_mod, only : autotroph_settings
 
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type    (marbl_tracer_index_type) , intent(in)    :: marbl_tracer_indices
@@ -594,39 +594,39 @@ contains
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Chl'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Chlorophyll'
+       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Chl'
+       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Chlorophyll'
        marbl_tracer_metadata(n)%units      = 'mg/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mg/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mg/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon'
+       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'C'
+       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Carbon'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
        if (n.gt.0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'P'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Phosphorus'
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'P'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Phosphorus'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
        endif
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Fe'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Iron'
+       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Fe'
+       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Iron'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
        if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Si'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Silicon'
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Si'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Silicon'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
@@ -634,8 +634,8 @@ contains
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'CaCO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' CaCO3'
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'CaCO3'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' CaCO3'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
