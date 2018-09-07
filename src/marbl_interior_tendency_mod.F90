@@ -41,7 +41,7 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : lsource_sink
   use marbl_settings_mod, only : ladjust_bury_coeff
   use marbl_settings_mod, only : autotroph_settings
-  use marbl_settings_mod, only : zooplankton
+  use marbl_settings_mod, only : zooplankton_settings
   use marbl_settings_mod, only : dust_to_Fe
   use marbl_settings_mod, only : denitrif_C_N
   use marbl_settings_mod, only : parm_Red_Fe_C
@@ -68,7 +68,7 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : QCaCO3_max
   use marbl_settings_mod, only : Qfe_zoo
   use marbl_settings_mod, only : spc_poc_fac
-  use marbl_settings_mod, only : grazing
+  use marbl_settings_mod, only : grazer_settings
   use marbl_settings_mod, only : PON_bury_coeff
   use marbl_settings_mod, only : del_ph
   use marbl_settings_mod, only : phhi_3d_init
@@ -1736,11 +1736,11 @@ contains
      endif
 
      do zoo_ind = 1, zooplankton_cnt
-        C_loss_thres = f_loss_thres * zooplankton(zoo_ind)%loss_thres
+        C_loss_thres = f_loss_thres * zooplankton_settings(zoo_ind)%loss_thres
         Zprime(zoo_ind) = max(zooC(zoo_ind) - C_loss_thres, c0)
 
-        zoo_loss(zoo_ind) = ( zooplankton(zoo_ind)%z_mort2_0 * Zprime(zoo_ind)**1.5_r8 + &
-             zooplankton(zoo_ind)%z_mort_0  * Zprime(zoo_ind)) * Tfunc
+        zoo_loss(zoo_ind) = ( zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind)**1.5_r8 + &
+             zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind)) * Tfunc
      end do
 
      end associate
@@ -1828,32 +1828,32 @@ contains
            !  compute sum of carbon in the grazee class, both autotrophs and zoop
            !-----------------------------------------------------------------------
            work1 = c0 ! biomass in prey class prey_ind
-           do auto_ind2 = 1, grazing(prey_ind, pred_ind)%auto_ind_cnt
-              auto_ind = grazing(prey_ind, pred_ind)%auto_ind(auto_ind2)
+           do auto_ind2 = 1, grazer_settings(prey_ind, pred_ind)%auto_ind_cnt
+              auto_ind = grazer_settings(prey_ind, pred_ind)%auto_ind(auto_ind2)
               work1 = work1 + Pprime(auto_ind)
            end do
 
-           do zoo_ind2 = 1, grazing(prey_ind, pred_ind)%zoo_ind_cnt
-              zoo_ind = grazing(prey_ind, pred_ind)%zoo_ind(zoo_ind2)
+           do zoo_ind2 = 1, grazer_settings(prey_ind, pred_ind)%zoo_ind_cnt
+              zoo_ind = grazer_settings(prey_ind, pred_ind)%zoo_ind(zoo_ind2)
               work1 = work1 + Zprime(zoo_ind)
            end do
 
            ! compute grazing rate
            graze_rate = c0
-           select case (grazing(prey_ind, pred_ind)%grazing_function)
+           select case (grazer_settings(prey_ind, pred_ind)%grazing_function)
 
            case (grz_fnc_michaelis_menten)
 
               if (work1 > c0) then
-                 graze_rate = grazing(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_loc(pred_ind)%C &
-                      * ( work1 / (work1 + grazing(prey_ind, pred_ind)%z_grz) )
+                 graze_rate = grazer_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_loc(pred_ind)%C &
+                      * ( work1 / (work1 + grazer_settings(prey_ind, pred_ind)%z_grz) )
               end if
 
            case (grz_fnc_sigmoidal)
 
               if (work1 > c0) then
-                 graze_rate = grazing(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_loc(pred_ind)%C &
-                      * ( work1**2 / (work1**2 + grazing(prey_ind, pred_ind)%z_grz**2) )
+                 graze_rate = grazer_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_loc(pred_ind)%C &
+                      * ( work1**2 / (work1**2 + grazer_settings(prey_ind, pred_ind)%z_grz**2) )
               end if
 
            end select
@@ -1862,8 +1862,8 @@ contains
            !  autotroph prey
            !-----------------------------------------------------------------------
 
-           do auto_ind2 = 1, grazing(prey_ind, pred_ind)%auto_ind_cnt
-              auto_ind = grazing(prey_ind, pred_ind)%auto_ind(auto_ind2)
+           do auto_ind2 = 1, grazer_settings(prey_ind, pred_ind)%auto_ind_cnt
+              auto_ind = grazer_settings(prey_ind, pred_ind)%auto_ind(auto_ind2)
 
               ! scale by biomass from autotroph pool
               if (work1 > c0) then
@@ -1874,8 +1874,8 @@ contains
               auto_graze(auto_ind) = auto_graze(auto_ind) + work2
 
               ! routed to zooplankton
-              auto_graze_zoo(auto_ind) = auto_graze_zoo(auto_ind) + grazing(prey_ind, pred_ind)%graze_zoo * work2
-              x_graze_zoo(pred_ind)    = x_graze_zoo(pred_ind)    + grazing(prey_ind, pred_ind)%graze_zoo * work2
+              auto_graze_zoo(auto_ind) = auto_graze_zoo(auto_ind) + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
+              x_graze_zoo(pred_ind)    = x_graze_zoo(pred_ind)    + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
 
               ! routed to POC
               if (autotroph_settings(auto_ind)%imp_calcifier) then
@@ -1884,14 +1884,14 @@ contains
                       min(spc_poc_fac * (Pprime(auto_ind)+0.6_r8)**1.6_r8,    &
                       f_graze_sp_poc_lim))
               else
-                 auto_graze_poc(auto_ind) = auto_graze_poc(auto_ind) + grazing(prey_ind, pred_ind)%graze_poc * work2
+                 auto_graze_poc(auto_ind) = auto_graze_poc(auto_ind) + grazer_settings(prey_ind, pred_ind)%graze_poc * work2
               endif
 
               ! routed to DOC
-              auto_graze_doc(auto_ind) = auto_graze_doc(auto_ind) + grazing(prey_ind, pred_ind)%graze_doc * work2
+              auto_graze_doc(auto_ind) = auto_graze_doc(auto_ind) + grazer_settings(prey_ind, pred_ind)%graze_doc * work2
 
               !  get fractional factor for routing of zoo losses, based on food supply
-              work3 = work3 + grazing(prey_ind, pred_ind)%f_zoo_detr * (work2 + epsC * epsTinv)
+              work3 = work3 + grazer_settings(prey_ind, pred_ind)%f_zoo_detr * (work2 + epsC * epsTinv)
               work4 = work4 + (work2 + epsC * epsTinv)
 
            end do
@@ -1899,8 +1899,8 @@ contains
            !-----------------------------------------------------------------------
            !  Zooplankton prey
            !-----------------------------------------------------------------------
-           do zoo_ind2 = 1, grazing(prey_ind, pred_ind)%zoo_ind_cnt
-              zoo_ind = grazing(prey_ind, pred_ind)%zoo_ind(zoo_ind2)
+           do zoo_ind2 = 1, grazer_settings(prey_ind, pred_ind)%zoo_ind_cnt
+              zoo_ind = grazer_settings(prey_ind, pred_ind)%zoo_ind(zoo_ind2)
 
               ! scale by biomass from zooplankton pool
               if (work1 > c0) then
@@ -1913,15 +1913,15 @@ contains
               zoo_graze(zoo_ind) = zoo_graze(zoo_ind) + work2
 
               ! routed to zooplankton
-              zoo_graze_zoo(zoo_ind) = zoo_graze_zoo(zoo_ind) + grazing(prey_ind, pred_ind)%graze_zoo * work2
-              x_graze_zoo(pred_ind) = x_graze_zoo(pred_ind)   + grazing(prey_ind, pred_ind)%graze_zoo * work2
+              zoo_graze_zoo(zoo_ind) = zoo_graze_zoo(zoo_ind) + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
+              x_graze_zoo(pred_ind) = x_graze_zoo(pred_ind)   + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
 
               ! routed to POC/DOC
-              zoo_graze_poc(zoo_ind) = zoo_graze_poc(zoo_ind) + grazing(prey_ind, pred_ind)%graze_poc * work2
-              zoo_graze_doc(zoo_ind) = zoo_graze_doc(zoo_ind) + grazing(prey_ind, pred_ind)%graze_doc * work2
+              zoo_graze_poc(zoo_ind) = zoo_graze_poc(zoo_ind) + grazer_settings(prey_ind, pred_ind)%graze_poc * work2
+              zoo_graze_doc(zoo_ind) = zoo_graze_doc(zoo_ind) + grazer_settings(prey_ind, pred_ind)%graze_doc * work2
 
               !  get fractional factor for routing of zoo losses, based on food supply
-              work3 = work3 + grazing(prey_ind, pred_ind)%f_zoo_detr * (work2 + epsC * epsTinv)
+              work3 = work3 + grazer_settings(prey_ind, pred_ind)%f_zoo_detr * (work2 + epsC * epsTinv)
               work4 = work4 + (work2 + epsC * epsTinv)
 
            end do

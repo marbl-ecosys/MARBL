@@ -46,9 +46,9 @@ module marbl_pft_mod
   end type autotroph_settings_type
 
   !****************************************************************************
-  ! derived types for zooplankton
+  ! derived types for zooplankton settings
 
-  type, public :: zooplankton_type
+  type, public :: zooplankton_settings_type
      character(len=char_len) :: sname
      character(len=char_len) :: lname
      real(r8)                :: z_mort_0_per_day   ! zoo linear mort rate (1/day)
@@ -58,7 +58,7 @@ module marbl_pft_mod
      real(r8)                :: loss_thres         ! zoo conc. where losses go to zero
    contains
      procedure, public :: set_to_default => zooplankton_set_to_default
-  end type zooplankton_type
+  end type zooplankton_settings_type
 
   type, public :: zooplankton_local_type
     ! FIXME #316: replace with indices into tracer_local
@@ -66,9 +66,9 @@ module marbl_pft_mod
   end type zooplankton_local_type
 
   !****************************************************************************
-  ! derived types for grazing
+  ! derived types for grazer settings
 
-  type, public :: grazing_type
+  type, public :: grazer_settings_type
     character(len=char_len) :: sname
     character(len=char_len) :: lname
     integer(int_kind)       :: auto_ind_cnt     ! number of autotrophs in prey-class auto_ind
@@ -84,9 +84,9 @@ module marbl_pft_mod
     integer(int_kind), allocatable :: auto_ind(:)
     integer(int_kind), allocatable :: zoo_ind(:)
   contains
-    procedure, public :: set_to_default => grazing_set_to_default
-    procedure, public :: construct => grazing_constructor
-  end type grazing_type
+    procedure, public :: set_to_default => grazer_set_to_default
+    procedure, public :: construct => grazer_constructor
+  end type grazer_settings_type
 
   !***********************************************************************
 
@@ -246,9 +246,9 @@ contains
 
   subroutine zooplankton_set_to_default(self, zooplankton_id, marbl_status_log)
 
-    class(zooplankton_type), intent(out)   :: self
-    character(len=*),        intent(in)    :: zooplankton_id
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
+    class(zooplankton_settings_type), intent(out)   :: self
+    character(len=*),                 intent(in)    :: zooplankton_id
+    type(marbl_log_type),             intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_pft_mod:zooplankton_set_to_default'
     character(len=char_len)     :: log_message
@@ -276,16 +276,16 @@ contains
 
   !*****************************************************************************
 
-  subroutine grazing_set_to_default(self, grazing_id, marbl_status_log)
+  subroutine grazer_set_to_default(self, grazer_id, marbl_status_log)
 
-    class(grazing_type),  intent(inout) :: self
-    character(len=*),     intent(in)    :: grazing_id
-    type(marbl_log_type), intent(inout) :: marbl_status_log
+    class(grazer_settings_type), intent(inout) :: self
+    character(len=*),            intent(in)    :: grazer_id
+    type(marbl_log_type),        intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_pft_mod:grazing_set_to_default'
+    character(len=*), parameter :: subname = 'marbl_pft_mod:grazer_set_to_default'
     character(len=char_len)     :: log_message
 
-    select case (grazing_id)
+    select case (grazer_id)
       case ('sp_zoo')
         self%sname = 'grz_sp_zoo'                         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%lname = 'Grazing of sp by zoo'               ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -340,22 +340,22 @@ contains
         self%f_zoo_detr       = UnsetValue
         self%grazing_function = grz_fnc_michaelis_menten
       case DEFAULT
-        write(log_message, "(3A)") "'", grazing_id, "' is not a valid grazing ID"
+        write(log_message, "(3A)") "'", grazer_id, "' is not a valid grazing ID"
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
 
-  end subroutine grazing_set_to_default
+  end subroutine grazer_set_to_default
   !*****************************************************************************
 
-  subroutine grazing_constructor(self, autotroph_cnt, zooplankton_cnt, marbl_status_log)
+  subroutine grazer_constructor(self, autotroph_cnt, zooplankton_cnt, marbl_status_log)
 
-    class(grazing_type),  intent(out)   :: self
-    integer(int_kind),    intent(in)    :: autotroph_cnt
-    integer(int_kind),    intent(in)    :: zooplankton_cnt
-    type(marbl_log_type), intent(inout) :: marbl_status_log
+    class(grazer_settings_type), intent(out)   :: self
+    integer(int_kind),           intent(in)    :: autotroph_cnt
+    integer(int_kind),           intent(in)    :: zooplankton_cnt
+    type(marbl_log_type),        intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_pft_mod:grazing_constructor'
+    character(len=*), parameter :: subname = 'marbl_pft_mod:grazer_constructor'
     character(len=char_len)     :: log_message
 
     if (allocated(self%auto_ind)) then
@@ -373,7 +373,7 @@ contains
     allocate(self%auto_ind(autotroph_cnt))
     allocate(self%zoo_ind(zooplankton_cnt))
 
-  end subroutine grazing_constructor
+  end subroutine grazer_constructor
 
   !*****************************************************************************
 

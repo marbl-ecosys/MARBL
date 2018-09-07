@@ -136,7 +136,7 @@ contains
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : autotroph_settings
-    use marbl_settings_mod, only : zooplankton
+    use marbl_settings_mod, only : zooplankton_settings
     use marbl_settings_mod, only : tracer_restore_vars
     use marbl_ciso_init_mod, only : marbl_ciso_init_tracer_metadata
 
@@ -157,7 +157,7 @@ contains
 
     ! Construct tracer indices
     allocate(tracer_indices)
-    call tracer_indices%construct(ciso_on, lvariable_PtoC, autotroph_settings, zooplankton, &
+    call tracer_indices%construct(ciso_on, lvariable_PtoC, autotroph_settings, zooplankton_settings, &
                                   marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
@@ -550,7 +550,7 @@ contains
     !  initialize zooplankton tracer_d values and tracer indices
     !-----------------------------------------------------------------------
 
-    use marbl_settings_mod, only : zooplankton
+    use marbl_settings_mod, only : zooplankton_settings
 
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
     type (marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
@@ -563,8 +563,8 @@ contains
 
     do zoo_ind = 1, zooplankton_cnt
        n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
-       marbl_tracer_metadata(n)%short_name = trim(zooplankton(zoo_ind)%sname) // 'C'
-       marbl_tracer_metadata(n)%long_name  = trim(zooplankton(zoo_ind)%lname) // ' Carbon'
+       marbl_tracer_metadata(n)%short_name = trim(zooplankton_settings(zoo_ind)%sname) // 'C'
+       marbl_tracer_metadata(n)%long_name  = trim(zooplankton_settings(zoo_ind)%lname) // ' Carbon'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'

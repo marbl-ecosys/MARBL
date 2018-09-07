@@ -1156,7 +1156,7 @@ contains
   !*****************************************************************************
 
   subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotroph_settings, &
-             zooplankton, marbl_status_log)
+             zooplankton_settings, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -1164,21 +1164,21 @@ contains
     ! accurate count whether the carbon isotope tracers are included or not.
 
     use marbl_pft_mod, only : autotroph_settings_type
-    use marbl_pft_mod, only : zooplankton_type
+    use marbl_pft_mod, only : zooplankton_settings_type
 
-    class(marbl_tracer_index_type), intent(out)   :: this
-    logical,                        intent(in)    :: ciso_on
-    logical,                        intent(in)    :: lvariable_PtoC
-    type(autotroph_settings_type),  intent(in)    :: autotroph_settings(:)
-    type(zooplankton_type),         intent(in)    :: zooplankton(:)
-    type(marbl_log_type),           intent(inout) :: marbl_status_log
+    class(marbl_tracer_index_type),  intent(out)   :: this
+    logical,                         intent(in)    :: ciso_on
+    logical,                         intent(in)    :: lvariable_PtoC
+    type(autotroph_settings_type),   intent(in)    :: autotroph_settings(:)
+    type(zooplankton_settings_type), intent(in)    :: zooplankton_settings(:)
+    type(marbl_log_type),            intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_interface_private_types:tracer_index_constructor'
     character(len=char_len) :: ind_name
     integer :: autotroph_cnt, zooplankton_cnt, n
 
     autotroph_cnt = size(autotroph_settings)
-    zooplankton_cnt = size(zooplankton)
+    zooplankton_cnt = size(zooplankton_settings)
 
     !Allocate memory
     allocate(this%auto_inds(autotroph_cnt))
@@ -1204,7 +1204,7 @@ contains
     call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
 
     do n=1,zooplankton_cnt
-      write(ind_name, "(2A)") trim(zooplankton(n)%sname), "C"
+      write(ind_name, "(2A)") trim(zooplankton_settings(n)%sname), "C"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%zoo_inds(n)%C_ind, marbl_status_log)
     end do
 

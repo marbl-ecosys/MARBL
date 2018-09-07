@@ -27,8 +27,8 @@ module marbl_settings_mod
   use marbl_constants_mod, only : molw_Fe
 
   use marbl_pft_mod, only : autotroph_settings_type
-  use marbl_pft_mod, only : zooplankton_type
-  use marbl_pft_mod, only : grazing_type
+  use marbl_pft_mod, only : zooplankton_settings_type
+  use marbl_pft_mod, only : grazer_settings_type
 
   use marbl_logging, only: marbl_log_type
 
@@ -312,8 +312,8 @@ module marbl_settings_mod
   !-------------------------------------------------------------
 
   type(autotroph_settings_type),   allocatable, target :: autotroph_settings(:)
-  type(zooplankton_type), allocatable, target :: zooplankton(:)
-  type(grazing_type),     allocatable, target :: grazing(:,:)
+  type(zooplankton_settings_type), allocatable, target :: zooplankton_settings(:)
+  type(grazer_settings_type),      allocatable, target :: grazer_settings(:,:)
 
   !  marbl_settings_define_tracer_dependent
   !    parameters that can not be set until MARBL knows what tracers
@@ -461,8 +461,8 @@ contains
     character(len=char_len)     :: log_message
     integer                     :: m, n
 
-    if (.not. all((/allocated(autotroph_settings), allocated(zooplankton), allocated(grazing)/))) then
-      write(log_message, '(A)') 'autotroph_settings, zooplankton, and grazing have not been allocated!'
+    if (.not. all((/allocated(autotroph_settings), allocated(zooplankton_settings), allocated(grazer_settings)/))) then
+      write(log_message, '(A)') 'autotroph_settings, zooplankton_settings, and grazer_settings have not been allocated!'
       call marbl_status_log%log_error(log_message, subname)
       return
     end if
@@ -472,20 +472,20 @@ contains
         call autotroph_settings(1)%set_to_default('sp', marbl_status_log)
         call autotroph_settings(2)%set_to_default('diat', marbl_status_log)
         call autotroph_settings(3)%set_to_default('diaz', marbl_status_log)
-        call zooplankton(1)%set_to_default('zoo', marbl_status_log)
-        call grazing(1,1)%set_to_default('sp_zoo', marbl_status_log)
-        call grazing(2,1)%set_to_default('diat_zoo', marbl_status_log)
-        call grazing(3,1)%set_to_default('diaz_zoo', marbl_status_log)
+        call zooplankton_settings(1)%set_to_default('zoo', marbl_status_log)
+        call grazer_settings(1,1)%set_to_default('sp_zoo', marbl_status_log)
+        call grazer_settings(2,1)%set_to_default('diat_zoo', marbl_status_log)
+        call grazer_settings(3,1)%set_to_default('diaz_zoo', marbl_status_log)
       case ('user-specified')
         do m=1,autotroph_cnt
           call autotroph_settings(m)%set_to_default('unset', marbl_status_log)
         end do
         do n=1,zooplankton_cnt
-          call zooplankton(n)%set_to_default('unset', marbl_status_log)
+          call zooplankton_settings(n)%set_to_default('unset', marbl_status_log)
         end do
         do n=1,zooplankton_cnt
           do m=1,max_grazer_prey_cnt
-            call grazing(m,n)%set_to_default('unset', marbl_status_log)
+            call grazer_settings(m,n)%set_to_default('unset', marbl_status_log)
           end do
         end do
       case DEFAULT
@@ -1151,15 +1151,15 @@ contains
     ! FIXME #69: this is not ideal for threaded runs
     if (.not. allocated(autotroph_settings)) &
       allocate(autotroph_settings(autotroph_cnt))
-    if (.not. allocated(zooplankton)) &
-      allocate(zooplankton(zooplankton_cnt))
-    if (.not. allocated(grazing)) then
-      allocate(grazing(max_grazer_prey_cnt, zooplankton_cnt))
+    if (.not. allocated(zooplankton_settings)) &
+      allocate(zooplankton_settings(zooplankton_cnt))
+    if (.not. allocated(grazer_settings)) then
+      allocate(grazer_settings(max_grazer_prey_cnt, zooplankton_cnt))
       do n=1,zooplankton_cnt
         do m=1,max_grazer_prey_cnt
-          call grazing(m,n)%construct(autotroph_cnt, zooplankton_cnt, marbl_status_log)
+          call grazer_settings(m,n)%construct(autotroph_cnt, zooplankton_cnt, marbl_status_log)
           if (marbl_status_log%labort_marbl) then
-            write(log_message,"(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%construct'
+            write(log_message,"(A,I0,A,I0,A)") 'grazer_settings(', m, ',', n, ')%construct'
             call marbl_status_log%log_error_trace(log_message, subname)
             return
           end if
@@ -1456,14 +1456,14 @@ contains
     end do
 
     do n=1, zooplankton_cnt
-      write(prefix, "(A,I0,A)") 'zooplankton(', n, ')%'
-      write(category, "(A,1X,I0)") 'zooplankton', n
+      write(prefix, "(A,I0,A)") 'zooplankton_settings(', n, ')%'
+      write(category, "(A,1X,I0)") 'zooplankton_settings', n
 
       write(sname, "(2A)") trim(prefix), 'sname'
       lname    = 'Short name of zooplankton'
       units    = 'unitless'
       datatype = 'string'
-      sptr     => zooplankton(n)%sname
+      sptr     => zooplankton_settings(n)%sname
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, sptr=sptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1473,7 +1473,7 @@ contains
       lname    = 'Long name of zooplankton'
       units    = 'unitless'
       datatype = 'string'
-      sptr     => zooplankton(n)%lname
+      sptr     => zooplankton_settings(n)%lname
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, sptr=sptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1483,7 +1483,7 @@ contains
       lname    = 'Linear mortality rate'
       units    = '1/day'
       datatype = 'real'
-      rptr     => zooplankton(n)%z_mort_0_per_day
+      rptr     => zooplankton_settings(n)%z_mort_0_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1493,7 +1493,7 @@ contains
       lname    = 'Concentration where losses go to zero'
       units    = 'nmol/cm^3'
       datatype = 'real'
-      rptr     => zooplankton(n)%loss_thres
+      rptr     => zooplankton_settings(n)%loss_thres
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1503,7 +1503,7 @@ contains
       lname    = 'Quadratic mortality rate'
       units    = '1/day/(mmol/m^3)'
       datatype = 'real'
-      rptr     => zooplankton(n)%z_mort2_0_per_day
+      rptr     => zooplankton_settings(n)%z_mort2_0_per_day
       call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1513,14 +1513,14 @@ contains
 
     do n=1,zooplankton_cnt
       do m=1,max_grazer_prey_cnt
-        write(prefix, "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%'
-        write(category, "(A,1X,I0,1X,I0)") 'grazing', m, n
+        write(prefix, "(A,I0,A,I0,A)") 'grazer_settings(', m, ',', n, ')%'
+        write(category, "(A,1X,I0,1X,I0)") 'grazer_settings', m, n
 
         write(sname, "(2A)") trim(prefix), 'sname'
         lname    = 'Short name of grazer'
         units    = 'unitless'
         datatype = 'string'
-        sptr     => grazing(m,n)%sname
+        sptr     => grazer_settings(m,n)%sname
         call this%add_var(sname, lname, units, datatype, category,     &
                           marbl_status_log, sptr=sptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1530,7 +1530,7 @@ contains
         lname    = 'Long name of grazer'
         units    = 'unitless'
         datatype = 'string'
-        sptr     => grazing(m,n)%lname
+        sptr     => grazer_settings(m,n)%lname
         call this%add_var(sname, lname, units, datatype, category,     &
                           marbl_status_log, sptr=sptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1540,7 +1540,7 @@ contains
         lname    = 'number of autotrophs in prey-class auto_ind'
         units    = 'unitless'
         datatype = 'integer'
-        iptr     => grazing(m,n)%auto_ind_cnt
+        iptr     => grazer_settings(m,n)%auto_ind_cnt
         call this%add_var(sname, lname, units, datatype, category,     &
                           marbl_status_log, iptr=iptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1550,17 +1550,17 @@ contains
         lname    = 'number of zooplankton in prey-class auto_ind'
         units    = 'unitless'
         datatype = 'integer'
-        iptr     => grazing(m,n)%zoo_ind_cnt
+        iptr     => grazer_settings(m,n)%zoo_ind_cnt
         call this%add_var(sname, lname, units, datatype, category,     &
                           marbl_status_log, iptr=iptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
         call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'grazing_function'
-        lname    = 'functional form of grazing parmaeterization'
+        lname    = 'functional form of grazer_settings parmaeterization'
         units    = 'unitless'
         datatype = 'integer'
-        iptr     => grazing(m,n)%grazing_function
+        iptr     => grazer_settings(m,n)%grazing_function
         call this%add_var(sname, lname, units, datatype, category,     &
                           marbl_status_log, iptr=iptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1570,17 +1570,17 @@ contains
         lname    = 'max zoo growth rate at Tref'
         units    = '1/day'
         datatype = 'real'
-        rptr     => grazing(m,n)%z_umax_0_per_day
+        rptr     => grazer_settings(m,n)%z_umax_0_per_day
         call this%add_var(sname, lname, units, datatype, category,     &
                           marbl_status_log, rptr=rptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
         call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
         write(sname, "(2A)") trim(prefix), 'z_grz'
-        lname    = 'Grazing coefficient'
+        lname    = 'grazer_settings coefficient'
         units    = '(mmol/m^3)^2'
         datatype = 'real'
-        rptr     => grazing(m,n)%z_grz
+        rptr     => grazer_settings(m,n)%z_grz
         call this%add_var(sname, lname, units, datatype, category,     &
                           marbl_status_log, rptr=rptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1590,7 +1590,7 @@ contains
         lname    = 'routing of grazed term (remainder goes to DIC)'
         units    = 'unitless'
         datatype = 'real'
-        rptr     => grazing(m,n)%graze_zoo
+        rptr     => grazer_settings(m,n)%graze_zoo
         call this%add_var(sname, lname, units, datatype, category,     &
                           marbl_status_log, rptr=rptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1600,7 +1600,7 @@ contains
         lname    = 'routing of grazed term (remainder goes to DIC)'
         units    = 'unitless'
         datatype = 'real'
-        rptr     => grazing(m,n)%graze_poc
+        rptr     => grazer_settings(m,n)%graze_poc
         call this%add_var(sname, lname, units, datatype, category,     &
                           marbl_status_log, rptr=rptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1610,7 +1610,7 @@ contains
         lname    = 'routing of grazed term (remainder goes to DIC)'
         units    = 'unitless'
         datatype = 'real'
-        rptr     => grazing(m,n)%graze_doc
+        rptr     => grazer_settings(m,n)%graze_doc
         call this%add_var(sname, lname, units, datatype, category,     &
                           marbl_status_log, rptr=rptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1620,32 +1620,32 @@ contains
         lname    = 'Fraction of zoo losses to detrital'
         units    = 'unitless'
         datatype = 'real'
-        rptr     => grazing(m,n)%f_zoo_detr
+        rptr     => grazer_settings(m,n)%f_zoo_detr
         call this%add_var(sname, lname, units, datatype, category,     &
                           marbl_status_log, rptr=rptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
         call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-        cnt = grazing(m,n)%auto_ind_cnt
+        cnt = grazer_settings(m,n)%auto_ind_cnt
         if (cnt .gt. 0) then
           write(sname, "(2A)") trim(prefix), 'auto_ind'
           lname     = 'Indices of autotrophs in class'
           units     = 'unitless'
           call this%add_var_1d_int(sname, lname, units, category,      &
-                            grazing(m,n)%auto_ind(1:cnt),              &
+                            grazer_settings(m,n)%auto_ind(1:cnt),      &
                             marbl_status_log,                          &
                             nondefault_required=(PFT_defaults .eq. 'user-specified'))
           call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
         end if
 
-        cnt = grazing(m,n)%zoo_ind_cnt
+        cnt = grazer_settings(m,n)%zoo_ind_cnt
         if (cnt .gt. 0) then
           write(sname, "(2A)") trim(prefix), 'zoo_ind'
           lname     = 'Indices of autotrophs in class'
           units     = 'unitless'
-          call this%add_var_1d_int(sname, lname, units, category,      &
-                                   grazing(m,n)%zoo_ind(1:cnt),        &
-                                   marbl_status_log,                   &
+          call this%add_var_1d_int(sname, lname, units, category,       &
+                                   grazer_settings(m,n)%zoo_ind(1:cnt), &
+                                   marbl_status_log,                    &
                                    nondefault_required=(PFT_defaults .eq. 'user-specified'))
           call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
         end if
@@ -1782,28 +1782,28 @@ contains
     call marbl_status_log%log_noerror('', subname)
 
     do n = 1, zooplankton_cnt
-       zooplankton(n)%z_mort_0 = dps * zooplankton(n)%z_mort_0_per_day
-       write(sname_in,  "(A,I0,A)") 'zooplankton(', n, ')%z_mort_0_per_day'
-       write(sname_out, "(A,I0,A)") 'zooplankton(', n, ')%z_mort_0'
+       zooplankton_settings(n)%z_mort_0 = dps * zooplankton_settings(n)%z_mort_0_per_day
+       write(sname_in,  "(A,I0,A)") 'zooplankton_settings(', n, ')%z_mort_0_per_day'
+       write(sname_out, "(A,I0,A)") 'zooplankton_settings(', n, ')%z_mort_0'
        call print_single_derived_parm(sname_in, sname_out, &
-            zooplankton(n)%z_mort_0, subname, marbl_status_log)
+            zooplankton_settings(n)%z_mort_0, subname, marbl_status_log)
 
-       zooplankton(n)%z_mort2_0 = dps * zooplankton(n)%z_mort2_0_per_day
-       write(sname_in,  "(A,I0,A)") 'zooplankton(', n, ')%z_mort2_0_per_day'
-       write(sname_out, "(A,I0,A)") 'zooplankton(', n, ')%z_mort2_0'
+       zooplankton_settings(n)%z_mort2_0 = dps * zooplankton_settings(n)%z_mort2_0_per_day
+       write(sname_in,  "(A,I0,A)") 'zooplankton_settings(', n, ')%z_mort2_0_per_day'
+       write(sname_out, "(A,I0,A)") 'zooplankton_settings(', n, ')%z_mort2_0'
        call print_single_derived_parm(sname_in, sname_out, &
-            zooplankton(n)%z_mort2_0, subname, marbl_status_log)
+            zooplankton_settings(n)%z_mort2_0, subname, marbl_status_log)
     end do
 
     call marbl_status_log%log_noerror('', subname)
 
     do n = 1, zooplankton_cnt
        do m = 1, max_grazer_prey_cnt
-          grazing(m,n)%z_umax_0 = dps * grazing(m,n)%z_umax_0_per_day
-          write(sname_in,  "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%z_umax_0_per_day'
-          write(sname_out, "(A,I0,A,I0,A)") 'grazing(', m, ',', n, ')%z_umax_0'
+          grazer_settings(m,n)%z_umax_0 = dps * grazer_settings(m,n)%z_umax_0_per_day
+          write(sname_in,  "(A,I0,A,I0,A)") 'grazer_settings(', m, ',', n, ')%z_umax_0_per_day'
+          write(sname_out, "(A,I0,A,I0,A)") 'grazer_settings(', m, ',', n, ')%z_umax_0'
           call print_single_derived_parm(sname_in, sname_out, &
-               grazing(m,n)%z_umax_0, subname, marbl_status_log)
+               grazer_settings(m,n)%z_umax_0, subname, marbl_status_log)
        end do
     end do
 

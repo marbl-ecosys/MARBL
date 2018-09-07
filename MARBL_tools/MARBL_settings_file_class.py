@@ -228,11 +228,11 @@ class MARBL_settings_class(object):
         append_to_keys = (('PFT_defaults == "CESM2"' in self._config_keyword) and
                           (category_name == "PFT_derived_types"))
         if append_to_keys:
-            PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][variable_name]
-            if variable_name == "autotrophs":
-                PFT_name = "autotroph"
+            PFT_name = variable_name[:-9] # drop '_settings' from 'autotroph_settings', 'zooplankton_settings', or 'grazer_settings'
+            if PFT_name == 'zooplankton':
+                PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][PFT_name]
             else:
-                PFT_name = variable_name
+                PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][PFT_name+'s']
         # Is the derived type an array? If so, treat each entry separately
         if ("_array_shape" in this_var.keys()):
             for n, elem_index in enumerate(_get_array_info(this_var["_array_shape"], self.settings_dict, self.tracers_dict)):

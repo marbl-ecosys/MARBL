@@ -10,7 +10,7 @@ module marbl_diagnostics_mod
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : autotroph_settings
-  use marbl_settings_mod, only : zooplankton
+  use marbl_settings_mod, only : zooplankton_settings
 
   use marbl_constants_mod, only : c0
   use marbl_constants_mod, only : c1
@@ -1290,8 +1290,8 @@ contains
         allocate(ind%x_graze_zoo_zint_100m(zooplankton_cnt))
       end if
       do n = 1,zooplankton_cnt
-        lname = trim(zooplankton(n)%lname) // ' Loss Vertical Integral'
-        sname = trim(zooplankton(n)%sname) // '_loss_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1302,8 +1302,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Loss Vertical Integral, 0-100m'
-        sname = trim(zooplankton(n)%sname) // '_loss_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral, 0-100m'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1314,8 +1314,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Loss to POC Vertical Integral'
-        sname = trim(zooplankton(n)%sname) // '_loss_poc_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss to POC Vertical Integral'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_poc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1326,8 +1326,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
-        sname = trim(zooplankton(n)%sname) // '_loss_poc_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_poc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1338,8 +1338,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Loss to DOC Vertical Integral'
-        sname = trim(zooplankton(n)%sname) // '_loss_doc_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss to DOC Vertical Integral'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_doc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1350,8 +1350,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
-        sname = trim(zooplankton(n)%sname) // '_loss_doc_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_doc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1362,8 +1362,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing Vertical Integral'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Vertical Integral'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1374,8 +1374,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1386,8 +1386,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to POC Vertical Integral'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_poc_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to POC Vertical Integral'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1398,8 +1398,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_poc_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1410,8 +1410,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to DOC Vertical Integral'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_doc_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to DOC Vertical Integral'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1422,8 +1422,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_doc_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1434,8 +1434,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to ZOO Vertical Integral'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_zoo_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to ZOO Vertical Integral'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zoo_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1446,8 +1446,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to ZOO Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_zoo_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to ZOO Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zoo_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1458,8 +1458,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing Gain Vertical Integral'
-        sname = 'x_graze_' // trim(zooplankton(n)%sname) // '_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Gain Vertical Integral'
+        sname = 'x_graze_' // trim(zooplankton_settings(n)%sname) // '_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1470,8 +1470,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing Gain Vertical Integral, 0-100m'
-        sname = 'x_graze_' // trim(zooplankton(n)%sname) // '_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Gain Vertical Integral, 0-100m'
+        sname = 'x_graze_' // trim(zooplankton_settings(n)%sname) // '_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -2794,8 +2794,8 @@ contains
         allocate(ind%x_graze_zoo(zooplankton_cnt))
       end if
       do n = 1,zooplankton_cnt
-        lname    = trim(zooplankton(n)%lname) // ' Loss'
-        sname    = trim(zooplankton(n)%sname) // '_loss'
+        lname    = trim(zooplankton_settings(n)%lname) // ' Loss'
+        sname    = trim(zooplankton_settings(n)%sname) // '_loss'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2806,8 +2806,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' Loss to POC'
-        sname    = trim(zooplankton(n)%sname) // '_loss_poc'
+        lname    = trim(zooplankton_settings(n)%lname) // ' Loss to POC'
+        sname    = trim(zooplankton_settings(n)%sname) // '_loss_poc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2818,8 +2818,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' Loss to DOC'
-        sname    = trim(zooplankton(n)%sname) // '_loss_doc'
+        lname    = trim(zooplankton_settings(n)%lname) // ' Loss to DOC'
+        sname    = trim(zooplankton_settings(n)%sname) // '_loss_doc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2830,8 +2830,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' grazing loss'
-        sname    = 'graze_' // trim(zooplankton(n)%sname)
+        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss'
+        sname    = 'graze_' // trim(zooplankton_settings(n)%sname)
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2842,8 +2842,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' grazing loss to POC'
-        sname    = 'graze_' // trim(zooplankton(n)%sname) // '_poc'
+        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to POC'
+        sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2854,8 +2854,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' grazing loss to DOC'
-        sname    = 'graze_' // trim(zooplankton(n)%sname) // '_doc'
+        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to DOC'
+        sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2866,8 +2866,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' grazing loss to ZOO'
-        sname    = 'graze_' // trim(zooplankton(n)%sname) // '_zoo'
+        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to ZOO'
+        sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zoo'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2878,8 +2878,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' grazing gain'
-        sname    = 'x_graze_' // trim(zooplankton(n)%sname)
+        lname    = trim(zooplankton_settings(n)%lname) // ' grazing gain'
+        sname    = 'x_graze_' // trim(zooplankton_settings(n)%sname)
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
