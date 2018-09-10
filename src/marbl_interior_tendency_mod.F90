@@ -310,8 +310,7 @@ contains
     call compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_indices, &
                      totalChl_local, PAR)
 
-    ! FIXME: clean up k-loop in this function
-    call compute_autotroph_elemental_ratios(km, autotroph_local, tracer_local, marbl_tracer_indices, &
+    call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
 
     call compute_function_scaling(temperature, Tfunc)
@@ -1106,7 +1105,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_autotroph_elemental_ratios(km, autotroph_local, tracer_local, marbl_tracer_indices, &
+   subroutine compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
               autotroph_derived_terms)
 
      use marbl_constants_mod, only : epsC
@@ -1120,37 +1119,36 @@ contains
 
      integer,                            intent(in)    :: km
      type(autotroph_local_type),         intent(in)    :: autotroph_local
-     real (r8),                          intent(in)    :: tracer_local(:,:) ! local copies of model tracer concentrations
      type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
+     real (r8),                          intent(in)    :: tracer_local(marbl_tracer_indices%total_cnt,km)
      type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
 
      !-----------------------------------------------------------------------
      !  local variables
      !-----------------------------------------------------------------------
-     integer(int_kind) :: k, auto_ind
+     integer(int_kind) :: auto_ind
      !-----------------------------------------------------------------------
 
-     do k=1,km
      associate(                                                 &
-          PO4_loc    => tracer_local(marbl_tracer_indices%po4_ind,k),                  &
-          Fe_loc     => tracer_local(marbl_tracer_indices%fe_ind,k),                   &
-          SiO3_loc   => tracer_local(marbl_tracer_indices%sio3_ind,k),                 &
+          PO4_loc    => tracer_local(marbl_tracer_indices%po4_ind,:),                  &
+          Fe_loc     => tracer_local(marbl_tracer_indices%fe_ind,:),                   &
+          SiO3_loc   => tracer_local(marbl_tracer_indices%sio3_ind,:),                 &
 
-          auto_C     => autotroph_local%C(:,k),     &
-          auto_P     => autotroph_local%P(:,k),     &
-          auto_Chl   => autotroph_local%Chl(:,k),   &
-          auto_Fe    => autotroph_local%Fe(:,k),    &
-          auto_Si    => autotroph_local%Si(:,k),    &
-          auto_CaCO3 => autotroph_local%CaCO3(:,k), &
+          auto_C     => autotroph_local%C(:,:),     &
+          auto_P     => autotroph_local%P(:,:),     &
+          auto_Chl   => autotroph_local%Chl(:,:),   &
+          auto_Fe    => autotroph_local%Fe(:,:),    &
+          auto_Si    => autotroph_local%Si(:,:),    &
+          auto_CaCO3 => autotroph_local%CaCO3(:,:), &
 
-          thetaC     => autotroph_derived_terms%thetaC(:,k), & ! current Chl/C ratio (mg Chl/mmol C)
-          QCaCO3     => autotroph_derived_terms%QCaCO3(:,k), & ! currenc CaCO3/C ratio (mmol CaCO3/mmol C)
-          Qp         => autotroph_derived_terms%Qp(:,k),     & ! current P/C ratio (mmol P/mmol C)
-          gQp        => autotroph_derived_terms%gQp(:,k),    & ! P/C for growth
-          Qfe        => autotroph_derived_terms%Qfe(:,k),    & ! current Fe/C ratio (mmol Fe/mmol C)
-          gQfe       => autotroph_derived_terms%gQfe(:,k),   & ! Fe/C for growth
-          Qsi        => autotroph_derived_terms%Qsi(:,k),    & ! current Si/C ratio (mmol Si/mmol C)
-          gQsi       => autotroph_derived_terms%gQsi(:,k)    & ! diatom Si/C ratio for growth (new biomass)
+          thetaC     => autotroph_derived_terms%thetaC(:,:), & ! current Chl/C ratio (mg Chl/mmol C)
+          QCaCO3     => autotroph_derived_terms%QCaCO3(:,:), & ! currenc CaCO3/C ratio (mmol CaCO3/mmol C)
+          Qp         => autotroph_derived_terms%Qp(:,:),     & ! current P/C ratio (mmol P/mmol C)
+          gQp        => autotroph_derived_terms%gQp(:,:),    & ! P/C for growth
+          Qfe        => autotroph_derived_terms%Qfe(:,:),    & ! current Fe/C ratio (mmol Fe/mmol C)
+          gQfe       => autotroph_derived_terms%gQfe(:,:),   & ! Fe/C for growth
+          Qsi        => autotroph_derived_terms%Qsi(:,:),    & ! current Si/C ratio (mmol Si/mmol C)
+          gQsi       => autotroph_derived_terms%gQsi(:,:)    & ! diatom Si/C ratio for growth (new biomass)
           )
 
      !-----------------------------------------------------------------------
@@ -1158,15 +1156,15 @@ contains
      !-----------------------------------------------------------------------
 
      do auto_ind = 1, autotroph_cnt
-        thetaC(auto_ind) = auto_Chl(auto_ind) / (auto_C(auto_ind) + epsC)
+        thetaC(auto_ind,:) = auto_Chl(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
         if (lvariable_PtoC) then
-           Qp(auto_ind) = auto_P(auto_ind) / (auto_C(auto_ind) + epsC)
+           Qp(auto_ind,:) = auto_P(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
         else
-           Qp(auto_ind) = autotroph_settings(auto_ind)%Qp_fixed
+           Qp(auto_ind,:) = autotroph_settings(auto_ind)%Qp_fixed
         endif
-        Qfe(auto_ind) = auto_Fe(auto_ind) / (auto_C(auto_ind) + epsC)
+        Qfe(auto_ind,:) = auto_Fe(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
         if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-           Qsi(auto_ind) = min(auto_Si(auto_ind) / (auto_C(auto_ind) + epsC), gQsi_max)
+           Qsi(auto_ind,:) = min(auto_Si(auto_ind,:) / (auto_C(auto_ind,:) + epsC), gQsi_max)
         endif
      end do
 
@@ -1183,39 +1181,39 @@ contains
            ! - 14= 0.00976801, 14.5 = 0.00944239 15= 0.00911677 15.5=0.00882272 16= 0.00854701
            ! - std intercept 6.0 = 166.66maxCP, 5.26=190, 4.0 = 250, 3.0 = 333.33
            !-----------------------------------------------------------------------
-           gQp(auto_ind) = min((((PquotaSlope * PO4_loc) + PquotaIntercept) * 0.001_r8), PquotaMinNP)
+           gQp(auto_ind,:) = min((((PquotaSlope * PO4_loc(:)) + PquotaIntercept) * 0.001_r8), PquotaMinNP)
         else
            ! group-specific fixed P:C ratios
-           gQp(auto_ind) = autotroph_settings(auto_ind)%Qp_fixed
+           gQp(auto_ind,:) = autotroph_settings(auto_ind)%Qp_fixed
         end if
 
         !  Uncomment this line to use modified, fixed Redfield (C/N/P 117/16/1) stoichiomdetry
         !      gQp(auto_ind) = 0.00854701_r8      ! fixed Redfield C/N/P
 
-        gQfe(auto_ind) = autotroph_settings(auto_ind)%gQfe_0
-        if (Fe_loc < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe) then
-           gQfe(auto_ind) = &
-                max((gQfe(auto_ind) * Fe_loc / (gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe)), &
+        gQfe(auto_ind,:) = autotroph_settings(auto_ind)%gQfe_0
+        where (Fe_loc(:) < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe)
+           gQfe(auto_ind,:) = &
+                max((gQfe(auto_ind,:) * Fe_loc(:) / (gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe)), &
                 autotroph_settings(auto_ind)%gQfe_min)
-        end if
+        end where
 
         if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-           gQsi(auto_ind) = gQsi_0
-           if ((Fe_loc < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe) .and. &
-                (Fe_loc > c0) .and. &
-                (SiO3_loc > (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3))) then
-              gQsi(auto_ind) = min((gQsi(auto_ind) * gQ_Fe_kFe_thres &
-                             * autotroph_settings(auto_ind)%kFe / Fe_loc), gQsi_max)
-           end if
+           gQsi(auto_ind,:) = gQsi_0
+           where ((Fe_loc(:) < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe) .and. &
+                (Fe_loc(:) > c0) .and. &
+                (SiO3_loc(:) > (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3)))
+              gQsi(auto_ind,:) = min((gQsi(auto_ind,:) * gQ_Fe_kFe_thres &
+                             * autotroph_settings(auto_ind)%kFe / Fe_loc(:)), gQsi_max)
+           end where
 
-           if (Fe_loc == c0) then
-              gQsi(auto_ind) = gQsi_max
-           end if
+           where (Fe_loc == c0)
+              gQsi(auto_ind,:) = gQsi_max
+           end where
 
-           if (SiO3_loc < (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3)) then
-              gQsi(auto_ind) = max((gQsi(auto_ind) * SiO3_loc &
+           where (SiO3_loc(:) < (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3))
+              gQsi(auto_ind,:) = max((gQsi(auto_ind,:) * SiO3_loc(:) &
                                    / (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3)), gQsi_min)
-           end if
+           end where
         endif
 
         !-----------------------------------------------------------------------
@@ -1224,14 +1222,14 @@ contains
         !-----------------------------------------------------------------------
 
         if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
-           QCaCO3(auto_ind) = auto_CaCO3(auto_ind) / (auto_C(auto_ind) + epsC)
-           if (QCaCO3(auto_ind) > QCaCO3_max) then
-              QCaCO3(auto_ind) = QCaCO3_max
-           end if
+           QCaCO3(auto_ind,:) = auto_CaCO3(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
+           where (QCaCO3(auto_ind,:) > QCaCO3_max)
+              QCaCO3(auto_ind,:) = QCaCO3_max
+           end where
         end if
      end do
      end associate
-     end do
+
    end subroutine compute_autotroph_elemental_ratios
 
    !***********************************************************************
