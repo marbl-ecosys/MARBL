@@ -203,13 +203,13 @@ general_parms :
             - CESM2
             - user-specified
       _CESM2_PFT_keys :
-         autotroph_settings :
+         autotrophs :
             - sp
             - diat
             - diaz
-         zooplankton_settings :
+         zooplankton :
             - zoo
-         grazer_settings :
+         grazers :
             - sp_zoo
             - diat_zoo
             - diaz_zoo
