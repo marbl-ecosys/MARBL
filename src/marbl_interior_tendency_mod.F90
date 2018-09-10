@@ -310,12 +310,13 @@ contains
     call compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_indices, &
                      totalChl_local, PAR)
 
+    ! FIXME: clean up k-loop in this function
     call compute_autotroph_elemental_ratios(km, autotroph_local, tracer_local, marbl_tracer_indices, &
          autotroph_derived_terms)
 
     call compute_function_scaling(temperature, Tfunc)
 
-    call compute_Pprime(domain, autotroph_local, temperature, autotroph_derived_terms)
+    call compute_Pprime(domain%km, domain%zt, autotroph_local, temperature, autotroph_derived_terms%Pprime)
 
     do k = 1, km
 
@@ -1256,28 +1257,24 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_Pprime(domain, autotroph_local, temperature, autotroph_derived_terms)
+   subroutine compute_Pprime(km, zt, autotroph_local, temperature, Pprime)
 
      use marbl_settings_mod, only : thres_z1_auto
      use marbl_settings_mod, only : thres_z2_auto
 
-     type(marbl_domain_type),            intent(in)    :: domain
-     type(autotroph_local_type),         intent(in)    :: autotroph_local
-     real(r8),                           intent(in)    :: temperature(:)
-     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
+     integer,                    intent(in)  :: km
+     real(r8),                   intent(in)  :: zt(km)
+     type(autotroph_local_type), intent(in)  :: autotroph_local
+     real(r8),                   intent(in)  :: temperature(km)
+     real(r8),                   intent(out) :: Pprime(autotroph_cnt, km)
 
      !-----------------------------------------------------------------------
      !  local variables
      !-----------------------------------------------------------------------
      integer  :: auto_ind
-     real(r8) :: f_loss_thres(domain%km)
-     real(r8) :: C_loss_thres(domain%km)
+     real(r8) :: f_loss_thres(km)
+     real(r8) :: C_loss_thres(km)
      !-----------------------------------------------------------------------
-
-     associate(                                         &
-          zt     => domain%zt(:),                       &
-          Pprime => autotroph_derived_terms%Pprime(:,:) & ! output
-          )
 
      !  calculate the loss threshold interpolation factor
      where (zt >= thres_z2_auto)
@@ -1297,8 +1294,6 @@ contains
         end where
         Pprime(auto_ind,:) = max(autotroph_local%C(auto_ind,:) - C_loss_thres, c0)
      end do
-
-     end associate
 
    end subroutine compute_Pprime
 
