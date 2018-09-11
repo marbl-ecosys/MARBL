@@ -319,10 +319,10 @@ contains
 
     call compute_autotroph_uptake(km, marbl_tracer_indices, tracer_local(:, :), autotroph_derived_terms)
 
-    do k = 1, km
+    call compute_autotroph_photosynthesis(km, num_PAR_subcols, autotroph_local, temperature(:), &
+         Tfunc(:), PAR%col_frac(:), PAR%avg(:,:), autotroph_derived_terms)
 
-       call compute_autotroph_photosynthesis(k, num_PAR_subcols, autotroph_local, temperature(k), &
-            Tfunc(k), PAR%col_frac(:), PAR%avg(k,:), autotroph_derived_terms)
+    do k = 1, km
 
        call compute_autotroph_phyto_diatoms(k, marbl_tracer_indices, autotroph_derived_terms)
 
@@ -1285,95 +1285,97 @@ contains
 
    end subroutine compute_Pprime
 
-   !***********************************************************************
+  !***********************************************************************
 
-   subroutine compute_autotroph_photosynthesis (k, PAR_nsubcols,  &
-        autotroph_local, temperature, Tfunc, PAR_col_frac, PAR_avg,  &
-        autotroph_derived_terms)
+  subroutine compute_autotroph_photosynthesis(km, PAR_nsubcols, &
+       autotroph_local, temperature, Tfunc, PAR_col_frac, PAR_avg, &
+       autotroph_derived_terms)
 
-     !-----------------------------------------------------------------------
-     !     get photosynth. rate, phyto C biomass change, photoadapt
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !     get photosynth. rate, phyto C biomass change, photoadapt
+    !-----------------------------------------------------------------------
 
-     use marbl_constants_mod, only : epsTinv
+    use marbl_constants_mod, only : epsTinv
 
-     integer(int_kind),                  intent(in)    :: k
-     integer(int_kind),                  intent(in)    :: PAR_nsubcols
-     type(autotroph_local_type),         intent(in)    :: autotroph_local
-     real(r8),                           intent(in)    :: temperature
-     real(r8),                           intent(in)    :: Tfunc
-     real(r8),                           intent(in)    :: PAR_col_frac(PAR_nsubcols)
-     real(r8),                           intent(in)    :: PAR_avg(PAR_nsubcols)
-     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
+    integer(int_kind),                  intent(in)    :: km
+    integer(int_kind),                  intent(in)    :: PAR_nsubcols
+    type(autotroph_local_type),         intent(in)    :: autotroph_local
+    real(r8),                           intent(in)    :: temperature(km)
+    real(r8),                           intent(in)    :: Tfunc(km)
+    real(r8),                           intent(in)    :: PAR_col_frac(PAR_nsubcols)
+    real(r8),                           intent(in)    :: PAR_avg(km,PAR_nsubcols)
+    type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     integer  :: auto_ind, subcol_ind
-     real(r8) :: PCmax            ! max value of PCphoto at temperature TEMP (1/sec)
-     real(r8) :: light_lim_subcol ! light_lim for a sub-column
-     real(r8) :: PCphoto_subcol   ! PCphoto for a sub-column
-     real(r8) :: pChl_subcol      ! Chl synth. regulation term (mg Chl/mmol N)
-     real(r8) :: photoacc_subcol  ! photoacc for a sub-column
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: k, auto_ind, subcol_ind
+    real(r8) :: PCmax            ! max value of PCphoto at temperature TEMP (1/sec)
+    real(r8) :: light_lim_subcol ! light_lim for a sub-column
+    real(r8) :: PCphoto_subcol   ! PCphoto for a sub-column
+    real(r8) :: pChl_subcol      ! Chl synth. regulation term (mg Chl/mmol N)
+    real(r8) :: photoacc_subcol  ! photoacc for a sub-column
+    !-----------------------------------------------------------------------
 
-     do auto_ind = 1, autotroph_cnt
+    associate(                                                &
+         ! current Chl/C ratio (mg Chl / mmol C)
+         thetaC    => autotroph_derived_terms%thetaC(:,:),    &
+         f_nut     => autotroph_derived_terms%f_nut(:,:),     &
+         VNtot     => autotroph_derived_terms%VNtot(:,:),     &
+         light_lim => autotroph_derived_terms%light_lim(:,:), &
+         PCPhoto   => autotroph_derived_terms%PCPhoto(:,:),   &
+         photoC    => autotroph_derived_terms%photoC(:,:),    &
+         photoacc  => autotroph_derived_terms%photoacc(:,:),  &
+         alphaPI   => autotroph_settings(:)%alphaPI           &
+         )
 
-        associate(                                                        &
-             ! current Chl/C ratio (mg Chl / mmol C)
-             thetaC    => autotroph_derived_terms%thetaC(auto_ind, k),    &
-             f_nut     => autotroph_derived_terms%f_nut(auto_ind, k),     &
-             VNtot     => autotroph_derived_terms%VNtot(auto_ind, k),     &
-             light_lim => autotroph_derived_terms%light_lim(auto_ind, k), &
-             PCPhoto   => autotroph_derived_terms%PCPhoto(auto_ind, k),   &
-             photoC    => autotroph_derived_terms%photoC(auto_ind, k),    &
-             photoacc  => autotroph_derived_terms%photoacc(auto_ind, k),  &
-             PCref     => autotroph_settings(auto_ind)%PCref,             &
-             alphaPI   => autotroph_settings(auto_ind)%alphaPI            &
-             )
+      do k=1,km
+        do auto_ind = 1, autotroph_cnt
 
-        PCmax = PCref * f_nut * Tfunc
-        if (temperature < autotroph_settings(auto_ind)%temp_thres) then
-           PCmax = c0
-        end if
+          if (temperature(k) < autotroph_settings(auto_ind)%temp_thres) then
+            PCmax = c0
+          else
+            PCmax = autotroph_settings(auto_ind)%PCref * f_nut(auto_ind,k) * Tfunc(k)
+          end if
 
-        if (thetaC > c0) then
-           light_lim = c0
-           PCphoto   = c0
-           photoacc  = c0
+          if (thetaC(auto_ind,k) > c0) then
+            light_lim(auto_ind,k) = c0
+            PCphoto(auto_ind,k)   = c0
+            photoacc(auto_ind,k)  = c0
 
-           do subcol_ind = 1, PAR_nsubcols
-              if (PAR_avg(subcol_ind) > c0) then
-                 light_lim_subcol = (c1 - exp((-c1 * alphaPI * thetaC * PAR_avg(subcol_ind)) / (PCmax + epsTinv)))
+            do subcol_ind = 1, PAR_nsubcols
+              if (PAR_avg(k,subcol_ind) > c0) then
+                light_lim_subcol = (c1 - exp((-c1 * alphaPI(auto_ind) * thetaC(auto_ind,k) * PAR_avg(k,subcol_ind)) &
+                                       / (PCmax + epsTinv)))
 
-                 PCphoto_subcol = PCmax * light_lim_subcol
+                PCphoto_subcol = PCmax * light_lim_subcol
 
-                 ! GD 98 Chl. synth. term
-                 pChl_subcol = autotroph_settings(auto_ind)%thetaN_max * PCphoto_subcol / &
-                      (autotroph_settings(auto_ind)%alphaPI * thetaC * PAR_avg(subcol_ind))
-                 photoacc_subcol = (pChl_subcol * PCphoto_subcol * Q / thetaC) * autotroph_local%Chl(auto_ind,k)
+                ! GD 98 Chl. synth. term
+                pChl_subcol = autotroph_settings(auto_ind)%thetaN_max * PCphoto_subcol &
+                            / (alphaPI(auto_ind) * thetaC(auto_ind,k) * PAR_avg(k,subcol_ind))
+                photoacc_subcol = (pChl_subcol * PCphoto_subcol * Q / thetaC(auto_ind,k)) &
+                                * autotroph_local%Chl(auto_ind,k)
 
-                 light_lim = light_lim + PAR_col_frac(subcol_ind) * light_lim_subcol
-                 PCphoto   = PCphoto   + PAR_col_frac(subcol_ind) * PCphoto_subcol
-                 photoacc  = photoacc  + PAR_col_frac(subcol_ind) * photoacc_subcol
+                light_lim(auto_ind,k) = light_lim(auto_ind,k) + PAR_col_frac(subcol_ind) * light_lim_subcol
+                PCphoto(auto_ind,k)   = PCphoto(auto_ind,k)   + PAR_col_frac(subcol_ind) * PCphoto_subcol
+                photoacc(auto_ind,k)  = photoacc(auto_ind,k)  + PAR_col_frac(subcol_ind) * photoacc_subcol
               end if
-           end do
+            end do
 
-           photoC = PCphoto * autotroph_local%C(auto_ind,k)
-        else
-           light_lim = c0
-           PCphoto   = c0
-           photoacc  = c0
-           photoC    = c0
-        endif
+            photoC(auto_ind,k) = PCphoto(auto_ind,k) * autotroph_local%C(auto_ind,k)
+          else
+            light_lim(auto_ind,k) = c0
+            PCphoto(auto_ind,k)   = c0
+            photoacc(auto_ind,k)  = c0
+            photoC(auto_ind,k)    = c0
+          endif
+        end do
+      end do
+    end associate
 
-        end associate
+  end subroutine compute_autotroph_photosynthesis
 
-     end do
-
-   end subroutine compute_autotroph_photosynthesis
-
-   !***********************************************************************
+  !***********************************************************************
 
    subroutine compute_autotroph_calcification (k, autotroph_local, temperature, autotroph_derived_terms)
 
