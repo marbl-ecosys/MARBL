@@ -315,12 +315,11 @@ contains
 
     call compute_function_scaling(temperature, Tfunc)
 
-    call compute_Pprime(domain%km, domain%zt, autotroph_local, temperature, autotroph_derived_terms%Pprime)
+    call compute_Pprime(km, domain%zt, autotroph_local, temperature, autotroph_derived_terms%Pprime)
+
+    call compute_autotroph_uptake(km, marbl_tracer_indices, tracer_local(:, :), autotroph_derived_terms)
 
     do k = 1, km
-
-       call compute_autotroph_uptake(k, tracer_local(:, k), marbl_tracer_indices, &
-            autotroph_derived_terms)
 
        call compute_autotroph_photosynthesis(k, num_PAR_subcols, autotroph_local, temperature(k), &
             Tfunc(k), PAR%col_frac(:), PAR%avg(k,:), autotroph_derived_terms)
@@ -1428,87 +1427,91 @@ contains
      end associate
    end subroutine compute_autotroph_calcification
 
-   !***********************************************************************
+  !***********************************************************************
 
-   subroutine compute_autotroph_uptake (k, tracer_local, marbl_tracer_indices, autotroph_derived_terms)
+  subroutine compute_autotroph_uptake(km, marbl_tracer_indices, tracer_local, autotroph_derived_terms)
 
-     integer,                            intent(in)    :: k
-     real(r8),                           intent(in)    :: tracer_local(:)
-     type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
-     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
+    integer,                            intent(in)    :: km
+    type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
+    real(r8),                           intent(in)    :: tracer_local(marbl_tracer_indices%total_cnt,km)
+    type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     integer  :: auto_ind
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: k, auto_ind
+    !-----------------------------------------------------------------------
 
-     !-----------------------------------------------------------------------
-     !  Get relative nutrient uptake rates for autotrophs,
-     !  min. relative uptake rate modifies C fixation in the manner
-     !  that the min. cell quota does in GD98.
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  Get relative nutrient uptake rates for autotrophs,
+    !  min. relative uptake rate modifies C fixation in the manner
+    !  that the min. cell quota does in GD98.
+    !-----------------------------------------------------------------------
 
-     do auto_ind = 1, autotroph_cnt
+    associate(                                                           &
+              DOP_loc => tracer_local(marbl_tracer_indices%dop_ind,:),   &
+              NO3_loc => tracer_local(marbl_tracer_indices%no3_ind,:),   &
+              NH4_loc => tracer_local(marbl_tracer_indices%nh4_ind,:),   &
+              PO4_loc => tracer_local(marbl_tracer_indices%po4_ind,:),   &
+              Fe_loc   => tracer_local(marbl_tracer_indices%fe_ind,:),   &
+              SiO3_loc => tracer_local(marbl_tracer_indices%sio3_ind,:), &
+              ! AUTOTROPHS
+              Nfixer     => autotroph_settings(:)%Nfixer,     &
+              silicifier => autotroph_settings(:)%silicifier, &
+              kNO3   => autotroph_settings(:)%kNO3,           &
+              kNH4   => autotroph_settings(:)%kNH4,           &
+              kFe    => autotroph_settings(:)%kFe,            &
+              kPO4   => autotroph_settings(:)%kPO4,           &
+              kDOP   => autotroph_settings(:)%kDOP,           &
+              kSiO3  => autotroph_settings(:)%kSiO3,          &
+              ! OUTPUTS
+              VNO3  => autotroph_derived_terms%VNO3(:,:),  &
+              VNH4  => autotroph_derived_terms%VNH4(:,:),  &
+              VNtot => autotroph_derived_terms%VNtot(:,:), &
+              VFe   => autotroph_derived_terms%VFe(:,:),   &
+              f_nut => autotroph_derived_terms%f_nut(:,:), &
+              VDOP  => autotroph_derived_terms%VDOP(:,:),  &
+              VPO4  => autotroph_derived_terms%VPO4(:,:),  &
+              VPtot => autotroph_derived_terms%VPtot(:,:), &
+              VSiO3 => autotroph_derived_terms%VSiO3(:,:)  &
+              )
 
-        associate(                                                         &
-                  DOP_loc => tracer_local(marbl_tracer_indices%dop_ind),   &
-                  NO3_loc => tracer_local(marbl_tracer_indices%no3_ind),   &
-                  NH4_loc => tracer_local(marbl_tracer_indices%nh4_ind),   &
-                  PO4_loc => tracer_local(marbl_tracer_indices%po4_ind),   &
-                  Fe_loc   => tracer_local(marbl_tracer_indices%fe_ind),   &
-                  SiO3_loc => tracer_local(marbl_tracer_indices%sio3_ind), &
-                  ! OUTPUTS
-                  VNO3  => autotroph_derived_terms%VNO3(auto_ind, k),      &
-                  VNH4  => autotroph_derived_terms%VNH4(auto_ind, k),      &
-                  VNtot => autotroph_derived_terms%VNtot(auto_ind, k),     &
-                  VFe   => autotroph_derived_terms%VFe(auto_ind, k),       &
-                  f_nut => autotroph_derived_terms%f_nut(auto_ind, k),     &
-                  VDOP  => autotroph_derived_terms%VDOP(auto_ind, k),      &
-                  VPO4  => autotroph_derived_terms%VPO4(auto_ind, k),      &
-                  VPtot => autotroph_derived_terms%VPtot(auto_ind, k),     &
-                  VSiO3 => autotroph_derived_terms%VSiO3(auto_ind, k),     &
-                  ! AUTOTROPHS
-                  Nfixer     => autotroph_settings(auto_ind)%Nfixer,       &
-                  silicifier => autotroph_settings(auto_ind)%silicifier,   &
-                  kNO3   => autotroph_settings(auto_ind)%kNO3,             &
-                  kNH4   => autotroph_settings(auto_ind)%kNH4,             &
-                  kFe    => autotroph_settings(auto_ind)%kFe,              &
-                  kPO4   => autotroph_settings(auto_ind)%kPO4,             &
-                  kDOP   => autotroph_settings(auto_ind)%kDOP,             &
-                  kSiO3  => autotroph_settings(auto_ind)%kSiO3             &
-                 )
+      do k=1,km
+        do auto_ind = 1, autotroph_cnt
 
-        VNO3 = (NO3_loc / kNO3) / (c1 + (NO3_loc / kNO3) + (NH4_loc / kNH4))
-        VNH4 = (NH4_loc / kNH4) / (c1 + (NO3_loc / kNO3) + (NH4_loc / kNH4))
-        VNtot = VNO3 + VNH4
-        if (Nfixer) then
-           VNtot = c1
-        end if
+          VNO3(auto_ind,k) = (NO3_loc(k) / kNO3(auto_ind)) &
+                           / (c1 + (NO3_loc(k) / kNO3(auto_ind)) + (NH4_loc(k) / kNH4(auto_ind)))
+          VNH4(auto_ind,k) = (NH4_loc(k) / kNH4(auto_ind)) &
+                           / (c1 + (NO3_loc(k) / kNO3(auto_ind)) + (NH4_loc(k) / kNH4(auto_ind)))
+          if (Nfixer(auto_ind)) then
+            VNtot(auto_ind,k) = c1
+          else
+            VNtot(auto_ind,k) = VNO3(auto_ind,k) + VNH4(auto_ind,k)
+          end if
 
-        VFe = Fe_loc / (Fe_loc + kFe)
+          VFe(auto_ind, k) = Fe_loc(k) / (Fe_loc(k) + kFe(auto_ind))
+          f_nut(auto_ind, k) = min(VNtot(auto_ind, k), VFe(auto_ind, k))
 
-        VPO4 = (PO4_loc / kPO4) / (c1 + (PO4_loc / kPO4) + (DOP_loc / kDOP))
-        VDOP = (DOP_loc / kDOP) / (c1 + (PO4_loc / kPO4) + (DOP_loc / kDOP))
-        VPtot = VPO4 + VDOP
+          VPO4(auto_ind, k) = (PO4_loc(k) / kPO4(auto_ind)) &
+                            / (c1 + (PO4_loc(k) / kPO4(auto_ind)) + (DOP_loc(k) / kDOP(auto_ind)))
+          VDOP(auto_ind, k) = (DOP_loc(k) / kDOP(auto_ind)) &
+                            / (c1 + (PO4_loc(k) / kPO4(auto_ind)) + (DOP_loc(k) / kDOP(auto_ind)))
+          VPtot(auto_ind, k) = VPO4(auto_ind, k) + VDOP(auto_ind, k)
+          f_nut(auto_ind, k) = min(f_nut(auto_ind, k), VPtot(auto_ind, k))
 
-        if (silicifier) then
-           VSiO3 = SiO3_loc / (SiO3_loc + kSiO3)
-        endif
+          if (silicifier(auto_ind)) then
+            VSiO3(auto_ind, k) = SiO3_loc(k) / (SiO3_loc(k) + kSiO3(auto_ind))
+            f_nut(auto_ind, k) = min(f_nut(auto_ind, k), VSiO3(auto_ind, k))
+          endif
 
-        f_nut = min(VNtot, VFe)
-        f_nut = min(f_nut, VPtot)
-        if (silicifier) then
-           f_nut = min(f_nut, VSiO3)
-        endif
+        end do
+      end do
 
-     end associate
+    end associate
 
-     end do
+  end subroutine compute_autotroph_uptake
 
-   end subroutine compute_autotroph_uptake
-
-   !***********************************************************************
+  !***********************************************************************
 
    subroutine compute_autotroph_nfixation(k, autotroph_derived_terms)
 
