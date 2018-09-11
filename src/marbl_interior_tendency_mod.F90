@@ -1126,108 +1126,99 @@ contains
      !-----------------------------------------------------------------------
      !  local variables
      !-----------------------------------------------------------------------
-     integer(int_kind) :: auto_ind
+     integer(int_kind) :: k, auto_ind
      !-----------------------------------------------------------------------
 
-     associate(                                                 &
-          PO4_loc    => tracer_local(marbl_tracer_indices%po4_ind,:),                  &
-          Fe_loc     => tracer_local(marbl_tracer_indices%fe_ind,:),                   &
-          SiO3_loc   => tracer_local(marbl_tracer_indices%sio3_ind,:),                 &
+    associate(                                                        &
+         PO4_loc    => tracer_local(marbl_tracer_indices%po4_ind,:),  &
+         Fe_loc     => tracer_local(marbl_tracer_indices%fe_ind,:),   &
+         SiO3_loc   => tracer_local(marbl_tracer_indices%sio3_ind,:), &
 
-          auto_C     => autotroph_local%C(:,:),     &
-          auto_P     => autotroph_local%P(:,:),     &
-          auto_Chl   => autotroph_local%Chl(:,:),   &
-          auto_Fe    => autotroph_local%Fe(:,:),    &
-          auto_Si    => autotroph_local%Si(:,:),    &
-          auto_CaCO3 => autotroph_local%CaCO3(:,:), &
+         auto_C     => autotroph_local%C(:,:),     &
+         auto_P     => autotroph_local%P(:,:),     &
+         auto_Chl   => autotroph_local%Chl(:,:),   &
+         auto_Fe    => autotroph_local%Fe(:,:),    &
+         auto_Si    => autotroph_local%Si(:,:),    &
+         auto_CaCO3 => autotroph_local%CaCO3(:,:), &
 
-          thetaC     => autotroph_derived_terms%thetaC(:,:), & ! current Chl/C ratio (mg Chl/mmol C)
-          QCaCO3     => autotroph_derived_terms%QCaCO3(:,:), & ! currenc CaCO3/C ratio (mmol CaCO3/mmol C)
-          Qp         => autotroph_derived_terms%Qp(:,:),     & ! current P/C ratio (mmol P/mmol C)
-          gQp        => autotroph_derived_terms%gQp(:,:),    & ! P/C for growth
-          Qfe        => autotroph_derived_terms%Qfe(:,:),    & ! current Fe/C ratio (mmol Fe/mmol C)
-          gQfe       => autotroph_derived_terms%gQfe(:,:),   & ! Fe/C for growth
-          Qsi        => autotroph_derived_terms%Qsi(:,:),    & ! current Si/C ratio (mmol Si/mmol C)
-          gQsi       => autotroph_derived_terms%gQsi(:,:)    & ! diatom Si/C ratio for growth (new biomass)
-          )
+         thetaC     => autotroph_derived_terms%thetaC(:,:), & ! current Chl/C ratio (mg Chl/mmol C)
+         QCaCO3     => autotroph_derived_terms%QCaCO3(:,:), & ! currenc CaCO3/C ratio (mmol CaCO3/mmol C)
+         Qp         => autotroph_derived_terms%Qp(:,:),     & ! current P/C ratio (mmol P/mmol C)
+         gQp        => autotroph_derived_terms%gQp(:,:),    & ! P/C for growth
+         Qfe        => autotroph_derived_terms%Qfe(:,:),    & ! current Fe/C ratio (mmol Fe/mmol C)
+         gQfe       => autotroph_derived_terms%gQfe(:,:),   & ! Fe/C for growth
+         Qsi        => autotroph_derived_terms%Qsi(:,:),    & ! current Si/C ratio (mmol Si/mmol C)
+         gQsi       => autotroph_derived_terms%gQsi(:,:)    & ! diatom Si/C ratio for growth (new biomass)
+         )
 
-     !-----------------------------------------------------------------------
-     !  set local variables, with incoming ratios
-     !-----------------------------------------------------------------------
+      !-----------------------------------------------------------------------
+      !  set local variables, with incoming ratios
+      !-----------------------------------------------------------------------
 
-     do auto_ind = 1, autotroph_cnt
-        thetaC(auto_ind,:) = auto_Chl(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
-        if (lvariable_PtoC) then
-           Qp(auto_ind,:) = auto_P(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
-        else
-           Qp(auto_ind,:) = autotroph_settings(auto_ind)%Qp_fixed
-        endif
-        Qfe(auto_ind,:) = auto_Fe(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
-        if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-           Qsi(auto_ind,:) = min(auto_Si(auto_ind,:) / (auto_C(auto_ind,:) + epsC), gQsi_max)
-        endif
-     end do
+      do k=1,km
+        do auto_ind = 1, autotroph_cnt
+          thetaC(auto_ind,k) = auto_Chl(auto_ind,k) / (auto_C(auto_ind,k) + epsC)
+          if (lvariable_PtoC) then
+            Qp(auto_ind,k) = auto_P(auto_ind,k) / (auto_C(auto_ind,k) + epsC)
+            !-----------------------------------------------------------------------
+            !-- Calculate Qp for new growth based on Galbraith and Martiny (2015), with min. N/P
+            ! - 14= 0.00976801, 14.5 = 0.00944239 15= 0.00911677 15.5=0.00882272 16= 0.00854701
+            ! - std intercept 6.0 = 166.66maxCP, 5.26=190, 4.0 = 250, 3.0 = 333.33
+            !-----------------------------------------------------------------------
+            gQp(auto_ind,k) = min((((PquotaSlope * PO4_loc(k)) + PquotaIntercept) * 0.001_r8), PquotaMinNP)
+          else
+            Qp(auto_ind,k) = autotroph_settings(auto_ind)%Qp_fixed
+            gQp(auto_ind,k) = autotroph_settings(auto_ind)%Qp_fixed
+          endif
+          !  Uncomment this line to use modified, fixed Redfield (C/N/P 117/16/1) stoichiomdetry
+          !      gQp(auto_ind) = 0.00854701_r8      ! fixed Redfield C/N/P
 
-     !-----------------------------------------------------------------------
-     !  DETERMINE NEW ELEMENTAL RATIOS FOR GROWTH (NEW BIOMASS)
-     !  Modify these initial ratios under low ambient iron conditions
-     !  Modify the initial si/C ratio under low ambient Si conditions
-     !-----------------------------------------------------------------------
+          !-----------------------------------------------------------------------
+          !  DETERMINE NEW ELEMENTAL RATIOS FOR GROWTH (NEW BIOMASS)
+          !-----------------------------------------------------------------------
 
-     do auto_ind = 1, autotroph_cnt
-        if (lvariable_PtoC) then
-           !-----------------------------------------------------------------------
-           !-- Calculate Qp for new growth based on Galbraith and Martiny (2015), with min. N/P
-           ! - 14= 0.00976801, 14.5 = 0.00944239 15= 0.00911677 15.5=0.00882272 16= 0.00854701
-           ! - std intercept 6.0 = 166.66maxCP, 5.26=190, 4.0 = 250, 3.0 = 333.33
-           !-----------------------------------------------------------------------
-           gQp(auto_ind,:) = min((((PquotaSlope * PO4_loc(:)) + PquotaIntercept) * 0.001_r8), PquotaMinNP)
-        else
-           ! group-specific fixed P:C ratios
-           gQp(auto_ind,:) = autotroph_settings(auto_ind)%Qp_fixed
-        end if
+          Qfe(auto_ind,k) = auto_Fe(auto_ind,k) / (auto_C(auto_ind,k) + epsC)
+          gQfe(auto_ind,k) = autotroph_settings(auto_ind)%gQfe_0
+          if (Fe_loc(k) < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe) then
+               gQfe(auto_ind,k) = &
+                  max((gQfe(auto_ind,k) * Fe_loc(k) / (gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe)), &
+                  autotroph_settings(auto_ind)%gQfe_min)
+          end if
 
-        !  Uncomment this line to use modified, fixed Redfield (C/N/P 117/16/1) stoichiomdetry
-        !      gQp(auto_ind) = 0.00854701_r8      ! fixed Redfield C/N/P
+          if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
+            Qsi(auto_ind,k) = min(auto_Si(auto_ind,k) / (auto_C(auto_ind,k) + epsC), gQsi_max)
+            gQsi(auto_ind,k) = gQsi_0
 
-        gQfe(auto_ind,:) = autotroph_settings(auto_ind)%gQfe_0
-        where (Fe_loc(:) < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe)
-           gQfe(auto_ind,:) = &
-                max((gQfe(auto_ind,:) * Fe_loc(:) / (gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe)), &
-                autotroph_settings(auto_ind)%gQfe_min)
-        end where
+            !  Modify these initial ratios under low ambient iron conditions
+            if ((Fe_loc(k) < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe) .and. &
+                 (Fe_loc(k) > c0) .and. &
+                 (SiO3_loc(k) > (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3))) then
+              gQsi(auto_ind,k) = min((gQsi(auto_ind,k) * gQ_Fe_kFe_thres &
+                               * autotroph_settings(auto_ind)%kFe / Fe_loc(k)), gQsi_max)
+            else if (Fe_loc(k) == c0) then
+              gQsi(auto_ind,k) = gQsi_max
+            end if
 
-        if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-           gQsi(auto_ind,:) = gQsi_0
-           where ((Fe_loc(:) < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe) .and. &
-                (Fe_loc(:) > c0) .and. &
-                (SiO3_loc(:) > (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3)))
-              gQsi(auto_ind,:) = min((gQsi(auto_ind,:) * gQ_Fe_kFe_thres &
-                             * autotroph_settings(auto_ind)%kFe / Fe_loc(:)), gQsi_max)
-           end where
+            !  Modify the initial si/C ratio under low ambient Si conditions
+            if (SiO3_loc(k) < (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3)) then
+              gQsi(auto_ind,k) = max((gQsi(auto_ind,k) * SiO3_loc(k) &
+                               / (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3)), gQsi_min)
+            end if
+          endif
 
-           where (Fe_loc == c0)
-              gQsi(auto_ind,:) = gQsi_max
-           end where
+          !-----------------------------------------------------------------------
+          !  QCaCO3 is the percentage of sp organic matter which is associated
+          !  with coccolithophores
+          !-----------------------------------------------------------------------
 
-           where (SiO3_loc(:) < (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3))
-              gQsi(auto_ind,:) = max((gQsi(auto_ind,:) * SiO3_loc(:) &
-                                   / (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3)), gQsi_min)
-           end where
-        endif
-
-        !-----------------------------------------------------------------------
-        !  QCaCO3 is the percentage of sp organic matter which is associated
-        !  with coccolithophores
-        !-----------------------------------------------------------------------
-
-        if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
-           QCaCO3(auto_ind,:) = auto_CaCO3(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
-           where (QCaCO3(auto_ind,:) > QCaCO3_max)
-              QCaCO3(auto_ind,:) = QCaCO3_max
-           end where
-        end if
-     end do
+          if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
+            QCaCO3(auto_ind,k) = auto_CaCO3(auto_ind,k) / (auto_C(auto_ind,k) + epsC)
+            if (QCaCO3(auto_ind,k) > QCaCO3_max) then
+              QCaCO3(auto_ind,k) = QCaCO3_max
+            end if
+          end if
+        end do
+      end do
      end associate
 
    end subroutine compute_autotroph_elemental_ratios
