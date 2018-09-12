@@ -1321,7 +1321,6 @@ contains
          ! current Chl/C ratio (mg Chl / mmol C)
          thetaC    => autotroph_derived_terms%thetaC(:,:),    &
          f_nut     => autotroph_derived_terms%f_nut(:,:),     &
-         VNtot     => autotroph_derived_terms%VNtot(:,:),     &
          light_lim => autotroph_derived_terms%light_lim(:,:), &
          PCPhoto   => autotroph_derived_terms%PCPhoto(:,:),   &
          photoC    => autotroph_derived_terms%photoC(:,:),    &
