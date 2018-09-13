@@ -324,7 +324,7 @@ contains
 
     do k = 1, km
 
-       call compute_autotroph_phyto_diatoms(k, marbl_tracer_indices, autotroph_derived_terms)
+       call compute_autotroph_nutrient_uptake(k, marbl_tracer_indices, autotroph_derived_terms)
 
        call compute_autotroph_calcification(k, autotroph_local, temperature(k), &
             autotroph_derived_terms)
@@ -1555,7 +1555,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_autotroph_phyto_diatoms(k, marbl_tracer_indices, autotroph_derived_terms)
+   subroutine compute_autotroph_nutrient_uptake(k, marbl_tracer_indices, autotroph_derived_terms)
 
      !-----------------------------------------------------------------------
      !  Get nutrient uptakes by small phyto based on calculated C fixation
@@ -1624,7 +1624,7 @@ contains
 
      end associate
 
-   end subroutine compute_autotroph_phyto_diatoms
+   end subroutine compute_autotroph_nutrient_uptake
 
    !***********************************************************************
 
