@@ -322,9 +322,9 @@ contains
     call compute_autotroph_photosynthesis(km, num_PAR_subcols, autotroph_local, temperature(:), &
          Tfunc(:), PAR%col_frac(:), PAR%avg(:,:), autotroph_derived_terms)
 
-    do k = 1, km
+    call compute_autotroph_nutrient_uptake(km, marbl_tracer_indices, autotroph_derived_terms)
 
-       call compute_autotroph_nutrient_uptake(k, marbl_tracer_indices, autotroph_derived_terms)
+    do k = 1, km
 
        call compute_autotroph_calcification(k, autotroph_local, temperature(k), &
             autotroph_derived_terms)
@@ -1553,78 +1553,79 @@ contains
      end associate
    end subroutine compute_autotroph_nfixation
 
-   !***********************************************************************
+  !***********************************************************************
 
-   subroutine compute_autotroph_nutrient_uptake(k, marbl_tracer_indices, autotroph_derived_terms)
+  subroutine compute_autotroph_nutrient_uptake(km, marbl_tracer_indices, autotroph_derived_terms)
 
-     !-----------------------------------------------------------------------
-     !  Get nutrient uptakes by small phyto based on calculated C fixation
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  Get nutrient uptakes by small phyto based on calculated C fixation
+    !-----------------------------------------------------------------------
 
-     use marbl_settings_mod, only : Q
+    use marbl_settings_mod, only : Q
 
-     integer,                            intent(in)    :: k
-     type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
-     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
+    integer,                            intent(in)    :: km
+    type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
+    type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     integer  :: auto_ind
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: k, auto_ind
+    !-----------------------------------------------------------------------
 
-     associate(                                              &
-          gQp      => autotroph_derived_terms%gQp(:, k),     & ! p/C for growth
-          gQfe     => autotroph_derived_terms%gQfe(:, k),    & ! fe/C for growth
-          gQsi     => autotroph_derived_terms%gQsi(:, k),    & ! diatom Si/C ratio for growth (new biomass)
-          VNO3     => autotroph_derived_terms%VNO3(:, k),    & ! input
-          VNH4     => autotroph_derived_terms%VNH4(:, k),    & ! input
-          VNtot    => autotroph_derived_terms%VNtot(:, k),   & ! input
-          VPO4     => autotroph_derived_terms%VPO4(:, k),    & ! input
-          VDOP     => autotroph_derived_terms%VDOP(:, k),    & ! input
-          VPtot    => autotroph_derived_terms%VPtot(:, k),   & ! input
-          photoC   => autotroph_derived_terms%photoC(:, k),  & ! input
-          NO3_V    => autotroph_derived_terms%NO3_V(:, k),   & ! output
-          NH4_V    => autotroph_derived_terms%NH4_V(:, k),   & ! output
-          PO4_V    => autotroph_derived_terms%PO4_V(:, k),   & ! output
-          DOP_V    => autotroph_derived_terms%DOP_V(:, k),   & ! output
-          photoFe  => autotroph_derived_terms%photoFe(:, k), & ! output
-          photoSi  => autotroph_derived_terms%photoSi(:, k)  & ! output
-          )
+    associate(                                              &
+         gQp      => autotroph_derived_terms%gQp(:, :),     & ! p/C for growth
+         gQfe     => autotroph_derived_terms%gQfe(:, :),    & ! fe/C for growth
+         gQsi     => autotroph_derived_terms%gQsi(:, :),    & ! diatom Si/C ratio for growth (new biomass)
+         VNO3     => autotroph_derived_terms%VNO3(:, :),    & ! input
+         VNH4     => autotroph_derived_terms%VNH4(:, :),    & ! input
+         VNtot    => autotroph_derived_terms%VNtot(:, :),   & ! input
+         VPO4     => autotroph_derived_terms%VPO4(:, :),    & ! input
+         VDOP     => autotroph_derived_terms%VDOP(:, :),    & ! input
+         VPtot    => autotroph_derived_terms%VPtot(:, :),   & ! input
+         photoC   => autotroph_derived_terms%photoC(:, :),  & ! input
+         NO3_V    => autotroph_derived_terms%NO3_V(:, :),   & ! output
+         NH4_V    => autotroph_derived_terms%NH4_V(:, :),   & ! output
+         PO4_V    => autotroph_derived_terms%PO4_V(:, :),   & ! output
+         DOP_V    => autotroph_derived_terms%DOP_V(:, :),   & ! output
+         photoFe  => autotroph_derived_terms%photoFe(:, :), & ! output
+         photoSi  => autotroph_derived_terms%photoSi(:, :)  & ! output
+         )
 
-     do auto_ind = 1, autotroph_cnt
+      do k=1,km
+        do auto_ind = 1, autotroph_cnt
 
-        if (VNtot(auto_ind) > c0) then
-           NO3_V(auto_ind) = (VNO3(auto_ind) / VNtot(auto_ind)) * photoC(auto_ind) * Q
-           NH4_V(auto_ind) = (VNH4(auto_ind) / VNtot(auto_ind)) * photoC(auto_ind) * Q
-        else
-           NO3_V(auto_ind) = c0
-           NH4_V(auto_ind) = c0
-        end if
+          if (VNtot(auto_ind,k) > c0) then
+            NO3_V(auto_ind,k) = (VNO3(auto_ind,k) / VNtot(auto_ind,k)) * photoC(auto_ind,k) * Q
+            NH4_V(auto_ind,k) = (VNH4(auto_ind,k) / VNtot(auto_ind,k)) * photoC(auto_ind,k) * Q
+          else
+            NO3_V(auto_ind,k) = c0
+            NH4_V(auto_ind,k) = c0
+          end if
 
-        if (VPtot(auto_ind) > c0) then
-           PO4_V(auto_ind) = (VPO4(auto_ind) / VPtot(auto_ind)) * photoC(auto_ind) * gQp(auto_ind)
-           DOP_V(auto_ind) = (VDOP(auto_ind) / VPtot(auto_ind)) * photoC(auto_ind) * gQp(auto_ind)
-        else
-           PO4_V(auto_ind) = c0
-           DOP_V(auto_ind) = c0
-        end if
+          if (VPtot(auto_ind,k) > c0) then
+            PO4_V(auto_ind,k) = (VPO4(auto_ind,k) / VPtot(auto_ind,k)) * photoC(auto_ind,k) * gQp(auto_ind,k)
+            DOP_V(auto_ind,k) = (VDOP(auto_ind,k) / VPtot(auto_ind,k)) * photoC(auto_ind,k) * gQp(auto_ind,k)
+          else
+            PO4_V(auto_ind,k) = c0
+            DOP_V(auto_ind,k) = c0
+          end if
 
-        !-----------------------------------------------------------------------
-        !  Get nutrient uptake by diatoms based on C fixation
-        !-----------------------------------------------------------------------
+          !-----------------------------------------------------------------------
+          !  Get nutrient uptake by diatoms based on C fixation
+          !-----------------------------------------------------------------------
 
-        photoFe(auto_ind) = photoC(auto_ind) * gQfe(auto_ind)
+          photoFe(auto_ind,k) = photoC(auto_ind,k) * gQfe(auto_ind,k)
 
-        if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-           photoSi(auto_ind) = photoC(auto_ind) * gQsi(auto_ind)
-        endif
+          if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
+            photoSi(auto_ind,k) = photoC(auto_ind,k) * gQsi(auto_ind,k)
+          endif
 
-     end do
+        end do
+      end do
+    end associate
 
-     end associate
-
-   end subroutine compute_autotroph_nutrient_uptake
+  end subroutine compute_autotroph_nutrient_uptake
 
    !***********************************************************************
 
