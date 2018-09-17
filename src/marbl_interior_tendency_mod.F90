@@ -333,10 +333,9 @@ contains
 
     call compute_Zprime(km, domain%zt, zooplankton_local%C, Tfunc, zooplankton_derived_terms)
 
-    do k = 1, km
+    call compute_grazing(km, Tfunc, zooplankton_local, zooplankton_derived_terms, autotroph_derived_terms)
 
-       call compute_grazing(k, Tfunc(k), zooplankton_local, &
-            zooplankton_derived_terms, autotroph_derived_terms)
+    do k = 1, km
 
        call compute_routing(k, zooplankton_derived_terms, autotroph_derived_terms)
 
@@ -1749,195 +1748,204 @@ contains
 
   end subroutine compute_Zprime
 
-   !***********************************************************************
+  !***********************************************************************
 
-   subroutine compute_grazing(k, Tfunc, zooplankton_local, &
-        zooplankton_derived_terms, autotroph_derived_terms)
+  subroutine compute_grazing(km, Tfunc, zooplankton_local, zooplankton_derived_terms, autotroph_derived_terms)
 
-     !-----------------------------------------------------------------------
-     !  CALCULATE GRAZING
-     !
-     !  Autotroph prey
-     !  routing of grazing terms
-     !  all aggregation goes to POC
-     !  currently assumes that 33% of grazed caco3 is remineralized
-     !  if autotroph_settings(sp_ind)%graze_zoo ever changes, coefficients on routing grazed sp must change!
-     !  min.%C routed to POC from grazing for ballast requirements = 0.4 * Qcaco3
-     !  NOTE: if autotroph_settings(diat_ind)%graze_zoo is changed, coeff.s for poc, doc and dic must change!
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  CALCULATE GRAZING
+    !
+    !  Autotroph prey
+    !  routing of grazing terms
+    !  all aggregation goes to POC
+    !  currently assumes that 33% of grazed caco3 is remineralized
+    !  if autotroph_settings(sp_ind)%graze_zoo ever changes, coefficients on routing grazed sp must change!
+    !  min.%C routed to POC from grazing for ballast requirements = 0.4 * Qcaco3
+    !  NOTE: if autotroph_settings(diat_ind)%graze_zoo is changed, coeff.s for poc, doc and dic must change!
+    !-----------------------------------------------------------------------
 
-     use marbl_constants_mod, only : epsC
-     use marbl_constants_mod, only : epsTinv
-     use marbl_pft_mod, only : grz_fnc_michaelis_menten
-     use marbl_pft_mod, only : grz_fnc_sigmoidal
+    use marbl_constants_mod, only : epsC
+    use marbl_constants_mod, only : epsTinv
+    use marbl_pft_mod, only : grz_fnc_michaelis_menten
+    use marbl_pft_mod, only : grz_fnc_sigmoidal
 
-     integer,                              intent(in)    :: k
-     real(r8),                             intent(in)    :: Tfunc
-     type(zooplankton_local_type),         intent(in)    :: zooplankton_local
-     type(zooplankton_derived_terms_type), intent(inout) :: zooplankton_derived_terms
-     type(autotroph_derived_terms_type),   intent(inout) :: autotroph_derived_terms
+    integer,                              intent(in)    :: km
+    real(r8),                             intent(in)    :: Tfunc(km)
+    type(zooplankton_local_type),         intent(in)    :: zooplankton_local
+    type(zooplankton_derived_terms_type), intent(inout) :: zooplankton_derived_terms
+    type(autotroph_derived_terms_type),   intent(inout) :: autotroph_derived_terms
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     integer  :: auto_ind, auto_ind2
-     integer  :: zoo_ind, zoo_ind2
-     integer  :: pred_ind
-     integer  :: prey_ind
-     real(r8) :: work1, work2, work3, work4
-     real(r8) :: graze_rate
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: k, auto_ind, auto_ind2
+    integer  :: zoo_ind, zoo_ind2
+    integer  :: pred_ind
+    integer  :: prey_ind
+    real(r8) :: work1, work2, work3, work4
+    real(r8) :: graze_rate
+    !-----------------------------------------------------------------------
 
-     associate(                                                           &
-          Pprime         => autotroph_derived_terms%Pprime(:,k),          & ! input
-          QCaCO3         => autotroph_derived_terms%QCaCO3(:,k),          & ! input
-          Zprime         => zooplankton_derived_terms%Zprime(:,k),        & ! input
-          auto_graze     => autotroph_derived_terms%auto_graze(:,k),      & ! output
-          auto_graze_poc => autotroph_derived_terms%auto_graze_poc(:,k),  & ! output
-          auto_graze_dic => autotroph_derived_terms%auto_graze_dic(:,k),  & ! output
-          auto_graze_doc => autotroph_derived_terms%auto_graze_doc(:,k),  & ! output
-          auto_graze_zoo => autotroph_derived_terms%auto_graze_zoo(:,k),  & ! output
-          zoo_graze      => zooplankton_derived_terms%zoo_graze(:,k),     & ! output
-          zoo_graze_poc  => zooplankton_derived_terms%zoo_graze_poc(:,k), & ! output
-          zoo_graze_dic  => zooplankton_derived_terms%zoo_graze_dic(:,k), & ! output
-          zoo_graze_doc  => zooplankton_derived_terms%zoo_graze_doc(:,k), & ! output
-          zoo_graze_zoo  => zooplankton_derived_terms%zoo_graze_zoo(:,k), & ! output
-          x_graze_zoo    => zooplankton_derived_terms%x_graze_zoo(:,k),   & ! output
-          f_zoo_detr     => zooplankton_derived_terms%f_zoo_detr(:,k)     & ! output
-          )
+    associate(                                                           &
+         Pprime         => autotroph_derived_terms%Pprime(:,:),          & ! input
+         QCaCO3         => autotroph_derived_terms%QCaCO3(:,:),          & ! input
+         Zprime         => zooplankton_derived_terms%Zprime(:,:),        & ! input
+         auto_graze     => autotroph_derived_terms%auto_graze(:,:),      & ! output
+         auto_graze_poc => autotroph_derived_terms%auto_graze_poc(:,:),  & ! output
+         auto_graze_dic => autotroph_derived_terms%auto_graze_dic(:,:),  & ! output
+         auto_graze_doc => autotroph_derived_terms%auto_graze_doc(:,:),  & ! output
+         auto_graze_zoo => autotroph_derived_terms%auto_graze_zoo(:,:),  & ! output
+         zoo_graze      => zooplankton_derived_terms%zoo_graze(:,:),     & ! output
+         zoo_graze_poc  => zooplankton_derived_terms%zoo_graze_poc(:,:), & ! output
+         zoo_graze_dic  => zooplankton_derived_terms%zoo_graze_dic(:,:), & ! output
+         zoo_graze_doc  => zooplankton_derived_terms%zoo_graze_doc(:,:), & ! output
+         zoo_graze_zoo  => zooplankton_derived_terms%zoo_graze_zoo(:,:), & ! output
+         x_graze_zoo    => zooplankton_derived_terms%x_graze_zoo(:,:),   & ! output
+         f_zoo_detr     => zooplankton_derived_terms%f_zoo_detr(:,:)     & ! output
+         )
 
-     auto_graze(:)     = c0 ! total grazing losses from autotroph pool at auto_ind
-     auto_graze_zoo(:) = c0 ! autotroph grazing losses routed to zooplankton at auto_ind
-     auto_graze_poc(:) = c0 ! autotroph grazing losses routed to poc
-     auto_graze_doc(:) = c0 ! autotroph grazing losses routed to doc
-     auto_graze_dic(:) = c0 ! autotroph grazing losses routed to dic (computed by residual)
+      auto_graze(:,:)     = c0 ! total grazing losses from autotroph pool at auto_ind
+      auto_graze_zoo(:,:) = c0 ! autotroph grazing losses routed to zooplankton at auto_ind
+      auto_graze_poc(:,:) = c0 ! autotroph grazing losses routed to poc
+      auto_graze_doc(:,:) = c0 ! autotroph grazing losses routed to doc
+      auto_graze_dic(:,:) = c0 ! autotroph grazing losses routed to dic (computed by residual)
 
-     zoo_graze(:)     = c0 ! total grazing losses from zooplankton pool at zoo_ind
-     zoo_graze_zoo(:) = c0 ! zooplankton grazing losses routed to zooplankton at zoo_ind
-     zoo_graze_poc(:) = c0 ! zooplankton grazing losses routed to poc
-     zoo_graze_doc(:) = c0 ! zooplankton grazing losses routed to doc
-     zoo_graze_dic(:) = c0 ! zooplankton grazing losses routed to dic (computed by residual)
+      zoo_graze(:,:)     = c0 ! total grazing losses from zooplankton pool at zoo_ind
+      zoo_graze_zoo(:,:) = c0 ! zooplankton grazing losses routed to zooplankton at zoo_ind
+      zoo_graze_poc(:,:) = c0 ! zooplankton grazing losses routed to poc
+      zoo_graze_doc(:,:) = c0 ! zooplankton grazing losses routed to doc
+      zoo_graze_dic(:,:) = c0 ! zooplankton grazing losses routed to dic (computed by residual)
 
-     x_graze_zoo(:)   = c0 ! grazing gains by zooplankton at zoo_ind
+      x_graze_zoo(:,:)   = c0 ! grazing gains by zooplankton at zoo_ind
 
-     do pred_ind = 1, zooplankton_cnt
+      do k=1, km
+        do pred_ind = 1, zooplankton_cnt
 
-        work3 = c0
-        work4 = c0
+          work3 = c0
+          work4 = c0
 
-        do prey_ind = 1, max_grazer_prey_cnt
+          do prey_ind = 1, max_grazer_prey_cnt
 
-           !-----------------------------------------------------------------------
-           !  compute sum of carbon in the grazee class, both autotrophs and zoop
-           !-----------------------------------------------------------------------
-           work1 = c0 ! biomass in prey class prey_ind
-           do auto_ind2 = 1, grazer_settings(prey_ind, pred_ind)%auto_ind_cnt
+            !-----------------------------------------------------------------------
+            !  compute sum of carbon in the grazee class, both autotrophs and zoop
+            !-----------------------------------------------------------------------
+            work1 = c0 ! biomass in prey class prey_ind
+            do auto_ind2 = 1, grazer_settings(prey_ind, pred_ind)%auto_ind_cnt
               auto_ind = grazer_settings(prey_ind, pred_ind)%auto_ind(auto_ind2)
-              work1 = work1 + Pprime(auto_ind)
-           end do
+              work1 = work1 + Pprime(auto_ind,k)
+            end do
 
-           do zoo_ind2 = 1, grazer_settings(prey_ind, pred_ind)%zoo_ind_cnt
+            do zoo_ind2 = 1, grazer_settings(prey_ind, pred_ind)%zoo_ind_cnt
               zoo_ind = grazer_settings(prey_ind, pred_ind)%zoo_ind(zoo_ind2)
-              work1 = work1 + Zprime(zoo_ind)
-           end do
+              work1 = work1 + Zprime(zoo_ind,k)
+            end do
 
-           ! compute grazing rate
-           graze_rate = c0
-           select case (grazer_settings(prey_ind, pred_ind)%grazing_function)
+            ! compute grazing rate
+            graze_rate = c0
+            select case (grazer_settings(prey_ind, pred_ind)%grazing_function)
 
-           case (grz_fnc_michaelis_menten)
+              case (grz_fnc_michaelis_menten)
 
-              if (work1 > c0) then
-                 graze_rate = grazer_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_local%C(pred_ind,k) &
-                      * ( work1 / (work1 + grazer_settings(prey_ind, pred_ind)%z_grz) )
-              end if
+                if (work1 > c0) then
+                  graze_rate = grazer_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc(k) * zooplankton_local%C(pred_ind,k) &
+                             * ( work1 / (work1 + grazer_settings(prey_ind, pred_ind)%z_grz) )
+                end if
 
-           case (grz_fnc_sigmoidal)
+              case (grz_fnc_sigmoidal)
 
-              if (work1 > c0) then
-                 graze_rate = grazer_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_local%C(pred_ind,k) &
-                      * ( work1**2 / (work1**2 + grazer_settings(prey_ind, pred_ind)%z_grz**2) )
-              end if
+                if (work1 > c0) then
+                  graze_rate = grazer_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc(k) * zooplankton_local%C(pred_ind,k) &
+                             * ( work1**2 / (work1**2 + grazer_settings(prey_ind, pred_ind)%z_grz**2) )
+                end if
 
-           end select
+            end select
 
-           !-----------------------------------------------------------------------
-           !  autotroph prey
-           !-----------------------------------------------------------------------
+            !-----------------------------------------------------------------------
+            !  autotroph prey
+            !-----------------------------------------------------------------------
 
-           do auto_ind2 = 1, grazer_settings(prey_ind, pred_ind)%auto_ind_cnt
+            do auto_ind2 = 1, grazer_settings(prey_ind, pred_ind)%auto_ind_cnt
               auto_ind = grazer_settings(prey_ind, pred_ind)%auto_ind(auto_ind2)
 
               ! scale by biomass from autotroph pool
               if (work1 > c0) then
-                 work2 = (Pprime(auto_ind) / work1) * graze_rate ! total grazing loss from auto_ind
+                work2 = (Pprime(auto_ind,k) / work1) * graze_rate ! total grazing loss from auto_ind
               else
-                 work2 = c0
+                work2 = c0
               end if
-              auto_graze(auto_ind) = auto_graze(auto_ind) + work2
+              auto_graze(auto_ind,k) = auto_graze(auto_ind,k) + work2
 
               ! routed to zooplankton
-              auto_graze_zoo(auto_ind) = auto_graze_zoo(auto_ind) + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
-              x_graze_zoo(pred_ind)    = x_graze_zoo(pred_ind)    + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
+              auto_graze_zoo(auto_ind,k) = auto_graze_zoo(auto_ind,k) &
+                                         + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
+              x_graze_zoo(pred_ind,k)    = x_graze_zoo(pred_ind,k)    &
+                                         + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
 
               ! routed to POC
               if (autotroph_settings(auto_ind)%imp_calcifier) then
-                 auto_graze_poc(auto_ind) = auto_graze_poc(auto_ind) &
-                      + work2 * max((caco3_poc_min * QCaCO3(auto_ind)),  &
-                      min(spc_poc_fac * (Pprime(auto_ind)+0.6_r8)**1.6_r8,    &
-                      f_graze_sp_poc_lim))
+                auto_graze_poc(auto_ind,k) = auto_graze_poc(auto_ind,k) &
+                                           + work2 * max((caco3_poc_min * QCaCO3(auto_ind,k)),  &
+                                                         min(spc_poc_fac * (Pprime(auto_ind,k)+0.6_r8)**1.6_r8, &
+                                                             f_graze_sp_poc_lim))
               else
-                 auto_graze_poc(auto_ind) = auto_graze_poc(auto_ind) + grazer_settings(prey_ind, pred_ind)%graze_poc * work2
+                auto_graze_poc(auto_ind,k) = auto_graze_poc(auto_ind,k) &
+                                           + grazer_settings(prey_ind, pred_ind)%graze_poc * work2
               endif
 
               ! routed to DOC
-              auto_graze_doc(auto_ind) = auto_graze_doc(auto_ind) + grazer_settings(prey_ind, pred_ind)%graze_doc * work2
+              auto_graze_doc(auto_ind,k) = auto_graze_doc(auto_ind,k) &
+                                         + grazer_settings(prey_ind, pred_ind)%graze_doc * work2
 
               !  get fractional factor for routing of zoo losses, based on food supply
               work3 = work3 + grazer_settings(prey_ind, pred_ind)%f_zoo_detr * (work2 + epsC * epsTinv)
               work4 = work4 + (work2 + epsC * epsTinv)
 
-           end do
+            end do
 
-           !-----------------------------------------------------------------------
-           !  Zooplankton prey
-           !-----------------------------------------------------------------------
-           do zoo_ind2 = 1, grazer_settings(prey_ind, pred_ind)%zoo_ind_cnt
+            !-----------------------------------------------------------------------
+            !  Zooplankton prey
+            !-----------------------------------------------------------------------
+            do zoo_ind2 = 1, grazer_settings(prey_ind, pred_ind)%zoo_ind_cnt
               zoo_ind = grazer_settings(prey_ind, pred_ind)%zoo_ind(zoo_ind2)
 
               ! scale by biomass from zooplankton pool
               if (work1 > c0) then
-                 work2 = (Zprime(zoo_ind) / work1) * graze_rate
+                work2 = (Zprime(zoo_ind,k) / work1) * graze_rate
               else
-                 work2 = c0
+                work2 = c0
               end if
 
               ! grazing loss from zooplankton prey pool
-              zoo_graze(zoo_ind) = zoo_graze(zoo_ind) + work2
+              zoo_graze(zoo_ind,k) = zoo_graze(zoo_ind,k) + work2
 
               ! routed to zooplankton
-              zoo_graze_zoo(zoo_ind) = zoo_graze_zoo(zoo_ind) + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
-              x_graze_zoo(pred_ind) = x_graze_zoo(pred_ind)   + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
+              zoo_graze_zoo(zoo_ind,k) = zoo_graze_zoo(zoo_ind,k) &
+                                       + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
+              x_graze_zoo(pred_ind,k)  = x_graze_zoo(pred_ind,k)  &
+                                       + grazer_settings(prey_ind, pred_ind)%graze_zoo * work2
 
               ! routed to POC/DOC
-              zoo_graze_poc(zoo_ind) = zoo_graze_poc(zoo_ind) + grazer_settings(prey_ind, pred_ind)%graze_poc * work2
-              zoo_graze_doc(zoo_ind) = zoo_graze_doc(zoo_ind) + grazer_settings(prey_ind, pred_ind)%graze_doc * work2
+              zoo_graze_poc(zoo_ind,k) = zoo_graze_poc(zoo_ind,k) &
+                                       + grazer_settings(prey_ind, pred_ind)%graze_poc * work2
+              zoo_graze_doc(zoo_ind,k) = zoo_graze_doc(zoo_ind,k) &
+                                       + grazer_settings(prey_ind, pred_ind)%graze_doc * work2
 
               !  get fractional factor for routing of zoo losses, based on food supply
               work3 = work3 + grazer_settings(prey_ind, pred_ind)%f_zoo_detr * (work2 + epsC * epsTinv)
               work4 = work4 + (work2 + epsC * epsTinv)
 
-           end do
+            end do
+          end do
+          f_zoo_detr(pred_ind,k) = work3 / work4
+
         end do
+      end do
 
-        f_zoo_detr(pred_ind) = work3 / work4
-     end do
+    end associate
 
-     end associate
+  end subroutine compute_grazing
 
-   end subroutine compute_grazing
-
-   !***********************************************************************
+  !***********************************************************************
 
    subroutine compute_routing (k, zooplankton_derived_terms, autotroph_derived_terms)
 
