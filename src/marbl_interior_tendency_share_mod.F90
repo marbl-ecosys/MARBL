@@ -72,18 +72,18 @@ contains
        zooplankton_derived_terms, marbl_zooplankton_share)
 
     use marbl_interface_private_types, only : zooplankton_derived_terms_type
-    use marbl_pft_mod, only : zooplankton_local_type
+    use marbl_interface_private_types, only : zooplankton_local_type
     use marbl_pft_mod, only : marbl_zooplankton_share_type
 
     integer,                              intent(in)    :: k
-    type(zooplankton_local_type),         intent(in)    :: zooplankton_local(:)
+    type(zooplankton_local_type),         intent(in)    :: zooplankton_local
     type(zooplankton_derived_terms_type), intent(in)    :: zooplankton_derived_terms
     type(marbl_zooplankton_share_type),   intent(inout) :: marbl_zooplankton_share
 
     ! Populate fields used by carbon isotopes if running with ciso module
     if (ciso_on) then
       associate(share => marbl_zooplankton_share)
-         share%zoototC_loc_fields      = sum(zooplankton_local(:)%C)
+         share%zoototC_loc_fields      = sum(zooplankton_local%C(:,k))
          share%zootot_loss_fields      = sum(zooplankton_derived_terms%zoo_loss(:,k))
          share%zootot_loss_poc_fields  = sum(zooplankton_derived_terms%zoo_loss_poc(:,k))
          share%zootot_loss_doc_fields  = sum(zooplankton_derived_terms%zoo_loss_doc(:,k))

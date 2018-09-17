@@ -123,6 +123,15 @@ module marbl_interface_private_types
 
   !****************************************************************************
 
+  type, public :: zooplankton_local_type
+    real(r8), allocatable :: C(:,:)  ! local copy of model zooplankton C
+  contains
+    procedure, public :: construct => zooplankton_local_constructor
+    procedure, public :: destruct => zooplankton_local_destructor
+  end type zooplankton_local_type
+
+  !****************************************************************************
+
   ! derived type for implicit handling of sinking particulate matter
   type, public :: column_sinking_particle_type
      real(r8) :: diss                       ! dissolution length for soft subclass
@@ -1075,6 +1084,28 @@ contains
     deallocate(self%Zprime)
 
   end subroutine zooplankton_derived_terms_destructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_local_constructor(self, zooplankton_cnt, km)
+
+    class(zooplankton_local_type), intent(inout) :: self
+    integer,                       intent(in)    :: zooplankton_cnt
+    integer,                       intent(in)    :: km
+
+    allocate(self%C(zooplankton_cnt, km))
+
+  end subroutine zooplankton_local_constructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_local_destructor(self)
+
+    class(zooplankton_local_type), intent(inout) :: self
+
+    deallocate(self%C)
+
+  end subroutine zooplankton_local_destructor
 
   !*****************************************************************************
 

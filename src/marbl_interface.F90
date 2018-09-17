@@ -41,6 +41,7 @@ module marbl_interface
   use marbl_interface_private_types, only : autotroph_derived_terms_type
   use marbl_interface_private_types, only : autotroph_local_type
   use marbl_interface_private_types, only : zooplankton_derived_terms_type
+  use marbl_interface_private_types, only : zooplankton_local_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
@@ -111,6 +112,7 @@ module marbl_interface
      type(autotroph_derived_terms_type),     private :: autotroph_derived_terms
      type(autotroph_local_type),             private :: autotroph_local
      type(zooplankton_derived_terms_type),   private :: zooplankton_derived_terms
+     type(zooplankton_local_type),           private :: zooplankton_local
      type(marbl_particulate_share_type),     private :: particulate_share
      type(marbl_surface_flux_share_type),    private :: surface_flux_share
      type(marbl_surface_flux_internal_type), private :: surface_flux_internal
@@ -270,6 +272,7 @@ contains
     call this%autotroph_derived_terms%construct(autotroph_cnt, num_levels)
     call this%autotroph_local%construct(ciso_on, autotroph_cnt, num_levels)
     call this%zooplankton_derived_terms%construct(zooplankton_cnt, num_levels)
+    call this%zooplankton_local%construct(zooplankton_cnt, num_levels)
 
     !-----------------------------------------------------------------------
     !  Set up tracers
@@ -861,6 +864,7 @@ contains
          autotroph_derived_terms           = this%autotroph_derived_terms,          &
          autotroph_local                   = this%autotroph_local,                  &
          zooplankton_derived_terms         = this%zooplankton_derived_terms,        &
+         zooplankton_local                 = this%zooplankton_local,                &
          saved_state                       = this%interior_tendency_saved_state,    &
          marbl_timers                      = this%timers,                           &
          marbl_particulate_share           = this%particulate_share,                &
@@ -1013,6 +1017,7 @@ contains
     call this%autotroph_derived_terms%destruct()
     call this%autotroph_local%destruct()
     call this%zooplankton_derived_terms%destruct()
+    call this%zooplankton_local%destruct()
     call this%domain%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)

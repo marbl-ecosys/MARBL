@@ -19,6 +19,7 @@ module marbl_interior_tendency_mod
   use marbl_interface_private_types, only : autotroph_derived_terms_type
   use marbl_interface_private_types, only : autotroph_local_type
   use marbl_interface_private_types, only : zooplankton_derived_terms_type
+  use marbl_interface_private_types, only : zooplankton_local_type
   use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
@@ -75,7 +76,6 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : phlo_3d_init
 
   use marbl_pft_mod, only : marbl_zooplankton_share_type
-  use marbl_pft_mod, only : zooplankton_local_type
   use marbl_pft_mod, only : Qp_zoo
 
   implicit none
@@ -101,6 +101,7 @@ contains
        autotroph_derived_terms,               &
        autotroph_local,                       &
        zooplankton_derived_terms,             &
+       zooplankton_local,                     &
        saved_state,                           &
        marbl_timers,                          &
        marbl_particulate_share,               &
@@ -136,6 +137,7 @@ contains
     type(autotroph_derived_terms_type),                      intent(inout) :: autotroph_derived_terms
     type(autotroph_local_type),                              intent(inout) :: autotroph_local
     type(zooplankton_derived_terms_type),                    intent(inout) :: zooplankton_derived_terms
+    type(zooplankton_local_type),                            intent(inout) :: zooplankton_local
     type(marbl_saved_state_type),                            intent(inout) :: saved_state
     type(marbl_internal_timers_type),                        intent(inout) :: marbl_timers
     type(marbl_particulate_share_type),                      intent(inout) :: marbl_particulate_share
@@ -181,7 +183,6 @@ contains
     real (r8) :: Lig_loss(domain%km)         ! loss of Fe-binding Ligand
     real (r8) :: totalChl_local(domain%km)   ! local value of totalChl
 
-    type(zooplankton_local_type)             :: zooplankton_local(zooplankton_cnt, domain%km)
     type(dissolved_organic_matter_type)      :: dissolved_organic_matter(domain%km)
     type(carbonate_type)                     :: carbonate(domain%km)
 
@@ -288,7 +289,7 @@ contains
     !-----------------------------------------------------------------------
 
     call setup_local_tracers(kmt, marbl_tracer_indices, tracers(:,:), autotroph_local, &
-         tracer_local(:,:), zooplankton_local(:,:), totalChl_local)
+         tracer_local(:,:), zooplankton_local, totalChl_local)
 
     call set_surface_particulate_terms(surface_flux_forcing_indices, POC, POP, P_CaCO3, &
          P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
@@ -332,9 +333,9 @@ contains
 
     do k = 1, km
 
-       call compute_Zprime(k, domain, zooplankton_local(:, k)%C, Tfunc(k), zooplankton_derived_terms)
+       call compute_Zprime(k, domain, zooplankton_local%C(:, k), Tfunc(k), zooplankton_derived_terms)
 
-       call compute_grazing(k, Tfunc(k), zooplankton_local(:, k), &
+       call compute_grazing(k, Tfunc(k), zooplankton_local, &
             zooplankton_derived_terms, autotroph_derived_terms)
 
        call compute_routing(k, zooplankton_derived_terms, autotroph_derived_terms)
@@ -411,7 +412,7 @@ contains
             marbl_tracer_indices, carbonate(k), dissolved_organic_matter(k),   &
             QA_dust_def(k), marbl_interior_tendency_share(k))
 
-       call marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local(:, k), &
+       call marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local, &
             zooplankton_derived_terms, marbl_zooplankton_share(k))
 
        if  (k < km) then
@@ -705,7 +706,7 @@ contains
      real (r8)                    , intent(in)    :: tracers(:,:)
      type(autotroph_local_type)   , intent(inout) :: autotroph_local
      real (r8)                    , intent(out)   :: tracer_local(:,:)
-     type(zooplankton_local_type) , intent(out)   :: zooplankton_local(:,:)
+     type(zooplankton_local_type) , intent(inout) :: zooplankton_local
      real (r8)                    , intent(out)   :: totalChl_local(:)
 
      !-----------------------------------------------------------------------
@@ -729,7 +730,7 @@ contains
 
      do zoo_ind = 1, zooplankton_cnt
         n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
-        zooplankton_local(zoo_ind,:)%C = tracer_local(n,:)
+        zooplankton_local%C(zoo_ind,:) = tracer_local(n,:)
      end do
 
      !-----------------------------------------------------------------------
@@ -1748,7 +1749,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_grazing(k, Tfunc, zooplankton_loc, &
+   subroutine compute_grazing(k, Tfunc, zooplankton_local, &
         zooplankton_derived_terms, autotroph_derived_terms)
 
      !-----------------------------------------------------------------------
@@ -1770,7 +1771,7 @@ contains
 
      integer,                              intent(in)    :: k
      real(r8),                             intent(in)    :: Tfunc
-     type(zooplankton_local_type),         intent(in)    :: zooplankton_loc(zooplankton_cnt)
+     type(zooplankton_local_type),         intent(in)    :: zooplankton_local
      type(zooplankton_derived_terms_type), intent(inout) :: zooplankton_derived_terms
      type(autotroph_derived_terms_type),   intent(inout) :: autotroph_derived_terms
 
@@ -1845,14 +1846,14 @@ contains
            case (grz_fnc_michaelis_menten)
 
               if (work1 > c0) then
-                 graze_rate = grazer_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_loc(pred_ind)%C &
+                 graze_rate = grazer_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_local%C(pred_ind,k) &
                       * ( work1 / (work1 + grazer_settings(prey_ind, pred_ind)%z_grz) )
               end if
 
            case (grz_fnc_sigmoidal)
 
               if (work1 > c0) then
-                 graze_rate = grazer_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_loc(pred_ind)%C &
+                 graze_rate = grazer_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc * zooplankton_local%C(pred_ind,k) &
                       * ( work1**2 / (work1**2 + grazer_settings(prey_ind, pred_ind)%z_grz**2) )
               end if
 

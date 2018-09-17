@@ -60,11 +60,6 @@ module marbl_pft_mod
      procedure, public :: set_to_default => zooplankton_set_to_default
   end type zooplankton_settings_type
 
-  type, public :: zooplankton_local_type
-    ! FIXME #316: replace with indices into tracer_local
-    real (r8) :: C  ! local copy of model zooplankton C
-  end type zooplankton_local_type
-
   !****************************************************************************
   ! derived types for grazer settings
 
