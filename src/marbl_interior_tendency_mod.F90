@@ -335,9 +335,9 @@ contains
 
     call compute_grazing(km, Tfunc, zooplankton_local, zooplankton_derived_terms, autotroph_derived_terms)
 
-    do k = 1, km
+    call compute_routing(km, zooplankton_derived_terms, autotroph_derived_terms)
 
-       call compute_routing(k, zooplankton_derived_terms, autotroph_derived_terms)
+    do k = 1, km
 
        call compute_dissolved_organic_matter (k, num_PAR_subcols, &
             zooplankton_derived_terms, autotroph_derived_terms,   &
@@ -1947,107 +1947,110 @@ contains
 
   !***********************************************************************
 
-   subroutine compute_routing (k, zooplankton_derived_terms, autotroph_derived_terms)
+  subroutine compute_routing(km, zooplankton_derived_terms, autotroph_derived_terms)
 
-     use marbl_settings_mod, only : parm_labile_ratio
-     use marbl_settings_mod, only : f_toDOP
+    use marbl_settings_mod, only : parm_labile_ratio
+    use marbl_settings_mod, only : f_toDOP
 
-     integer,                              intent(in)    :: k
-     type(zooplankton_derived_terms_type), intent(inout) :: zooplankton_derived_terms
-     type(autotroph_derived_terms_type),   intent(inout) :: autotroph_derived_terms
+    integer,                              intent(in)    :: km
+    type(zooplankton_derived_terms_type), intent(inout) :: zooplankton_derived_terms
+    type(autotroph_derived_terms_type),   intent(inout) :: autotroph_derived_terms
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     integer  :: auto_ind, zoo_ind
-     real(r8) :: remaining_P      ! used in routing P from autotrophs
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: k, auto_ind, zoo_ind
+    real(r8) :: remaining_P      ! used in routing P from autotrophs
+    !-----------------------------------------------------------------------
 
-     associate(                                                           &
-          Qp              => autotroph_derived_terms%Qp(:,k),             & ! input
-          auto_graze      => autotroph_derived_terms%auto_graze(:,k),     & ! input
-          auto_graze_zoo  => autotroph_derived_terms%auto_graze_zoo(:,k), & ! input
-          auto_graze_poc  => autotroph_derived_terms%auto_graze_poc(:,k), & ! input
-          auto_graze_doc  => autotroph_derived_terms%auto_graze_doc(:,k), & ! input
-          auto_loss       => autotroph_derived_terms%auto_loss(:,k),      & ! input
-          auto_loss_poc   => autotroph_derived_terms%auto_loss_poc(:,k),  & ! input
-          auto_agg        => autotroph_derived_terms%auto_agg(:,k),       & ! input
+    associate(                                                           &
+         Qp              => autotroph_derived_terms%Qp(:,:),             & ! input
+         auto_graze      => autotroph_derived_terms%auto_graze(:,:),     & ! input
+         auto_graze_zoo  => autotroph_derived_terms%auto_graze_zoo(:,:), & ! input
+         auto_graze_poc  => autotroph_derived_terms%auto_graze_poc(:,:), & ! input
+         auto_graze_doc  => autotroph_derived_terms%auto_graze_doc(:,:), & ! input
+         auto_loss       => autotroph_derived_terms%auto_loss(:,:),      & ! input
+         auto_loss_poc   => autotroph_derived_terms%auto_loss_poc(:,:),  & ! input
+         auto_agg        => autotroph_derived_terms%auto_agg(:,:),       & ! input
 
-          zoo_graze       => zooplankton_derived_terms%zoo_graze(:,k),     & ! input
-          zoo_graze_poc   => zooplankton_derived_terms%zoo_graze_poc(:,k), & ! input
-          zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,k), & ! input
-          zoo_graze_zoo   => zooplankton_derived_terms%zoo_graze_zoo(:,k), & ! input
-          zoo_loss        => zooplankton_derived_terms%zoo_loss(:,k),      & ! input
-          f_zoo_detr      => zooplankton_derived_terms%f_zoo_detr(:,k),    & ! input
+         zoo_graze       => zooplankton_derived_terms%zoo_graze(:,:),     & ! input
+         zoo_graze_poc   => zooplankton_derived_terms%zoo_graze_poc(:,:), & ! input
+         zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,:), & ! input
+         zoo_graze_zoo   => zooplankton_derived_terms%zoo_graze_zoo(:,:), & ! input
+         zoo_loss        => zooplankton_derived_terms%zoo_loss(:,:),      & ! input
+         f_zoo_detr      => zooplankton_derived_terms%f_zoo_detr(:,:),    & ! input
 
-          auto_graze_dic  => autotroph_derived_terms%auto_graze_dic(:,k),  & ! output
-          remaining_P_dop => autotroph_derived_terms%remaining_P_dop(:,k), & ! output
-          remaining_P_pop => autotroph_derived_terms%remaining_P_pop(:,k), & ! output
-          remaining_P_dip => autotroph_derived_terms%remaining_P_dip(:,k), & ! output
+         auto_graze_dic  => autotroph_derived_terms%auto_graze_dic(:,:),  & ! output
+         remaining_P_dop => autotroph_derived_terms%remaining_P_dop(:,:), & ! output
+         remaining_P_pop => autotroph_derived_terms%remaining_P_pop(:,:), & ! output
+         remaining_P_dip => autotroph_derived_terms%remaining_P_dip(:,:), & ! output
 
-          zoo_graze_dic   => zooplankton_derived_terms%zoo_graze_dic(:,k), & ! output
-          zoo_loss_poc    => zooplankton_derived_terms%zoo_loss_poc(:,k),  & ! output
-          zoo_loss_doc    => zooplankton_derived_terms%zoo_loss_doc(:,k),  & ! output
-          zoo_loss_dic    => zooplankton_derived_terms%zoo_loss_dic(:,k)   & ! output
-          )
+         zoo_graze_dic   => zooplankton_derived_terms%zoo_graze_dic(:,:), & ! output
+         zoo_loss_poc    => zooplankton_derived_terms%zoo_loss_poc(:,:),  & ! output
+         zoo_loss_doc    => zooplankton_derived_terms%zoo_loss_doc(:,:),  & ! output
+         zoo_loss_dic    => zooplankton_derived_terms%zoo_loss_dic(:,:)   & ! output
+         )
 
-     !-----------------------------------------------------------------------
-     ! compute routing to dic of grazed material
-     ! call this and the one below compute_routing
-     !-----------------------------------------------------------------------
-     do auto_ind = 1, autotroph_cnt
-        auto_graze_dic(auto_ind) = auto_graze(auto_ind) &
-             - (auto_graze_zoo(auto_ind) + auto_graze_poc(auto_ind) + auto_graze_doc(auto_ind))
-     end do
-     do zoo_ind = 1, zooplankton_cnt
-        zoo_graze_dic(zoo_ind) = zoo_graze(zoo_ind)  &
-             - (zoo_graze_zoo(zoo_ind) + zoo_graze_poc(zoo_ind) + zoo_graze_doc(zoo_ind))
-     end do
-
-     !-----------------------------------------------------------------------
-     ! compute zooplankton loss routing
-     ! call this compute_routing_zooplankton_loss
-     !-----------------------------------------------------------------------
-     do zoo_ind = 1, zooplankton_cnt
-        zoo_loss_poc(zoo_ind) = f_zoo_detr(zoo_ind) * zoo_loss(zoo_ind)
-        zoo_loss_doc(zoo_ind) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind)) * zoo_loss(zoo_ind)
-        zoo_loss_dic(zoo_ind) = parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind)) * zoo_loss(zoo_ind)
-     end do
-
-     !-----------------------------------------------------------------------
-     ! We ensure the zooplankton pool gets its Pquota, fixed P/C ratio,
-     ! sinking POP is routed as POC * autoQp, but reduced where insuffient P is available
-     ! The remaining P is split between DOP and PO4.
-     !-----------------------------------------------------------------------
-
-     do auto_ind = 1, autotroph_cnt
-        remaining_P_pop(auto_ind) = (auto_graze_poc(auto_ind) + auto_loss_poc(auto_ind) + auto_agg(auto_ind)) * Qp(auto_ind)
-
-        remaining_P = (auto_graze(auto_ind) + auto_loss(auto_ind) + auto_agg(auto_ind)) * Qp(auto_ind) &
-           - auto_graze_zoo(auto_ind) * Qp_zoo - remaining_P_pop(auto_ind)
+      do k=1,km
+        !-----------------------------------------------------------------------
+        ! compute routing to dic of grazed material
+        !-----------------------------------------------------------------------
+        do auto_ind = 1, autotroph_cnt
+          auto_graze_dic(auto_ind,k) = auto_graze(auto_ind,k) &
+                                     - (auto_graze_zoo(auto_ind,k) + auto_graze_poc(auto_ind,k) &
+                                        + auto_graze_doc(auto_ind,k))
+        end do
+        do zoo_ind = 1, zooplankton_cnt
+          zoo_graze_dic(zoo_ind,k) = zoo_graze(zoo_ind,k)  &
+                                   - (zoo_graze_zoo(zoo_ind,k) + zoo_graze_poc(zoo_ind,k) + zoo_graze_doc(zoo_ind,k))
+        end do
 
         !-----------------------------------------------------------------------
-        ! reduce sinking pop if remaining_P is negative
+        ! compute zooplankton loss routing
         !-----------------------------------------------------------------------
-        if (remaining_P < c0) then
-           remaining_P_pop(auto_ind) = remaining_P_pop(auto_ind) + remaining_P
-           remaining_P = c0
-        endif
+        do zoo_ind = 1, zooplankton_cnt
+          zoo_loss_poc(zoo_ind,k) = f_zoo_detr(zoo_ind,k) * zoo_loss(zoo_ind,k)
+          zoo_loss_doc(zoo_ind,k) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss(zoo_ind,k)
+          zoo_loss_dic(zoo_ind,k) = parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss(zoo_ind,k)
+        end do
 
         !-----------------------------------------------------------------------
-        ! increase fraction routed to dop, relative to doc 0.06, 0.94
-        !    better matches DOP obs with var P quotas
+        ! We ensure the zooplankton pool gets its Pquota, fixed P/C ratio,
+        ! sinking POP is routed as POC * autoQp, but reduced where insuffient P is available
+        ! The remaining P is split between DOP and PO4.
         !-----------------------------------------------------------------------
 
-        remaining_P_dop(auto_ind) = f_toDOP * remaining_P
-        remaining_P_dip(auto_ind) = (c1 - f_toDOP) * remaining_P
-     end do
+        do auto_ind = 1, autotroph_cnt
+          remaining_P_pop(auto_ind,k) = (auto_graze_poc(auto_ind,k) + auto_loss_poc(auto_ind,k) + auto_agg(auto_ind,k)) &
+                                    * Qp(auto_ind,k)
 
-     end associate
+          remaining_P = (auto_graze(auto_ind,k) + auto_loss(auto_ind,k) + auto_agg(auto_ind,k)) * Qp(auto_ind,k) &
+                      - auto_graze_zoo(auto_ind,k) * Qp_zoo - remaining_P_pop(auto_ind,k)
 
-   end subroutine compute_routing
+          !-----------------------------------------------------------------------
+          ! reduce sinking pop if remaining_P is negative
+          !-----------------------------------------------------------------------
+          if (remaining_P < c0) then
+            remaining_P_pop(auto_ind,k) = remaining_P_pop(auto_ind,k) + remaining_P
+            remaining_P = c0
+          endif
 
-   !***********************************************************************
+          !-----------------------------------------------------------------------
+          ! increase fraction routed to dop, relative to doc 0.06, 0.94
+          !    better matches DOP obs with var P quotas
+          !-----------------------------------------------------------------------
+
+          remaining_P_dop(auto_ind,k) = f_toDOP * remaining_P
+          remaining_P_dip(auto_ind,k) = (c1 - f_toDOP) * remaining_P
+
+        end do
+      end do
+
+    end associate
+
+  end subroutine compute_routing
+
+  !***********************************************************************
 
    subroutine compute_dissolved_organic_matter (k, &
               PAR_nsubcols, zooplankton_derived_terms, &
