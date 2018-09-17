@@ -328,9 +328,9 @@ contains
 
     call compute_autotroph_nfixation(km, autotroph_derived_terms)
 
-    do k = 1, km
+    call compute_autotroph_loss(km, Tfunc, autotroph_derived_terms)
 
-       call compute_autotroph_loss(k, Tfunc(k), autotroph_derived_terms)
+    do k = 1, km
 
        call compute_Zprime(k, domain, zooplankton_local(:, k)%C, Tfunc(k), zooplankton_derived_terms)
 
@@ -1634,66 +1634,70 @@ contains
 
   end subroutine compute_autotroph_nutrient_uptake
 
-   !***********************************************************************
+  !***********************************************************************
 
-   subroutine compute_autotroph_loss (k, Tfunc, autotroph_derived_terms)
+  subroutine compute_autotroph_loss(km, Tfunc, autotroph_derived_terms)
 
-     !-----------------------------------------------------------------------
-     ! Compute autotroph-loss, autotroph aggregation loss and routine of
-     ! loss terms
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    ! Compute autotroph-loss, autotroph aggregation loss and routine of
+    ! loss terms
+    !-----------------------------------------------------------------------
 
-     integer,                            intent(in)    :: k
-     real(r8),                           intent(in)    :: Tfunc
-     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
+    integer,                            intent(in)    :: km
+    real(r8),                           intent(in)    :: Tfunc(km)
+    type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     integer  :: auto_ind
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: k, auto_ind
+    !-----------------------------------------------------------------------
 
-     associate(                                                         &
-          QCaCO3        => autotroph_derived_terms%QCaCO3(:, k)       , & ! input
-          Pprime        => autotroph_derived_terms%Pprime(:, k)       , & ! input
-          auto_loss     => autotroph_derived_terms%auto_loss(:, k)    , & ! output
-          auto_loss_poc => autotroph_derived_terms%auto_loss_poc(:, k), & ! output
-          auto_loss_dic => autotroph_derived_terms%auto_loss_dic(:, k), & ! output
-          auto_loss_doc => autotroph_derived_terms%auto_loss_doc(:, k), & ! output
-          auto_agg      => autotroph_derived_terms%auto_agg(:, k)       & ! output
-          )
+    associate(                                                         &
+         QCaCO3        => autotroph_derived_terms%QCaCO3(:, :)       , & ! input
+         Pprime        => autotroph_derived_terms%Pprime(:, :)       , & ! input
+         auto_loss     => autotroph_derived_terms%auto_loss(:, :)    , & ! output
+         auto_loss_poc => autotroph_derived_terms%auto_loss_poc(:, :), & ! output
+         auto_loss_dic => autotroph_derived_terms%auto_loss_dic(:, :), & ! output
+         auto_loss_doc => autotroph_derived_terms%auto_loss_doc(:, :), & ! output
+         auto_agg      => autotroph_derived_terms%auto_agg(:, :)       & ! output
+         )
 
-     do auto_ind = 1, autotroph_cnt
-        !-----------------------------------------------------------------------
-        !  get autotroph loss (in C units)
-        !  autotroph agg loss
-        !-----------------------------------------------------------------------
+      do k=1,km
+        do auto_ind = 1, autotroph_cnt
+          !-----------------------------------------------------------------------
+          !  get autotroph loss (in C units)
+          !  autotroph agg loss
+          !-----------------------------------------------------------------------
 
-        auto_loss(auto_ind) = autotroph_settings(auto_ind)%mort * Pprime(auto_ind) * Tfunc
+          auto_loss(auto_ind,k) = autotroph_settings(auto_ind)%mort * Pprime(auto_ind,k) * Tfunc(k)
 
-        auto_agg(auto_ind) = min((autotroph_settings(auto_ind)%agg_rate_max * dps) * Pprime(auto_ind), &
-             autotroph_settings(auto_ind)%mort2 * Pprime(auto_ind)**1.75_r8)
-        auto_agg(auto_ind) = max((autotroph_settings(auto_ind)%agg_rate_min * dps) * Pprime(auto_ind), auto_agg(auto_ind))
+          auto_agg(auto_ind,k) = min((autotroph_settings(auto_ind)%agg_rate_max * dps) * Pprime(auto_ind,k), &
+                                     autotroph_settings(auto_ind)%mort2 * Pprime(auto_ind,k)**1.75_r8)
+          auto_agg(auto_ind,k) = max((autotroph_settings(auto_ind)%agg_rate_min * dps) * Pprime(auto_ind,k), &
+                                     auto_agg(auto_ind,k))
 
-        !-----------------------------------------------------------------------
-        !  routing of loss terms
-        !  all aggregation goes to POM
-        !  min.%C routed from sp_loss = 0.59 * QCaCO3, or P_CaCO3%rho
-        !-----------------------------------------------------------------------
+          !-----------------------------------------------------------------------
+          !  routing of loss terms
+          !  all aggregation goes to POM
+          !  min.%C routed from sp_loss = 0.59 * QCaCO3, or P_CaCO3%rho
+          !-----------------------------------------------------------------------
 
-        if (autotroph_settings(auto_ind)%imp_calcifier) then
-           auto_loss_poc(auto_ind) = QCaCO3(auto_ind) * auto_loss(auto_ind)
-        else
-           auto_loss_poc(auto_ind) = autotroph_settings(auto_ind)%loss_poc * auto_loss(auto_ind)
-        endif
-        auto_loss_doc(auto_ind) = (c1 - parm_labile_ratio) * (auto_loss(auto_ind) - auto_loss_poc(auto_ind))
-        auto_loss_dic(auto_ind) = parm_labile_ratio * (auto_loss(auto_ind) - auto_loss_poc(auto_ind))
-     end do  ! auto_ind = 1, autotroph_cnt
+          if (autotroph_settings(auto_ind)%imp_calcifier) then
+            auto_loss_poc(auto_ind,k) = QCaCO3(auto_ind,k) * auto_loss(auto_ind,k)
+          else
+            auto_loss_poc(auto_ind,k) = autotroph_settings(auto_ind)%loss_poc * auto_loss(auto_ind,k)
+          endif
+          auto_loss_doc(auto_ind,k) = (c1 - parm_labile_ratio) * (auto_loss(auto_ind,k) - auto_loss_poc(auto_ind,k))
+          auto_loss_dic(auto_ind,k) = parm_labile_ratio * (auto_loss(auto_ind,k) - auto_loss_poc(auto_ind,k))
+        end do  ! auto_ind = 1, autotroph_cnt
+      end do
 
-     end associate
-   end subroutine compute_autotroph_loss
+    end associate
 
-   !***********************************************************************
+  end subroutine compute_autotroph_loss
+
+  !***********************************************************************
 
    subroutine compute_Zprime(k, domain, zooC, Tfunc, zooplankton_derived_terms)
 
