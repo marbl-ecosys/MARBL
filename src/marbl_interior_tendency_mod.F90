@@ -324,10 +324,9 @@ contains
 
     call compute_autotroph_nutrient_uptake(km, marbl_tracer_indices, autotroph_derived_terms)
 
-    do k = 1, km
+    call compute_autotroph_calcification(km, autotroph_local, temperature, autotroph_derived_terms)
 
-       call compute_autotroph_calcification(k, autotroph_local, temperature(k), &
-            autotroph_derived_terms)
+    do k = 1, km
 
        call compute_autotroph_nfixation(k, autotroph_derived_terms)
 
@@ -1376,57 +1375,61 @@ contains
 
   !***********************************************************************
 
-   subroutine compute_autotroph_calcification (k, autotroph_local, temperature, autotroph_derived_terms)
+  subroutine compute_autotroph_calcification(km, autotroph_local, temperature, autotroph_derived_terms)
 
-     !-----------------------------------------------------------------------
-     !  CaCO3 Production, parameterized as function of small phyto production
-     !  decrease CaCO3 as function of nutrient limitation decrease CaCO3 prod
-     !  at low temperatures increase CaCO3 prod under bloom conditions
-     !  maximum calcification rate is 40% of primary production
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  CaCO3 Production, parameterized as function of small phyto production
+    !  decrease CaCO3 as function of nutrient limitation decrease CaCO3 prod
+    !  at low temperatures increase CaCO3 prod under bloom conditions
+    !  maximum calcification rate is 40% of primary production
+    !-----------------------------------------------------------------------
 
-     use marbl_settings_mod, only : parm_f_prod_sp_CaCO3
-     use marbl_settings_mod, only : CaCO3_sp_thres
-     use marbl_settings_mod, only : CaCO3_temp_thres1
-     use marbl_settings_mod, only : CaCO3_temp_thres2
-     use marbl_settings_mod, only : f_photosp_CaCO3
+    use marbl_settings_mod, only : parm_f_prod_sp_CaCO3
+    use marbl_settings_mod, only : CaCO3_sp_thres
+    use marbl_settings_mod, only : CaCO3_temp_thres1
+    use marbl_settings_mod, only : CaCO3_temp_thres2
+    use marbl_settings_mod, only : f_photosp_CaCO3
 
-     integer,                            intent(in)    :: k
-     type(autotroph_local_type),         intent(in)    :: autotroph_local
-     real(r8),                           intent(in)    :: temperature
-     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
+    integer,                            intent(in)    :: km
+    type(autotroph_local_type),         intent(in)    :: autotroph_local
+    real(r8),                           intent(in)    :: temperature(km)
+    type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     integer  :: auto_ind
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: k, auto_ind
+    !-----------------------------------------------------------------------
 
-     associate(                                                 &
-          f_nut      => autotroph_derived_terms%f_nut(:,k),     & ! input
-          photoC     => autotroph_derived_terms%photoC(:,k),    & ! input
-          CaCO3_form => autotroph_derived_terms%CaCO3_form(:,k) & ! output
-          )
+    associate(                                                 &
+         f_nut      => autotroph_derived_terms%f_nut(:,:),     & ! input
+         photoC     => autotroph_derived_terms%photoC(:,:),    & ! input
+         CaCO3_form => autotroph_derived_terms%CaCO3_form(:,:) & ! output
+         )
 
-     do auto_ind = 1, autotroph_cnt
-        if (autotroph_settings(auto_ind)%imp_calcifier) then
-           CaCO3_form(auto_ind) = parm_f_prod_sp_CaCO3 * photoC(auto_ind)
-           CaCO3_form(auto_ind) = CaCO3_form(auto_ind) * f_nut(auto_ind) * f_nut(auto_ind)
+      do k=1, km
+        do auto_ind = 1, autotroph_cnt
+          if (autotroph_settings(auto_ind)%imp_calcifier) then
+            CaCO3_form(auto_ind,k) = parm_f_prod_sp_CaCO3 * photoC(auto_ind,k)
+            CaCO3_form(auto_ind,k) = CaCO3_form(auto_ind,k) * f_nut(auto_ind,k) * f_nut(auto_ind,k)
 
-           if (temperature < CaCO3_temp_thres1)  then
-              CaCO3_form(auto_ind) = CaCO3_form(auto_ind) * max((temperature - CaCO3_temp_thres2), c0) / &
+            if (temperature(k) < CaCO3_temp_thres1)  then
+              CaCO3_form(auto_ind,k) = CaCO3_form(auto_ind,k) * max((temperature(k) - CaCO3_temp_thres2), c0) / &
                    (CaCO3_temp_thres1-CaCO3_temp_thres2)
-           end if
+            end if
 
-           if (autotroph_local%C(auto_ind,k) > CaCO3_sp_thres) then
-              CaCO3_form(auto_ind) = min((CaCO3_form(auto_ind) * autotroph_local%C(auto_ind,k) / CaCO3_sp_thres), &
-                   (f_photosp_CaCO3 * photoC(auto_ind)))
-           end if
-        end if
-     end do
+            if (autotroph_local%C(auto_ind,k) > CaCO3_sp_thres) then
+              CaCO3_form(auto_ind,k) = min((CaCO3_form(auto_ind,k) * autotroph_local%C(auto_ind,k) / CaCO3_sp_thres), &
+                   (f_photosp_CaCO3 * photoC(auto_ind,k)))
+            end if
+          end if
 
-     end associate
-   end subroutine compute_autotroph_calcification
+        end do
+      end do
+
+    end associate
+
+  end subroutine compute_autotroph_calcification
 
   !***********************************************************************
 
