@@ -331,9 +331,9 @@ contains
 
     call compute_autotroph_loss(km, Tfunc, autotroph_derived_terms)
 
-    do k = 1, km
+    call compute_Zprime(km, domain%zt, zooplankton_local%C, Tfunc, zooplankton_derived_terms)
 
-       call compute_Zprime(k, domain, zooplankton_local%C(:, k), Tfunc(k), zooplankton_derived_terms)
+    do k = 1, km
 
        call compute_grazing(k, Tfunc(k), zooplankton_local, &
             zooplankton_derived_terms, autotroph_derived_terms)
@@ -1700,52 +1700,54 @@ contains
 
   !***********************************************************************
 
-   subroutine compute_Zprime(k, domain, zooC, Tfunc, zooplankton_derived_terms)
+  subroutine compute_Zprime(km, zt, zooC, Tfunc, zooplankton_derived_terms)
 
-     use marbl_settings_mod, only : thres_z1_zoo
-     use marbl_settings_mod, only : thres_z2_zoo
+    use marbl_settings_mod, only : thres_z1_zoo
+    use marbl_settings_mod, only : thres_z2_zoo
 
-     integer(int_kind),                    intent(in)    :: k
-     type(marbl_domain_type),              intent(in)    :: domain
-     real(r8),                             intent(in)    :: zooC(zooplankton_cnt)
-     real(r8),                             intent(in)    :: Tfunc
-     type(zooplankton_derived_terms_type), intent(inout) :: zooplankton_derived_terms
+    integer(int_kind),                    intent(in)    :: km
+    real(r8),                             intent(in)    :: zt(km)
+    real(r8),                             intent(in)    :: zooC(zooplankton_cnt,km)
+    real(r8),                             intent(in)    :: Tfunc(km)
+    type(zooplankton_derived_terms_type), intent(inout) :: zooplankton_derived_terms
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     integer  :: zoo_ind
-     real(r8) :: f_loss_thres
-     real(r8) :: C_loss_thres
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: k, zoo_ind
+    real(r8) :: f_loss_thres
+    real(r8) :: C_loss_thres
+    !-----------------------------------------------------------------------
 
-     associate(                                               &
-          zt       => domain%zt(:),                           & !(km)
-          Zprime   => zooplankton_derived_terms%Zprime(:,k),  & !(zooplankton_cnt)
-          zoo_loss => zooplankton_derived_terms%zoo_loss(:,k) & !(zooplankton_cnt) output
-          )
+    associate(                                               &
+         Zprime   => zooplankton_derived_terms%Zprime(:,:),  & !(zooplankton_cnt)
+         zoo_loss => zooplankton_derived_terms%zoo_loss(:,:) & !(zooplankton_cnt) output
+         )
 
-     !  calculate the loss threshold interpolation factor
-     if (zt(k) > thres_z1_zoo) then
-        if (zt(k) < thres_z2_zoo) then
-           f_loss_thres = (thres_z2_zoo - zt(k))/(thres_z2_zoo - thres_z1_zoo)
+      do k=1,km
+        !  calculate the loss threshold interpolation factor
+        if (zt(k) > thres_z1_zoo) then
+          if (zt(k) < thres_z2_zoo) then
+            f_loss_thres = (thres_z2_zoo - zt(k))/(thres_z2_zoo - thres_z1_zoo)
+          else
+            f_loss_thres = c0
+          endif
         else
-           f_loss_thres = c0
+          f_loss_thres = c1
         endif
-     else
-        f_loss_thres = c1
-     endif
 
-     do zoo_ind = 1, zooplankton_cnt
-        C_loss_thres = f_loss_thres * zooplankton_settings(zoo_ind)%loss_thres
-        Zprime(zoo_ind) = max(zooC(zoo_ind) - C_loss_thres, c0)
+        do zoo_ind = 1, zooplankton_cnt
+          C_loss_thres = f_loss_thres * zooplankton_settings(zoo_ind)%loss_thres
+          Zprime(zoo_ind,k) = max(zooC(zoo_ind,k) - C_loss_thres, c0)
 
-        zoo_loss(zoo_ind) = ( zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind)**1.5_r8 + &
-             zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind)) * Tfunc
-     end do
+          zoo_loss(zoo_ind,k) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,k)**1.5_r8 &
+                                 + zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind,k)) * Tfunc(k)
+        end do
+      end do
 
-     end associate
-   end subroutine compute_Zprime
+    end associate
+
+  end subroutine compute_Zprime
 
    !***********************************************************************
 
