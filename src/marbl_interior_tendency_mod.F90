@@ -326,9 +326,9 @@ contains
 
     call compute_autotroph_calcification(km, autotroph_local, temperature, autotroph_derived_terms)
 
-    do k = 1, km
+    call compute_autotroph_nfixation(km, autotroph_derived_terms)
 
-       call compute_autotroph_nfixation(k, autotroph_derived_terms)
+    do k = 1, km
 
        call compute_autotroph_loss(k, Tfunc(k), autotroph_derived_terms)
 
@@ -1517,44 +1517,48 @@ contains
 
   !***********************************************************************
 
-   subroutine compute_autotroph_nfixation(k, autotroph_derived_terms)
+  subroutine compute_autotroph_nfixation(km, autotroph_derived_terms)
 
-     !-----------------------------------------------------------------------
-     !  Get N fixation by diazotrophs based on C fixation,
-     !  Diazotrophs fix more than they need then 20% is excreted
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  Get N fixation by diazotrophs based on C fixation,
+    !  Diazotrophs fix more than they need then 20% is excreted
+    !-----------------------------------------------------------------------
 
-     use marbl_settings_mod, only : Q
-     use marbl_settings_mod, only : r_Nfix_photo
+    use marbl_settings_mod, only : Q
+    use marbl_settings_mod, only : r_Nfix_photo
 
-     integer,                            intent(in)    :: k
-     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
+    integer,                            intent(in)    :: km
+    type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     integer  :: auto_ind
-     real(r8) :: work1
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: k,auto_ind
+    real(r8) :: work1
+    !-----------------------------------------------------------------------
 
-     associate(                                              &
-          photoC   => autotroph_derived_terms%photoC(:, k),  & ! input
-          NO3_V    => autotroph_derived_terms%NO3_V(:, k),   & ! input
-          NH4_V    => autotroph_derived_terms%NH4_V(:, k),   & ! input
-          Nfix     => autotroph_derived_terms%Nfix(:, k),    & ! output total Nitrogen fixation (mmol N/m^3/sec)
-          Nexcrete => autotroph_derived_terms%Nexcrete(:, k) & ! output fixed N excretion
-          )
+    associate(                                              &
+         photoC   => autotroph_derived_terms%photoC(:, :),  & ! input
+         NO3_V    => autotroph_derived_terms%NO3_V(:, :),   & ! input
+         NH4_V    => autotroph_derived_terms%NH4_V(:, :),   & ! input
+         Nfix     => autotroph_derived_terms%Nfix(:, :),    & ! output total Nitrogen fixation (mmol N/m^3/sec)
+         Nexcrete => autotroph_derived_terms%Nexcrete(:, :) & ! output fixed N excretion
+         )
 
-     do auto_ind = 1, autotroph_cnt
-        if (autotroph_settings(auto_ind)%Nfixer) then
-           work1 = photoC(auto_ind) * Q
-           Nfix(auto_ind) = (work1 * r_Nfix_photo) - NO3_V(auto_ind) - NH4_V(auto_ind)
-           Nexcrete(auto_ind) = Nfix(auto_ind) + NO3_V(auto_ind) + NH4_V(auto_ind) - work1
-        endif
-     end do
+      do k=1,km
+        do auto_ind = 1, autotroph_cnt
+          if (autotroph_settings(auto_ind)%Nfixer) then
+            work1 = photoC(auto_ind,k) * Q
+            Nfix(auto_ind,k) = (work1 * r_Nfix_photo) - NO3_V(auto_ind,k) - NH4_V(auto_ind,k)
+            Nexcrete(auto_ind,k) = Nfix(auto_ind,k) + NO3_V(auto_ind,k) + NH4_V(auto_ind,k) - work1
+          endif
 
-     end associate
-   end subroutine compute_autotroph_nfixation
+        end do
+      end do
+
+    end associate
+
+  end subroutine compute_autotroph_nfixation
 
   !***********************************************************************
 
