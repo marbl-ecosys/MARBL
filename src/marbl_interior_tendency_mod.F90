@@ -376,6 +376,11 @@ contains
           return
        end if
 
+       if  (k < km) then
+          call update_particulate_terms_from_prior_level(k+1, POC, POP, P_CaCO3, &
+               P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:))
+       endif
+
        call compute_Lig_terms(k, POC%remin(k), dissolved_organic_matter(k)%DOC_prod, &
             num_PAR_subcols, PAR%col_frac(:), PAR%interface(k-1,:), delta_z1, &
             tracer_local(lig_ind,k), Lig_scavenge(k), &
@@ -413,11 +418,6 @@ contains
 
        call marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local, &
             zooplankton_derived_terms, marbl_zooplankton_share(k))
-
-       if  (k < km) then
-          call update_particulate_terms_from_prior_level(k+1, POC, POP, P_CaCO3, &
-               P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:))
-       endif
 
     end do ! k
 
