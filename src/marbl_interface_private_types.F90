@@ -241,16 +241,19 @@ module marbl_interface_private_types
   !*****************************************************************************
 
   type, public :: dissolved_organic_matter_type
-     real (r8) :: DOC_prod         ! production of DOC (mmol C/m^3/sec)
-     real (r8) :: DOC_remin        ! remineralization of DOC (mmol C/m^3/sec)
-     real (r8) :: DOCr_remin       ! remineralization of DOCr
-     real (r8) :: DON_prod         ! production of DON
-     real (r8) :: DON_remin        ! remineralization of DON
-     real (r8) :: DONr_remin       ! remineralization of DONr
-     real (r8) :: DOP_prod         ! production of DOP
-     real (r8) :: DOP_remin        ! remineralization of DOP
-     real (r8) :: DOPr_remin       ! remineralization of DOPr
-     real (r8) :: DOP_loss_P_bal   ! DOP loss, due to P budget balancing
+     real(r8), allocatable :: DOC_prod(:)         ! production of DOC (mmol C/m^3/sec)
+     real(r8), allocatable :: DOC_remin(:)        ! remineralization of DOC (mmol C/m^3/sec)
+     real(r8), allocatable :: DOCr_remin(:)       ! remineralization of DOCr
+     real(r8), allocatable :: DON_prod(:)         ! production of DON
+     real(r8), allocatable :: DON_remin(:)        ! remineralization of DON
+     real(r8), allocatable :: DONr_remin(:)       ! remineralization of DONr
+     real(r8), allocatable :: DOP_prod(:)         ! production of DOP
+     real(r8), allocatable :: DOP_remin(:)        ! remineralization of DOP
+     real(r8), allocatable :: DOPr_remin(:)       ! remineralization of DOPr
+     real(r8), allocatable :: DOP_loss_P_bal(:)   ! DOP loss, due to P budget balancing
+   contains
+     procedure, public :: construct => dissolved_organic_matter_constructor
+     procedure, public :: destruct => dissolved_organic_matter_destructor
   end type dissolved_organic_matter_type
 
   !***********************************************************************
@@ -824,6 +827,45 @@ contains
      call this%dust%destruct()
 
    end subroutine marbl_particulate_share_destructor
+
+   !***********************************************************************
+
+    subroutine dissolved_organic_matter_constructor(this, num_levels)
+
+      class(dissolved_organic_matter_type), intent(inout) :: this
+      integer (int_kind),                   intent(in)    :: num_levels
+
+      allocate(this%DOC_prod(num_levels))
+      allocate(this%DOC_remin(num_levels))
+      allocate(this%DOCr_remin(num_levels))
+      allocate(this%DON_prod(num_levels))
+      allocate(this%DON_remin(num_levels))
+      allocate(this%DONr_remin(num_levels))
+      allocate(this%DOP_prod(num_levels))
+      allocate(this%DOP_remin(num_levels))
+      allocate(this%DOPr_remin(num_levels))
+      allocate(this%DOP_loss_P_bal(num_levels))
+
+    end subroutine dissolved_organic_matter_constructor
+
+    !***********************************************************************
+
+     subroutine dissolved_organic_matter_destructor(this)
+
+       class(dissolved_organic_matter_type), intent(out) :: this
+
+       deallocate(this%DOC_prod)
+       deallocate(this%DOC_remin)
+       deallocate(this%DOCr_remin)
+       deallocate(this%DON_prod)
+       deallocate(this%DON_remin)
+       deallocate(this%DONr_remin)
+       deallocate(this%DOP_prod)
+       deallocate(this%DOP_remin)
+       deallocate(this%DOPr_remin)
+       deallocate(this%DOP_loss_P_bal)
+
+     end subroutine dissolved_organic_matter_destructor
 
   !***********************************************************************
 

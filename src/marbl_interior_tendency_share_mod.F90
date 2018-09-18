@@ -32,6 +32,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_interior_tendency_share_export_variables(&
+       k, &
        tracer_local, &
        marbl_tracer_indices, &
        carbonate, &
@@ -44,6 +45,7 @@ contains
     use marbl_interface_private_types, only : dissolved_organic_matter_type
     use marbl_interface_private_types, only : marbl_interior_tendency_share_type
 
+    integer,                                  intent(in)    :: k
     real(r8),                                 intent(in)    :: tracer_local(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
     type(carbonate_type),                     intent(in)    :: carbonate
@@ -61,7 +63,7 @@ contains
       marbl_interior_tendency_share%DOCtot_loc_fields = &
            tracer_local(marbl_tracer_indices%DOC_ind) + tracer_local(marbl_tracer_indices%DOCr_ind)
       marbl_interior_tendency_share%DOCtot_remin_fields = &
-           dissolved_organic_matter%DOC_remin + dissolved_organic_matter%DOCr_remin
+           dissolved_organic_matter%DOC_remin(k) + dissolved_organic_matter%DOCr_remin(k)
     end if
 
   end subroutine marbl_interior_tendency_share_export_variables

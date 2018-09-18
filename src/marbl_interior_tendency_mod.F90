@@ -98,6 +98,7 @@ contains
        marbl_tracer_indices,                  &
        marbl_timer_indices,                   &
        PAR,                                   &
+       dissolved_organic_matter,              &
        autotroph_derived_terms,               &
        autotroph_local,                       &
        zooplankton_derived_terms,             &
@@ -134,6 +135,7 @@ contains
     type(marbl_tracer_index_type),                           intent(in)    :: marbl_tracer_indices
     type(marbl_timer_indexing_type),                         intent(in)    :: marbl_timer_indices
     type(marbl_PAR_type),                                    intent(inout) :: PAR
+    type(dissolved_organic_matter_type),                     intent(inout) :: dissolved_organic_matter
     type(autotroph_derived_terms_type),                      intent(inout) :: autotroph_derived_terms
     type(autotroph_local_type),                              intent(inout) :: autotroph_local
     type(zooplankton_derived_terms_type),                    intent(inout) :: zooplankton_derived_terms
@@ -183,7 +185,6 @@ contains
     real (r8) :: Lig_loss(domain%km)         ! loss of Fe-binding Ligand
     real (r8) :: totalChl_local(domain%km)   ! local value of totalChl
 
-    type(dissolved_organic_matter_type)      :: dissolved_organic_matter(domain%km)
     type(carbonate_type)                     :: carbonate(domain%km)
 
     ! NOTE(bja, 2015-07) vectorization: arrays that are (n, k, c, i)
@@ -343,7 +344,7 @@ contains
             zooplankton_derived_terms, autotroph_derived_terms,   &
             PAR%col_frac(:), PAR%interface(k-1,:), PAR%avg(k,:),  &
             delta_z1, tracer_local(:, k), marbl_tracer_indices,   &
-            dissolved_organic_matter(k))
+            dissolved_organic_matter)
 
        call compute_scavenging(k, tracer_local(fe_ind, k),                   &
             tracer_local(lig_ind, k), POC, P_CaCO3, P_SiO2, dust,            &
@@ -358,7 +359,7 @@ contains
        call compute_large_detritus_prod(k, domain, marbl_tracer_indices, zooplankton_derived_terms, &
             autotroph_derived_terms, Fe_scavenge(k),                    &
             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron,   &
-            dissolved_organic_matter(k)%DOP_loss_P_bal, marbl_status_log)
+            dissolved_organic_matter%DOP_loss_P_bal(k), marbl_status_log)
 
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
@@ -381,7 +382,7 @@ contains
                P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:))
        endif
 
-       call compute_Lig_terms(k, POC%remin(k), dissolved_organic_matter(k)%DOC_prod, &
+       call compute_Lig_terms(k, POC%remin(k), dissolved_organic_matter%DOC_prod(k), &
             num_PAR_subcols, PAR%col_frac(:), PAR%interface(k-1,:), delta_z1, &
             tracer_local(lig_ind,k), Lig_scavenge(k), &
             autotroph_derived_terms%photoFe(:,k),     &
@@ -392,13 +393,13 @@ contains
             PAR%KPARdz(k), tracer_local(nh4_ind, k), nitrif(k))
 
        call compute_denitrif(tracer_local(o2_ind, k), tracer_local(no3_ind, k), &
-            dissolved_organic_matter(k)%DOC_remin, &
-            dissolved_organic_matter(k)%DOCr_remin, &
+            dissolved_organic_matter%DOC_remin(k), &
+            dissolved_organic_matter%DOCr_remin(k), &
             POC%remin(k), other_remin(k), sed_denitrif(k), denitrif(k))
 
        call compute_local_tendencies(k, autotroph_derived_terms, &
             zooplankton_derived_terms, &
-            dissolved_organic_matter(k), &
+            dissolved_organic_matter, &
             nitrif(k), denitrif(k), sed_denitrif(k), &
             Fe_scavenge(k), Lig_prod(k), Lig_loss(k), &
             P_iron%remin(k), POC%remin(k), POP%remin(k), &
@@ -412,8 +413,8 @@ contains
        ! Store any variables needed in other tracer modules
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
-       call marbl_interior_tendency_share_export_variables(tracer_local(:, k), &
-            marbl_tracer_indices, carbonate(k), dissolved_organic_matter(k),   &
+       call marbl_interior_tendency_share_export_variables(k, tracer_local(:, k), &
+            marbl_tracer_indices, carbonate(k), dissolved_organic_matter,   &
             QA_dust_def(k), marbl_interior_tendency_share(k))
 
        call marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local, &
@@ -2052,136 +2053,136 @@ contains
 
   !***********************************************************************
 
-   subroutine compute_dissolved_organic_matter (k, &
-              PAR_nsubcols, zooplankton_derived_terms, &
-              autotroph_derived_terms, PAR_col_frac, PAR_in, PAR_avg, &
-              dz1, tracer_local, marbl_tracer_indices, dissolved_organic_matter)
+  subroutine compute_dissolved_organic_matter (k, &
+             PAR_nsubcols, zooplankton_derived_terms, &
+             autotroph_derived_terms, PAR_col_frac, PAR_in, PAR_avg, &
+             dz1, tracer_local, marbl_tracer_indices, dissolved_organic_matter)
 
-     use marbl_settings_mod, only : Q
-     use marbl_settings_mod, only : DOC_reminR_light
-     use marbl_settings_mod, only : DON_reminR_light
-     use marbl_settings_mod, only : DOP_reminR_light
-     use marbl_settings_mod, only : DOC_reminR_dark
-     use marbl_settings_mod, only : DON_reminR_dark
-     use marbl_settings_mod, only : DOP_reminR_dark
-     use marbl_settings_mod, only : DOCr_reminR0
-     use marbl_settings_mod, only : DONr_reminR0
-     use marbl_settings_mod, only : DOPr_reminR0
-     use marbl_settings_mod, only : DOMr_reminR_photo
+    use marbl_settings_mod, only : Q
+    use marbl_settings_mod, only : DOC_reminR_light
+    use marbl_settings_mod, only : DON_reminR_light
+    use marbl_settings_mod, only : DOP_reminR_light
+    use marbl_settings_mod, only : DOC_reminR_dark
+    use marbl_settings_mod, only : DON_reminR_dark
+    use marbl_settings_mod, only : DOP_reminR_dark
+    use marbl_settings_mod, only : DOCr_reminR0
+    use marbl_settings_mod, only : DONr_reminR0
+    use marbl_settings_mod, only : DOPr_reminR0
+    use marbl_settings_mod, only : DOMr_reminR_photo
 
-     integer(int_kind),                    intent(in)  :: k
-     integer(int_kind),                    intent(in)  :: PAR_nsubcols
-     type(zooplankton_derived_terms_type), intent(in)  :: zooplankton_derived_terms
-     type(autotroph_derived_terms_type),   intent(in)  :: autotroph_derived_terms
-     real(r8),                             intent(in)  :: PAR_col_frac(:)
-     real(r8),                             intent(in)  :: PAR_in(:)
-     real(r8),                             intent(in)  :: PAR_avg(:)
-     real(r8),                             intent(in)  :: dz1
-     real(r8),                             intent(in)  :: tracer_local(:)
-     type(marbl_tracer_index_type),        intent(in)  :: marbl_tracer_indices
-     type(dissolved_organic_matter_type),  intent(out) :: dissolved_organic_matter
+    integer(int_kind),                    intent(in)    :: k
+    integer(int_kind),                    intent(in)    :: PAR_nsubcols
+    type(zooplankton_derived_terms_type), intent(in)    :: zooplankton_derived_terms
+    type(autotroph_derived_terms_type),   intent(in)    :: autotroph_derived_terms
+    real(r8),                             intent(in)    :: PAR_col_frac(:)
+    real(r8),                             intent(in)    :: PAR_in(:)
+    real(r8),                             intent(in)    :: PAR_avg(:)
+    real(r8),                             intent(in)    :: dz1
+    real(r8),                             intent(in)    :: tracer_local(:)
+    type(marbl_tracer_index_type),        intent(in)    :: marbl_tracer_indices
+    type(dissolved_organic_matter_type),  intent(inout) :: dissolved_organic_matter
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     integer  :: subcol_ind
-     real(r8) :: work
-     real(r8) :: DOC_reminR        ! remineralization rate (1/sec)
-     real(r8) :: DON_reminR        ! remineralization rate (1/sec)
-     real(r8) :: DOP_reminR        ! remineralization rate (1/sec)
-     real(r8) :: DOCr_reminR       ! remineralization rate (1/sec)
-     real(r8) :: DONr_reminR       ! remineralization rate (1/sec)
-     real(r8) :: DOPr_reminR       ! remineralization rate (1/sec)
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: subcol_ind
+    real(r8) :: work
+    real(r8) :: DOC_reminR        ! remineralization rate (1/sec)
+    real(r8) :: DON_reminR        ! remineralization rate (1/sec)
+    real(r8) :: DOP_reminR        ! remineralization rate (1/sec)
+    real(r8) :: DOCr_reminR       ! remineralization rate (1/sec)
+    real(r8) :: DONr_reminR       ! remineralization rate (1/sec)
+    real(r8) :: DOPr_reminR       ! remineralization rate (1/sec)
+    !-----------------------------------------------------------------------
 
-     associate(                                                           &
-          DOC_loc         => tracer_local(marbl_tracer_indices%doc_ind),  &
-          DON_loc         => tracer_local(marbl_tracer_indices%don_ind),  &
-          DOP_loc         => tracer_local(marbl_tracer_indices%dop_ind),  &
-          DONr_loc        => tracer_local(marbl_tracer_indices%donr_ind), &
-          DOPr_loc        => tracer_local(marbl_tracer_indices%dopr_ind), &
-          DOCr_loc        => tracer_local(marbl_tracer_indices%docr_ind), &
+    associate(                                                           &
+         DOC_loc         => tracer_local(marbl_tracer_indices%doc_ind),  &
+         DON_loc         => tracer_local(marbl_tracer_indices%don_ind),  &
+         DOP_loc         => tracer_local(marbl_tracer_indices%dop_ind),  &
+         DONr_loc        => tracer_local(marbl_tracer_indices%donr_ind), &
+         DOPr_loc        => tracer_local(marbl_tracer_indices%dopr_ind), &
+         DOCr_loc        => tracer_local(marbl_tracer_indices%docr_ind), &
 
-          Qfe             => autotroph_derived_terms%Qfe(:,k),             & ! input
-          remaining_P_dop => autotroph_derived_terms%remaining_P_dop(:,k), & ! input
-          auto_loss_doc   => autotroph_derived_terms%auto_loss_doc(:,k),   & ! input
-          auto_graze_doc  => autotroph_derived_terms%auto_graze_doc(:,k),  & ! input
+         Qfe             => autotroph_derived_terms%Qfe(:,k),             & ! input
+         remaining_P_dop => autotroph_derived_terms%remaining_P_dop(:,k), & ! input
+         auto_loss_doc   => autotroph_derived_terms%auto_loss_doc(:,k),   & ! input
+         auto_graze_doc  => autotroph_derived_terms%auto_graze_doc(:,k),  & ! input
 
-          zoo_loss_doc    => zooplankton_derived_terms%zoo_loss_doc(:,k),  & ! input
-          zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,k), & ! input
+         zoo_loss_doc    => zooplankton_derived_terms%zoo_loss_doc(:,k),  & ! input
+         zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,k), & ! input
 
-          DOC_prod        => dissolved_organic_matter%DOC_prod,   & ! output production of DOC (mmol C/m^3/sec)
-          DOC_remin       => dissolved_organic_matter%DOC_remin,  & ! output remineralization of DOC (mmol C/m^3/sec)
-          DOCr_remin      => dissolved_organic_matter%DOCr_remin, & ! output remineralization of DOCr
-          DON_prod        => dissolved_organic_matter%DON_prod,   & ! output production of DON
-          DON_remin       => dissolved_organic_matter%DON_remin,  & ! output remineralization of DON
-          DONr_remin      => dissolved_organic_matter%DONr_remin, & ! output remineralization of DONr
-          DOP_prod        => dissolved_organic_matter%DOP_prod,   & ! output production of DOP
-          DOP_remin       => dissolved_organic_matter%DOP_remin,  & ! output remineralization of DOP
-          DOPr_remin      => dissolved_organic_matter%DOPr_remin  & ! output remineralization of DOPr
-          )
+         DOC_prod        => dissolved_organic_matter%DOC_prod(k),   & ! output production of DOC (mmol C/m^3/sec)
+         DOC_remin       => dissolved_organic_matter%DOC_remin(k),  & ! output remineralization of DOC (mmol C/m^3/sec)
+         DOCr_remin      => dissolved_organic_matter%DOCr_remin(k), & ! output remineralization of DOCr
+         DON_prod        => dissolved_organic_matter%DON_prod(k),   & ! output production of DON
+         DON_remin       => dissolved_organic_matter%DON_remin(k),  & ! output remineralization of DON
+         DONr_remin      => dissolved_organic_matter%DONr_remin(k), & ! output remineralization of DONr
+         DOP_prod        => dissolved_organic_matter%DOP_prod(k),   & ! output production of DOP
+         DOP_remin       => dissolved_organic_matter%DOP_remin(k),  & ! output remineralization of DOP
+         DOPr_remin      => dissolved_organic_matter%DOPr_remin(k)  & ! output remineralization of DOPr
+         )
 
-       !-----------------------------------------------------------------------
-       !  compute terms for DOM
-       !-----------------------------------------------------------------------
+      !-----------------------------------------------------------------------
+      !  compute terms for DOM
+      !-----------------------------------------------------------------------
 
-       DOC_prod = sum(zoo_loss_doc(:)) + sum(auto_loss_doc(:)) + sum(auto_graze_doc(:)) + sum(zoo_graze_doc(:))
-       DON_prod = Q * DOC_prod * f_toDON
-       DOP_prod = Qp_zoo * (sum(zoo_loss_doc(:)) + sum(zoo_graze_doc(:))) + sum(remaining_P_dop(:))
+      DOC_prod = sum(zoo_loss_doc(:)) + sum(auto_loss_doc(:)) + sum(auto_graze_doc(:)) + sum(zoo_graze_doc(:))
+      DON_prod = Q * DOC_prod * f_toDON
+      DOP_prod = Qp_zoo * (sum(zoo_loss_doc(:)) + sum(zoo_graze_doc(:))) + sum(remaining_P_dop(:))
 
-       !-----------------------------------------------------------------------
-       !  Different remin rates in light and dark for semi-labile pools
-       !-----------------------------------------------------------------------
+      !-----------------------------------------------------------------------
+      !  Different remin rates in light and dark for semi-labile pools
+      !-----------------------------------------------------------------------
 
-       DOC_reminR = c0
-       DON_reminR = c0
-       DOP_reminR = c0
+      DOC_reminR = c0
+      DON_reminR = c0
+      DOP_reminR = c0
 
-       do subcol_ind = 1, PAR_nsubcols
-          if (PAR_col_frac(subcol_ind) > c0) then
-             if (PAR_avg(subcol_ind) > 1.0_r8) then
-                DOC_reminR = DOC_reminR + PAR_col_frac(subcol_ind) * DOC_reminR_light
-                DON_reminR = DON_reminR + PAR_col_frac(subcol_ind) * DON_reminR_light
-                DOP_reminR = DOP_reminR + PAR_col_frac(subcol_ind) * DOP_reminR_light
-             else
-                DOC_reminR = DOC_reminR + PAR_col_frac(subcol_ind) * DOC_reminR_dark
-                DON_reminR = DON_reminR + PAR_col_frac(subcol_ind) * DON_reminR_dark
-                DOP_reminR = DOP_reminR + PAR_col_frac(subcol_ind) * DOP_reminR_dark
-             endif
+      do subcol_ind = 1, PAR_nsubcols
+        if (PAR_col_frac(subcol_ind) > c0) then
+          if (PAR_avg(subcol_ind) > 1.0_r8) then
+            DOC_reminR = DOC_reminR + PAR_col_frac(subcol_ind) * DOC_reminR_light
+            DON_reminR = DON_reminR + PAR_col_frac(subcol_ind) * DON_reminR_light
+            DOP_reminR = DOP_reminR + PAR_col_frac(subcol_ind) * DOP_reminR_light
+          else
+            DOC_reminR = DOC_reminR + PAR_col_frac(subcol_ind) * DOC_reminR_dark
+            DON_reminR = DON_reminR + PAR_col_frac(subcol_ind) * DON_reminR_dark
+            DOP_reminR = DOP_reminR + PAR_col_frac(subcol_ind) * DOP_reminR_dark
           endif
-       end do
+        endif
+      end do
 
-       !-----------------------------------------------------------------------
-       !  Refractory remin increased in top layer from photodegradation due to UV
-       !-----------------------------------------------------------------------
+      !-----------------------------------------------------------------------
+      !  Refractory remin increased in top layer from photodegradation due to UV
+      !-----------------------------------------------------------------------
 
-       DOCr_reminR = DOCr_reminR0
-       DONr_reminR = DONr_reminR0
-       DOPr_reminR = DOPr_reminR0
+      DOCr_reminR = DOCr_reminR0
+      DONr_reminR = DONr_reminR0
+      DOPr_reminR = DOPr_reminR0
 
-       if (k == 1) then
-          do subcol_ind = 1, PAR_nsubcols
-             if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR_in(subcol_ind) > 1.0_r8)) then
-                work = PAR_col_frac(subcol_ind) * (log(PAR_in(subcol_ind))*0.4373_r8) * (10.0e2_r8/dz1)
-                DOCr_reminR = DOCr_reminR + work * DOMr_reminR_photo
-                DONr_reminR = DONr_reminR + work * DOMr_reminR_photo
-                DOPr_reminR = DOPr_reminR + work * DOMr_reminR_photo
-             endif
-          end do
-       endif
+      if (k == 1) then
+        do subcol_ind = 1, PAR_nsubcols
+          if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR_in(subcol_ind) > 1.0_r8)) then
+            work = PAR_col_frac(subcol_ind) * (log(PAR_in(subcol_ind))*0.4373_r8) * (10.0e2_r8/dz1)
+            DOCr_reminR = DOCr_reminR + work * DOMr_reminR_photo
+            DONr_reminR = DONr_reminR + work * DOMr_reminR_photo
+            DOPr_reminR = DOPr_reminR + work * DOMr_reminR_photo
+          endif
+        end do
+      endif
 
-       DOC_remin  = DOC_loc  * DOC_reminR
-       DON_remin  = DON_loc  * DON_reminR
-       DOP_remin  = DOP_loc  * DOP_reminR
-       DOCr_remin = DOCr_loc * DOCr_reminR
-       DONr_remin = DONr_loc * DONr_reminR
-       DOPr_remin = DOPr_loc * DOPr_reminR
+      DOC_remin  = DOC_loc  * DOC_reminR
+      DON_remin  = DON_loc  * DON_reminR
+      DOP_remin  = DOP_loc  * DOP_reminR
+      DOCr_remin = DOCr_loc * DOCr_reminR
+      DONr_remin = DONr_loc * DONr_reminR
+      DOPr_remin = DOPr_loc * DOPr_reminR
 
-     end associate
+    end associate
 
-   end subroutine compute_dissolved_organic_matter
+  end subroutine compute_dissolved_organic_matter
 
-   !***********************************************************************
+  !***********************************************************************
 
    subroutine compute_scavenging(k, Fe_loc, Lig_loc, &
         POC, P_CaCO3, P_SiO2, dust, &
@@ -3440,16 +3441,16 @@ contains
           zoo_loss_dic    => zooplankton_derived_terms%zoo_loss_dic(:,k),  & ! zoo_loss routed to dic (mmol C/m^3/sec)
           zoo_loss_doc    => zooplankton_derived_terms%zoo_loss_doc(:,k),  & ! zoo_loss routed to doc (mmol C/m^3/sec)
 
-          DOC_prod        => dissolved_organic_matter%DOC_prod,       & ! production of DOC (mmol C/m^3/sec)
-          DOC_remin       => dissolved_organic_matter%DOC_remin,      & ! remineralization of DOC (mmol C/m^3/sec)
-          DOCr_remin      => dissolved_organic_matter%DOCr_remin,     & ! remineralization of DOCr
-          DON_prod        => dissolved_organic_matter%DON_prod,       & ! production of DON
-          DON_remin       => dissolved_organic_matter%DON_remin,      & ! remineralization of DON
-          DONr_remin      => dissolved_organic_matter%DONr_remin,     & ! remineralization of DONr
-          DOP_prod        => dissolved_organic_matter%DOP_prod,       & ! production of DOP
-          DOP_remin       => dissolved_organic_matter%DOP_remin,      & ! remineralization of DOP
-          DOPr_remin      => dissolved_organic_matter%DOPr_remin,     & ! remineralization of DOPr
-          DOP_loss_P_bal  => dissolved_organic_matter%DOP_loss_P_bal, & ! DOP loss, due to P budget balancing
+          DOC_prod        => dissolved_organic_matter%DOC_prod(k),       & ! production of DOC (mmol C/m^3/sec)
+          DOC_remin       => dissolved_organic_matter%DOC_remin(k),      & ! remineralization of DOC (mmol C/m^3/sec)
+          DOCr_remin      => dissolved_organic_matter%DOCr_remin(k),     & ! remineralization of DOCr
+          DON_prod        => dissolved_organic_matter%DON_prod(k),       & ! production of DON
+          DON_remin       => dissolved_organic_matter%DON_remin(k),      & ! remineralization of DON
+          DONr_remin      => dissolved_organic_matter%DONr_remin(k),     & ! remineralization of DONr
+          DOP_prod        => dissolved_organic_matter%DOP_prod(k),       & ! production of DOP
+          DOP_remin       => dissolved_organic_matter%DOP_remin(k),      & ! remineralization of DOP
+          DOPr_remin      => dissolved_organic_matter%DOPr_remin(k),     & ! remineralization of DOPr
+          DOP_loss_P_bal  => dissolved_organic_matter%DOP_loss_P_bal(k), & ! DOP loss, due to P budget balancing
 
           po4_ind           => marbl_tracer_indices%po4_ind,         &
           no3_ind           => marbl_tracer_indices%no3_ind,         &

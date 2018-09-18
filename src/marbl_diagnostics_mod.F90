@@ -2988,7 +2988,7 @@ contains
     type (autotroph_local_type),                         intent(in)    :: autotroph_local
     type (autotroph_derived_terms_type),                 intent(in)    :: autotroph_derived_terms
     type (zooplankton_derived_terms_type),               intent(in)    :: zooplankton_derived_terms
-    type (dissolved_organic_matter_type),                intent(in)    :: dissolved_organic_matter(domain%km)
+    type (dissolved_organic_matter_type),                intent(in)    :: dissolved_organic_matter
     type (marbl_particulate_share_type),                 intent(in)    :: marbl_particulate_share
     type (marbl_PAR_type),                               intent(in)    :: PAR
     real (r8),                                           intent(in)    :: PON_remin(domain%km)        ! remin of PON
@@ -3882,9 +3882,9 @@ contains
   subroutine store_diagnostics_dissolved_organic_matter(marbl_domain, &
        dissolved_organic_matter, marbl_diags)
 
-    type(marbl_domain_type)      , intent(in)    :: marbl_domain
-    type(dissolved_organic_matter_type) , intent(in)    :: dissolved_organic_matter(:) ! (km)
-    type(marbl_diagnostics_type)        , intent(inout) :: marbl_diags
+    type(marbl_domain_type)            , intent(in)    :: marbl_domain
+    type(dissolved_organic_matter_type), intent(in)    :: dissolved_organic_matter
+    type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -3901,16 +3901,16 @@ contains
          )
 
     do k = 1, km
-       diags(ind%DOC_prod)%field_3d(k, 1)         = dissolved_organic_matter(k)%DOC_prod
-       diags(ind%DOC_remin)%field_3d(k, 1)        = dissolved_organic_matter(k)%DOC_remin
-       diags(ind%DOCr_remin)%field_3d(k, 1)       = dissolved_organic_matter(k)%DOCr_remin
-       diags(ind%DON_prod)%field_3d(k, 1)         = dissolved_organic_matter(k)%DON_prod
-       diags(ind%DON_remin)%field_3d(k, 1)        = dissolved_organic_matter(k)%DON_remin
-       diags(ind%DONr_remin)%field_3d(k, 1)       = dissolved_organic_matter(k)%DONr_remin
-       diags(ind%DOP_prod)%field_3d(k, 1)         = dissolved_organic_matter(k)%DOP_prod
-       diags(ind%DOP_remin)%field_3d(k, 1)        = dissolved_organic_matter(k)%DOP_remin
-       diags(ind%DOPr_remin)%field_3d(k, 1)       = dissolved_organic_matter(k)%DOPr_remin
-       diags(ind%DOP_loss_P_bal)%field_3d(k, 1)   = dissolved_organic_matter(k)%DOP_loss_P_bal
+       diags(ind%DOC_prod)%field_3d(k, 1)         = dissolved_organic_matter%DOC_prod(k)
+       diags(ind%DOC_remin)%field_3d(k, 1)        = dissolved_organic_matter%DOC_remin(k)
+       diags(ind%DOCr_remin)%field_3d(k, 1)       = dissolved_organic_matter%DOCr_remin(k)
+       diags(ind%DON_prod)%field_3d(k, 1)         = dissolved_organic_matter%DON_prod(k)
+       diags(ind%DON_remin)%field_3d(k, 1)        = dissolved_organic_matter%DON_remin(k)
+       diags(ind%DONr_remin)%field_3d(k, 1)       = dissolved_organic_matter%DONr_remin(k)
+       diags(ind%DOP_prod)%field_3d(k, 1)         = dissolved_organic_matter%DOP_prod(k)
+       diags(ind%DOP_remin)%field_3d(k, 1)        = dissolved_organic_matter%DOP_remin(k)
+       diags(ind%DOPr_remin)%field_3d(k, 1)       = dissolved_organic_matter%DOPr_remin(k)
+       diags(ind%DOP_loss_P_bal)%field_3d(k, 1)   = dissolved_organic_matter%DOP_loss_P_bal(k)
     end do
 
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%DOC_prod)%field_3d(:,1), &
