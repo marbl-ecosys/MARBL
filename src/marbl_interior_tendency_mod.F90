@@ -385,11 +385,9 @@ contains
             autotroph_derived_terms%photoFe(:,k),     &
             Lig_prod(k), Lig_photochem(k), Lig_deg(k), Lig_loss(k))
 
-       call compute_nitrif(k, num_PAR_subcols, kmt, &
-            PAR%col_frac(:), PAR%interface(k-1,:), PAR%interface(k,:),  &
-            PAR%KPARdz(k), tracer_local(nh4_ind, k), nitrif(k))
-
     end do ! k
+
+    call compute_nitrif(kmt, km, num_PAR_subcols, marbl_tracer_indices, PAR, tracer_local(:,:), nitrif(:))
 
     call compute_denitrif(km, marbl_tracer_indices, tracer_local(:, :), &
          dissolved_organic_matter%DOC_remin(:), &
@@ -3279,59 +3277,63 @@ contains
 
    end subroutine compute_Lig_terms
 
-   !***********************************************************************
+  !***********************************************************************
 
-   subroutine compute_nitrif(k, PAR_nsubcols, column_kmt, PAR_col_frac, &
-              PAR_in, PAR_out, KPARdz, NH4_loc, nitrif)
+  subroutine compute_nitrif(kmt, km, PAR_nsubcols, marbl_tracer_indices, PAR, tracer_local, nitrif)
 
-     !-----------------------------------------------------------------------
-     !  nitrate & ammonium
-     !  nitrification in low light
-     !  use exponential decay of PAR across model level to compute taper factor
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  nitrate & ammonium
+    !  nitrification in low light
+    !  use exponential decay of PAR across model level to compute taper factor
+    !-----------------------------------------------------------------------
 
-     use marbl_settings_mod, only : parm_nitrif_par_lim
-     use marbl_settings_mod, only : parm_kappa_nitrif
+    use marbl_settings_mod, only : parm_nitrif_par_lim
+    use marbl_settings_mod, only : parm_kappa_nitrif
 
-     integer(int_kind) , intent(in)  :: k
-     integer(int_kind) , intent(in)  :: PAR_nsubcols
-     integer(int_kind) , intent(in)  :: column_kmt
-     real(r8)          , intent(in)  :: PAR_col_frac(PAR_nsubcols)
-     real(r8)          , intent(in)  :: PAR_in(PAR_nsubcols)
-     real(r8)          , intent(in)  :: PAR_out(PAR_nsubcols)
-     real(r8)          , intent(in)  :: kPARdz
-     real(r8)          , intent(in)  :: NH4_loc
-     real(r8)          , intent(out) :: nitrif
+    integer(int_kind),             intent(in)  :: kmt
+    integer(int_kind),             intent(in)  :: km
+    integer(int_kind),             intent(in)  :: PAR_nsubcols
+    type(marbl_tracer_index_type), intent(in)  :: marbl_tracer_indices
+    type(marbl_PAR_type),          intent(in)  :: PAR
+    real(r8),                      intent(in)  :: tracer_local(marbl_tracer_indices%total_cnt, kmt)
+    real(r8),                      intent(out) :: nitrif(km)
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     integer(int_kind) :: subcol_ind
-     real(r8) :: nitrif_subcol
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer(int_kind) :: k, subcol_ind
+    real(r8) :: nitrif_subcol
+    !-----------------------------------------------------------------------
 
-     !-----------------------------------------------------------------------
-     ! skip computations for non-active layers or NH4 is 0
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    ! skip computations for non-active layers or NH4 is 0
+    !-----------------------------------------------------------------------
 
-     nitrif = c0
+    nitrif(:) = c0
 
-     if ((k > column_kmt) .or. (NH4_loc == c0)) return
-
-     do subcol_ind = 1, PAR_nsubcols
-        if (PAR_col_frac(subcol_ind) > c0) then
-           if (PAR_out(subcol_ind) < parm_nitrif_par_lim) then
-              nitrif_subcol = parm_kappa_nitrif * NH4_loc
-              if (PAR_in(subcol_ind) > parm_nitrif_par_lim) then
-                 nitrif_subcol = nitrif_subcol * &
-                    log(PAR_out(subcol_ind) / parm_nitrif_par_lim) / (-KPARdz)
+    associate(                                                          &
+         PAR_col_frac => PAR%col_frac(:),                               &
+         kPARdz       => PAR%kPARdz(:),                                 &
+         NH4_loc      => tracer_local(marbl_tracer_indices%NH4_ind, :)  &
+         )
+      do k=1,kmt
+        if (NH4_loc(k) == c0) cycle
+        do subcol_ind = 1, PAR_nsubcols
+          if (PAR_col_frac(subcol_ind) > c0) then
+            if (PAR%interface(k,subcol_ind) < parm_nitrif_par_lim) then
+              nitrif_subcol = parm_kappa_nitrif * NH4_loc(k)
+              if (PAR%interface(k-1,subcol_ind) > parm_nitrif_par_lim) then
+                nitrif_subcol = nitrif_subcol * &
+                log(PAR%interface(k,subcol_ind) / parm_nitrif_par_lim) / (-KPARdz(k))
               end if
-              nitrif = nitrif + PAR_col_frac(subcol_ind) * nitrif_subcol
-           end if
-        end if
-     end do
+              nitrif(k) = nitrif(k) + PAR_col_frac(subcol_ind) * nitrif_subcol
+            end if
+          end if
+        end do
+      end do
+    end associate
 
-   end subroutine compute_nitrif
+  end subroutine compute_nitrif
 
   !***********************************************************************
 
