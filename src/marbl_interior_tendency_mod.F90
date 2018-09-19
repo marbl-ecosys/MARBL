@@ -389,12 +389,12 @@ contains
             PAR%col_frac(:), PAR%interface(k-1,:), PAR%interface(k,:),  &
             PAR%KPARdz(k), tracer_local(nh4_ind, k), nitrif(k))
 
-       call compute_denitrif(tracer_local(o2_ind, k), tracer_local(no3_ind, k), &
-            dissolved_organic_matter%DOC_remin(k), &
-            dissolved_organic_matter%DOCr_remin(k), &
-            POC%remin(k), other_remin(k), sed_denitrif(k), denitrif(k))
-
     end do ! k
+
+    call compute_denitrif(km, marbl_tracer_indices, tracer_local(:, :), &
+         dissolved_organic_matter%DOC_remin(:), &
+         dissolved_organic_matter%DOCr_remin(:), &
+         POC%remin(:), other_remin(:), sed_denitrif(:), denitrif(:))
 
     call compute_local_tendencies(km, marbl_tracer_indices, autotroph_derived_terms, &
          zooplankton_derived_terms, &
@@ -3333,43 +3333,53 @@ contains
 
    end subroutine compute_nitrif
 
-   !***********************************************************************
+  !***********************************************************************
 
-   subroutine compute_denitrif(O2_loc, NO3_loc, DOC_remin, DOCr_remin,   &
-              POC_remin, other_remin, sed_denitrif, denitrif)
+  subroutine compute_denitrif(km, marbl_tracer_indices, tracer_local, DOC_remin, DOCr_remin,   &
+       POC_remin, other_remin, sed_denitrif, denitrif)
 
-     !-----------------------------------------------------------------------
-     !  Compute denitrification under low O2 conditions
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  Compute denitrification under low O2 conditions
+    !-----------------------------------------------------------------------
 
-     real(r8) , intent(in)    :: O2_loc
-     real(r8) , intent(in)    :: NO3_loc
-     real(r8) , intent(in)    :: DOC_remin
-     real(r8) , intent(in)    :: DOCr_remin
-     real(r8) , intent(in)    :: POC_remin
-     real(r8) , intent(in)    :: OTHER_REMIN
-     real(r8) , intent(inout) :: SED_DENITRIF
-     real(r8) , intent(out)   :: denitrif
+    integer,                       intent(in)    :: km
+    type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
+    real(r8),                      intent(in)    :: tracer_local(marbl_tracer_indices%total_cnt, km)
+    real(r8),                      intent(in)    :: DOC_remin(km)
+    real(r8),                      intent(in)    :: DOCr_remin(km)
+    real(r8),                      intent(in)    :: POC_remin(km)
+    real(r8),                      intent(in)    :: other_remin(km)
+    real(r8),                      intent(inout) :: sed_denitrif(km)
+    real(r8),                      intent(out)   :: denitrif(km)
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
-     real(r8) :: work
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: k
+    real(r8) :: work
+    !-----------------------------------------------------------------------
 
-     work = ((parm_o2_min + parm_o2_min_delta) - O2_loc) / parm_o2_min_delta
-     work = min(max(work, c0), c1)
-     denitrif = work * ((DOC_remin + DOCr_remin + POC_remin * (c1 - POCremin_refract) &
-          - other_remin) / denitrif_C_N  - sed_denitrif)
+    associate(&
+              O2_loc  => tracer_local(marbl_tracer_indices%o2_ind,:),  &
+              NO3_loc => tracer_local(marbl_tracer_indices%no3_ind,:)  &
+             )
+      do k=1,km
+        work = ((parm_o2_min + parm_o2_min_delta) - O2_loc(k)) / parm_o2_min_delta
+        work = min(max(work, c0), c1)
+        denitrif(k) = work * ((DOC_remin(k) + DOCr_remin(k) + POC_remin(k) * (c1 - POCremin_refract) &
+                 - other_remin(k)) / denitrif_C_N  - sed_denitrif(k))
 
-     ! scale down denitrif if computed rate would consume all NO3 in 10 days
-     if (NO3_loc < ((c10*spd)*(denitrif+sed_denitrif))) then
-        work = NO3_loc / ((c10*spd)*(denitrif+sed_denitrif))
-        denitrif = denitrif * work
-        sed_denitrif = sed_denitrif * work
-     endif
+        ! scale down denitrif if computed rate would consume all NO3 in 10 days
+        if (NO3_loc(k) < ((c10*spd)*(denitrif(k)+sed_denitrif(k)))) then
+          work = NO3_loc(k) / ((c10*spd)*(denitrif(k)+sed_denitrif(k)))
+          denitrif(k) = denitrif(k) * work
+          sed_denitrif(k) = sed_denitrif(k) * work
+        end if
+      end do
 
-   end subroutine compute_denitrif
+    end associate
+
+  end subroutine compute_denitrif
 
   !***********************************************************************
 
