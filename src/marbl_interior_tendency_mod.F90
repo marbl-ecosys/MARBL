@@ -344,10 +344,9 @@ contains
 
     do k = 1, km
 
-       call compute_scavenging(k, tracer_local(fe_ind, k),                   &
-            tracer_local(lig_ind, k), POC, P_CaCO3, P_SiO2, dust,            &
-            Fefree(k), Fe_scavenge_rate(k), Fe_scavenge(k), Lig_scavenge(k), &
-            marbl_status_log)
+       call compute_scavenging(k, km, marbl_tracer_indices, tracer_local(:,:), &
+            POC, P_CaCO3, P_SiO2, dust, Fefree(:), Fe_scavenge_rate(:), &
+            Fe_scavenge(:), Lig_scavenge(:), marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
           call marbl_status_log%log_error_trace('compute_scavenging()', subname)
@@ -2188,62 +2187,68 @@ contains
 
   !***********************************************************************
 
-   subroutine compute_scavenging(k, Fe_loc, Lig_loc, &
-        POC, P_CaCO3, P_SiO2, dust, &
-        Fefree, Fe_scavenge_rate, Fe_scavenge, Lig_scavenge, &
-        marbl_status_log)
+  subroutine compute_scavenging(k, km, marbl_tracer_indices, &
+       tracer_local, POC, P_CaCO3, P_SiO2, dust, &
+       Fefree, Fe_scavenge_rate, Fe_scavenge, Lig_scavenge, &
+       marbl_status_log)
 
-     use marbl_constants_mod, only : c3, c4
-     use marbl_settings_mod , only : Lig_cnt
-     use marbl_settings_mod , only : parm_Fe_scavenge_rate0
-     use marbl_settings_mod , only : parm_Lig_scavenge_rate0
-     use marbl_settings_mod , only : parm_FeLig_scavenge_rate0
-     use marbl_settings_mod , only : dust_Fe_scavenge_scale
+    use marbl_constants_mod, only : c3, c4
+    use marbl_settings_mod , only : Lig_cnt
+    use marbl_settings_mod , only : parm_Fe_scavenge_rate0
+    use marbl_settings_mod , only : parm_Lig_scavenge_rate0
+    use marbl_settings_mod , only : parm_FeLig_scavenge_rate0
+    use marbl_settings_mod , only : dust_Fe_scavenge_scale
 
-     integer                                  , intent(in)    :: k
-     real(r8)                                 , intent(in)    :: Fe_loc
-     real(r8)                                 , intent(in)    :: Lig_loc
-     type(column_sinking_particle_type)       , intent(in)    :: POC
-     type(column_sinking_particle_type)       , intent(in)    :: P_CaCO3
-     type(column_sinking_particle_type)       , intent(in)    :: P_SiO2
-     type(column_sinking_particle_type)       , intent(in)    :: dust
-     real(r8)                                 , intent(out)   :: Fefree
-     real(r8)                                 , intent(out)   :: Fe_scavenge_rate
-     real(r8)                                 , intent(out)   :: Fe_scavenge
-     real(r8)                                 , intent(out)   :: Lig_scavenge
-     type(marbl_log_type)                     , intent(inout) :: marbl_status_log
+    integer,                            intent(in)    :: k
+    integer,                            intent(in)    :: km
+    type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
+    real(r8),                           intent(in)    :: tracer_local(marbl_tracer_indices%total_cnt,km)
+    type(column_sinking_particle_type), intent(in)    :: POC
+    type(column_sinking_particle_type), intent(in)    :: P_CaCO3
+    type(column_sinking_particle_type), intent(in)    :: P_SiO2
+    type(column_sinking_particle_type), intent(in)    :: dust
+    real(r8),                           intent(out)   :: Fefree(km)
+    real(r8),                           intent(out)   :: Fe_scavenge_rate(km)
+    real(r8),                           intent(out)   :: Fe_scavenge(km)
+    real(r8),                           intent(out)   :: Lig_scavenge(km)
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
 
-     character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:compute_scavenging'
-     character(len=char_len)     :: log_message
+    character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:compute_scavenging'
+    character(len=char_len)     :: log_message
 
-     ! ligand binding strengths, original values are L/mol, model units are L/umol
-     real(kind=r8), parameter :: KFeLig1 = 10.0e13_r8 * 1.0e-6_r8
+    ! ligand binding strengths, original values are L/mol, model units are L/umol
+    real(kind=r8), parameter :: KFeLig1 = 10.0e13_r8 * 1.0e-6_r8
 
-     real(r8) :: FeLig1               ! iron bound to ligand 1
-     real(r8) :: sinking_mass         ! sinking mass flux used in calculating scavenging
-     real(r8) :: Lig_scavenge_rate    ! scavenging rate of bound ligand (1/yr)
-     real(r8) :: FeLig_scavenge_rate  ! scavenging rate of bound iron (1/yr)
+    real(r8) :: FeLig1               ! iron bound to ligand 1
+    real(r8) :: sinking_mass         ! sinking mass flux used in calculating scavenging
+    real(r8) :: Lig_scavenge_rate    ! scavenging rate of bound ligand (1/yr)
+    real(r8) :: FeLig_scavenge_rate  ! scavenging rate of bound iron (1/yr)
 
-     ! local vars specific to 2 ligand model
-     real(kind=r8), parameter :: KFeLig2 = 10.0e11_r8 * 1.0e-6_r8
-     real(kind=r8), parameter :: Lig2 = 0.002_r8      ! Lig2 are present everywhere at 2nM concentration
-     integer                  :: n                    ! Newton's method loop index
-     logical (log_kind)       :: Newton_convergence   ! has Newton's method converged
-     real(r8)                 :: FeLig2               ! iron bound to ligand 2
-     real(r8)                 :: Fefree_inc           ! increment in free iron in Newton's method
-     real(r8)                 :: p0,p1,p2,p3          ! polynomial coefficients of Fefree_fcn
-     real(r8)                 :: Fefree_fcn           ! function being solved to determine Fefree
-     real(r8)                 :: dFefree_fcn          ! derivative of Fefree_fcn wrt Fefree
+    ! local vars specific to 2 ligand model
+    real(kind=r8), parameter :: KFeLig2 = 10.0e11_r8 * 1.0e-6_r8
+    real(kind=r8), parameter :: Lig2 = 0.002_r8      ! Lig2 are present everywhere at 2nM concentration
+    integer                  :: n                    ! Newton's method loop index
+    logical (log_kind)       :: Newton_convergence   ! has Newton's method converged
+    real(r8)                 :: FeLig2               ! iron bound to ligand 2
+    real(r8)                 :: Fefree_inc           ! increment in free iron in Newton's method
+    real(r8)                 :: p0,p1,p2,p3          ! polynomial coefficients of Fefree_fcn
+    real(r8)                 :: Fefree_fcn           ! function being solved to determine Fefree
+    real(r8)                 :: dFefree_fcn          ! derivative of Fefree_fcn wrt Fefree
 
-     !-----------------------------------------------------------------------
-     !  compute how much iron is bound to ligand
-     !-----------------------------------------------------------------------
+    associate(&
+         Fe_loc  => tracer_local(marbl_tracer_indices%Fe_ind, :), &
+         Lig_loc => tracer_local(marbl_tracer_indices%Lig_ind, :) &
+         )
 
-     if (Lig_cnt == 1) then
+      !-----------------------------------------------------------------------
+      !  compute how much iron is bound to ligand
+      !-----------------------------------------------------------------------
+
+      if (Lig_cnt == 1) then
         !--------------------------------------------------------------------
         !  Lt  : total ligand; Lf  : unbound ligand; FeL : iron bound to ligand
         !  Fet : total Fe;     Fef : unbound iron
@@ -2263,26 +2268,26 @@ contains
         !  FeL = K Fef Lf = K Fef Lt / (1 + K Fef)
         !--------------------------------------------------------------------
 
-        if (Fe_loc > c0) then
-           p2 = KFeLig1
-           p1 = c1 + KFeLig1*(Lig_loc - Fe_loc)
-           p0 = -Fe_loc
+        if (Fe_loc(k) > c0) then
+          p2 = KFeLig1
+          p1 = c1 + KFeLig1*(Lig_loc(k) - Fe_loc(k))
+          p0 = -Fe_loc(k)
 
-           ! formula for solution of quadratic equation for Fefree (Fef above)
-           !
-           ! the positive root arises from + in the quadratic formula,
-           ! because p2 (= KFeLig1) is positive
-           Fefree = (-p1 + sqrt(p1**2 - c4*p2*p0))/(c2*p2)
+          ! formula for solution of quadratic equation for Fefree (Fef above)
+          !
+          ! the positive root arises from + in the quadratic formula,
+          ! because p2 (= KFeLig1) is positive
+          Fefree(k) = (-p1 + sqrt(p1**2 - c4*p2*p0))/(c2*p2)
 
-           FeLig1 = KFeLig1 * Fefree * Lig_loc / (c1 + KFeLig1 * Fefree)
-        else
-           Fefree = c0
-           FeLig1 = c0
+          FeLig1 = KFeLig1 * Fefree(k) * Lig_loc(k) / (c1 + KFeLig1 * Fefree(k))
+        else ! Fe_loc(k) == 0
+          Fefree(k) = c0
+          FeLig1 = c0
         end if
         FeLig2 = c0
-     endif
+      end if
 
-     if (Lig_cnt == 2) then
+      if (Lig_cnt == 2) then
         !--------------------------------------------------------------------
         !  L1t : ligand 1; L1f : unbound ligand 1; FeL1 : iron bound to ligand 1
         !  L2t : ligand 2; L2f : unbound ligand 2; FeL2 : iron bound to ligand 2
@@ -2309,90 +2314,87 @@ contains
         !  FeL2 = K2 Fef L2f = K2 Fef L2t / (1 + K2 Fef)
         !--------------------------------------------------------------------
 
-        if (Fe_loc > c0) then
-           p3 = KFeLig1*KFeLig2
-           p2 = (KFeLig1+KFeLig2) + KFeLig1*KFeLig2*(Lig_loc+Lig2-Fe_loc)
-           p1 = c1 + KFeLig1*Lig_loc + KFeLig2*Lig2 - (KFeLig1+KFeLig2)*Fe_loc
-           p0 = -Fe_loc
+        if (Fe_loc(k) > c0) then
+          p3 = KFeLig1*KFeLig2
+          p2 = (KFeLig1+KFeLig2) + KFeLig1*KFeLig2*(Lig_loc(k)+Lig2-Fe_loc(k))
+          p1 = c1 + KFeLig1*Lig_loc(k) + KFeLig2*Lig2 - (KFeLig1+KFeLig2)*Fe_loc(k)
+          p0 = -Fe_loc(k)
 
-           ! initial iterate for Newton's method
-           Fefree = Fe_loc
+          ! initial iterate for Newton's method
+          Fefree(k) = Fe_loc(k)
 
-           Newton_convergence = .false.
+          Newton_convergence = .false.
 
-           do n = 1,30 ! maximum number of iterations
-              ! Horner's method to evaluate p0 + p1*Fefree + p2*Fefree^2 + p3*Fefree^3
-              Fefree_fcn  = p0 + Fefree*(p1 + Fefree*(p2 + p3*Fefree))
+          do n = 1,30 ! maximum number of iterations
+            ! Horner's method to evaluate p0 + p1*Fefree + p2*Fefree^2 + p3*Fefree^3
+            Fefree_fcn  = p0 + Fefree(k)*(p1 + Fefree(k)*(p2 + p3*Fefree(k)))
 
-              ! Horner's method to evaluate p1 + (c2*p2)*Fefree + (c3*p3)*Fefree^2
-              dFefree_fcn = p1 + Fefree*((c2*p2) + (c3*p3)*Fefree)
+            ! Horner's method to evaluate p1 + (c2*p2)*Fefree + (c3*p3)*Fefree^2
+            dFefree_fcn = p1 + Fefree(k)*((c2*p2) + (c3*p3)*Fefree(k))
 
-              ! Newton's method
-              Fefree_inc  = Fefree_fcn / dFefree_fcn
-              Fefree      = Fefree - Fefree_inc
+            ! Newton's method
+            Fefree_inc  = Fefree_fcn / dFefree_fcn
+            Fefree(k)      = Fefree(k) - Fefree_inc
 
-              ! Newton's method converges quadratically, once you are close to the solution.
-              ! So if relative change in Fefree is small, then we have converged.
-              if (abs(Fefree_inc) .le. 1.0e-9_r8 * Fefree) then
-                 Newton_convergence = .true.
-                 exit
-              end if
-           end do
+            ! Newton's method converges quadratically, once you are close to the solution.
+            ! So if relative change in Fefree is small, then we have converged.
+            if (abs(Fefree_inc) .le. 1.0e-9_r8 * Fefree(k)) then
+              Newton_convergence = .true.
+              exit
+            end if
+          end do
 
-           ! check that Newton's method converged
-           if (.not. Newton_convergence) then
-              write(log_message,"(A)") 'failure to converge in Newtons method for Fefree'
-              call marbl_status_log%log_error(log_message, subname)
-              write(log_message, "(A,1x,I0)") 'k =', k
-              call marbl_status_log%log_error(log_message, subname)
-              write(log_message, "(A,1x,E25.17)") 'Fe_loc =', Fe_loc
-              call marbl_status_log%log_error(log_message, subname)
-              write(log_message, "(A,1x,E25.17)") 'Lig_loc =', Lig_loc
-              call marbl_status_log%log_error(log_message, subname)
-              return
-           end if
+          ! check that Newton's method converged
+          if (.not. Newton_convergence) then
+            write(log_message,"(A)") 'failure to converge in Newtons method for Fefree'
+            call marbl_status_log%log_error(log_message, subname)
+            write(log_message, "(A,1x,I0)") 'k =', k
+            call marbl_status_log%log_error(log_message, subname)
+            write(log_message, "(A,1x,E25.17)") 'Fe_loc =', Fe_loc(k)
+            call marbl_status_log%log_error(log_message, subname)
+            write(log_message, "(A,1x,E25.17)") 'Lig_loc =', Lig_loc(k)
+            call marbl_status_log%log_error(log_message, subname)
+            return
+          end if
 
-           FeLig1 = KFeLig1 * (Fefree * Lig_loc) / (c1 + KFeLig1*Fefree)
-           FeLig2 = KFeLig2 * (Fefree * Lig_loc) / (c1 + KFeLig2*Fefree)
-        else
-           Fefree = c0
-           FeLig1 = c0
-           FeLig2 = c0
+          FeLig1 = KFeLig1 * (Fefree(k) * Lig_loc(k)) / (c1 + KFeLig1*Fefree(k))
+          FeLig2 = KFeLig2 * (Fefree(k) * Lig_loc(k)) / (c1 + KFeLig2*Fefree(k))
+        else ! Fe_loc(k) == 0
+          Fefree(k) = c0
+          FeLig1 = c0
+          FeLig2 = c0
         end if
-     endif
+      end if
 
-     !-----------------------------------------------------------------------
-     !  Compute iron and ligand scavenging :
-     !  1) compute in terms of loss per year per unit iron (%/year/fe)
-     !  2) scale by sinking mass flux (POM + Dust + bSi + CaCO3)
-     !    POC x 12.01 x 3.0 = 36.03 > POM,
-     !              remin, particle number, and TEP production all scale with POC
-     !  3) Scavenging linear function of sinking mass,
-     !     1.6 ng/cm2/s = 500g/m2/yr, 1.44 450g/m2/yr,
-     !
-     ! scavening of FeLig2 is not implemented
-     !-----------------------------------------------------------------------
+      !-----------------------------------------------------------------------
+      !  Compute iron and ligand scavenging :
+      !  1) compute in terms of loss per year per unit iron (%/year/fe)
+      !  2) scale by sinking mass flux (POM + Dust + bSi + CaCO3)
+      !    POC x 12.01 x 3.0 = 36.03 > POM,
+      !              remin, particle number, and TEP production all scale with POC
+      !  3) Scavenging linear function of sinking mass,
+      !     1.6 ng/cm2/s = 500g/m2/yr, 1.44 450g/m2/yr,
+      !
+      ! scavening of FeLig2 is not implemented
+      !-----------------------------------------------------------------------
 
-     sinking_mass = &
-        ((POC%sflux_in(k)     + POC%hflux_in(k)    ) * (3.0_r8 * 12.01_r8) + &
-         (P_CaCO3%sflux_in(k) + P_CaCO3%hflux_in(k)) * P_CaCO3%mass + &
-         (P_SiO2%sflux_in(k)  + P_SiO2%hflux_in(k) ) * P_SiO2%mass + &
-         (dust%sflux_in(k)    + dust%hflux_in(k)   ) * dust_Fe_scavenge_scale)
+      sinking_mass = (POC%sflux_in(k)     + POC%hflux_in(k)    ) * (3.0_r8 * 12.01_r8) &
+                   + (P_CaCO3%sflux_in(k) + P_CaCO3%hflux_in(k)) * P_CaCO3%mass &
+                   + (P_SiO2%sflux_in(k)  + P_SiO2%hflux_in(k) ) * P_SiO2%mass &
+                   + (dust%sflux_in(k)    + dust%hflux_in(k)   ) * dust_Fe_scavenge_scale
 
-     Fe_scavenge_rate = parm_Fe_scavenge_rate0 * sinking_mass
+      Fe_scavenge_rate(k) = parm_Fe_scavenge_rate0 * sinking_mass
+      Lig_scavenge_rate   = parm_Lig_scavenge_rate0 * sinking_mass
+      FeLig_scavenge_rate = parm_FeLig_scavenge_rate0 * sinking_mass
 
-     Lig_scavenge_rate = parm_Lig_scavenge_rate0 * sinking_mass
+      Lig_scavenge(k) = yps * FeLig1 * Lig_scavenge_rate
+      Fe_scavenge(k)  = yps * (Fefree(k) * Fe_scavenge_rate(k) + FeLig1 * FeLig_scavenge_rate)
 
-     FeLig_scavenge_rate = parm_FeLig_scavenge_rate0 * sinking_mass
+    end associate
 
+  end subroutine compute_scavenging
 
-     Lig_scavenge = yps * FeLig1 * Lig_scavenge_rate
-
-     Fe_scavenge = yps * (Fefree * Fe_scavenge_rate + FeLig1 * FeLig_scavenge_rate)
-
-   end subroutine compute_scavenging
-
-   !***********************************************************************
+  !***********************************************************************
 
    subroutine compute_large_detritus_prod(k, domain, marbl_tracer_indices, &
         zooplankton_derived_terms, autotroph_derived_terms, &
