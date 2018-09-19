@@ -852,7 +852,7 @@ contains
 
      subroutine dissolved_organic_matter_destructor(this)
 
-       class(dissolved_organic_matter_type), intent(out) :: this
+       class(dissolved_organic_matter_type), intent(inout) :: this
 
        deallocate(this%DOC_prod)
        deallocate(this%DOC_remin)
