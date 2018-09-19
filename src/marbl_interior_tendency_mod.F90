@@ -379,13 +379,11 @@ contains
                P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:))
        endif
 
-       call compute_Lig_terms(k, POC%remin(k), dissolved_organic_matter%DOC_prod(k), &
-            num_PAR_subcols, PAR%col_frac(:), PAR%interface(k-1,:), delta_z1, &
-            tracer_local(lig_ind,k), Lig_scavenge(k), &
-            autotroph_derived_terms%photoFe(:,k),     &
-            Lig_prod(k), Lig_photochem(k), Lig_deg(k), Lig_loss(k))
-
     end do ! k
+
+    call compute_Lig_terms(km, num_PAR_subcols, marbl_tracer_indices, &
+         POC%remin(:), dissolved_organic_matter%DOC_prod(:), PAR, delta_z1, tracer_local, Lig_scavenge(:), &
+         autotroph_derived_terms%photoFe(:,:), Lig_prod(:), Lig_photochem(:), Lig_deg(:), Lig_loss(:))
 
     call compute_nitrif(kmt, km, num_PAR_subcols, marbl_tracer_indices, PAR, tracer_local(:,:), nitrif(:))
 
@@ -3203,79 +3201,81 @@ contains
 
    end subroutine compute_particulate_terms
 
-   !***********************************************************************
+  !***********************************************************************
 
-   subroutine compute_Lig_terms(k, POC_remin, DOC_prod, &
-         PAR_nsubcols, PAR_col_frac, PAR_in, dz1,       &
-         Lig_loc, Lig_scavenge, photoFe,                &
-         Lig_prod, Lig_photochem, Lig_deg, Lig_loss)
+  subroutine compute_Lig_terms(km, PAR_nsubcols, marbl_tracer_indices, &
+       POC_remin, DOC_prod, PAR, dz1, tracer_local, Lig_scavenge, &
+       photoFe, Lig_prod, Lig_photochem, Lig_deg, Lig_loss)
 
-     use marbl_settings_mod  , only : remin_to_Lig
-     use marbl_settings_mod  , only : parm_Lig_degrade_rate0
+    use marbl_settings_mod, only : remin_to_Lig
+    use marbl_settings_mod, only : parm_Lig_degrade_rate0
 
-     integer(int_kind)       , intent(in)  :: k
-     real(r8)                , intent(in)  :: POC_remin
-     real(r8)                , intent(in)  :: DOC_prod
-     integer(int_kind)       , intent(in)  :: PAR_nsubcols
-     real(r8)                , intent(in)  :: PAR_col_frac(PAR_nsubcols)
-     real(r8)                , intent(in)  :: PAR_in(PAR_nsubcols)
-     real(r8)                , intent(in)  :: dz1
-     real(r8)                , intent(in)  :: Lig_loc
-     real(r8)                , intent(in)  :: Lig_scavenge
-     real(r8)                , intent(in)  :: photoFe(autotroph_cnt)
-     real(r8)                , intent(out) :: Lig_prod
-     real(r8)                , intent(out) :: Lig_photochem
-     real(r8)                , intent(out) :: Lig_deg
-     real(r8)                , intent(out) :: Lig_loss
+    integer(int_kind),             intent(in)  :: km
+    integer(int_kind),             intent(in)  :: PAR_nsubcols
+    type(marbl_tracer_index_type), intent(in)  :: marbl_tracer_indices
+    real(r8),                      intent(in)  :: POC_remin(km)
+    real(r8),                      intent(in)  :: DOC_prod(km)
+    type(marbl_PAR_type),          intent(in)  :: PAR
+    real(r8),                      intent(in)  :: dz1
+    real(r8),                      intent(in)  :: tracer_local(marbl_tracer_indices%total_cnt, km)
+    real(r8),                      intent(in)  :: Lig_scavenge(km)
+    real(r8),                      intent(in)  :: photoFe(autotroph_cnt,km)
+    real(r8),                      intent(out) :: Lig_prod(km)
+    real(r8),                      intent(out) :: Lig_photochem(km)
+    real(r8),                      intent(out) :: Lig_deg(km)
+    real(r8),                      intent(out) :: Lig_loss(km)
 
-     !-----------------------------------------------------------------------
-     !  local variables
-     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  local variables
+    !-----------------------------------------------------------------------
+    integer  :: subcol_ind
+    real(r8) :: rate_per_sec_subcol ! (1/sec)
+    real(r8) :: rate_per_sec        ! (1/sec)
 
-     integer  :: subcol_ind
-     real(r8) :: rate_per_sec_subcol ! (1/sec)
-     real(r8) :: rate_per_sec        ! (1/sec)
+    associate(&
+              PAR_col_frac => PAR%col_frac(:), &
+              Lig_loc      => tracer_local(marbl_tracer_indices%lig_ind,:) &
+              )
 
-     !-----------------------------------------------------------------------
-     !  Ligand production tied to remin of particulate organic matter
-     !      and production of DOM
-     !-----------------------------------------------------------------------
+      !-----------------------------------------------------------------------
+      !  Ligand production tied to remin of particulate organic matter
+      !      and production of DOM
+      !-----------------------------------------------------------------------
 
-     Lig_prod = (POC_remin * remin_to_Lig) + (DOC_prod * remin_to_Lig)
+      Lig_prod(:) = (POC_remin(:) * remin_to_Lig) + (DOC_prod(:) * remin_to_Lig)
 
-     !----------------------------------------------------------------------
-     !  Ligand losses due to photochemistry in first ocean layer
-     !  ligand photo-oxidation a function of PAR (2/5/2015)
-     !----------------------------------------------------------------------
+      !----------------------------------------------------------------------
+      !  Ligand losses due to photochemistry in first ocean layer
+      !  ligand photo-oxidation a function of PAR (2/5/2015)
+      !----------------------------------------------------------------------
 
-     Lig_photochem = c0
+      Lig_photochem(:) = c0
 
-     if (k==1) then
-        rate_per_sec = c0
-        do subcol_ind = 1, PAR_nsubcols
-           if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR_in(subcol_ind) > 1.0_r8)) then
-              rate_per_sec_subcol = (log(PAR_in(subcol_ind))*0.4373_r8)*(10.0e2_r8/dz1)*((12.0_r8/3.0_r8)*yps) ! 1/(3 months)
-              rate_per_sec = rate_per_sec + PAR_col_frac(subcol_ind) * rate_per_sec_subcol
-           endif
-        end do
-        Lig_photochem = Lig_loc * rate_per_sec
-     endif
+      ! Initialize top level
+      rate_per_sec = c0
+      do subcol_ind = 1, PAR_nsubcols
+        if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR%interface(0,subcol_ind) > 1.0_r8)) then
+          rate_per_sec_subcol = (log(PAR%interface(0,subcol_ind))*0.4373_r8)*(10.0e2_r8/dz1)*((12.0_r8/3.0_r8)*yps) ! 1/(3 months)
+          rate_per_sec = rate_per_sec + PAR_col_frac(subcol_ind) * rate_per_sec_subcol
+        endif
+      end do
+      Lig_photochem(1) = Lig_loc(1) * rate_per_sec
 
-     !----------------------------------------------------------------------
-     !  Ligand losses due to uptake/degradation (by hetrotrophic bacteria)
-     !----------------------------------------------------------------------
+      !----------------------------------------------------------------------
+      !  Ligand losses due to uptake/degradation (by hetrotrophic bacteria)
+      !----------------------------------------------------------------------
 
-     Lig_deg = POC_remin * parm_Lig_degrade_rate0
+      Lig_deg(:) = POC_remin(:) * parm_Lig_degrade_rate0
 
-     !----------------------------------------------------------------------
-     !  total ligand loss
-     !----------------------------------------------------------------------
+      !----------------------------------------------------------------------
+      !  total ligand loss
+      !----------------------------------------------------------------------
 
-     Lig_loss = Lig_scavenge + 0.20_r8*sum(photoFe(:)) + Lig_photochem + Lig_deg
+      Lig_loss(:) = Lig_scavenge(:) + 0.20_r8*sum(photoFe(:,:),dim=1) + Lig_photochem(:) + Lig_deg(:)
 
-     !----------------------------------------------------------------------
+    end associate
 
-   end subroutine compute_Lig_terms
+  end subroutine compute_Lig_terms
 
   !***********************************************************************
 
