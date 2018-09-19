@@ -406,7 +406,9 @@ contains
             o2_consumption_scalef(k), &
             o2_production(k), o2_consumption(k), &
             interior_tendencies(:, k), marbl_tracer_indices )
+    end do ! k
 
+    do k=1, km
        ! Store any variables needed in other tracer modules
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
