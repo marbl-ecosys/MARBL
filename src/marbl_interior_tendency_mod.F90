@@ -105,6 +105,7 @@ contains
        zooplankton_local,                     &
        saved_state,                           &
        marbl_timers,                          &
+       interior_tendency_share,               &
        marbl_particulate_share,               &
        interior_tendency_diags,               &
        interior_tendencies,                   &
@@ -142,6 +143,7 @@ contains
     type(zooplankton_local_type),                            intent(inout) :: zooplankton_local
     type(marbl_saved_state_type),                            intent(inout) :: saved_state
     type(marbl_internal_timers_type),                        intent(inout) :: marbl_timers
+    type(marbl_interior_tendency_share_type),                intent(inout) :: interior_tendency_share
     type(marbl_particulate_share_type),                      intent(inout) :: marbl_particulate_share
     type(marbl_diagnostics_type),                            intent(inout) :: interior_tendency_diags
     real(r8),                                                intent(out)   :: interior_tendencies(:,:)          ! (tracer_cnt, km) computed source/sink terms
@@ -156,7 +158,6 @@ contains
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
     real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
 
-    type(marbl_interior_tendency_share_type) :: marbl_interior_tendency_share(domain%km)
     type(marbl_zooplankton_share_type)       :: marbl_zooplankton_share(domain%km)
 
     integer (int_kind) :: k         ! vertical level index
@@ -413,7 +414,7 @@ contains
        !            of compute_particulate_terms!
        call marbl_interior_tendency_share_export_variables(k, tracer_local(:, k), &
             marbl_tracer_indices, carbonate(k), dissolved_organic_matter,   &
-            QA_dust_def(k), marbl_interior_tendency_share(k))
+            QA_dust_def(k), interior_tendency_share)
 
        call marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local, &
             zooplankton_derived_terms, marbl_zooplankton_share(k))
@@ -451,19 +452,19 @@ contains
     end if
 
     !  Compute time derivatives for ecosystem carbon isotope state variables
-    call marbl_ciso_interior_tendency_compute(                       &
-         marbl_domain                 = domain,                      &
-         marbl_interior_tendency_share = marbl_interior_tendency_share, &
-         marbl_zooplankton_share      = marbl_zooplankton_share,     &
-         marbl_particulate_share      = marbl_particulate_share,     &
-         autotroph_derived_terms      = autotroph_derived_terms,     &
-         tracer_local                 = tracer_local,                &
-         autotroph_local              = autotroph_local,             &
-         temperature                  = temperature,                 &
-         marbl_tracer_indices         = marbl_tracer_indices,        &
-         interior_tendencies          = interior_tendencies,         &
-         marbl_interior_diags         = interior_tendency_diags,     &
-         marbl_status_log             = marbl_status_log)
+    call marbl_ciso_interior_tendency_compute(                  &
+         marbl_domain            = domain,                      &
+         interior_tendency_share = interior_tendency_share,     &
+         marbl_zooplankton_share = marbl_zooplankton_share,     &
+         marbl_particulate_share = marbl_particulate_share,     &
+         autotroph_derived_terms = autotroph_derived_terms,     &
+         tracer_local            = tracer_local,                &
+         autotroph_local         = autotroph_local,             &
+         temperature             = temperature,                 &
+         marbl_tracer_indices    = marbl_tracer_indices,        &
+         interior_tendencies     = interior_tendencies,         &
+         marbl_interior_diags    = interior_tendency_diags,     &
+         marbl_status_log        = marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace(&

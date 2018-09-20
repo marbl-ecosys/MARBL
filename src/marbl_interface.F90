@@ -43,6 +43,7 @@ module marbl_interface
   use marbl_interface_private_types, only : zooplankton_derived_terms_type
   use marbl_interface_private_types, only : zooplankton_local_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
+  use marbl_interface_private_types, only : marbl_interior_tendency_share_type
   use marbl_interface_private_types, only : dissolved_organic_matter_type
   use marbl_interface_private_types, only : marbl_surface_flux_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
@@ -109,19 +110,20 @@ module marbl_interface
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
-     type(marbl_PAR_type),                   private :: PAR
-     type(autotroph_derived_terms_type),     private :: autotroph_derived_terms
-     type(autotroph_local_type),             private :: autotroph_local
-     type(zooplankton_derived_terms_type),   private :: zooplankton_derived_terms
-     type(zooplankton_local_type),           private :: zooplankton_local
-     type(marbl_particulate_share_type),     private :: particulate_share
-     type(dissolved_organic_matter_type),    private :: dissolved_organic_matter
-     type(marbl_surface_flux_share_type),    private :: surface_flux_share
-     type(marbl_surface_flux_internal_type), private :: surface_flux_internal
-     logical,                                private :: lallow_glo_ops
-     type(marbl_internal_timers_type),       private :: timers
-     type(marbl_timer_indexing_type),        private :: timer_ids
-     type(marbl_settings_type),              private :: settings
+     type(marbl_PAR_type),                     private :: PAR
+     type(autotroph_derived_terms_type),       private :: autotroph_derived_terms
+     type(autotroph_local_type),               private :: autotroph_local
+     type(zooplankton_derived_terms_type),     private :: zooplankton_derived_terms
+     type(zooplankton_local_type),             private :: zooplankton_local
+     type(marbl_particulate_share_type),       private :: particulate_share
+     type(marbl_interior_tendency_share_type), private :: interior_tendency_share
+     type(dissolved_organic_matter_type),      private :: dissolved_organic_matter
+     type(marbl_surface_flux_share_type),      private :: surface_flux_share
+     type(marbl_surface_flux_internal_type),   private :: surface_flux_internal
+     logical,                                  private :: lallow_glo_ops
+     type(marbl_internal_timers_type),         private :: timers
+     type(marbl_timer_indexing_type),          private :: timer_ids
+     type(marbl_settings_type),                private :: settings
 
    contains
 
@@ -276,6 +278,7 @@ contains
     call this%autotroph_local%construct(ciso_on, autotroph_cnt, num_levels)
     call this%zooplankton_derived_terms%construct(zooplankton_cnt, num_levels)
     call this%zooplankton_local%construct(zooplankton_cnt, num_levels)
+    call this%interior_tendency_share%construct(num_levels)
 
     !-----------------------------------------------------------------------
     !  Set up tracers
@@ -871,6 +874,7 @@ contains
          zooplankton_local                 = this%zooplankton_local,                &
          saved_state                       = this%interior_tendency_saved_state,    &
          marbl_timers                      = this%timers,                           &
+         interior_tendency_share           = this%interior_tendency_share,          &
          marbl_particulate_share           = this%particulate_share,                &
          interior_tendency_diags           = this%interior_tendency_diags,          &
          interior_tendencies               = this%interior_tendencies,              &
@@ -1023,6 +1027,7 @@ contains
     call this%autotroph_local%destruct()
     call this%zooplankton_derived_terms%destruct()
     call this%zooplankton_local%destruct()
+    call this%interior_tendency_share%destruct()
     call this%domain%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)

@@ -47,7 +47,7 @@ contains
 
   subroutine marbl_ciso_interior_tendency_compute( &
        marbl_domain,                               &
-       marbl_interior_tendency_share,              &
+       interior_tendency_share,                    &
        marbl_zooplankton_share,                    &
        marbl_particulate_share,                    &
        tracer_local,                               &
@@ -72,7 +72,7 @@ contains
     use marbl_ciso_diagnostics_mod, only : store_diagnostics_ciso_interior
 
     type(marbl_domain_type),                  intent(in)    :: marbl_domain
-    type(marbl_interior_tendency_share_type), intent(in)    :: marbl_interior_tendency_share(:)
+    type(marbl_interior_tendency_share_type), intent(in)    :: interior_tendency_share
     type(marbl_zooplankton_share_type),       intent(in)    :: marbl_zooplankton_share(:)
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
     real (r8),                                intent(in)    :: tracer_local(:,:)
@@ -179,11 +179,12 @@ contains
          column_km          => marbl_domain%km,  &
          column_kmt         => marbl_domain%kmt, &
 
-         CO3                => marbl_interior_tendency_share%CO3_fields,           & ! INPUT carbonate ion
-         HCO3               => marbl_interior_tendency_share%HCO3_fields,          & ! INPUT bicarbonate ion
-         H2CO3              => marbl_interior_tendency_share%H2CO3_fields,         & ! INPUT carbonic acid
-         DOCtot_remin       => marbl_interior_tendency_share%DOCtot_remin_fields,  & ! INPUT remineralization of DOCtot (mmol C/m^3/sec)
-         DOCtot_loc         => marbl_interior_tendency_share%DOCtot_loc_fields,    & ! INPUT local copy of model DOCtot
+         CO3                => interior_tendency_share%CO3_fields,           & ! INPUT carbonate ion
+         HCO3               => interior_tendency_share%HCO3_fields,          & ! INPUT bicarbonate ion
+         H2CO3              => interior_tendency_share%H2CO3_fields,         & ! INPUT carbonic acid
+         DOCtot_remin       => interior_tendency_share%DOCtot_remin_fields,  & ! INPUT remineralization of DOCtot (mmol C/m^3/sec)
+         DOCtot_loc         => interior_tendency_share%DOCtot_loc_fields,    & ! INPUT local copy of model DOCtot
+
          DO13Ctot_loc       => tracer_local(marbl_tracer_indices%DO13Ctot_ind,:),  & ! local copy of model DO14Ctot
          DO14Ctot_loc       => tracer_local(marbl_tracer_indices%DO14Ctot_ind,:),  & ! local copy of model DO14Ctot
          DIC_loc            => tracer_local(marbl_tracer_indices%DIC_ind,:),       & ! INPUT local copy of model DIC
@@ -556,10 +557,10 @@ contains
        !-----------------------------------------------------------------------
 
        call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            marbl_interior_tendency_share(k), marbl_particulate_share, PO13C, P_Ca13CO3)
+            interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3)
 
        call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            marbl_interior_tendency_share(k), marbl_particulate_share, PO14C, P_Ca14CO3)
+            interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3)
 
        !-----------------------------------------------------------------------
        ! Update interior_tendencies for the 7 carbon pools for each Carbon isotope
@@ -1048,7 +1049,7 @@ contains
   !***********************************************************************
 
   subroutine compute_particulate_terms(k, domain, tracer_local, marbl_tracer_indices, &
-             marbl_interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
+             interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
 
     !----------------------------------------------------------------------------------------
     !  Compute outgoing fluxes and remineralization terms for Carbon isotopes.
@@ -1070,7 +1071,7 @@ contains
     type(marbl_domain_type),                  intent(in)    :: domain
     real(r8),                                 intent(in)    :: tracer_local(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
-    type(marbl_interior_tendency_share_type), intent(in)    :: marbl_interior_tendency_share
+    type(marbl_interior_tendency_share_type), intent(in)    :: interior_tendency_share
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
     type(column_sinking_particle_type),       intent(inout) :: POC_ciso          ! base units = nmol particulate organic Carbon isotope
     type(column_sinking_particle_type),       intent(inout) :: P_CaCO3_ciso      ! base units = nmol CaCO3 Carbon isotope
@@ -1095,8 +1096,8 @@ contains
          column_zw         => domain%zw(k)                                  , & ! IN
          O2_loc            => tracer_local(marbl_tracer_indices%O2_ind)     , & ! IN
          NO3_loc           => tracer_local(marbl_tracer_indices%NO3_ind)    , & ! IN
-         CO3               => marbl_interior_tendency_share%CO3_fields      , & ! IN
-         CO3_sat_calcite   => marbl_interior_tendency_share%CO3_sat_calcite , & ! IN
+         CO3               => interior_tendency_share%CO3_fields(k)         , & ! IN
+         CO3_sat_calcite   => interior_tendency_share%CO3_sat_calcite(k)    , & ! IN
          decay_CaCO3       => marbl_particulate_share%decay_CaCO3_fields    , & ! IN
          DECAY_Hard        => marbl_particulate_share%DECAY_Hard_fields     , & ! IN
          decay_POC_E       => marbl_particulate_share%decay_POC_E_fields    , & ! IN

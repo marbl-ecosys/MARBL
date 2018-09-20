@@ -187,13 +187,16 @@ module marbl_interface_private_types
   !****************************************************************************
 
   type, public :: marbl_interior_tendency_share_type
-     real(r8) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux
-     real(r8) :: CO3_fields
-     real(r8) :: HCO3_fields         ! bicarbonate ion
-     real(r8) :: H2CO3_fields        ! carbonic acid
-     real(r8) :: CO3_sat_calcite
-     real(r8) :: DOCtot_loc_fields   ! local copy of model DOC+DOCr
-     real(r8) :: DOCtot_remin_fields ! remineralization of DOC+DOCr (mmol C/m^3/sec)
+     real(r8), allocatable :: QA_dust_def(:)         ! incoming deficit in the QA(dust) POC flux
+     real(r8), allocatable :: CO3_fields(:)
+     real(r8), allocatable :: HCO3_fields(:)         ! bicarbonate ion
+     real(r8), allocatable :: H2CO3_fields(:)        ! carbonic acid
+     real(r8), allocatable :: CO3_sat_calcite(:)
+     real(r8), allocatable :: DOCtot_loc_fields(:)   ! local copy of model DOC+DOCr
+     real(r8), allocatable :: DOCtot_remin_fields(:) ! remineralization of DOC+DOCr (mmol C/m^3/sec)
+   contains
+     procedure, public :: construct => marbl_interior_tendency_share_constructor
+     procedure, public :: destruct => marbl_interior_tendency_share_destructor
   end type marbl_interior_tendency_share_type
 
   !***********************************************************************
@@ -1225,6 +1228,39 @@ contains
     end if
 
   end subroutine marbl_surface_flux_internal_destructor
+
+  !*****************************************************************************
+
+  subroutine marbl_interior_tendency_share_constructor(this, num_levels)
+
+    class(marbl_interior_tendency_share_type), intent(out) :: this
+    integer (int_kind),                        intent(in)  :: num_levels
+
+    allocate(this%QA_dust_def(num_levels))
+    allocate(this%CO3_fields(num_levels))
+    allocate(this%HCO3_fields(num_levels))
+    allocate(this%H2CO3_fields(num_levels))
+    allocate(this%CO3_sat_calcite(num_levels))
+    allocate(this%DOCtot_loc_fields(num_levels))
+    allocate(this%DOCtot_remin_fields(num_levels))
+
+  end subroutine marbl_interior_tendency_share_constructor
+
+  !***********************************************************************
+
+  subroutine marbl_interior_tendency_share_destructor(this)
+
+    class(marbl_interior_tendency_share_type), intent(inout) :: this
+
+    deallocate(this%QA_dust_def)
+    deallocate(this%CO3_fields)
+    deallocate(this%HCO3_fields)
+    deallocate(this%H2CO3_fields)
+    deallocate(this%CO3_sat_calcite)
+    deallocate(this%DOCtot_loc_fields)
+    deallocate(this%DOCtot_remin_fields)
+
+  end subroutine marbl_interior_tendency_share_destructor
 
   !*****************************************************************************
 
