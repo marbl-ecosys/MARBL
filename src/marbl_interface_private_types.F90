@@ -229,16 +229,19 @@ module marbl_interface_private_types
   !*****************************************************************************
 
   type, public :: carbonate_type
-     real (r8) :: CO3           ! carbonate ion
-     real (r8) :: HCO3          ! bicarbonate ion
-     real (r8) :: H2CO3         ! carbonic acid
-     real (r8) :: pH
-     real (r8) :: CO3_sat_calcite
-     real (r8) :: CO3_sat_aragonite
-     real (r8) :: CO3_ALT_CO2   ! carbonate ion, alternative CO2
-     real (r8) :: HCO3_ALT_CO2  ! bicarbonate ion, alternative CO2
-     real (r8) :: H2CO3_ALT_CO2 ! carbonic acid, alternative CO2
-     real (r8) :: pH_ALT_CO2
+     real(r8), allocatable :: CO3(:)           ! carbonate ion
+     real(r8), allocatable :: HCO3(:)          ! bicarbonate ion
+     real(r8), allocatable :: H2CO3(:)         ! carbonic acid
+     real(r8), allocatable :: pH(:)
+     real(r8), allocatable :: CO3_sat_calcite(:)
+     real(r8), allocatable :: CO3_sat_aragonite(:)
+     real(r8), allocatable :: CO3_ALT_CO2(:)   ! carbonate ion, alternative CO2
+     real(r8), allocatable :: HCO3_ALT_CO2(:)  ! bicarbonate ion, alternative CO2
+     real(r8), allocatable :: H2CO3_ALT_CO2(:) ! carbonic acid, alternative CO2
+     real(r8), allocatable :: pH_ALT_CO2(:)
+   contains
+     procedure, public :: construct => carbonate_constructor
+     procedure, public :: destruct  => carbonate_destructor
   end type carbonate_type
 
   !*****************************************************************************
@@ -830,6 +833,45 @@ contains
      call this%dust%destruct()
 
    end subroutine marbl_particulate_share_destructor
+
+   !***********************************************************************
+
+    subroutine carbonate_constructor(this, num_levels)
+
+      class(carbonate_type), intent(inout) :: this
+      integer (int_kind),    intent(in)    :: num_levels
+
+      allocate(this%CO3(num_levels))
+      allocate(this%HCO3(num_levels))
+      allocate(this%H2CO3(num_levels))
+      allocate(this%pH(num_levels))
+      allocate(this%CO3_sat_calcite(num_levels))
+      allocate(this%CO3_sat_aragonite(num_levels))
+      allocate(this%CO3_ALT_CO2(num_levels))
+      allocate(this%HCO3_ALT_CO2(num_levels))
+      allocate(this%H2CO3_ALT_CO2(num_levels))
+      allocate(this%pH_ALT_CO2(num_levels))
+
+    end subroutine carbonate_constructor
+
+    !***********************************************************************
+
+     subroutine carbonate_destructor(this)
+
+       class(carbonate_type), intent(inout) :: this
+
+       deallocate(this%CO3)
+       deallocate(this%HCO3)
+       deallocate(this%H2CO3)
+       deallocate(this%pH)
+       deallocate(this%CO3_sat_calcite)
+       deallocate(this%CO3_sat_aragonite)
+       deallocate(this%CO3_ALT_CO2)
+       deallocate(this%HCO3_ALT_CO2)
+       deallocate(this%H2CO3_ALT_CO2)
+       deallocate(this%pH_ALT_CO2)
+
+     end subroutine carbonate_destructor
 
    !***********************************************************************
 

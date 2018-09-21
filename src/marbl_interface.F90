@@ -45,6 +45,7 @@ module marbl_interface
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_interior_tendency_share_type
   use marbl_interface_private_types, only : dissolved_organic_matter_type
+  use marbl_interface_private_types, only : carbonate_type
   use marbl_interface_private_types, only : marbl_surface_flux_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
@@ -118,6 +119,7 @@ module marbl_interface
      type(marbl_particulate_share_type),       private :: particulate_share
      type(marbl_interior_tendency_share_type), private :: interior_tendency_share
      type(dissolved_organic_matter_type),      private :: dissolved_organic_matter
+     type(carbonate_type),                     private :: carbonate
      type(marbl_surface_flux_share_type),      private :: surface_flux_share
      type(marbl_surface_flux_internal_type),   private :: surface_flux_internal
      logical,                                  private :: lallow_glo_ops
@@ -274,6 +276,7 @@ contains
 
     call this%PAR%construct(num_levels, num_PAR_subcols)
     call this%dissolved_organic_matter%construct(num_levels)
+    call this%carbonate%construct(num_levels)
     call this%autotroph_derived_terms%construct(autotroph_cnt, num_levels)
     call this%autotroph_local%construct(ciso_on, autotroph_cnt, num_levels)
     call this%zooplankton_derived_terms%construct(zooplankton_cnt, num_levels)
@@ -868,6 +871,7 @@ contains
          marbl_timer_indices               = this%timer_ids,                        &
          PAR                               = this%PAR,                              &
          dissolved_organic_matter          = this%dissolved_organic_matter,         &
+         carbonate                         = this%carbonate,                        &
          autotroph_derived_terms           = this%autotroph_derived_terms,          &
          autotroph_local                   = this%autotroph_local,                  &
          zooplankton_derived_terms         = this%zooplankton_derived_terms,        &
@@ -1023,6 +1027,7 @@ contains
     call this%particulate_share%destruct()
     call this%PAR%destruct()
     call this%dissolved_organic_matter%destruct()
+    call this%carbonate%destruct()
     call this%autotroph_derived_terms%destruct()
     call this%autotroph_local%destruct()
     call this%zooplankton_derived_terms%destruct()

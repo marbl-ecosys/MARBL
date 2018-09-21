@@ -2984,7 +2984,7 @@ contains
     real (r8),                                           intent(in)    :: temperature(domain%km) ! in situ temperature
     real(r8),                                            intent(in)    :: interior_tendencies(:,:) ! (tracer_cnt, km) computed source/sink terms
     type(marbl_tracer_index_type),                       intent(in)    :: marbl_tracer_indices
-    type (carbonate_type),                               intent(in)    :: carbonate(domain%km)
+    type (carbonate_type),                               intent(in)    :: carbonate
     type (autotroph_local_type),                         intent(in)    :: autotroph_local
     type (autotroph_derived_terms_type),                 intent(in)    :: autotroph_derived_terms
     type (zooplankton_derived_terms_type),               intent(in)    :: zooplankton_derived_terms
@@ -3276,7 +3276,7 @@ contains
              marbl_interior_diags, marbl_status_log)
 
     type(marbl_domain_type)      , intent(in)    :: marbl_domain
-    type(carbonate_type)         , intent(in)    :: carbonate(:)
+    type(carbonate_type)         , intent(in)    :: carbonate
     type(marbl_diagnostics_type) , intent(inout) :: marbl_interior_diags
     type(marbl_log_type)         , intent(inout) :: marbl_status_log
 
@@ -3284,17 +3284,15 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_carbonate'
-
-    integer(int_kind) :: k
     !-----------------------------------------------------------------------
 
     associate(                                                  &
          km                => marbl_domain%km,                  &
          diags             => marbl_interior_diags%diags,       &
          ind               => marbl_interior_tendency_diag_ind, &
-         CO3               => carbonate(:)%CO3,                 &
-         CO3_sat_calcite   => carbonate(:)%CO3_sat_calcite,     &
-         CO3_sat_aragonite => carbonate(:)%CO3_sat_aragonite    &
+         CO3               => carbonate%CO3(:),                 &
+         CO3_sat_calcite   => carbonate%CO3_sat_calcite(:),     &
+         CO3_sat_aragonite => carbonate%CO3_sat_aragonite(:)    &
          )
 
     ! Find depth where CO3 = CO3_sat_calcite or CO3_sat_argonite
@@ -3315,18 +3313,16 @@ contains
       return
     end if
 
-    do k = 1, km
-       diags(ind%CO3)%field_3d(k, 1)           = carbonate(k)%CO3
-       diags(ind%HCO3)%field_3d(k, 1)          = carbonate(k)%HCO3
-       diags(ind%H2CO3)%field_3d(k, 1)         = carbonate(k)%H2CO3
-       diags(ind%pH_3D)%field_3d(k, 1)         = carbonate(k)%pH
-       diags(ind%CO3_ALT_CO2)%field_3d(k, 1)   = carbonate(k)%CO3_ALT_CO2
-       diags(ind%HCO3_ALT_CO2)%field_3d(k, 1)  = carbonate(k)%HCO3_ALT_CO2
-       diags(ind%H2CO3_ALT_CO2)%field_3d(k, 1) = carbonate(k)%H2CO3_ALT_CO2
-       diags(ind%pH_3D_ALT_CO2)%field_3d(k, 1) = carbonate(k)%pH_ALT_CO2
-       diags(ind%co3_sat_calc)%field_3d(k, 1)  = carbonate(k)%CO3_sat_calcite
-       diags(ind%co3_sat_arag)%field_3d(k, 1)  = carbonate(k)%CO3_sat_aragonite
-    end do
+    diags(ind%CO3)%field_3d(:, 1)           = carbonate%CO3(:)
+    diags(ind%HCO3)%field_3d(:, 1)          = carbonate%HCO3(:)
+    diags(ind%H2CO3)%field_3d(:, 1)         = carbonate%H2CO3(:)
+    diags(ind%pH_3D)%field_3d(:, 1)         = carbonate%pH(:)
+    diags(ind%CO3_ALT_CO2)%field_3d(:, 1)   = carbonate%CO3_ALT_CO2(:)
+    diags(ind%HCO3_ALT_CO2)%field_3d(:, 1)  = carbonate%HCO3_ALT_CO2(:)
+    diags(ind%H2CO3_ALT_CO2)%field_3d(:, 1) = carbonate%H2CO3_ALT_CO2(:)
+    diags(ind%pH_3D_ALT_CO2)%field_3d(:, 1) = carbonate%pH_ALT_CO2(:)
+    diags(ind%co3_sat_calc)%field_3d(:, 1)  = carbonate%CO3_sat_calcite(:)
+    diags(ind%co3_sat_arag)%field_3d(:, 1)  = carbonate%CO3_sat_aragonite(:)
 
     end associate
 

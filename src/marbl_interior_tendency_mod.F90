@@ -99,6 +99,7 @@ contains
        marbl_timer_indices,                   &
        PAR,                                   &
        dissolved_organic_matter,              &
+       carbonate,                             &
        autotroph_derived_terms,               &
        autotroph_local,                       &
        zooplankton_derived_terms,             &
@@ -137,6 +138,7 @@ contains
     type(marbl_timer_indexing_type),                         intent(in)    :: marbl_timer_indices
     type(marbl_PAR_type),                                    intent(inout) :: PAR
     type(dissolved_organic_matter_type),                     intent(inout) :: dissolved_organic_matter
+    type(carbonate_type),                                    intent(inout) :: carbonate
     type(autotroph_derived_terms_type),                      intent(inout) :: autotroph_derived_terms
     type(autotroph_local_type),                              intent(inout) :: autotroph_local
     type(zooplankton_derived_terms_type),                    intent(inout) :: zooplankton_derived_terms
@@ -185,8 +187,6 @@ contains
     real (r8) :: Lig_deg(domain%km)          ! loss of Fe-binding Ligand from bacterial degradation
     real (r8) :: Lig_loss(domain%km)         ! loss of Fe-binding Ligand
     real (r8) :: totalChl_local(domain%km)   ! local value of totalChl
-
-    type(carbonate_type)                     :: carbonate(domain%km)
 
     ! NOTE(bja, 2015-07) vectorization: arrays that are (n, k, c, i)
     ! probably can not be vectorized reasonably over c without memory
@@ -299,7 +299,7 @@ contains
     call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
                             marbl_status_log)
     call compute_carbonate_chemistry(domain, temperature, pressure,           &
-         salinity, tracer_local(:, :), marbl_tracer_indices, carbonate(:),    &
+         salinity, tracer_local(:, :), marbl_tracer_indices, carbonate,       &
          ph_prev_col(:), ph_prev_alt_co2_col(:), marbl_status_log)
     call marbl_timers%stop(marbl_timer_indices%carbonate_chem_id,             &
                             marbl_status_log)
@@ -368,7 +368,7 @@ contains
             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                    &
             P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),   &
             QA_dust_def(k),                                        &
-            tracer_local(:, k), carbonate(k), sed_denitrif(k),     &
+            tracer_local(:, k), carbonate, sed_denitrif(k),        &
             other_remin(k), fesedflux(k), marbl_tracer_indices,    &
             glo_avg_fields_interior_tendency, marbl_status_log)
 
@@ -412,8 +412,8 @@ contains
        ! Store any variables needed in other tracer modules
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
-       call marbl_interior_tendency_share_export_variables(k, tracer_local(:, k), &
-            marbl_tracer_indices, carbonate(k), dissolved_organic_matter,   &
+       call marbl_interior_tendency_share_export_variables(k, marbl_tracer_indices, &
+            tracer_local(:, k), carbonate, dissolved_organic_matter,                &
             QA_dust_def(k), interior_tendency_share)
 
        call marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local, &
@@ -920,7 +920,6 @@ contains
     use marbl_co2calc_mod, only : marbl_co2calc_co3_sat_vals
     use marbl_co2calc_mod, only : co2calc_coeffs_type
     use marbl_co2calc_mod, only : co2calc_state_type
-    use marbl_interface_private_types, only : carbonate_type
 
     type(marbl_domain_type),       intent(in)    :: domain
     real (r8),                     intent(in)    :: temperature(:)
@@ -928,7 +927,7 @@ contains
     real (r8),                     intent(in)    :: salinity(:)
     real (r8),                     intent(in)    :: tracer_local(:,:)       ! local copies of model tracer concentrations
     type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
-    type(carbonate_type),          intent(out)   :: carbonate(:)            ! km
+    type(carbonate_type),          intent(inout) :: carbonate
     real(r8),                      intent(inout) :: ph_prev_col(:)          ! km
     real(r8),                      intent(inout) :: ph_prev_alt_co2_col(:)  ! km
     type(marbl_log_type),          intent(inout) :: marbl_status_log
@@ -962,16 +961,16 @@ contains
     associate(                                                         &
               dkm               => domain%km,                          &
               column_kmt        => domain%kmt,                         &
-              co3               => carbonate(:)%CO3,                   &
-              hco3              => carbonate(:)%HCO3,                  &
-              h2co3             => carbonate(:)%H2CO3,                 &
-              ph                => carbonate(:)%pH,                    &
-              co3_sat_calcite   => carbonate(:)%CO3_sat_calcite,       &
-              co3_sat_aragonite => carbonate(:)%CO3_sat_aragonite,     &
-              co3_alt_co2       => carbonate(:)%CO3_ALT_CO2,           &
-              hco3_alt_co2      => carbonate(:)%HCO3_ALT_CO2,          &
-              h2co3_alt_co2     => carbonate(:)%H2CO3_ALT_CO2,         &
-              ph_alt_co2        => carbonate(:)%pH_ALT_CO2             &
+              co3               => carbonate%CO3(:),                   &
+              hco3              => carbonate%HCO3(:),                  &
+              h2co3             => carbonate%H2CO3(:),                 &
+              ph                => carbonate%pH(:),                    &
+              co3_sat_calcite   => carbonate%CO3_sat_calcite(:),       &
+              co3_sat_aragonite => carbonate%CO3_sat_aragonite(:),     &
+              co3_alt_co2       => carbonate%CO3_ALT_CO2(:),           &
+              hco3_alt_co2      => carbonate%HCO3_ALT_CO2(:),          &
+              h2co3_alt_co2     => carbonate%H2CO3_ALT_CO2(:),         &
+              ph_alt_co2        => carbonate%pH_ALT_CO2(:)             &
               )
 
       do k=1,dkm
@@ -3116,10 +3115,10 @@ contains
               P_CaCO3_ALT_CO2%sed_loss(k) = P_CaCO3_ALT_CO2%to_floor
            endif
         else ! caco3_bury_thres_iopt = caco3_bury_thres_iopt_omega_calc
-           if (carbonate%CO3 > caco3_bury_thres_omega_calc * carbonate%CO3_sat_calcite) then
+           if (carbonate%CO3(k) > caco3_bury_thres_omega_calc * carbonate%CO3_sat_calcite(k)) then
               P_CaCO3%sed_loss(k) = P_CaCO3%to_floor
            endif
-           if (carbonate%CO3_ALT_CO2 > caco3_bury_thres_omega_calc * carbonate%CO3_sat_calcite) then
+           if (carbonate%CO3_ALT_CO2(k) > caco3_bury_thres_omega_calc * carbonate%CO3_sat_calcite(k)) then
               P_CaCO3_ALT_CO2%sed_loss(k) = P_CaCO3_ALT_CO2%to_floor
            endif
         endif

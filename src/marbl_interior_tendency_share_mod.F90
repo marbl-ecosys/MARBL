@@ -33,8 +33,8 @@ contains
 
   subroutine marbl_interior_tendency_share_export_variables(&
        k, &
-       tracer_local, &
        marbl_tracer_indices, &
+       tracer_local, &
        carbonate, &
        dissolved_organic_matter, &
        QA_dust_def, &
@@ -46,8 +46,8 @@ contains
     use marbl_interface_private_types, only : marbl_interior_tendency_share_type
 
     integer,                                  intent(in)    :: k
-    real(r8),                                 intent(in)    :: tracer_local(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
+    real(r8),                                 intent(in)    :: tracer_local(marbl_tracer_indices%total_cnt)
     type(carbonate_type),                     intent(in)    :: carbonate
     type(dissolved_organic_matter_type),      intent(in)    :: dissolved_organic_matter
     real(r8),                                 intent(in)    :: QA_dust_def
@@ -56,10 +56,10 @@ contains
     ! Populate fields used by carbon isotopes if running with ciso module
     if (ciso_on) then
       interior_tendency_share%QA_dust_def(k)    = QA_dust_def
-      interior_tendency_share%CO3_fields(k)   = carbonate%CO3
-      interior_tendency_share%HCO3_fields(k)  = carbonate%HCO3
-      interior_tendency_share%H2CO3_fields(k) = carbonate%H2CO3
-      interior_tendency_share%CO3_sat_calcite(k) = carbonate%CO3_sat_calcite
+      interior_tendency_share%CO3_fields(k)   = carbonate%CO3(k)
+      interior_tendency_share%HCO3_fields(k)  = carbonate%HCO3(k)
+      interior_tendency_share%H2CO3_fields(k) = carbonate%H2CO3(k)
+      interior_tendency_share%CO3_sat_calcite(k) = carbonate%CO3_sat_calcite(k)
       interior_tendency_share%DOCtot_loc_fields(k) = &
            tracer_local(marbl_tracer_indices%DOC_ind) + tracer_local(marbl_tracer_indices%DOCr_ind)
       interior_tendency_share%DOCtot_remin_fields(k) = &
