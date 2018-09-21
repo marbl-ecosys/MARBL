@@ -449,10 +449,8 @@ contains
         tracer_local(:,:), carbonate, dissolved_organic_matter,                   &
         QA_dust_def(:), interior_tendency_share)
 
-    do k=1, km
-       call marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local, &
-            zooplankton_derived_terms, zooplankton_share)
-    end do ! k
+    call marbl_interior_tendency_share_export_zooplankton(zooplankton_local, &
+         zooplankton_derived_terms, zooplankton_share)
 
     ! call marbl_ciso_interior_tendency_compute()
     call marbl_ciso_interior_tendency_compute(                  &
