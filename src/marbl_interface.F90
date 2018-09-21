@@ -277,11 +277,12 @@ contains
     call this%PAR%construct(num_levels, num_PAR_subcols)
     call this%dissolved_organic_matter%construct(num_levels)
     call this%carbonate%construct(num_levels)
+    call this%particulate_share%construct(num_levels)
     call this%autotroph_derived_terms%construct(autotroph_cnt, num_levels)
     call this%autotroph_local%construct(ciso_on, autotroph_cnt, num_levels)
     call this%zooplankton_derived_terms%construct(zooplankton_cnt, num_levels)
     call this%zooplankton_local%construct(zooplankton_cnt, num_levels)
-    call this%interior_tendency_share%construct(num_levels)
+    if (ciso_on) call this%interior_tendency_share%construct(num_levels)
 
     !-----------------------------------------------------------------------
     !  Set up tracers
@@ -343,7 +344,7 @@ contains
     !  Initialize bury coefficient
     !-----------------------------------------------------------------------
 
-    call marbl_init_bury_coeff(this%particulate_share, num_levels, this%StatusLog)
+    call marbl_init_bury_coeff(this%particulate_share, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
       return
@@ -358,8 +359,6 @@ contains
     call marbl_init_forcing_fields(this%domain, &
                                    this%tracer_metadata, &
                                    this%surface_flux_forcing_ind, &
-                                   this%surface_flux_share, &
-                                   this%surface_flux_internal, &
                                    this%surface_flux_forcings, &
                                    this%interior_tendency_forcing_ind, &
                                    this%interior_tendency_forcings, &
@@ -368,6 +367,10 @@ contains
       call this%StatusLog%log_error_trace("marbl_init_forcing_fields", subname)
       return
     end if
+
+    ! Surface forcing constructors
+    if (ciso_on) call this%surface_flux_share%construct(this%domain%num_elements_surface_flux)
+    call this%surface_flux_internal%construct(this%domain%num_elements_surface_flux)
 
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
@@ -967,6 +970,7 @@ contains
 
   subroutine shutdown(this)
 
+    use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : max_grazer_prey_cnt
     use marbl_settings_mod, only : autotroph_settings
     use marbl_settings_mod, only : zooplankton_settings
@@ -1012,7 +1016,7 @@ contains
       deallocate(this%surface_flux_forcings)
     end if
     call this%surface_flux_internal%destruct()
-    call this%surface_flux_share%destruct()
+    if (ciso_on) call this%surface_flux_share%destruct()
     if (allocated(this%tracers_at_surface)) then
       deallocate(this%tracers_at_surface)
       deallocate(this%surface_fluxes)
@@ -1032,7 +1036,7 @@ contains
     call this%autotroph_local%destruct()
     call this%zooplankton_derived_terms%destruct()
     call this%zooplankton_local%destruct()
-    call this%interior_tendency_share%destruct()
+    if (ciso_on) call this%interior_tendency_share%destruct()
     call this%domain%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)

@@ -307,7 +307,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_bury_coeff(marbl_particulate_share, num_levels, marbl_status_log)
+  subroutine marbl_init_bury_coeff(marbl_particulate_share, marbl_status_log)
 
     use marbl_logging, only : marbl_log_type
     use marbl_settings_mod, only : init_bury_coeff_opt
@@ -317,8 +317,7 @@ contains
     use marbl_settings_mod, only : parm_init_bSi_bury_coeff
     use marbl_interface_private_types, only : marbl_particulate_share_type
 
-    type(marbl_particulate_share_type), intent(out)   :: marbl_particulate_share
-    integer(int_kind),                  intent(in)    :: num_levels
+    type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
     type(marbl_log_type),               intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
@@ -327,8 +326,6 @@ contains
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_bury_coeff'
 
     !---------------------------------------------------------------------------
-
-    call marbl_particulate_share%construct(num_levels)
 
     ! if ladjust_bury_coeff is true, then bury coefficients are set at runtime
     ! so they do not need to be initialized here
@@ -351,8 +348,6 @@ contains
   subroutine marbl_init_forcing_fields(domain, &
                                        tracer_metadata, &
                                        surface_flux_forcing_ind, &
-                                       surface_flux_share, &
-                                       surface_flux_internal, &
                                        surface_flux_forcings, &
                                        interior_tendency_forcing_ind, &
                                        interior_tendency_forcings, &
@@ -360,8 +355,6 @@ contains
 
     use marbl_interface_public_types, only : marbl_domain_type
     use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
-    use marbl_interface_private_types, only : marbl_surface_flux_share_type
-    use marbl_interface_private_types, only : marbl_surface_flux_internal_type
     use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lflux_gas_o2
@@ -372,8 +365,6 @@ contains
     type(marbl_domain_type),                             intent(in)    :: domain
     type(marbl_tracer_metadata_type),                    intent(in)    :: tracer_metadata(:)
     type(marbl_surface_flux_forcing_indexing_type),      intent(out)   :: surface_flux_forcing_ind
-    type(marbl_surface_flux_share_type),                 intent(out)   :: surface_flux_share
-    type(marbl_surface_flux_internal_type),              intent(out)   :: surface_flux_internal
     type(marbl_forcing_fields_type), allocatable,        intent(out)   :: surface_flux_forcings(:)
     type(marbl_interior_tendency_forcing_indexing_type), intent(out)   :: interior_tendency_forcing_ind
     type(marbl_forcing_fields_type), allocatable,        intent(out)   :: interior_tendency_forcings(:)
@@ -407,10 +398,6 @@ contains
         call marbl_status_log%log_error_trace("interior_tendency_forcing_ind%construct", subname)
         return
       end if
-
-      ! Construct share / internal types for surface flux computation
-      call surface_flux_share%construct(num_elements_surface_flux)
-      call surface_flux_internal%construct(num_elements_surface_flux)
 
       ! Initialize surface forcing fields
       allocate(surface_flux_forcings(num_surface_flux_forcing_fields))
