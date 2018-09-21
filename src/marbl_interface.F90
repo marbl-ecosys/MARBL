@@ -42,6 +42,7 @@ module marbl_interface
   use marbl_interface_private_types, only : autotroph_local_type
   use marbl_interface_private_types, only : zooplankton_derived_terms_type
   use marbl_interface_private_types, only : zooplankton_local_type
+  use marbl_interface_private_types, only : zooplankton_share_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_interior_tendency_share_type
   use marbl_interface_private_types, only : dissolved_organic_matter_type
@@ -116,6 +117,7 @@ module marbl_interface
      type(autotroph_local_type),               private :: autotroph_local
      type(zooplankton_derived_terms_type),     private :: zooplankton_derived_terms
      type(zooplankton_local_type),             private :: zooplankton_local
+     type(zooplankton_share_type),             private :: zooplankton_share
      type(marbl_particulate_share_type),       private :: particulate_share
      type(marbl_interior_tendency_share_type), private :: interior_tendency_share
      type(dissolved_organic_matter_type),      private :: dissolved_organic_matter
@@ -282,7 +284,10 @@ contains
     call this%autotroph_local%construct(ciso_on, autotroph_cnt, num_levels)
     call this%zooplankton_derived_terms%construct(zooplankton_cnt, num_levels)
     call this%zooplankton_local%construct(zooplankton_cnt, num_levels)
-    if (ciso_on) call this%interior_tendency_share%construct(num_levels)
+    if (ciso_on) then
+      call this%zooplankton_share%construct(num_levels)
+      call this%interior_tendency_share%construct(num_levels)
+    end if
 
     !-----------------------------------------------------------------------
     !  Set up tracers
@@ -879,6 +884,7 @@ contains
          autotroph_local                   = this%autotroph_local,                  &
          zooplankton_derived_terms         = this%zooplankton_derived_terms,        &
          zooplankton_local                 = this%zooplankton_local,                &
+         zooplankton_share                 = this%zooplankton_share,                &
          saved_state                       = this%interior_tendency_saved_state,    &
          marbl_timers                      = this%timers,                           &
          interior_tendency_share           = this%interior_tendency_share,          &
@@ -1036,7 +1042,10 @@ contains
     call this%autotroph_local%destruct()
     call this%zooplankton_derived_terms%destruct()
     call this%zooplankton_local%destruct()
-    if (ciso_on) call this%interior_tendency_share%destruct()
+    if (ciso_on) then
+      call this%zooplankton_share%destruct()
+      call this%interior_tendency_share%destruct()
+    end if
     call this%domain%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)

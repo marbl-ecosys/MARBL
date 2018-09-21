@@ -20,6 +20,7 @@ module marbl_interior_tendency_mod
   use marbl_interface_private_types, only : autotroph_local_type
   use marbl_interface_private_types, only : zooplankton_derived_terms_type
   use marbl_interface_private_types, only : zooplankton_local_type
+  use marbl_interface_private_types, only : zooplankton_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
@@ -75,7 +76,6 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : phhi_3d_init
   use marbl_settings_mod, only : phlo_3d_init
 
-  use marbl_pft_mod, only : marbl_zooplankton_share_type
   use marbl_pft_mod, only : Qp_zoo
 
   implicit none
@@ -104,6 +104,7 @@ contains
        autotroph_local,                       &
        zooplankton_derived_terms,             &
        zooplankton_local,                     &
+       zooplankton_share,                     &
        saved_state,                           &
        marbl_timers,                          &
        interior_tendency_share,               &
@@ -143,6 +144,7 @@ contains
     type(autotroph_local_type),                              intent(inout) :: autotroph_local
     type(zooplankton_derived_terms_type),                    intent(inout) :: zooplankton_derived_terms
     type(zooplankton_local_type),                            intent(inout) :: zooplankton_local
+    type(zooplankton_share_type),                            intent(inout) :: zooplankton_share
     type(marbl_saved_state_type),                            intent(inout) :: saved_state
     type(marbl_internal_timers_type),                        intent(inout) :: marbl_timers
     type(marbl_interior_tendency_share_type),                intent(inout) :: interior_tendency_share
@@ -159,8 +161,6 @@ contains
 
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
     real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
-
-    type(marbl_zooplankton_share_type)       :: marbl_zooplankton_share(domain%km)
 
     integer (int_kind) :: k         ! vertical level index
 
@@ -451,14 +451,14 @@ contains
 
     do k=1, km
        call marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local, &
-            zooplankton_derived_terms, marbl_zooplankton_share(k))
+            zooplankton_derived_terms, zooplankton_share)
     end do ! k
 
     ! call marbl_ciso_interior_tendency_compute()
     call marbl_ciso_interior_tendency_compute(                  &
          marbl_domain            = domain,                      &
          interior_tendency_share = interior_tendency_share,     &
-         marbl_zooplankton_share = marbl_zooplankton_share,     &
+         zooplankton_share = zooplankton_share,                 &
          marbl_particulate_share = marbl_particulate_share,     &
          autotroph_derived_terms = autotroph_derived_terms,     &
          tracer_local            = tracer_local,                &

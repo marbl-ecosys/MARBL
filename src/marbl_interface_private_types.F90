@@ -130,6 +130,24 @@ module marbl_interface_private_types
     procedure, public :: destruct => zooplankton_local_destructor
   end type zooplankton_local_type
 
+  !***********************************************************************
+
+  type, public :: zooplankton_share_type
+     real(r8), allocatable :: zoototC_loc_fields(:)      ! local copy of model zooC
+     real(r8), allocatable :: zootot_loss_fields(:)      ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_loss_poc_fields(:)  ! zoo_loss routed to large detrital (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_loss_doc_fields(:)  ! zoo_loss routed to doc (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_loss_dic_fields(:)  ! zoo_loss routed to dic (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_fields(:)     ! zooplankton losses due to grazing (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_zoo_fields(:) ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_poc_fields(:) ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_doc_fields(:) ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_dic_fields(:) ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
+   contains
+     procedure, public :: construct => zooplankton_share_constructor
+     procedure, public :: destruct => zooplankton_share_destructor
+  end type zooplankton_share_type
+
   !****************************************************************************
 
   ! derived type for implicit handling of sinking particulate matter
@@ -1193,6 +1211,45 @@ contains
     deallocate(self%C)
 
   end subroutine zooplankton_local_destructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_share_constructor(self, km)
+
+    class(zooplankton_share_type), intent(inout) :: self
+    integer,                       intent(in)    :: km
+
+    allocate(self%zoototC_loc_fields(km))
+    allocate(self%zootot_loss_fields(km))
+    allocate(self%zootot_loss_poc_fields(km))
+    allocate(self%zootot_loss_doc_fields(km))
+    allocate(self%zootot_loss_dic_fields(km))
+    allocate(self%zootot_graze_fields(km))
+    allocate(self%zootot_graze_zoo_fields(km))
+    allocate(self%zootot_graze_poc_fields(km))
+    allocate(self%zootot_graze_doc_fields(km))
+    allocate(self%zootot_graze_dic_fields(km))
+
+  end subroutine zooplankton_share_constructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_share_destructor(self)
+
+    class(zooplankton_share_type), intent(inout) :: self
+
+    deallocate(self%zoototC_loc_fields)
+    deallocate(self%zootot_loss_fields)
+    deallocate(self%zootot_loss_poc_fields)
+    deallocate(self%zootot_loss_doc_fields)
+    deallocate(self%zootot_loss_dic_fields)
+    deallocate(self%zootot_graze_fields)
+    deallocate(self%zootot_graze_zoo_fields)
+    deallocate(self%zootot_graze_poc_fields)
+    deallocate(self%zootot_graze_doc_fields)
+    deallocate(self%zootot_graze_dic_fields)
+
+  end subroutine zooplankton_share_destructor
 
   !*****************************************************************************
 
