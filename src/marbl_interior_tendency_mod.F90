@@ -408,19 +408,6 @@ contains
          o2_production(:), o2_consumption(:), &
          interior_tendencies(:,:))
 
-    do k=1, km
-       ! Store any variables needed in other tracer modules
-       ! FIXME #28: need to pull particulate share out
-       !            of compute_particulate_terms!
-       call marbl_interior_tendency_share_export_variables(k, marbl_tracer_indices, &
-            tracer_local(:, k), carbonate, dissolved_organic_matter,                &
-            QA_dust_def(k), interior_tendency_share)
-
-       call marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local, &
-            zooplankton_derived_terms, marbl_zooplankton_share(k))
-
-    end do ! k
-
     ! Compute interior diagnostics
     call marbl_diagnostics_interior_tendency_compute(       &
          domain,                                            &
@@ -451,7 +438,23 @@ contains
        return
     end if
 
+    !-----------------------------------------------------------------------
     !  Compute time derivatives for ecosystem carbon isotope state variables
+    !-----------------------------------------------------------------------
+
+    ! Store any variables needed in other tracer modules
+    ! FIXME #28: need to pull particulate share out
+    !            of compute_particulate_terms!
+    call marbl_interior_tendency_share_export_variables(km, marbl_tracer_indices, &
+        tracer_local(:,:), carbonate, dissolved_organic_matter,                   &
+        QA_dust_def(:), interior_tendency_share)
+
+    do k=1, km
+       call marbl_interior_tendency_share_export_zooplankton(k, zooplankton_local, &
+            zooplankton_derived_terms, marbl_zooplankton_share(k))
+    end do ! k
+
+    ! call marbl_ciso_interior_tendency_compute()
     call marbl_ciso_interior_tendency_compute(                  &
          marbl_domain            = domain,                      &
          interior_tendency_share = interior_tendency_share,     &
