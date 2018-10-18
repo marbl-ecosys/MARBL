@@ -31,7 +31,7 @@ module marbl_ciso_interior_tendency_mod
   private
 
   public :: marbl_ciso_interior_tendency_compute
-  public :: marbl_ciso_interior_tendency_autotroph_set_to_zero
+  public :: marbl_ciso_interior_tendency_autotroph_zero_consistency_enforce
 
   !-----------------------------------------------------------------------
   !  scalar constants for 14C decay calculation
@@ -730,28 +730,37 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_ciso_interior_tendency_autotroph_set_to_zero(autotroph_tracer_indices, auto_ind, k, autotroph_local)
+  subroutine marbl_ciso_interior_tendency_autotroph_zero_consistency_enforce(auto_ind, column_kmt, zero_mask, &
+             autotroph_tracer_indices, autotroph_local)
 
     use marbl_interface_private_types, only : marbl_living_tracer_index_type
 
-    type(marbl_living_tracer_index_type), intent(in)    :: autotroph_tracer_indices
     integer,                              intent(in)    :: auto_ind
-    integer,                              intent(in)    :: k
+    integer,                              intent(in)    :: column_kmt
+    logical,                              intent(in)    :: zero_mask(column_kmt)
+    type(marbl_living_tracer_index_type), intent(in)    :: autotroph_tracer_indices(autotroph_cnt)
     type(autotroph_local_type),           intent(inout) :: autotroph_local
 
     if (.not. ciso_on) return
 
-    autotroph_local%C13(auto_ind,k) = c0
-    autotroph_local%C14(auto_ind,k) = c0
+    where (zero_mask)
+      autotroph_local%C13(auto_ind,1:column_kmt) = c0
+      autotroph_local%C14(auto_ind,1:column_kmt) = c0
+    end where
 
-    if (autotroph_tracer_indices%Ca13CO3_ind > 0) then
-      autotroph_local%Ca13CO3(auto_ind,k) = c0
-    end if
-    if (autotroph_tracer_indices%Ca14CO3_ind > 0) then
-      autotroph_local%Ca14CO3(auto_ind,k) = c0
+    if (autotroph_tracer_indices(auto_ind)%Ca13CO3_ind > 0) then
+      where (zero_mask)
+        autotroph_local%Ca13CO3(auto_ind,1:column_kmt) = c0
+      end where
     end if
 
-  end subroutine marbl_ciso_interior_tendency_autotroph_set_to_zero
+    if (autotroph_tracer_indices(auto_ind)%Ca14CO3_ind > 0) then
+      where (zero_mask)
+        autotroph_local%Ca14CO3(auto_ind,1:column_kmt) = c0
+      end where
+    end if
+
+  end subroutine marbl_ciso_interior_tendency_autotroph_zero_consistency_enforce
 
   !***********************************************************************
 

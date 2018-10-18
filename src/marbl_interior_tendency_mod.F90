@@ -1036,7 +1036,7 @@ contains
 
   subroutine autotroph_zero_consistency_enforce(column_kmt, marbl_tracer_indices, autotroph_local)
 
-    use marbl_ciso_interior_tendency_mod, only : marbl_ciso_interior_tendency_autotroph_set_to_zero
+    use marbl_ciso_interior_tendency_mod, only : marbl_ciso_interior_tendency_autotroph_zero_consistency_enforce
 
     !-----------------------------------------------------------------------
     !  If any phyto box are zero, set others to zeros.
@@ -1050,38 +1050,42 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     integer (int_kind) :: auto_ind, k
-    logical (log_kind) :: zero_mask
+    logical (log_kind) :: zero_mask(column_kmt)
     !-----------------------------------------------------------------------
 
-    do k = 1, column_kmt
-      do auto_ind = 1, autotroph_cnt
+    do auto_ind = 1, autotroph_cnt
+      do k = 1, column_kmt
 
-        zero_mask = (autotroph_local%Chl(auto_ind,k) == c0 &
-                     .or. autotroph_local%C(auto_ind,k) == c0 &
-                     .or. autotroph_local%P(auto_ind,k) == c0 &
-                     .or. autotroph_local%Fe(auto_ind,k)  == c0)
+        zero_mask(k) = (autotroph_local%Chl(auto_ind,k) == c0 &
+                        .or. autotroph_local%C(auto_ind,k) == c0 &
+                        .or. autotroph_local%P(auto_ind,k) == c0 &
+                        .or. autotroph_local%Fe(auto_ind,k)  == c0)
 
         if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-          zero_mask = zero_mask .or. autotroph_local%Si(auto_ind,k) == c0
-        end if
-        if (zero_mask) then
-          autotroph_local%Chl(auto_ind,k) = c0
-          autotroph_local%C(auto_ind,k) = c0
-          autotroph_local%P(auto_ind,k) = c0
-          autotroph_local%Fe(auto_ind,k) = c0
-          if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-            autotroph_local%Si(auto_ind,k) = c0
-          end if
-          if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
-            autotroph_local%CaCO3(auto_ind,k) = c0
-          end if
-
-          ! carbon isotope components of autotroph_local_type
-          ! FIXME #278: this interface will change when logical checks are not index-based
-          call marbl_ciso_interior_tendency_autotroph_set_to_zero(marbl_tracer_indices%auto_inds(auto_ind), &
-               auto_ind, k, autotroph_local)
+          zero_mask(k) = zero_mask(k) .or. autotroph_local%Si(auto_ind,k) == c0
         end if
       end do
+      where (zero_mask)
+        autotroph_local%Chl(auto_ind,1:column_kmt) = c0
+        autotroph_local%C(auto_ind,1:column_kmt) = c0
+        autotroph_local%P(auto_ind,1:column_kmt) = c0
+        autotroph_local%Fe(auto_ind,1:column_kmt) = c0
+      end where
+      if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
+        where (zero_mask)
+          autotroph_local%Si(auto_ind,1:column_kmt) = c0
+        end where
+      end if
+      if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
+        where (zero_mask)
+          autotroph_local%CaCO3(auto_ind,1:column_kmt) = c0
+        end where
+      end if
+
+      ! carbon isotope components of autotroph_local_type
+      ! FIXME #278: this interface will change when logical checks are not index-based
+      call marbl_ciso_interior_tendency_autotroph_zero_consistency_enforce(auto_ind, column_kmt, zero_mask, &
+           marbl_tracer_indices%auto_inds(auto_ind), autotroph_local)
     end do
 
   end subroutine autotroph_zero_consistency_enforce
