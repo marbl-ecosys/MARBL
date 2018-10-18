@@ -63,7 +63,7 @@ module marbl_pft_mod
   !****************************************************************************
   ! derived types for grazer settings
 
-  type, public :: grazer_settings_type
+  type, public :: grazing_relationship_settings_type
     character(len=char_len) :: sname
     character(len=char_len) :: lname
     integer(int_kind)       :: auto_ind_cnt     ! number of autotrophs in prey-class auto_ind
@@ -81,7 +81,7 @@ module marbl_pft_mod
   contains
     procedure, public :: set_to_default => grazer_set_to_default
     procedure, public :: construct => grazer_constructor
-  end type grazer_settings_type
+  end type grazing_relationship_settings_type
 
   !****************************************************************************
 
@@ -258,9 +258,9 @@ contains
 
   subroutine grazer_set_to_default(self, grazer_id, marbl_status_log)
 
-    class(grazer_settings_type), intent(inout) :: self
-    character(len=*),            intent(in)    :: grazer_id
-    type(marbl_log_type),        intent(inout) :: marbl_status_log
+    class(grazing_relationship_settings_type), intent(inout) :: self
+    character(len=*),                          intent(in)    :: grazer_id
+    type(marbl_log_type),                      intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_pft_mod:grazer_set_to_default'
     character(len=char_len)     :: log_message
@@ -330,10 +330,10 @@ contains
 
   subroutine grazer_constructor(self, autotroph_cnt, zooplankton_cnt, marbl_status_log)
 
-    class(grazer_settings_type), intent(out)   :: self
-    integer(int_kind),           intent(in)    :: autotroph_cnt
-    integer(int_kind),           intent(in)    :: zooplankton_cnt
-    type(marbl_log_type),        intent(inout) :: marbl_status_log
+    class(grazing_relationship_settings_type), intent(out)   :: self
+    integer(int_kind),                         intent(in)    :: autotroph_cnt
+    integer(int_kind),                         intent(in)    :: zooplankton_cnt
+    type(marbl_log_type),                      intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_pft_mod:grazer_constructor'
     character(len=char_len)     :: log_message

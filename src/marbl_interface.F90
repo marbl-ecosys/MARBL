@@ -980,7 +980,7 @@ contains
     use marbl_settings_mod, only : max_grazer_prey_cnt
     use marbl_settings_mod, only : autotroph_settings
     use marbl_settings_mod, only : zooplankton_settings
-    use marbl_settings_mod, only : grazer_settings
+    use marbl_settings_mod, only : grazing_relationship_settings
     use marbl_settings_mod, only : tracer_restore_vars
     use marbl_diagnostics_mod, only : marbl_interior_tendency_diag_ind
 
@@ -1009,11 +1009,11 @@ contains
       deallocate(zooplankton_settings)
       do m=1,max_grazer_prey_cnt
         do n=1,zooplankton_cnt
-          deallocate(grazer_settings(m,n)%auto_ind)
-          deallocate(grazer_settings(m,n)%zoo_ind)
+          deallocate(grazing_relationship_settings(m,n)%auto_ind)
+          deallocate(grazing_relationship_settings(m,n)%zoo_ind)
         end do
       end do
-      deallocate(grazer_settings)
+      deallocate(grazing_relationship_settings)
     end if
     call marbl_interior_tendency_diag_ind%destruct()
 
