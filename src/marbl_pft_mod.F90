@@ -15,7 +15,6 @@ module marbl_pft_mod
   real(r8), parameter :: UnsetValue = 1e34_r8
 
   !****************************************************************************
-  ! derived types for autotroph settings
 
   type, public :: autotroph_settings_type
     character(len=char_len) :: sname
@@ -46,7 +45,6 @@ module marbl_pft_mod
   end type autotroph_settings_type
 
   !****************************************************************************
-  ! derived types for zooplankton settings
 
   type, public :: zooplankton_settings_type
      character(len=char_len) :: sname
@@ -61,7 +59,6 @@ module marbl_pft_mod
   end type zooplankton_settings_type
 
   !****************************************************************************
-  ! derived types for grazer settings
 
   type, public :: grazing_relationship_settings_type
     character(len=char_len) :: sname
