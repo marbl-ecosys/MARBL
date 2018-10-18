@@ -3073,7 +3073,7 @@ contains
     call store_diagnostics_dissolved_organic_matter(domain, &
          dissolved_organic_matter, marbl_interior_tendency_diags)
 
-    call store_diagnostics_iron_cycle(domain, &
+    call store_diagnostics_iron_cycle( &
          fe_scavenge, fe_scavenge_rate, Lig_prod, Lig_loss, Lig_scavenge, &
          Fefree, Lig_photochem, Lig_deg, marbl_interior_tendency_diags)
 
@@ -3882,32 +3882,23 @@ contains
     type(dissolved_organic_matter_type), intent(in)    :: dissolved_organic_matter
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer(int_kind) :: k
-    !-----------------------------------------------------------------------
-
     associate(                                       &
-         km      => marbl_domain%km,                 &
          delta_z => marbl_domain%delta_z,            &
          kmt     => marbl_domain%kmt,                &
          diags   => marbl_diags%diags,               &
          ind     => marbl_interior_tendency_diag_ind &
          )
 
-    do k = 1, km
-       diags(ind%DOC_prod)%field_3d(k, 1)         = dissolved_organic_matter%DOC_prod(k)
-       diags(ind%DOC_remin)%field_3d(k, 1)        = dissolved_organic_matter%DOC_remin(k)
-       diags(ind%DOCr_remin)%field_3d(k, 1)       = dissolved_organic_matter%DOCr_remin(k)
-       diags(ind%DON_prod)%field_3d(k, 1)         = dissolved_organic_matter%DON_prod(k)
-       diags(ind%DON_remin)%field_3d(k, 1)        = dissolved_organic_matter%DON_remin(k)
-       diags(ind%DONr_remin)%field_3d(k, 1)       = dissolved_organic_matter%DONr_remin(k)
-       diags(ind%DOP_prod)%field_3d(k, 1)         = dissolved_organic_matter%DOP_prod(k)
-       diags(ind%DOP_remin)%field_3d(k, 1)        = dissolved_organic_matter%DOP_remin(k)
-       diags(ind%DOPr_remin)%field_3d(k, 1)       = dissolved_organic_matter%DOPr_remin(k)
-       diags(ind%DOP_loss_P_bal)%field_3d(k, 1)   = dissolved_organic_matter%DOP_loss_P_bal(k)
-    end do
+    diags(ind%DOC_prod)%field_3d(:, 1)         = dissolved_organic_matter%DOC_prod(:)
+    diags(ind%DOC_remin)%field_3d(:, 1)        = dissolved_organic_matter%DOC_remin(:)
+    diags(ind%DOCr_remin)%field_3d(:, 1)       = dissolved_organic_matter%DOCr_remin(:)
+    diags(ind%DON_prod)%field_3d(:, 1)         = dissolved_organic_matter%DON_prod(:)
+    diags(ind%DON_remin)%field_3d(:, 1)        = dissolved_organic_matter%DON_remin(:)
+    diags(ind%DONr_remin)%field_3d(:, 1)       = dissolved_organic_matter%DONr_remin(:)
+    diags(ind%DOP_prod)%field_3d(:, 1)         = dissolved_organic_matter%DOP_prod(:)
+    diags(ind%DOP_remin)%field_3d(:, 1)        = dissolved_organic_matter%DOP_remin(:)
+    diags(ind%DOPr_remin)%field_3d(:, 1)       = dissolved_organic_matter%DOPr_remin(:)
+    diags(ind%DOP_loss_P_bal)%field_3d(:, 1)   = dissolved_organic_matter%DOP_loss_P_bal(:)
 
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%DOC_prod)%field_3d(:,1), &
          delta_z, kmt, full_depth_integral=diags(ind%DOC_prod_zint)%field_2d(1), &
@@ -3927,11 +3918,10 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_iron_cycle(marbl_domain, &
+  subroutine store_diagnostics_iron_cycle(&
        fe_scavenge, fe_scavenge_rate, Lig_prod, Lig_loss, Lig_scavenge, &
        Fefree, Lig_photochem, Lig_deg, marbl_diags)
 
-    type(marbl_domain_type)             , intent(in)    :: marbl_domain
     real(r8)                            , intent(in)    :: fe_scavenge(:)      ! (km)
     real(r8)                            , intent(in)    :: fe_scavenge_rate(:) ! (km)
     real(r8)                            , intent(in)    :: Lig_prod(:)         ! (km)
@@ -3942,28 +3932,19 @@ contains
     real(r8)                            , intent(in)    :: Lig_deg(:)          ! (km)
     type(marbl_diagnostics_type)        , intent(inout) :: marbl_diags
 
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer(int_kind) :: k
-    !-----------------------------------------------------------------------
-
     associate(                                     &
-         km    => marbl_domain%km,                 &
          diags => marbl_diags%diags,               &
          ind   => marbl_interior_tendency_diag_ind &
          )
 
-    do k = 1, km
-       diags(ind%Fe_scavenge)%field_3d(k, 1)      = Fe_scavenge(k)
-       diags(ind%Fe_scavenge_rate)%field_3d(k, 1) = Fe_scavenge_rate(k)
-       diags(ind%Lig_prod)%field_3d(k, 1)         = Lig_prod(k)
-       diags(ind%Lig_loss)%field_3d(k, 1)         = Lig_loss(k)
-       diags(ind%Lig_scavenge)%field_3d(k, 1)     = Lig_scavenge(k)
-       diags(ind%Fefree)%field_3d(k, 1)           = Fefree(k)
-       diags(ind%Lig_photochem)%field_3d(k, 1)    = Lig_photochem(k)
-       diags(ind%Lig_deg)%field_3d(k, 1)          = Lig_deg(k)
-    end do
+    diags(ind%Fe_scavenge)%field_3d(:, 1)      = Fe_scavenge(:)
+    diags(ind%Fe_scavenge_rate)%field_3d(:, 1) = Fe_scavenge_rate(:)
+    diags(ind%Lig_prod)%field_3d(:, 1)         = Lig_prod(:)
+    diags(ind%Lig_loss)%field_3d(:, 1)         = Lig_loss(:)
+    diags(ind%Lig_scavenge)%field_3d(:, 1)     = Lig_scavenge(:)
+    diags(ind%Fefree)%field_3d(:, 1)           = Fefree(:)
+    diags(ind%Lig_photochem)%field_3d(:, 1)    = Lig_photochem(:)
+    diags(ind%Lig_deg)%field_3d(:, 1)          = Lig_deg(:)
 
     end associate
 
