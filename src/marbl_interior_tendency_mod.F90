@@ -1425,7 +1425,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer  :: k, auto_ind
+    integer  :: auto_ind
     !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------------
@@ -1462,35 +1462,33 @@ contains
               VSiO3 => autotroph_derived_terms%VSiO3(:,:)  &
               )
 
-      do k=1,km
-        do auto_ind = 1, autotroph_cnt
+      do auto_ind = 1, autotroph_cnt
 
-          VNO3(auto_ind,k) = (NO3_loc(k) / kNO3(auto_ind)) &
-                           / (c1 + (NO3_loc(k) / kNO3(auto_ind)) + (NH4_loc(k) / kNH4(auto_ind)))
-          VNH4(auto_ind,k) = (NH4_loc(k) / kNH4(auto_ind)) &
-                           / (c1 + (NO3_loc(k) / kNO3(auto_ind)) + (NH4_loc(k) / kNH4(auto_ind)))
-          if (Nfixer(auto_ind)) then
-            VNtot(auto_ind,k) = c1
-          else
-            VNtot(auto_ind,k) = VNO3(auto_ind,k) + VNH4(auto_ind,k)
-          end if
+        VNO3(auto_ind,:) = (NO3_loc(:) / kNO3(auto_ind)) &
+                         / (c1 + (NO3_loc(:) / kNO3(auto_ind)) + (NH4_loc(:) / kNH4(auto_ind)))
+        VNH4(auto_ind,:) = (NH4_loc(:) / kNH4(auto_ind)) &
+                         / (c1 + (NO3_loc(:) / kNO3(auto_ind)) + (NH4_loc(:) / kNH4(auto_ind)))
+        if (Nfixer(auto_ind)) then
+          VNtot(auto_ind,:) = c1
+        else
+          VNtot(auto_ind,:) = VNO3(auto_ind,:) + VNH4(auto_ind,:)
+        end if
 
-          VFe(auto_ind, k) = Fe_loc(k) / (Fe_loc(k) + kFe(auto_ind))
-          f_nut(auto_ind, k) = min(VNtot(auto_ind, k), VFe(auto_ind, k))
+        VFe(auto_ind, :) = Fe_loc(:) / (Fe_loc(:) + kFe(auto_ind))
+        f_nut(auto_ind, :) = min(VNtot(auto_ind, :), VFe(auto_ind, :))
 
-          VPO4(auto_ind, k) = (PO4_loc(k) / kPO4(auto_ind)) &
-                            / (c1 + (PO4_loc(k) / kPO4(auto_ind)) + (DOP_loc(k) / kDOP(auto_ind)))
-          VDOP(auto_ind, k) = (DOP_loc(k) / kDOP(auto_ind)) &
-                            / (c1 + (PO4_loc(k) / kPO4(auto_ind)) + (DOP_loc(k) / kDOP(auto_ind)))
-          VPtot(auto_ind, k) = VPO4(auto_ind, k) + VDOP(auto_ind, k)
-          f_nut(auto_ind, k) = min(f_nut(auto_ind, k), VPtot(auto_ind, k))
+        VPO4(auto_ind, :) = (PO4_loc(:) / kPO4(auto_ind)) &
+                          / (c1 + (PO4_loc(:) / kPO4(auto_ind)) + (DOP_loc(:) / kDOP(auto_ind)))
+        VDOP(auto_ind, :) = (DOP_loc(:) / kDOP(auto_ind)) &
+                          / (c1 + (PO4_loc(:) / kPO4(auto_ind)) + (DOP_loc(:) / kDOP(auto_ind)))
+        VPtot(auto_ind, :) = VPO4(auto_ind, :) + VDOP(auto_ind, :)
+        f_nut(auto_ind, :) = min(f_nut(auto_ind, :), VPtot(auto_ind, :))
 
-          if (silicifier(auto_ind)) then
-            VSiO3(auto_ind, k) = SiO3_loc(k) / (SiO3_loc(k) + kSiO3(auto_ind))
-            f_nut(auto_ind, k) = min(f_nut(auto_ind, k), VSiO3(auto_ind, k))
-          endif
+        if (silicifier(auto_ind)) then
+          VSiO3(auto_ind, :) = SiO3_loc(:) / (SiO3_loc(:) + kSiO3(auto_ind))
+          f_nut(auto_ind, :) = min(f_nut(auto_ind, :), VSiO3(auto_ind, :))
+        endif
 
-        end do
       end do
 
     end associate
