@@ -1513,8 +1513,8 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer  :: k,auto_ind
-    real(r8) :: work1
+    integer  :: auto_ind
+    real(r8) :: work1(km)
     !-----------------------------------------------------------------------
 
     associate(                                              &
@@ -1525,15 +1525,12 @@ contains
          Nexcrete => autotroph_derived_terms%Nexcrete(:, :) & ! output fixed N excretion
          )
 
-      do k=1,km
-        do auto_ind = 1, autotroph_cnt
-          if (autotroph_settings(auto_ind)%Nfixer) then
-            work1 = photoC(auto_ind,k) * Q
-            Nfix(auto_ind,k) = (work1 * r_Nfix_photo) - NO3_V(auto_ind,k) - NH4_V(auto_ind,k)
-            Nexcrete(auto_ind,k) = Nfix(auto_ind,k) + NO3_V(auto_ind,k) + NH4_V(auto_ind,k) - work1
-          endif
-
-        end do
+      do auto_ind = 1, autotroph_cnt
+        if (autotroph_settings(auto_ind)%Nfixer) then
+          work1(:) = photoC(auto_ind,:) * Q
+          Nfix(auto_ind,:) = (work1(:) * r_Nfix_photo) - NO3_V(auto_ind,:) - NH4_V(auto_ind,:)
+          Nexcrete(auto_ind,:) = Nfix(auto_ind,:) + NO3_V(auto_ind,:) + NH4_V(auto_ind,:) - work1(:)
+        endif
       end do
 
     end associate
