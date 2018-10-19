@@ -325,7 +325,7 @@ contains
     call compute_autotroph_photosynthesis(km, num_PAR_subcols, autotroph_local, temperature(:), &
          Tfunc(:), PAR%col_frac(:), PAR%avg(:,:), autotroph_derived_terms)
 
-    call compute_autotroph_nutrient_uptake(km, marbl_tracer_indices, autotroph_derived_terms)
+    call compute_autotroph_nutrient_uptake(marbl_tracer_indices, autotroph_derived_terms)
 
     call compute_autotroph_calcification(km, autotroph_local, temperature, autotroph_derived_terms)
 
@@ -1539,7 +1539,7 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_autotroph_nutrient_uptake(km, marbl_tracer_indices, autotroph_derived_terms)
+  subroutine compute_autotroph_nutrient_uptake(marbl_tracer_indices, autotroph_derived_terms)
 
     !-----------------------------------------------------------------------
     !  Get nutrient uptakes by small phyto based on calculated C fixation
@@ -1547,14 +1547,13 @@ contains
 
     use marbl_settings_mod, only : Q
 
-    integer,                            intent(in)    :: km
     type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer  :: k, auto_ind
+    integer  :: auto_ind
     !-----------------------------------------------------------------------
 
     associate(                                              &
@@ -1576,36 +1575,34 @@ contains
          photoSi  => autotroph_derived_terms%photoSi(:, :)  & ! output
          )
 
-      do k=1,km
-        do auto_ind = 1, autotroph_cnt
+      do auto_ind = 1, autotroph_cnt
 
-          if (VNtot(auto_ind,k) > c0) then
-            NO3_V(auto_ind,k) = (VNO3(auto_ind,k) / VNtot(auto_ind,k)) * photoC(auto_ind,k) * Q
-            NH4_V(auto_ind,k) = (VNH4(auto_ind,k) / VNtot(auto_ind,k)) * photoC(auto_ind,k) * Q
-          else
-            NO3_V(auto_ind,k) = c0
-            NH4_V(auto_ind,k) = c0
-          end if
+        where (VNtot(auto_ind,:) > c0)
+          NO3_V(auto_ind,:) = (VNO3(auto_ind,:) / VNtot(auto_ind,:)) * photoC(auto_ind,:) * Q
+          NH4_V(auto_ind,:) = (VNH4(auto_ind,:) / VNtot(auto_ind,:)) * photoC(auto_ind,:) * Q
+        else where
+          NO3_V(auto_ind,:) = c0
+          NH4_V(auto_ind,:) = c0
+        end where
 
-          if (VPtot(auto_ind,k) > c0) then
-            PO4_V(auto_ind,k) = (VPO4(auto_ind,k) / VPtot(auto_ind,k)) * photoC(auto_ind,k) * gQp(auto_ind,k)
-            DOP_V(auto_ind,k) = (VDOP(auto_ind,k) / VPtot(auto_ind,k)) * photoC(auto_ind,k) * gQp(auto_ind,k)
-          else
-            PO4_V(auto_ind,k) = c0
-            DOP_V(auto_ind,k) = c0
-          end if
+        where (VPtot(auto_ind,:) > c0)
+          PO4_V(auto_ind,:) = (VPO4(auto_ind,:) / VPtot(auto_ind,:)) * photoC(auto_ind,:) * gQp(auto_ind,:)
+          DOP_V(auto_ind,:) = (VDOP(auto_ind,:) / VPtot(auto_ind,:)) * photoC(auto_ind,:) * gQp(auto_ind,:)
+        else where
+          PO4_V(auto_ind,:) = c0
+          DOP_V(auto_ind,:) = c0
+        end where
 
-          !-----------------------------------------------------------------------
-          !  Get nutrient uptake by diatoms based on C fixation
-          !-----------------------------------------------------------------------
+        !-----------------------------------------------------------------------
+        !  Get nutrient uptake by diatoms based on C fixation
+        !-----------------------------------------------------------------------
 
-          photoFe(auto_ind,k) = photoC(auto_ind,k) * gQfe(auto_ind,k)
+        photoFe(auto_ind,:) = photoC(auto_ind,:) * gQfe(auto_ind,:)
 
-          if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-            photoSi(auto_ind,k) = photoC(auto_ind,k) * gQsi(auto_ind,k)
-          endif
+        if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
+          photoSi(auto_ind,:) = photoC(auto_ind,:) * gQsi(auto_ind,:)
+        endif
 
-        end do
       end do
     end associate
 
