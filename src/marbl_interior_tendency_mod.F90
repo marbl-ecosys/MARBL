@@ -1311,8 +1311,8 @@ contains
          alphaPI   => autotroph_settings(:)%alphaPI           &
          )
 
-      do k=1,km
-        do auto_ind = 1, autotroph_cnt
+      do auto_ind = 1, autotroph_cnt
+        do k=1,km
 
           if (temperature(k) < autotroph_settings(auto_ind)%temp_thres) then
             PCmax = c0
