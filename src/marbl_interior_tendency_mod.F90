@@ -1624,7 +1624,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer  :: k, auto_ind
+    integer  :: auto_ind
     !-----------------------------------------------------------------------
 
     associate(                                                         &
@@ -1637,34 +1637,32 @@ contains
          auto_agg      => autotroph_derived_terms%auto_agg(:, :)       & ! output
          )
 
-      do k=1,km
-        do auto_ind = 1, autotroph_cnt
-          !-----------------------------------------------------------------------
-          !  get autotroph loss (in C units)
-          !  autotroph agg loss
-          !-----------------------------------------------------------------------
+      do auto_ind = 1, autotroph_cnt
+        !-----------------------------------------------------------------------
+        !  get autotroph loss (in C units)
+        !  autotroph agg loss
+        !-----------------------------------------------------------------------
 
-          auto_loss(auto_ind,k) = autotroph_settings(auto_ind)%mort * Pprime(auto_ind,k) * Tfunc(k)
+        auto_loss(auto_ind,:) = autotroph_settings(auto_ind)%mort * Pprime(auto_ind,:) * Tfunc(:)
 
-          auto_agg(auto_ind,k) = min((autotroph_settings(auto_ind)%agg_rate_max * dps) * Pprime(auto_ind,k), &
-                                     autotroph_settings(auto_ind)%mort2 * Pprime(auto_ind,k)**1.75_r8)
-          auto_agg(auto_ind,k) = max((autotroph_settings(auto_ind)%agg_rate_min * dps) * Pprime(auto_ind,k), &
-                                     auto_agg(auto_ind,k))
+        auto_agg(auto_ind,:) = min((autotroph_settings(auto_ind)%agg_rate_max * dps) * Pprime(auto_ind,:), &
+                                   autotroph_settings(auto_ind)%mort2 * Pprime(auto_ind,:)**1.75_r8)
+        auto_agg(auto_ind,:) = max((autotroph_settings(auto_ind)%agg_rate_min * dps) * Pprime(auto_ind,:), &
+                                   auto_agg(auto_ind,:))
 
-          !-----------------------------------------------------------------------
-          !  routing of loss terms
-          !  all aggregation goes to POM
-          !  min.%C routed from sp_loss = 0.59 * QCaCO3, or P_CaCO3%rho
-          !-----------------------------------------------------------------------
+        !-----------------------------------------------------------------------
+        !  routing of loss terms
+        !  all aggregation goes to POM
+        !  min.%C routed from sp_loss = 0.59 * QCaCO3, or P_CaCO3%rho
+        !-----------------------------------------------------------------------
 
-          if (autotroph_settings(auto_ind)%imp_calcifier) then
-            auto_loss_poc(auto_ind,k) = QCaCO3(auto_ind,k) * auto_loss(auto_ind,k)
-          else
-            auto_loss_poc(auto_ind,k) = autotroph_settings(auto_ind)%loss_poc * auto_loss(auto_ind,k)
-          endif
-          auto_loss_doc(auto_ind,k) = (c1 - parm_labile_ratio) * (auto_loss(auto_ind,k) - auto_loss_poc(auto_ind,k))
-          auto_loss_dic(auto_ind,k) = parm_labile_ratio * (auto_loss(auto_ind,k) - auto_loss_poc(auto_ind,k))
-        end do  ! auto_ind = 1, autotroph_cnt
+        if (autotroph_settings(auto_ind)%imp_calcifier) then
+          auto_loss_poc(auto_ind,:) = QCaCO3(auto_ind,:) * auto_loss(auto_ind,:)
+        else
+          auto_loss_poc(auto_ind,:) = autotroph_settings(auto_ind)%loss_poc * auto_loss(auto_ind,:)
+        endif
+        auto_loss_doc(auto_ind,:) = (c1 - parm_labile_ratio) * (auto_loss(auto_ind,:) - auto_loss_poc(auto_ind,:))
+        auto_loss_dic(auto_ind,:) = parm_labile_ratio * (auto_loss(auto_ind,:) - auto_loss_poc(auto_ind,:))
       end do
 
     end associate
