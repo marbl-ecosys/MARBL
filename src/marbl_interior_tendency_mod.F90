@@ -1113,7 +1113,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer(int_kind) :: k, auto_ind
+    integer(int_kind) :: auto_ind
     !-----------------------------------------------------------------------
 
     associate(                                                        &
@@ -1142,69 +1142,64 @@ contains
       !  set local variables, with incoming ratios
       !-----------------------------------------------------------------------
 
-      do k=1,km
-        do auto_ind = 1, autotroph_cnt
-          thetaC(auto_ind,k) = auto_Chl(auto_ind,k) / (auto_C(auto_ind,k) + epsC)
-          if (lvariable_PtoC) then
-            Qp(auto_ind,k) = auto_P(auto_ind,k) / (auto_C(auto_ind,k) + epsC)
-            !-----------------------------------------------------------------------
-            !-- Calculate Qp for new growth based on Galbraith and Martiny (2015), with min. N/P
-            ! - 14= 0.00976801, 14.5 = 0.00944239 15= 0.00911677 15.5=0.00882272 16= 0.00854701
-            ! - std intercept 6.0 = 166.66maxCP, 5.26=190, 4.0 = 250, 3.0 = 333.33
-            !-----------------------------------------------------------------------
-            gQp(auto_ind,k) = min((((PquotaSlope * PO4_loc(k)) + PquotaIntercept) * 0.001_r8), PquotaMinNP)
-          else
-            Qp(auto_ind,k) = autotroph_settings(auto_ind)%Qp_fixed
-            gQp(auto_ind,k) = autotroph_settings(auto_ind)%Qp_fixed
-          endif
-          !  Uncomment this line to use modified, fixed Redfield (C/N/P 117/16/1) stoichiomdetry
-          !      gQp(auto_ind) = 0.00854701_r8      ! fixed Redfield C/N/P
-
+      do auto_ind = 1, autotroph_cnt
+        thetaC(auto_ind,:) = auto_Chl(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
+        if (lvariable_PtoC) then
+          Qp(auto_ind,:) = auto_P(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
           !-----------------------------------------------------------------------
-          !  DETERMINE NEW ELEMENTAL RATIOS FOR GROWTH (NEW BIOMASS)
+          !-- Calculate Qp for new growth based on Galbraith and Martiny (2015), with min. N/P
+          ! - 14= 0.00976801, 14.5 = 0.00944239 15= 0.00911677 15.5=0.00882272 16= 0.00854701
+          ! - std intercept 6.0 = 166.66maxCP, 5.26=190, 4.0 = 250, 3.0 = 333.33
           !-----------------------------------------------------------------------
+          gQp(auto_ind,:) = min((((PquotaSlope * PO4_loc(:)) + PquotaIntercept) * 0.001_r8), PquotaMinNP)
+        else
+          Qp(auto_ind,:) = autotroph_settings(auto_ind)%Qp_fixed
+          gQp(auto_ind,:) = autotroph_settings(auto_ind)%Qp_fixed
+        endif
+        !  Uncomment this line to use modified, fixed Redfield (C/N/P 117/16/1) stoichiomdetry
+        !      gQp(auto_ind) = 0.00854701_r8      ! fixed Redfield C/N/P
 
-          Qfe(auto_ind,k) = auto_Fe(auto_ind,k) / (auto_C(auto_ind,k) + epsC)
-          gQfe(auto_ind,k) = autotroph_settings(auto_ind)%gQfe_0
-          if (Fe_loc(k) < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe) then
-            gQfe(auto_ind,k) = max((gQfe(auto_ind,k) * Fe_loc(k) &
-                                    / (gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe)), &
-                                   autotroph_settings(auto_ind)%gQfe_min)
-          end if
+        !-----------------------------------------------------------------------
+        !  DETERMINE NEW ELEMENTAL RATIOS FOR GROWTH (NEW BIOMASS)
+        !-----------------------------------------------------------------------
 
-          if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
-            Qsi(auto_ind,k) = min(auto_Si(auto_ind,k) / (auto_C(auto_ind,k) + epsC), gQsi_max)
-            gQsi(auto_ind,k) = gQsi_0
+        Qfe(auto_ind,:) = auto_Fe(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
+        gQfe(auto_ind,:) = autotroph_settings(auto_ind)%gQfe_0
+        where (Fe_loc(:) < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe)
+          gQfe(auto_ind,:) = max((gQfe(auto_ind,:) * Fe_loc(:) &
+                                  / (gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe)), &
+                                 autotroph_settings(auto_ind)%gQfe_min)
+        end where
 
-            !  Modify these initial ratios under low ambient iron conditions
-            if ((Fe_loc(k) < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe) &
-                .and. (Fe_loc(k) > c0) &
-                .and. (SiO3_loc(k) > (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3))) then
-              gQsi(auto_ind,k) = min((gQsi(auto_ind,k) * gQ_Fe_kFe_thres &
-                               * autotroph_settings(auto_ind)%kFe / Fe_loc(k)), gQsi_max)
-            else if (Fe_loc(k) == c0) then
-              gQsi(auto_ind,k) = gQsi_max
-            end if
+        if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
+          Qsi(auto_ind,:) = min(auto_Si(auto_ind,:) / (auto_C(auto_ind,:) + epsC), gQsi_max)
+          gQsi(auto_ind,:) = gQsi_0
 
-            !  Modify the initial si/C ratio under low ambient Si conditions
-            if (SiO3_loc(k) < (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3)) then
-              gQsi(auto_ind,k) = max((gQsi(auto_ind,k) * SiO3_loc(k) &
-                               / (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3)), gQsi_min)
-            end if
-          end if
+          !  Modify these initial ratios under low ambient iron conditions
+          where ((Fe_loc(:) < gQ_Fe_kFe_thres * autotroph_settings(auto_ind)%kFe) &
+              .and. (Fe_loc(:) > c0) &
+              .and. (SiO3_loc(:) > (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3)))
+            gQsi(auto_ind,:) = min((gQsi(auto_ind,:) * gQ_Fe_kFe_thres &
+                             * autotroph_settings(auto_ind)%kFe / Fe_loc(:)), gQsi_max)
+          else where (Fe_loc(:) == c0)
+            gQsi(auto_ind,:) = gQsi_max
+          end where
 
-          !-----------------------------------------------------------------------
-          !  QCaCO3 is the percentage of sp organic matter which is associated
-          !  with coccolithophores
-          !-----------------------------------------------------------------------
+          !  Modify the initial si/C ratio under low ambient Si conditions
+          where (SiO3_loc(:) < (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3))
+            gQsi(auto_ind,:) = max((gQsi(auto_ind,:) * SiO3_loc(:) &
+                             / (gQ_Si_kSi_thres * autotroph_settings(auto_ind)%kSiO3)), gQsi_min)
+          end where
+        end if
 
-          if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
-            QCaCO3(auto_ind,k) = auto_CaCO3(auto_ind,k) / (auto_C(auto_ind,k) + epsC)
-            if (QCaCO3(auto_ind,k) > QCaCO3_max) then
-              QCaCO3(auto_ind,k) = QCaCO3_max
-            end if
-          end if
-        end do
+        !-----------------------------------------------------------------------
+        !  QCaCO3 is the percentage of sp organic matter which is associated
+        !  with coccolithophores
+        !-----------------------------------------------------------------------
+
+        if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
+          QCaCO3(auto_ind,:) = min(auto_CaCO3(auto_ind,:) / (auto_C(auto_ind,:) + epsC), QCaCO3_max)
+        end if
       end do
     end associate
 
