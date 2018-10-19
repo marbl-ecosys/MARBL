@@ -1248,13 +1248,7 @@ contains
     !-----------------------------------------------------------------------
 
     !  calculate the loss threshold interpolation factor
-    where (zt >= thres_z2_auto)
-      f_loss_thres = c0
-    else where (zt > thres_z1_auto)
-      f_loss_thres = (thres_z2_auto - zt)/(thres_z2_auto - thres_z1_auto)
-    else where
-      f_loss_thres = c1
-    end where
+    f_loss_thres(:) = min(max((thres_z2_auto - zt(:))/(thres_z2_auto - thres_z1_auto), c0), c1)
 
     !  Compute Pprime for all autotrophs, used for loss terms
     do auto_ind = 1, autotroph_cnt
@@ -1685,9 +1679,9 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer  :: k, zoo_ind
-    real(r8) :: f_loss_thres
-    real(r8) :: C_loss_thres
+    integer  :: zoo_ind
+    real(r8) :: f_loss_thres(km)
+    real(r8) :: C_loss_thres(km)
     !-----------------------------------------------------------------------
 
     associate(                                               &
@@ -1695,25 +1689,15 @@ contains
          zoo_loss => zooplankton_derived_terms%zoo_loss(:,:) & !(zooplankton_cnt) output
          )
 
-      do k=1,km
-        !  calculate the loss threshold interpolation factor
-        if (zt(k) > thres_z1_zoo) then
-          if (zt(k) < thres_z2_zoo) then
-            f_loss_thres = (thres_z2_zoo - zt(k))/(thres_z2_zoo - thres_z1_zoo)
-          else
-            f_loss_thres = c0
-          endif
-        else
-          f_loss_thres = c1
-        endif
+      !  calculate the loss threshold interpolation factor
+      f_loss_thres(:) = min(max((thres_z2_zoo - zt(:))/(thres_z2_zoo - thres_z1_zoo), c0), c1)
 
-        do zoo_ind = 1, zooplankton_cnt
-          C_loss_thres = f_loss_thres * zooplankton_settings(zoo_ind)%loss_thres
-          Zprime(zoo_ind,k) = max(zooC(zoo_ind,k) - C_loss_thres, c0)
+      do zoo_ind = 1, zooplankton_cnt
+        C_loss_thres(:) = f_loss_thres(:) * zooplankton_settings(zoo_ind)%loss_thres
+        Zprime(zoo_ind,:) = max(zooC(zoo_ind,:) - C_loss_thres, c0)
 
-          zoo_loss(zoo_ind,k) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,k)**1.5_r8 &
-                                 + zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind,k)) * Tfunc(k)
-        end do
+        zoo_loss(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**1.5_r8 &
+                               + zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind,:)) * Tfunc(:)
       end do
 
     end associate
