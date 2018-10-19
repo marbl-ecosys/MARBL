@@ -1382,7 +1382,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer  :: k, auto_ind
+    integer  :: auto_ind
     !-----------------------------------------------------------------------
 
     associate(                                                 &
@@ -1391,24 +1391,22 @@ contains
          CaCO3_form => autotroph_derived_terms%CaCO3_form(:,:) & ! output
          )
 
-      do k=1, km
-        do auto_ind = 1, autotroph_cnt
-          if (autotroph_settings(auto_ind)%imp_calcifier) then
-            CaCO3_form(auto_ind,k) = parm_f_prod_sp_CaCO3 * photoC(auto_ind,k)
-            CaCO3_form(auto_ind,k) = CaCO3_form(auto_ind,k) * f_nut(auto_ind,k) * f_nut(auto_ind,k)
+      do auto_ind = 1, autotroph_cnt
+        if (autotroph_settings(auto_ind)%imp_calcifier) then
+          CaCO3_form(auto_ind,:) = parm_f_prod_sp_CaCO3 * photoC(auto_ind,:)
+          CaCO3_form(auto_ind,:) = CaCO3_form(auto_ind,:) * f_nut(auto_ind,:) * f_nut(auto_ind,:)
 
-            if (temperature(k) < CaCO3_temp_thres1)  then
-              CaCO3_form(auto_ind,k) = CaCO3_form(auto_ind,k) * max((temperature(k) - CaCO3_temp_thres2), c0) / &
-                   (CaCO3_temp_thres1-CaCO3_temp_thres2)
-            end if
+          where (temperature(:) < CaCO3_temp_thres1)
+            CaCO3_form(auto_ind,:) = CaCO3_form(auto_ind,:) * max((temperature(:) - CaCO3_temp_thres2), c0) / &
+                 (CaCO3_temp_thres1-CaCO3_temp_thres2)
+          end where
 
-            if (autotroph_local%C(auto_ind,k) > CaCO3_sp_thres) then
-              CaCO3_form(auto_ind,k) = min((CaCO3_form(auto_ind,k) * autotroph_local%C(auto_ind,k) / CaCO3_sp_thres), &
-                   (f_photosp_CaCO3 * photoC(auto_ind,k)))
-            end if
-          end if
+          where (autotroph_local%C(auto_ind,:) > CaCO3_sp_thres)
+            CaCO3_form(auto_ind,:) = min((CaCO3_form(auto_ind,:) * autotroph_local%C(auto_ind,:) / CaCO3_sp_thres), &
+                 (f_photosp_CaCO3 * photoC(auto_ind,:)))
+          end where
+        end if
 
-        end do
       end do
 
     end associate
