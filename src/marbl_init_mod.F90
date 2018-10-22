@@ -135,8 +135,8 @@ contains
 
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lvariable_PtoC
-    use marbl_settings_mod, only : autotrophs
-    use marbl_settings_mod, only : zooplankton
+    use marbl_settings_mod, only : autotroph_settings
+    use marbl_settings_mod, only : zooplankton_settings
     use marbl_settings_mod, only : tracer_restore_vars
     use marbl_ciso_init_mod, only : marbl_ciso_init_tracer_metadata
 
@@ -157,7 +157,7 @@ contains
 
     ! Construct tracer indices
     allocate(tracer_indices)
-    call tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs, zooplankton, &
+    call tracer_indices%construct(ciso_on, lvariable_PtoC, autotroph_settings, zooplankton_settings, &
                                   marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
@@ -307,7 +307,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_bury_coeff(marbl_particulate_share, num_levels, marbl_status_log)
+  subroutine marbl_init_bury_coeff(marbl_particulate_share, marbl_status_log)
 
     use marbl_logging, only : marbl_log_type
     use marbl_settings_mod, only : init_bury_coeff_opt
@@ -317,8 +317,7 @@ contains
     use marbl_settings_mod, only : parm_init_bSi_bury_coeff
     use marbl_interface_private_types, only : marbl_particulate_share_type
 
-    type(marbl_particulate_share_type), intent(out)   :: marbl_particulate_share
-    integer(int_kind),                  intent(in)    :: num_levels
+    type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
     type(marbl_log_type),               intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
@@ -327,8 +326,6 @@ contains
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_bury_coeff'
 
     !---------------------------------------------------------------------------
-
-    call marbl_particulate_share%construct(num_levels)
 
     ! if ladjust_bury_coeff is true, then bury coefficients are set at runtime
     ! so they do not need to be initialized here
@@ -351,8 +348,6 @@ contains
   subroutine marbl_init_forcing_fields(domain, &
                                        tracer_metadata, &
                                        surface_flux_forcing_ind, &
-                                       surface_flux_share, &
-                                       surface_flux_internal, &
                                        surface_flux_forcings, &
                                        interior_tendency_forcing_ind, &
                                        interior_tendency_forcings, &
@@ -360,8 +355,6 @@ contains
 
     use marbl_interface_public_types, only : marbl_domain_type
     use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
-    use marbl_interface_private_types, only : marbl_surface_flux_share_type
-    use marbl_interface_private_types, only : marbl_surface_flux_internal_type
     use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lflux_gas_o2
@@ -372,8 +365,6 @@ contains
     type(marbl_domain_type),                             intent(in)    :: domain
     type(marbl_tracer_metadata_type),                    intent(in)    :: tracer_metadata(:)
     type(marbl_surface_flux_forcing_indexing_type),      intent(out)   :: surface_flux_forcing_ind
-    type(marbl_surface_flux_share_type),                 intent(out)   :: surface_flux_share
-    type(marbl_surface_flux_internal_type),              intent(out)   :: surface_flux_internal
     type(marbl_forcing_fields_type), allocatable,        intent(out)   :: surface_flux_forcings(:)
     type(marbl_interior_tendency_forcing_indexing_type), intent(out)   :: interior_tendency_forcing_ind
     type(marbl_forcing_fields_type), allocatable,        intent(out)   :: interior_tendency_forcings(:)
@@ -407,10 +398,6 @@ contains
         call marbl_status_log%log_error_trace("interior_tendency_forcing_ind%construct", subname)
         return
       end if
-
-      ! Construct share / internal types for surface flux computation
-      call surface_flux_share%construct(num_elements_surface_flux)
-      call surface_flux_internal%construct(num_elements_surface_flux)
 
       ! Initialize surface forcing fields
       allocate(surface_flux_forcings(num_surface_flux_forcing_fields))
@@ -550,7 +537,7 @@ contains
     !  initialize zooplankton tracer_d values and tracer indices
     !-----------------------------------------------------------------------
 
-    use marbl_settings_mod, only : zooplankton
+    use marbl_settings_mod, only : zooplankton_settings
 
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
     type (marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
@@ -563,8 +550,8 @@ contains
 
     do zoo_ind = 1, zooplankton_cnt
        n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
-       marbl_tracer_metadata(n)%short_name = trim(zooplankton(zoo_ind)%sname) // 'C'
-       marbl_tracer_metadata(n)%long_name  = trim(zooplankton(zoo_ind)%lname) // ' Carbon'
+       marbl_tracer_metadata(n)%short_name = trim(zooplankton_settings(zoo_ind)%sname) // 'C'
+       marbl_tracer_metadata(n)%long_name  = trim(zooplankton_settings(zoo_ind)%lname) // ' Carbon'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
@@ -581,7 +568,7 @@ contains
     !  initialize autotroph tracer_d values and tracer indices
     !-----------------------------------------------------------------------
 
-    use marbl_settings_mod, only : autotrophs
+    use marbl_settings_mod, only : autotroph_settings
 
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type    (marbl_tracer_index_type) , intent(in)    :: marbl_tracer_indices
@@ -594,39 +581,39 @@ contains
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Chl'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Chlorophyll'
+       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Chl'
+       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Chlorophyll'
        marbl_tracer_metadata(n)%units      = 'mg/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mg/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mg/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon'
+       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'C'
+       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Carbon'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
        if (n.gt.0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'P'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Phosphorus'
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'P'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Phosphorus'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
        endif
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Fe'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Iron'
+       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Fe'
+       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Iron'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
        if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Si'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Silicon'
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Si'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Silicon'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
@@ -634,8 +621,8 @@ contains
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'CaCO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' CaCO3'
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'CaCO3'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' CaCO3'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'

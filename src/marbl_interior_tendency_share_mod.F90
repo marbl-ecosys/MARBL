@@ -32,69 +32,67 @@ contains
   !***********************************************************************
 
   subroutine marbl_interior_tendency_share_export_variables(&
-       tracer_local, &
+       km, &
        marbl_tracer_indices, &
+       tracer_local, &
        carbonate, &
        dissolved_organic_matter, &
        QA_dust_def, &
-       marbl_interior_tendency_share)
+       interior_tendency_share)
 
     use marbl_interface_private_types, only : marbl_tracer_index_type
     use marbl_interface_private_types, only : carbonate_type
     use marbl_interface_private_types, only : dissolved_organic_matter_type
     use marbl_interface_private_types, only : marbl_interior_tendency_share_type
 
-    real(r8),                                 intent(in)    :: tracer_local(:)
+    integer,                                  intent(in)    :: km
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
+    real(r8),                                 intent(in)    :: tracer_local(marbl_tracer_indices%total_cnt,km)
     type(carbonate_type),                     intent(in)    :: carbonate
     type(dissolved_organic_matter_type),      intent(in)    :: dissolved_organic_matter
-    real(r8),                                 intent(in)    :: QA_dust_def
-    type(marbl_interior_tendency_share_type), intent(inout) :: marbl_interior_tendency_share
+    real(r8),                                 intent(in)    :: QA_dust_def(km)
+    type(marbl_interior_tendency_share_type), intent(inout) :: interior_tendency_share
 
     ! Populate fields used by carbon isotopes if running with ciso module
     if (ciso_on) then
-      marbl_interior_tendency_share%QA_dust_def    = QA_dust_def
-      marbl_interior_tendency_share%CO3_fields   = carbonate%CO3
-      marbl_interior_tendency_share%HCO3_fields  = carbonate%HCO3
-      marbl_interior_tendency_share%H2CO3_fields = carbonate%H2CO3
-      marbl_interior_tendency_share%CO3_sat_calcite = carbonate%CO3_sat_calcite
-      marbl_interior_tendency_share%DOCtot_loc_fields = &
-           tracer_local(marbl_tracer_indices%DOC_ind) + tracer_local(marbl_tracer_indices%DOCr_ind)
-      marbl_interior_tendency_share%DOCtot_remin_fields = &
-           dissolved_organic_matter%DOC_remin + dissolved_organic_matter%DOCr_remin
+      interior_tendency_share%QA_dust_def(:)    = QA_dust_def(:)
+      interior_tendency_share%CO3_fields(:)   = carbonate%CO3(:)
+      interior_tendency_share%HCO3_fields(:)  = carbonate%HCO3(:)
+      interior_tendency_share%H2CO3_fields(:) = carbonate%H2CO3(:)
+      interior_tendency_share%CO3_sat_calcite(:) = carbonate%CO3_sat_calcite(:)
+      interior_tendency_share%DOCtot_remin_fields(:) = &
+           dissolved_organic_matter%DOC_remin(:) + dissolved_organic_matter%DOCr_remin(:)
+      interior_tendency_share%DOCtot_loc_fields(:) = &
+           tracer_local(marbl_tracer_indices%DOC_ind,:) + tracer_local(marbl_tracer_indices%DOCr_ind,:)
     end if
 
   end subroutine marbl_interior_tendency_share_export_variables
 
   !***********************************************************************
 
-  subroutine marbl_interior_tendency_share_export_zooplankton(&
-       zooplankton_local, &
-       zooplankton_secondary_species, &
-       marbl_zooplankton_share)
+  subroutine marbl_interior_tendency_share_export_zooplankton(zooplankton_local, &
+       zooplankton_derived_terms, zooplankton_share)
 
-    use marbl_pft_mod, only : zooplankton_local_type
-    use marbl_pft_mod, only : zooplankton_secondary_species_type
-    use marbl_pft_mod, only : marbl_zooplankton_share_type
+    use marbl_interface_private_types, only : zooplankton_derived_terms_type
+    use marbl_interface_private_types, only : zooplankton_local_type
+    use marbl_interface_private_types, only : zooplankton_share_type
 
-    type(zooplankton_local_type)             , intent(in)    :: zooplankton_local(:)
-    type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(:)
-    type(marbl_zooplankton_share_type)       , intent(inout) :: marbl_zooplankton_share
+    type(zooplankton_local_type),         intent(in)    :: zooplankton_local
+    type(zooplankton_derived_terms_type), intent(in)    :: zooplankton_derived_terms
+    type(zooplankton_share_type),         intent(inout) :: zooplankton_share
 
     ! Populate fields used by carbon isotopes if running with ciso module
     if (ciso_on) then
-      associate(share => marbl_zooplankton_share)
-         share%zoototC_loc_fields      = sum(zooplankton_local(:)%C)
-         share%zootot_loss_fields      = sum(zooplankton_secondary_species(:)%zoo_loss)
-         share%zootot_loss_poc_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_poc)
-         share%zootot_loss_doc_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_doc)
-         share%zootot_loss_dic_fields  = sum(zooplankton_secondary_species(:)%zoo_loss_dic)
-         share%zootot_graze_fields     = sum(zooplankton_secondary_species(:)%zoo_graze)
-         share%zootot_graze_zoo_fields = sum(zooplankton_secondary_species(:)%zoo_graze_zoo)
-         share%zootot_graze_poc_fields = sum(zooplankton_secondary_species(:)%zoo_graze_poc)
-         share%zootot_graze_doc_fields = sum(zooplankton_secondary_species(:)%zoo_graze_doc)
-         share%zootot_graze_dic_fields = sum(zooplankton_secondary_species(:)%zoo_graze_dic)
-      end associate
+      zooplankton_share%zoototC_loc_fields(:)      = sum(zooplankton_local%C(:,:), dim=1)
+      zooplankton_share%zootot_loss_fields(:)      = sum(zooplankton_derived_terms%zoo_loss(:,:), dim=1)
+      zooplankton_share%zootot_loss_poc_fields(:)  = sum(zooplankton_derived_terms%zoo_loss_poc(:,:), dim=1)
+      zooplankton_share%zootot_loss_doc_fields(:)  = sum(zooplankton_derived_terms%zoo_loss_doc(:,:), dim=1)
+      zooplankton_share%zootot_loss_dic_fields(:)  = sum(zooplankton_derived_terms%zoo_loss_dic(:,:), dim=1)
+      zooplankton_share%zootot_graze_fields(:)     = sum(zooplankton_derived_terms%zoo_graze(:,:), dim=1)
+      zooplankton_share%zootot_graze_zoo_fields(:) = sum(zooplankton_derived_terms%zoo_graze_zoo(:,:), dim=1)
+      zooplankton_share%zootot_graze_poc_fields(:) = sum(zooplankton_derived_terms%zoo_graze_poc(:,:), dim=1)
+      zooplankton_share%zootot_graze_doc_fields(:) = sum(zooplankton_derived_terms%zoo_graze_doc(:,:), dim=1)
+      zooplankton_share%zootot_graze_dic_fields(:) = sum(zooplankton_derived_terms%zoo_graze_dic(:,:), dim=1)
     end if
 
   end subroutine marbl_interior_tendency_share_export_zooplankton

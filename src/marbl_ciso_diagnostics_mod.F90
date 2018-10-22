@@ -9,7 +9,7 @@ module marbl_ciso_diagnostics_mod
   use marbl_constants_mod, only : c1000
 
   use marbl_settings_mod, only : autotroph_cnt
-  use marbl_settings_mod, only : autotrophs
+  use marbl_settings_mod, only : autotroph_settings
 
   use marbl_interface_public_types, only : marbl_diagnostics_type
 
@@ -621,9 +621,9 @@ contains
        allocate(ind%CISO_autotrophCaCO3_d14C(autotroph_cnt))
       end if
       do n = 1, autotroph_cnt
-       if (autotrophs(n)%imp_calcifier .or. autotrophs(n)%exp_calcifier) then
-         lname    = trim(autotrophs(n)%lname) // ' Ca13CO3 Formation'
-         sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca13CO3_form'
+       if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
+         lname    = trim(autotroph_settings(n)%lname) // ' Ca13CO3 Formation'
+         sname    = 'CISO_' // trim(autotroph_settings(n)%sname) // '_Ca13CO3_form'
          units    = 'mmol/m^3/s'
          vgrid    = 'layer_avg'
          truncate = .true.
@@ -634,8 +634,8 @@ contains
            return
          end if
 
-         lname    = trim(autotrophs(n)%lname) // ' Ca13CO3 Formation Vertical Integral'
-         sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca13CO3_form_zint'
+         lname    = trim(autotroph_settings(n)%lname) // ' Ca13CO3 Formation Vertical Integral'
+         sname    = 'CISO_' // trim(autotroph_settings(n)%sname) // '_Ca13CO3_form_zint'
          units    = 'mmol/m^3 cm/s'
          vgrid    = 'none'
          truncate = .false.
@@ -646,8 +646,8 @@ contains
            return
          end if
 
-         lname    = trim(autotrophs(n)%lname) // ' Ca14CO3 Formation'
-         sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca14CO3_form'
+         lname    = trim(autotroph_settings(n)%lname) // ' Ca14CO3 Formation'
+         sname    = 'CISO_' // trim(autotroph_settings(n)%sname) // '_Ca14CO3_form'
          units    = 'mmol/m^3/s'
          vgrid    = 'layer_avg'
          truncate = .true.
@@ -658,8 +658,8 @@ contains
            return
          end if
 
-         lname    = trim(autotrophs(n)%lname) // ' Ca14CO3 Formation Vertical Integral'
-         sname    = 'CISO_' // trim(autotrophs(n)%sname) // '_Ca14CO3_form_zint'
+         lname    = trim(autotroph_settings(n)%lname) // ' Ca14CO3 Formation Vertical Integral'
+         sname    = 'CISO_' // trim(autotroph_settings(n)%sname) // '_Ca14CO3_form_zint'
          units    = 'mmol/m^3 cm/s'
          vgrid    = 'none'
          truncate = .false.
@@ -670,8 +670,8 @@ contains
            return
          end if
 
-         lname    = trim(autotrophs(n)%lname) // ' d13C of CaCO3'
-         sname    = 'CISO_autotrophCaCO3_d13C_' // trim(autotrophs(n)%sname)
+         lname    = trim(autotroph_settings(n)%lname) // ' d13C of CaCO3'
+         sname    = 'CISO_autotrophCaCO3_d13C_' // trim(autotroph_settings(n)%sname)
          units    = 'mmol/m^3/s'
          vgrid    = 'layer_avg'
          truncate = .false.
@@ -682,8 +682,8 @@ contains
            return
          end if
 
-         lname    = trim(autotrophs(n)%lname) // ' d14C of CaCO3'
-         sname    = 'CISO_autotrophCaCO3_d14C_' // trim(autotrophs(n)%sname)
+         lname    = trim(autotroph_settings(n)%lname) // ' d14C of CaCO3'
+         sname    = 'CISO_autotrophCaCO3_d14C_' // trim(autotroph_settings(n)%sname)
          units    = 'mmol/m^3/s'
          vgrid    = 'layer_avg'
          truncate = .false.
@@ -702,8 +702,8 @@ contains
          ind%CISO_autotrophCaCO3_d14C(n) = 0
        end if ! calcifier
 
-       lname    = trim(autotrophs(n)%lname) // ' 13C Fixation'
-       sname    = 'CISO_photo13C_' // trim(autotrophs(n)%sname)
+       lname    = trim(autotroph_settings(n)%lname) // ' 13C Fixation'
+       sname    = 'CISO_photo13C_' // trim(autotroph_settings(n)%sname)
        units    = 'mmol/m^3/s'
        vgrid    = 'layer_avg'
        truncate = .true.
@@ -714,8 +714,8 @@ contains
          return
        end if
 
-       lname    = trim(autotrophs(n)%lname) // ' 14C Fixation'
-       sname    = 'CISO_photo14C_' // trim(autotrophs(n)%sname)
+       lname    = trim(autotroph_settings(n)%lname) // ' 14C Fixation'
+       sname    = 'CISO_photo14C_' // trim(autotroph_settings(n)%sname)
        units    = 'mmol/m^3/s'
        vgrid    = 'layer_avg'
        truncate = .true.
@@ -726,8 +726,8 @@ contains
          return
        end if
 
-       lname    = trim(autotrophs(n)%lname) // ' 13C Fixation Vertical Integral'
-       sname    = 'CISO_photo13C_' // trim(autotrophs(n)%sname) // '_zint'
+       lname    = trim(autotroph_settings(n)%lname) // ' 13C Fixation Vertical Integral'
+       sname    = 'CISO_photo13C_' // trim(autotroph_settings(n)%sname) // '_zint'
        units    = 'mmol/m^3 cm/s'
        vgrid    = 'none'
        truncate = .false.
@@ -738,8 +738,8 @@ contains
          return
        end if
 
-       lname    = trim(autotrophs(n)%lname) // ' 14C Fixation Vertical Integral'
-       sname    = 'CISO_photo14C_' // trim(autotrophs(n)%sname) // '_zint'
+       lname    = trim(autotroph_settings(n)%lname) // ' 14C Fixation Vertical Integral'
+       sname    = 'CISO_photo14C_' // trim(autotroph_settings(n)%sname) // '_zint'
        units    = 'mmol/m^3 cm/s'
        vgrid    = 'none'
        truncate = .false.
@@ -750,8 +750,8 @@ contains
          return
        end if
 
-       lname    = trim(autotrophs(n)%lname) // ' discrimination factor (eps)'
-       sname    = 'CISO_eps_autotroph_' // trim(autotrophs(n)%sname)
+       lname    = trim(autotroph_settings(n)%lname) // ' discrimination factor (eps)'
+       sname    = 'CISO_eps_autotroph_' // trim(autotroph_settings(n)%sname)
        units    = 'permil'
        vgrid    = 'layer_avg'
        truncate = .false.
@@ -762,8 +762,8 @@ contains
          return
        end if
 
-       lname    = trim(autotrophs(n)%lname) // ' d13C'
-       sname    = 'CISO_d13C_' // trim(autotrophs(n)%sname)
+       lname    = trim(autotroph_settings(n)%lname) // ' d13C'
+       sname    = 'CISO_d13C_' // trim(autotroph_settings(n)%sname)
        units    = 'permil'
        vgrid    = 'layer_avg'
        truncate = .false.
@@ -774,8 +774,8 @@ contains
          return
        end if
 
-       lname    = trim(autotrophs(n)%lname) // ' d14C'
-       sname    = 'CISO_d14C_' // trim(autotrophs(n)%sname)
+       lname    = trim(autotroph_settings(n)%lname) // ' d14C'
+       sname    = 'CISO_d14C_' // trim(autotroph_settings(n)%sname)
        units    = 'permil'
        vgrid    = 'layer_avg'
        truncate = .false.
@@ -786,8 +786,8 @@ contains
          return
        end if
 
-       lname    = trim(autotrophs(n)%lname) // ' instanteous growth rate over [CO2*]'
-       sname    = 'CISO_mui_to_co2star_' // trim(autotrophs(n)%sname)
+       lname    = trim(autotroph_settings(n)%lname) // ' instanteous growth rate over [CO2*]'
+       sname    = 'CISO_mui_to_co2star_' // trim(autotroph_settings(n)%sname)
        units    = 'm^3/mmol/s'
        vgrid    = 'layer_avg'
        truncate = .false.
@@ -1171,8 +1171,8 @@ contains
              diags(ind%CISO_Ca13CO3_form(n))%field_3d(k, 1)     = Ca13CO3_prod(n,k)
           if (ind%CISO_Ca14CO3_form(n) .gt. 0) &
              diags(ind%CISO_Ca14CO3_form(n))%field_3d(k, 1)     = Ca14CO3_prod(n,k)
-       end do  ! end loop over autotrophs
-    end do  ! end loop over k
+       end do  ! end loop over autotroph_cnt
+    end do  ! end loop over km
 
     do k = 1,km
        diags(ind%CISO_DIC_d13C)%field_3d(k, 1)        = DIC_d13C(k)

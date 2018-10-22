@@ -15,9 +15,8 @@ module marbl_pft_mod
   real(r8), parameter :: UnsetValue = 1e34_r8
 
   !****************************************************************************
-  ! derived types for autotrophs
 
-  type, public :: autotroph_type
+  type, public :: autotroph_settings_type
     character(len=char_len) :: sname
     character(len=char_len) :: lname
     logical(log_kind)       :: Nfixer                             ! flag set to true if this autotroph fixes N2
@@ -43,25 +42,11 @@ module marbl_pft_mod
     real(r8)                :: loss_poc                           ! routing of loss term
   contains
     procedure, public :: set_to_default => autotroph_set_to_default
-  end type autotroph_type
-
-  type, public :: autotroph_local_type
-     real (r8) :: Chl   ! local copy of model autotroph Chl
-     real (r8) :: C     ! local copy of model autotroph C
-     real (r8) :: P     ! local copy of model autotroph P
-     real (r8) :: Fe    ! local copy of model autotroph Fe
-     real (r8) :: Si    ! local copy of model autotroph Si
-     real (r8) :: CaCO3 ! local copy of model autotroph CaCO3
-     real (r8) :: C13     ! local copy of model autotroph C13
-     real (r8) :: C14     ! local copy of model autotroph C14
-     real (r8) :: Ca13CO3 ! local copy of model autotroph Ca13CO3
-     real (r8) :: Ca14CO3 ! local copy of model autotroph Ca14CO3
-  end type autotroph_local_type
+  end type autotroph_settings_type
 
   !****************************************************************************
-  ! derived types for zooplankton
 
-  type, public :: zooplankton_type
+  type, public :: zooplankton_settings_type
      character(len=char_len) :: sname
      character(len=char_len) :: lname
      real(r8)                :: z_mort_0_per_day   ! zoo linear mort rate (1/day)
@@ -71,20 +56,15 @@ module marbl_pft_mod
      real(r8)                :: loss_thres         ! zoo conc. where losses go to zero
    contains
      procedure, public :: set_to_default => zooplankton_set_to_default
-  end type zooplankton_type
-
-  type, public :: zooplankton_local_type
-     real (r8) :: C  ! local copy of model zooplankton C
-  end type zooplankton_local_type
+  end type zooplankton_settings_type
 
   !****************************************************************************
-  ! derived types for grazing
 
-  type, public :: grazing_type
+  type, public :: grazing_relationship_settings_type
     character(len=char_len) :: sname
     character(len=char_len) :: lname
-    integer(int_kind)       :: auto_ind_cnt     ! number of autotrophs in prey-clase auto_ind
-    integer(int_kind)       :: zoo_ind_cnt      ! number of zooplankton in prey-clase zoo_ind
+    integer(int_kind)       :: auto_ind_cnt     ! number of autotrophs in prey-class auto_ind
+    integer(int_kind)       :: zoo_ind_cnt      ! number of zooplankton in prey-class zoo_ind
     integer(int_kind)       :: grazing_function ! functional form of grazing parameterization
     real(r8)                :: z_umax_0_per_day ! max zoo growth rate at tref (1/day)
     real(r8)                :: z_umax_0         ! max zoo growth rate at tref (1/sec) (derived from z_umax_0_per_day)
@@ -96,90 +76,9 @@ module marbl_pft_mod
     integer(int_kind), allocatable :: auto_ind(:)
     integer(int_kind), allocatable :: zoo_ind(:)
   contains
-    procedure, public :: set_to_default => grazing_set_to_default
-    procedure, public :: construct => grazing_constructor
-  end type grazing_type
-
-  !***********************************************************************
-
-  type, public :: marbl_zooplankton_share_type
-     real(r8) :: zoototC_loc_fields      ! local copy of model zooC
-     real(r8) :: zootot_loss_fields      ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-     real(r8) :: zootot_loss_poc_fields  ! zoo_loss routed to large detrital (mmol C/m^3/sec)
-     real(r8) :: zootot_loss_doc_fields  ! zoo_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: zootot_loss_dic_fields  ! zoo_loss routed to dic (mmol C/m^3/sec)
-     real(r8) :: zootot_graze_fields     ! zooplankton losses due to grazing (mmol C/m^3/sec)
-     real(r8) :: zootot_graze_zoo_fields ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
-     real(r8) :: zootot_graze_poc_fields ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
-     real(r8) :: zootot_graze_doc_fields ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
-     real(r8) :: zootot_graze_dic_fields ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
-  end type marbl_zooplankton_share_type
-
-  !*****************************************************************************
-
-  type, public :: autotroph_secondary_species_type
-     real(r8) :: thetaC          ! current Chl/C ratio (mg Chl/mmol C)
-     real(r8) :: QCaCO3          ! current CaCO3/C ratio (mmol CaCO3/mmol C)
-     real(r8) :: Qp              ! current P/C ratio (mmol P/mmol C)
-     real(r8) :: gQp             ! P/C for growth
-     real(r8) :: Qfe             ! current Fe/C ratio (mmol Fe/mmol C)
-     real(r8) :: gQfe            ! fe/C for growth
-     real(r8) :: Qsi             ! current Si/C ratio (mmol Si/mmol C)
-     real(r8) :: gQsi            ! diatom Si/C ratio for growth (new biomass)
-     real(r8) :: VNO3            ! NH4 uptake rate (non-dim)
-     real(r8) :: VNH4            ! NO3 uptake rate (non-dim)
-     real(r8) :: VNtot           ! total N uptake rate (non-dim)
-     real(r8) :: NO3_V           ! nitrate uptake (mmol NO3/m^3/sec)
-     real(r8) :: NH4_V           ! ammonium uptake (mmol NH4/m^3/sec)
-     real(r8) :: PO4_V           ! PO4 uptake (mmol PO4/m^3/sec)
-     real(r8) :: DOP_V           ! DOP uptake (mmol DOP/m^3/sec)
-     real(r8) :: VPO4            ! C-specific PO4 uptake (non-dim)
-     real(r8) :: VDOP            ! C-specific DOP uptake rate (non-dim)
-     real(r8) :: VPtot           ! total P uptake rate (non-dim)
-     real(r8) :: f_nut           ! nut limitation factor, modifies C fixation (non-dim)
-     real(r8) :: VFe             ! C-specific Fe uptake (non-dim)
-     real(r8) :: VSiO3           ! C-specific SiO3 uptake (non-dim)
-     real(r8) :: light_lim       ! light limitation factor
-     real(r8) :: PCphoto         ! C-specific rate of photosynth. (1/sec)
-     real(r8) :: photoC          ! C-fixation (mmol C/m^3/sec)
-     real(r8) :: photoFe         ! iron uptake
-     real(r8) :: photoSi         ! silicon uptake (mmol Si/m^3/sec)
-     real(r8) :: photoacc        ! Chl synth. term in photoadapt. (GD98) (mg Chl/m^3/sec)
-     real(r8) :: auto_loss       ! autotroph non-grazing mort (mmol C/m^3/sec)
-     real(r8) :: auto_loss_poc   ! auto_loss routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_doc   ! auto_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_loss_dic   ! auto_loss routed to dic (mmol C/m^3/sec)
-     real(r8) :: auto_agg        ! autotroph aggregation (mmol C/m^3/sec)
-     real(r8) :: auto_graze      ! autotroph grazing rate (mmol C/m^3/sec)
-     real(r8) :: auto_graze_zoo  ! auto_graze routed to zoo (mmol C/m^3/sec)
-     real(r8) :: auto_graze_poc  ! auto_graze routed to poc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_doc  ! auto_graze routed to doc (mmol C/m^3/sec)
-     real(r8) :: auto_graze_dic  ! auto_graze routed to dic (mmol C/m^3/sec)
-     real(r8) :: Pprime          ! used to limit autotroph mort at low biomass (mmol C/m^3)
-     real(r8) :: CaCO3_form      ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-     real(r8) :: Nfix            ! total Nitrogen fixation (mmol N/m^3/sec)
-     real(r8) :: Nexcrete        ! fixed N excretion
-     real(r8) :: remaining_P_dop ! remaining_P from grazing routed to DOP pool
-     real(r8) :: remaining_P_pop ! remaining_P from grazing routed to POP pool
-     real(r8) :: remaining_P_dip ! remaining_P from grazing routed to remin
-  end type autotroph_secondary_species_type
-
-  !*****************************************************************************
-
-  type, public :: zooplankton_secondary_species_type
-     real(r8) :: f_zoo_detr       ! frac of zoo losses into large detrital pool (non-dim)
-     real(r8) :: x_graze_zoo      ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
-     real(r8) :: zoo_graze        ! zooplankton losses due to grazing (mmol C/m^3/sec)
-     real(r8) :: zoo_graze_zoo    ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
-     real(r8) :: zoo_graze_poc    ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
-     real(r8) :: zoo_graze_doc    ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
-     real(r8) :: zoo_graze_dic    ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
-     real(r8) :: zoo_loss         ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_poc     ! zoo_loss routed to poc (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_doc     ! zoo_loss routed to doc (mmol C/m^3/sec)
-     real(r8) :: zoo_loss_dic     ! zoo_loss routed to dic (mmol C/m^3/sec)
-     real(r8) :: Zprime           ! used to limit zoo mort at low biomass (mmol C/m^3)
-  end type zooplankton_secondary_species_type
+    procedure, public :: set_to_default => grazer_set_to_default
+    procedure, public :: construct => grazer_constructor
+  end type grazing_relationship_settings_type
 
   !****************************************************************************
 
@@ -196,9 +95,9 @@ contains
 
   subroutine autotroph_set_to_default(self, autotroph_id, marbl_status_log)
 
-    class(autotroph_type), intent(out)   :: self
-    character(len=*),      intent(in)    :: autotroph_id
-    type(marbl_log_type),  intent(inout) :: marbl_status_log
+    class(autotroph_settings_type), intent(out)   :: self
+    character(len=*),               intent(in)    :: autotroph_id
+    type(marbl_log_type),           intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_pft_mod:autotroph_set_to_default'
     character(len=char_len)     :: log_message
@@ -324,9 +223,9 @@ contains
 
   subroutine zooplankton_set_to_default(self, zooplankton_id, marbl_status_log)
 
-    class(zooplankton_type), intent(out)   :: self
-    character(len=*),        intent(in)    :: zooplankton_id
-    type(marbl_log_type),    intent(inout) :: marbl_status_log
+    class(zooplankton_settings_type), intent(out)   :: self
+    character(len=*),                 intent(in)    :: zooplankton_id
+    type(marbl_log_type),             intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_pft_mod:zooplankton_set_to_default'
     character(len=char_len)     :: log_message
@@ -354,16 +253,16 @@ contains
 
   !*****************************************************************************
 
-  subroutine grazing_set_to_default(self, grazing_id, marbl_status_log)
+  subroutine grazer_set_to_default(self, grazer_id, marbl_status_log)
 
-    class(grazing_type),  intent(inout) :: self
-    character(len=*),     intent(in)    :: grazing_id
-    type(marbl_log_type), intent(inout) :: marbl_status_log
+    class(grazing_relationship_settings_type), intent(inout) :: self
+    character(len=*),                          intent(in)    :: grazer_id
+    type(marbl_log_type),                      intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_pft_mod:grazing_set_to_default'
+    character(len=*), parameter :: subname = 'marbl_pft_mod:grazer_set_to_default'
     character(len=char_len)     :: log_message
 
-    select case (grazing_id)
+    select case (grazer_id)
       case ('sp_zoo')
         self%sname = 'grz_sp_zoo'                         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%lname = 'Grazing of sp by zoo'               ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -418,22 +317,22 @@ contains
         self%f_zoo_detr       = UnsetValue
         self%grazing_function = grz_fnc_michaelis_menten
       case DEFAULT
-        write(log_message, "(3A)") "'", grazing_id, "' is not a valid grazing ID"
+        write(log_message, "(3A)") "'", grazer_id, "' is not a valid grazing ID"
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
 
-  end subroutine grazing_set_to_default
+  end subroutine grazer_set_to_default
   !*****************************************************************************
 
-  subroutine grazing_constructor(self, autotroph_cnt, zooplankton_cnt, marbl_status_log)
+  subroutine grazer_constructor(self, autotroph_cnt, zooplankton_cnt, marbl_status_log)
 
-    class(grazing_type),  intent(out)   :: self
-    integer(int_kind),    intent(in)    :: autotroph_cnt
-    integer(int_kind),    intent(in)    :: zooplankton_cnt
-    type(marbl_log_type), intent(inout) :: marbl_status_log
+    class(grazing_relationship_settings_type), intent(out)   :: self
+    integer(int_kind),                         intent(in)    :: autotroph_cnt
+    integer(int_kind),                         intent(in)    :: zooplankton_cnt
+    type(marbl_log_type),                      intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_pft_mod:grazing_constructor'
+    character(len=*), parameter :: subname = 'marbl_pft_mod:grazer_constructor'
     character(len=char_len)     :: log_message
 
     if (allocated(self%auto_ind)) then
@@ -451,7 +350,7 @@ contains
     allocate(self%auto_ind(autotroph_cnt))
     allocate(self%zoo_ind(zooplankton_cnt))
 
-  end subroutine grazing_constructor
+  end subroutine grazer_constructor
 
   !*****************************************************************************
 

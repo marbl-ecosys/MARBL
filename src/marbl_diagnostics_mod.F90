@@ -9,8 +9,8 @@ module marbl_diagnostics_mod
 
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : zooplankton_cnt
-  use marbl_settings_mod, only : autotrophs
-  use marbl_settings_mod, only : zooplankton
+  use marbl_settings_mod, only : autotroph_settings
+  use marbl_settings_mod, only : zooplankton_settings
 
   use marbl_constants_mod, only : c0
   use marbl_constants_mod, only : c1
@@ -19,6 +19,9 @@ module marbl_diagnostics_mod
   use marbl_interface_private_types, only : dissolved_organic_matter_type
   use marbl_interface_private_types, only : column_sinking_particle_type
   use marbl_interface_private_types, only : marbl_PAR_type
+  use marbl_interface_private_types, only : autotroph_local_type
+  use marbl_interface_private_types, only : autotroph_derived_terms_type
+  use marbl_interface_private_types, only : zooplankton_derived_terms_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
@@ -28,10 +31,6 @@ module marbl_diagnostics_mod
   use marbl_interface_public_types, only : marbl_forcing_fields_type
   use marbl_interface_public_types, only : marbl_saved_state_type
   use marbl_interface_public_types, only : marbl_diagnostics_type
-
-  use marbl_pft_mod, only : autotroph_local_type
-  use marbl_pft_mod, only : autotroph_secondary_species_type
-  use marbl_pft_mod, only : zooplankton_secondary_species_type
 
   use marbl_logging, only : marbl_log_type
   use marbl_logging, only : marbl_logging_add_diagnostics_error
@@ -861,8 +860,8 @@ contains
         allocate(ind%auto_agg_zint_100m(autotroph_cnt))
       end if
       do n=1,autotroph_cnt
-        lname = trim(autotrophs(n)%lname) // ' N Limitation, Surface'
-        sname = trim(autotrophs(n)%sname) // '_N_lim_surf'
+        lname = trim(autotroph_settings(n)%lname) // ' N Limitation, Surface'
+        sname = trim(autotroph_settings(n)%sname) // '_N_lim_surf'
         units = '1'
         vgrid = 'none'
         truncate = .false.
@@ -873,8 +872,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' N Limitation, carbon biomass weighted average over 0-100m'
-        sname = trim(autotrophs(n)%sname) // '_N_lim_Cweight_avg_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' N Limitation, carbon biomass weighted average over 0-100m'
+        sname = trim(autotroph_settings(n)%sname) // '_N_lim_Cweight_avg_100m'
         units = '1'
         vgrid = 'none'
         truncate = .false.
@@ -885,8 +884,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' P Limitation, Surface'
-        sname = trim(autotrophs(n)%sname) // '_P_lim_surf'
+        lname = trim(autotroph_settings(n)%lname) // ' P Limitation, Surface'
+        sname = trim(autotroph_settings(n)%sname) // '_P_lim_surf'
         units = '1'
         vgrid = 'none'
         truncate = .false.
@@ -897,8 +896,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' P Limitation, carbon biomass weighted average over 0-100m'
-        sname = trim(autotrophs(n)%sname) // '_P_lim_Cweight_avg_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' P Limitation, carbon biomass weighted average over 0-100m'
+        sname = trim(autotroph_settings(n)%sname) // '_P_lim_Cweight_avg_100m'
         units = '1'
         vgrid = 'none'
         truncate = .false.
@@ -909,8 +908,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Fe Limitation, Surface'
-        sname = trim(autotrophs(n)%sname) // '_Fe_lim_surf'
+        lname = trim(autotroph_settings(n)%lname) // ' Fe Limitation, Surface'
+        sname = trim(autotroph_settings(n)%sname) // '_Fe_lim_surf'
         units = '1'
         vgrid = 'none'
         truncate = .false.
@@ -921,8 +920,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Fe Limitation, carbon biomass weighted average over 0-100m'
-        sname = trim(autotrophs(n)%sname) // '_Fe_lim_Cweight_avg_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' Fe Limitation, carbon biomass weighted average over 0-100m'
+        sname = trim(autotroph_settings(n)%sname) // '_Fe_lim_Cweight_avg_100m'
         units = '1'
         vgrid = 'none'
         truncate = .false.
@@ -933,9 +932,9 @@ contains
           return
         end if
 
-        if (autotrophs(n)%silicifier) then
-          lname = trim(autotrophs(n)%lname) // ' SiO3 Limitation, Surface'
-          sname = trim(autotrophs(n)%sname) // '_SiO3_lim_surf'
+        if (autotroph_settings(n)%silicifier) then
+          lname = trim(autotroph_settings(n)%lname) // ' SiO3 Limitation, Surface'
+          sname = trim(autotroph_settings(n)%sname) // '_SiO3_lim_surf'
           units = '1'
           vgrid = 'none'
           truncate = .false.
@@ -946,8 +945,8 @@ contains
             return
           end if
 
-          lname = trim(autotrophs(n)%lname) // ' SiO3 Limitation, carbon biomass weighted average over 0-100m'
-          sname = trim(autotrophs(n)%sname) // '_SiO3_lim_Cweight_avg_100m'
+          lname = trim(autotroph_settings(n)%lname) // ' SiO3 Limitation, carbon biomass weighted average over 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_SiO3_lim_Cweight_avg_100m'
           units = '1'
           vgrid = 'none'
           truncate = .false.
@@ -962,8 +961,8 @@ contains
           ind%SiO3_lim_Cweight_avg_100m(n) = -1
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Light Limitation, Surface'
-        sname = trim(autotrophs(n)%sname) // '_light_lim_surf'
+        lname = trim(autotroph_settings(n)%lname) // ' Light Limitation, Surface'
+        sname = trim(autotroph_settings(n)%sname) // '_light_lim_surf'
         units = '1'
         vgrid = 'none'
         truncate = .false.
@@ -974,8 +973,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Light Limitation, carbon biomass weighted average over 0-100m'
-        sname = trim(autotrophs(n)%sname) // '_light_lim_Cweight_avg_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' Light Limitation, carbon biomass weighted average over 0-100m'
+        sname = trim(autotroph_settings(n)%sname) // '_light_lim_Cweight_avg_100m'
         units = '1'
         vgrid = 'none'
         truncate = .false.
@@ -986,8 +985,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' C Fixation Vertical Integral'
-        sname = 'photoC_' // trim(autotrophs(n)%sname) // '_zint'
+        lname = trim(autotroph_settings(n)%lname) // ' C Fixation Vertical Integral'
+        sname = 'photoC_' // trim(autotroph_settings(n)%sname) // '_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -998,8 +997,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' C Fixation Vertical Integral, 0-100m'
-        sname = 'photoC_' // trim(autotrophs(n)%sname) // '_zint_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' C Fixation Vertical Integral, 0-100m'
+        sname = 'photoC_' // trim(autotroph_settings(n)%sname) // '_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1010,8 +1009,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' C Fixation from NO3 Vertical Integral'
-        sname = 'photoC_NO3_' // trim(autotrophs(n)%sname) // '_zint'
+        lname = trim(autotroph_settings(n)%lname) // ' C Fixation from NO3 Vertical Integral'
+        sname = 'photoC_NO3_' // trim(autotroph_settings(n)%sname) // '_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1022,9 +1021,9 @@ contains
           return
         end if
 
-        if (autotrophs(n)%imp_calcifier .or. autotrophs(n)%exp_calcifier) then
-          lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation Vertical Integral'
-          sname = trim(autotrophs(n)%sname) // '_CaCO3_form_zint'
+        if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
+          lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation Vertical Integral'
+          sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form_zint'
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
@@ -1038,9 +1037,9 @@ contains
           ind%CaCO3_form_zint(n) = -1
         end if
 
-        if (autotrophs(n)%imp_calcifier .or. autotrophs(n)%exp_calcifier) then
-          lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation Vertical Integral, 0-100m'
-          sname = trim(autotrophs(n)%sname) // '_CaCO3_form_zint_100m'
+        if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
+          lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation Vertical Integral, 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form_zint_100m'
           units = 'mmol/m^3 cm/s'
           vgrid = 'none'
           truncate = .false.
@@ -1054,8 +1053,8 @@ contains
           ind%CaCO3_form_zint_100m(n) = -1
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing Vertical Integral'
-        sname = 'graze_' // trim(autotrophs(n)%sname) // '_zint'
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing Vertical Integral'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1066,8 +1065,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(autotrophs(n)%sname) // '_zint_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1078,8 +1077,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing to POC Vertical Integral'
-        sname = 'graze_' // trim(autotrophs(n)%sname) // '_poc_zint'
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC Vertical Integral'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1090,8 +1089,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(autotrophs(n)%sname) // '_poc_zint_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1102,8 +1101,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing to DOC Vertical Integral'
-        sname = 'graze_' // trim(autotrophs(n)%sname) // '_doc_zint'
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC Vertical Integral'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1114,8 +1113,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(autotrophs(n)%sname) // '_doc_zint_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1126,8 +1125,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing to ZOO Vertical Integral'
-        sname = 'graze_' // trim(autotrophs(n)%sname) // '_zoo_zint'
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing to ZOO Vertical Integral'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zoo_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1138,8 +1137,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing to ZOO Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(autotrophs(n)%sname) // '_zoo_zint_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing to ZOO Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zoo_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1150,8 +1149,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Loss Vertical Integral'
-        sname = trim(autotrophs(n)%sname) // '_loss_zint'
+        lname = trim(autotroph_settings(n)%lname) // ' Loss Vertical Integral'
+        sname = trim(autotroph_settings(n)%sname) // '_loss_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1162,8 +1161,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Loss Vertical Integral, 0-100m'
-        sname = trim(autotrophs(n)%sname) // '_loss_zint_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' Loss Vertical Integral, 0-100m'
+        sname = trim(autotroph_settings(n)%sname) // '_loss_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1174,8 +1173,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Loss to POC Vertical Integral'
-        sname = trim(autotrophs(n)%sname) // '_loss_poc_zint'
+        lname = trim(autotroph_settings(n)%lname) // ' Loss to POC Vertical Integral'
+        sname = trim(autotroph_settings(n)%sname) // '_loss_poc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1186,8 +1185,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
-        sname = trim(autotrophs(n)%sname) // '_loss_poc_zint_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
+        sname = trim(autotroph_settings(n)%sname) // '_loss_poc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1198,8 +1197,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Loss to DOC Vertical Integral'
-        sname = trim(autotrophs(n)%sname) // '_loss_doc_zint'
+        lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC Vertical Integral'
+        sname = trim(autotroph_settings(n)%sname) // '_loss_doc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1210,8 +1209,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
-        sname = trim(autotrophs(n)%sname) // '_loss_doc_zint_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
+        sname = trim(autotroph_settings(n)%sname) // '_loss_doc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1222,8 +1221,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Aggregation Vertical Integral'
-        sname = trim(autotrophs(n)%sname) // '_agg_zint'
+        lname = trim(autotroph_settings(n)%lname) // ' Aggregation Vertical Integral'
+        sname = trim(autotroph_settings(n)%sname) // '_agg_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1234,8 +1233,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Aggregation Vertical Integral, 0-100m'
-        sname = trim(autotrophs(n)%sname) // '_agg_zint_100m'
+        lname = trim(autotroph_settings(n)%lname) // ' Aggregation Vertical Integral, 0-100m'
+        sname = trim(autotroph_settings(n)%sname) // '_agg_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1291,8 +1290,8 @@ contains
         allocate(ind%x_graze_zoo_zint_100m(zooplankton_cnt))
       end if
       do n = 1,zooplankton_cnt
-        lname = trim(zooplankton(n)%lname) // ' Loss Vertical Integral'
-        sname = trim(zooplankton(n)%sname) // '_loss_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1303,8 +1302,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Loss Vertical Integral, 0-100m'
-        sname = trim(zooplankton(n)%sname) // '_loss_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral, 0-100m'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1315,8 +1314,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Loss to POC Vertical Integral'
-        sname = trim(zooplankton(n)%sname) // '_loss_poc_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss to POC Vertical Integral'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_poc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1327,8 +1326,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
-        sname = trim(zooplankton(n)%sname) // '_loss_poc_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_poc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1339,8 +1338,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Loss to DOC Vertical Integral'
-        sname = trim(zooplankton(n)%sname) // '_loss_doc_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss to DOC Vertical Integral'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_doc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1351,8 +1350,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
-        sname = trim(zooplankton(n)%sname) // '_loss_doc_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_doc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1363,8 +1362,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing Vertical Integral'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Vertical Integral'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1375,8 +1374,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1387,8 +1386,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to POC Vertical Integral'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_poc_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to POC Vertical Integral'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1399,8 +1398,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_poc_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1411,8 +1410,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to DOC Vertical Integral'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_doc_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to DOC Vertical Integral'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1423,8 +1422,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_doc_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1435,8 +1434,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to ZOO Vertical Integral'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_zoo_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to ZOO Vertical Integral'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zoo_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1447,8 +1446,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing to ZOO Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(zooplankton(n)%sname) // '_zoo_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to ZOO Vertical Integral, 0-100m'
+        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zoo_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1459,8 +1458,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing Gain Vertical Integral'
-        sname = 'x_graze_' // trim(zooplankton(n)%sname) // '_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Gain Vertical Integral'
+        sname = 'x_graze_' // trim(zooplankton_settings(n)%sname) // '_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1471,8 +1470,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton(n)%lname) // ' Grazing Gain Vertical Integral, 0-100m'
-        sname = 'x_graze_' // trim(zooplankton(n)%sname) // '_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Gain Vertical Integral, 0-100m'
+        sname = 'x_graze_' // trim(zooplankton_settings(n)%sname) // '_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -2502,8 +2501,8 @@ contains
       end if
       do n=1,autotroph_cnt
         if (lvariable_PtoC) then
-          lname = trim(autotrophs(n)%lname) // ' P:C ratio'
-          sname = trim(autotrophs(n)%sname) // '_Qp'
+          lname = trim(autotroph_settings(n)%lname) // ' P:C ratio'
+          sname = trim(autotroph_settings(n)%sname) // '_Qp'
           units = '1'
           vgrid = 'layer_avg'
           truncate = .true.
@@ -2517,8 +2516,8 @@ contains
           ind%Qp(n) = -1
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' C Fixation'
-        sname = 'photoC_' // trim(autotrophs(n)%sname)
+        lname = trim(autotroph_settings(n)%lname) // ' C Fixation'
+        sname = 'photoC_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2529,8 +2528,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' C Fixation from NO3'
-        sname = 'photoC_NO3_' // trim(autotrophs(n)%sname)
+        lname = trim(autotroph_settings(n)%lname) // ' C Fixation from NO3'
+        sname = 'photoC_NO3_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2541,8 +2540,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Fe Uptake'
-        sname = 'photoFe_' // trim(autotrophs(n)%sname)
+        lname = trim(autotroph_settings(n)%lname) // ' Fe Uptake'
+        sname = 'photoFe_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2553,8 +2552,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' NO3 Uptake'
-        sname = 'photoNO3_' // trim(autotrophs(n)%sname)
+        lname = trim(autotroph_settings(n)%lname) // ' NO3 Uptake'
+        sname = 'photoNO3_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2565,8 +2564,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' NH4 Uptake'
-        sname = 'photoNH4_' // trim(autotrophs(n)%sname)
+        lname = trim(autotroph_settings(n)%lname) // ' NH4 Uptake'
+        sname = 'photoNH4_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2577,8 +2576,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' DOP Uptake'
-        sname = 'DOP_' // trim(autotrophs(n)%sname) // '_uptake'
+        lname = trim(autotroph_settings(n)%lname) // ' DOP Uptake'
+        sname = 'DOP_' // trim(autotroph_settings(n)%sname) // '_uptake'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2589,8 +2588,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' PO4 Uptake'
-        sname = 'PO4_' // trim(autotrophs(n)%sname) // '_uptake'
+        lname = trim(autotroph_settings(n)%lname) // ' PO4 Uptake'
+        sname = 'PO4_' // trim(autotroph_settings(n)%sname) // '_uptake'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2601,8 +2600,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing'
-        sname = 'graze_' // trim(autotrophs(n)%sname)
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2613,8 +2612,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing to POC'
-        sname = 'graze_' // trim(autotrophs(n)%sname) // '_poc'
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2625,8 +2624,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing to DOC'
-        sname = 'graze_' // trim(autotrophs(n)%sname) // '_doc'
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2637,8 +2636,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Grazing to ZOO'
-        sname = 'graze_' // trim(autotrophs(n)%sname) // '_zoo'
+        lname = trim(autotroph_settings(n)%lname) // ' Grazing to ZOO'
+        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zoo'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2649,8 +2648,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Loss'
-        sname = trim(autotrophs(n)%sname) // '_loss'
+        lname = trim(autotroph_settings(n)%lname) // ' Loss'
+        sname = trim(autotroph_settings(n)%sname) // '_loss'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2661,8 +2660,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Loss to POC'
-        sname = trim(autotrophs(n)%sname) // '_loss_poc'
+        lname = trim(autotroph_settings(n)%lname) // ' Loss to POC'
+        sname = trim(autotroph_settings(n)%sname) // '_loss_poc'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2673,8 +2672,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Loss to DOC'
-        sname = trim(autotrophs(n)%sname) // '_loss_doc'
+        lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC'
+        sname = trim(autotroph_settings(n)%sname) // '_loss_doc'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2685,8 +2684,8 @@ contains
           return
         end if
 
-        lname = trim(autotrophs(n)%lname) // ' Aggregation'
-        sname = trim(autotrophs(n)%sname) // '_agg'
+        lname = trim(autotroph_settings(n)%lname) // ' Aggregation'
+        sname = trim(autotroph_settings(n)%sname) // '_agg'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
         truncate = .true.
@@ -2697,9 +2696,9 @@ contains
           return
         end if
 
-        if (autotrophs(n)%silicifier) then
-          lname = trim(autotrophs(n)%lname) // ' Si Uptake'
-          sname = trim(autotrophs(n)%sname) // '_bSi_form'
+        if (autotroph_settings(n)%silicifier) then
+          lname = trim(autotroph_settings(n)%lname) // ' Si Uptake'
+          sname = trim(autotroph_settings(n)%sname) // '_bSi_form'
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .true.
@@ -2713,9 +2712,9 @@ contains
           ind%bSi_form(n) = -1
         end if
 
-        if (autotrophs(n)%imp_calcifier .or. autotrophs(n)%exp_calcifier) then
-          lname = trim(autotrophs(n)%lname) // ' CaCO3 Formation'
-          sname = trim(autotrophs(n)%sname) // '_CaCO3_form'
+        if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
+          lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation'
+          sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form'
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .true.
@@ -2729,9 +2728,9 @@ contains
           ind%CaCO3_form(n) = -1
         end if
 
-        if (autotrophs(n)%Nfixer) then
-          lname = trim(autotrophs(n)%lname) // ' N Fixation'
-          sname = trim(autotrophs(n)%sname) // '_Nfix'
+        if (autotroph_settings(n)%Nfixer) then
+          lname = trim(autotroph_settings(n)%lname) // ' N Fixation'
+          sname = trim(autotroph_settings(n)%sname) // '_Nfix'
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
           truncate = .true.
@@ -2795,8 +2794,8 @@ contains
         allocate(ind%x_graze_zoo(zooplankton_cnt))
       end if
       do n = 1,zooplankton_cnt
-        lname    = trim(zooplankton(n)%lname) // ' Loss'
-        sname    = trim(zooplankton(n)%sname) // '_loss'
+        lname    = trim(zooplankton_settings(n)%lname) // ' Loss'
+        sname    = trim(zooplankton_settings(n)%sname) // '_loss'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2807,8 +2806,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' Loss to POC'
-        sname    = trim(zooplankton(n)%sname) // '_loss_poc'
+        lname    = trim(zooplankton_settings(n)%lname) // ' Loss to POC'
+        sname    = trim(zooplankton_settings(n)%sname) // '_loss_poc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2819,8 +2818,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' Loss to DOC'
-        sname    = trim(zooplankton(n)%sname) // '_loss_doc'
+        lname    = trim(zooplankton_settings(n)%lname) // ' Loss to DOC'
+        sname    = trim(zooplankton_settings(n)%sname) // '_loss_doc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2831,8 +2830,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' grazing loss'
-        sname    = 'graze_' // trim(zooplankton(n)%sname)
+        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss'
+        sname    = 'graze_' // trim(zooplankton_settings(n)%sname)
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2843,8 +2842,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' grazing loss to POC'
-        sname    = 'graze_' // trim(zooplankton(n)%sname) // '_poc'
+        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to POC'
+        sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2855,8 +2854,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' grazing loss to DOC'
-        sname    = 'graze_' // trim(zooplankton(n)%sname) // '_doc'
+        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to DOC'
+        sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2867,8 +2866,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' grazing loss to ZOO'
-        sname    = 'graze_' // trim(zooplankton(n)%sname) // '_zoo'
+        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to ZOO'
+        sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zoo'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2879,8 +2878,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton(n)%lname) // ' grazing gain'
-        sname    = 'x_graze_' // trim(zooplankton(n)%sname)
+        lname    = trim(zooplankton_settings(n)%lname) // ' grazing gain'
+        sname    = 'x_graze_' // trim(zooplankton_settings(n)%sname)
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
@@ -2953,7 +2952,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_diagnostics_interior_tendency_compute ( &
+  subroutine marbl_diagnostics_interior_tendency_compute( &
        domain,                                        &
        interior_tendency_forcing_ind,                 &
        interior_tendency_forcings,                    &
@@ -2962,8 +2961,8 @@ contains
        marbl_tracer_indices,                          &
        carbonate,                                     &
        autotroph_local,                               &
-       autotroph_secondary_species,                   &
-       zooplankton_secondary_species,                 &
+       autotroph_derived_terms,                       &
+       zooplankton_derived_terms,                     &
        dissolved_organic_matter,                      &
        marbl_particulate_share,                       &
        PAR,                                           &
@@ -2979,41 +2978,39 @@ contains
 
     use marbl_interface_private_types , only : marbl_interior_tendency_forcing_indexing_type
 
-    type (marbl_domain_type)                  , intent(in) :: domain
-    type(marbl_interior_tendency_forcing_indexing_type), intent(in) :: interior_tendency_forcing_ind
-
-    type(marbl_forcing_fields_type)           , intent(in) :: interior_tendency_forcings(:)
-    real (r8)                                 , intent(in) :: temperature(domain%km) ! in situ temperature
-    real(r8), intent(in) :: interior_tendencies(:,:) ! (tracer_cnt, km) computed source/sink terms
-
-    type(marbl_tracer_index_type)             , intent(in) :: marbl_tracer_indices
-    type (carbonate_type)                     , intent(in) :: carbonate(domain%km)
-    type (autotroph_local_type)               , intent(in) :: autotroph_local(autotroph_cnt, domain%km)
-    type (autotroph_secondary_species_type)   , intent(in) :: autotroph_secondary_species(autotroph_cnt, domain%km)
-    type (zooplankton_secondary_species_type) , intent(in) :: zooplankton_secondary_species(zooplankton_cnt, domain%km)
-    type (dissolved_organic_matter_type)      , intent(in) :: dissolved_organic_matter(domain%km)
-    type (marbl_particulate_share_type)       , intent(in) :: marbl_particulate_share
-    type (marbl_PAR_type)                     , intent(in) :: PAR
-    real (r8)                                 , intent(in) :: PON_remin(domain%km)        ! remin of PON
-    real (r8)                                 , intent(in) :: PON_sed_loss(domain%km)     ! loss of PON to sediments
-    real (r8)                                 , intent(in) :: sed_denitrif(domain%km)     ! sedimentary denitrification (nmol N/cm^3/sec)
-    real (r8)                                 , intent(in) :: other_remin(domain%km)      ! organic C remin not due oxic or denitrif (nmolC/cm^3/sec)
-    real (r8)                                 , intent(in) :: nitrif(domain%km)           ! nitrification (NH4 -> NO3) (mmol N/m^3/sec)
-    real (r8)                                 , intent(in) :: denitrif(domain%km)         ! WC nitrification (NO3 -> N2) (mmol N/m^3/sec)
-    real (r8)                                 , intent(in) :: column_o2(:)
-    real (r8)                                 , intent(in) :: o2_production(:)
-    real (r8)                                 , intent(in) :: o2_consumption(:)
-    real (r8)                                 , intent(in) :: fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient
-    real (r8)                                 , intent(in) :: fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
-    real (r8)                                 , intent(in) :: Lig_prod(domain%km)
-    real (r8)                                 , intent(in) :: Lig_loss(domain%km)
-    real (r8)                                 , intent(in) :: Lig_scavenge(domain%km)
-    real (r8)                                 , intent(in) :: Fefree(domain%km)
-    real (r8)                                 , intent(in) :: Lig_photochem(domain%km)
-    real (r8)                                 , intent(in) :: Lig_deg(domain%km)
-    real (r8)                                 , intent(in) :: interior_restore(:,:)       ! (tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
-    type (marbl_diagnostics_type)             , intent(inout) :: marbl_interior_tendency_diags
-    type (marbl_log_type)                     , intent(inout) :: marbl_status_log
+    type (marbl_domain_type),                            intent(in)    :: domain
+    type(marbl_interior_tendency_forcing_indexing_type), intent(in)    :: interior_tendency_forcing_ind
+    type(marbl_forcing_fields_type),                     intent(in)    :: interior_tendency_forcings(:)
+    real (r8),                                           intent(in)    :: temperature(domain%km) ! in situ temperature
+    real(r8),                                            intent(in)    :: interior_tendencies(:,:) ! (tracer_cnt, km) computed source/sink terms
+    type(marbl_tracer_index_type),                       intent(in)    :: marbl_tracer_indices
+    type (carbonate_type),                               intent(in)    :: carbonate
+    type (autotroph_local_type),                         intent(in)    :: autotroph_local
+    type (autotroph_derived_terms_type),                 intent(in)    :: autotroph_derived_terms
+    type (zooplankton_derived_terms_type),               intent(in)    :: zooplankton_derived_terms
+    type (dissolved_organic_matter_type),                intent(in)    :: dissolved_organic_matter
+    type (marbl_particulate_share_type),                 intent(in)    :: marbl_particulate_share
+    type (marbl_PAR_type),                               intent(in)    :: PAR
+    real (r8),                                           intent(in)    :: PON_remin(domain%km)        ! remin of PON
+    real (r8),                                           intent(in)    :: PON_sed_loss(domain%km)     ! loss of PON to sediments
+    real (r8),                                           intent(in)    :: sed_denitrif(domain%km)     ! sedimentary denitrification (nmol N/cm^3/sec)
+    real (r8),                                           intent(in)    :: other_remin(domain%km)      ! organic C remin not due oxic or denitrif (nmolC/cm^3/sec)
+    real (r8),                                           intent(in)    :: nitrif(domain%km)           ! nitrification (NH4 -> NO3) (mmol N/m^3/sec)
+    real (r8),                                           intent(in)    :: denitrif(domain%km)         ! WC nitrification (NO3 -> N2) (mmol N/m^3/sec)
+    real (r8),                                           intent(in)    :: column_o2(:)
+    real (r8),                                           intent(in)    :: o2_production(:)
+    real (r8),                                           intent(in)    :: o2_consumption(:)
+    real (r8),                                           intent(in)    :: fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient
+    real (r8),                                           intent(in)    :: fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
+    real (r8),                                           intent(in)    :: Lig_prod(domain%km)
+    real (r8),                                           intent(in)    :: Lig_loss(domain%km)
+    real (r8),                                           intent(in)    :: Lig_scavenge(domain%km)
+    real (r8),                                           intent(in)    :: Fefree(domain%km)
+    real (r8),                                           intent(in)    :: Lig_photochem(domain%km)
+    real (r8),                                           intent(in)    :: Lig_deg(domain%km)
+    real (r8),                                           intent(in)    :: interior_restore(:,:)       ! (tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
+    type (marbl_diagnostics_type),                       intent(inout) :: marbl_interior_tendency_diags
+    type (marbl_log_type),                               intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_interior_tendency_compute'
 
@@ -3041,11 +3038,9 @@ contains
       return
     end if
 
-    call store_diagnostics_autotrophs(domain, &
-         autotroph_local, autotroph_secondary_species, marbl_interior_tendency_diags)
+    call store_diagnostics_autotrophs(domain, autotroph_local, autotroph_derived_terms, marbl_interior_tendency_diags)
 
-    call store_diagnostics_zooplankton(domain, &
-         zooplankton_secondary_species, marbl_interior_tendency_diags)
+    call store_diagnostics_zooplankton(domain, zooplankton_derived_terms, marbl_interior_tendency_diags)
 
     call store_diagnostics_particulates(domain, &
          interior_tendency_forcing_ind, interior_tendency_forcings, &
@@ -3078,12 +3073,12 @@ contains
     call store_diagnostics_dissolved_organic_matter(domain, &
          dissolved_organic_matter, marbl_interior_tendency_diags)
 
-    call store_diagnostics_iron_cycle(domain, &
+    call store_diagnostics_iron_cycle( &
          fe_scavenge, fe_scavenge_rate, Lig_prod, Lig_loss, Lig_scavenge, &
          Fefree, Lig_photochem, Lig_deg, marbl_interior_tendency_diags)
 
     call store_diagnostics_nitrogen_fluxes(domain, &
-         PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, interior_tendencies, &
+         PON_sed_loss, denitrif, sed_denitrif, autotroph_derived_terms, interior_tendencies, &
          marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_nitrogen_fluxes', subname)
@@ -3092,7 +3087,7 @@ contains
 
     associate( POP => marbl_particulate_share%POP )
     call store_diagnostics_phosphorus_fluxes(domain, POP, &
-         autotroph_secondary_species, interior_tendencies, &
+         autotroph_derived_terms, interior_tendencies, &
          marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_phosphorus_fluxes', subname)
@@ -3281,7 +3276,7 @@ contains
              marbl_interior_diags, marbl_status_log)
 
     type(marbl_domain_type)      , intent(in)    :: marbl_domain
-    type(carbonate_type)         , intent(in)    :: carbonate(:)
+    type(carbonate_type)         , intent(in)    :: carbonate
     type(marbl_diagnostics_type) , intent(inout) :: marbl_interior_diags
     type(marbl_log_type)         , intent(inout) :: marbl_status_log
 
@@ -3289,17 +3284,15 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_carbonate'
-
-    integer(int_kind) :: k
     !-----------------------------------------------------------------------
 
     associate(                                                  &
          km                => marbl_domain%km,                  &
          diags             => marbl_interior_diags%diags,       &
          ind               => marbl_interior_tendency_diag_ind, &
-         CO3               => carbonate(:)%CO3,                 &
-         CO3_sat_calcite   => carbonate(:)%CO3_sat_calcite,     &
-         CO3_sat_aragonite => carbonate(:)%CO3_sat_aragonite    &
+         CO3               => carbonate%CO3(:),                 &
+         CO3_sat_calcite   => carbonate%CO3_sat_calcite(:),     &
+         CO3_sat_aragonite => carbonate%CO3_sat_aragonite(:)    &
          )
 
     ! Find depth where CO3 = CO3_sat_calcite or CO3_sat_argonite
@@ -3320,18 +3313,16 @@ contains
       return
     end if
 
-    do k = 1, km
-       diags(ind%CO3)%field_3d(k, 1)           = carbonate(k)%CO3
-       diags(ind%HCO3)%field_3d(k, 1)          = carbonate(k)%HCO3
-       diags(ind%H2CO3)%field_3d(k, 1)         = carbonate(k)%H2CO3
-       diags(ind%pH_3D)%field_3d(k, 1)         = carbonate(k)%pH
-       diags(ind%CO3_ALT_CO2)%field_3d(k, 1)   = carbonate(k)%CO3_ALT_CO2
-       diags(ind%HCO3_ALT_CO2)%field_3d(k, 1)  = carbonate(k)%HCO3_ALT_CO2
-       diags(ind%H2CO3_ALT_CO2)%field_3d(k, 1) = carbonate(k)%H2CO3_ALT_CO2
-       diags(ind%pH_3D_ALT_CO2)%field_3d(k, 1) = carbonate(k)%pH_ALT_CO2
-       diags(ind%co3_sat_calc)%field_3d(k, 1)  = carbonate(k)%CO3_sat_calcite
-       diags(ind%co3_sat_arag)%field_3d(k, 1)  = carbonate(k)%CO3_sat_aragonite
-    end do
+    diags(ind%CO3)%field_3d(:, 1)           = carbonate%CO3(:)
+    diags(ind%HCO3)%field_3d(:, 1)          = carbonate%HCO3(:)
+    diags(ind%H2CO3)%field_3d(:, 1)         = carbonate%H2CO3(:)
+    diags(ind%pH_3D)%field_3d(:, 1)         = carbonate%pH(:)
+    diags(ind%CO3_ALT_CO2)%field_3d(:, 1)   = carbonate%CO3_ALT_CO2(:)
+    diags(ind%HCO3_ALT_CO2)%field_3d(:, 1)  = carbonate%HCO3_ALT_CO2(:)
+    diags(ind%H2CO3_ALT_CO2)%field_3d(:, 1) = carbonate%H2CO3_ALT_CO2(:)
+    diags(ind%pH_3D_ALT_CO2)%field_3d(:, 1) = carbonate%pH_ALT_CO2(:)
+    diags(ind%co3_sat_calc)%field_3d(:, 1)  = carbonate%CO3_sat_calcite(:)
+    diags(ind%co3_sat_arag)%field_3d(:, 1)  = carbonate%CO3_sat_aragonite(:)
 
     end associate
 
@@ -3411,12 +3402,12 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_autotrophs(marbl_domain, &
-       autotroph_local, autotroph_secondary_species, marbl_interior_diags)
+       autotroph_local, autotroph_derived_terms, marbl_interior_diags)
 
-    type(marbl_domain_type)                , intent(in)    :: marbl_domain
-    type(autotroph_local_type)             , intent(in)    :: autotroph_local(:,:) ! autotroph_cnt, km
-    type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:) ! autotroph_cnt, km
-    type(marbl_diagnostics_type)           , intent(inout) :: marbl_interior_diags
+    type(marbl_domain_type),            intent(in)    :: marbl_domain
+    type(autotroph_local_type),         intent(in)    :: autotroph_local
+    type(autotroph_derived_terms_type), intent(in)    :: autotroph_derived_terms
+    type(marbl_diagnostics_type),       intent(inout) :: marbl_interior_diags
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -3448,7 +3439,7 @@ contains
 
     do n = 1, autotroph_cnt
        ! compute biomass weighted average of limitation terms over 0..100m
-       autotrophC_weight(:) = autotroph_local(n,:)%C
+       autotrophC_weight(:) = autotroph_local%C(n,:)
        call marbl_diagnostics_share_compute_vertical_integrals(autotrophC_weight, delta_z, kmt, &
             near_surface_integral=autotrophC_zint_100m)
 
@@ -3462,81 +3453,81 @@ contains
        ! normalize weight, so that its integral is 1
        autotrophC_weight(:) = autotrophC_weight(:) / autotrophC_zint_100m
 
-       diags(ind%N_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VNtot
-       limterm = autotroph_secondary_species(n,:)%VNtot * autotrophC_weight(:)
+       diags(ind%N_lim_surf(n))%field_2d(1) = autotroph_derived_terms%VNtot(n,1)
+       limterm = autotroph_derived_terms%VNtot(n,:) * autotrophC_weight(:)
        call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%N_lim_Cweight_avg_100m(n))%field_2d(1))
 
-       diags(ind%P_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VPtot
-       limterm = autotroph_secondary_species(n,:)%VPtot * autotrophC_weight(:)
+       diags(ind%P_lim_surf(n))%field_2d(1) = autotroph_derived_terms%VPtot(n,1)
+       limterm = autotroph_derived_terms%VPtot(n,:) * autotrophC_weight(:)
        call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%P_lim_Cweight_avg_100m(n))%field_2d(1))
 
-       diags(ind%Fe_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VFe
-       limterm = autotroph_secondary_species(n,:)%VFe * autotrophC_weight(:)
+       diags(ind%Fe_lim_surf(n))%field_2d(1) = autotroph_derived_terms%VFe(n,1)
+       limterm = autotroph_derived_terms%VFe(n,:) * autotrophC_weight(:)
        call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%Fe_lim_Cweight_avg_100m(n))%field_2d(1))
 
        if (ind%SiO3_lim_surf(n).ne.-1) then
-          diags(ind%SiO3_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%VSiO3
+          diags(ind%SiO3_lim_surf(n))%field_2d(1) = autotroph_derived_terms%VSiO3(n,1)
        endif
        if (ind%SiO3_lim_Cweight_avg_100m(n).ne.-1) then
-          limterm = autotroph_secondary_species(n,:)%VSiO3 * autotrophC_weight(:)
+          limterm = autotroph_derived_terms%VSiO3(n,:) * autotrophC_weight(:)
           call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
                near_surface_integral=diags(ind%SiO3_lim_Cweight_avg_100m(n))%field_2d(1))
        endif
 
-       diags(ind%light_lim_surf(n))%field_2d(1) = autotroph_secondary_species(n,1)%light_lim
-       limterm = autotroph_secondary_species(n,:)%light_lim * autotrophC_weight(:)
+       diags(ind%light_lim_surf(n))%field_2d(1) = autotroph_derived_terms%light_lim(n,1)
+       limterm = autotroph_derived_terms%light_lim(n,:) * autotrophC_weight(:)
        call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
             near_surface_integral=diags(ind%light_lim_Cweight_avg_100m(n))%field_2d(1))
 
        if (ind%Qp(n).ne.-1) then
-         diags(ind%Qp(n))%field_3d(:, 1)        = autotroph_secondary_species(n,:)%Qp
+         diags(ind%Qp(n))%field_3d(:, 1)        = autotroph_derived_terms%Qp(n,:)
        end if
 
-       diags(ind%photoNO3(n))%field_3d(:, 1)    = autotroph_secondary_species(n,:)%NO3_V
-       diags(ind%photoNH4(n))%field_3d(:, 1)    = autotroph_secondary_species(n,:)%NH4_V
-       diags(ind%PO4_uptake(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%PO4_V
-       diags(ind%DOP_uptake(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%DOP_V
-       diags(ind%photoFE(n))%field_3d(:, 1)     = autotroph_secondary_species(n,:)%photoFe
+       diags(ind%photoNO3(n))%field_3d(:, 1)    = autotroph_derived_terms%NO3_V(n,:)
+       diags(ind%photoNH4(n))%field_3d(:, 1)    = autotroph_derived_terms%NH4_V(n,:)
+       diags(ind%PO4_uptake(n))%field_3d(:, 1)  = autotroph_derived_terms%PO4_V(n,:)
+       diags(ind%DOP_uptake(n))%field_3d(:, 1)  = autotroph_derived_terms%DOP_V(n,:)
+       diags(ind%photoFE(n))%field_3d(:, 1)     = autotroph_derived_terms%photoFe(n,:)
 
        if (ind%bSi_form(n).ne.-1) then
-          diags(ind%bSi_form(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%photoSi
+          diags(ind%bSi_form(n))%field_3d(:, 1)  = autotroph_derived_terms%photoSi(n,:)
           diags(ind%tot_bSi_form)%field_3d(:, 1) = diags(ind%tot_bSi_form)%field_3d(:, 1) + &
                diags(ind%bSi_form(n))%field_3d(:, 1)
        endif
 
        if (ind%CaCO3_form(n).ne.-1) then
-          diags(ind%CaCO3_form(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%CaCO3_form
+          diags(ind%CaCO3_form(n))%field_3d(:, 1)  = autotroph_derived_terms%CaCO3_form(n,:)
           diags(ind%tot_CaCO3_form)%field_3d(:, 1) = diags(ind%tot_CaCO3_form)%field_3d(:, 1) + &
                diags(ind%CaCO3_form(n))%field_3d(:, 1)
        end if
 
        if (ind%Nfix(n).ne.-1) then
-          diags(ind%Nfix(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%Nfix
+          diags(ind%Nfix(n))%field_3d(:, 1)  = autotroph_derived_terms%Nfix(n,:)
           diags(ind%tot_Nfix)%field_3d(:, 1) = diags(ind%tot_Nfix)%field_3d(:, 1) + &
                diags(ind%Nfix(n))%field_3d(:, 1)
        end if
 
-       diags(ind%auto_graze(n))%field_3d(:, 1)     = autotroph_secondary_species(n,:)%auto_graze
+       diags(ind%auto_graze(n))%field_3d(:, 1)     = autotroph_derived_terms%auto_graze(n,:)
        diags(ind%auto_graze_TOT)%field_3d(:, 1)    = diags(ind%auto_graze_TOT)%field_3d(:, 1) + &
-            autotroph_secondary_species(n,:)%auto_graze
-       diags(ind%auto_graze_poc(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%auto_graze_poc
-       diags(ind%auto_graze_doc(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%auto_graze_doc
-       diags(ind%auto_graze_zoo(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%auto_graze_zoo
-       diags(ind%auto_loss(n))%field_3d(:, 1)      = autotroph_secondary_species(n,:)%auto_loss
-       diags(ind%auto_loss_poc(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%auto_loss_poc
-       diags(ind%auto_loss_doc(n))%field_3d(:, 1)  = autotroph_secondary_species(n,:)%auto_loss_doc
-       diags(ind%auto_agg(n))%field_3d(:, 1)       = autotroph_secondary_species(n,:)%auto_agg
-       diags(ind%photoC(n))%field_3d(:, 1)         = autotroph_secondary_species(n,:)%photoC
+            autotroph_derived_terms%auto_graze(n,:)
+       diags(ind%auto_graze_poc(n))%field_3d(:, 1) = autotroph_derived_terms%auto_graze_poc(n,:)
+       diags(ind%auto_graze_doc(n))%field_3d(:, 1) = autotroph_derived_terms%auto_graze_doc(n,:)
+       diags(ind%auto_graze_zoo(n))%field_3d(:, 1) = autotroph_derived_terms%auto_graze_zoo(n,:)
+       diags(ind%auto_loss(n))%field_3d(:, 1)      = autotroph_derived_terms%auto_loss(n,:)
+       diags(ind%auto_loss_poc(n))%field_3d(:, 1)  = autotroph_derived_terms%auto_loss_poc(n,:)
+       diags(ind%auto_loss_doc(n))%field_3d(:, 1)  = autotroph_derived_terms%auto_loss_doc(n,:)
+       diags(ind%auto_agg(n))%field_3d(:, 1)       = autotroph_derived_terms%auto_agg(n,:)
+       diags(ind%photoC(n))%field_3d(:, 1)         = autotroph_derived_terms%photoC(n,:)
        diags(ind%photoC_TOT)%field_3d(:, 1)        = diags(ind%photoC_TOT)%field_3d(:, 1) + &
-            autotroph_secondary_species(n,:)%photoC
+            autotroph_derived_terms%photoC(n,:)
 
        diags(ind%photoC_NO3(n))%field_3d(:, 1) = c0
-       where (autotroph_secondary_species(n,:)%VNtot > c0)
-          diags(ind%photoC_NO3(n))%field_3d(:, 1) = autotroph_secondary_species(n,:)%photoC * &
-               (autotroph_secondary_species(n,:)%VNO3 / autotroph_secondary_species(n,:)%VNtot)
+       where (autotroph_derived_terms%VNtot(n,:) > c0)
+          diags(ind%photoC_NO3(n))%field_3d(:, 1) = autotroph_derived_terms%photoC(n,:) * &
+               (autotroph_derived_terms%VNO3(n,:) / autotroph_derived_terms%VNtot(n,:))
 
           diags(ind%photoC_NO3_TOT)%field_3d(:, 1) = diags(ind%photoC_NO3_TOT)%field_3d(:, 1) + &
                diags(ind%photoC_NO3(n))%field_3d(:, 1)
@@ -3544,7 +3535,7 @@ contains
 
        ! per-autotroph vertical integrals and their sums
        if (ind%CaCO3_form_zint(n).ne.-1) then
-          call marbl_diagnostics_share_compute_vertical_integrals(autotroph_secondary_species(n,:)%CaCO3_form, &
+          call marbl_diagnostics_share_compute_vertical_integrals(autotroph_derived_terms%CaCO3_form(n,:), &
                delta_z, kmt, full_depth_integral=diags(ind%CaCO3_form_zint(n))%field_2d(1), &
                near_surface_integral=diags(ind%CaCO3_form_zint_100m(n))%field_2d(1))
 
@@ -3555,7 +3546,7 @@ contains
                diags(ind%CaCO3_form_zint_100m(n))%field_2d(1)
        end if
 
-       call marbl_diagnostics_share_compute_vertical_integrals(autotroph_secondary_species(n,:)%photoC, &
+       call marbl_diagnostics_share_compute_vertical_integrals(autotroph_derived_terms%photoC(n,:), &
             delta_z, kmt, full_depth_integral=diags(ind%photoC_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%photoC_zint_100m(n))%field_2d(1))
 
@@ -3814,11 +3805,11 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_zooplankton(marbl_domain, &
-       zooplankton_secondary_species, marbl_interior_diags)
+       zooplankton_derived_terms, marbl_interior_diags)
 
-    type(marbl_domain_type)                  , intent(in)    :: marbl_domain
-    type(zooplankton_secondary_species_type) , intent(in)    :: zooplankton_secondary_species(:,:)
-    type(marbl_diagnostics_type)             , intent(inout) :: marbl_interior_diags
+    type(marbl_domain_type),              intent(in)    :: marbl_domain
+    type(zooplankton_derived_terms_type), intent(in)    :: zooplankton_derived_terms
+    type(marbl_diagnostics_type),         intent(inout) :: marbl_interior_diags
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -3834,14 +3825,14 @@ contains
          )
 
     do n = 1, zooplankton_cnt
-       diags(ind%zoo_loss(n))%field_3d(:, 1)      = zooplankton_secondary_species(n,:)%zoo_loss
-       diags(ind%zoo_loss_poc(n))%field_3d(:, 1)  = zooplankton_secondary_species(n,:)%zoo_loss_poc
-       diags(ind%zoo_loss_doc(n))%field_3d(:, 1)  = zooplankton_secondary_species(n,:)%zoo_loss_doc
-       diags(ind%zoo_graze(n))%field_3d(:, 1)     = zooplankton_secondary_species(n,:)%zoo_graze
-       diags(ind%zoo_graze_poc(n))%field_3d(:, 1) = zooplankton_secondary_species(n,:)%zoo_graze_poc
-       diags(ind%zoo_graze_doc(n))%field_3d(:, 1) = zooplankton_secondary_species(n,:)%zoo_graze_doc
-       diags(ind%zoo_graze_zoo(n))%field_3d(:, 1) = zooplankton_secondary_species(n,:)%zoo_graze_zoo
-       diags(ind%x_graze_zoo(n))%field_3d(:, 1)   = zooplankton_secondary_species(n,:)%x_graze_zoo
+       diags(ind%zoo_loss(n))%field_3d(:, 1)      = zooplankton_derived_terms%zoo_loss(n,:)
+       diags(ind%zoo_loss_poc(n))%field_3d(:, 1)  = zooplankton_derived_terms%zoo_loss_poc(n,:)
+       diags(ind%zoo_loss_doc(n))%field_3d(:, 1)  = zooplankton_derived_terms%zoo_loss_doc(n,:)
+       diags(ind%zoo_graze(n))%field_3d(:, 1)     = zooplankton_derived_terms%zoo_graze(n,:)
+       diags(ind%zoo_graze_poc(n))%field_3d(:, 1) = zooplankton_derived_terms%zoo_graze_poc(n,:)
+       diags(ind%zoo_graze_doc(n))%field_3d(:, 1) = zooplankton_derived_terms%zoo_graze_doc(n,:)
+       diags(ind%zoo_graze_zoo(n))%field_3d(:, 1) = zooplankton_derived_terms%zoo_graze_zoo(n,:)
+       diags(ind%x_graze_zoo(n))%field_3d(:, 1)   = zooplankton_derived_terms%x_graze_zoo(n,:)
 
        ! vertical integrals
 
@@ -3887,36 +3878,27 @@ contains
   subroutine store_diagnostics_dissolved_organic_matter(marbl_domain, &
        dissolved_organic_matter, marbl_diags)
 
-    type(marbl_domain_type)      , intent(in)    :: marbl_domain
-    type(dissolved_organic_matter_type) , intent(in)    :: dissolved_organic_matter(:) ! (km)
-    type(marbl_diagnostics_type)        , intent(inout) :: marbl_diags
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer(int_kind) :: k
-    !-----------------------------------------------------------------------
+    type(marbl_domain_type)            , intent(in)    :: marbl_domain
+    type(dissolved_organic_matter_type), intent(in)    :: dissolved_organic_matter
+    type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
     associate(                                       &
-         km      => marbl_domain%km,                 &
          delta_z => marbl_domain%delta_z,            &
          kmt     => marbl_domain%kmt,                &
          diags   => marbl_diags%diags,               &
          ind     => marbl_interior_tendency_diag_ind &
          )
 
-    do k = 1, km
-       diags(ind%DOC_prod)%field_3d(k, 1)         = dissolved_organic_matter(k)%DOC_prod
-       diags(ind%DOC_remin)%field_3d(k, 1)        = dissolved_organic_matter(k)%DOC_remin
-       diags(ind%DOCr_remin)%field_3d(k, 1)       = dissolved_organic_matter(k)%DOCr_remin
-       diags(ind%DON_prod)%field_3d(k, 1)         = dissolved_organic_matter(k)%DON_prod
-       diags(ind%DON_remin)%field_3d(k, 1)        = dissolved_organic_matter(k)%DON_remin
-       diags(ind%DONr_remin)%field_3d(k, 1)       = dissolved_organic_matter(k)%DONr_remin
-       diags(ind%DOP_prod)%field_3d(k, 1)         = dissolved_organic_matter(k)%DOP_prod
-       diags(ind%DOP_remin)%field_3d(k, 1)        = dissolved_organic_matter(k)%DOP_remin
-       diags(ind%DOPr_remin)%field_3d(k, 1)       = dissolved_organic_matter(k)%DOPr_remin
-       diags(ind%DOP_loss_P_bal)%field_3d(k, 1)   = dissolved_organic_matter(k)%DOP_loss_P_bal
-    end do
+    diags(ind%DOC_prod)%field_3d(:, 1)         = dissolved_organic_matter%DOC_prod(:)
+    diags(ind%DOC_remin)%field_3d(:, 1)        = dissolved_organic_matter%DOC_remin(:)
+    diags(ind%DOCr_remin)%field_3d(:, 1)       = dissolved_organic_matter%DOCr_remin(:)
+    diags(ind%DON_prod)%field_3d(:, 1)         = dissolved_organic_matter%DON_prod(:)
+    diags(ind%DON_remin)%field_3d(:, 1)        = dissolved_organic_matter%DON_remin(:)
+    diags(ind%DONr_remin)%field_3d(:, 1)       = dissolved_organic_matter%DONr_remin(:)
+    diags(ind%DOP_prod)%field_3d(:, 1)         = dissolved_organic_matter%DOP_prod(:)
+    diags(ind%DOP_remin)%field_3d(:, 1)        = dissolved_organic_matter%DOP_remin(:)
+    diags(ind%DOPr_remin)%field_3d(:, 1)       = dissolved_organic_matter%DOPr_remin(:)
+    diags(ind%DOP_loss_P_bal)%field_3d(:, 1)   = dissolved_organic_matter%DOP_loss_P_bal(:)
 
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%DOC_prod)%field_3d(:,1), &
          delta_z, kmt, full_depth_integral=diags(ind%DOC_prod_zint)%field_2d(1), &
@@ -3936,11 +3918,10 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_iron_cycle(marbl_domain, &
+  subroutine store_diagnostics_iron_cycle(&
        fe_scavenge, fe_scavenge_rate, Lig_prod, Lig_loss, Lig_scavenge, &
        Fefree, Lig_photochem, Lig_deg, marbl_diags)
 
-    type(marbl_domain_type)             , intent(in)    :: marbl_domain
     real(r8)                            , intent(in)    :: fe_scavenge(:)      ! (km)
     real(r8)                            , intent(in)    :: fe_scavenge_rate(:) ! (km)
     real(r8)                            , intent(in)    :: Lig_prod(:)         ! (km)
@@ -3951,28 +3932,19 @@ contains
     real(r8)                            , intent(in)    :: Lig_deg(:)          ! (km)
     type(marbl_diagnostics_type)        , intent(inout) :: marbl_diags
 
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer(int_kind) :: k
-    !-----------------------------------------------------------------------
-
     associate(                                     &
-         km    => marbl_domain%km,                 &
          diags => marbl_diags%diags,               &
          ind   => marbl_interior_tendency_diag_ind &
          )
 
-    do k = 1, km
-       diags(ind%Fe_scavenge)%field_3d(k, 1)      = Fe_scavenge(k)
-       diags(ind%Fe_scavenge_rate)%field_3d(k, 1) = Fe_scavenge_rate(k)
-       diags(ind%Lig_prod)%field_3d(k, 1)         = Lig_prod(k)
-       diags(ind%Lig_loss)%field_3d(k, 1)         = Lig_loss(k)
-       diags(ind%Lig_scavenge)%field_3d(k, 1)     = Lig_scavenge(k)
-       diags(ind%Fefree)%field_3d(k, 1)           = Fefree(k)
-       diags(ind%Lig_photochem)%field_3d(k, 1)    = Lig_photochem(k)
-       diags(ind%Lig_deg)%field_3d(k, 1)          = Lig_deg(k)
-    end do
+    diags(ind%Fe_scavenge)%field_3d(:, 1)      = Fe_scavenge(:)
+    diags(ind%Fe_scavenge_rate)%field_3d(:, 1) = Fe_scavenge_rate(:)
+    diags(ind%Lig_prod)%field_3d(:, 1)         = Lig_prod(:)
+    diags(ind%Lig_loss)%field_3d(:, 1)         = Lig_loss(:)
+    diags(ind%Lig_scavenge)%field_3d(:, 1)     = Lig_scavenge(:)
+    diags(ind%Fefree)%field_3d(:, 1)           = Fefree(:)
+    diags(ind%Lig_photochem)%field_3d(:, 1)    = Lig_photochem(:)
+    diags(ind%Lig_deg)%field_3d(:, 1)          = Lig_deg(:)
 
     end associate
 
@@ -4046,21 +4018,21 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, &
-       PON_sed_loss, denitrif, sed_denitrif, autotroph_secondary_species, interior_tendencies, &
+       PON_sed_loss, denitrif, sed_denitrif, autotroph_derived_terms, interior_tendencies, &
        marbl_tracer_indices, marbl_diags, marbl_status_log)
 
     use marbl_settings_mod, only : Q
     use marbl_settings_mod, only : Jint_Ntot_thres
 
-    type(marbl_domain_type)         , intent(in)    :: marbl_domain
-    real(r8)                               , intent(in)    :: PON_sed_loss(:) ! km
-    real(r8)                               , intent(in)    :: denitrif(:)     ! km
-    real(r8)                               , intent(in)    :: sed_denitrif(:) ! km
-    type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:)
-    real(r8)                               , intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
-    type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
-    type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
-    type(marbl_log_type)                   , intent(inout) :: marbl_status_log
+    type(marbl_domain_type),            intent(in)    :: marbl_domain
+    real(r8),                           intent(in)    :: PON_sed_loss(:) ! km
+    real(r8),                           intent(in)    :: denitrif(:)     ! km
+    real(r8),                           intent(in)    :: sed_denitrif(:) ! km
+    type(autotroph_derived_terms_type), intent(in)    :: autotroph_derived_terms
+    real(r8),                           intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
+    type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
+    type(marbl_diagnostics_type),       intent(inout) :: marbl_diags
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -4093,8 +4065,8 @@ contains
 
     ! subtract out N fixation
     do n = 1, autotroph_cnt
-       if (autotrophs(n)%Nfixer) then
-          work = work - autotroph_secondary_species(n,:)%Nfix
+       if (autotroph_settings(n)%Nfixer) then
+          work = work - autotroph_derived_terms%Nfix(n,:)
        end if
     end do
 
@@ -4117,20 +4089,20 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_phosphorus_fluxes(marbl_domain, POP, &
-       autotroph_secondary_species, interior_tendencies, &
+       autotroph_derived_terms, interior_tendencies, &
        marbl_tracer_indices, marbl_diags, marbl_status_log)
 
     use marbl_pft_mod, only : Qp_zoo
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : Jint_Ptot_thres
 
-    type(marbl_domain_type)                , intent(in)    :: marbl_domain
-    type(column_sinking_particle_type)     , intent(in)    :: POP
-    type(autotroph_secondary_species_type) , intent(in)    :: autotroph_secondary_species(:,:)
-    real(r8)                               , intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
-    type(marbl_tracer_index_type)          , intent(in)    :: marbl_tracer_indices
-    type(marbl_diagnostics_type)           , intent(inout) :: marbl_diags
-    type(marbl_log_type)                   , intent(inout) :: marbl_status_log
+    type(marbl_domain_type),            intent(in)    :: marbl_domain
+    type(column_sinking_particle_type), intent(in)    :: POP
+    type(autotroph_derived_terms_type), intent(in)    :: autotroph_derived_terms
+    real(r8),                           intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
+    type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
+    type(marbl_diagnostics_type),       intent(inout) :: marbl_diags
+    type(marbl_log_type),               intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -4159,7 +4131,7 @@ contains
        work = work + sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%P_ind,:),dim=1)
     else
        do n = 1, autotroph_cnt
-          work = work + autotroph_secondary_species(n,:)%Qp * interior_tendencies(marbl_tracer_indices%auto_inds(n)%C_ind,:)
+          work = work + autotroph_derived_terms%Qp(n,:) * interior_tendencies(marbl_tracer_indices%auto_inds(n)%C_ind,:)
        end do
     endif
 

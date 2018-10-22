@@ -30,6 +30,124 @@ module marbl_interface_private_types
      procedure, public :: destruct => marbl_PAR_destructor
   end type marbl_PAR_type
 
+  !*****************************************************************************
+
+  type, public :: autotroph_derived_terms_type
+    real(r8), allocatable :: thetaC(:,:)          ! current Chl/C ratio (mg Chl/mmol C)
+    real(r8), allocatable :: QCaCO3(:,:)          ! current CaCO3/C ratio (mmol CaCO3/mmol C)
+    real(r8), allocatable :: Qp(:,:)              ! current P/C ratio (mmol P/mmol C)
+    real(r8), allocatable :: gQp(:,:)             ! P/C for growth
+    real(r8), allocatable :: Qfe(:,:)             ! current Fe/C ratio (mmol Fe/mmol C)
+    real(r8), allocatable :: gQfe(:,:)            ! fe/C for growth
+    real(r8), allocatable :: Qsi(:,:)             ! current Si/C ratio (mmol Si/mmol C)
+    real(r8), allocatable :: gQsi(:,:)            ! diatom Si/C ratio for growth (new biomass)
+    real(r8), allocatable :: VNO3(:,:)            ! NH4 uptake rate (non-dim)
+    real(r8), allocatable :: VNH4(:,:)            ! NO3 uptake rate (non-dim)
+    real(r8), allocatable :: VNtot(:,:)           ! total N uptake rate (non-dim)
+    real(r8), allocatable :: NO3_V(:,:)           ! nitrate uptake (mmol NO3/m^3/sec)
+    real(r8), allocatable :: NH4_V(:,:)           ! ammonium uptake (mmol NH4/m^3/sec)
+    real(r8), allocatable :: PO4_V(:,:)           ! PO4 uptake (mmol PO4/m^3/sec)
+    real(r8), allocatable :: DOP_V(:,:)           ! DOP uptake (mmol DOP/m^3/sec)
+    real(r8), allocatable :: VPO4(:,:)            ! C-specific PO4 uptake (non-dim)
+    real(r8), allocatable :: VDOP(:,:)            ! C-specific DOP uptake rate (non-dim)
+    real(r8), allocatable :: VPtot(:,:)           ! total P uptake rate (non-dim)
+    real(r8), allocatable :: f_nut(:,:)           ! nut limitation factor, modifies C fixation (non-dim)
+    real(r8), allocatable :: VFe(:,:)             ! C-specific Fe uptake (non-dim)
+    real(r8), allocatable :: VSiO3(:,:)           ! C-specific SiO3 uptake (non-dim)
+    real(r8), allocatable :: light_lim(:,:)       ! light limitation factor
+    real(r8), allocatable :: PCphoto(:,:)         ! C-specific rate of photosynth. (1/sec)
+    real(r8), allocatable :: photoC(:,:)          ! C-fixation (mmol C/m^3/sec)
+    real(r8), allocatable :: photoFe(:,:)         ! iron uptake
+    real(r8), allocatable :: photoSi(:,:)         ! silicon uptake (mmol Si/m^3/sec)
+    real(r8), allocatable :: photoacc(:,:)        ! Chl synth. term in photoadapt. (GD98) (mg Chl/m^3/sec)
+    real(r8), allocatable :: auto_loss(:,:)       ! autotroph non-grazing mort (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_loss_poc(:,:)   ! auto_loss routed to poc (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_loss_doc(:,:)   ! auto_loss routed to doc (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_loss_dic(:,:)   ! auto_loss routed to dic (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_agg(:,:)        ! autotroph aggregation (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze(:,:)      ! autotroph grazing rate (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze_zoo(:,:)  ! auto_graze routed to zoo (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze_poc(:,:)  ! auto_graze routed to poc (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze_doc(:,:)  ! auto_graze routed to doc (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze_dic(:,:)  ! auto_graze routed to dic (mmol C/m^3/sec)
+    real(r8), allocatable :: Pprime(:,:)          ! used to limit autotroph mort at low biomass (mmol C/m^3)
+    real(r8), allocatable :: CaCO3_form(:,:)      ! calcification of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
+    real(r8), allocatable :: Nfix(:,:)            ! total Nitrogen fixation (mmol N/m^3/sec)
+    real(r8), allocatable :: Nexcrete(:,:)        ! fixed N excretion
+    real(r8), allocatable :: remaining_P_dop(:,:) ! remaining_P from grazing routed to DOP pool
+    real(r8), allocatable :: remaining_P_pop(:,:) ! remaining_P from grazing routed to POP pool
+    real(r8), allocatable :: remaining_P_dip(:,:) ! remaining_P from grazing routed to remin
+  contains
+    procedure, public :: construct => autotroph_derived_terms_constructor
+    procedure, public :: destruct => autotroph_derived_terms_destructor
+  end type autotroph_derived_terms_type
+
+  !****************************************************************************
+
+  type, public :: autotroph_local_type
+    ! FIXME #316: replace with indices into tracer_local
+    real(r8), allocatable :: Chl(:,:)     ! local copy of model autotroph Chl
+    real(r8), allocatable :: C(:,:)       ! local copy of model autotroph C
+    real(r8), allocatable :: P(:,:)       ! local copy of model autotroph P
+    real(r8), allocatable :: Fe(:,:)      ! local copy of model autotroph Fe
+    real(r8), allocatable :: Si(:,:)      ! local copy of model autotroph Si
+    real(r8), allocatable :: CaCO3(:,:)   ! local copy of model autotroph CaCO3
+    real(r8), allocatable :: C13(:,:)     ! local copy of model autotroph C13
+    real(r8), allocatable :: C14(:,:)     ! local copy of model autotroph C14
+    real(r8), allocatable :: Ca13CO3(:,:) ! local copy of model autotroph Ca13CO3
+    real(r8), allocatable :: Ca14CO3(:,:) ! local copy of model autotroph Ca14CO3
+  contains
+    procedure, public :: construct => autotroph_local_constructor
+    procedure, public :: destruct => autotroph_local_destructor
+  end type autotroph_local_type
+
+  !*****************************************************************************
+
+  type, public :: zooplankton_derived_terms_type
+    real(r8), allocatable :: f_zoo_detr(:,:)       ! frac of zoo losses into large detrital pool (non-dim)
+    real(r8), allocatable :: x_graze_zoo(:,:)      ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze(:,:)        ! zooplankton losses due to grazing (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze_zoo(:,:)    ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze_poc(:,:)    ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze_doc(:,:)    ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze_dic(:,:)    ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss(:,:)         ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss_poc(:,:)     ! zoo_loss routed to poc (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss_doc(:,:)     ! zoo_loss routed to doc (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss_dic(:,:)     ! zoo_loss routed to dic (mmol C/m^3/sec)
+    real(r8), allocatable :: Zprime(:,:)           ! used to limit zoo mort at low biomass (mmol C/m^3)
+  contains
+    procedure, public :: construct => zooplankton_derived_terms_constructor
+    procedure, public :: destruct => zooplankton_derived_terms_destructor
+  end type zooplankton_derived_terms_type
+
+  !****************************************************************************
+
+  type, public :: zooplankton_local_type
+    real(r8), allocatable :: C(:,:)  ! local copy of model zooplankton C
+  contains
+    procedure, public :: construct => zooplankton_local_constructor
+    procedure, public :: destruct => zooplankton_local_destructor
+  end type zooplankton_local_type
+
+  !***********************************************************************
+
+  type, public :: zooplankton_share_type
+     real(r8), allocatable :: zoototC_loc_fields(:)      ! local copy of model zooC
+     real(r8), allocatable :: zootot_loss_fields(:)      ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_loss_poc_fields(:)  ! zoo_loss routed to large detrital (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_loss_doc_fields(:)  ! zoo_loss routed to doc (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_loss_dic_fields(:)  ! zoo_loss routed to dic (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_fields(:)     ! zooplankton losses due to grazing (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_zoo_fields(:) ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_poc_fields(:) ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_doc_fields(:) ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_dic_fields(:) ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
+   contains
+     procedure, public :: construct => zooplankton_share_constructor
+     procedure, public :: destruct => zooplankton_share_destructor
+  end type zooplankton_share_type
+
   !****************************************************************************
 
   ! derived type for implicit handling of sinking particulate matter
@@ -87,13 +205,16 @@ module marbl_interface_private_types
   !****************************************************************************
 
   type, public :: marbl_interior_tendency_share_type
-     real(r8) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux
-     real(r8) :: CO3_fields
-     real(r8) :: HCO3_fields         ! bicarbonate ion
-     real(r8) :: H2CO3_fields        ! carbonic acid
-     real(r8) :: CO3_sat_calcite
-     real(r8) :: DOCtot_loc_fields   ! local copy of model DOC+DOCr
-     real(r8) :: DOCtot_remin_fields ! remineralization of DOC+DOCr (mmol C/m^3/sec)
+     real(r8), allocatable :: QA_dust_def(:)         ! incoming deficit in the QA(dust) POC flux
+     real(r8), allocatable :: CO3_fields(:)
+     real(r8), allocatable :: HCO3_fields(:)         ! bicarbonate ion
+     real(r8), allocatable :: H2CO3_fields(:)        ! carbonic acid
+     real(r8), allocatable :: CO3_sat_calcite(:)
+     real(r8), allocatable :: DOCtot_loc_fields(:)   ! local copy of model DOC+DOCr
+     real(r8), allocatable :: DOCtot_remin_fields(:) ! remineralization of DOC+DOCr (mmol C/m^3/sec)
+   contains
+     procedure, public :: construct => marbl_interior_tendency_share_constructor
+     procedure, public :: destruct => marbl_interior_tendency_share_destructor
   end type marbl_interior_tendency_share_type
 
   !***********************************************************************
@@ -126,31 +247,37 @@ module marbl_interface_private_types
   !*****************************************************************************
 
   type, public :: carbonate_type
-     real (r8) :: CO3           ! carbonate ion
-     real (r8) :: HCO3          ! bicarbonate ion
-     real (r8) :: H2CO3         ! carbonic acid
-     real (r8) :: pH
-     real (r8) :: CO3_sat_calcite
-     real (r8) :: CO3_sat_aragonite
-     real (r8) :: CO3_ALT_CO2   ! carbonate ion, alternative CO2
-     real (r8) :: HCO3_ALT_CO2  ! bicarbonate ion, alternative CO2
-     real (r8) :: H2CO3_ALT_CO2 ! carbonic acid, alternative CO2
-     real (r8) :: pH_ALT_CO2
+     real(r8), allocatable :: CO3(:)           ! carbonate ion
+     real(r8), allocatable :: HCO3(:)          ! bicarbonate ion
+     real(r8), allocatable :: H2CO3(:)         ! carbonic acid
+     real(r8), allocatable :: pH(:)
+     real(r8), allocatable :: CO3_sat_calcite(:)
+     real(r8), allocatable :: CO3_sat_aragonite(:)
+     real(r8), allocatable :: CO3_ALT_CO2(:)   ! carbonate ion, alternative CO2
+     real(r8), allocatable :: HCO3_ALT_CO2(:)  ! bicarbonate ion, alternative CO2
+     real(r8), allocatable :: H2CO3_ALT_CO2(:) ! carbonic acid, alternative CO2
+     real(r8), allocatable :: pH_ALT_CO2(:)
+   contains
+     procedure, public :: construct => carbonate_constructor
+     procedure, public :: destruct  => carbonate_destructor
   end type carbonate_type
 
   !*****************************************************************************
 
   type, public :: dissolved_organic_matter_type
-     real (r8) :: DOC_prod         ! production of DOC (mmol C/m^3/sec)
-     real (r8) :: DOC_remin        ! remineralization of DOC (mmol C/m^3/sec)
-     real (r8) :: DOCr_remin       ! remineralization of DOCr
-     real (r8) :: DON_prod         ! production of DON
-     real (r8) :: DON_remin        ! remineralization of DON
-     real (r8) :: DONr_remin       ! remineralization of DONr
-     real (r8) :: DOP_prod         ! production of DOP
-     real (r8) :: DOP_remin        ! remineralization of DOP
-     real (r8) :: DOPr_remin       ! remineralization of DOPr
-     real (r8) :: DOP_loss_P_bal   ! DOP loss, due to P budget balancing
+     real(r8), allocatable :: DOC_prod(:)         ! production of DOC (mmol C/m^3/sec)
+     real(r8), allocatable :: DOC_remin(:)        ! remineralization of DOC (mmol C/m^3/sec)
+     real(r8), allocatable :: DOCr_remin(:)       ! remineralization of DOCr
+     real(r8), allocatable :: DON_prod(:)         ! production of DON
+     real(r8), allocatable :: DON_remin(:)        ! remineralization of DON
+     real(r8), allocatable :: DONr_remin(:)       ! remineralization of DONr
+     real(r8), allocatable :: DOP_prod(:)         ! production of DOP
+     real(r8), allocatable :: DOP_remin(:)        ! remineralization of DOP
+     real(r8), allocatable :: DOPr_remin(:)       ! remineralization of DOPr
+     real(r8), allocatable :: DOP_loss_P_bal(:)   ! DOP loss, due to P budget balancing
+   contains
+     procedure, public :: construct => dissolved_organic_matter_constructor
+     procedure, public :: destruct => dissolved_organic_matter_destructor
   end type dissolved_organic_matter_type
 
   !***********************************************************************
@@ -725,6 +852,84 @@ contains
 
    end subroutine marbl_particulate_share_destructor
 
+   !***********************************************************************
+
+    subroutine carbonate_constructor(this, num_levels)
+
+      class(carbonate_type), intent(inout) :: this
+      integer (int_kind),    intent(in)    :: num_levels
+
+      allocate(this%CO3(num_levels))
+      allocate(this%HCO3(num_levels))
+      allocate(this%H2CO3(num_levels))
+      allocate(this%pH(num_levels))
+      allocate(this%CO3_sat_calcite(num_levels))
+      allocate(this%CO3_sat_aragonite(num_levels))
+      allocate(this%CO3_ALT_CO2(num_levels))
+      allocate(this%HCO3_ALT_CO2(num_levels))
+      allocate(this%H2CO3_ALT_CO2(num_levels))
+      allocate(this%pH_ALT_CO2(num_levels))
+
+    end subroutine carbonate_constructor
+
+    !***********************************************************************
+
+     subroutine carbonate_destructor(this)
+
+       class(carbonate_type), intent(inout) :: this
+
+       deallocate(this%CO3)
+       deallocate(this%HCO3)
+       deallocate(this%H2CO3)
+       deallocate(this%pH)
+       deallocate(this%CO3_sat_calcite)
+       deallocate(this%CO3_sat_aragonite)
+       deallocate(this%CO3_ALT_CO2)
+       deallocate(this%HCO3_ALT_CO2)
+       deallocate(this%H2CO3_ALT_CO2)
+       deallocate(this%pH_ALT_CO2)
+
+     end subroutine carbonate_destructor
+
+   !***********************************************************************
+
+    subroutine dissolved_organic_matter_constructor(this, num_levels)
+
+      class(dissolved_organic_matter_type), intent(inout) :: this
+      integer (int_kind),                   intent(in)    :: num_levels
+
+      allocate(this%DOC_prod(num_levels))
+      allocate(this%DOC_remin(num_levels))
+      allocate(this%DOCr_remin(num_levels))
+      allocate(this%DON_prod(num_levels))
+      allocate(this%DON_remin(num_levels))
+      allocate(this%DONr_remin(num_levels))
+      allocate(this%DOP_prod(num_levels))
+      allocate(this%DOP_remin(num_levels))
+      allocate(this%DOPr_remin(num_levels))
+      allocate(this%DOP_loss_P_bal(num_levels))
+
+    end subroutine dissolved_organic_matter_constructor
+
+    !***********************************************************************
+
+     subroutine dissolved_organic_matter_destructor(this)
+
+       class(dissolved_organic_matter_type), intent(inout) :: this
+
+       deallocate(this%DOC_prod)
+       deallocate(this%DOC_remin)
+       deallocate(this%DOCr_remin)
+       deallocate(this%DON_prod)
+       deallocate(this%DON_remin)
+       deallocate(this%DONr_remin)
+       deallocate(this%DOP_prod)
+       deallocate(this%DOP_remin)
+       deallocate(this%DOPr_remin)
+       deallocate(this%DOP_loss_P_bal)
+
+     end subroutine dissolved_organic_matter_destructor
+
   !***********************************************************************
 
    subroutine marbl_surface_flux_share_constructor(this, num_elements)
@@ -786,6 +991,267 @@ contains
   end subroutine marbl_PAR_destructor
 
   !***********************************************************************
+
+  subroutine autotroph_derived_terms_constructor(self, autotroph_cnt, km)
+
+    class(autotroph_derived_terms_type), intent(inout) :: self
+    integer,                             intent(in)    :: autotroph_cnt
+    integer,                             intent(in)    :: km
+
+    allocate(self%thetaC(autotroph_cnt, km))
+    allocate(self%QCaCO3(autotroph_cnt, km))
+    allocate(self%Qp(autotroph_cnt, km))
+    allocate(self%gQp(autotroph_cnt, km))
+    allocate(self%Qfe(autotroph_cnt, km))
+    allocate(self%gQfe(autotroph_cnt, km))
+    allocate(self%Qsi(autotroph_cnt, km))
+    allocate(self%gQsi(autotroph_cnt, km))
+    allocate(self%VNO3(autotroph_cnt, km))
+    allocate(self%VNH4(autotroph_cnt, km))
+    allocate(self%VNtot(autotroph_cnt, km))
+    allocate(self%NO3_V(autotroph_cnt, km))
+    allocate(self%NH4_V(autotroph_cnt, km))
+    allocate(self%PO4_V(autotroph_cnt, km))
+    allocate(self%DOP_V(autotroph_cnt, km))
+    allocate(self%VPO4(autotroph_cnt, km))
+    allocate(self%VDOP(autotroph_cnt, km))
+    allocate(self%VPtot(autotroph_cnt, km))
+    allocate(self%f_nut(autotroph_cnt, km))
+    allocate(self%VFe(autotroph_cnt, km))
+    allocate(self%VSiO3(autotroph_cnt, km))
+    allocate(self%light_lim(autotroph_cnt, km))
+    allocate(self%PCphoto(autotroph_cnt, km))
+    allocate(self%photoC(autotroph_cnt, km))
+    allocate(self%photoFe(autotroph_cnt, km))
+    allocate(self%photoSi(autotroph_cnt, km))
+    allocate(self%photoacc(autotroph_cnt, km))
+    allocate(self%auto_loss(autotroph_cnt, km))
+    allocate(self%auto_loss_poc(autotroph_cnt, km))
+    allocate(self%auto_loss_doc(autotroph_cnt, km))
+    allocate(self%auto_loss_dic(autotroph_cnt, km))
+    allocate(self%auto_agg(autotroph_cnt, km))
+    allocate(self%auto_graze(autotroph_cnt, km))
+    allocate(self%auto_graze_zoo(autotroph_cnt, km))
+    allocate(self%auto_graze_poc(autotroph_cnt, km))
+    allocate(self%auto_graze_doc(autotroph_cnt, km))
+    allocate(self%auto_graze_dic(autotroph_cnt, km))
+    allocate(self%Pprime(autotroph_cnt, km))
+    allocate(self%CaCO3_form(autotroph_cnt, km))
+    allocate(self%Nfix(autotroph_cnt, km))
+    allocate(self%Nexcrete(autotroph_cnt, km))
+    allocate(self%remaining_P_dop(autotroph_cnt, km))
+    allocate(self%remaining_P_pop(autotroph_cnt, km))
+    allocate(self%remaining_P_dip(autotroph_cnt, km))
+
+  end subroutine autotroph_derived_terms_constructor
+
+  !*****************************************************************************
+
+  subroutine autotroph_derived_terms_destructor(self)
+
+    class(autotroph_derived_terms_type), intent(inout) :: self
+
+    deallocate(self%thetaC)
+    deallocate(self%QCaCO3)
+    deallocate(self%Qp)
+    deallocate(self%gQp)
+    deallocate(self%Qfe)
+    deallocate(self%gQfe)
+    deallocate(self%Qsi)
+    deallocate(self%gQsi)
+    deallocate(self%VNO3)
+    deallocate(self%VNH4)
+    deallocate(self%VNtot)
+    deallocate(self%NO3_V)
+    deallocate(self%NH4_V)
+    deallocate(self%PO4_V)
+    deallocate(self%DOP_V)
+    deallocate(self%VPO4)
+    deallocate(self%VDOP)
+    deallocate(self%VPtot)
+    deallocate(self%f_nut)
+    deallocate(self%VFe)
+    deallocate(self%VSiO3)
+    deallocate(self%light_lim)
+    deallocate(self%PCphoto)
+    deallocate(self%photoC)
+    deallocate(self%photoFe)
+    deallocate(self%photoSi)
+    deallocate(self%photoacc)
+    deallocate(self%auto_loss)
+    deallocate(self%auto_loss_poc)
+    deallocate(self%auto_loss_doc)
+    deallocate(self%auto_loss_dic)
+    deallocate(self%auto_agg)
+    deallocate(self%auto_graze)
+    deallocate(self%auto_graze_zoo)
+    deallocate(self%auto_graze_poc)
+    deallocate(self%auto_graze_doc)
+    deallocate(self%auto_graze_dic)
+    deallocate(self%Pprime)
+    deallocate(self%CaCO3_form)
+    deallocate(self%Nfix)
+    deallocate(self%Nexcrete)
+    deallocate(self%remaining_P_dop)
+    deallocate(self%remaining_P_pop)
+    deallocate(self%remaining_P_dip)
+
+  end subroutine autotroph_derived_terms_destructor
+
+  !***********************************************************************
+
+  subroutine autotroph_local_constructor(self, ciso_on, autotroph_cnt, km)
+
+    class(autotroph_local_type), intent(inout) :: self
+    logical,                     intent(in)    :: ciso_on
+    integer,                     intent(in)    :: autotroph_cnt
+    integer,                     intent(in)    :: km
+
+    allocate(self%Chl(autotroph_cnt, km))
+    allocate(self%C(autotroph_cnt, km))
+    allocate(self%P(autotroph_cnt, km))
+    allocate(self%Fe(autotroph_cnt, km))
+    allocate(self%Si(autotroph_cnt, km))
+    allocate(self%CaCO3(autotroph_cnt, km))
+    if (ciso_on) then
+      allocate(self%C13(autotroph_cnt, km))
+      allocate(self%C14(autotroph_cnt, km))
+      allocate(self%Ca13CO3(autotroph_cnt, km))
+      allocate(self%Ca14CO3(autotroph_cnt, km))
+    else
+      allocate(self%C13(0,0))
+      allocate(self%C14(0,0))
+      allocate(self%Ca13CO3(0,0))
+      allocate(self%Ca14CO3(0,0))
+    end if
+
+  end subroutine autotroph_local_constructor
+
+  !***********************************************************************
+
+  subroutine autotroph_local_destructor(self)
+
+    class(autotroph_local_type), intent(inout) :: self
+
+    deallocate(self%Chl)
+    deallocate(self%C)
+    deallocate(self%P)
+    deallocate(self%Fe)
+    deallocate(self%Si)
+    deallocate(self%CaCO3)
+    deallocate(self%C13)
+    deallocate(self%C14)
+    deallocate(self%Ca13CO3)
+    deallocate(self%Ca14CO3)
+
+  end subroutine autotroph_local_destructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_derived_terms_constructor(self, zooplankton_cnt, km)
+
+    class(zooplankton_derived_terms_type), intent(inout) :: self
+    integer,                               intent(in)    :: zooplankton_cnt
+    integer,                               intent(in)    :: km
+
+    allocate(self%f_zoo_detr(zooplankton_cnt, km))
+    allocate(self%x_graze_zoo(zooplankton_cnt, km))
+    allocate(self%zoo_graze(zooplankton_cnt, km))
+    allocate(self%zoo_graze_zoo(zooplankton_cnt, km))
+    allocate(self%zoo_graze_poc(zooplankton_cnt, km))
+    allocate(self%zoo_graze_doc(zooplankton_cnt, km))
+    allocate(self%zoo_graze_dic(zooplankton_cnt, km))
+    allocate(self%zoo_loss(zooplankton_cnt, km))
+    allocate(self%zoo_loss_poc(zooplankton_cnt, km))
+    allocate(self%zoo_loss_doc(zooplankton_cnt, km))
+    allocate(self%zoo_loss_dic(zooplankton_cnt, km))
+    allocate(self%Zprime(zooplankton_cnt, km))
+
+  end subroutine zooplankton_derived_terms_constructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_derived_terms_destructor(self)
+
+    class(zooplankton_derived_terms_type), intent(inout) :: self
+
+    deallocate(self%f_zoo_detr)
+    deallocate(self%x_graze_zoo)
+    deallocate(self%zoo_graze)
+    deallocate(self%zoo_graze_zoo)
+    deallocate(self%zoo_graze_poc)
+    deallocate(self%zoo_graze_doc)
+    deallocate(self%zoo_graze_dic)
+    deallocate(self%zoo_loss)
+    deallocate(self%zoo_loss_poc)
+    deallocate(self%zoo_loss_doc)
+    deallocate(self%zoo_loss_dic)
+    deallocate(self%Zprime)
+
+  end subroutine zooplankton_derived_terms_destructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_local_constructor(self, zooplankton_cnt, km)
+
+    class(zooplankton_local_type), intent(inout) :: self
+    integer,                       intent(in)    :: zooplankton_cnt
+    integer,                       intent(in)    :: km
+
+    allocate(self%C(zooplankton_cnt, km))
+
+  end subroutine zooplankton_local_constructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_local_destructor(self)
+
+    class(zooplankton_local_type), intent(inout) :: self
+
+    deallocate(self%C)
+
+  end subroutine zooplankton_local_destructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_share_constructor(self, km)
+
+    class(zooplankton_share_type), intent(inout) :: self
+    integer,                       intent(in)    :: km
+
+    allocate(self%zoototC_loc_fields(km))
+    allocate(self%zootot_loss_fields(km))
+    allocate(self%zootot_loss_poc_fields(km))
+    allocate(self%zootot_loss_doc_fields(km))
+    allocate(self%zootot_loss_dic_fields(km))
+    allocate(self%zootot_graze_fields(km))
+    allocate(self%zootot_graze_zoo_fields(km))
+    allocate(self%zootot_graze_poc_fields(km))
+    allocate(self%zootot_graze_doc_fields(km))
+    allocate(self%zootot_graze_dic_fields(km))
+
+  end subroutine zooplankton_share_constructor
+
+  !***********************************************************************
+
+  subroutine zooplankton_share_destructor(self)
+
+    class(zooplankton_share_type), intent(inout) :: self
+
+    deallocate(self%zoototC_loc_fields)
+    deallocate(self%zootot_loss_fields)
+    deallocate(self%zootot_loss_poc_fields)
+    deallocate(self%zootot_loss_doc_fields)
+    deallocate(self%zootot_loss_dic_fields)
+    deallocate(self%zootot_graze_fields)
+    deallocate(self%zootot_graze_zoo_fields)
+    deallocate(self%zootot_graze_poc_fields)
+    deallocate(self%zootot_graze_doc_fields)
+    deallocate(self%zootot_graze_dic_fields)
+
+  end subroutine zooplankton_share_destructor
+
+  !*****************************************************************************
 
   subroutine marbl_surface_flux_internal_constructor(this, num_elements)
 
@@ -864,30 +1330,63 @@ contains
 
   !*****************************************************************************
 
-  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs, &
-             zooplankton, marbl_status_log)
+  subroutine marbl_interior_tendency_share_constructor(this, num_levels)
+
+    class(marbl_interior_tendency_share_type), intent(out) :: this
+    integer (int_kind),                        intent(in)  :: num_levels
+
+    allocate(this%QA_dust_def(num_levels))
+    allocate(this%CO3_fields(num_levels))
+    allocate(this%HCO3_fields(num_levels))
+    allocate(this%H2CO3_fields(num_levels))
+    allocate(this%CO3_sat_calcite(num_levels))
+    allocate(this%DOCtot_loc_fields(num_levels))
+    allocate(this%DOCtot_remin_fields(num_levels))
+
+  end subroutine marbl_interior_tendency_share_constructor
+
+  !***********************************************************************
+
+  subroutine marbl_interior_tendency_share_destructor(this)
+
+    class(marbl_interior_tendency_share_type), intent(inout) :: this
+
+    deallocate(this%QA_dust_def)
+    deallocate(this%CO3_fields)
+    deallocate(this%HCO3_fields)
+    deallocate(this%H2CO3_fields)
+    deallocate(this%CO3_sat_calcite)
+    deallocate(this%DOCtot_loc_fields)
+    deallocate(this%DOCtot_remin_fields)
+
+  end subroutine marbl_interior_tendency_share_destructor
+
+  !*****************************************************************************
+
+  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotroph_settings, &
+             zooplankton_settings, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
     ! tracer_cnt by 1 for each tracer that is included. Note that this gives an
     ! accurate count whether the carbon isotope tracers are included or not.
 
-    use marbl_pft_mod, only : autotroph_type
-    use marbl_pft_mod, only : zooplankton_type
+    use marbl_pft_mod, only : autotroph_settings_type
+    use marbl_pft_mod, only : zooplankton_settings_type
 
-    class(marbl_tracer_index_type), intent(out)   :: this
-    logical,                        intent(in)    :: ciso_on
-    logical,                        intent(in)    :: lvariable_PtoC
-    type(autotroph_type),           intent(in)    :: autotrophs(:)
-    type(zooplankton_type),         intent(in)    :: zooplankton(:)
-    type(marbl_log_type),           intent(inout) :: marbl_status_log
+    class(marbl_tracer_index_type),  intent(out)   :: this
+    logical,                         intent(in)    :: ciso_on
+    logical,                         intent(in)    :: lvariable_PtoC
+    type(autotroph_settings_type),   intent(in)    :: autotroph_settings(:)
+    type(zooplankton_settings_type), intent(in)    :: zooplankton_settings(:)
+    type(marbl_log_type),            intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_interface_private_types:tracer_index_constructor'
     character(len=char_len) :: ind_name
     integer :: autotroph_cnt, zooplankton_cnt, n
 
-    autotroph_cnt = size(autotrophs)
-    zooplankton_cnt = size(zooplankton)
+    autotroph_cnt = size(autotroph_settings)
+    zooplankton_cnt = size(zooplankton_settings)
 
     !Allocate memory
     allocate(this%auto_inds(autotroph_cnt))
@@ -913,33 +1412,33 @@ contains
     call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
 
     do n=1,zooplankton_cnt
-      write(ind_name, "(2A)") trim(zooplankton(n)%sname), "C"
+      write(ind_name, "(2A)") trim(zooplankton_settings(n)%sname), "C"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%zoo_inds(n)%C_ind, marbl_status_log)
     end do
 
     do n=1,autotroph_cnt
-      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Chl"
+      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Chl"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Chl_ind, marbl_status_log)
 
-      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C"
+      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%C_ind, marbl_status_log)
 
       if (lvariable_PtoC) then
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "P"
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "P"
         call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%P_ind, marbl_status_log)
       end if
 
-      write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Fe"
+      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Fe"
       call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Fe_ind, marbl_status_log)
 
-      if (autotrophs(n)%silicifier) then
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Si"
+      if (autotroph_settings(n)%silicifier) then
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Si"
         call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Si_ind, marbl_status_log)
       end if
 
-      if (autotrophs(n)%imp_calcifier.or.                            &
-          autotrophs(n)%exp_calcifier) then
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "CaCO3"
+      if (autotroph_settings(n)%imp_calcifier.or. &
+          autotroph_settings(n)%exp_calcifier) then
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "CaCO3"
         call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
       end if
     end do
@@ -953,18 +1452,18 @@ contains
       call this%add_tracer_index('zootot14C',   'ciso', this%zootot14C_ind,   marbl_status_log)
 
       do n=1,autotroph_cnt
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C13"
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C13"
         call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C13_ind, marbl_status_log)
 
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "C14"
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C14"
         call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C14_ind, marbl_status_log)
 
-        if (autotrophs(n)%imp_calcifier .or. &
-            autotrophs(n)%exp_calcifier) then
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Ca13CO3"
+        if (autotroph_settings(n)%imp_calcifier .or. &
+            autotroph_settings(n)%exp_calcifier) then
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca13CO3"
           call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca13CO3_ind, marbl_status_log)
 
-        write(ind_name, "(2A)") trim(autotrophs(n)%sname), "Ca14CO3"
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca14CO3"
           call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca14CO3_ind, marbl_status_log)
         end if
       end do

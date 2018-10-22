@@ -38,7 +38,15 @@ module marbl_interface
   use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_interior_tendency_saved_state_indexing_type
   use marbl_interface_private_types, only : marbl_PAR_type
+  use marbl_interface_private_types, only : autotroph_derived_terms_type
+  use marbl_interface_private_types, only : autotroph_local_type
+  use marbl_interface_private_types, only : zooplankton_derived_terms_type
+  use marbl_interface_private_types, only : zooplankton_local_type
+  use marbl_interface_private_types, only : zooplankton_share_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
+  use marbl_interface_private_types, only : marbl_interior_tendency_share_type
+  use marbl_interface_private_types, only : dissolved_organic_matter_type
+  use marbl_interface_private_types, only : carbonate_type
   use marbl_interface_private_types, only : marbl_surface_flux_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
@@ -104,14 +112,22 @@ module marbl_interface
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
-     type(marbl_PAR_type)                      , private              :: PAR
-     type(marbl_particulate_share_type)        , private              :: particulate_share
-     type(marbl_surface_flux_share_type)       , private              :: surface_flux_share
-     type(marbl_surface_flux_internal_type)    , private              :: surface_flux_internal
-     logical                                   , private              :: lallow_glo_ops
-     type(marbl_internal_timers_type)          , private              :: timers
-     type(marbl_timer_indexing_type)           , private              :: timer_ids
-     type(marbl_settings_type)                 , private              :: settings
+     type(marbl_PAR_type),                     private :: PAR
+     type(autotroph_derived_terms_type),       private :: autotroph_derived_terms
+     type(autotroph_local_type),               private :: autotroph_local
+     type(zooplankton_derived_terms_type),     private :: zooplankton_derived_terms
+     type(zooplankton_local_type),             private :: zooplankton_local
+     type(zooplankton_share_type),             private :: zooplankton_share
+     type(marbl_particulate_share_type),       private :: particulate_share
+     type(marbl_interior_tendency_share_type), private :: interior_tendency_share
+     type(dissolved_organic_matter_type),      private :: dissolved_organic_matter
+     type(carbonate_type),                     private :: carbonate
+     type(marbl_surface_flux_share_type),      private :: surface_flux_share
+     type(marbl_surface_flux_internal_type),   private :: surface_flux_internal
+     logical,                                  private :: lallow_glo_ops
+     type(marbl_internal_timers_type),         private :: timers
+     type(marbl_timer_indexing_type),          private :: timer_ids
+     type(marbl_settings_type),                private :: settings
 
    contains
 
@@ -183,6 +199,8 @@ contains
     use marbl_init_mod, only : marbl_init_forcing_fields
     use marbl_settings_mod, only : marbl_settings_set_all_derived
     use marbl_settings_mod, only : marbl_settings_consistency_check
+    use marbl_settings_mod, only : autotroph_cnt
+    use marbl_settings_mod, only : ciso_on
     use marbl_diagnostics_mod, only : marbl_diagnostics_init
     use marbl_saved_state_mod, only : marbl_saved_state_init
 
@@ -259,6 +277,17 @@ contains
     !--------------------------------------------------------------------
 
     call this%PAR%construct(num_levels, num_PAR_subcols)
+    call this%dissolved_organic_matter%construct(num_levels)
+    call this%carbonate%construct(num_levels)
+    call this%particulate_share%construct(num_levels)
+    call this%autotroph_derived_terms%construct(autotroph_cnt, num_levels)
+    call this%autotroph_local%construct(ciso_on, autotroph_cnt, num_levels)
+    call this%zooplankton_derived_terms%construct(zooplankton_cnt, num_levels)
+    call this%zooplankton_local%construct(zooplankton_cnt, num_levels)
+    if (ciso_on) then
+      call this%zooplankton_share%construct(num_levels)
+      call this%interior_tendency_share%construct(num_levels)
+    end if
 
     !-----------------------------------------------------------------------
     !  Set up tracers
@@ -320,7 +349,7 @@ contains
     !  Initialize bury coefficient
     !-----------------------------------------------------------------------
 
-    call marbl_init_bury_coeff(this%particulate_share, num_levels, this%StatusLog)
+    call marbl_init_bury_coeff(this%particulate_share, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('marbl_init_bury_coeff', subname)
       return
@@ -335,8 +364,6 @@ contains
     call marbl_init_forcing_fields(this%domain, &
                                    this%tracer_metadata, &
                                    this%surface_flux_forcing_ind, &
-                                   this%surface_flux_share, &
-                                   this%surface_flux_internal, &
                                    this%surface_flux_forcings, &
                                    this%interior_tendency_forcing_ind, &
                                    this%interior_tendency_forcings, &
@@ -345,6 +372,10 @@ contains
       call this%StatusLog%log_error_trace("marbl_init_forcing_fields", subname)
       return
     end if
+
+    ! Surface forcing constructors
+    if (ciso_on) call this%surface_flux_share%construct(this%domain%num_elements_surface_flux)
+    call this%surface_flux_internal%construct(this%domain%num_elements_surface_flux)
 
     ! Set up running mean variables (dependent on parms namelist)
     call this%glo_vars_init()
@@ -837,23 +868,31 @@ contains
       return
     end if
 
-    call marbl_interior_tendency_compute(                                         &
-         domain                       = this%domain,                              &
-         interior_tendency_forcings   = this%interior_tendency_forcings,          &
-         saved_state                  = this%interior_tendency_saved_state,       &
-         saved_state_ind              = this%interior_state_ind,                  &
-         tracers                      = this%tracers,                             &
-         surface_flux_forcing_indices = this%surface_flux_forcing_ind,            &
-         interior_tendency_forcing_indices = this%interior_tendency_forcing_ind,  &
-         interior_tendencies          = this%interior_tendencies,                 &
-         marbl_tracer_indices         = this%tracer_indices,                      &
-         marbl_timers                 = this%timers,                              &
-         marbl_timer_indices          = this%timer_ids,                           &
-         PAR                          = this%PAR,                                 &
-         marbl_particulate_share      = this%particulate_share,                   &
-         interior_tendency_diags      = this%interior_tendency_diags,             &
-         glo_avg_fields_interior_tendency = this%glo_avg_fields_interior_tendency,&
-         marbl_status_log             = this%StatusLog)
+    call marbl_interior_tendency_compute(                                           &
+         domain                            = this%domain,                           &
+         interior_tendency_forcings        = this%interior_tendency_forcings,       &
+         tracers                           = this%tracers,                          &
+         surface_flux_forcing_indices      = this%surface_flux_forcing_ind,         &
+         interior_tendency_forcing_indices = this%interior_tendency_forcing_ind,    &
+         saved_state_ind                   = this%interior_state_ind,               &
+         marbl_tracer_indices              = this%tracer_indices,                   &
+         marbl_timer_indices               = this%timer_ids,                        &
+         PAR                               = this%PAR,                              &
+         dissolved_organic_matter          = this%dissolved_organic_matter,         &
+         carbonate                         = this%carbonate,                        &
+         autotroph_derived_terms           = this%autotroph_derived_terms,          &
+         autotroph_local                   = this%autotroph_local,                  &
+         zooplankton_derived_terms         = this%zooplankton_derived_terms,        &
+         zooplankton_local                 = this%zooplankton_local,                &
+         zooplankton_share                 = this%zooplankton_share,                &
+         saved_state                       = this%interior_tendency_saved_state,    &
+         marbl_timers                      = this%timers,                           &
+         interior_tendency_share           = this%interior_tendency_share,          &
+         marbl_particulate_share           = this%particulate_share,                &
+         interior_tendency_diags           = this%interior_tendency_diags,          &
+         interior_tendencies               = this%interior_tendencies,              &
+         glo_avg_fields_interior_tendency  = this%glo_avg_fields_interior_tendency, &
+         marbl_status_log                  = this%StatusLog)
 
     if (this%StatusLog%labort_marbl) then
        call this%StatusLog%log_error_trace("marbl_interior_tendency_compute()", subname)
@@ -937,10 +976,11 @@ contains
 
   subroutine shutdown(this)
 
+    use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : max_grazer_prey_cnt
-    use marbl_settings_mod, only : autotrophs
-    use marbl_settings_mod, only : zooplankton
-    use marbl_settings_mod, only : grazing
+    use marbl_settings_mod, only : autotroph_settings
+    use marbl_settings_mod, only : zooplankton_settings
+    use marbl_settings_mod, only : grazing_relationship_settings
     use marbl_settings_mod, only : tracer_restore_vars
     use marbl_diagnostics_mod, only : marbl_interior_tendency_diag_ind
 
@@ -964,16 +1004,16 @@ contains
 
     ! free dynamically allocated memory, etc
     ! FIXME #69: this is not ideal for threaded runs
-    if (allocated(autotrophs)) then
-      deallocate(autotrophs)
-      deallocate(zooplankton)
+    if (allocated(autotroph_settings)) then
+      deallocate(autotroph_settings)
+      deallocate(zooplankton_settings)
       do m=1,max_grazer_prey_cnt
         do n=1,zooplankton_cnt
-          deallocate(grazing(m,n)%auto_ind)
-          deallocate(grazing(m,n)%zoo_ind)
+          deallocate(grazing_relationship_settings(m,n)%auto_ind)
+          deallocate(grazing_relationship_settings(m,n)%zoo_ind)
         end do
       end do
-      deallocate(grazing)
+      deallocate(grazing_relationship_settings)
     end if
     call marbl_interior_tendency_diag_ind%destruct()
 
@@ -982,7 +1022,7 @@ contains
       deallocate(this%surface_flux_forcings)
     end if
     call this%surface_flux_internal%destruct()
-    call this%surface_flux_share%destruct()
+    if (ciso_on) call this%surface_flux_share%destruct()
     if (allocated(this%tracers_at_surface)) then
       deallocate(this%tracers_at_surface)
       deallocate(this%surface_fluxes)
@@ -996,6 +1036,16 @@ contains
     call this%settings%destruct()
     call this%particulate_share%destruct()
     call this%PAR%destruct()
+    call this%dissolved_organic_matter%destruct()
+    call this%carbonate%destruct()
+    call this%autotroph_derived_terms%destruct()
+    call this%autotroph_local%destruct()
+    call this%zooplankton_derived_terms%destruct()
+    call this%zooplankton_local%destruct()
+    if (ciso_on) then
+      call this%zooplankton_share%destruct()
+      call this%interior_tendency_share%destruct()
+    end if
     call this%domain%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)

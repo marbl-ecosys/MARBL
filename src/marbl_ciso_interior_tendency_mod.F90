@@ -11,7 +11,7 @@ module marbl_ciso_interior_tendency_mod
   use marbl_constants_mod, only : mpercm
 
   use marbl_settings_mod, only : autotroph_cnt
-  use marbl_settings_mod, only : autotrophs
+  use marbl_settings_mod, only : autotroph_settings
   use marbl_settings_mod, only : ciso_on
 
   use marbl_logging, only : marbl_log_type
@@ -19,20 +19,19 @@ module marbl_ciso_interior_tendency_mod
   use marbl_interface_public_types, only : marbl_diagnostics_type
   use marbl_interface_public_types, only : marbl_domain_type
 
+  use marbl_interface_private_types, only : autotroph_local_type
   use marbl_interface_private_types, only : column_sinking_particle_type
   use marbl_interface_private_types, only : marbl_interior_tendency_share_type
+  use marbl_interface_private_types, only : zooplankton_share_type
   use marbl_interface_private_types, only : marbl_particulate_share_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
-
-  use marbl_pft_mod, only : autotroph_local_type
-  use marbl_pft_mod, only : marbl_zooplankton_share_type
-  use marbl_pft_mod, only : autotroph_secondary_species_type
+  use marbl_interface_private_types, only : autotroph_derived_terms_type
 
   implicit none
   private
 
   public :: marbl_ciso_interior_tendency_compute
-  public :: marbl_ciso_interior_tendency_autotroph_set_to_zero
+  public :: marbl_ciso_interior_tendency_autotroph_zero_consistency_enforce
 
   !-----------------------------------------------------------------------
   !  scalar constants for 14C decay calculation
@@ -46,17 +45,17 @@ contains
   !***********************************************************************
 
   subroutine marbl_ciso_interior_tendency_compute( &
-       marbl_domain,                          &
-       marbl_interior_tendency_share,         &
-       marbl_zooplankton_share,               &
-       marbl_particulate_share,               &
-       tracer_local,                          &
-       autotroph_local,                       &
-       autotroph_secondary_species,           &
-       temperature,                           &
-       marbl_tracer_indices,                  &
-       interior_tendencies,                   &
-       marbl_interior_diags,                  &
+       marbl_domain,                               &
+       interior_tendency_share,                    &
+       zooplankton_share,                          &
+       marbl_particulate_share,                    &
+       tracer_local,                               &
+       autotroph_local,                            &
+       autotroph_derived_terms,                    &
+       temperature,                                &
+       marbl_tracer_indices,                       &
+       interior_tendencies,                        &
+       marbl_interior_diags,                       &
        marbl_status_log)
 
     !  Compute time derivatives for 13C and 14C state variables.
@@ -72,12 +71,12 @@ contains
     use marbl_ciso_diagnostics_mod, only : store_diagnostics_ciso_interior
 
     type(marbl_domain_type),                  intent(in)    :: marbl_domain
-    type(marbl_interior_tendency_share_type), intent(in)    :: marbl_interior_tendency_share(:)
-    type(marbl_zooplankton_share_type),       intent(in)    :: marbl_zooplankton_share(:)
+    type(marbl_interior_tendency_share_type), intent(in)    :: interior_tendency_share
+    type(zooplankton_share_type),             intent(in)    :: zooplankton_share
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
     real (r8),                                intent(in)    :: tracer_local(:,:)
-    type(autotroph_local_type),               intent(in)    :: autotroph_local(:,:)
-    type(autotroph_secondary_species_type),   intent(in)    :: autotroph_secondary_species(:,:)
+    type(autotroph_local_type),               intent(in)    :: autotroph_local
+    type(autotroph_derived_terms_type),       intent(in)    :: autotroph_derived_terms
     real (r8),                                intent(in)    :: temperature(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
     real (r8),                                intent(inout) :: interior_tendencies(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
@@ -175,58 +174,59 @@ contains
     ! Return immediately if not running with carbon isotope tracer module
     if (.not. ciso_on) return
 
-    associate(                                                                   &
-         column_km          => marbl_domain%km                                 , &
-         column_kmt         => marbl_domain%kmt                                , &
+    associate(                                   &
+         column_km          => marbl_domain%km,  &
+         column_kmt         => marbl_domain%kmt, &
 
-         CO3                => marbl_interior_tendency_share%CO3_fields        , & ! INPUT carbonate ion
-         HCO3               => marbl_interior_tendency_share%HCO3_fields       , & ! INPUT bicarbonate ion
-         H2CO3              => marbl_interior_tendency_share%H2CO3_fields      , & ! INPUT carbonic acid
-         DOCtot_remin       => marbl_interior_tendency_share%DOCtot_remin_fields, & ! INPUT remineralization of DOCtot (mmol C/m^3/sec)
-         DOCtot_loc         => marbl_interior_tendency_share%DOCtot_loc_fields , & ! INPUT local copy of model DOCtot
-         DO13Ctot_loc       => tracer_local(marbl_tracer_indices%DO13Ctot_ind,:) , & ! local copy of model DO14Ctot
-         DO14Ctot_loc       => tracer_local(marbl_tracer_indices%DO14Ctot_ind,:) , & ! local copy of model DO14Ctot
-         DIC_loc            => tracer_local(marbl_tracer_indices%DIC_ind,:)    , & ! INPUT local copy of model DIC
-         DI13C_loc          => tracer_local(marbl_tracer_indices%DI13C_ind,:)    , & ! local copy of model DI13C
-         DI14C_loc          => tracer_local(marbl_tracer_indices%DI14C_ind,:)    , & ! local copy of model DI14C
+         CO3                => interior_tendency_share%CO3_fields,           & ! INPUT carbonate ion
+         HCO3               => interior_tendency_share%HCO3_fields,          & ! INPUT bicarbonate ion
+         H2CO3              => interior_tendency_share%H2CO3_fields,         & ! INPUT carbonic acid
+         DOCtot_remin       => interior_tendency_share%DOCtot_remin_fields,  & ! INPUT remineralization of DOCtot (mmol C/m^3/sec)
+         DOCtot_loc         => interior_tendency_share%DOCtot_loc_fields,    & ! INPUT local copy of model DOCtot
+
+         DO13Ctot_loc       => tracer_local(marbl_tracer_indices%DO13Ctot_ind,:),  & ! local copy of model DO14Ctot
+         DO14Ctot_loc       => tracer_local(marbl_tracer_indices%DO14Ctot_ind,:),  & ! local copy of model DO14Ctot
+         DIC_loc            => tracer_local(marbl_tracer_indices%DIC_ind,:),       & ! INPUT local copy of model DIC
+         DI13C_loc          => tracer_local(marbl_tracer_indices%DI13C_ind,:),     & ! local copy of model DI13C
+         DI14C_loc          => tracer_local(marbl_tracer_indices%DI14C_ind,:),     & ! local copy of model DI14C
          zootot13C_loc      => tracer_local(marbl_tracer_indices%zootot13C_ind,:), & ! local copy of model zootot13C
-         zootot14C_loc      => tracer_local(marbl_tracer_indices%zootot14C_ind,:), &  ! local copy of model zootot14C
+         zootot14C_loc      => tracer_local(marbl_tracer_indices%zootot14C_ind,:), & ! local copy of model zootot14C
 
-         QCaCO3             => autotroph_secondary_species%QCaCO3              , & ! INPUT small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
-         auto_graze         => autotroph_secondary_species%auto_graze          , & ! INPUT autotroph grazing rate (mmol C/m^3/sec)
-         auto_graze_zoo     => autotroph_secondary_species%auto_graze_zoo      , & ! INPUT auto_graze routed to zoo (mmol C/m^3/sec)
-         auto_graze_poc     => autotroph_secondary_species%auto_graze_poc      , & ! INPUT auto_graze routed to poc (mmol C/m^3/sec)
-         auto_graze_doc     => autotroph_secondary_species%auto_graze_doc      , & ! INPUT auto_graze routed to doc (mmol C/m^3/sec)
-         auto_graze_dic     => autotroph_secondary_species%auto_graze_dic      , & ! INPUT auto_graze routed to dic (mmol C/m^3/sec)
-         auto_loss          => autotroph_secondary_species%auto_loss           , & ! INPUT autotroph non-grazing mort (mmol C/m^3/sec)
-         auto_loss_poc      => autotroph_secondary_species%auto_loss_poc       , & ! INPUT auto_loss routed to poc (mmol C/m^3/sec)
-         auto_loss_doc      => autotroph_secondary_species%auto_loss_doc       , & ! INPUT auto_loss routed to doc (mmol C/m^3/sec)
-         auto_loss_dic      => autotroph_secondary_species%auto_loss_dic       , & ! INPUT auto_loss routed to dic (mmol C/m^3/sec)
-         auto_agg           => autotroph_secondary_species%auto_agg            , & ! INPUT autotroph aggregation (mmol C/m^3/sec)
-         photoC             => autotroph_secondary_species%photoC              , & ! INPUT C-fixation (mmol C/m^3/sec)
-         CaCO3_form         => autotroph_secondary_species%CaCO3_form          , & ! INPUT prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
-         PCphoto            => autotroph_secondary_species%PCphoto             , & ! INPUT C-specific rate of photosynth. (1/sec)
+         QCaCO3             => autotroph_derived_terms%QCaCO3,         & ! INPUT small phyto CaCO3/C ratio (mmol CaCO3/mmol C)
+         auto_graze         => autotroph_derived_terms%auto_graze,     & ! INPUT autotroph grazing rate (mmol C/m^3/sec)
+         auto_graze_zoo     => autotroph_derived_terms%auto_graze_zoo, & ! INPUT auto_graze routed to zoo (mmol C/m^3/sec)
+         auto_graze_poc     => autotroph_derived_terms%auto_graze_poc, & ! INPUT auto_graze routed to poc (mmol C/m^3/sec)
+         auto_graze_doc     => autotroph_derived_terms%auto_graze_doc, & ! INPUT auto_graze routed to doc (mmol C/m^3/sec)
+         auto_graze_dic     => autotroph_derived_terms%auto_graze_dic, & ! INPUT auto_graze routed to dic (mmol C/m^3/sec)
+         auto_loss          => autotroph_derived_terms%auto_loss,      & ! INPUT autotroph non-grazing mort (mmol C/m^3/sec)
+         auto_loss_poc      => autotroph_derived_terms%auto_loss_poc,  & ! INPUT auto_loss routed to poc (mmol C/m^3/sec)
+         auto_loss_doc      => autotroph_derived_terms%auto_loss_doc,  & ! INPUT auto_loss routed to doc (mmol C/m^3/sec)
+         auto_loss_dic      => autotroph_derived_terms%auto_loss_dic,  & ! INPUT auto_loss routed to dic (mmol C/m^3/sec)
+         auto_agg           => autotroph_derived_terms%auto_agg,       & ! INPUT autotroph aggregation (mmol C/m^3/sec)
+         photoC             => autotroph_derived_terms%photoC,         & ! INPUT C-fixation (mmol C/m^3/sec)
+         CaCO3_form         => autotroph_derived_terms%CaCO3_form,     & ! INPUT prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
+         PCphoto            => autotroph_derived_terms%PCphoto,        & ! INPUT C-specific rate of photosynth. (1/sec)
 
-         zoototC_loc        => marbl_zooplankton_share%zoototC_loc_fields      , & ! INPUT local copy of model zoototC
-         zootot_loss        => marbl_zooplankton_share%zootot_loss_fields      , & ! INPUT mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-         zootot_loss_poc    => marbl_zooplankton_share%zootot_loss_poc_fields  , & ! INPUT zootot_loss routed to large detrital pool (mmol C/m^3/sec)
-         zootot_loss_doc    => marbl_zooplankton_share%zootot_loss_doc_fields  , & ! INPUT zootot_loss routed to doc (mmol C/m^3/sec)
-         zootot_loss_dic    => marbl_zooplankton_share%zootot_loss_dic_fields  , & ! INPUT zootot_loss routed to dic (mmol C/m^3/sec)
-         zootot_graze       => marbl_zooplankton_share%zootot_graze_fields     , & ! INPUT zooplankton losses due to grazing (mmol C/m^3/sec)
-         zootot_graze_zoo   => marbl_zooplankton_share%zootot_graze_zoo_fields , & ! INPUT grazing of zooplankton routed to zoo (mmol C/m^3/sec)
-         zootot_graze_poc   => marbl_zooplankton_share%zootot_graze_poc_fields , & ! INPUT grazing of zooplankton routed to poc (mmol C/m^3/sec)
-         zootot_graze_doc   => marbl_zooplankton_share%zootot_graze_doc_fields , & ! INPUT grazing of zooplankton routed to doc (mmol C/m^3/sec)
-         zootot_graze_dic   => marbl_zooplankton_share%zootot_graze_dic_fields , & ! INPUT grazing of zooplankton routed to dic (mmol C/m^3/sec)
+         zoototC_loc        => zooplankton_share%zoototC_loc_fields(:),      & ! INPUT local copy of model zoototC
+         zootot_loss        => zooplankton_share%zootot_loss_fields(:),      & ! INPUT mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+         zootot_loss_poc    => zooplankton_share%zootot_loss_poc_fields(:),  & ! INPUT zootot_loss routed to large detrital pool (mmol C/m^3/sec)
+         zootot_loss_doc    => zooplankton_share%zootot_loss_doc_fields(:),  & ! INPUT zootot_loss routed to doc (mmol C/m^3/sec)
+         zootot_loss_dic    => zooplankton_share%zootot_loss_dic_fields(:),  & ! INPUT zootot_loss routed to dic (mmol C/m^3/sec)
+         zootot_graze       => zooplankton_share%zootot_graze_fields(:),     & ! INPUT zooplankton losses due to grazing (mmol C/m^3/sec)
+         zootot_graze_zoo   => zooplankton_share%zootot_graze_zoo_fields(:), & ! INPUT grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+         zootot_graze_poc   => zooplankton_share%zootot_graze_poc_fields(:), & ! INPUT grazing of zooplankton routed to poc (mmol C/m^3/sec)
+         zootot_graze_doc   => zooplankton_share%zootot_graze_doc_fields(:), & ! INPUT grazing of zooplankton routed to doc (mmol C/m^3/sec)
+         zootot_graze_dic   => zooplankton_share%zootot_graze_dic_fields(:), & ! INPUT grazing of zooplankton routed to dic (mmol C/m^3/sec)
 
-         POC                => marbl_particulate_share%POC                     , & ! INPUT
-         P_CaCO3            => marbl_particulate_share%P_CaCO3                 , & ! INPUT
+         POC                => marbl_particulate_share%POC,     & ! INPUT
+         P_CaCO3            => marbl_particulate_share%P_CaCO3, & ! INPUT
 
-         di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
-         do13ctot_ind       => marbl_tracer_indices%do13ctot_ind               , &
-         zootot13C_ind      => marbl_tracer_indices%zootot13C_ind              , &
-         di14c_ind          => marbl_tracer_indices%di14c_ind                  , &
-         do14ctot_ind       => marbl_tracer_indices%do14ctot_ind               , &
-         zootot14C_ind      => marbl_tracer_indices%zootot14C_ind                &
+         di13c_ind          => marbl_tracer_indices%di13c_ind,     &
+         do13ctot_ind       => marbl_tracer_indices%do13ctot_ind,  &
+         zootot13C_ind      => marbl_tracer_indices%zootot13C_ind, &
+         di14c_ind          => marbl_tracer_indices%di14c_ind,     &
+         do14ctot_ind       => marbl_tracer_indices%do14ctot_ind,  &
+         zootot14C_ind      => marbl_tracer_indices%zootot14C_ind  &
          )
 
     !-----------------------------------------------------------------------
@@ -303,18 +303,18 @@ contains
        end if
 
        do auto_ind = 1, autotroph_cnt
-          if (autotroph_local(auto_ind,k)%C > c0) then
-             R13C_autotroph(auto_ind,k) = autotroph_local(auto_ind,k)%C13 / autotroph_local(auto_ind,k)%C
-             R14C_autotroph(auto_ind,k) = autotroph_local(auto_ind,k)%C14 / autotroph_local(auto_ind,k)%C
+          if (autotroph_local%C(auto_ind,k) > c0) then
+             R13C_autotroph(auto_ind,k) = autotroph_local%C13(auto_ind,k) / autotroph_local%C(auto_ind,k)
+             R14C_autotroph(auto_ind,k) = autotroph_local%C14(auto_ind,k) / autotroph_local%C(auto_ind,k)
           else
              R13C_autotroph(auto_ind,k) = c0
              R14C_autotroph(auto_ind,k) = c0
           end if
 
           if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
-             if (autotroph_local(auto_ind,k)%CaCO3 > c0) then
-                R13C_autotrophCaCO3(auto_ind,k) = autotroph_local(auto_ind,k)%Ca13CO3 / autotroph_local(auto_ind,k)%CaCO3
-                R14C_autotrophCaCO3(auto_ind,k) = autotroph_local(auto_ind,k)%Ca14CO3 / autotroph_local(auto_ind,k)%CaCO3
+             if (autotroph_local%CaCO3(auto_ind,k) > c0) then
+                R13C_autotrophCaCO3(auto_ind,k) = autotroph_local%Ca13CO3(auto_ind,k) / autotroph_local%CaCO3(auto_ind,k)
+                R14C_autotrophCaCO3(auto_ind,k) = autotroph_local%Ca14CO3(auto_ind,k) / autotroph_local%CaCO3(auto_ind,k)
              else
                 R13C_autotrophCaCO3(auto_ind,k) = c0
                 R14C_autotrophCaCO3(auto_ind,k) = c0
@@ -475,7 +475,7 @@ contains
           ! C13 & C14 CaCO3 production
           !-----------------------------------------------------------------------
 
-          if (autotrophs(auto_ind)%imp_calcifier) then
+          if (autotroph_settings(auto_ind)%imp_calcifier) then
 
              R13C_CaCO3_form(k) = R13C_DIC(k) + R13C_std * eps_carb / c1000
              R14C_CaCO3_form(k) = R14C_DIC(k) + R14C_std * eps_carb * 2.0_r8 / c1000
@@ -556,10 +556,10 @@ contains
        !-----------------------------------------------------------------------
 
        call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            marbl_interior_tendency_share(k), marbl_particulate_share, PO13C, P_Ca13CO3)
+            interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3)
 
        call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            marbl_interior_tendency_share(k), marbl_particulate_share, PO14C, P_Ca14CO3)
+            interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3)
 
        !-----------------------------------------------------------------------
        ! Update interior_tendencies for the 7 carbon pools for each Carbon isotope
@@ -579,9 +579,9 @@ contains
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
           interior_tendencies(n,k) = photo14C(auto_ind,k) - work1 * R14C_autotroph(auto_ind,k) - &
-               c14_lambda_inv_sec * autotroph_local(auto_ind,k)%C14
+               c14_lambda_inv_sec * autotroph_local%C14(auto_ind,k)
 
-          decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local(auto_ind,k)%C14
+          decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local%C14(auto_ind,k)
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
           if (n > 0) then
@@ -593,9 +593,9 @@ contains
           if (n > 0) then
              interior_tendencies(n,k) = Ca14CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
                   * work1 * R14C_autotrophCaCO3(auto_ind,k)      &
-                  - c14_lambda_inv_sec * autotroph_local(auto_ind,k)%Ca14CO3
+                  - c14_lambda_inv_sec * autotroph_local%Ca14CO3(auto_ind,k)
 
-             decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local(auto_ind,k)%Ca14CO3
+             decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local%Ca14CO3(auto_ind,k)
           endif
        end do
 
@@ -730,26 +730,37 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_ciso_interior_tendency_autotroph_set_to_zero(autotroph_tracer_indices, autotroph_local)
+  subroutine marbl_ciso_interior_tendency_autotroph_zero_consistency_enforce(auto_ind, column_kmt, zero_mask, &
+             autotroph_tracer_indices, autotroph_local)
 
     use marbl_interface_private_types, only : marbl_living_tracer_index_type
 
+    integer,                              intent(in)    :: auto_ind
+    integer,                              intent(in)    :: column_kmt
+    logical,                              intent(in)    :: zero_mask(column_kmt)
     type(marbl_living_tracer_index_type), intent(in)    :: autotroph_tracer_indices
     type(autotroph_local_type),           intent(inout) :: autotroph_local
 
     if (.not. ciso_on) return
 
-    autotroph_local%C13 = c0
-    autotroph_local%C14 = c0
+    where (zero_mask)
+      autotroph_local%C13(auto_ind,1:column_kmt) = c0
+      autotroph_local%C14(auto_ind,1:column_kmt) = c0
+    end where
 
     if (autotroph_tracer_indices%Ca13CO3_ind > 0) then
-      autotroph_local%Ca13CO3 = c0
-    end if
-    if (autotroph_tracer_indices%Ca14CO3_ind > 0) then
-      autotroph_local%Ca14CO3 = c0
+      where (zero_mask)
+        autotroph_local%Ca13CO3(auto_ind,1:column_kmt) = c0
+      end where
     end if
 
-  end subroutine marbl_ciso_interior_tendency_autotroph_set_to_zero
+    if (autotroph_tracer_indices%Ca14CO3_ind > 0) then
+      where (zero_mask)
+        autotroph_local%Ca14CO3(auto_ind,1:column_kmt) = c0
+      end where
+    end if
+
+  end subroutine marbl_ciso_interior_tendency_autotroph_zero_consistency_enforce
 
   !***********************************************************************
 
@@ -783,7 +794,7 @@ contains
     case ('KellerMorel')
        do auto_ind = 1, autotroph_cnt
 
-          if (autotrophs(auto_ind)%silicifier) then
+          if (autotroph_settings(auto_ind)%silicifier) then
              !----------------------------------------------------------------------------------------
              ! Diatom based on P. tricornumtum ( Keller and morel, 1999; Popp et al., 1998 )
              !----------------------------------------------------------------------------------------
@@ -794,7 +805,7 @@ contains
              cell_permea(auto_ind)          = 3.3e-5_r8    ! cell wall permeability to CO2(aq) (m/s)
              cell_eps_fix(auto_ind)         = 26.6_r8      ! fractionation effect of carbon fixation
 
-          else if (autotrophs(auto_ind)%Nfixer) then
+          else if (autotroph_settings(auto_ind)%Nfixer) then
              !----------------------------------------------------------------------------------------
              ! Diazotroph based on  Standard Phyto of Rau et al., (1996)
              !----------------------------------------------------------------------------------------
@@ -814,7 +825,7 @@ contains
              cell_permea(auto_ind)          = 3.0e-8_r8     ! cell wall permeability to CO2(aq) (m/s)
              cell_eps_fix(auto_ind)         = 30.0_r8       ! fractionation effect of carbon fixation
 
-         !else if (autotrophs(auto_ind)%exp_calcifier) then
+         !else if (autotroph_settings(auto_ind)%exp_calcifier) then
              !Currently not set up to separate exp_calcifiers, needs cell_radius value from data
              !----------------------------------------------------------------------------------------
              ! Calcifier based on P. glacialis ( Keller and morel, 1999; Popp et al., 1998 )
@@ -828,8 +839,8 @@ contains
              !   cell_permea(auto_ind)          = 1.1e-5_r8    ! cell wall permeability to CO2(aq) (m/s)
              !   cell_eps_fix(auto_ind)         = 23.0_r8      ! fractionation effect of carbon fixation
 
-          else if (autotrophs(auto_ind)%Nfixer .and.                   &
-                   autotrophs(auto_ind)%silicifier) then
+          else if (autotroph_settings(auto_ind)%Nfixer .and. &
+                   autotroph_settings(auto_ind)%silicifier) then
               log_message = "ciso: Currently Keller and Morel fractionation does not work for Diatoms-Diazotrophs"
               call marbl_status_log%log_error(log_message, subname)
               return
@@ -1046,7 +1057,7 @@ contains
   !***********************************************************************
 
   subroutine compute_particulate_terms(k, domain, tracer_local, marbl_tracer_indices, &
-             marbl_interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
+             interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
 
     !----------------------------------------------------------------------------------------
     !  Compute outgoing fluxes and remineralization terms for Carbon isotopes.
@@ -1068,7 +1079,7 @@ contains
     type(marbl_domain_type),                  intent(in)    :: domain
     real(r8),                                 intent(in)    :: tracer_local(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
-    type(marbl_interior_tendency_share_type), intent(in)    :: marbl_interior_tendency_share
+    type(marbl_interior_tendency_share_type), intent(in)    :: interior_tendency_share
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
     type(column_sinking_particle_type),       intent(inout) :: POC_ciso          ! base units = nmol particulate organic Carbon isotope
     type(column_sinking_particle_type),       intent(inout) :: P_CaCO3_ciso      ! base units = nmol CaCO3 Carbon isotope
@@ -1093,8 +1104,8 @@ contains
          column_zw         => domain%zw(k)                                  , & ! IN
          O2_loc            => tracer_local(marbl_tracer_indices%O2_ind)     , & ! IN
          NO3_loc           => tracer_local(marbl_tracer_indices%NO3_ind)    , & ! IN
-         CO3               => marbl_interior_tendency_share%CO3_fields      , & ! IN
-         CO3_sat_calcite   => marbl_interior_tendency_share%CO3_sat_calcite , & ! IN
+         CO3               => interior_tendency_share%CO3_fields(k)         , & ! IN
+         CO3_sat_calcite   => interior_tendency_share%CO3_sat_calcite(k)    , & ! IN
          decay_CaCO3       => marbl_particulate_share%decay_CaCO3_fields    , & ! IN
          DECAY_Hard        => marbl_particulate_share%DECAY_Hard_fields     , & ! IN
          decay_POC_E       => marbl_particulate_share%decay_POC_E_fields    , & ! IN
