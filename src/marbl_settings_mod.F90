@@ -127,7 +127,7 @@ module marbl_settings_mod
   ! Partitioning of phytoplankton growth, grazing and losses
   ! All f_* variables are fractions and are non-dimensional
   real(r8), parameter :: &
-      caco3_poc_min         = 0.40_r8,  & ! minimum proportionality between
+      caco3_poc_min         = 0.75_r8,  & ! minimum proportionality between
                                           !   QCaCO3 and grazing losses to POC
                                           !   (mmol C/mmol CaCO3)
       spc_poc_fac           = 0.13_r8,  & ! small phyto grazing factor (1/mmolC)
@@ -146,7 +146,7 @@ module marbl_settings_mod
   real(r8), parameter :: &
       Q             = 16.0_r8 / 117.0_r8, & !N/C ratio (mmol/mmol) of phyto & zoo
       Qfe_zoo       = 3.0e-6_r8,          & !zooplankton Fe/C ratio
-      QCaCO3_max    = 0.4_r8,             & !max QCaCO3
+      QCaCO3_max    = 0.75_r8,             & !max QCaCO3
       ! parameters in GalbraithMartiny Pquota Model^M
       PquotaSlope     = 7.0_r8,        &
       PquotaIntercept = 5.571_r8,      &
@@ -1345,11 +1345,11 @@ contains
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-      write(sname, "(2A)") trim(prefix), 'alphaPi_per_day'
+      write(sname, "(2A)") trim(prefix), 'alphaPI_per_day'
       lname    = 'Initial slope of P_I curve (GD98)'
       units    = 'mmol m^2 / (mg Chl W day)'
       datatype = 'real'
-      rptr     => autotroph_settings(n)%alphaPi_per_day
+      rptr     => autotroph_settings(n)%alphaPI_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1455,6 +1455,16 @@ contains
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
+      write(sname, "(2A)") trim(prefix), 'Ea'
+      lname    = 'activation energy for Arrhenius equation'
+      units    = 'eV'
+      datatype = 'real'
+      rptr     => autotroph_settings(n)%Ea
+      call this%add_var(sname, lname, units, datatype, category,     &
+                        marbl_status_log, rptr=rptr,                 &
+                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+	  
     end do
 
     do n=1, zooplankton_cnt
@@ -1507,6 +1517,16 @@ contains
       datatype = 'real'
       rptr     => zooplankton_settings(n)%z_mort2_0_per_day
       call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr,                 &
+                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      write(sname, "(2A)") trim(prefix), 'Ea'
+      lname    = 'Activation energy for Arrhenius equation'
+      units    = 'eV'
+      datatype = 'real'
+      rptr     => zooplankton_settings(n)%Ea
+      call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)

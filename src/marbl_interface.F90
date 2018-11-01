@@ -280,7 +280,7 @@ contains
     call this%dissolved_organic_matter%construct(num_levels)
     call this%carbonate%construct(num_levels)
     call this%particulate_share%construct(num_levels)
-    call this%autotroph_derived_terms%construct(autotroph_cnt, num_levels)
+    call this%autotroph_derived_terms%construct(autotroph_cnt, zooplankton_cnt, num_levels)
     call this%autotroph_local%construct(ciso_on, autotroph_cnt, num_levels)
     call this%zooplankton_derived_terms%construct(zooplankton_cnt, num_levels)
     call this%zooplankton_local%construct(zooplankton_cnt, num_levels)

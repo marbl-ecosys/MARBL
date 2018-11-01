@@ -89,7 +89,7 @@ contains
       zooplankton_share%zootot_loss_doc_fields(:)  = sum(zooplankton_derived_terms%zoo_loss_doc(:,:), dim=1)
       zooplankton_share%zootot_loss_dic_fields(:)  = sum(zooplankton_derived_terms%zoo_loss_dic(:,:), dim=1)
       zooplankton_share%zootot_graze_fields(:)     = sum(zooplankton_derived_terms%zoo_graze(:,:), dim=1)
-      zooplankton_share%zootot_graze_zoo_fields(:) = sum(zooplankton_derived_terms%zoo_graze_zoo(:,:), dim=1)
+      zooplankton_share%zootot_graze_zoo_fields(:) = sum(zooplankton_derived_terms%zoo_graze_zootot(:,:), dim=1)
       zooplankton_share%zootot_graze_poc_fields(:) = sum(zooplankton_derived_terms%zoo_graze_poc(:,:), dim=1)
       zooplankton_share%zootot_graze_doc_fields(:) = sum(zooplankton_derived_terms%zoo_graze_doc(:,:), dim=1)
       zooplankton_share%zootot_graze_dic_fields(:) = sum(zooplankton_derived_terms%zoo_graze_dic(:,:), dim=1)

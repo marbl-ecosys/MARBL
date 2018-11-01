@@ -897,6 +897,16 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0
                ((autotroph_sname)) == "diat" : 0
                ((autotroph_sname)) == "diaz" : 0
+         Ea :
+            longname : Activation energy for Arrhenius equation (eV)
+            subcategory : 10. autotrophs
+            units : unitless
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "sp" : 0.32
+               ((autotroph_sname)) == "diat" : 0.32
+               ((autotroph_sname)) == "diaz" : 0.32
    zooplankton_settings :
       _array_shape : zooplankton_cnt
       _is_allocatable : true

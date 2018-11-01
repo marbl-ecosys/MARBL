@@ -41,8 +41,8 @@ module marbl_interface_private_types
     real(r8), allocatable :: gQfe(:,:)            ! fe/C for growth
     real(r8), allocatable :: Qsi(:,:)             ! current Si/C ratio (mmol Si/mmol C)
     real(r8), allocatable :: gQsi(:,:)            ! diatom Si/C ratio for growth (new biomass)
-    real(r8), allocatable :: VNO3(:,:)            ! NH4 uptake rate (non-dim)
-    real(r8), allocatable :: VNH4(:,:)            ! NO3 uptake rate (non-dim)
+    real(r8), allocatable :: VNO3(:,:)            ! NO3 uptake rate (non-dim)
+    real(r8), allocatable :: VNH4(:,:)            ! NH4 uptake rate (non-dim)
     real(r8), allocatable :: VNtot(:,:)           ! total N uptake rate (non-dim)
     real(r8), allocatable :: NO3_V(:,:)           ! nitrate uptake (mmol NO3/m^3/sec)
     real(r8), allocatable :: NH4_V(:,:)           ! ammonium uptake (mmol NH4/m^3/sec)
@@ -66,7 +66,8 @@ module marbl_interface_private_types
     real(r8), allocatable :: auto_loss_dic(:,:)   ! auto_loss routed to dic (mmol C/m^3/sec)
     real(r8), allocatable :: auto_agg(:,:)        ! autotroph aggregation (mmol C/m^3/sec)
     real(r8), allocatable :: auto_graze(:,:)      ! autotroph grazing rate (mmol C/m^3/sec)
-    real(r8), allocatable :: auto_graze_zoo(:,:)  ! auto_graze routed to zoo (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze_zootot(:,:)  ! auto_graze routed to total zoo (mmol C/m^3/sec)
+    real(r8), allocatable :: auto_graze_zoo(:,:,:)  ! auto_graze routed to individual zoo (mmol C/m^3/sec)
     real(r8), allocatable :: auto_graze_poc(:,:)  ! auto_graze routed to poc (mmol C/m^3/sec)
     real(r8), allocatable :: auto_graze_doc(:,:)  ! auto_graze routed to doc (mmol C/m^3/sec)
     real(r8), allocatable :: auto_graze_dic(:,:)  ! auto_graze routed to dic (mmol C/m^3/sec)
@@ -107,7 +108,8 @@ module marbl_interface_private_types
     real(r8), allocatable :: f_zoo_detr(:,:)       ! frac of zoo losses into large detrital pool (non-dim)
     real(r8), allocatable :: x_graze_zoo(:,:)      ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_graze(:,:)        ! zooplankton losses due to grazing (mmol C/m^3/sec)
-    real(r8), allocatable :: zoo_graze_zoo(:,:)    ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze_zootot(:,:)    ! grazing of zooplankton routed to total zoo (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_graze_zoo(:,:,:)    ! grazing of zooplankton routed to individual zoo (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_graze_poc(:,:)    ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_graze_doc(:,:)    ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_graze_dic(:,:)    ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
@@ -675,7 +677,8 @@ module marbl_interface_private_types
     integer(int_kind), allocatable :: auto_graze(:)
     integer(int_kind), allocatable :: auto_graze_poc(:)
     integer(int_kind), allocatable :: auto_graze_doc(:)
-    integer(int_kind), allocatable :: auto_graze_zoo(:)
+    integer(int_kind), allocatable :: auto_graze_zootot(:)
+    integer(int_kind), allocatable :: auto_graze_zoo(:,:)
     integer(int_kind), allocatable :: auto_loss(:)
     integer(int_kind), allocatable :: auto_loss_poc(:)
     integer(int_kind), allocatable :: auto_loss_doc(:)
@@ -694,7 +697,8 @@ module marbl_interface_private_types
     integer(int_kind), allocatable :: zoo_graze(:)
     integer(int_kind), allocatable :: zoo_graze_poc(:)
     integer(int_kind), allocatable :: zoo_graze_doc(:)
-    integer(int_kind), allocatable :: zoo_graze_zoo(:)
+    integer(int_kind), allocatable :: zoo_graze_zootot(:)
+    integer(int_kind), allocatable :: zoo_graze_zoo(:,:)
     integer(int_kind), allocatable :: x_graze_zoo(:)
 
      !  ciso ids for nonstandard 3d fields
@@ -992,10 +996,11 @@ contains
 
   !***********************************************************************
 
-  subroutine autotroph_derived_terms_constructor(self, autotroph_cnt, km)
+  subroutine autotroph_derived_terms_constructor(self, autotroph_cnt, zooplankton_cnt, km)
 
     class(autotroph_derived_terms_type), intent(inout) :: self
     integer,                             intent(in)    :: autotroph_cnt
+    integer,                             intent(in)    :: zooplankton_cnt
     integer,                             intent(in)    :: km
 
     allocate(self%thetaC(autotroph_cnt, km))
@@ -1031,7 +1036,8 @@ contains
     allocate(self%auto_loss_dic(autotroph_cnt, km))
     allocate(self%auto_agg(autotroph_cnt, km))
     allocate(self%auto_graze(autotroph_cnt, km))
-    allocate(self%auto_graze_zoo(autotroph_cnt, km))
+    allocate(self%auto_graze_zootot(autotroph_cnt, km))
+    allocate(self%auto_graze_zoo(autotroph_cnt, zooplankton_cnt, km))
     allocate(self%auto_graze_poc(autotroph_cnt, km))
     allocate(self%auto_graze_doc(autotroph_cnt, km))
     allocate(self%auto_graze_dic(autotroph_cnt, km))
@@ -1157,7 +1163,8 @@ contains
     allocate(self%f_zoo_detr(zooplankton_cnt, km))
     allocate(self%x_graze_zoo(zooplankton_cnt, km))
     allocate(self%zoo_graze(zooplankton_cnt, km))
-    allocate(self%zoo_graze_zoo(zooplankton_cnt, km))
+    allocate(self%zoo_graze_zootot(zooplankton_cnt, km))
+    allocate(self%zoo_graze_zoo(zooplankton_cnt, zooplankton_cnt, km))
     allocate(self%zoo_graze_poc(zooplankton_cnt, km))
     allocate(self%zoo_graze_doc(zooplankton_cnt, km))
     allocate(self%zoo_graze_dic(zooplankton_cnt, km))
@@ -1908,6 +1915,7 @@ contains
       deallocate(this%auto_graze)
       deallocate(this%auto_graze_poc)
       deallocate(this%auto_graze_doc)
+      deallocate(this%auto_graze_zootot)
       deallocate(this%auto_graze_zoo)
       deallocate(this%auto_loss)
       deallocate(this%auto_loss_poc)
@@ -1923,6 +1931,7 @@ contains
       deallocate(this%zoo_graze_poc)
       deallocate(this%zoo_graze_doc)
       deallocate(this%zoo_graze_zoo)
+      deallocate(this%zoo_graze_zootot)
       deallocate(this%x_graze_zoo)
       if (ciso_on) then
         deallocate(this%CISO_eps_autotroph)
