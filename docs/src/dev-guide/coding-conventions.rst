@@ -21,17 +21,18 @@ Example of an Object-oriented Class
 
 The class used to time blocks of code inside MARBL, ``marbl_internal_timers_type``, is object-oriented:
 
+.. block from marbl_timing_mod
 .. code-block:: fortran
 
   !*****************************************************************************
   ! Internal timer types
 
   type :: marbl_single_timer_type
-    character(char_len) :: name
-    logical             :: is_running
-    logical             :: is_threaded
-    real(r8)            :: cur_start
-    real(r8)            :: cumulative_runtime
+    character(len=char_len) :: name
+    logical                 :: is_running
+    logical                 :: is_threaded
+    real(r8)                :: cur_start
+    real(r8)                :: cumulative_runtime
   contains
     procedure :: init => init_single_timer
   end type marbl_single_timer_type
@@ -60,22 +61,22 @@ For example, MARBL times the call to the subroutine ``marbl_compute_carbonate_ch
 the subroutine ``marbl_interior_tendency_compute()`` (part of ``marbl_interior_tendency_mod.F90``).
 The timer calls look like this:
 
+.. block from marbl_interior_tendency_mod
 .. code-block:: fortran
 
   subroutine marbl_interior_tendency_compute( &
-  .
-  .
-  .
-    type    (marbl_internal_timers_type)        , intent(inout) :: marbl_timers
+    .
+    .
+    .
+    type(marbl_internal_timers_type),                        intent(inout) :: marbl_timers
     .
     .
     .
     call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
                             marbl_status_log)
-    call marbl_compute_carbonate_chemistry(domain, temperature, pressure,     &
-         salinity, tracer_local(:, :), marbl_tracer_indices, carbonate(:),    &
-         ph_prev_col(:), ph_prev_alt_co2_col(:), zsat_calcite(:),             &
-         zsat_aragonite(:), marbl_status_log)
+    call compute_carbonate_chemistry(domain, temperature, pressure,           &
+         salinity, tracer_local(:, :), marbl_tracer_indices, carbonate,       &
+         ph_prev_col(:), ph_prev_alt_co2_col(:), marbl_status_log)
     call marbl_timers%stop(marbl_timer_indices%carbonate_chem_id,             &
                             marbl_status_log)
 
@@ -86,6 +87,7 @@ Example of a Subroutine Inside an Object-oriented Class
 
 The subroutine header looks like this:
 
+.. block from marbl_timing_mod
 .. code-block:: fortran
 
   subroutine start_timer(self, id, marbl_status_log)
@@ -93,12 +95,6 @@ The subroutine header looks like this:
     class(marbl_internal_timers_type), intent(inout) :: self
     integer,                           intent(in)    :: id
     type(marbl_log_type),              intent(inout) :: marbl_status_log
-
-    .
-    .
-    .
-
-  end subroutine start_timer
 
 One key thing to note here is the use of ``self``, the first argument to the subroutine.
 In this case, ``self`` stands for the particular instance of an object of type ``marbl_internal_timers_type``.
@@ -114,6 +110,7 @@ The association between the name and the underlying variable is terminated at th
 
 If we look closer at the ``start_timer`` routine, we see an example:
 
+.. block from marbl_timing_mod
 .. code-block:: fortran
 
     associate(timer => self%individual_timers(id))
