@@ -128,6 +128,8 @@ contains
     use marbl_restore_mod, only : marbl_restore_compute_interior_restore
     use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
+    use marbl_settings_mod, only : l_ea_on
+
 
     type(marbl_domain_type),                                 intent(in)    :: domain
     type(marbl_forcing_fields_type),                         intent(in)    :: interior_tendency_forcings(:)
@@ -319,9 +321,13 @@ contains
     call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
 
-    call compute_temperature_scaling(temperature(:), Tfunc_auto(:,:), Ea_auto(:))
-
-    call compute_temperature_scaling(temperature(:), Tfunc_zoo(:,:), Ea_zoo(:))
+    if (l_ea_on) then
+        call compute_temperature_scaling(temperature(:), Tfunc_auto(:,:), Ea_auto(:))
+        call compute_temperature_scaling(temperature(:), Tfunc_zoo(:,:), Ea_zoo(:))
+    else
+        call compute_temperature_scaling(temperature(:), Tfunc_auto(:,:))
+        call compute_temperature_scaling(temperature(:), Tfunc_zoo(:,:))
+    end if
 
     call compute_Pprime(km, domain%zt, autotroph_local, temperature, autotroph_derived_terms%Pprime)
 
@@ -1215,13 +1221,18 @@ contains
   subroutine compute_temperature_scaling(temperature, Tfunc, Ea)
 
     !-----------------------------------------------------------------------
-    !  Tref = 25.0 reference temperature (degC)
+    !  Scaling of physiological rates by temperature
+    !  Set up for two alternate temperature functions, Q10 and Arrhenius
+    !  Tref = 30.0 (deg C) reference temperature for Q10 formulation
+    !  Tref = 25.0 (deg C) reference temperature for Arrhenius equation.
+    !
     !  Using q10 formulation with Q10 value of 2.0 (Doney et al., 1996).
     !  growth, mort and grazing rates scaled by Tfunc where they are computed
     !-----------------------------------------------------------------------
 
     use marbl_settings_mod,  only : Q_10
     use marbl_constants_mod, only : Tref
+    use marbl_constants_mod, only : Tref_A
     use marbl_constants_mod, only : c10
     use marbl_constants_mod, only : K_Boltz
 
@@ -1232,13 +1243,15 @@ contains
     integer :: Tfunc_ind
     
     if (present(Ea)) then
-        do Tfunc_ind = 1, size(Ea)
-            Tfunc(Tfunc_ind,:) = exp(-Ea(:) * (Tref - temperature(:)) &
-                                     / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref + T0_Kelvin)))
+        do Tfunc_ind = 1, size(Tfunc, dim=1)
+            Tfunc(Tfunc_ind,:) = exp(-Ea(:) * (Tref_A - temperature(:)) &
+                                     / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref_A + T0_Kelvin)))
         end do
     else
         ! Q10 (Eppley) temperature scaling
-        Tfunc(1,:) = Q_10**(((temperature(:) + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
+        do Tfunc_ind = 1, size(Tfunc, dim=1)
+            Tfunc(Tfunc_ind,:) = Q_10**(((temperature(:) + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
+        end do
     end if
 
   end subroutine compute_temperature_scaling
@@ -1713,7 +1726,7 @@ contains
         C_loss_thres(:) = f_loss_thres(:) * zooplankton_settings(zoo_ind)%loss_thres
         Zprime(zoo_ind,:) = max(zooC(zoo_ind,:) - C_loss_thres, c0)
 
-        zoo_loss(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**2.0_r8 &
+        zoo_loss(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**1.5_r8 &
                                + zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind,:)) * Tfunc_zoo(zoo_ind,:)
       end do
 

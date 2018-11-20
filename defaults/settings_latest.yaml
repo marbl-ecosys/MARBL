@@ -283,6 +283,12 @@ general_parms :
       default_value : # default value is resolution dependent!
          default : .false.
          GRID == "CESM_x1" : .true.
+   l_ea_on :
+      longname : Use the Arrhenius temperature scaling with activation energy Ea
+      subcategory : 2. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
    lp_remin_scalef :
       longname : Apply p_remin_scalef to particulate remin (and request it as a forcing)
       subcategory : 2. config flags

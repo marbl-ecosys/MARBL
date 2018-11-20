@@ -127,7 +127,7 @@ module marbl_settings_mod
   ! Partitioning of phytoplankton growth, grazing and losses
   ! All f_* variables are fractions and are non-dimensional
   real(r8), parameter :: &
-      caco3_poc_min         = 0.75_r8,  & ! minimum proportionality between
+      caco3_poc_min         = 0.40_r8,  & ! minimum proportionality between
                                           !   QCaCO3 and grazing losses to POC
                                           !   (mmol C/mmol CaCO3)
       spc_poc_fac           = 0.13_r8,  & ! small phyto grazing factor (1/mmolC)
@@ -146,7 +146,7 @@ module marbl_settings_mod
   real(r8), parameter :: &
       Q             = 16.0_r8 / 117.0_r8, & !N/C ratio (mmol/mmol) of phyto & zoo
       Qfe_zoo       = 3.0e-6_r8,          & !zooplankton Fe/C ratio
-      QCaCO3_max    = 0.75_r8,             & !max QCaCO3
+      QCaCO3_max    = 0.40_r8,             & !max QCaCO3
       ! parameters in GalbraithMartiny Pquota Model^M
       PquotaSlope     = 7.0_r8,        &
       PquotaIntercept = 5.571_r8,      &
@@ -229,6 +229,7 @@ module marbl_settings_mod
                                                               !   (this is done primarily in spinup runs)
   logical(log_kind), target :: lo2_consumption_scalef         ! Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)
   logical(log_kind), target :: lp_remin_scalef                ! Apply p_remin_scalef to particulate remin (and request it as a forcing)
+  logical(log_kind), target :: l_ea_on                        ! Use the Arrhenius temperature scaling with activation energy Ea
 
   character(len=char_len), target :: init_bury_coeff_opt
 
@@ -378,6 +379,7 @@ contains
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lo2_consumption_scalef        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    l_ea_on                       = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     gQsi_0                        = 0.137_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -669,6 +671,16 @@ contains
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'l_ea_on'
+    lname     = 'Use the Arrhenius temperature scaling with activation energy Ea'
+    units     = 'unitless'
+    datatype  = 'logical'
+    lptr      => l_ea_on
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, lptr=lptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
 
     ! --------------------------
     category  = 'config strings'
