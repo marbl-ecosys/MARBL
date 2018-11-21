@@ -1476,7 +1476,7 @@ contains
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-	  
+
     end do
 
     do n=1, zooplankton_cnt

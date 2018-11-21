@@ -1239,9 +1239,9 @@ contains
     real(r8), intent(in)  :: temperature(:)
     real(r8), intent(out) :: Tfunc(:,:)
     real(r8), optional, intent(in)  :: Ea(size(Tfunc, dim=1))
-    
+
     integer :: Tfunc_ind
-    
+
     if (present(Ea)) then
         do Tfunc_ind = 1, size(Tfunc, dim=1)
             Tfunc(Tfunc_ind,:) = exp(-Ea(:) * (Tref_A - temperature(:)) &

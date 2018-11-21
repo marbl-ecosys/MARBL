@@ -38,6 +38,18 @@
          "_array_shape": "autotroph_cnt",
          "_is_allocatable": true,
          "datatype": {
+            "Ea": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"diat\"": 0.32,
+                  "((autotroph_sname)) == \"diaz\"": 0.32,
+                  "((autotroph_sname)) == \"sp\"": 0.32,
+                  "default": "1e34"
+               },
+               "longname": "Activation energy for Arrhenius equation (eV)",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
             "Nfixer": {
                "datatype": "logical",
                "default_value": {
@@ -895,6 +907,13 @@
          "longname": "min Si/C ratio for growth",
          "subcategory": "4. general parameters",
          "units": 1
+      },
+      "l_ea_on": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "longname": "Use the Arrhenius temperature scaling with activation energy Ea",
+         "subcategory": "2. config flags",
+         "units": "unitless"
       },
       "ladjust_bury_coeff": {
          "_append_to_config_keywords": true,

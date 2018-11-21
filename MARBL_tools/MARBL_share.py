@@ -116,7 +116,7 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
             key_fill_val = MARBL_settings.settings_dict[auto_prefix + "sname"].strip('"') + '_' + MARBL_settings.settings_dict[zoo_prefix + "sname"].strip('"')
             template_fill_dict['((autotroph_lname))'] = MARBL_settings.settings_dict[auto_prefix + "lname"].strip('"')
             template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict[zoo_prefix + "lname"].strip('"')
-        elif fill_source == 'zoo_graze_zoo': 
+        elif fill_source == 'zoo_graze_zoo':
             zoo_ind1 = item % MARBL_settings.settings_dict['zooplankton_cnt']
             if zoo_ind1==0:
                 zoo_ind1 = MARBL_settings.settings_dict['zooplankton_cnt']

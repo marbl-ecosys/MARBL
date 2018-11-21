@@ -38,6 +38,18 @@
          "_array_shape": "autotroph_cnt",
          "_is_allocatable": true,
          "datatype": {
+            "Ea": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"diat\"": 0.32,
+                  "((autotroph_sname)) == \"diaz\"": 0.32,
+                  "((autotroph_sname)) == \"sp\"": 0.32,
+                  "default": "1e34"
+               },
+               "longname": "Activation energy for Arrhenius equation (eV)",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
             "Nfixer": {
                "datatype": "logical",
                "default_value": {

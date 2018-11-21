@@ -1930,8 +1930,8 @@ contains
       deallocate(this%zoo_graze)
       deallocate(this%zoo_graze_poc)
       deallocate(this%zoo_graze_doc)
-      deallocate(this%zoo_graze_zoo)
       deallocate(this%zoo_graze_zootot)
+      deallocate(this%zoo_graze_zoo)
       deallocate(this%x_graze_zoo)
       if (ciso_on) then
         deallocate(this%CISO_eps_autotroph)
