@@ -96,7 +96,7 @@ html_theme = 'sphinx_rtd_theme'
 # documentation.
 #
 html_theme_options = {}
-html_theme_options['versions'] = {'latest': '../latest', 'cesm2.0': '../cesm2.0'}
+html_theme_options['versions'] = {'latest': '../latest', 'cesm2.1': '../cesm2.1'}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
