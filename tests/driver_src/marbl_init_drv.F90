@@ -14,10 +14,9 @@ module marbl_init_drv
 
 Contains
 
-  subroutine test(marbl_instance, nt, lshutdown)
+  subroutine test(marbl_instance, lshutdown)
 
     type(marbl_interface_class), intent(inout) :: marbl_instance
-    integer, optional,           intent(inout) :: nt
     logical, optional,           intent(in)    :: lshutdown
 
     character(*), parameter      :: subname = 'marbl_init_drv:test'
@@ -25,7 +24,7 @@ Contains
     integer                      :: k
     logical                      :: lshutdown_loc
 
-    ! Run marbl_instance%shutdown? (Skip when running get_setting() from driver
+    ! Run marbl_instance%shutdown? (Skip when running get_setting() from driver)
     if (present(lshutdown)) then
       lshutdown_loc = lshutdown
     else
@@ -54,9 +53,6 @@ Contains
       call marbl_instance%StatusLog%log_error_trace('marbl%init', subname)
       return
     end if
-
-    ! Set tracer count (if requested)
-    if (present(nt)) nt = size(marbl_instance%tracer_metadata)
 
     if (lshutdown_loc) then
       ! Shutdown

@@ -68,7 +68,7 @@ Program marbl
 
   type(marbl_interface_class)   :: marbl_instance
   type(marbl_log_type)          :: driver_status_log
-  integer                       :: n, nt, cnt
+  integer                       :: n, cnt
   character(len=char_len)       :: input_line, testname, varname, log_message, log_out_file
   logical                       :: lprint_marbl_log, lhas_namelist_file, lhas_input_file
   logical                       :: ldriver_log_to_file, lsummarize_timers
@@ -311,10 +311,10 @@ Program marbl
     ! -- request_tracers test -- !
     case ('request_tracers')
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
+      call marbl_init_test(marbl_instance, lshutdown = .false.)
       ! Log tracers requested for initialization
       call driver_status_log%log_header('Requested tracers', subname)
-      do n=1,nt
+      do n=1, size(marbl_instance%tracer_metadata)
         write(log_message, "(I0, 2A)") n, '. ',                               &
           trim(marbl_instance%tracer_metadata(n)%short_name)
         call driver_status_log%log_noerror(log_message, subname)
@@ -346,7 +346,7 @@ Program marbl
     ! -- request_restoring test -- !
     case ('request_restoring')
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instance, nt = nt, lshutdown = .false.)
+      call marbl_init_test(marbl_instance, lshutdown = .false.)
 
       ! Log tracers requested for restoring
       call driver_status_log%log_header('Requested tracers to restore', subname)
