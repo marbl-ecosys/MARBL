@@ -54,9 +54,9 @@ author = u'MARBL developers'
 # built documents.
 #
 # The short X.Y version.
-version = u'cesm2.0'
+version = u'cesm2.1'
 # The full version, including alpha/beta/rc tags.
-release = u'cesm2.0'
+release = u'cesm2.1'
 
 # Suppress "Created Using Sphinx" footer
 #html_show_sphinx = False
