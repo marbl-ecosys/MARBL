@@ -124,6 +124,7 @@ We use a YAML file to provide an easy-to-edit and human-readable text file conta
 On the ``development`` branch, make changes to ``defaults/settings_latest.yaml``.
 Release branches may only offer specific versions of this file, such as ``defaults/settings_cesm2.1.yaml``.
 
+.. block comes from settings_latest.yaml
 .. code-block:: yaml
 
   # ABOUT THIS FILE
@@ -174,10 +175,10 @@ Release branches may only offer specific versions of this file, such as ``defaul
   ################################################################################
 
   general_parms :
-    .
-    .
-    .
-    parm_o2_min :
+     .
+     .
+     .
+     parm_o2_min :
         longname : Minimum O2 needed for production & consumption
         subcategory : 4. general parameters
         units : nmol/cm^3
@@ -201,6 +202,7 @@ The ``MARBL_tools/yaml_to_json.py`` script is provided to do just that:
 The rest of the python scripts provided in the ``MARBL_tools/`` subdirectory rely on the JSON file rather than the YAML.
 ``MARBL_tools/MARBL_generate_settings_file.py`` will turn the JSON file into a list for the GCM to parse:
 
+.. block comes from marbl.input
 .. code-block:: none
 
   ! general parameters

@@ -333,6 +333,7 @@ On the ``development`` branch, make changes to ``defaults/settings_latest.yaml``
 Release branches may only offer specific versions of this file, such as ``defaults/settings_cesm2.1.yaml``.
 The block of code defining the tracers looks like this:
 
+.. block comes from settings_latest.yaml
 .. code-block:: yaml
 
   # ABOUT THIS FILE

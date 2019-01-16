@@ -95,6 +95,7 @@ Step 4. Update the Diagnostics YAML files
 We use a YAML file to provide an easy-to-edit and human-readable text file containing a list of all diagnostics and the recommended frequency of output.
 Developers adding or removing diagnostics should make changes to ``defaults/diagnostics_latest.yaml``.
 
+.. block comes from diagnostics_latest.yaml
 .. code-block:: yaml
 
   insitu_temp :
@@ -112,6 +113,7 @@ The operator means "average over this time period."
 Other acceptable operators are ``instantaneous``, ``minimum``, and ``maximum``.
 You can recommend multiple frequencies by adding a list to the YAML, as long as the operator key is a list of the same size:
 
+.. block comes from diagnostics_latest.yaml
 .. code-block:: yaml
 
   CaCO3_form_zint :
@@ -142,6 +144,7 @@ The ``MARBL_tools/yaml_to_json.py`` script is provided to do just that:
 The rest of the python scripts provided in the ``MARBL_tools/`` subdirectory rely on the JSON file rather than the YAML.
 ``MARBL_tools/MARBL_generate_diagnostics_file.py`` will turn the JSON file into a list for the GCM to parse:
 
+.. block comes from marbl.diags
 .. code-block:: none
 
   # This file contains a list of all diagnostics MARBL can compute for a given configuration,
