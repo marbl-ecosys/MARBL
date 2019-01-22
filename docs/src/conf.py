@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'MARBL'
-copyright = u'2018, National Science Foundation and U.S. Department of Energy'
+copyright = u'2019, National Science Foundation and U.S. Department of Energy'
 author = u'MARBL developers'
 
 # The version info for the project you're documenting, acts as replacement for
