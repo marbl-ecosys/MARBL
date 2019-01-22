@@ -7,6 +7,7 @@ MARBL interface
 GCMs should use the MARBL interface class to call MARBL routines.
 The class definition is shown below:
 
+.. block comes from marbl_interface
 .. code-block:: fortran
 
   type, public :: marbl_interface_class
@@ -57,14 +58,22 @@ The class definition is shown below:
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
-     type(marbl_PAR_type)                      , private              :: PAR
-     type(marbl_particulate_share_type)        , private              :: particulate_share
-     type(marbl_surface_flux_share_type)       , private              :: surface_flux_share
-     type(marbl_surface_flux_internal_type)    , private              :: surface_flux_internal
-     logical                                   , private              :: lallow_glo_ops
-     type(marbl_internal_timers_type)          , private              :: timers
-     type(marbl_timer_indexing_type)           , private              :: timer_ids
-     type(marbl_settings_type)                 , private              :: settings
+     type(marbl_PAR_type),                     private :: PAR
+     type(autotroph_derived_terms_type),       private :: autotroph_derived_terms
+     type(autotroph_local_type),               private :: autotroph_local
+     type(zooplankton_derived_terms_type),     private :: zooplankton_derived_terms
+     type(zooplankton_local_type),             private :: zooplankton_local
+     type(zooplankton_share_type),             private :: zooplankton_share
+     type(marbl_particulate_share_type),       private :: particulate_share
+     type(marbl_interior_tendency_share_type), private :: interior_tendency_share
+     type(dissolved_organic_matter_type),      private :: dissolved_organic_matter
+     type(carbonate_type),                     private :: carbonate
+     type(marbl_surface_flux_share_type),      private :: surface_flux_share
+     type(marbl_surface_flux_internal_type),   private :: surface_flux_internal
+     logical,                                  private :: lallow_glo_ops
+     type(marbl_internal_timers_type),         private :: timers
+     type(marbl_timer_indexing_type),          private :: timer_ids
+     type(marbl_settings_type),                private :: settings
 
    contains
 

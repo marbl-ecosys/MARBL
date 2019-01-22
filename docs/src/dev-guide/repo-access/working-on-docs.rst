@@ -34,7 +34,7 @@ With conda installed, do the following (the last command assumes you are in the 
 
   $ conda create --name marbl-docs pip
   $ conda activate marbl-docs
-  [MARBL]$ pip install -r docs/py_requirements.txt
+  (marbl-docs)$ pip install -r docs/py_requirements.txt
 
 This creates an environment call "marbl-docs" and ensures that ``pip install`` commands are local to the environment rather than global.
 
@@ -42,7 +42,7 @@ To deactivate the "marbl-docs" environment run
 
 .. code-block:: none
 
-  $ conda deactivate
+  (marbl-docs)$ conda deactivate
 
 ----------------------
 Documentation workflow
@@ -59,7 +59,7 @@ Checkout a new local branch using
 
 .. code-block:: none
 
-  [MARBL]$ git checkout -b my_branch
+  (marbl-docs)$ git checkout -b my_branch
 
 to create a branch or omit the ``-b`` to checkout an existing branch.
 
@@ -102,7 +102,7 @@ Once changes are complete, build from `src` using
 
 .. code-block:: none
 
-  [MARBL/docs/src]$ make clean html
+  (marbl-docs)[docs/src]$ make clean html
 
 The compiled documentation ends up in ``MARBL/docs/html``.
 You can view the files there in a browser locally as you work.

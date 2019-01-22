@@ -14,7 +14,8 @@ For example, running
 
 Provides a list of the tracers in the base ecosystem module. The test output is below:
 
-::
+.. block comes from output of requested_tracers.py
+.. code-block:: none
 
   -----------------
   Requested tracers
@@ -59,10 +60,11 @@ Tracer Metadata Available from the MARBL Interface
 
 The details are found in ``$MARBL/tests/driver_src/marbl.F90``:
 
+.. block comes from tests/driver_src/marbl.F90
 .. code-block:: fortran
 
   call driver_status_log%log_header('Requested tracers', subname)
-  do n=1,nt
+  do n=1, size(marbl_instance%tracer_metadata)
     write(log_message, "(I0, 2A)") n, '. ',                               &
       trim(marbl_instance%tracer_metadata(n)%short_name)
     call driver_status_log%log_noerror(log_message, subname)
@@ -71,6 +73,7 @@ The details are found in ``$MARBL/tests/driver_src/marbl.F90``:
 The ``marbl_interface_class`` contains an object ``tracer_metadata``, the length of which is equal to the number of tracers MARBL is computing tendencies of.
 The ``tracer_metadata_type`` contains metadata for each tracer:
 
+.. block comes from marbl_interface_public_types
 .. code-block:: fortran
 
   type, public :: marbl_tracer_metadata_type

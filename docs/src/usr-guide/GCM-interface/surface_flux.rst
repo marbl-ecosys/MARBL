@@ -11,6 +11,7 @@ The array is assumed to be length ``num_elements_surface_flux``, per :ref:`ref-i
 The stand-alone test suite does not yet call this routine, so examples come from the POP driver.
 The call to the routine is straightforward:
 
+.. block comes from ecosys_driver in POP
 .. code-block:: fortran
 
        call marbl_instances(iblock)%surface_flux_compute()
@@ -31,9 +32,10 @@ Step 1. Set global scalars
 Currently, there are no global scalars that need to be set for this stage.
 To prepare for future updates where that is no longer the case, it is recommended that the GCM calls
 
+.. block comes from made-up example
 .. code-block:: fortran
 
-  call marbl_instances(iblock)%set_global_scalars('surface_flux')
+  call marbl_instance%set_global_scalars('surface_flux')
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 2. Copy data into MARBL
@@ -42,6 +44,7 @@ Step 2. Copy data into MARBL
 In POP, 2D ``(nx_block, ny_block)`` data is reshaped into an array of length ``num_elements_surface_flux = nx_block*ny_block``.
 Data for ``surface_input_forcings``, ``surface_vals`` (tracer values at the surface), and saved state (MARBL data from previous time step) are all copied in.
 
+.. block comes from ecosys_driver in POP
 .. code-block:: fortran
 
   !-----------------------------------------------------------------------
@@ -49,23 +52,23 @@ Data for ``surface_input_forcings``, ``surface_vals`` (tracer values at the surf
   !-----------------------------------------------------------------------
 
   do index_marbl = 1, marbl_col_cnt(iblock)
-    i = marbl_col_to_pop_i(index_marbl,iblock)
-    j = marbl_col_to_pop_j(index_marbl,iblock)
+     i = marbl_col_to_pop_i(index_marbl,iblock)
+     j = marbl_col_to_pop_j(index_marbl,iblock)
 
-    do n = 1,size(surface_flux_forcings)
-       marbl_instances(iblock)%surface_flux_forcings(n)%field_0d(index_marbl) = &
-            surface_flux_forcings(n)%field_0d(i,j,iblock)
-    end do
+     do n = 1,size(surface_flux_forcings)
+        marbl_instances(iblock)%surface_flux_forcings(n)%field_0d(index_marbl) = &
+             surface_flux_forcings(n)%field_0d(i,j,iblock)
+     end do
 
-    do n = 1,ecosys_tracer_cnt
-       marbl_instances(iblock)%tracers_at_surface(index_marbl,n) = &
-            p5*(tracers_at_surface_old(i,j,n) + tracers_at_surface_cur(i,j,n))
-    end do
+     do n = 1,ecosys_tracer_cnt
+        marbl_instances(iblock)%tracers_at_surface(index_marbl,n) = &
+             p5*(tracers_at_surface_old(i,j,n) + tracers_at_surface_cur(i,j,n))
+     end do
 
-    do n=1,size(surface_flux_saved_state)
-      marbl_instances(iblock)%surface_flux_saved_state%state(n)%field_2d(index_marbl) = &
-        surface_flux_saved_state(n)%field_2d(i,j,iblock)
-    end do
+     do n=1,size(surface_flux_saved_state)
+       marbl_instances(iblock)%surface_flux_saved_state%state(n)%field_2d(index_marbl) = &
+         surface_flux_saved_state(n)%field_2d(i,j,iblock)
+     end do
 
   end do
 
@@ -77,6 +80,7 @@ MARBL returns surface fluxes (and any requested surface forcing fields) for all 
 Additionally, saved state needs to be saved so it is available in the next time step and any fields that are globally averaged also need to be stored.
 Lastly, MARBL will return values for fields that need to be globally averaged.
 
+.. block comes from ecosys_driver in POP
 .. code-block:: fortran
 
   !-----------------------------------------------------------------------

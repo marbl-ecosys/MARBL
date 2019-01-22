@@ -7,9 +7,10 @@ How Many Saved State Fields Need to be Stored?
 MARBL does not yet have a stand-alone test to provide a list of requested saved state fields, but ``marbl_saved_state_init()`` shows that there are four saved state fields - two for the surface and two for the interior.
 The two surface fields are ``surface pH`` and ``surface pH (alternate CO2)``:
 
+.. block comes from marbl_saved_state_mod
 .. code-block:: fortran
 
-  call surface_state%construct(num_surface_elements, num_levels)
+  call surface_state%construct(num_elements_surface_flux, num_levels)
 
   lname = 'surface pH'
   sname = 'PH_SURF'
@@ -37,9 +38,10 @@ The two surface fields are ``surface pH`` and ``surface pH (alternate CO2)``:
 
 The two interior state fields are ``3D pH`` and ``3D pH (alternate CO2)``
 
+.. block comes from marbl_saved_state_mod
 .. code-block:: fortran
 
-  call interior_state%construct(num_interior_forcing, num_levels)
+  call interior_state%construct(num_elements_interior_tendency, num_levels)
 
   lname = '3D pH'
   sname = 'PH_3D'
@@ -73,13 +75,24 @@ Saved State in the Interface
 
 MARBL splits the saved state fields between those needed for computing surface fluxes and those needed for computing interior tendencies, so on the interface we have
 
+.. block comes from marbl_interface
 .. code-block:: fortran
 
-  marbl_instance%surface_flux_saved_state
-  marbl_instance%interior_tendency_saved_state
+  type, public :: marbl_interface_class
 
-Both of these are of type ``marbl_saved_state_type``:
+    .
+    .
+    .
+    type(marbl_saved_state_type)              , public               :: surface_flux_saved_state             ! input/output
+    type(marbl_saved_state_type)              , public               :: interior_tendency_saved_state        ! input/output
+    .
+    .
+    .
+  end type marbl_interface_class
 
+The ``marbl_saved_state_type`` is a wrapper for ``marbl_single_saved_state_type``:
+
+.. block comes from marbl_interface_public_types
 .. code-block:: fortran
 
   type, public :: marbl_single_saved_state_type

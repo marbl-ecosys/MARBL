@@ -10,6 +10,7 @@ The only object still accessible after shutdown is ``marbl_interface%timer_summa
 The ``shutdown()`` interface
 ----------------------------
 
+.. block comes from marbl_interface
 .. code-block:: fortran
 
   subroutine shutdown(this)
