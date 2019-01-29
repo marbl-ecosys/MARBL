@@ -110,8 +110,6 @@ contains
     ! salinity (s), etc.
     !---------------------------------------------------------------------------
 
-    implicit none
-
     integer(kind=int_kind)        , intent(in)    :: num_elements
     logical(kind=log_kind)        , intent(in)    :: lcomp_co2calc_coeffs
     real(kind=r8)                 , intent(in)    :: dic_in(num_elements)   ! total inorganic carbon (nmol/cm^3)
@@ -119,7 +117,7 @@ contains
     real(kind=r8)                 , intent(in)    :: ta_in(num_elements)    ! total alkalinity (neq/cm^3)
     real(kind=r8)                 , intent(in)    :: pt_in(num_elements)    ! inorganic phosphate (nmol/cm^3)
     real(kind=r8)                 , intent(in)    :: sit_in(num_elements)   ! inorganic silicate (nmol/cm^3)
-    real(kind=r8)                 , intent(in)    :: temp(num_elements)     ! temperature (degrees C)
+    real(kind=r8)                 , intent(in)    :: temp(num_elements)     ! temperature (degC)
     real(kind=r8)                 , intent(in)    :: salt(num_elements)     ! salinity (PSU)
     real(kind=r8)                 , intent(in)    :: atmpres(num_elements)  ! atmospheric pressure (atmosphere)
     real(kind=r8)                 , intent(inout) :: phlo(num_elements)     ! lower limit of ph range
@@ -256,12 +254,10 @@ contains
     ! Calculate H2CO3, HCO3, CO3 from total alkalinity, total CO2, temp, salinity (s), etc.
     !---------------------------------------------------------------------------
 
-    implicit none
-
     integer(kind=int_kind)    , intent(in)    :: num_elements
     integer(kind=int_kind)    , intent(in)    :: num_active_elements
     logical(kind=log_kind)    , intent(in)    :: lcomp_co2calc_coeffs
-    real(kind=r8)             , intent(in)    :: temp(num_elements)      ! temperature (degrees C)
+    real(kind=r8)             , intent(in)    :: temp(num_elements)      ! temperature (degC)
     real(kind=r8)             , intent(in)    :: salt(num_elements)      ! salinity (PSU)
     real(kind=r8)             , intent(in)    :: press_bar(num_elements) ! pressure at level (bars)
     real(kind=r8)             , intent(in)    :: dic_in(num_elements)    ! total inorganic carbon (nmol/cm^3)
@@ -392,8 +388,6 @@ contains
     !            be broken out into separate functions and unit tested
     !---------------------------------------------------------------------------
 
-    implicit none
-
     integer(kind=int_kind)    , intent(in)  :: num_elements
     type(co2calc_state_type)  , intent(in)  :: co2calc_state_in(num_elements)
     type(co2calc_coeffs_type) , intent(out) :: co2calc_coeffs(num_elements)
@@ -402,8 +396,6 @@ contains
     !---------------------------------------------------------------------------
     !   local variable declarations
     !---------------------------------------------------------------------------
-    integer(kind=int_kind) :: c
-
     real(kind=r8), dimension(num_elements) :: salt_lim ! bounded salt
     real(kind=r8), dimension(num_elements) :: tk       ! temperature (K)
     real(kind=r8), dimension(num_elements) :: is       ! ionic strength
@@ -416,13 +408,8 @@ contains
     real(kind=r8), dimension(num_elements) :: sqrtis
     real(kind=r8), dimension(num_elements) :: s2
     real(kind=r8), dimension(num_elements) :: sqrts
-    real(kind=r8), dimension(num_elements) :: s15
     real(kind=r8), dimension(num_elements) :: invRtk
     real(kind=r8), dimension(num_elements) :: arg
-    real(kind=r8), dimension(num_elements) :: deltaV   ! pressure correction terms
-    real(kind=r8), dimension(num_elements) :: Kappa    ! pressure correction terms
-    real(kind=r8), dimension(num_elements) :: lnKfac   ! pressure correction terms
-    real(kind=r8), dimension(num_elements) :: Kfac     ! pressure correction terms
     real(kind=r8), dimension(num_elements) :: log_1_m_1p005em3_s
     real(kind=r8), dimension(num_elements) :: log_1_p_tot_sulfate_div_ks
     !---------------------------------------------------------------------------
@@ -826,8 +813,6 @@ contains
     !      In that case, bisection method is used.
     !---------------------------------------------------------------------------
 
-    implicit none
-
     integer(kind=int_kind)        , intent(in)    :: num_elements
     integer(kind=int_kind)        , intent(in)    :: num_active_elements
     real(kind=r8)                 , intent(in)    :: k1(num_elements)
@@ -888,20 +873,17 @@ contains
 
              ! Iteration number
              WRITE(log_message,"(3A,1X,A,I0)") '(', subname, ')', 'it = ', it
-             call marbl_status_log%log_noerror(log_message, subname, c,       &
-                             lonly_master_writes=.false.)
+             call marbl_status_log%log_warning(log_message, subname, c)
 
              ! x1 & f
              WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')',       &
                   'x1,f = ', x1(c), flo(c)
-             call marbl_status_log%log_noerror(log_message, subname, c,       &
-                             lonly_master_writes=.false.)
+             call marbl_status_log%log_warning(log_message, subname, c)
 
              ! x2 & f
              WRITE(log_message,"(3A,1X,A,2E15.7e3)") '(', subname, ')',       &
                   'x2,f = ', x2(c), fhi(c)
-             call marbl_status_log%log_noerror(log_message, subname, c,       &
-                             lonly_master_writes=.false.)
+             call marbl_status_log%log_warning(log_message, subname, c)
 
              ! Error if iteration count exceeds max_bracket_grow_it
              if (it > max_bracket_grow_it) then
@@ -1036,8 +1018,6 @@ contains
     !   TA and "df" is the value for dTA/dhtotal.
     !---------------------------------------------------------------------------
 
-    implicit none
-
     integer(kind=int_kind)    , intent(in)  :: num_elements
     logical(kind=log_kind)    , intent(in)  :: mask(num_elements)
     real(kind=r8)             , intent(in)  :: k1(num_elements)
@@ -1151,11 +1131,9 @@ contains
     ! from temp, salinity (s), press
     !---------------------------------------------------------------------------
 
-    implicit none
-
     integer(kind=int_kind)                           , intent(in)  :: num_elements
     integer(kind=int_kind)                           , intent(in)  :: num_active_elements
-    real(kind=r8)          , dimension(num_elements) , intent(in)  :: temp         ! temperature (degrees c)
+    real(kind=r8)          , dimension(num_elements) , intent(in)  :: temp         ! temperature (degC)
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: salt         ! salinity (psu)
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: press_bar    ! pressure at level k (bars)
     real(kind=r8)          , dimension(num_elements) , intent(out) :: co3_sat_calc ! co3 concentration at calcite saturation
@@ -1250,8 +1228,6 @@ contains
 
   subroutine apply_pressure_correction(num_elements, temp, invRtk, &
        deltaV_coefs, Kappa_coefs, therm_coef, press_bar)
-
-    implicit none
 
     integer,       intent(in)    :: num_elements
     real(kind=r8), intent(in)    :: temp(num_elements)

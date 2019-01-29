@@ -72,10 +72,10 @@ def machine_specific(mach, supported_compilers, module_names):
     supported_compilers.append('intel')
     supported_compilers.append('gnu')
     supported_compilers.append('pgi')
-    module_names['nag'] = 'compiler/nag/6.1'
-    module_names['intel'] = 'compiler/intel/15.0.2.164'
-    module_names['gnu'] = 'compiler/gnu/4.8.5'
-    module_names['pgi'] = 'compiler/pgi/17.04'
+    module_names['nag'] = 'compiler/nag/6.2'
+    module_names['intel'] = 'compiler/intel/18.0.3'
+    module_names['gnu'] = 'compiler/gnu/8.1.0'
+    module_names['pgi'] = 'compiler/pgi/18.1'
     return
 
   if mach == 'edison':

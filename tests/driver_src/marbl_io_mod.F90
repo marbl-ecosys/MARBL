@@ -66,7 +66,6 @@ contains
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_open'
     character(len=char_len) :: log_message
     type(marbl_file_entry), pointer :: new_entry, dummy_entry
-    logical :: id_match
 
     nullify(new_entry)
     nullify(dummy_entry)
@@ -76,6 +75,7 @@ contains
     file_id = -1
     return
 #else
+    file_id = 0
     ! Only make netCDF calls if built with -D_NETCDF
 
     ! Error check: if file_name is already in database, abort!
@@ -160,26 +160,26 @@ contains
 
     ! netCDF variables
     ! 1) Surface diagnostics
-    diag_size = size(marbl_instances(1)%surface_forcing_diags%diags)
+    diag_size = size(marbl_instances(1)%surface_flux_diags%diags)
     allocate(surface_diag_ids(diag_size))
     do n=1, diag_size
-      call define_diag(file_id, marbl_instances(1)%surface_forcing_diags, n, surface_diag_ids(n), &
+      call define_diag(file_id, marbl_instances(1)%surface_flux_diags, n, surface_diag_ids(n), &
            driver_status_log)
       if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") 'define_diag(', trim(marbl_instances(1)%surface_forcing_diags%diags(n)%short_name), ')'
+        write(log_message, "(3A)") 'define_diag(', trim(marbl_instances(1)%surface_flux_diags%diags(n)%short_name), ')'
         call driver_status_log%log_error_trace(log_message, subname)
         return
       end if
     end do
 
     ! 2) Interior diagnostics
-    diag_size = size(marbl_instances(1)%interior_forcing_diags%diags)
+    diag_size = size(marbl_instances(1)%interior_tendency_diags%diags)
     allocate(interior_diag_ids(diag_size))
     do n=1, diag_size
-      call define_diag(file_id, marbl_instances(1)%interior_forcing_diags, n, interior_diag_ids(n), &
+      call define_diag(file_id, marbl_instances(1)%interior_tendency_diags, n, interior_diag_ids(n), &
            driver_status_log)
       if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") 'define_diag(', trim(marbl_instances(1)%interior_forcing_diags%diags(n)%short_name), ')'
+        write(log_message, "(3A)") 'define_diag(', trim(marbl_instances(1)%interior_tendency_diags%diags(n)%short_name), ')'
         call driver_status_log%log_error_trace(log_message, subname)
         return
       end if
@@ -208,7 +208,6 @@ contains
     integer :: n, diag_size
     integer :: file_id
     integer :: num_inst
-    integer :: num_levels
 
     ! Get file_id given file_name
     file_id = get_nc_file_id(outfile, driver_status_log)
@@ -219,13 +218,13 @@ contains
 
 #ifdef _NETCDF
     ! 1) Surface diagnostics
-    diag_size = size(marbl_instances(1)%surface_forcing_diags%diags)
+    diag_size = size(marbl_instances(1)%surface_flux_diags%diags)
     do num_inst=1, size(marbl_instances)
       do n=1, diag_size
-        call write_diag(file_id, marbl_instances(num_inst)%surface_forcing_diags, n, num_inst, surface_diag_ids(n), &
+        call write_diag(file_id, marbl_instances(num_inst)%surface_flux_diags, n, num_inst, surface_diag_ids(n), &
              driver_status_log)
         if (driver_status_log%labort_marbl) then
-          write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%surface_forcing_diags%diags(n)%short_name), ')'
+          write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%surface_flux_diags%diags(n)%short_name), ')'
           call driver_status_log%log_error_trace(log_message, subname)
           return
         end if
@@ -233,13 +232,13 @@ contains
     end do
 
     ! 2) Interior diagnostics
-    diag_size = size(marbl_instances(1)%interior_forcing_diags%diags)
+    diag_size = size(marbl_instances(1)%interior_tendency_diags%diags)
     do num_inst=1, size(marbl_instances)
       do n=1, diag_size
-        call write_diag(file_id, marbl_instances(num_inst)%interior_forcing_diags, n, num_inst, interior_diag_ids(n), &
+        call write_diag(file_id, marbl_instances(num_inst)%interior_tendency_diags, n, num_inst, interior_diag_ids(n), &
              driver_status_log)
         if (driver_status_log%labort_marbl) then
-          write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%interior_forcing_diags%diags(n)%short_name), ')'
+          write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%interior_tendency_diags%diags(n)%short_name), ')'
           call driver_status_log%log_error_trace(log_message, subname)
           return
         end if
@@ -260,7 +259,6 @@ contains
     type(marbl_file_entry), pointer, intent(inout) :: file_database_entry
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_by_database'
-    character(len=char_len) :: log_message
     type(marbl_file_entry), pointer :: prev_entry
 
 #ifndef _NETCDF
@@ -304,7 +302,7 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_by_id'
     character(len=char_len) :: log_message
-    type(marbl_file_entry), pointer :: entry_to_remove, prev_entry
+    type(marbl_file_entry), pointer :: entry_to_remove
 
     entry_to_remove => file_database
     do while (associated(entry_to_remove))
@@ -359,7 +357,6 @@ contains
     type(marbl_log_type), intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_by_name'
-    character(len=char_len) :: log_message
     type(marbl_file_entry), pointer :: entry_to_remove
 
     do while (associated(file_database))
@@ -390,13 +387,13 @@ contains
     character(len=char_len) :: log_message
     type(marbl_file_entry), pointer :: single_entry
 
+    get_nc_file_id = -1
     if (len_trim(file_name) .eq. 0) then
       log_message = "file_name can not be blank!"
       call driver_status_log%log_error(log_message, subname)
       return
     end if
 
-    get_nc_file_id = -1
     single_entry => file_database
     do while (associated(single_entry))
       if (trim(file_name) .eq. trim(single_entry%file_name)) then

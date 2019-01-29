@@ -34,7 +34,7 @@
       }
    },
    "PFT_derived_types": {
-      "autotrophs": {
+      "autotroph_settings": {
          "_array_shape": "autotroph_cnt",
          "_is_allocatable": true,
          "datatype": {
@@ -52,7 +52,7 @@
                "datatype": "real",
                "default_value": {
                   "((autotroph_sname)) == \"diat\"": 5,
-                  "((autotroph_sname)) == \"diaz\"": 2.2,
+                  "((autotroph_sname)) == \"diaz\"": 2.5,
                   "((autotroph_sname)) == \"sp\"": 5,
                   "default": "1e34"
                },
@@ -72,7 +72,7 @@
                "subcategory": "10. autotrophs",
                "units": "unitless"
             },
-            "_type_name": "autotrophs_type",
+            "_type_name": "autotroph_settings_type",
             "agg_rate_max": {
                "datatype": "real",
                "default_value": {
@@ -107,7 +107,7 @@
                },
                "longname": "Initial slope of P_I curve (GD98)",
                "subcategory": "10. autotrophs",
-               "units": "mmol C m^2/(mg Chl W day)"
+               "units": "mmol m^2/(mg Chl W day)"
             },
             "exp_calcifier": {
                "datatype": "logical",
@@ -133,9 +133,9 @@
             "gQfe_min": {
                "datatype": "real",
                "default_value": {
-                  "((autotroph_sname)) == \"diat\"": "3e-6",
-                  "((autotroph_sname)) == \"diaz\"": "6e-6",
-                  "((autotroph_sname)) == \"sp\"": "3e-6",
+                  "((autotroph_sname)) == \"diat\"": 2.7e-06,
+                  "((autotroph_sname)) == \"diaz\"": 5.4e-06,
+                  "((autotroph_sname)) == \"sp\"": 2.7e-06,
                   "default": "1e34"
                },
                "longname": "Minimum Fe/C ratio for growth",
@@ -282,7 +282,7 @@
                },
                "longname": "Quadratic mortality rate",
                "subcategory": "10. autotrophs",
-               "units": "(1/day)/(mmol C/m^3)"
+               "units": "(1/day)/(mmol/m^3)"
             },
             "mort_per_day": {
                "datatype": "real",
@@ -328,7 +328,7 @@
                },
                "longname": "Temperature where concentration threshold and photosynthesis rate drops",
                "subcategory": "10. autotrophs",
-               "units": "deg C"
+               "units": "degC"
             },
             "thetaN_max": {
                "datatype": "real",
@@ -340,27 +340,27 @@
                },
                "longname": "Maximum thetaN (Chl / N)",
                "subcategory": "10. autotrophs",
-               "units": "mg Chl / mmol N"
+               "units": "mg Chl / mmol"
             }
          }
       },
-      "grazing": {
+      "grazing_relationship_settings": {
          "_array_shape": [
             "max_grazer_prey_cnt",
             "zooplankton_cnt"
          ],
          "_is_allocatable": true,
          "datatype": {
-            "_type_name": "grazing_type",
+            "_type_name": "grazing_relationship_settings_type",
             "auto_ind": {
                "_array_len_to_print": "auto_ind_cnt",
                "_array_shape": "autotroph_cnt",
                "_is_allocatable": true,
                "datatype": "integer",
                "default_value": {
-                  "((grazing_sname)) == \"diat_zoo\"": 2,
-                  "((grazing_sname)) == \"diaz_zoo\"": 3,
-                  "((grazing_sname)) == \"sp_zoo\"": 1,
+                  "((grazer_sname)) == \"diat_zoo\"": 2,
+                  "((grazer_sname)) == \"diaz_zoo\"": 3,
+                  "((grazer_sname)) == \"sp_zoo\"": 1,
                   "default": 0
                },
                "longname": "Indices of autotrophs being grazed",
@@ -379,9 +379,9 @@
             "f_zoo_detr": {
                "datatype": "real",
                "default_value": {
-                  "((grazing_sname)) == \"diat_zoo\"": 0.24,
-                  "((grazing_sname)) == \"diaz_zoo\"": 0.12,
-                  "((grazing_sname)) == \"sp_zoo\"": 0.12,
+                  "((grazer_sname)) == \"diat_zoo\"": 0.24,
+                  "((grazer_sname)) == \"diaz_zoo\"": 0.12,
+                  "((grazer_sname)) == \"sp_zoo\"": 0.12,
                   "default": "1e34"
                },
                "longname": "Fraction of zoo losses to detrital",
@@ -391,9 +391,9 @@
             "graze_doc": {
                "datatype": "real",
                "default_value": {
-                  "((grazing_sname)) == \"diat_zoo\"": 0.06,
-                  "((grazing_sname)) == \"diaz_zoo\"": 0.06,
-                  "((grazing_sname)) == \"sp_zoo\"": 0.06,
+                  "((grazer_sname)) == \"diat_zoo\"": 0.06,
+                  "((grazer_sname)) == \"diaz_zoo\"": 0.06,
+                  "((grazer_sname)) == \"sp_zoo\"": 0.06,
                   "default": "1e34"
                },
                "longname": "Routing of grazed term, remainder goes to dic",
@@ -403,9 +403,9 @@
             "graze_poc": {
                "datatype": "real",
                "default_value": {
-                  "((grazing_sname)) == \"diat_zoo\"": 0.38,
-                  "((grazing_sname)) == \"diaz_zoo\"": 0.1,
-                  "((grazing_sname)) == \"sp_zoo\"": 0,
+                  "((grazer_sname)) == \"diat_zoo\"": 0.38,
+                  "((grazer_sname)) == \"diaz_zoo\"": 0.1,
+                  "((grazer_sname)) == \"sp_zoo\"": 0,
                   "default": "1e34"
                },
                "longname": "Routing of grazed term, remainder goes to dic",
@@ -415,9 +415,9 @@
             "graze_zoo": {
                "datatype": "real",
                "default_value": {
-                  "((grazing_sname)) == \"diat_zoo\"": 0.25,
-                  "((grazing_sname)) == \"diaz_zoo\"": 0.3,
-                  "((grazing_sname)) == \"sp_zoo\"": 0.3,
+                  "((grazer_sname)) == \"diat_zoo\"": 0.25,
+                  "((grazer_sname)) == \"diaz_zoo\"": 0.3,
+                  "((grazer_sname)) == \"sp_zoo\"": 0.3,
                   "default": "1e34"
                },
                "longname": "Routing of grazed term, remainder goes to dic",
@@ -435,9 +435,9 @@
             "lname": {
                "datatype": "string",
                "default_value": {
-                  "((grazing_sname)) == \"diat_zoo\"": "Grazing of diat by zoo",
-                  "((grazing_sname)) == \"diaz_zoo\"": "Grazing of diaz by zoo",
-                  "((grazing_sname)) == \"sp_zoo\"": "Grazing of sp by zoo",
+                  "((grazer_sname)) == \"diat_zoo\"": "Grazing of diat by zoo",
+                  "((grazer_sname)) == \"diaz_zoo\"": "Grazing of diaz by zoo",
+                  "((grazer_sname)) == \"sp_zoo\"": "Grazing of sp by zoo",
                   "default": "UNSET"
                },
                "longname": "Long name of the grazing relationship",
@@ -447,9 +447,9 @@
             "sname": {
                "datatype": "string",
                "default_value": {
-                  "((grazing_sname)) == \"diat_zoo\"": "grz_diat_zoo",
-                  "((grazing_sname)) == \"diaz_zoo\"": "grz_diaz_zoo",
-                  "((grazing_sname)) == \"sp_zoo\"": "grz_sp_zoo",
+                  "((grazer_sname)) == \"diat_zoo\"": "grz_diat_zoo",
+                  "((grazer_sname)) == \"diaz_zoo\"": "grz_diaz_zoo",
+                  "((grazer_sname)) == \"sp_zoo\"": "grz_sp_zoo",
                   "default": "UNSET"
                },
                "longname": "Short name of the grazing relationship",
@@ -459,21 +459,21 @@
             "z_grz": {
                "datatype": "real",
                "default_value": {
-                  "((grazing_sname)) == \"diat_zoo\"": 1.2,
-                  "((grazing_sname)) == \"diaz_zoo\"": 1.2,
-                  "((grazing_sname)) == \"sp_zoo\"": 1.2,
+                  "((grazer_sname)) == \"diat_zoo\"": 1.2,
+                  "((grazer_sname)) == \"diaz_zoo\"": 1.2,
+                  "((grazer_sname)) == \"sp_zoo\"": 1.2,
                   "default": "1e34"
                },
                "longname": "Grazing coefficient",
                "subcategory": "12. grazing",
-               "units": "(mmol C/m^3)^2"
+               "units": "(mmol/m^3)^2"
             },
             "z_umax_0_per_day": {
                "datatype": "real",
                "default_value": {
-                  "((grazing_sname)) == \"diat_zoo\"": 3.05,
-                  "((grazing_sname)) == \"diaz_zoo\"": 3.1,
-                  "((grazing_sname)) == \"sp_zoo\"": 3.3,
+                  "((grazer_sname)) == \"diat_zoo\"": 3.1,
+                  "((grazer_sname)) == \"diaz_zoo\"": 3.25,
+                  "((grazer_sname)) == \"sp_zoo\"": 3.3,
                   "default": "1e34"
                },
                "longname": "Max zoo growth rate at tref",
@@ -501,7 +501,7 @@
             }
          }
       },
-      "zooplankton": {
+      "zooplankton_settings": {
          "_array_shape": "zooplankton_cnt",
          "_is_allocatable": true,
          "datatype": {
@@ -544,7 +544,7 @@
                },
                "longname": "Quadratic mortality rate",
                "subcategory": "11. zooplankton",
-               "units": "1/day / (mmol C/m^3)"
+               "units": "1/day / (mmol/m^3)"
             },
             "z_mort_0_per_day": {
                "datatype": "real",
@@ -630,20 +630,6 @@
          "long_name": "((autotroph_lname)) Silicon",
          "units": "mmol/m^3"
       },
-      "((zooplankton_sname))13C": {
-         "dependencies": {
-            "ciso_on": ".true."
-         },
-         "long_name": "((zooplankton_lname)) Carbon-13",
-         "units": "mmol/m^3"
-      },
-      "((zooplankton_sname))14C": {
-         "dependencies": {
-            "ciso_on": ".true."
-         },
-         "long_name": "((zooplankton_lname)) Carbon-14",
-         "units": "mmol/m^3"
-      },
       "((zooplankton_sname))C": {
          "long_name": "((zooplankton_lname)) Carbon",
          "units": "mmol/m^3"
@@ -678,18 +664,18 @@
          "long_name": "Dissolved Inorganic Carbon, Alternative CO2",
          "units": "mmol/m^3"
       },
-      "DO13C": {
+      "DO13Ctot": {
          "dependencies": {
             "ciso_on": ".true."
          },
-         "long_name": "Dissolved Organic Carbon-13",
+         "long_name": "Dissolved Organic Carbon-13 (semi-labile+refractoy)",
          "units": "mmol/m^3"
       },
-      "DO14C": {
+      "DO14Ctot": {
          "dependencies": {
             "ciso_on": ".true."
          },
-         "long_name": "Dissolved Organic Carbon-14",
+         "long_name": "Dissolved Organic Carbon-14 (semi-labile+refractoy)",
          "units": "mmol/m^3"
       },
       "DOC": {
@@ -743,22 +729,43 @@
       "SiO3": {
          "long_name": "Dissolved Inorganic Silicate",
          "units": "mmol/m^3"
+      },
+      "zootot13C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Zooplankton Carbon-13 (sum over all zooplankton)",
+         "units": "mmol/m^3"
+      },
+      "zootot14C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Zooplankton Carbon-14 (sum over all zooplankton)",
+         "units": "mmol/m^3"
       }
    },
    "general_parms": {
+      "Jint_Ctot_thres_molpm2pyr": {
+         "datatype": "real",
+         "default_value": 1e-09,
+         "longname": "MARBL will abort if abs(Jint_Ctot) exceeds this threshold",
+         "subcategory": "4. general parameters",
+         "units": "mol m-2 yr-1"
+      },
       "PFT_defaults": {
          "_CESM2_PFT_keys": {
-            "autotrophs": [
+            "autotroph_settings": [
                "sp",
                "diat",
                "diaz"
             ],
-            "grazing": [
+            "grazing_relationship_settings": [
                "sp_zoo",
                "diat_zoo",
                "diaz_zoo"
             ],
-            "zooplankton": [
+            "zooplankton_settings": [
                "zoo"
             ]
          },
@@ -773,10 +780,24 @@
             "user-specified"
          ]
       },
+      "POM_bury_frac_max": {
+         "datatype": "real",
+         "default_value": 0.8,
+         "longname": "maximum bury fraction for POM",
+         "subcategory": "4. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
       "PON_bury_coeff": {
          "datatype": "real",
          "default_value": 0.5,
          "longname": "Scale factor for burial of PON",
+         "subcategory": "4. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
+      "bSi_bury_frac_max": {
+         "datatype": "real",
+         "default_value": 1.0,
+         "longname": "maximum bury fraction for bSi",
          "subcategory": "4. general parameters (bury coeffs)",
          "units": "unitless"
       },
@@ -793,6 +814,13 @@
          "longname": "Threshold depth for CaCO3 burial when opt = 'fixed_depth'",
          "subcategory": "4. general parameters",
          "units": "cm"
+      },
+      "caco3_bury_thres_omega_calc": {
+         "datatype": "real",
+         "default_value": 1.0,
+         "longname": "omega calcite threshold for CaCO3 burial when opt = 'omega_calc'",
+         "subcategory": "4. general parameters",
+         "units": 1
       },
       "caco3_bury_thres_opt": {
          "datatype": "string",
@@ -833,6 +861,41 @@
          "subcategory": "2. config flags",
          "units": "unitless"
       },
+      "gQ_Fe_kFe_thres": {
+         "datatype": "real",
+         "default_value": 10.0,
+         "longname": "Fe:kFe ratio threshold in uptake ratio computations",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "gQ_Si_kSi_thres": {
+         "datatype": "real",
+         "default_value": 5.0,
+         "longname": "Si:kSi ratio threshold in uptake ratio computations",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "gQsi_0": {
+         "datatype": "real",
+         "default_value": 0.137,
+         "longname": "initial Si/C ratio for growth",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "gQsi_max": {
+         "datatype": "real",
+         "default_value": 0.685,
+         "longname": "max Si/C ratio for growth",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "gQsi_min": {
+         "datatype": "real",
+         "default_value": 0.0457,
+         "longname": "min Si/C ratio for growth",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
       "ladjust_bury_coeff": {
          "_append_to_config_keywords": true,
          "datatype": "logical",
@@ -869,6 +932,20 @@
          "subcategory": "2. config flags",
          "units": "unitless"
       },
+      "lo2_consumption_scalef": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "longname": "Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)",
+         "subcategory": "2. config flags",
+         "units": "unitless"
+      },
+      "lp_remin_scalef": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "longname": "Apply p_remin_scalef to particulate remin (and request it as a forcing)",
+         "subcategory": "2. config flags",
+         "units": "unitless"
+      },
       "lsource_sink": {
          "datatype": "logical",
          "default_value": ".true.",
@@ -883,16 +960,44 @@
          "subcategory": "2. config flags",
          "units": "unitless"
       },
+      "o2_sf_o2_range_hi": {
+         "datatype": "real",
+         "default_value": 45.0,
+         "longname": "o2_scalefactor is applied to diss length scales for O2 less than this",
+         "subcategory": "4. general parameters",
+         "units": "mmol/m^3"
+      },
+      "o2_sf_o2_range_lo": {
+         "datatype": "real",
+         "default_value": 5.0,
+         "longname": "o2_scalefactor is constant for O2 less than this",
+         "subcategory": "4. general parameters",
+         "units": "mmol/m^3"
+      },
+      "o2_sf_val_lo_o2": {
+         "datatype": "real",
+         "default_value": 3.0,
+         "longname": "o2_scalefactor constant for O2 less than o2_sf_o2_range_lo",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
       "parm_CaCO3_diss": {
          "datatype": "real",
          "default_value": "500e2",
-         "longname": "Base CaCO3 dissipation length scale",
-         "subcategory": "4. general parameters (dissipation)",
+         "longname": "Base CaCO3 dissolution length scale",
+         "subcategory": "4. general parameters (dissolution)",
          "units": "cm"
+      },
+      "parm_CaCO3_gamma": {
+         "datatype": "real",
+         "default_value": 0.1,
+         "longname": "CaCO3 gamma (fraction of production -> hard subclass)",
+         "subcategory": "4. general parameters",
+         "units": 1
       },
       "parm_FeLig_scavenge_rate0": {
          "datatype": "real",
-         "default_value": 1.3,
+         "default_value": 1.4,
          "longname": "Scavenging base rate for bound iron",
          "subcategory": "4. general parameters (scavenging)",
          "units": "unitless"
@@ -913,7 +1018,7 @@
       },
       "parm_Fe_scavenge_rate0": {
          "datatype": "real",
-         "default_value": 15,
+         "default_value": 18.0,
          "longname": "Scavenging base rate for Fe",
          "subcategory": "4. general parameters (scavenging)",
          "units": "unitless"
@@ -935,16 +1040,23 @@
       "parm_POC_diss": {
          "datatype": "real",
          "default_value": "100e2",
-         "longname": "Base POC dissipation length scale",
-         "subcategory": "4. general parameters (dissipation)",
+         "longname": "Base POC dissolution length scale",
+         "subcategory": "4. general parameters (dissolution)",
          "units": "cm"
       },
       "parm_SiO2_diss": {
          "datatype": "real",
          "default_value": "770e2",
-         "longname": "Base SiO2 dissipation length scale",
-         "subcategory": "4. general parameters (dissipation)",
+         "longname": "Base SiO2 dissolution length scale",
+         "subcategory": "4. general parameters (dissolution)",
          "units": "cm"
+      },
+      "parm_SiO2_gamma": {
+         "datatype": "real",
+         "default_value": 0.1,
+         "longname": "SiO2 gamma (fraction of production -> hard subclass)",
+         "subcategory": "4. general parameters",
+         "units": 1
       },
       "parm_f_prod_sp_CaCO3": {
          "datatype": "real",
@@ -955,6 +1067,27 @@
          "longname": "Fraction of sp production as CaCO3 production",
          "subcategory": "4. general parameters",
          "units": "unitless"
+      },
+      "parm_hPOC_CaCO3_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "longname": "hPOC to CaCO3 ratio",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "parm_hPOC_SiO2_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "longname": "hPOC to SiO2 ratio",
+         "subcategory": "4. general parameters",
+         "units": 1
+      },
+      "parm_hPOC_dust_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "longname": "hPOC to dust ratio",
+         "subcategory": "4. general parameters",
+         "units": 1
       },
       "parm_init_POC_bury_coeff": {
          "datatype": "real",
@@ -1033,9 +1166,9 @@
             ],
             "default": [
                1,
-               2.2,
-               4,
-               5
+               3.0,
+               4.5,
+               5.5
             ]
          },
          "longname": "Prescribed scalelen values",

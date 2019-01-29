@@ -55,7 +55,7 @@ PV_O2 :
    operator : average
 SCHMIDT_O2 :
    longname : O2 Schmidt Number
-   units : none
+   units : 1
    vertical_grid : none
    frequency : medium
    operator : average
@@ -117,7 +117,7 @@ PV_CO2 :
    operator : average
 SCHMIDT_CO2 :
    longname : CO2 Schmidt Number
-   units : none
+   units : 1
    vertical_grid : none
    frequency : medium
    operator : average
@@ -138,7 +138,7 @@ FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
    operator : average
 PH : &PH
    longname : Surface pH
-   units : none
+   units : 1
    vertical_grid : none
    frequency : medium
    operator : average
@@ -414,109 +414,91 @@ Jint_Ctot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Ctot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Ntot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ntot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Ntot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ntot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Ptot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ptot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Ptot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ptot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Sitot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Sitot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Sitot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Sitot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 Jint_Fetot :
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Fetot
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-Jint_100m_Fetot :
-   longname : Vertical Integral of Conservative Subterms of Source Sink Term for Fetot, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 
 # Particulate 2D diags
+calcToFloor :
+   longname : CaCO3 Flux Hitting Sea Floor
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : never
+   operator : average
 calcToSed :
    longname : CaCO3 Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 calcToSed_ALT_CO2 :
    longname : CaCO3 Flux to Sediments, Alternative CO2
-   units : calcToSed_ALT_CO2
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
+pocToFloor :
+   longname : POC Flux Hitting Sea Floor
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : never
+   operator : average
 pocToSed :
    longname : POC Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 ponToSed :
    longname : nitrogen burial Flux to Sediments
-   units : nmolN/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 SedDenitrif :
    longname : nitrogen loss in Sediments
-   units : nmolN/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 OtherRemin :
    longname : non-oxic,non-dentr remin in Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : never
    operator : average
 popToSed :
    longname : phosphorus Flux to Sediments
-   units : nmolP/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 bsiToSed :
    longname : biogenic Si Flux to Sediments
-   units : nmolSi/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -528,7 +510,7 @@ dustToSed :
    operator : average
 pfeToSed :
    longname : pFe Flux to Sediments
-   units : nmolFe/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -576,7 +558,7 @@ H2CO3 :
    operator : average
 pH_3D :
    longname : pH
-   units : none
+   units : 1
    vertical_grid : layer_avg
    frequency : medium
    operator : average
@@ -600,7 +582,7 @@ H2CO3_ALT_CO2 :
    operator : average
 pH_3D_ALT_CO2 :
    longname : pH, Alternative CO2
-   units : none
+   units : 1
    vertical_grid : layer_avg
    frequency : never
    operator : average
@@ -633,6 +615,14 @@ O2_PRODUCTION :
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
+   operator : average
+O2_CONSUMPTION_SCALEF :
+   dependencies :
+      lo2_consumption_scalef : .true.
+   longname : O2 Consumption Scale Factor
+   units : 1
+   vertical_grid : layer_avg
+   frequency : never
    operator : average
 O2_CONSUMPTION :
    longname : O2 Consumption
@@ -724,6 +714,12 @@ DOPr_remin :
    vertical_grid : layer_avg
    frequency : low
    operator : average
+DOP_loss_P_bal :
+   longname : DOP loss, due to P budget balancing
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
 Fe_scavenge :
    longname : Iron Scavenging
    units : mmol/m^3/s
@@ -771,6 +767,12 @@ Lig_deg :
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
+   operator : average
+FESEDFLUX :
+   longname : Iron Sediment Flux
+   units : nmol/cm^2/s
+   vertical_grid : layer_avg
+   frequency : never
    operator : average
 
 # Particulate 2D diags
@@ -866,11 +868,31 @@ CaCO3_REMIN_zint_100m :
    operator : average
 
 # Particulate 3D diags
+P_REMIN_SCALEF :
+   dependencies :
+      lp_remin_scalef : .true.
+   longname : Particulate Remin Scale Factor
+   units : 1
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
 POC_FLUX_IN :
    longname : POC Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
+   operator : average
+POC_sFLUX_IN :
+   longname : POC sFlux into Cell
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
+POC_hFLUX_IN :
+   longname : POC hFlux into Cell
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : never
    operator : average
 POC_PROD :
    longname : POC Production
@@ -982,13 +1004,13 @@ SiO2_REMIN :
    operator : average
 dust_FLUX_IN :
    longname : Dust Flux into Cell
-   units : ng/s/m^2
+   units : g/cm^2/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 dust_REMIN :
    longname : Dust Remineralization
-   units : mmol/m^3/s
+   units : g/cm^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
@@ -1056,7 +1078,7 @@ CISO_Jint_13Ctot :
    longname : 13Ctot Source Sink Term Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 CISO_Jint_14Ctot :
    dependencies :
@@ -1064,29 +1086,13 @@ CISO_Jint_14Ctot :
    longname : 14Ctot Source Sink Term Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-CISO_Jint_100m_13Ctot :
-   dependencies :
-      ciso_on : .true.
-   longname : 13Ctot Source Sink Term Vertical Integral, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
-   operator : average
-CISO_Jint_100m_14Ctot :
-   dependencies :
-      ciso_on : .true.
-   longname : 14Ctot Source Sink Term Vertical Integral, 0-100m
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 calcToSed_13C :
    dependencies :
       ciso_on : .true.
    longname : Ca13CO3 Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -1094,7 +1100,7 @@ pocToSed_13C :
    dependencies :
       ciso_on : .true.
    longname : PO13C Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -1102,7 +1108,7 @@ calcToSed_14C :
    dependencies :
       ciso_on : .true.
    longname : Ca14CO3 Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -1110,7 +1116,7 @@ pocToSed_14C :
    dependencies :
       ciso_on : .true.
    longname : PO14C Flux to Sediments
-   units : nmolC/cm^2/s
+   units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -1140,18 +1146,18 @@ CISO_PO13C_REMIN :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DO13C_prod :
+CISO_DO13Ctot_prod :
    dependencies :
       ciso_on : .true.
-   longname : DO13C Production
+   longname : DO13Ctot Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DO13C_remin :
+CISO_DO13Ctot_remin :
    dependencies :
       ciso_on : .true.
-   longname : DO13C Remineralization
+   longname : DO13Ctot Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
@@ -1196,18 +1202,18 @@ CISO_DIC_d13C :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DOC_d13C :
+CISO_DOCtot_d13C :
    dependencies :
       ciso_on : .true.
-   longname : d13C of DOC
+   longname : d13C of DOCtot
    units : permil
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_zooC_d13C :
+CISO_zoototC_d13C :
    dependencies :
       ciso_on : .true.
-   longname : d13C of zooC
+   longname : d13C of total zooC
    units : permil
    vertical_grid : layer_avg
    frequency : medium
@@ -1236,18 +1242,18 @@ CISO_PO14C_REMIN :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DO14C_prod :
+CISO_DO14Ctot_prod :
    dependencies :
       ciso_on : .true.
-   longname : DO14C Production
+   longname : DO14Ctot Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DO14C_remin :
+CISO_DO14Ctot_remin :
    dependencies :
       ciso_on : .true.
-   longname : DO14C Remineralization
+   longname : DO14Ctot Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
@@ -1292,18 +1298,18 @@ CISO_DIC_d14C :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_DOC_d14C :
+CISO_DOCtot_d14C :
    dependencies :
       ciso_on : .true.
-   longname : d14C of DOC
+   longname : d14C of DOCtot
    units : permil
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_zooC_d14C :
+CISO_zoototC_d14C :
    dependencies :
       ciso_on : .true.
-   longname : d14C of zooC
+   longname : d14C of total zooC
    units : permil
    vertical_grid : layer_avg
    frequency : medium
@@ -1342,6 +1348,74 @@ CISO_eps_dic_g :
 # Per-autotroph Diagnostics #
 #############################
 
+((autotroph_sname))_N_lim_surf :
+   longname : ((autotroph_lname)) N Limitation, Surface
+   units : 1
+   vertical_grid : none
+   frequency :
+      default : medium
+      ((autotroph_Nfixer)) : never
+   operator : average
+((autotroph_sname))_N_lim_Cweight_avg_100m :
+   longname : ((autotroph_lname)) N Limitation, carbon biomass weighted average over 0-100m
+   units : 1
+   vertical_grid : none
+   frequency :
+      default : medium
+      ((autotroph_Nfixer)) : never
+   operator : average
+((autotroph_sname))_P_lim_surf :
+   longname : ((autotroph_lname)) P Limitation, Surface
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_P_lim_Cweight_avg_100m :
+   longname : ((autotroph_lname)) P Limitation, carbon biomass weighted average over 0-100m
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_Fe_lim_surf :
+   longname : ((autotroph_lname)) Fe Limitation, Surface
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_Fe_lim_Cweight_avg_100m :
+   longname : ((autotroph_lname)) Fe Limitation, carbon biomass weighted average over 0-100m
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_SiO3_lim_surf :
+   dependencies :
+      ((autotroph_silicifier)) : true
+   longname : ((autotroph_lname)) SiO3 Limitation, Surface
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_SiO3_lim_Cweight_avg_100m :
+   dependencies :
+      ((autotroph_silicifier)) : true
+   longname : ((autotroph_lname)) SiO3 Limitation, carbon biomass weighted average over 0-100m
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_light_lim_surf :
+   longname : ((autotroph_lname)) Light Limitation, Surface
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((autotroph_sname))_light_lim_Cweight_avg_100m :
+   longname : ((autotroph_lname)) Light Limitation, carbon biomass weighted average over 0-100m
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
 photoC_((autotroph_sname))_zint :
    longname : ((autotroph_lname)) C Fixation Vertical Integral
    units : mmol/m^3 cm/s
@@ -1483,46 +1557,7 @@ graze_((autotroph_sname))_zoo_zint_100m :
                  #       fixed P:C so I'd like to update the fortran as well
       lvariable_PtoC : .true.
    longname : ((autotroph_lname))
-   units : none
-   vertical_grid : layer_avg
-   truncate : true
-   frequency : medium
-   operator : average
-((autotroph_sname))_N_lim :
-   longname : ((autotroph_lname)) N Limitation
-   units : none
-   vertical_grid : layer_avg
-   truncate : true
-   frequency :
-      default : medium
-      ((autotroph_Nfixer)) : never
-   operator : average
-((autotroph_sname))_P_lim :
-   longname : ((autotroph_lname)) P Limitation
-   units : none
-   vertical_grid : layer_avg
-   truncate : true
-   frequency : medium
-   operator : average
-((autotroph_sname))_Fe_lim :
-   longname : ((autotroph_lname)) Fe Limitation
-   units : none
-   vertical_grid : layer_avg
-   truncate : true
-   frequency : medium
-   operator : average
-((autotroph_sname))_SiO3_lim :
-   dependencies :
-      ((autotroph_silicifier)) : true
-   longname : ((autotroph_lname)) SiO3 Limitation
-   units : none
-   vertical_grid : layer_avg
-   truncate : true
-   frequency : medium
-   operator : average
-((autotroph_sname))_light_lim :
-   longname : ((autotroph_lname)) Light Limitation
-   units : none
+   units : 1
    vertical_grid : layer_avg
    truncate : true
    frequency : medium
@@ -1779,7 +1814,7 @@ CISO_mui_to_co2star_((autotroph_sname)) :
    dependencies :
       ciso_on : .true.
    longname : ((autotroph_lname)) instanteous growth rate over [CO2*]
-   units : m^3/mmol C/s
+   units : m^3/mmol/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average

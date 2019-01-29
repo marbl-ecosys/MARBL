@@ -24,14 +24,6 @@ module marbl_init_mod
   public :: marbl_init_bury_coeff
   public :: marbl_init_forcing_fields
 
-  private :: marbl_init_tracer_metadata
-  private :: marbl_init_non_autotroph_tracer_metadata
-  private :: marbl_init_non_autotroph_tracers_metadata
-  private :: marbl_init_zooplankton_tracer_metadata
-  private :: marbl_init_autotroph_tracer_metadata
-  private :: marbl_init_surface_forcing_fields
-  private :: marbl_init_interior_forcing_fields
-
 contains
 
   !***********************************************************************
@@ -64,7 +56,6 @@ contains
   subroutine marbl_init_parameters_pre_tracers(marbl_settings, marbl_status_log)
 
     use marbl_settings_mod, only : marbl_settings_type
-    use marbl_settings_mod, only : ladjust_bury_coeff
     use marbl_settings_mod, only : marbl_settings_set_defaults_general_parms
     use marbl_settings_mod, only : marbl_settings_define_general_parms
     use marbl_settings_mod, only : marbl_settings_set_defaults_PFT_counts
@@ -77,7 +68,6 @@ contains
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_pre_tracers'
-    character(len=char_len) :: log_message
 
     !---------------------------------------------------------------------------
     ! set default values for basic settings
@@ -131,30 +121,32 @@ contains
 
   !***********************************************************************
 
+  ! FIXME #81: Will need to pass num_elements_interior_tendency to this routine
+  !            (And add a dimension to tracers to count elements)
   subroutine marbl_init_tracers(num_levels, &
-                                num_surface_elements, &
+                                num_elements_surface_flux, &
                                 tracer_indices, &
-                                surface_vals, &
-                                surface_tracer_fluxes, &
-                                column_tracers, &
-                                column_dtracers, &
+                                tracers_at_surface, &
+                                surface_fluxes, &
+                                tracers, &
+                                interior_tendencies, &
                                 tracer_metadata, &
                                 marbl_status_log)
 
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lvariable_PtoC
-    use marbl_settings_mod, only : autotrophs
-    use marbl_settings_mod, only : zooplankton
+    use marbl_settings_mod, only : autotroph_settings
+    use marbl_settings_mod, only : zooplankton_settings
     use marbl_settings_mod, only : tracer_restore_vars
-    use marbl_ciso_mod, only : marbl_ciso_init_tracer_metadata
+    use marbl_ciso_init_mod, only : marbl_ciso_init_tracer_metadata
 
     integer(int_kind),                             intent(in)    :: num_levels
-    integer(int_kind),                             intent(in)    :: num_surface_elements
+    integer(int_kind),                             intent(in)    :: num_elements_surface_flux
     type(marbl_tracer_index_type),    pointer,     intent(out)   :: tracer_indices
-    real(r8),                         allocatable, intent(out)   :: surface_vals(:,:)
-    real(r8),                         allocatable, intent(out)   :: surface_tracer_fluxes(:,:)
-    real(r8),                         allocatable, intent(out)   :: column_tracers(:,:)
-    real(r8),                         allocatable, intent(out)   :: column_dtracers(:,:)
+    real(r8),                         allocatable, intent(out)   :: tracers_at_surface(:,:)
+    real(r8),                         allocatable, intent(out)   :: surface_fluxes(:,:)
+    real(r8),                         allocatable, intent(out)   :: tracers(:,:)
+    real(r8),                         allocatable, intent(out)   :: interior_tendencies(:,:)
     type(marbl_tracer_metadata_type), allocatable, intent(out)   :: tracer_metadata(:)
     type(marbl_log_type),                          intent(inout) :: marbl_status_log
 
@@ -165,7 +157,7 @@ contains
 
     ! Construct tracer indices
     allocate(tracer_indices)
-    call tracer_indices%construct(ciso_on, lvariable_PtoC, autotrophs, zooplankton, &
+    call tracer_indices%construct(ciso_on, lvariable_PtoC, autotroph_settings, zooplankton_settings, &
                                   marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
@@ -173,23 +165,17 @@ contains
     end if
 
     ! Allocate memory for tracers
-    allocate(surface_vals(num_surface_elements, tracer_indices%total_cnt))
-    allocate(surface_tracer_fluxes(num_surface_elements, tracer_indices%total_cnt))
-    allocate(column_tracers(tracer_indices%total_cnt, num_levels))
-    allocate(column_dtracers(tracer_indices%total_cnt, num_levels))
+    allocate(tracers_at_surface(num_elements_surface_flux, tracer_indices%total_cnt))
+    allocate(surface_fluxes(num_elements_surface_flux, tracer_indices%total_cnt))
+    allocate(tracers(tracer_indices%total_cnt, num_levels))
+    allocate(interior_tendencies(tracer_indices%total_cnt, num_levels))
     allocate(tracer_metadata(tracer_indices%total_cnt))
     if (.not.allocated(tracer_restore_vars)) &
       allocate(tracer_restore_vars(tracer_indices%total_cnt))
 
     ! Set up tracer metadata
-    call marbl_init_tracer_metadata(tracer_metadata, tracer_indices, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace("marbl_init_tracer_metadata()", subname)
-      return
-    end if
-    if (ciso_on) then
-       call marbl_ciso_init_tracer_metadata(tracer_metadata, tracer_indices)
-    end if
+    call marbl_init_tracer_metadata(tracer_metadata, tracer_indices)
+    call marbl_ciso_init_tracer_metadata(tracer_metadata, tracer_indices)
 
     ! Log what tracers are being used
     call marbl_status_log%log_header('MARBL Tracer indices', subname)
@@ -218,24 +204,18 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_tracer_metadata(marbl_tracer_metadata,                &
-             marbl_tracer_indices, marbl_status_log)
+  subroutine marbl_init_tracer_metadata(marbl_tracer_metadata, marbl_tracer_indices)
 
     !  Set tracer and forcing metadata
 
     use marbl_settings_mod, only : lecovars_full_depth_tavg
 
-    implicit none
-
     type (marbl_tracer_metadata_type), intent(out)   :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
-    type(marbl_log_type)             , intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_tracer_metadata'
 
     integer (int_kind) :: n        ! index for looping over tracers
     integer (int_kind) :: zoo_ind  ! zooplankton functional group index
@@ -308,7 +288,6 @@ contains
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_post_tracers'
-    character(len=char_len) :: log_message
 
     ! set default values for parameters
     call marbl_settings_set_defaults_tracer_dependent(marbl_status_log)
@@ -328,7 +307,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_bury_coeff(marbl_particulate_share, num_levels, marbl_status_log)
+  subroutine marbl_init_bury_coeff(marbl_particulate_share, marbl_status_log)
 
     use marbl_logging, only : marbl_log_type
     use marbl_settings_mod, only : init_bury_coeff_opt
@@ -338,8 +317,7 @@ contains
     use marbl_settings_mod, only : parm_init_bSi_bury_coeff
     use marbl_interface_private_types, only : marbl_particulate_share_type
 
-    type(marbl_particulate_share_type), intent(out)   :: marbl_particulate_share
-    integer(int_kind),                  intent(in)    :: num_levels
+    type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
     type(marbl_log_type),               intent(inout) :: marbl_status_log
 
     !---------------------------------------------------------------------------
@@ -348,8 +326,6 @@ contains
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_bury_coeff'
 
     !---------------------------------------------------------------------------
-
-    call marbl_particulate_share%construct(num_levels)
 
     ! if ladjust_bury_coeff is true, then bury coefficients are set at runtime
     ! so they do not need to be initialized here
@@ -371,93 +347,82 @@ contains
 
   subroutine marbl_init_forcing_fields(domain, &
                                        tracer_metadata, &
-                                       surface_forcing_ind, &
-                                       surface_forcing_share, &
-                                       surface_forcing_internal, &
-                                       surface_input_forcings, &
-                                       interior_forcing_ind, &
-                                       interior_input_forcings, &
+                                       surface_flux_forcing_ind, &
+                                       surface_flux_forcings, &
+                                       interior_tendency_forcing_ind, &
+                                       interior_tendency_forcings, &
                                        marbl_status_log)
 
     use marbl_interface_public_types, only : marbl_domain_type
-    use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
-    use marbl_interface_private_types, only : marbl_surface_forcing_share_type
-    use marbl_interface_private_types, only : marbl_surface_forcing_internal_type
-    use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lflux_gas_o2
     use marbl_settings_mod, only : lflux_gas_co2
     use marbl_settings_mod, only : ladjust_bury_coeff
     use marbl_settings_mod, only : tracer_restore_vars
 
-    type(marbl_domain_type),                      intent(in)    :: domain
-    type(marbl_tracer_metadata_type),             intent(in)    :: tracer_metadata(:)
-    type(marbl_surface_forcing_indexing_type),    intent(out)   :: surface_forcing_ind
-    type(marbl_surface_forcing_share_type),       intent(out)   :: surface_forcing_share
-    type(marbl_surface_forcing_internal_type),    intent(out)   :: surface_forcing_internal
-    type(marbl_forcing_fields_type), allocatable, intent(out)   :: surface_input_forcings(:)
-    type(marbl_interior_forcing_indexing_type),   intent(out)   :: interior_forcing_ind
-    type(marbl_forcing_fields_type), allocatable, intent(out)   :: interior_input_forcings(:)
-    type(marbl_log_type),                         intent(inout) :: marbl_status_log
+    type(marbl_domain_type),                             intent(in)    :: domain
+    type(marbl_tracer_metadata_type),                    intent(in)    :: tracer_metadata(:)
+    type(marbl_surface_flux_forcing_indexing_type),      intent(out)   :: surface_flux_forcing_ind
+    type(marbl_forcing_fields_type), allocatable,        intent(out)   :: surface_flux_forcings(:)
+    type(marbl_interior_tendency_forcing_indexing_type), intent(out)   :: interior_tendency_forcing_ind
+    type(marbl_forcing_fields_type), allocatable,        intent(out)   :: interior_tendency_forcings(:)
+    type(marbl_log_type),                                intent(inout) :: marbl_status_log
 
     ! Local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_forcing_fields'
     character(len=char_len) :: log_message
-    integer :: num_surface_forcing_fields
-    integer :: num_interior_forcing_fields
+    integer :: num_surface_flux_forcing_fields
+    integer :: num_interior_tendency_forcing_fields
     integer :: i
 
     associate(&
-         num_surface_elements  => domain%num_elements_surface_forcing,   &
-         num_interior_elements => domain%num_elements_interior_forcing,  &
+         num_elements_surface_flux  => domain%num_elements_surface_flux, &
          num_PAR_subcols       => domain%num_PAR_subcols,                &
          num_levels            => domain%km                              &
          )
 
       ! Construct indices for surface and interior forcing
-      call surface_forcing_ind%construct(ciso_on,                             &
-                                         lflux_gas_o2,                        &
-                                         lflux_gas_co2,                       &
-                                         ladjust_bury_coeff,                  &
-                                         num_surface_forcing_fields)
-      call interior_forcing_ind%construct(tracer_metadata%short_name,         &
-                                          tracer_restore_vars,                &
-                                          domain%num_PAR_subcols,             &
-                                          num_interior_forcing_fields,        &
-                                          marbl_status_log)
+      call surface_flux_forcing_ind%construct(ciso_on,                        &
+                                              lflux_gas_o2,                   &
+                                              lflux_gas_co2,                  &
+                                              ladjust_bury_coeff,             &
+                                              num_surface_flux_forcing_fields)
+      call interior_tendency_forcing_ind%construct(tracer_metadata%short_name,           &
+                                                   tracer_restore_vars,                  &
+                                                   domain%num_PAR_subcols,               &
+                                                   num_interior_tendency_forcing_fields, &
+                                                   marbl_status_log)
       if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace("interior_forcing_ind%construct", subname)
+        call marbl_status_log%log_error_trace("interior_tendency_forcing_ind%construct", subname)
         return
       end if
 
-      ! Construct share / internal types for surface forcing
-      call surface_forcing_share%construct(num_surface_elements)
-      call surface_forcing_internal%construct(num_surface_elements)
-
       ! Initialize surface forcing fields
-      allocate(surface_input_forcings(num_surface_forcing_fields))
-      call marbl_init_surface_forcing_fields(                                &
-           num_elements            = num_surface_elements,                   &
-           surface_forcing_indices = surface_forcing_ind,                    &
-           surface_forcings        = surface_input_forcings,                 &
-           marbl_status_log        = marbl_status_log)
+      allocate(surface_flux_forcings(num_surface_flux_forcing_fields))
+      call marbl_init_surface_flux_forcing_fields(                   &
+           num_elements                 = num_elements_surface_flux, &
+           surface_flux_forcing_indices = surface_flux_forcing_ind,  &
+           surface_flux_forcings        = surface_flux_forcings,     &
+           marbl_status_log             = marbl_status_log)
       if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace("marbl_init_surface_forcing_fields()", subname)
+        call marbl_status_log%log_error_trace("marbl_init_surface_flux_forcing_fields()", subname)
         return
       end if
 
       ! Initialize interior forcing fields
-      allocate(interior_input_forcings(num_interior_forcing_fields))
-      call marbl_init_interior_forcing_fields(                                &
-           num_elements             = num_interior_elements,                  &
-           interior_forcing_indices = interior_forcing_ind,                   &
-           tracer_metadata          = tracer_metadata,                        &
-           num_PAR_subcols          = num_PAR_subcols,                        &
-           num_levels               = num_levels,                             &
-           interior_forcings        = interior_input_forcings,                &
-           marbl_status_log         = marbl_status_log)
+      allocate(interior_tendency_forcings(num_interior_tendency_forcing_fields))
+      call marbl_init_interior_tendency_forcing_fields(                               &
+           num_elements                      = domain%num_elements_interior_tendency, &
+           interior_tendency_forcing_indices = interior_tendency_forcing_ind,         &
+           tracer_metadata                   = tracer_metadata,                       &
+           num_PAR_subcols                   = num_PAR_subcols,                       &
+           num_levels                        = num_levels,                            &
+           interior_tendency_forcings        = interior_tendency_forcings,            &
+           marbl_status_log                  = marbl_status_log)
       if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace("marbl_init_interior_forcing_fields()", subname)
+        call marbl_status_log%log_error_trace("marbl_init_interior_tendency_forcing_fields()", subname)
         return
       end if
 
@@ -467,15 +432,15 @@ contains
 
       call marbl_status_log%log_header('MARBL-Required Forcing Fields', subname)
       call marbl_status_log%log_noerror('Surface:', subname)
-      do i=1,size(surface_input_forcings)
-        write(log_message, "(2A)") '* ', trim(surface_input_forcings(i)%metadata%varname)
+      do i=1,size(surface_flux_forcings)
+        write(log_message, "(2A)") '* ', trim(surface_flux_forcings(i)%metadata%varname)
         call marbl_status_log%log_noerror(log_message, subname)
       end do
 
       call marbl_status_log%log_noerror('', subname)
       call marbl_status_log%log_noerror('Interior:', subname)
-      do i=1,size(interior_input_forcings)
-        write(log_message, "(2A)") '* ', trim(interior_input_forcings(i)%metadata%varname)
+      do i=1,size(interior_tendency_forcings)
+        write(log_message, "(2A)") '* ', trim(interior_tendency_forcings(i)%metadata%varname)
         call marbl_status_log%log_noerror(log_message, subname)
       end do
 
@@ -492,8 +457,6 @@ contains
     !  initialize non-autotroph tracer_d values and accumulate
     !  non_living_biomass_ecosys_tracer_cnt
     !-----------------------------------------------------------------------
-
-    implicit none
 
     character(len=*),                 intent(in)    :: short_name
     character(len=*),                 intent(in)    :: long_name
@@ -523,8 +486,6 @@ contains
     !  initialize non-autotroph tracer_d values and accumulate
     !  non_living_biomass_ecosys_tracer_cnt
     !-----------------------------------------------------------------------
-
-    implicit none
 
     type(marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
     type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
@@ -576,9 +537,7 @@ contains
     !  initialize zooplankton tracer_d values and tracer indices
     !-----------------------------------------------------------------------
 
-    use marbl_settings_mod, only : zooplankton
-
-    implicit none
+    use marbl_settings_mod, only : zooplankton_settings
 
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
     type (marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
@@ -591,8 +550,8 @@ contains
 
     do zoo_ind = 1, zooplankton_cnt
        n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
-       marbl_tracer_metadata(n)%short_name = trim(zooplankton(zoo_ind)%sname) // 'C'
-       marbl_tracer_metadata(n)%long_name  = trim(zooplankton(zoo_ind)%lname) // ' Carbon'
+       marbl_tracer_metadata(n)%short_name = trim(zooplankton_settings(zoo_ind)%sname) // 'C'
+       marbl_tracer_metadata(n)%long_name  = trim(zooplankton_settings(zoo_ind)%lname) // ' Carbon'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
@@ -609,9 +568,7 @@ contains
     !  initialize autotroph tracer_d values and tracer indices
     !-----------------------------------------------------------------------
 
-    use marbl_settings_mod, only : autotrophs
-
-    implicit none
+    use marbl_settings_mod, only : autotroph_settings
 
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type    (marbl_tracer_index_type) , intent(in)    :: marbl_tracer_indices
@@ -624,39 +581,39 @@ contains
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Chl'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Chlorophyll'
+       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Chl'
+       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Chlorophyll'
        marbl_tracer_metadata(n)%units      = 'mg/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mg/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mg/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Carbon'
+       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'C'
+       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Carbon'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
        if (n.gt.0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'P'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Phosphorus'
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'P'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Phosphorus'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
        endif
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Fe'
-       marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Iron'
+       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Fe'
+       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Iron'
        marbl_tracer_metadata(n)%units      = 'mmol/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
        marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
        if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'Si'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' Silicon'
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Si'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Silicon'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
@@ -664,8 +621,8 @@ contains
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotrophs(auto_ind)%sname) // 'CaCO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotrophs(auto_ind)%lname) // ' CaCO3'
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'CaCO3'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' CaCO3'
           marbl_tracer_metadata(n)%units      = 'mmol/m^3'
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
@@ -676,148 +633,146 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_surface_forcing_fields(num_elements, surface_forcing_indices, &
-                                        surface_forcings, marbl_status_log)
+  subroutine marbl_init_surface_flux_forcing_fields(num_elements, surface_flux_forcing_indices, &
+                                        surface_flux_forcings, marbl_status_log)
 
     !  Initialize the surface forcing_fields datatype with information from the
     !  namelist read
     !
 
-    use marbl_interface_private_types, only : marbl_surface_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
 
-    implicit none
-
-    integer,                                   intent(in)    :: num_elements
-    type(marbl_surface_forcing_indexing_type), intent(in)    :: surface_forcing_indices
-    type(marbl_forcing_fields_type),           intent(out)   :: surface_forcings(:)
-    type(marbl_log_type),                      intent(inout) :: marbl_status_log
+    integer,                                        intent(in)    :: num_elements
+    type(marbl_surface_flux_forcing_indexing_type), intent(in)    :: surface_flux_forcing_indices
+    type(marbl_forcing_fields_type),                intent(out)   :: surface_flux_forcings(:)
+    type(marbl_log_type),                           intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_surface_forcing_fields'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_surface_flux_forcing_fields'
     character(len=char_len)     :: log_message
 
     integer :: id
     logical :: found
     !-----------------------------------------------------------------------
 
-    associate(ind => surface_forcing_indices)
+    associate(ind => surface_flux_forcing_indices)
 
-      surface_forcings(:)%metadata%varname = ''
-      do id=1,size(surface_forcings)
+      surface_flux_forcings(:)%metadata%varname = ''
+      do id=1,size(surface_flux_forcings)
         found = .false.
 
         ! Square of 10m wind
         if (id .eq. ind%u10_sqr_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'u10_sqr'
-          surface_forcings(id)%metadata%field_units   = 'cm^2/s^2'
+          surface_flux_forcings(id)%metadata%varname       = 'u10_sqr'
+          surface_flux_forcings(id)%metadata%field_units   = 'cm^2/s^2'
         end if
 
         ! Sea-surface salinity
         if (id .eq. ind%sss_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'sss'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_flux_forcings(id)%metadata%varname       = 'sss'
+          surface_flux_forcings(id)%metadata%field_units   = 'psu'
         end if
 
         ! Sea-surface temperature
         if (id .eq. ind%sst_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'sst'
-          surface_forcings(id)%metadata%field_units   = 'degrees C'
+          surface_flux_forcings(id)%metadata%varname       = 'sst'
+          surface_flux_forcings(id)%metadata%field_units   = 'degC'
         end if
 
         ! Ice Fraction
         if (id .eq. ind%ifrac_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'Ice Fraction'
-          surface_forcings(id)%metadata%field_units   = 'unitless'
+          surface_flux_forcings(id)%metadata%varname       = 'Ice Fraction'
+          surface_flux_forcings(id)%metadata%field_units   = 'unitless'
         end if
 
         ! Dust Flux
         if (id .eq. ind%dust_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'Dust Flux'
-          surface_forcings(id)%metadata%field_units   = 'g/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'Dust Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'g/cm^2/s'
         end if
 
         ! Iron Flux
         if (id .eq. ind%iron_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'Iron Flux'
-          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'Iron Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! NOx Flux
         if (id .eq. ind%nox_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'NOx Flux'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_flux_forcings(id)%metadata%varname       = 'NOx Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! NHy Flux
         if (id .eq. ind%nhy_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'NHy Flux'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_flux_forcings(id)%metadata%varname       = 'NHy Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! external C Flux
         if (id .eq. ind%ext_C_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'external C Flux'
-          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'external C Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! external P Flux
         if (id .eq. ind%ext_P_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'external P Flux'
-          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'external P Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! external Si Flux
         if (id .eq. ind%ext_Si_flux_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'external Si Flux'
-          surface_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%varname       = 'external Si Flux'
+          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
         end if
 
         ! atm pressure
         if (id .eq. ind%atm_pressure_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'Atmospheric Pressure'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_flux_forcings(id)%metadata%varname       = 'Atmospheric Pressure'
+          surface_flux_forcings(id)%metadata%field_units   = 'atmospheres'
         end if
 
         ! xco2
         if (id .eq. ind%xco2_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'xco2'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_flux_forcings(id)%metadata%varname       = 'xco2'
+          surface_flux_forcings(id)%metadata%field_units   = 'ppmv'
         end if
 
         ! xco2_alt_co2
         if (id .eq. ind%xco2_alt_co2_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'xco2_alt_co2'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_flux_forcings(id)%metadata%varname       = 'xco2_alt_co2'
+          surface_flux_forcings(id)%metadata%field_units   = 'ppmv'
         end if
 
         ! d13c
         if (id .eq. ind%d13c_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'd13c'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_flux_forcings(id)%metadata%varname       = 'd13c'
+          surface_flux_forcings(id)%metadata%field_units   = 'permil'
         end if
 
         ! d14c
         if (id .eq. ind%d14c_id) then
           found = .true.
-          surface_forcings(id)%metadata%varname       = 'd14c'
-          surface_forcings(id)%metadata%field_units   = 'unknown units'
+          surface_flux_forcings(id)%metadata%varname       = 'd14c'
+          surface_flux_forcings(id)%metadata%field_units   = 'permil'
         end if
 
         if (.not.found) then
@@ -829,7 +784,7 @@ contains
 
         ! All surface forcing fields are rank 0; if that changes, make this
         ! call from inside each "if (id .eq. *)" block
-        call surface_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
+        call surface_flux_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
 
       end do
 
@@ -838,38 +793,36 @@ contains
     ! FIXME #26: do we have any forcing fields that are required to be set?
     !            If so, check to make sure those indices are not zero here.
 
-  end subroutine marbl_init_surface_forcing_fields
+  end subroutine marbl_init_surface_flux_forcing_fields
 
   !*****************************************************************************
 
-  subroutine marbl_init_interior_forcing_fields(&
+  subroutine marbl_init_interior_tendency_forcing_fields(&
        num_elements, &
-       interior_forcing_indices, &
+       interior_tendency_forcing_indices, &
        tracer_metadata, &
        num_PAR_subcols, &
        num_levels, &
-       interior_forcings, &
+       interior_tendency_forcings, &
        marbl_status_log)
 
     !  Initialize the interior forcing_fields datatype with information from the
     !  namelist read
     !
-    use marbl_interface_private_types, only : marbl_interior_forcing_indexing_type
-
-    implicit none
+    use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
 
     integer,                                    intent(in)    :: num_elements
-    type(marbl_interior_forcing_indexing_type), intent(in)    :: interior_forcing_indices
+    type(marbl_interior_tendency_forcing_indexing_type), intent(in)    :: interior_tendency_forcing_indices
     type(marbl_tracer_metadata_type),           intent(in)    :: tracer_metadata(:)
     integer,                                    intent(in)    :: num_PAR_subcols
     integer,                                    intent(in)    :: num_levels
-    type(marbl_forcing_fields_type),            intent(out)   :: interior_forcings(:)
+    type(marbl_forcing_fields_type),            intent(out)   :: interior_tendency_forcings(:)
     type(marbl_log_type),                       intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_interior_forcing_fields'
+    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_interior_tendency_forcing_fields'
     character(len=char_len)     :: log_message
 
     ! NAG didn't like associating to tracer_metadata(:)%*
@@ -879,73 +832,83 @@ contains
     logical                 :: found
     !-----------------------------------------------------------------------
 
-    associate(ind => interior_forcing_indices)
+    associate(ind => interior_tendency_forcing_indices)
 
-      interior_forcings(:)%metadata%varname = ''
+      interior_tendency_forcings(:)%metadata%varname = ''
 
       ! Surface fluxes that influence interior forcing
-      do id=1,size(interior_forcings)
+      do id=1,size(interior_tendency_forcings)
         found = .false.
         ! Dust Flux
         if (id .eq. ind%dustflux_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Dust Flux'
-          interior_forcings(id)%metadata%field_units = 'need_units'
-          call interior_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
+          interior_tendency_forcings(id)%metadata%varname     = 'Dust Flux'
+          interior_tendency_forcings(id)%metadata%field_units = 'g/cm^2/s'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
         end if
 
         ! PAR Column Fraction and Shortwave Radiation
         if (id .eq. ind%PAR_col_frac_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'PAR Column Fraction'
-          interior_forcings(id)%metadata%field_units = 'unitless'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_PAR_subcols)
+          interior_tendency_forcings(id)%metadata%varname     = 'PAR Column Fraction'
+          interior_tendency_forcings(id)%metadata%field_units = 'unitless'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_PAR_subcols)
         end if
 
         if (id .eq. ind%surf_shortwave_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Surface Shortwave'
-          interior_forcings(id)%metadata%field_units = 'need_units' ! W/m^2?
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_PAR_subcols)
+          interior_tendency_forcings(id)%metadata%varname     = 'Surface Shortwave'
+          interior_tendency_forcings(id)%metadata%field_units = 'W/m^2'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_PAR_subcols)
         end if
 
 
         ! Temperature
         if (id .eq. ind%potemp_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Potential Temperature'
-          interior_forcings(id)%metadata%field_units = 'Degrees C'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_levels)
+          interior_tendency_forcings(id)%metadata%varname     = 'Potential Temperature'
+          interior_tendency_forcings(id)%metadata%field_units = 'degC'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
         ! Salinity
         if (id .eq. ind%salinity_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Salinity'
-          interior_forcings(id)%metadata%field_units = 'need_units'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_levels)
+          interior_tendency_forcings(id)%metadata%varname     = 'Salinity'
+          interior_tendency_forcings(id)%metadata%field_units = 'psu'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
         ! Pressure
         if (id .eq. ind%pressure_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Pressure'
-          interior_forcings(id)%metadata%field_units = 'need_units'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_levels)
+          interior_tendency_forcings(id)%metadata%varname     = 'Pressure'
+          interior_tendency_forcings(id)%metadata%field_units = 'bars'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
         ! Iron Sediment Flux
         if (id .eq. ind%fesedflux_id) then
           found = .true.
-          interior_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
-          interior_forcings(id)%metadata%field_units = 'need_units'
-          call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
-                                              dim1 = num_levels)
+          interior_tendency_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
+          interior_tendency_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
+        end if
+
+        ! O2 Consumption Scale Factor
+        if (id .eq. ind%o2_consumption_scalef_id) then
+          found = .true.
+          interior_tendency_forcings(id)%metadata%varname     = 'O2 Consumption Scale Factor'
+          interior_tendency_forcings(id)%metadata%field_units = '1'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
+        end if
+
+        ! Particulate Remin Scale Factor
+        if (id .eq. ind%p_remin_scalef_id) then
+          found = .true.
+          interior_tendency_forcings(id)%metadata%varname     = 'Particulate Remin Scale Factor'
+          interior_tendency_forcings(id)%metadata%field_units = '1'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
         ! Interior Tracer Restoring
@@ -954,25 +917,25 @@ contains
             tracer_name = tracer_metadata(n)%short_name
             tracer_units = tracer_metadata(n)%units
             found = .true.
-            write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
+            write(interior_tendency_forcings(id)%metadata%varname,"(A,1X,A)")            &
                   trim(tracer_name), 'Restoring Field'
-            interior_forcings(id)%metadata%field_units = tracer_units
-            call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
+            interior_tendency_forcings(id)%metadata%field_units = tracer_units
+            call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                 dim1 = num_levels)
           end if
           if (id .eq. ind%inv_tau_id(n)) then
             found = .true.
-            write(interior_forcings(id)%metadata%varname,"(A,1X,A)")            &
+            write(interior_tendency_forcings(id)%metadata%varname,"(A,1X,A)")            &
                   trim(tracer_name), 'Restoring Inverse Timescale'
-            interior_forcings(id)%metadata%field_units = '1/s'
-            call interior_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
+            interior_tendency_forcings(id)%metadata%field_units = '1/s'
+            call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, &
                                                 dim1 = num_levels)
           end if
         end do
 
         ! Check to see if %set_rank() returned an error
         if (marbl_status_log%labort_marbl) then
-          write(log_message, "(2A)") trim(interior_forcings(id)%metadata%varname), &
+          write(log_message, "(2A)") trim(interior_tendency_forcings(id)%metadata%varname), &
                                      ' set_rank()'
           call marbl_status_log%log_error_trace(log_message, subname)
           return
@@ -993,7 +956,7 @@ contains
     ! FIXME #26: do we have any forcing fields that are required to be set?
     !            If so, check to make sure those indices are not zero here.
 
-  end subroutine marbl_init_interior_forcing_fields
+  end subroutine marbl_init_interior_tendency_forcing_fields
 
   !*****************************************************************************
 

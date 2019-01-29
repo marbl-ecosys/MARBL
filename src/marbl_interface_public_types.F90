@@ -2,8 +2,7 @@ module marbl_interface_public_types
   ! module for definitions of types that are shared between marbl interior and the driver.
 
   use marbl_kinds_mod           , only : r8, log_kind, int_kind, char_len
-  use marbl_constants_mod       , only : c0, c1
-  use marbl_interface_constants , only : marbl_str_length
+  use marbl_constants_mod       , only : c0
   use marbl_logging             , only : marbl_log_type
 
   implicit none
@@ -12,17 +11,17 @@ module marbl_interface_public_types
 
   !****************************************************************************
 
-  ! NOTE: when adding a new surface forcing output field (a field that the GCM
+  ! NOTE: when adding a new surface flux output field (a field that the GCM
   !       may need to pass to flux coupler), remember to add a new index for it
   !       as well.
-  type, public :: marbl_surface_forcing_output_indexing_type
+  type, public :: marbl_surface_flux_output_indexing_type
     integer(int_kind) :: flux_o2_id = 0
     integer(int_kind) :: flux_co2_id = 0
     integer(int_kind) :: flux_nhx_id = 0
     integer(int_kind) :: totalChl_id = 0
-  end type marbl_surface_forcing_output_indexing_type
+  end type marbl_surface_flux_output_indexing_type
 
-  type(marbl_surface_forcing_output_indexing_type), public :: sfo_ind
+  type(marbl_surface_flux_output_indexing_type), public :: sfo_ind
 
   !*****************************************************************************
 
@@ -53,14 +52,14 @@ module marbl_interface_public_types
   !*****************************************************************************
 
   type, public :: marbl_domain_type
-     integer(int_kind)     :: num_PAR_subcols               ! number of PAR subcols
-     integer(int_kind)     :: num_elements_surface_forcing  ! number of surface forcing columns
-     integer(int_kind)     :: num_elements_interior_forcing ! number of interior forcing columns
-     integer(int_kind)     :: km                            ! number of vertical grid cells
-     integer(int_kind)     :: kmt                           ! index of ocean floor
-     real(r8), allocatable :: zt(:)                         ! (km) vert dist from sfc to midpoint of layer
-     real(r8), allocatable :: zw(:)                         ! (km) vert dist from sfc to bottom of layer
-     real(r8), allocatable :: delta_z(:)                    ! (km) delta z - different values for partial bottom cells
+     integer(int_kind)     :: num_PAR_subcols                ! number of PAR subcols
+     integer(int_kind)     :: num_elements_surface_flux      ! number of columns computed in surface_flux_compute
+     integer(int_kind)     :: num_elements_interior_tendency ! number of interior forcing columns
+     integer(int_kind)     :: km                             ! number of vertical grid cells
+     integer(int_kind)     :: kmt                            ! index of ocean floor
+     real(r8), allocatable :: zt(:)                          ! (km) vert dist from sfc to midpoint of layer
+     real(r8), allocatable :: zw(:)                          ! (km) vert dist from sfc to bottom of layer
+     real(r8), allocatable :: delta_z(:)                     ! (km) delta z - different values for partial bottom cells
    contains
      procedure, public :: construct => marbl_domain_constructor
      procedure, public :: destruct => marbl_domain_destructor
@@ -122,10 +121,10 @@ module marbl_interface_public_types
   type, public :: marbl_single_sfo_type
      ! marbl_single_sfo :
      ! a private type, this contains both the metadata
-     ! and the actual data for a single surface forcing
-     ! field that needs to be passed to the GCM / flux
-     ! coupler. Data must be accesed via the
-     ! marbl_surface_forcing_output_type data structure.
+     ! and the actual data for a single field computed
+     ! in surface_flux_compute() that needs to be passed
+     ! to the GCM / flux coupler. Data must be accessed
+     ! via the marbl_surface_flux_output_type data structure.
      character (len=char_len)            :: long_name
      character (len=char_len)            :: short_name
      character (len=char_len)            :: units
@@ -135,13 +134,13 @@ module marbl_interface_public_types
   end type marbl_single_sfo_type
   !*****************************************************************************
 
-  type, public :: marbl_surface_forcing_output_type
+  type, public :: marbl_surface_flux_output_type
      integer :: sfo_cnt
      integer :: num_elements
      type(marbl_single_sfo_type), dimension(:), pointer :: sfo => NULL()
    contains
      procedure, public :: add_sfo => marbl_sfo_add
-  end type marbl_surface_forcing_output_type
+  end type marbl_surface_flux_output_type
 
   !*****************************************************************************
 
@@ -202,14 +201,14 @@ contains
 
   subroutine marbl_domain_constructor(this, &
        num_levels, num_PAR_subcols, &
-       num_elements_surface_forcing, num_elements_interior_forcing, &
+       num_elements_surface_flux, num_elements_interior_tendency, &
        delta_z, zw, zt)
 
     class(marbl_domain_type), intent(out) :: this
     integer (int_kind),       intent(in)  :: num_levels
     integer (int_kind),       intent(in)  :: num_PAR_subcols
-    integer (int_kind),       intent(in)  :: num_elements_surface_forcing
-    integer (int_kind),       intent(in)  :: num_elements_interior_forcing
+    integer (int_kind),       intent(in)  :: num_elements_surface_flux
+    integer (int_kind),       intent(in)  :: num_elements_interior_tendency
     real (r8),                intent(in)  :: delta_z(num_levels)
     real (r8),                intent(in)  :: zw(num_levels)
     real (r8),                intent(in)  :: zt(num_levels)
@@ -222,8 +221,8 @@ contains
 
     this%km = num_levels
     this%num_PAR_subcols = num_PAR_subcols
-    this%num_elements_surface_forcing = num_elements_surface_forcing
-    this%num_elements_interior_forcing = num_elements_interior_forcing
+    this%num_elements_surface_flux = num_elements_surface_flux
+    this%num_elements_interior_tendency = num_elements_interior_tendency
 
     do k = 1, num_levels
        this%delta_z(k) = delta_z(k)
@@ -474,12 +473,11 @@ contains
         this%units      = "mg/m^3"
         sfo_ind%totalChl_id = id
       case DEFAULT
-        write(log_message, "(2A)") trim(field_name),                            &
-                                 " is not a valid surface forcing field name"
+        write(log_message, "(2A)") trim(field_name), " is not a valid surface flux output field name"
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
-    write(log_message, "(3A)") "Adding ", trim(field_name), " to surface forcing outputs"
+    write(log_message, "(3A)") "Adding ", trim(field_name), " to surface flux outputs"
     call marbl_status_log%log_noerror(log_message, subname)
 
     allocate(this%forcing_field(num_elements))
@@ -499,14 +497,14 @@ contains
   !
   ! 1) allocate new_sfo to be size N (one element larger than this%sfo)
   ! 2) copy this%sfo into first N-1 elements of new_sfo
-  ! 3) newest surface forcing output (field_name) is Nth element of new_sfo
+  ! 3) newest surface flux output (field_name) is Nth element of new_sfo
   ! 4) deallocate / nullify this%sfo
   ! 5) point this%sfo => new_sfo
   !
-  ! If the number of possible surface forcing output fields grows, this workflow
+  ! If the number of possible surface flux output fields grows, this workflow
   ! may need to be replaced with something that is not O(N^2).
 
-    class(marbl_surface_forcing_output_type), intent(inout) :: this
+    class(marbl_surface_flux_output_type), intent(inout) :: this
     character(len=*),     intent(in)    :: field_name
     integer(int_kind),    intent(in)    :: num_elements
     type(marbl_log_type), intent(inout) :: marbl_status_log
@@ -537,7 +535,7 @@ contains
       deallocate(this%sfo(n)%forcing_field)
     end do
 
-    ! 3) newest surface forcing output (field_name) is Nth element of new_sfo
+    ! 3) newest surface flux output (field_name) is Nth element of new_sfo
     call new_sfo(sfo_id)%construct(num_elements, field_name, sfo_id,          &
                                    marbl_status_log)
     if (marbl_status_log%labort_marbl) then

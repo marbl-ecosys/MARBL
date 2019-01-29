@@ -2,11 +2,8 @@
 
 module marbl_oxygen
 
-  use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : r8
-
-  use marbl_constants_mod, only : c0
 
   implicit none
 
@@ -63,7 +60,7 @@ contains
   function o2sat_surf(n, sst, sss)
 
     !  Computes oxygen saturation concentration at 1 atm total pressure
-    !  in mmol/m^3 given the temperature (t, in deg C) and the salinity (s,
+    !  in mmol/m^3 given the temperature (t, in degC) and the salinity (s,
     !  in permil).
     !
     !  FROM GARCIA AND GORDON (1992), LIMNOLOGY and OCEANOGRAPHY.
@@ -72,9 +69,9 @@ contains
     !  *** NOTE: THE "A_3*TS^2" TERM (IN THE PAPER) IS INCORRECT. ***
     !  *** IT SHOULD NOT BE THERE.                                ***
     !
-    !  O2SAT IS DEFINED BETWEEN T(freezing) <= T <= 40(deg C) AND
+    !  O2SAT IS DEFINED BETWEEN T(freezing) <= T <= 40(degC) AND
     !  0 permil <= S <= 42 permil
-    !  CHECK VALUE:  T = 10.0 deg C, S = 35.0 permil,
+    !  CHECK VALUE:  T = 10.0 degC, S = 35.0 permil,
     !  O2SAT = 282.015 mmol/m^3
 
     use marbl_constants_mod, only : T0_Kelvin
@@ -105,7 +102,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! set default
-    ts(:)    = log( ((t0_kelvin + 25.0_r8) - sst(:)) / (t0_kelvin + sst(:)) )
+    ts(:)    = log( ((T0_Kelvin + 25.0_r8) - sst(:)) / (T0_Kelvin + sst(:)) )
     o2sat(:) = exp(a_0+ts(:)*(a_1+ts(:)*(a_2+ts(:)*(a_3+ts(:)*(a_4+ts(:)*a_5)))) + &
                    sss(:)*( (b_0+ts(:)*(b_1+ts(:)*(b_2+ts(:)*b_3))) + sss(:)*c_0 ))
 
@@ -121,7 +118,7 @@ contains
     ! !DESCRIPTION:
     !
     !  Computes oxygen saturation concentration at 1 atm total pressure
-    !  in mmol/m^3 given the temperature (t, in deg C) and the salinity (s,
+    !  in mmol/m^3 given the temperature (t, in degC) and the salinity (s,
     !  in permil).
     !
     !  FROM GARCIA AND GORDON (1992), LIMNOLOGY and OCEANOGRAPHY.
@@ -130,9 +127,9 @@ contains
     !  *** NOTE: THE "A_3*TS^2" TERM (IN THE PAPER) IS INCORRECT. ***
     !  *** IT SHOULD NOT BE THERE.                                ***
     !
-    !  O2SAT IS DEFINED BETWEEN T(freezing) <= T <= 40(deg C) AND
+    !  O2SAT IS DEFINED BETWEEN T(freezing) <= T <= 40(degC) AND
     !  0 permil <= S <= 42 permil
-    !  CHECK VALUE:  T = 10.0 deg C, S = 35.0 permil,
+    !  CHECK VALUE:  T = 10.0 degC, S = 35.0 permil,
     !  O2SAT = 282.015 mmol/m^3
 
     use marbl_constants_mod, only : T0_Kelvin
@@ -161,7 +158,7 @@ contains
     real (r8), parameter :: c_0 = -4.88682E-7_r8
     !-----------------------------------------------------------------------
 
-    ts = log( ((t0_kelvin + 25.0_r8) - sst) / (t0_kelvin + sst) )
+    ts = log( ((T0_Kelvin + 25.0_r8) - sst) / (T0_Kelvin + sst) )
 
     o2sat = exp(a_0+ts*(a_1+ts*(a_2+ts*(a_3+ts*(a_4+ts*a_5)))) + &
          sss*( (b_0+ts*(b_1+ts*(b_2+ts*b_3))) + sss*c_0 ))

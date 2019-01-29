@@ -52,11 +52,11 @@ Contains
     ! PER-INSTANCE CALLS
     do n=1,size(marbl_instances)
       ! 3. Call init()
-      call marbl_instances(n)%init(gcm_num_levels = km,                  &
-                                   gcm_num_PAR_subcols = 1,              &
-                                   gcm_num_elements_surface_forcing = 1, &
-                                   gcm_delta_z = delta_z,                &
-                                   gcm_zw = zw,                          &
+      call marbl_instances(n)%init(gcm_num_levels = km,               &
+                                   gcm_num_PAR_subcols = 1,           &
+                                   gcm_num_elements_surface_flux = 1, &
+                                   gcm_delta_z = delta_z,             &
+                                   gcm_zw = zw,                       &
                                    gcm_zt = zt)
       ! 4. Call set_surface_forcing()
       ! 5. Call set_interior_forcing()

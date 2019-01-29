@@ -1,0 +1,19 @@
+language: python
+sudo: required
+before_install:
+  - sudo apt-get install gfortran mpich
+install:
+  - pip install pyyaml
+  - pip install -r docs/py_requirements.txt
+python:
+  - '2.7'
+  - '3.6'
+script:
+  - cd docs/src; make html
+  - cd ../../MARBL_tools; ./run_test_suite.sh
+
+branches:
+  only:
+  - development
+  - stable
+  - cesm2.0

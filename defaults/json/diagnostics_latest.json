@@ -30,24 +30,39 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
-   "((autotroph_sname))_Fe_lim": {
+   "((autotroph_sname))_Fe_lim_Cweight_avg_100m": {
       "frequency": "medium",
-      "longname": "((autotroph_lname)) Fe Limitation",
+      "longname": "((autotroph_lname)) Fe Limitation, carbon biomass weighted average over 0-100m",
       "operator": "average",
-      "truncate": true,
-      "units": "none",
-      "vertical_grid": "layer_avg"
+      "units": 1,
+      "vertical_grid": "none"
    },
-   "((autotroph_sname))_N_lim": {
+   "((autotroph_sname))_Fe_lim_surf": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Fe Limitation, Surface",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_N_lim_Cweight_avg_100m": {
       "frequency": {
          "((autotroph_Nfixer))": "never",
          "default": "medium"
       },
-      "longname": "((autotroph_lname)) N Limitation",
+      "longname": "((autotroph_lname)) N Limitation, carbon biomass weighted average over 0-100m",
       "operator": "average",
-      "truncate": true,
-      "units": "none",
-      "vertical_grid": "layer_avg"
+      "units": 1,
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_N_lim_surf": {
+      "frequency": {
+         "((autotroph_Nfixer))": "never",
+         "default": "medium"
+      },
+      "longname": "((autotroph_lname)) N Limitation, Surface",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
    },
    "((autotroph_sname))_Nfix": {
       "dependencies": {
@@ -60,13 +75,19 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "((autotroph_sname))_P_lim": {
+   "((autotroph_sname))_P_lim_Cweight_avg_100m": {
       "frequency": "medium",
-      "longname": "((autotroph_lname)) P Limitation",
+      "longname": "((autotroph_lname)) P Limitation, carbon biomass weighted average over 0-100m",
       "operator": "average",
-      "truncate": true,
-      "units": "none",
-      "vertical_grid": "layer_avg"
+      "units": 1,
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_P_lim_surf": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) P Limitation, Surface",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
    },
    "((autotroph_sname))_Qp": {
       "dependencies": {
@@ -76,19 +97,28 @@
       "longname": "((autotroph_lname))",
       "operator": "average",
       "truncate": true,
-      "units": "none",
+      "units": 1,
       "vertical_grid": "layer_avg"
    },
-   "((autotroph_sname))_SiO3_lim": {
+   "((autotroph_sname))_SiO3_lim_Cweight_avg_100m": {
       "dependencies": {
          "((autotroph_silicifier))": true
       },
       "frequency": "medium",
-      "longname": "((autotroph_lname)) SiO3 Limitation",
+      "longname": "((autotroph_lname)) SiO3 Limitation, carbon biomass weighted average over 0-100m",
       "operator": "average",
-      "truncate": true,
-      "units": "none",
-      "vertical_grid": "layer_avg"
+      "units": 1,
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_SiO3_lim_surf": {
+      "dependencies": {
+         "((autotroph_silicifier))": true
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) SiO3 Limitation, Surface",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
    },
    "((autotroph_sname))_agg": {
       "frequency": "medium",
@@ -123,13 +153,19 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "((autotroph_sname))_light_lim": {
+   "((autotroph_sname))_light_lim_Cweight_avg_100m": {
       "frequency": "medium",
-      "longname": "((autotroph_lname)) Light Limitation",
+      "longname": "((autotroph_lname)) Light Limitation, carbon biomass weighted average over 0-100m",
       "operator": "average",
-      "truncate": true,
-      "units": "none",
-      "vertical_grid": "layer_avg"
+      "units": 1,
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_light_lim_surf": {
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) Light Limitation, Surface",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
    },
    "((autotroph_sname))_loss": {
       "frequency": "never",
@@ -440,62 +476,62 @@
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DO13C_prod": {
+   "CISO_DO13Ctot_prod": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "DO13C Production",
+      "longname": "DO13Ctot Production",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DO13C_remin": {
+   "CISO_DO13Ctot_remin": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "DO13C Remineralization",
+      "longname": "DO13Ctot Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DO14C_prod": {
+   "CISO_DO14Ctot_prod": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "DO14C Production",
+      "longname": "DO14Ctot Production",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DO14C_remin": {
+   "CISO_DO14Ctot_remin": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "DO14C Remineralization",
+      "longname": "DO14Ctot Remineralization",
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DOC_d13C": {
+   "CISO_DOCtot_d13C": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "d13C of DOC",
+      "longname": "d13C of DOCtot",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
-   "CISO_DOC_d14C": {
+   "CISO_DOCtot_d14C": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "d14C of DOC",
+      "longname": "d14C of DOCtot",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
@@ -580,31 +616,11 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
-   "CISO_Jint_100m_13Ctot": {
-      "dependencies": {
-         "ciso_on": ".true."
-      },
-      "frequency": "medium",
-      "longname": "13Ctot Source Sink Term Vertical Integral, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
-   "CISO_Jint_100m_14Ctot": {
-      "dependencies": {
-         "ciso_on": ".true."
-      },
-      "frequency": "medium",
-      "longname": "14Ctot Source Sink Term Vertical Integral, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
    "CISO_Jint_13Ctot": {
       "dependencies": {
          "ciso_on": ".true."
       },
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "13Ctot Source Sink Term Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
@@ -614,7 +630,7 @@
       "dependencies": {
          "ciso_on": ".true."
       },
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "14Ctot Source Sink Term Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
@@ -819,7 +835,7 @@
       "frequency": "medium",
       "longname": "((autotroph_lname)) instanteous growth rate over [CO2*]",
       "operator": "average",
-      "units": "m^3/mmol C/s",
+      "units": "m^3/mmol/s",
       "vertical_grid": "layer_avg"
    },
    "CISO_photo13C_((autotroph_sname))": {
@@ -904,22 +920,22 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
-   "CISO_zooC_d13C": {
+   "CISO_zoototC_d13C": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "d13C of zooC",
+      "longname": "d13C of total zooC",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
-   "CISO_zooC_d14C": {
+   "CISO_zoototC_d14C": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "d14C of zooC",
+      "longname": "d14C of total zooC",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
@@ -1169,6 +1185,13 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "DOP_loss_P_bal": {
+      "frequency": "never",
+      "longname": "DOP loss, due to P budget balancing",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
    "DOP_prod": {
       "frequency": "medium",
       "longname": "DOP Production",
@@ -1250,6 +1273,13 @@
       "units": "cm/s",
       "vertical_grid": "none"
    },
+   "FESEDFLUX": {
+      "frequency": "never",
+      "longname": "Iron Sediment Flux",
+      "operator": "average",
+      "units": "nmol/cm^2/s",
+      "vertical_grid": "layer_avg"
+   },
    "FG_ALT_CO2": {
       "frequency": "medium",
       "longname": "DIC Surface Gas Flux, Alternative CO2",
@@ -1326,71 +1356,36 @@
       "units": "mmol/m^2/s",
       "vertical_grid": "none"
    },
-   "Jint_100m_Ctot": {
-      "frequency": "medium",
-      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ctot, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
-   "Jint_100m_Fetot": {
-      "frequency": "medium",
-      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Fetot, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
-   "Jint_100m_Ntot": {
-      "frequency": "medium",
-      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ntot, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
-   "Jint_100m_Ptot": {
-      "frequency": "medium",
-      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ptot, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
-   "Jint_100m_Sitot": {
-      "frequency": "medium",
-      "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Sitot, 0-100m",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
    "Jint_Ctot": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ctot",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "Jint_Fetot": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Fetot",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "Jint_Ntot": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ntot",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "Jint_Ptot": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ptot",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "Jint_Sitot": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Sitot",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
@@ -1480,6 +1475,16 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "O2_CONSUMPTION_SCALEF": {
+      "dependencies": {
+         "lo2_consumption_scalef": ".true."
+      },
+      "frequency": "never",
+      "longname": "O2 Consumption Scale Factor",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "layer_avg"
+   },
    "O2_PRODUCTION": {
       "frequency": "medium",
       "longname": "O2 Production",
@@ -1505,7 +1510,7 @@
       "frequency": "never",
       "longname": "non-oxic,non-dentr remin in Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "PAR_avg": {
@@ -1519,14 +1524,14 @@
       "frequency": "medium",
       "longname": "Surface pH",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "none"
    },
    "PH_ALT_CO2": {
       "frequency": "medium",
       "longname": "Surface pH, Alternative CO2",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "none"
    },
    "PO4_((autotroph_sname))_uptake": {
@@ -1614,6 +1619,20 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "POC_hFLUX_IN": {
+      "frequency": "never",
+      "longname": "POC hFlux into Cell",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "POC_sFLUX_IN": {
+      "frequency": "never",
+      "longname": "POC sFlux into Cell",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
    "PON_REMIN_DONr": {
       "frequency": "low",
       "longname": "PON Remineralization routed to DONr",
@@ -1677,6 +1696,16 @@
       "units": "cm/s",
       "vertical_grid": "none"
    },
+   "P_REMIN_SCALEF": {
+      "dependencies": {
+         "lp_remin_scalef": ".true."
+      },
+      "frequency": "never",
+      "longname": "Particulate Remin Scale Factor",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "layer_avg"
+   },
    "P_iron_FLUX_((particulate_flux_ref_depth_str))": {
       "frequency": "medium",
       "longname": "P_iron Flux at ((particulate_flux_ref_depth_str))",
@@ -1709,21 +1738,21 @@
       "frequency": "medium",
       "longname": "CO2 Schmidt Number",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "none"
    },
    "SCHMIDT_O2": {
       "frequency": "medium",
       "longname": "O2 Schmidt Number",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "none"
    },
    "SedDenitrif": {
       "frequency": "medium",
       "longname": "nitrogen loss in Sediments",
       "operator": "average",
-      "units": "nmolN/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "SiO2_FLUX_((particulate_flux_ref_depth_str))": {
@@ -1765,14 +1794,21 @@
       "frequency": "medium",
       "longname": "biogenic Si Flux to Sediments",
       "operator": "average",
-      "units": "nmolSi/cm^2/s",
+      "units": "nmol/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "calcToFloor": {
+      "frequency": "never",
+      "longname": "CaCO3 Flux Hitting Sea Floor",
+      "operator": "average",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "calcToSed": {
       "frequency": "medium",
       "longname": "CaCO3 Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "calcToSed_13C": {
@@ -1782,7 +1818,7 @@
       "frequency": "medium",
       "longname": "Ca13CO3 Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "calcToSed_14C": {
@@ -1792,14 +1828,14 @@
       "frequency": "medium",
       "longname": "Ca14CO3 Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "calcToSed_ALT_CO2": {
       "frequency": "medium",
       "longname": "CaCO3 Flux to Sediments, Alternative CO2",
       "operator": "average",
-      "units": "calcToSed_ALT_CO2",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "co3_sat_arag": {
@@ -1827,14 +1863,14 @@
       "frequency": "medium",
       "longname": "Dust Flux into Cell",
       "operator": "average",
-      "units": "ng/s/m^2",
+      "units": "g/cm^2/s",
       "vertical_grid": "layer_avg"
    },
    "dust_REMIN": {
       "frequency": "medium",
       "longname": "Dust Remineralization",
       "operator": "average",
-      "units": "mmol/m^3/s",
+      "units": "g/cm^3/s",
       "vertical_grid": "layer_avg"
    },
    "graze_((autotroph_sname))": {
@@ -2045,21 +2081,21 @@
       "frequency": "medium",
       "longname": "pH",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "layer_avg"
    },
    "pH_3D_ALT_CO2": {
       "frequency": "never",
       "longname": "pH, Alternative CO2",
       "operator": "average",
-      "units": "none",
+      "units": 1,
       "vertical_grid": "layer_avg"
    },
    "pfeToSed": {
       "frequency": "medium",
       "longname": "pFe Flux to Sediments",
       "operator": "average",
-      "units": "nmolFe/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "photoC_((autotroph_sname))": {
@@ -2171,11 +2207,18 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "pocToFloor": {
+      "frequency": "never",
+      "longname": "POC Flux Hitting Sea Floor",
+      "operator": "average",
+      "units": "nmol/cm^2/s",
+      "vertical_grid": "none"
+   },
    "pocToSed": {
       "frequency": "medium",
       "longname": "POC Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "pocToSed_13C": {
@@ -2185,7 +2228,7 @@
       "frequency": "medium",
       "longname": "PO13C Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "pocToSed_14C": {
@@ -2195,21 +2238,21 @@
       "frequency": "medium",
       "longname": "PO14C Flux to Sediments",
       "operator": "average",
-      "units": "nmolC/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "ponToSed": {
       "frequency": "medium",
       "longname": "nitrogen burial Flux to Sediments",
       "operator": "average",
-      "units": "nmolN/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "popToSed": {
       "frequency": "medium",
       "longname": "phosphorus Flux to Sediments",
       "operator": "average",
-      "units": "nmolP/cm^2/s",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "x_graze_((zooplankton_sname))": {
