@@ -4,7 +4,7 @@ module marbl_io_mod
 ! netCDF support. Machines without netCDF can still built / run the other tests (without
 ! -D_NETCDF this module does not include netCDF functions but will not provide any I/O)
 
-  use marbl_kinds_mod, only : char_len
+  use marbl_kinds_mod, only : r8, char_len
   use marbl_interface, only : marbl_interface_class
   use marbl_logging,   only : marbl_log_type
 #ifdef _NETCDF
@@ -27,18 +27,31 @@ module marbl_io_mod
   type, private :: netcdf_dimids
     integer :: num_inst_id
     integer :: num_levels_id
-    integer :: num_ifaces_id
   end type netcdf_dimids
-  type(netcdf_dimids) :: dimids
+  type(netcdf_dimids) :: dimids_in, dimids_out
+
+  ! MARBL needs to track domain variable ids to use when writing netCDF variables
+  type, private :: netcdf_domain_ids
+    integer :: delta_z_id
+    integer :: zt_id
+    integer :: zw_id
+  end type netcdf_domain_ids
+  type(netcdf_domain_ids) :: domain_ids_in, domain_ids_out
 
   ! netCDF ids usd for writing diagnostic output
   integer, allocatable, dimension(:) :: surface_diag_ids, interior_diag_ids
 
   public :: marbl_io_open
+  public :: marbl_io_read_domain
   public :: marbl_io_define_diags
   public :: marbl_io_write_diags
   public :: marbl_io_close
   public :: marbl_io_close_all
+
+  interface marbl_io_read_domain
+    module procedure marbl_io_read_domain_by_id
+    module procedure marbl_io_read_domain_by_name
+  end interface marbl_io_read_domain
 
   interface marbl_io_close
     module procedure marbl_io_close_by_id
@@ -113,6 +126,78 @@ contains
 
   !*****************************************************************************
 
+  subroutine marbl_io_read_domain_by_id(file_id, num_levels, delta_z, zt, zw, driver_status_log)
+    ! Given netCDF identifier, populate domain variables
+
+    integer,                                  intent(in)    :: file_id
+    integer,                                  intent(inout)  :: num_levels
+    real(kind=r8), allocatable, dimension(:), intent(inout) :: delta_z, zt, zw
+    type(marbl_log_type),                     intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_domain_by_id'
+
+    ! Get file_id given file_name
+    if ((file_id.eq.0).and.(driver_status_log%labort_marbl)) then
+      call driver_status_log%log_error_trace('get_nc_file_id', subname)
+      return
+    end if
+
+    ! Read num_levels dimension
+    call netcdf_check(nf90_inq_dimid(file_id, 'zt', dimids_in%num_levels_id), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_inq_dimid(zt)', subname)
+      return
+    end if
+    call netcdf_check(nf90_inquire_dimension(file_id, dimids_in%num_levels_id, len=num_levels), driver_status_log)
+
+    ! Allocate memory for delta_z, zt, and zw then read from file
+    allocate(delta_z(num_levels), zt(num_levels), zw(num_levels))
+    call netcdf_check(nf90_inq_varid(file_id, 'delta_z', domain_ids_in%delta_z_id), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_inq_varid(delta_z)', subname)
+      return
+    end if
+    call netcdf_check(nf90_inq_varid(file_id, 'zt', domain_ids_in%zt_id), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_inq_varid(zt)', subname)
+      return
+    end if
+    call netcdf_check(nf90_inq_varid(file_id, 'zw', domain_ids_in%zw_id), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_inq_varid(zw)', subname)
+      return
+    end if
+    call netcdf_check(nf90_get_var(file_id, domain_ids_in%delta_z_id, delta_z), driver_status_log)
+    call netcdf_check(nf90_get_var(file_id, domain_ids_in%zt_id, zt), driver_status_log)
+    call netcdf_check(nf90_get_var(file_id, domain_ids_in%zw_id, zw), driver_status_log)
+
+  end subroutine marbl_io_read_domain_by_id
+
+  !*****************************************************************************
+
+  subroutine marbl_io_read_domain_by_name(file_name, num_levels, delta_z, zt, zw, driver_status_log)
+    ! Given netCDF file name, populate domain variables
+
+    character(len=*),                         intent(in)     :: file_name
+    integer,                                  intent(inout)  :: num_levels
+    real(kind=r8), allocatable, dimension(:), intent(inout) :: delta_z, zt, zw
+    type(marbl_log_type),                     intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_domain_by_name'
+    integer :: file_id
+
+    ! Get file_id given file_name
+    file_id = get_nc_file_id(file_name, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('get_nc_file_id', subname)
+      return
+    end if
+    call marbl_io_read_domain_by_id(file_id, num_levels, delta_z, zt, zw, driver_status_log)
+
+  end subroutine marbl_io_read_domain_by_name
+
+  !*****************************************************************************
+
   subroutine marbl_io_define_diags(marbl_instances, outfile, driver_status_log)
 
     type(marbl_interface_class), dimension(:), intent(in)    :: marbl_instances
@@ -137,7 +222,7 @@ contains
     ! netCDF dimensions
     ! 1) num_inst = number of netCDF instances
     num_inst = size(marbl_instances)
-    call netcdf_check(nf90_def_dim(file_id, 'num_inst', num_inst, dimids%num_inst_id), driver_status_log)
+    call netcdf_check(nf90_def_dim(file_id, 'num_inst', num_inst, dimids_out%num_inst_id), driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('nf90_def_dim(num_inst)', subname)
       return
@@ -145,21 +230,25 @@ contains
 
     ! 2) num_levels = number of levels (domain should be the same for all columns)
     num_levels = marbl_instances(1)%domain%km
-    call netcdf_check(nf90_def_dim(file_id, 'num_levels', num_levels, dimids%num_levels_id), driver_status_log)
+    call netcdf_check(nf90_def_dim(file_id, 'num_levels', num_levels, dimids_out%num_levels_id), driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('nf90_def_dim(num_levels)', subname)
       return
     end if
 
-    ! 3) num_ifaces = number of interfaces (domain should be the same for all columns)
-    call netcdf_check(nf90_def_dim(file_id, 'num_ifaces', num_levels+1, dimids%num_ifaces_id), driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('nf90_def_dim(num_ifaces)', subname)
-      return
-    end if
-
     ! netCDF variables
-    ! 1) Surface diagnostics
+    ! 1) Domain variables
+    call netcdf_check(nf90_def_var(file_id, 'zt', NF90_DOUBLE, (/dimids_out%num_levels_id/), domain_ids_out%zt_id), &
+                      driver_status_log)
+    call netcdf_check(nf90_put_att(file_id, domain_ids_out%zt_id, "long_name", "cell center depth"), driver_status_log)
+    call netcdf_check(nf90_put_att(file_id, domain_ids_out%zt_id, "units", "m"), driver_status_log)
+    call netcdf_check(nf90_def_var(file_id, 'zw', NF90_DOUBLE, (/dimids_out%num_levels_id/), domain_ids_out%zw_id), &
+                      driver_status_log)
+    call netcdf_check(nf90_put_att(file_id, domain_ids_out%zw_id, "long_name", "cell interface depth"), &
+                      driver_status_log)
+    call netcdf_check(nf90_put_att(file_id, domain_ids_out%zw_id, "units", "m"), driver_status_log)
+
+    ! 2) Surface diagnostics
     diag_size = size(marbl_instances(1)%surface_flux_diags%diags)
     allocate(surface_diag_ids(diag_size))
     do n=1, diag_size
@@ -172,7 +261,7 @@ contains
       end if
     end do
 
-    ! 2) Interior diagnostics
+    ! 3) Interior diagnostics
     diag_size = size(marbl_instances(1)%interior_tendency_diags%diags)
     allocate(interior_diag_ids(diag_size))
     do n=1, diag_size
@@ -217,7 +306,11 @@ contains
     end if
 
 #ifdef _NETCDF
-    ! 1) Surface diagnostics
+    ! 1) Domain variables
+    call netcdf_check(nf90_put_var(file_id, domain_ids_out%zt_id, marbl_instances(1)%domain%zt), driver_status_log)
+    call netcdf_check(nf90_put_var(file_id, domain_ids_out%zw_id, marbl_instances(1)%domain%zw), driver_status_log)
+
+    ! 2) Surface diagnostics
     diag_size = size(marbl_instances(1)%surface_flux_diags%diags)
     do num_inst=1, size(marbl_instances)
       do n=1, diag_size
@@ -231,7 +324,7 @@ contains
       end do
     end do
 
-    ! 2) Interior diagnostics
+    ! 3) Interior diagnostics
     diag_size = size(marbl_instances(1)%interior_tendency_diags%diags)
     do num_inst=1, size(marbl_instances)
       do n=1, diag_size
@@ -428,10 +521,10 @@ contains
     select case (trim(diag%diags(diag_ind)%vertical_grid))
       case ('none')
         call netcdf_check(nf90_def_var(file_id, varname, NF90_DOUBLE, &
-             (/dimids%num_inst_id/), ncid), driver_status_log)
+             (/dimids_out%num_inst_id/), ncid), driver_status_log)
       case ('layer_avg')
         call netcdf_check(nf90_def_var(file_id, varname, NF90_DOUBLE, &
-             (/dimids%num_levels_id, dimids%num_inst_id/), ncid), driver_status_log)
+             (/dimids_out%num_levels_id, dimids_out%num_inst_id/), ncid), driver_status_log)
       case DEFAULT
         write(log_message, '(3A)') "'", trim(diag%diags(diag_ind)%vertical_grid), &
              "' is not a valid vertical grid"
