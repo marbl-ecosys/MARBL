@@ -150,12 +150,19 @@ if [ "${STATUS}" == "PASS" ]; then
   STATUS=$(check_return $?)
   print_status "requested_diags.py" >> $OUTFILE
 
-  # Print all forcings MARBL requires
+  # Print all forcings MARBL requires without multiple PAR subcols
   cd ${MARBL_ROOT}/tests/regression_tests/requested_forcings
   echo "$ ./requested_forcings.py"
   ./requested_forcings.py
   STATUS=$(check_return $?)
   print_status "requested_forcings.py" >> $OUTFILE
+
+  # Print all forcings MARBL requires with multiple PAR subcols
+  cd ${MARBL_ROOT}/tests/regression_tests/requested_forcings
+  echo "$ ./requested_forcings.py -n test_with_PAR.nml"
+  ./requested_forcings.py -n test_with_PAR.nml
+  STATUS=$(check_return $?)
+  print_status "requested_forcings.py -n test_with_PAR.nml" >> $OUTFILE
 
   # Print all restoring fields being requested
   cd ${MARBL_ROOT}/tests/regression_tests/requested_restoring

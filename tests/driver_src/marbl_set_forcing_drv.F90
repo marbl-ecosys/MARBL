@@ -3,9 +3,9 @@ module marbl_set_forcing_drv
   use marbl_interface,     only : marbl_interface_class
   use marbl_kinds_mod,     only : r8, char_len
 
-  Implicit None
-  Private
-  Save
+  implicit none
+  private
+  save
 
   Public :: test
 
