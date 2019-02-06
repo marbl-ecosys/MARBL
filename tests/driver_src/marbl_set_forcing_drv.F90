@@ -18,6 +18,7 @@ Contains
     use marbl_logging, only : marbl_log_type
     use marbl_io_mod,  only : marbl_io_open
     use marbl_io_mod,  only : marbl_io_read_domain
+    use marbl_io_mod,  only : marbl_io_read_forcing_field
     use marbl_io_mod,  only : marbl_io_define_diags
     use marbl_io_mod,  only : marbl_io_write_diags
     use marbl_io_mod,  only : marbl_io_close_all
@@ -30,7 +31,7 @@ Contains
     character(len=*), parameter :: outfile = 'diagnostics.nc'
     character(len=char_len) :: log_message
     real(kind=r8), allocatable, dimension(:) :: delta_z, zt, zw
-    integer :: num_levels, n
+    integer :: num_levels, m, n
 
     ! 1. Open necessary netCDF files
     !    a) Input (grid info, forcing fields, initial conditions)
@@ -64,6 +65,9 @@ Contains
                                    gcm_zw = zw,                       &
                                    gcm_zt = zt)
       ! 4. Call set_surface_forcing()
+      do m=1,size(marbl_instances(n)%surface_flux_forcings)
+        call marbl_io_read_forcing_field(infile, marbl_instances(n)%surface_flux_forcings(m), driver_status_log)
+      end do
       ! 5. Call set_interior_forcing()
     end do
     ! 6. Define diagnostic fields in output netCDF file

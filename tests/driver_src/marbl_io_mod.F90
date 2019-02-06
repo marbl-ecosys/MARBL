@@ -43,6 +43,7 @@ module marbl_io_mod
 
   public :: marbl_io_open
   public :: marbl_io_read_domain
+  public :: marbl_io_read_forcing_field
   public :: marbl_io_define_diags
   public :: marbl_io_write_diags
   public :: marbl_io_close
@@ -172,6 +173,23 @@ contains
     call netcdf_check(nf90_get_var(file_id, domain_ids_in%zw_id, zw), driver_status_log)
 
   end subroutine marbl_io_read_domain_by_id
+
+  subroutine marbl_io_read_forcing_field(file_name, forcing_field, driver_status_log)
+
+    use marbl_interface_public_types, only : marbl_forcing_fields_type
+
+    character(len=*),                intent(in)    :: file_name
+    type(marbl_forcing_fields_type), intent(inout) :: forcing_field
+    type(marbl_log_type),            intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_forcing_field'
+    character(len=char_len)     :: log_message
+
+    write(log_message, "(6A)") 'Reading ', trim(forcing_field%metadata%varname), &
+          ' (units: ', trim(forcing_field%metadata%field_units),') from ', trim(file_name)
+    call driver_status_log%log_noerror(log_message, subname)
+
+  end subroutine marbl_io_read_forcing_field
 
   !*****************************************************************************
 
