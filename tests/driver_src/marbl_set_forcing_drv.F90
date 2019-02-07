@@ -64,10 +64,22 @@ Contains
                                    gcm_delta_z = delta_z,             &
                                    gcm_zw = zw,                       &
                                    gcm_zt = zt)
-      ! 4. Call set_surface_forcing()
-      do m=1,size(marbl_instances(n)%surface_flux_forcings)
-        call marbl_io_read_forcing_field(infile, marbl_instances(n)%surface_flux_forcings(m), driver_status_log)
+
+      ! 4. Call surface_flux_compute()
+      !    i. populate surface_flux_forcings
+      call marbl_io_read_forcing_field(infile, marbl_instances(n)%surface_flux_forcings, driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        call driver_status_log%log_error_trace('marbl_io_read_forcing_field', subname)
+        return
+      end if
+      !    ii. populate tracers_at_surface
+      !    iii. populate saved_state
+      do m=1, size(marbl_instances(n)%surface_flux_saved_state%state)
+        marbl_instances(n)%surface_flux_saved_state%state(m)%field_2d(1) = 0
       end do
+      !    iv. call surface_flux_compute()
+      call marbl_instances(n)%surface_flux_compute()
+
       ! 5. Call set_interior_forcing()
     end do
     ! 6. Define diagnostic fields in output netCDF file

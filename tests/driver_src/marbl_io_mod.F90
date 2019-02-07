@@ -174,23 +174,6 @@ contains
 
   end subroutine marbl_io_read_domain_by_id
 
-  subroutine marbl_io_read_forcing_field(file_name, forcing_field, driver_status_log)
-
-    use marbl_interface_public_types, only : marbl_forcing_fields_type
-
-    character(len=*),                intent(in)    :: file_name
-    type(marbl_forcing_fields_type), intent(inout) :: forcing_field
-    type(marbl_log_type),            intent(inout) :: driver_status_log
-
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_forcing_field'
-    character(len=char_len)     :: log_message
-
-    write(log_message, "(6A)") 'Reading ', trim(forcing_field%metadata%varname), &
-          ' (units: ', trim(forcing_field%metadata%field_units),') from ', trim(file_name)
-    call driver_status_log%log_noerror(log_message, subname)
-
-  end subroutine marbl_io_read_forcing_field
-
   !*****************************************************************************
 
   subroutine marbl_io_read_domain_by_name(file_name, num_levels, delta_z, zt, zw, driver_status_log)
@@ -213,6 +196,66 @@ contains
     call marbl_io_read_domain_by_id(file_id, num_levels, delta_z, zt, zw, driver_status_log)
 
   end subroutine marbl_io_read_domain_by_name
+
+  !*****************************************************************************
+
+  subroutine marbl_io_read_forcing_field(file_name, forcing_fields, driver_status_log)
+
+    use marbl_interface_public_types, only : marbl_forcing_fields_type
+
+    character(len=*),                              intent(in)    :: file_name
+    type(marbl_forcing_fields_type), dimension(:), intent(inout) :: forcing_fields
+    type(marbl_log_type),                          intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_forcing_field'
+    character(len=char_len)     :: log_message
+    integer :: n, varid, file_id
+
+    ! Get file_id given file_name
+    file_id = get_nc_file_id(file_name, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('get_nc_file_id', subname)
+      return
+    end if
+
+    do n=1, size(forcing_fields)
+      select case(trim(forcing_fields(n)%metadata%varname))
+        case('u10_sqr')
+          call netcdf_check(nf90_inq_varid(file_id, 'u10_sqr', varid), driver_status_log)
+        case('sss')
+          call netcdf_check(nf90_inq_varid(file_id, 'SSS', varid), driver_status_log)
+        case('sst')
+          call netcdf_check(nf90_inq_varid(file_id, 'SST', varid), driver_status_log)
+        case('Ice Fraction')
+          call netcdf_check(nf90_inq_varid(file_id, 'ice_frac', varid), driver_status_log)
+        case('Dust Flux')
+          call netcdf_check(nf90_inq_varid(file_id, 'dust_flux', varid), driver_status_log)
+        case('Iron Flux')
+          call netcdf_check(nf90_inq_varid(file_id, 'iron_flux', varid), driver_status_log)
+        case('NOx Flux')
+          call netcdf_check(nf90_inq_varid(file_id, 'nox_flux', varid), driver_status_log)
+        case('NHy Flux')
+          call netcdf_check(nf90_inq_varid(file_id, 'nhy_flux', varid), driver_status_log)
+        case('Atmospheric Pressure')
+          call netcdf_check(nf90_inq_varid(file_id, 'atm_pressure', varid), driver_status_log)
+        case('xco2')
+          call netcdf_check(nf90_inq_varid(file_id, 'atm_co2', varid), driver_status_log)
+        case('xco2_alt_co2')
+          call netcdf_check(nf90_inq_varid(file_id, 'atm_alt_co2', varid), driver_status_log)
+        case DEFAULT
+          write(log_message, "(3A)") "Unrecognized forcing field '", trim(forcing_fields(n)%metadata%varname), "'"
+          call driver_status_log%log_error(log_message, subname)
+          return
+      end select
+      if (driver_status_log%labort_marbl) then
+        write(log_message, "(3A)") "nf90_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
+        call driver_status_log%log_error_trace(log_message, subname)
+        return
+      end if
+      call netcdf_check(nf90_get_var(file_id, varid, forcing_fields(n)%field_0d(1)), driver_status_log)
+    end do
+
+  end subroutine marbl_io_read_forcing_field
 
   !*****************************************************************************
 
