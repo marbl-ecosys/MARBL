@@ -1,4 +1,4 @@
-module marbl_set_forcing_drv
+module marbl_compute_cols_drv
 
   use marbl_interface, only : marbl_interface_class
   use marbl_kinds_mod, only : r8, char_len
@@ -24,7 +24,7 @@ Contains
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_set_forcing_drv:test'
+    character(len=*), parameter :: subname = 'marbl_compute_cols_drv:test'
     character(len=*), parameter :: infile = 'marbl.nc'
     character(len=*), parameter :: outfile = 'diagnostics.nc'
     character(len=char_len) :: log_message
@@ -118,7 +118,7 @@ Contains
     real(kind=r8), allocatable, dimension(:), intent(inout) :: delta_z, zt, zw
     type(marbl_log_type),                     intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_set_forcing_drv:read_domain'
+    character(len=*), parameter :: subname = 'marbl_compute_cols_drv:read_domain'
 
     num_levels = 60
     allocate(delta_z(num_levels), zt(num_levels), zw(num_levels))
@@ -154,7 +154,7 @@ Contains
     type(marbl_forcing_fields_type), dimension(:), intent(inout) :: forcing_fields
     type(marbl_log_type),                          intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_set_forcing_drv:read_forcing_field'
+    character(len=*), parameter :: subname = 'marbl_compute_cols_drv:read_forcing_field'
     character(len=char_len)     :: log_message
     integer :: n
 
@@ -198,4 +198,4 @@ Contains
 
   !****************************************************************************
 
-end module marbl_set_forcing_drv
+end module marbl_compute_cols_drv

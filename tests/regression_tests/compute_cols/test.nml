@@ -1,5 +1,5 @@
 &marbl_driver_nml
-testname="set_forcing"
+testname="compute_cols"
 num_PAR_subcols=6
 num_inst=2
 /
