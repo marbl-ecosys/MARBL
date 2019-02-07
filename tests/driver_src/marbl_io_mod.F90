@@ -28,7 +28,7 @@ module marbl_io_mod
     integer :: num_inst_id
     integer :: num_levels_id
   end type netcdf_dimids
-  type(netcdf_dimids) :: dimids_in, dimids_out
+  type(netcdf_dimids) :: dimids_out
 
   ! MARBL needs to track domain variable ids to use when writing netCDF variables
   type, private :: netcdf_domain_ids
@@ -36,23 +36,24 @@ module marbl_io_mod
     integer :: zt_id
     integer :: zw_id
   end type netcdf_domain_ids
-  type(netcdf_domain_ids) :: domain_ids_in, domain_ids_out
+  type(netcdf_domain_ids) :: domain_ids_out
 
   ! netCDF ids usd for writing diagnostic output
   integer, allocatable, dimension(:) :: surface_diag_ids, interior_diag_ids
 
   public :: marbl_io_open
-  public :: marbl_io_read_domain
-  public :: marbl_io_read_forcing_field
+  public :: marbl_io_read_field
   public :: marbl_io_define_diags
   public :: marbl_io_write_diags
   public :: marbl_io_close
   public :: marbl_io_close_all
 
-  interface marbl_io_read_domain
-    module procedure marbl_io_read_domain_by_id
-    module procedure marbl_io_read_domain_by_name
-  end interface marbl_io_read_domain
+  interface marbl_io_read_field
+    module procedure marbl_io_read_field_0d_by_id
+    module procedure marbl_io_read_field_0d_by_name
+    module procedure marbl_io_read_field_1d_by_id
+    module procedure marbl_io_read_field_1d_by_name
+  end interface marbl_io_read_field
 
   interface marbl_io_close
     module procedure marbl_io_close_by_id
@@ -127,64 +128,45 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_domain_by_id(file_id, num_levels, delta_z, zt, zw, driver_status_log)
+  subroutine marbl_io_read_field_0d_by_id(file_id, field_name, field, driver_status_log)
     ! Given netCDF identifier, populate domain variables
 
-    integer,                                  intent(in)    :: file_id
-    integer,                                  intent(inout)  :: num_levels
-    real(kind=r8), allocatable, dimension(:), intent(inout) :: delta_z, zt, zw
-    type(marbl_log_type),                     intent(inout) :: driver_status_log
+    integer,              intent(in)    :: file_id
+    character(len=*),     intent(in)    :: field_name
+    real(kind=r8),        intent(inout) :: field
+    type(marbl_log_type), intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_domain_by_id'
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_field_0d_by_id'
+    character(len=char_len) :: log_message
+    integer :: var_id
 
-    ! Get file_id given file_name
-    if ((file_id.eq.0).and.(driver_status_log%labort_marbl)) then
-      call driver_status_log%log_error_trace('get_nc_file_id', subname)
-      return
-    end if
-
-    ! Read num_levels dimension
-    call netcdf_check(nf90_inq_dimid(file_id, 'zt', dimids_in%num_levels_id), driver_status_log)
+    call netcdf_check(nf90_inq_varid(file_id, trim(field_name), var_id), driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('nf90_inq_dimid(zt)', subname)
+      write(log_message, "(3A)") 'nf90_inq_varid(', trim(field_name), ')'
+      call driver_status_log%log_error_trace(log_message, subname)
       return
     end if
-    call netcdf_check(nf90_inquire_dimension(file_id, dimids_in%num_levels_id, len=num_levels), driver_status_log)
 
-    ! Allocate memory for delta_z, zt, and zw then read from file
-    allocate(delta_z(num_levels), zt(num_levels), zw(num_levels))
-    call netcdf_check(nf90_inq_varid(file_id, 'delta_z', domain_ids_in%delta_z_id), driver_status_log)
+    call netcdf_check(nf90_get_var(file_id, var_id, field), driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('nf90_inq_varid(delta_z)', subname)
+      write(log_message, "(3A)") 'nf90_get_var(', trim(field_name), ')'
+      call driver_status_log%log_error_trace(log_message, subname)
       return
     end if
-    call netcdf_check(nf90_inq_varid(file_id, 'zt', domain_ids_in%zt_id), driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('nf90_inq_varid(zt)', subname)
-      return
-    end if
-    call netcdf_check(nf90_inq_varid(file_id, 'zw', domain_ids_in%zw_id), driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('nf90_inq_varid(zw)', subname)
-      return
-    end if
-    call netcdf_check(nf90_get_var(file_id, domain_ids_in%delta_z_id, delta_z), driver_status_log)
-    call netcdf_check(nf90_get_var(file_id, domain_ids_in%zt_id, zt), driver_status_log)
-    call netcdf_check(nf90_get_var(file_id, domain_ids_in%zw_id, zw), driver_status_log)
 
-  end subroutine marbl_io_read_domain_by_id
+  end subroutine marbl_io_read_field_0d_by_id
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_domain_by_name(file_name, num_levels, delta_z, zt, zw, driver_status_log)
-    ! Given netCDF file name, populate domain variables
+  subroutine marbl_io_read_field_0d_by_name(file_name, field_name, field, driver_status_log)
+    ! Given netCDF identifier, populate domain variables
 
-    character(len=*),                         intent(in)     :: file_name
-    integer,                                  intent(inout)  :: num_levels
-    real(kind=r8), allocatable, dimension(:), intent(inout) :: delta_z, zt, zw
-    type(marbl_log_type),                     intent(inout) :: driver_status_log
+    character(len=*),     intent(in)    :: file_name
+    character(len=*),     intent(in)    :: field_name
+    real(kind=r8),        intent(inout) :: field
+    type(marbl_log_type), intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_domain_by_name'
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_field_0d_by_id'
     integer :: file_id
 
     ! Get file_id given file_name
@@ -193,23 +175,57 @@ contains
       call driver_status_log%log_error_trace('get_nc_file_id', subname)
       return
     end if
-    call marbl_io_read_domain_by_id(file_id, num_levels, delta_z, zt, zw, driver_status_log)
 
-  end subroutine marbl_io_read_domain_by_name
+    call marbl_io_read_field_0d_by_id(file_id, field_name, field, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('marbl_io_read_field_0d_by_id', subname)
+      return
+    end if
+
+  end subroutine marbl_io_read_field_0d_by_name
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_forcing_field(file_name, forcing_fields, driver_status_log)
+  subroutine marbl_io_read_field_1d_by_id(file_id, field_name, field, driver_status_log)
+    ! Given netCDF identifier, populate domain variables
 
-    use marbl_interface_public_types, only : marbl_forcing_fields_type
+    integer,                     intent(in)    :: file_id
+    character(len=*),            intent(in)    :: field_name
+    real(kind=r8), dimension(:), intent(inout) :: field
+    type(marbl_log_type),        intent(inout) :: driver_status_log
 
-    character(len=*),                              intent(in)    :: file_name
-    type(marbl_forcing_fields_type), dimension(:), intent(inout) :: forcing_fields
-    type(marbl_log_type),                          intent(inout) :: driver_status_log
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_field_1d_by_id'
+    character(len=char_len) :: log_message
+    integer :: var_id
 
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_forcing_field'
-    character(len=char_len)     :: log_message
-    integer :: n, varid, file_id
+    call netcdf_check(nf90_inq_varid(file_id, trim(field_name), var_id), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      write(log_message, "(3A)") 'nf90_inq_varid(', trim(field_name), ')'
+      call driver_status_log%log_error_trace(log_message, subname)
+      return
+    end if
+
+    call netcdf_check(nf90_get_var(file_id, var_id, field), driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      write(log_message, "(3A)") 'nf90_get_var(', trim(field_name), ')'
+      call driver_status_log%log_error_trace(log_message, subname)
+      return
+    end if
+
+  end subroutine marbl_io_read_field_1d_by_id
+
+  !*****************************************************************************
+
+  subroutine marbl_io_read_field_1d_by_name(file_name, field_name, field, driver_status_log)
+    ! Given netCDF identifier, populate domain variables
+
+    character(len=*),            intent(in)    :: file_name
+    character(len=*),            intent(in)    :: field_name
+    real(kind=r8), dimension(:), intent(inout) :: field
+    type(marbl_log_type),        intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_field_1d_by_id'
+    integer :: file_id
 
     ! Get file_id given file_name
     file_id = get_nc_file_id(file_name, driver_status_log)
@@ -218,44 +234,13 @@ contains
       return
     end if
 
-    do n=1, size(forcing_fields)
-      select case(trim(forcing_fields(n)%metadata%varname))
-        case('u10_sqr')
-          call netcdf_check(nf90_inq_varid(file_id, 'u10_sqr', varid), driver_status_log)
-        case('sss')
-          call netcdf_check(nf90_inq_varid(file_id, 'SSS', varid), driver_status_log)
-        case('sst')
-          call netcdf_check(nf90_inq_varid(file_id, 'SST', varid), driver_status_log)
-        case('Ice Fraction')
-          call netcdf_check(nf90_inq_varid(file_id, 'ice_frac', varid), driver_status_log)
-        case('Dust Flux')
-          call netcdf_check(nf90_inq_varid(file_id, 'dust_flux', varid), driver_status_log)
-        case('Iron Flux')
-          call netcdf_check(nf90_inq_varid(file_id, 'iron_flux', varid), driver_status_log)
-        case('NOx Flux')
-          call netcdf_check(nf90_inq_varid(file_id, 'nox_flux', varid), driver_status_log)
-        case('NHy Flux')
-          call netcdf_check(nf90_inq_varid(file_id, 'nhy_flux', varid), driver_status_log)
-        case('Atmospheric Pressure')
-          call netcdf_check(nf90_inq_varid(file_id, 'atm_pressure', varid), driver_status_log)
-        case('xco2')
-          call netcdf_check(nf90_inq_varid(file_id, 'atm_co2', varid), driver_status_log)
-        case('xco2_alt_co2')
-          call netcdf_check(nf90_inq_varid(file_id, 'atm_alt_co2', varid), driver_status_log)
-        case DEFAULT
-          write(log_message, "(3A)") "Unrecognized forcing field '", trim(forcing_fields(n)%metadata%varname), "'"
-          call driver_status_log%log_error(log_message, subname)
-          return
-      end select
-      if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") "nf90_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-        call driver_status_log%log_error_trace(log_message, subname)
-        return
-      end if
-      call netcdf_check(nf90_get_var(file_id, varid, forcing_fields(n)%field_0d(1)), driver_status_log)
-    end do
+    call marbl_io_read_field_1d_by_id(file_id, field_name, field, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('marbl_io_read_field_1d_by_id', subname)
+      return
+    end if
 
-  end subroutine marbl_io_read_forcing_field
+  end subroutine marbl_io_read_field_1d_by_name
 
   !*****************************************************************************
 
