@@ -143,6 +143,13 @@ if [ "${STATUS}" == "PASS" ]; then
   STATUS=$(check_return $?)
   print_status "gen_input_file.py" >> $OUTFILE
 
+  # Initialize MARBL, compute surface fluxes and interior tendencies
+  cd ${MARBL_ROOT}/tests/regression_tests/compute_cols
+  echo "$ ./compute_cols.py"
+  ./compute_cols.py
+  STATUS=$(check_return $?)
+  print_status "compute_cols.py" >> $OUTFILE
+
   # Print all diagnostics MARBL can provide
   cd ${MARBL_ROOT}/tests/regression_tests/requested_diags
   echo "$ ./requested_diags.py"

@@ -381,7 +381,7 @@ Program marbl
 
     case ('compute_cols')
       lprint_marbl_log = .false.
-      call marbl_compute_cols_test(marbl_instances, driver_status_log)
+      call marbl_compute_cols_test(marbl_instances, num_PAR_subcols, driver_status_log)
 
     !    UNIT TESTS
     ! -- get_put test -- !

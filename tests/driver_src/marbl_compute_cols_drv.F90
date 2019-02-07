@@ -14,7 +14,7 @@ Contains
 
   !****************************************************************************
 
-  subroutine test(marbl_instances, driver_status_log)
+  subroutine test(marbl_instances, num_PAR_subcols, driver_status_log)
 
     use marbl_io_mod,  only : marbl_io_open
     use marbl_io_mod,  only : marbl_io_define_diags
@@ -22,6 +22,7 @@ Contains
     use marbl_io_mod,  only : marbl_io_close_all
 
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
+    integer,                                   intent(in)    :: num_PAR_subcols
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_compute_cols_drv:test'
@@ -60,11 +61,11 @@ Contains
     ! PER-INSTANCE CALLS
     do n=1,size(marbl_instances)
       ! 3. Call init()
-      call marbl_instances(n)%init(gcm_num_levels = num_levels,       &
-                                   gcm_num_PAR_subcols = 1,           &
-                                   gcm_num_elements_surface_flux = 1, &
-                                   gcm_delta_z = delta_z,             &
-                                   gcm_zw = zw,                       &
+      call marbl_instances(n)%init(gcm_num_levels = num_levels,           &
+                                   gcm_num_PAR_subcols = num_PAR_subcols, &
+                                   gcm_num_elements_surface_flux = 1,     &
+                                   gcm_delta_z = delta_z,                 &
+                                   gcm_zw = zw,                           &
                                    gcm_zt = zt)
 
       ! 4. Call surface_flux_compute()
