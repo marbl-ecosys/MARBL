@@ -68,38 +68,51 @@ Contains
                                    gcm_zw = zw,                           &
                                    gcm_zt = zt)
 
-      ! 4. Call surface_flux_compute()
+      ! 4. Read tracer initial state
+      call read_tracers(infile, marbl_instances(n)%tracer_metadata, marbl_instances(n)%tracers, &
+                        marbl_instances(n)%tracers_at_surface, driver_status_log)
+
+      ! 5. Call surface_flux_compute()
       !    i. populate surface_flux_forcings
       call read_forcing_field(infile, marbl_instances(n)%surface_flux_forcings, driver_status_log)
       if (driver_status_log%labort_marbl) then
-        call driver_status_log%log_error_trace('read_forcing_field', subname)
+        call driver_status_log%log_error_trace('read_forcing_field(surface)', subname)
         return
       end if
-      !    ii. populate tracers_at_surface
-      !    iii. populate saved_state
+      !    ii. populate saved_state
       do m=1, size(marbl_instances(n)%surface_flux_saved_state%state)
-        marbl_instances(n)%surface_flux_saved_state%state(m)%field_2d(1) = 0._r8
+        marbl_instances(n)%surface_flux_saved_state%state(m)%field_2d(:) = 0._r8
       end do
-      !    iv. call surface_flux_compute()
+      !    iii. call surface_flux_compute()
       call marbl_instances(n)%surface_flux_compute()
 
-      ! 5. Call set_interior_forcing()
+      ! 6. Call set_interior_forcing()
+      !    i. populate interior_tendency_forcings
+      !    ii. populate saved_state
+      do m=1, size(marbl_instances(n)%interior_tendency_saved_state%state)
+        if (allocated(marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d)) then
+          marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d(:) = 0._r8
+        else
+          marbl_instances(n)%interior_tendency_saved_state%state(m)%field_3d(:,1) = 0._r8
+        end if
+      end do
     end do
-    ! 6. Define diagnostic fields in output netCDF file
+
+    ! 7. Define diagnostic fields in output netCDF file
     call marbl_io_define_diags(marbl_instances, outfile, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_define_diags', subname)
       return
     end if
 
-    ! 7. Output netCDF
+    ! 8. Output netCDF
     call marbl_io_write_diags(marbl_instances, outfile, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_write_diags', subname)
       return
     end if
 
-    ! 8. Close all netCDF files
+    ! 9. Close all netCDF files
     call marbl_io_close_all(driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_close_all', subname)
@@ -196,6 +209,35 @@ Contains
     end do
 
   end subroutine read_forcing_field
+
+  !****************************************************************************
+
+  subroutine read_tracers(infile, tracer_metadata, tracers, tracers_at_surface, driver_status_log)
+
+    use marbl_interface_public_types, only : marbl_tracer_metadata_type
+    use marbl_io_mod, only : marbl_io_read_field
+
+    character(len=*),                                 intent(in)    :: infile
+    type(marbl_tracer_metadata_type), dimension(:),   intent(in)    :: tracer_metadata
+    real(kind=r8),                    dimension(:,:), intent(inout) :: tracers            ! (tracer_cnt, num_levels)
+    real(kind=r8),                    dimension(:,:), intent(inout) :: tracers_at_surface ! (num_surface_elem, tracer_cnt)
+    type(marbl_log_type),                             intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_compute_cols_drv:read_tracers'
+    character(len=char_len) :: log_message
+    integer :: n
+
+    do n = 1, size(tracer_metadata)
+      call marbl_io_read_field(infile, trim(tracer_metadata(n)%short_name), tracers(n,:), driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        write(log_message, "(3A)") "marbl_io_read_field(", trim(tracer_metadata(n)%short_name), ")"
+        call driver_status_log%log_error_trace(log_message, subname)
+        return
+      end if
+      tracers_at_surface(1,n) = tracers(n,1)
+    end do
+
+  end subroutine read_tracers
 
   !****************************************************************************
 
