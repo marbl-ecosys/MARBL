@@ -464,13 +464,13 @@ contains
     do n=1, num_tracers
       write(var_name, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%short_name), "_SFLUX"
       write(log_message, "(2A)") "Surface flux of ", trim(marbl_instances(1)%tracer_metadata(n)%long_name)
-      call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_cols_id/), &
+      call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_cols_id, dimids_out%num_inst_id/), &
                         prog_ids_out%sflux_ids(n)), driver_status_log)
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%sflux_ids(n), "long_name", log_message), driver_status_log)
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%sflux_ids(n), "units", "FIXME"), driver_status_log)
       write(var_name, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%short_name), "_TEND"
       write(log_message, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%long_name), "Tendency"
-      call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_levels_id/), &
+      call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_levels_id, dimids_out%num_inst_id/), &
                         prog_ids_out%tendency_ids(n)), driver_status_log)
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%tendency_ids(n), "long_name", log_message), driver_status_log)
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%tendency_ids(n), "units", "FIXME"), driver_status_log)
@@ -544,23 +544,25 @@ contains
     end do
 
     ! 4) Surface fluxes and Tracer tendencies
-    do n=1, size(marbl_instances(1)%tracer_metadata)
-      call netcdf_check(nf90_put_var(file_id, prog_ids_out%sflux_ids(n), marbl_instances(1)%surface_fluxes(1,n)), &
-                        driver_status_log)
-      if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") 'nf90_put_var(', trim(marbl_instances(1)%tracer_metadata(n)%short_name), '_SFLUX)'
-        call driver_status_log%log_error_trace(log_message, subname)
-        return
-      end if
+    do num_inst=1, size(marbl_instances)
+      do n=1, size(marbl_instances(num_inst)%tracer_metadata)
+        call netcdf_check(nf90_put_var(file_id, prog_ids_out%sflux_ids(n), marbl_instances(num_inst)%surface_fluxes(1,n), &
+                          (/1, num_inst/)), driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          write(log_message, "(3A)") 'nf90_put_var(', trim(marbl_instances(num_inst)%tracer_metadata(n)%short_name), '_SFLUX)'
+          call driver_status_log%log_error_trace(log_message, subname)
+          return
+        end if
 
-      call netcdf_check(nf90_put_var(file_id, prog_ids_out%tendency_ids(n), &
-                        marbl_instances(1)%interior_tendencies(n, 1:num_active_levels)), &
-                        driver_status_log)
-      if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") 'nf90_put_var(', trim(marbl_instances(1)%tracer_metadata(n)%short_name), '_TEND)'
-        call driver_status_log%log_error_trace(log_message, subname)
-        return
-      end if
+        call netcdf_check(nf90_put_var(file_id, prog_ids_out%tendency_ids(n), &
+                          marbl_instances(num_inst)%interior_tendencies(n, 1:num_active_levels), &
+                          (/1, num_inst/)), driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          write(log_message, "(3A)") 'nf90_put_var(', trim(marbl_instances(num_inst)%tracer_metadata(n)%short_name), '_TEND)'
+          call driver_status_log%log_error_trace(log_message, subname)
+          return
+        end if
+      end do
     end do
 
 #endif
