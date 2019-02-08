@@ -17,8 +17,8 @@ Contains
   subroutine test(marbl_instances, num_PAR_subcols, driver_status_log)
 
     use marbl_io_mod,  only : marbl_io_open
-    use marbl_io_mod,  only : marbl_io_define_diags
-    use marbl_io_mod,  only : marbl_io_write_diags
+    use marbl_io_mod,  only : marbl_io_define_history
+    use marbl_io_mod,  only : marbl_io_write_history
     use marbl_io_mod,  only : marbl_io_close_all
 
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
@@ -27,7 +27,7 @@ Contains
 
     character(len=*), parameter :: subname = 'marbl_compute_cols_drv:test'
     character(len=*), parameter :: infile = 'marbl.nc'
-    character(len=*), parameter :: outfile = 'diagnostics.nc'
+    character(len=*), parameter :: outfile = 'history.nc'
     character(len=char_len) :: log_message
     real(kind=r8), allocatable, dimension(:) :: delta_z, zt, zw
     integer :: num_levels, m, n
@@ -53,7 +53,7 @@ Contains
       call driver_status_log%log_error_trace('marbl_io_open', subname)
       return
     end if
-    write(log_message, "(A, 1X, A)") "* Diagnostics will be written to", outfile
+    write(log_message, "(A, 1X, A)") "* MARBL output will be written to", outfile
     call driver_status_log%log_noerror(log_message, subname)
 
     ! 2. Get domain info, initial conditions, and forcing fields from netCDF file
@@ -88,6 +88,11 @@ Contains
 
       ! 6. Call set_interior_forcing()
       !    i. populate interior_tendency_forcings
+      !call read_forcing_field(infile, marbl_instances(n)%interior_tendency_forcings, driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        call driver_status_log%log_error_trace('read_forcing_field(interior)', subname)
+        return
+      end if
       !    ii. populate saved_state
       do m=1, size(marbl_instances(n)%interior_tendency_saved_state%state)
         if (allocated(marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d)) then
@@ -96,19 +101,20 @@ Contains
           marbl_instances(n)%interior_tendency_saved_state%state(m)%field_3d(:,1) = 0._r8
         end if
       end do
+      call marbl_instances(n)%interior_tendency_compute()
     end do
 
     ! 7. Define diagnostic fields in output netCDF file
-    call marbl_io_define_diags(marbl_instances, outfile, driver_status_log)
+    call marbl_io_define_history(marbl_instances, outfile, driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_io_define_diags', subname)
+      call driver_status_log%log_error_trace('marbl_io_define_history', subname)
       return
     end if
 
     ! 8. Output netCDF
-    call marbl_io_write_diags(marbl_instances, outfile, driver_status_log)
+    call marbl_io_write_history(marbl_instances, outfile, driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_io_write_diags', subname)
+      call driver_status_log%log_error_trace('marbl_io_write_history', subname)
       return
     end if
 
