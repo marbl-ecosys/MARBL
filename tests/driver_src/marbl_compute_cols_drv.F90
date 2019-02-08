@@ -113,7 +113,7 @@ Contains
     end if
 
     ! 8. Output netCDF
-    call marbl_io_write_history(outfile, num_active_levels, marbl_instances, driver_status_log)
+    call marbl_io_write_history(outfile, marbl_instances, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_write_history', subname)
       return

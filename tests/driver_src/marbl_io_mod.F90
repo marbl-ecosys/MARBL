@@ -488,18 +488,15 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_write_history(outfile, num_active_levels, marbl_instances, driver_status_log)
+  subroutine marbl_io_write_history(outfile, marbl_instances, driver_status_log)
 
     character(len=*),                          intent(in)    :: outfile
-    integer,                                   intent(in)    :: num_active_levels
     type(marbl_interface_class), dimension(:), intent(in)    :: marbl_instances
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_write_history'
     character(len=char_len) :: log_message
-    integer :: n, diag_size
-    integer :: file_id
-    integer :: num_inst
+    integer :: n, diag_size, file_id, num_inst, num_active_levels
 
     ! Get file_id given file_name
     file_id = get_nc_file_id(outfile, driver_status_log)
@@ -516,6 +513,7 @@ contains
     ! 2) Surface diagnostics
     diag_size = size(marbl_instances(1)%surface_flux_diags%diags)
     do num_inst=1, size(marbl_instances)
+      num_active_levels = marbl_instances(num_inst)%domain%kmt
       do n=1, diag_size
         call write_diag(file_id, marbl_instances(num_inst)%surface_flux_diags, n, num_inst, num_active_levels, &
                         surface_diag_ids(n), driver_status_log)
@@ -530,10 +528,11 @@ contains
     ! 3) Interior diagnostics
     diag_size = size(marbl_instances(1)%interior_tendency_diags%diags)
     do num_inst=1, size(marbl_instances)
+      ! FIXME #176: changing num_active_levels to num_levels (km instead of kmt) will populate levels below
+      !             num_active_levels with nonsensical values
+      num_active_levels = marbl_instances(num_inst)%domain%kmt
       do n=1, diag_size
-        ! FIXME #176: changing num_active_levels to num_levels (60) will populate levels below
-        !             num_active_levels with nonsensical values
-        call write_diag(file_id, marbl_instances(num_inst)%interior_tendency_diags, n, num_inst, num_active_levels+5, &
+        call write_diag(file_id, marbl_instances(num_inst)%interior_tendency_diags, n, num_inst, num_active_levels, &
              interior_diag_ids(n), driver_status_log)
         if (driver_status_log%labort_marbl) then
           write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%interior_tendency_diags%diags(n)%short_name), ')'
@@ -545,6 +544,7 @@ contains
 
     ! 4) Surface fluxes and Tracer tendencies
     do num_inst=1, size(marbl_instances)
+      num_active_levels = marbl_instances(num_inst)%domain%kmt
       do n=1, size(marbl_instances(num_inst)%tracer_metadata)
         call netcdf_check(nf90_put_var(file_id, prog_ids_out%sflux_ids(n), marbl_instances(num_inst)%surface_fluxes(1,n), &
                           (/1, num_inst/)), driver_status_log)
