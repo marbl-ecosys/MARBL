@@ -30,7 +30,7 @@ Contains
     character(len=*), parameter :: outfile = 'history.nc'
     character(len=char_len) :: log_message
     real(kind=r8), allocatable, dimension(:) :: delta_z, zt, zw
-    integer :: num_levels, m, n
+    integer :: num_levels, num_active_levels, m, n
 
     ! 1. Open necessary netCDF files
     !    a) Input (grid info, forcing fields, initial conditions)
@@ -41,7 +41,7 @@ Contains
     end if
     write(log_message, "(A, 1X, A)") "* Reading input from", infile
     call driver_status_log%log_noerror(log_message, subname)
-    call read_domain(infile, num_levels, delta_z, zt, zw, driver_status_log)
+    call read_domain(infile, num_active_levels, num_levels, delta_z, zt, zw, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('read_domain', subname)
       return
@@ -112,7 +112,7 @@ Contains
     end if
 
     ! 8. Output netCDF
-    call marbl_io_write_history(marbl_instances, outfile, driver_status_log)
+    call marbl_io_write_history(outfile, num_active_levels, marbl_instances, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_write_history', subname)
       return
@@ -129,18 +129,31 @@ Contains
 
   !*****************************************************************************
 
-  subroutine read_domain(infile, num_levels, delta_z, zt, zw, driver_status_log)
+  subroutine read_domain(infile, num_active_levels, num_levels, delta_z, zt, zw, driver_status_log)
 
+    use marbl_io_mod, only : marbl_io_read_dim
     use marbl_io_mod, only : marbl_io_read_field
 
     character(len=*),                         intent(in)    :: infile
+    integer,                                  intent(inout) :: num_active_levels
     integer,                                  intent(inout) :: num_levels
     real(kind=r8), allocatable, dimension(:), intent(inout) :: delta_z, zt, zw
     type(marbl_log_type),                     intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_compute_cols_drv:read_domain'
 
-    num_levels = 60
+    call marbl_io_read_dim(infile, 'zt', num_levels, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('marbl_io_read_field(zt)', subname)
+      return
+    end if
+
+    call marbl_io_read_field(infile, 'active_level_cnt', num_active_levels, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('marbl_io_read_field(active_level_cnt)', subname)
+      return
+    end if
+
     allocate(delta_z(num_levels), zt(num_levels), zw(num_levels))
 
     call marbl_io_read_field(infile, 'delta_z', delta_z, driver_status_log)
