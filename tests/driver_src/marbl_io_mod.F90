@@ -517,8 +517,8 @@ contains
     diag_size = size(marbl_instances(1)%surface_flux_diags%diags)
     do num_inst=1, size(marbl_instances)
       do n=1, diag_size
-        call write_diag(file_id, marbl_instances(num_inst)%surface_flux_diags, n, num_inst, surface_diag_ids(n), &
-             driver_status_log)
+        call write_diag(file_id, marbl_instances(num_inst)%surface_flux_diags, n, num_inst, num_active_levels, &
+                        surface_diag_ids(n), driver_status_log)
         if (driver_status_log%labort_marbl) then
           write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%surface_flux_diags%diags(n)%short_name), ')'
           call driver_status_log%log_error_trace(log_message, subname)
@@ -531,8 +531,10 @@ contains
     diag_size = size(marbl_instances(1)%interior_tendency_diags%diags)
     do num_inst=1, size(marbl_instances)
       do n=1, diag_size
-        call write_diag(file_id, marbl_instances(num_inst)%interior_tendency_diags, n, num_inst, interior_diag_ids(n), &
-             driver_status_log)
+        ! FIXME #176: changing num_active_levels to num_levels (60) will populate levels below
+        !             num_active_levels with nonsensical values
+        call write_diag(file_id, marbl_instances(num_inst)%interior_tendency_diags, n, num_inst, num_active_levels+5, &
+             interior_diag_ids(n), driver_status_log)
         if (driver_status_log%labort_marbl) then
           write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%interior_tendency_diags%diags(n)%short_name), ')'
           call driver_status_log%log_error_trace(log_message, subname)
@@ -782,7 +784,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine write_diag(file_id, diag, diag_ind, num_inst, ncid, driver_status_log)
+  subroutine write_diag(file_id, diag, diag_ind, num_inst, num_active_levels, ncid, driver_status_log)
 
     use marbl_interface_public_types , only : marbl_diagnostics_type
 
@@ -790,6 +792,7 @@ contains
     type(marbl_diagnostics_type), intent(in)    :: diag
     integer,                      intent(in)    :: diag_ind
     integer,                      intent(in)    :: num_inst
+    integer,                      intent(in)    :: num_active_levels
     integer,                      intent(in)    :: ncid
     type(marbl_log_type),         intent(inout) :: driver_status_log
 
@@ -800,7 +803,8 @@ contains
       case ('none')
         call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_2d(1), (/num_inst/)), driver_status_log)
       case ('layer_avg')
-        call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_3d(:,1), (/1,num_inst/)), driver_status_log)
+        call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_3d(1:num_active_levels,1), &
+                          (/1,num_inst/)), driver_status_log)
       case DEFAULT
         write(log_message, '(3A)') "'", trim(diag%diags(diag_ind)%vertical_grid), &
              "' is not a valid vertical grid"

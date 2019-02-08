@@ -67,6 +67,7 @@ Contains
                                    gcm_delta_z = delta_z,                 &
                                    gcm_zw = zw,                           &
                                    gcm_zt = zt)
+      marbl_instances(n)%domain%kmt = num_active_levels
 
       ! 4. Read tracer initial state
       call read_tracers(infile, marbl_instances(n)%tracer_metadata, marbl_instances(n)%tracers, &
@@ -88,7 +89,7 @@ Contains
 
       ! 6. Call set_interior_forcing()
       !    i. populate interior_tendency_forcings
-      !call read_forcing_field(infile, marbl_instances(n)%interior_tendency_forcings, driver_status_log)
+      call read_forcing_field(infile, marbl_instances(n)%interior_tendency_forcings, driver_status_log)
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('read_forcing_field(interior)', subname)
         return
@@ -215,6 +216,18 @@ Contains
           call marbl_io_read_field(infile, 'atm_co2', forcing_fields(n)%field_0d(1), driver_status_log)
         case('xco2_alt_co2')
           call marbl_io_read_field(infile, 'atm_alt_co2', forcing_fields(n)%field_0d(1), driver_status_log)
+        case('PAR Column Fraction')
+          call marbl_io_read_field(infile, 'FRACR_BIN', forcing_fields(n)%field_1d(1,:), driver_status_log)
+        case('Surface Shortwave')
+          call marbl_io_read_field(infile, 'QSW_BIN', forcing_fields(n)%field_1d(1,:), driver_status_log)
+        case('Potential Temperature')
+          call marbl_io_read_field(infile, 'temperature', forcing_fields(n)%field_1d(1,:), driver_status_log)
+        case('Salinity')
+          call marbl_io_read_field(infile, 'salinity', forcing_fields(n)%field_1d(1,:), driver_status_log)
+        case('Pressure')
+          call marbl_io_read_field(infile, 'pressure', forcing_fields(n)%field_1d(1,:), driver_status_log)
+        case('Iron Sediment Flux')
+         call marbl_io_read_field(infile, 'iron_sed_flux', forcing_fields(n)%field_1d(1,:), driver_status_log)
         case DEFAULT
           write(log_message, "(3A)") "Unrecognized forcing field '", trim(forcing_fields(n)%metadata%varname), "'"
           call driver_status_log%log_error(log_message, subname)
