@@ -198,12 +198,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_int_field_0d_by_id(file_id, field_name, field, driver_status_log)
+  subroutine marbl_io_read_int_field_0d_by_id(file_id, field_name, field, driver_status_log, col_id)
 
     integer,              intent(in)    :: file_id
     character(len=*),     intent(in)    :: field_name
     integer,              intent(inout) :: field
     type(marbl_log_type), intent(inout) :: driver_status_log
+    integer, optional,    intent(in)    :: col_id
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_int_field_0d_by_id'
     character(len=char_len) :: log_message
@@ -216,7 +217,11 @@ contains
       return
     end if
 
-    call netcdf_check(nf90_get_var(file_id, varid, field), driver_status_log)
+    if (present(col_id)) then
+      call netcdf_check(nf90_get_var(file_id, varid, field, start=(/col_id/)), driver_status_log)
+    else
+      call netcdf_check(nf90_get_var(file_id, varid, field), driver_status_log)
+    end if
     if (driver_status_log%labort_marbl) then
       write(log_message, "(3A)") 'nf90_get_var(', trim(field_name), ')'
       call driver_status_log%log_error_trace(log_message, subname)
@@ -227,13 +232,14 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_int_field_0d_by_name(file_name, field_name, field, driver_status_log)
+  subroutine marbl_io_read_int_field_0d_by_name(file_name, field_name, field, driver_status_log, col_id)
     ! Given netCDF identifier, populate domain variables
 
     character(len=*),     intent(in)    :: file_name
     character(len=*),     intent(in)    :: field_name
     integer,              intent(inout) :: field
     type(marbl_log_type), intent(inout) :: driver_status_log
+    integer, optional,    intent(in)    :: col_id
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_int_field_0d_by_id'
     integer :: file_id
@@ -245,7 +251,7 @@ contains
       return
     end if
 
-    call marbl_io_read_int_field_0d_by_id(file_id, field_name, field, driver_status_log)
+    call marbl_io_read_int_field_0d_by_id(file_id, field_name, field, driver_status_log, col_id)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_read_int_field_0d_by_id', subname)
       return
@@ -255,12 +261,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_r8_field_0d_by_id(file_id, field_name, field, driver_status_log)
+  subroutine marbl_io_read_r8_field_0d_by_id(file_id, field_name, field, driver_status_log, col_id)
 
     integer,              intent(in)    :: file_id
     character(len=*),     intent(in)    :: field_name
     real(kind=r8),        intent(inout) :: field
     type(marbl_log_type), intent(inout) :: driver_status_log
+    integer, optional,    intent(in)    :: col_id
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_r8_field_0d_by_id'
     character(len=char_len) :: log_message
@@ -273,7 +280,11 @@ contains
       return
     end if
 
-    call netcdf_check(nf90_get_var(file_id, varid, field), driver_status_log)
+    if (present(col_id)) then
+      call netcdf_check(nf90_get_var(file_id, varid, field, start=(/col_id/)), driver_status_log)
+    else
+      call netcdf_check(nf90_get_var(file_id, varid, field), driver_status_log)
+    end if
     if (driver_status_log%labort_marbl) then
       write(log_message, "(3A)") 'nf90_get_var(', trim(field_name), ')'
       call driver_status_log%log_error_trace(log_message, subname)
@@ -284,13 +295,14 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_r8_field_0d_by_name(file_name, field_name, field, driver_status_log)
+  subroutine marbl_io_read_r8_field_0d_by_name(file_name, field_name, field, driver_status_log, col_id)
     ! Given netCDF identifier, populate domain variables
 
     character(len=*),     intent(in)    :: file_name
     character(len=*),     intent(in)    :: field_name
     real(kind=r8),        intent(inout) :: field
     type(marbl_log_type), intent(inout) :: driver_status_log
+    integer, optional,    intent(in)    :: col_id
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_r8_field_0d_by_id'
     integer :: file_id
@@ -302,7 +314,7 @@ contains
       return
     end if
 
-    call marbl_io_read_r8_field_0d_by_id(file_id, field_name, field, driver_status_log)
+    call marbl_io_read_r8_field_0d_by_id(file_id, field_name, field, driver_status_log, col_id)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_read_r8_field_0d_by_id', subname)
       return
@@ -312,7 +324,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_r8_field_1d_by_id(file_id, field_name, field, driver_status_log, surf_only)
+  subroutine marbl_io_read_r8_field_1d_by_id(file_id, field_name, field, driver_status_log, surf_only, col_id)
     ! Given netCDF identifier, populate domain variables
 
     integer,                     intent(in)    :: file_id
@@ -320,6 +332,7 @@ contains
     real(kind=r8), dimension(:), intent(inout) :: field
     type(marbl_log_type),        intent(inout) :: driver_status_log
     logical, optional,           intent(in)    :: surf_only ! if true, only read surface values
+    integer, optional,           intent(in)    :: col_id
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_r8_field_1d_by_id'
     character(len=char_len) :: log_message
@@ -347,7 +360,11 @@ contains
     if (surf_only_loc) then
       call netcdf_check(nf90_get_var(file_id, varid, field, start = (/1/), count=(/1/)), driver_status_log)
     else
-      call netcdf_check(nf90_get_var(file_id, varid, field), driver_status_log)
+      if (present(col_id)) then
+        call netcdf_check(nf90_get_var(file_id, varid, field, (/col_id, 1/)), driver_status_log)
+      else
+        call netcdf_check(nf90_get_var(file_id, varid, field), driver_status_log)
+      end if
     end if
     if (driver_status_log%labort_marbl) then
       write(log_message, "(3A)") 'nf90_get_var(', trim(field_name), ')'
@@ -359,7 +376,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_r8_field_1d_by_name(file_name, field_name, field, driver_status_log, surf_only)
+  subroutine marbl_io_read_r8_field_1d_by_name(file_name, field_name, field, driver_status_log, surf_only, col_id)
     ! Given netCDF identifier, populate domain variables
 
     character(len=*),            intent(in)    :: file_name
@@ -367,8 +384,9 @@ contains
     real(kind=r8), dimension(:), intent(inout) :: field
     type(marbl_log_type),        intent(inout) :: driver_status_log
     logical, optional,           intent(in)    :: surf_only ! if true, only read surface values
+    integer, optional,           intent(in)    :: col_id
 
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_r8_field_1d_by_id'
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_r8_field_1d_by_name'
     integer :: file_id
 
     ! Get file_id given file_name
@@ -378,7 +396,7 @@ contains
       return
     end if
 
-    call marbl_io_read_r8_field_1d_by_id(file_id, field_name, field, driver_status_log, surf_only)
+    call marbl_io_read_r8_field_1d_by_id(file_id, field_name, field, driver_status_log, surf_only, col_id)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_read_r8_field_1d_by_id', subname)
       return
@@ -685,7 +703,7 @@ contains
 
     type(marbl_log_type), intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_by_name'
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_all'
     type(marbl_file_entry), pointer :: entry_to_remove
 
     do while (associated(file_database))
@@ -712,7 +730,7 @@ contains
     type(marbl_log_type), intent(inout) :: driver_status_log
     integer                             :: get_nc_file_id
 
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_close_by_name'
+    character(len=*), parameter :: subname = 'marbl_io_mod:get_nc_file_id'
     character(len=char_len) :: log_message
     type(marbl_file_entry), pointer :: single_entry
 
