@@ -340,6 +340,10 @@ contains
     logical :: surf_only_loc
 
     if (present(surf_only)) then
+      if (.not.present(col_id)) then
+        call driver_status_log%log_error('Can not pass surf_only without col_id', subname)
+        return
+      end if
       surf_only_loc = surf_only
       call marbl_io_read_dim(file_id, 'zt', num_levels, driver_status_log)
       if (driver_status_log%labort_marbl) then
@@ -358,10 +362,10 @@ contains
     end if
 
     if (surf_only_loc) then
-      call netcdf_check(nf90_get_var(file_id, varid, field, start = (/1/), count=(/1/)), driver_status_log)
+      call netcdf_check(nf90_get_var(file_id, varid, field, start=(/1, col_id/), count=(/1/)), driver_status_log)
     else
       if (present(col_id)) then
-        call netcdf_check(nf90_get_var(file_id, varid, field, (/col_id, 1/)), driver_status_log)
+        call netcdf_check(nf90_get_var(file_id, varid, field, (/1, col_id/)), driver_status_log)
       else
         call netcdf_check(nf90_get_var(file_id, varid, field), driver_status_log)
       end if
