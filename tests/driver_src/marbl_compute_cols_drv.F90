@@ -259,7 +259,8 @@ Contains
     integer :: n
 
     do n = 1, size(tracer_metadata)
-      call marbl_io_read_field(infile, trim(tracer_metadata(n)%short_name), tracers_at_surface(n,:), driver_status_log)
+      call marbl_io_read_field(infile, trim(tracer_metadata(n)%short_name), tracers_at_surface(n,:), driver_status_log, &
+                               surf_only = .true.)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") "marbl_io_read_field(", trim(tracer_metadata(n)%short_name), " [surface])"
         call driver_status_log%log_error_trace(log_message, subname)
