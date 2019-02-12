@@ -25,7 +25,6 @@ module marbl_io_mod
 
   ! MARBL needs to track dimension ids to use when defining netCDF variables
   type, private :: netcdf_dimids
-    integer :: num_inst_id
     integer :: num_levels_id
     integer :: num_cols_id
   end type netcdf_dimids
@@ -399,7 +398,7 @@ contains
     character(len=char_len) :: log_message, var_name
     integer :: n, diag_size
     integer :: file_id
-    integer :: num_inst, num_levels, num_cols, num_tracers
+    integer :: num_levels, num_cols, num_tracers
 
     ! Get file_id given file_name
     file_id = get_nc_file_id(outfile, driver_status_log)
@@ -411,15 +410,7 @@ contains
 
 #ifdef _NETCDF
     ! netCDF dimensions
-    ! 1) num_inst = number of netCDF instances
-    num_inst = size(marbl_instances)
-    call netcdf_check(nf90_def_dim(file_id, 'num_inst', num_inst, dimids_out%num_inst_id), driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('nf90_def_dim(num_inst)', subname)
-      return
-    end if
-
-    ! 2) num_levels = number of levels (domain should be the same for all columns)
+    ! 1) num_levels = number of levels (domain should be the same for all columns)
     num_levels = marbl_instances(1)%domain%km
     call netcdf_check(nf90_def_dim(file_id, 'num_levels', num_levels, dimids_out%num_levels_id), driver_status_log)
     if (driver_status_log%labort_marbl) then
@@ -427,9 +418,12 @@ contains
       return
     end if
 
-    ! 3) num_cols = number of surface fluxes computed simultaneously
-    ! FIXME: should be num_surface_elem from MARBL, not hard-coded to 1
-    num_cols = 1
+    ! 2) num_cols = number of total columns across all instances
+    num_cols = 0
+    do n=1, size(marbl_instances)
+      ! FIXME: should be num_surface_elem from MARBL, not hard-coded to 1 per instance
+      num_cols = num_cols + 1
+    end do
     call netcdf_check(nf90_def_dim(file_id, 'num_cols', num_cols, dimids_out%num_cols_id), driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('nf90_def_dim(num_cols)', subname)
@@ -482,13 +476,13 @@ contains
     do n=1, num_tracers
       write(var_name, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%short_name), "_SFLUX"
       write(log_message, "(2A)") "Surface flux of ", trim(marbl_instances(1)%tracer_metadata(n)%long_name)
-      call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_cols_id, dimids_out%num_inst_id/), &
+      call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_cols_id/), &
                         prog_ids_out%sflux_ids(n)), driver_status_log)
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%sflux_ids(n), "long_name", log_message), driver_status_log)
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%sflux_ids(n), "units", "FIXME"), driver_status_log)
       write(var_name, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%short_name), "_TEND"
       write(log_message, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%long_name), "Tendency"
-      call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_levels_id, dimids_out%num_inst_id/), &
+      call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_levels_id, dimids_out%num_cols_id/), &
                         prog_ids_out%tendency_ids(n)), driver_status_log)
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%tendency_ids(n), "long_name", log_message), driver_status_log)
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%tendency_ids(n), "units", "FIXME"), driver_status_log)
@@ -506,15 +500,16 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_write_history(outfile, marbl_instances, driver_status_log)
+  subroutine marbl_io_write_history(outfile, marbl_instances, num_active_levels, driver_status_log)
 
     character(len=*),                          intent(in)    :: outfile
     type(marbl_interface_class), dimension(:), intent(in)    :: marbl_instances
+    integer,                     dimension(:), intent(in)    :: num_active_levels
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_write_history'
     character(len=char_len) :: log_message
-    integer :: n, diag_size, file_id, num_inst, num_active_levels
+    integer :: n, diag_size, file_id, col_id, num_inst
 
     ! Get file_id given file_name
     file_id = get_nc_file_id(outfile, driver_status_log)
@@ -528,44 +523,39 @@ contains
     call netcdf_check(nf90_put_var(file_id, domain_ids_out%zt_id, marbl_instances(1)%domain%zt), driver_status_log)
     call netcdf_check(nf90_put_var(file_id, domain_ids_out%zw_id, marbl_instances(1)%domain%zw), driver_status_log)
 
-    ! 2) Surface diagnostics
-    diag_size = size(marbl_instances(1)%surface_flux_diags%diags)
+    col_id = 0
     do num_inst=1, size(marbl_instances)
-      num_active_levels = marbl_instances(num_inst)%domain%kmt
+      col_id = col_id + 1
+      ! 2) Surface diagnostics
+      diag_size = size(marbl_instances(num_inst)%surface_flux_diags%diags)
       do n=1, diag_size
-        call write_diag(file_id, marbl_instances(num_inst)%surface_flux_diags, n, num_inst, num_active_levels, &
-                        surface_diag_ids(n), driver_status_log)
+        call write_diag(file_id, col_id, marbl_instances(num_inst)%surface_flux_diags, n, &
+                        num_active_levels(col_id), surface_diag_ids(n), driver_status_log)
         if (driver_status_log%labort_marbl) then
           write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%surface_flux_diags%diags(n)%short_name), ')'
           call driver_status_log%log_error_trace(log_message, subname)
           return
         end if
       end do
-    end do
 
-    ! 3) Interior diagnostics
-    diag_size = size(marbl_instances(1)%interior_tendency_diags%diags)
-    do num_inst=1, size(marbl_instances)
+      ! 3) Interior diagnostics
+      diag_size = size(marbl_instances(1)%interior_tendency_diags%diags)
       ! FIXME #176: changing num_active_levels to num_levels (km instead of kmt) will populate levels below
       !             num_active_levels with nonsensical values
-      num_active_levels = marbl_instances(num_inst)%domain%kmt
       do n=1, diag_size
-        call write_diag(file_id, marbl_instances(num_inst)%interior_tendency_diags, n, num_inst, num_active_levels, &
-             interior_diag_ids(n), driver_status_log)
+        call write_diag(file_id, col_id, marbl_instances(num_inst)%interior_tendency_diags, n, &
+                        num_active_levels(col_id), interior_diag_ids(n), driver_status_log)
         if (driver_status_log%labort_marbl) then
           write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%interior_tendency_diags%diags(n)%short_name), ')'
           call driver_status_log%log_error_trace(log_message, subname)
           return
         end if
       end do
-    end do
 
-    ! 4) Surface fluxes and Tracer tendencies
-    do num_inst=1, size(marbl_instances)
-      num_active_levels = marbl_instances(num_inst)%domain%kmt
+      ! 4) Surface fluxes and Tracer tendencies
       do n=1, size(marbl_instances(num_inst)%tracer_metadata)
         call netcdf_check(nf90_put_var(file_id, prog_ids_out%sflux_ids(n), marbl_instances(num_inst)%surface_fluxes(1,n), &
-                          (/1, num_inst/)), driver_status_log)
+                          (/col_id/)), driver_status_log)
         if (driver_status_log%labort_marbl) then
           write(log_message, "(3A)") 'nf90_put_var(', trim(marbl_instances(num_inst)%tracer_metadata(n)%short_name), '_SFLUX)'
           call driver_status_log%log_error_trace(log_message, subname)
@@ -573,8 +563,8 @@ contains
         end if
 
         call netcdf_check(nf90_put_var(file_id, prog_ids_out%tendency_ids(n), &
-                          marbl_instances(num_inst)%interior_tendencies(n, 1:num_active_levels), &
-                          (/1, num_inst/)), driver_status_log)
+                          marbl_instances(num_inst)%interior_tendencies(n, 1:num_active_levels(col_id)), &
+                          (/1, col_id/)), driver_status_log)
         if (driver_status_log%labort_marbl) then
           write(log_message, "(3A)") 'nf90_put_var(', trim(marbl_instances(num_inst)%tracer_metadata(n)%short_name), '_TEND)'
           call driver_status_log%log_error_trace(log_message, subname)
@@ -767,10 +757,10 @@ contains
     select case (trim(diag%diags(diag_ind)%vertical_grid))
       case ('none')
         call netcdf_check(nf90_def_var(file_id, varname, NF90_DOUBLE, &
-             (/dimids_out%num_inst_id/), ncid), driver_status_log)
+             (/dimids_out%num_cols_id/), ncid), driver_status_log)
       case ('layer_avg')
         call netcdf_check(nf90_def_var(file_id, varname, NF90_DOUBLE, &
-             (/dimids_out%num_levels_id, dimids_out%num_inst_id/), ncid), driver_status_log)
+             (/dimids_out%num_levels_id, dimids_out%num_cols_id/), ncid), driver_status_log)
       case DEFAULT
         write(log_message, '(3A)') "'", trim(diag%diags(diag_ind)%vertical_grid), &
              "' is not a valid vertical grid"
@@ -804,14 +794,14 @@ contains
 
   !*****************************************************************************
 
-  subroutine write_diag(file_id, diag, diag_ind, num_inst, num_active_levels, ncid, driver_status_log)
+  subroutine write_diag(file_id, col_id, diag, diag_ind, num_active_levels, ncid, driver_status_log)
 
     use marbl_interface_public_types , only : marbl_diagnostics_type
 
     integer,                      intent(in)    :: file_id
+    integer,                      intent(in)    :: col_id
     type(marbl_diagnostics_type), intent(in)    :: diag
     integer,                      intent(in)    :: diag_ind
-    integer,                      intent(in)    :: num_inst
     integer,                      intent(in)    :: num_active_levels
     integer,                      intent(in)    :: ncid
     type(marbl_log_type),         intent(inout) :: driver_status_log
@@ -821,10 +811,10 @@ contains
 
     select case (trim(diag%diags(diag_ind)%vertical_grid))
       case ('none')
-        call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_2d(1), (/num_inst/)), driver_status_log)
+        call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_2d(1), start = (/col_id/)), driver_status_log)
       case ('layer_avg')
         call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_3d(1:num_active_levels,1), &
-                          (/1,num_inst/)), driver_status_log)
+                          start = (/1,col_id/)), driver_status_log)
       case DEFAULT
         write(log_message, '(3A)') "'", trim(diag%diags(diag_ind)%vertical_grid), &
              "' is not a valid vertical grid"

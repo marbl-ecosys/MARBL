@@ -32,6 +32,7 @@ Contains
     character(len=char_len) :: log_message
     real(kind=r8), allocatable, dimension(:) :: delta_z, zt, zw
     integer :: num_levels, m, n
+    integer, allocatable, dimension(:) :: num_active_levels
 
     ! 1. Open necessary netCDF files
     !    a) Input (grid info, forcing fields, initial conditions)
@@ -60,7 +61,8 @@ Contains
     end if
 
     ! PER-INSTANCE CALLS
-    do n=1,size(marbl_instances)
+    allocate(num_active_levels(size(marbl_instances)))
+    do n=1, size(marbl_instances)
       ! 3. Call init()
       call marbl_instances(n)%init(gcm_num_levels = num_levels,           &
                                    gcm_num_PAR_subcols = num_PAR_subcols, &
@@ -73,6 +75,7 @@ Contains
         call driver_status_log%log_error_trace('marbl_io_read_field(active_level_cnt)', subname)
         return
       end if
+      num_active_levels(n) = marbl_instances(n)%domain%kmt
 
       ! 5. Call surface_flux_compute()
       !    i. populate surface tracer values
@@ -120,7 +123,7 @@ Contains
     end if
 
     ! 8. Output netCDF
-    call marbl_io_write_history(outfile, marbl_instances, driver_status_log)
+    call marbl_io_write_history(outfile, marbl_instances, num_active_levels, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_write_history', subname)
       return
