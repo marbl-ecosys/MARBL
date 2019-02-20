@@ -709,6 +709,16 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0.03e-3
                ((autotroph_sname)) == "diat" : 0.07e-3
                ((autotroph_sname)) == "diaz" : 0.045e-3
+         kCO2 :
+            longname : CO2 uptake half-sat constant
+            subcategory : 10. autotrophs
+            units : nmol/cm^3
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "sp" : 0
+               ((autotroph_sname)) == "diat" : 0
+               ((autotroph_sname)) == "diaz" : 0
          kPO4 :
             longname : PO4 uptake half-sat constant
             subcategory : 10. autotrophs
