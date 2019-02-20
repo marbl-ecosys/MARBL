@@ -229,10 +229,6 @@ class MARBL_settings_class(object):
                           (category_name == "PFT_derived_types"))
         if append_to_keys:
             PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][variable_name]
-            if variable_name == "autotrophs":
-                PFT_name = "autotroph"
-            else:
-                PFT_name = variable_name
         # Is the derived type an array? If so, treat each entry separately
         if ("_array_shape" in this_var.keys()):
             for n, elem_index in enumerate(_get_array_info(this_var["_array_shape"], self.settings_dict, self.tracers_dict)):
@@ -241,7 +237,12 @@ class MARBL_settings_class(object):
 
                 if append_to_keys:
                     # Add key for specific PFT
-                    self._config_keyword.append('((%s_sname)) == "%s"' % (PFT_name, PFT_keys[n]))
+                    if variable_name == 'zooplankton_settings':
+                      self._config_keyword.append('((zooplankton_sname)) == "%s"' % PFT_keys[n])
+                    elif variable_name == 'autotroph_settings':
+                      self._config_keyword.append('((autotroph_sname)) == "%s"' % PFT_keys[n])
+                    elif variable_name == 'grazing_relationship_settings':
+                      self._config_keyword.append('((grazer_sname)) == "%s"' % PFT_keys[n])
 
                 for key in _sort_with_specific_suffix_first(this_var["datatype"].keys(),'_cnt'):
                     if key[0] != '_':

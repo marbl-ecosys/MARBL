@@ -31,9 +31,13 @@ contains
     real(kind=r8) :: m_inv
 
     if ((y(1).gt.c0).and.(y(2).gt.c0)) then
+       ! If no linear root is found, function will return 0
+       linear_root = c0 ! avoid 'linear_root' may be used uninitialized warning from gfortran
        call marbl_status_log%log_error("can not find root, both y-values are positive!", subname)
        return
     else if ((y(1).lt.c0).and.(y(2).lt.c0)) then
+       ! If no linear root is found, function will return 0
+       linear_root = c0 ! avoid 'linear_root' may be used uninitialized warning from gfortran
        call marbl_status_log%log_error("can not find root, both y-values are negative!", subname)
        return
     end if
@@ -69,6 +73,7 @@ contains
     ! Initialize some local variables and intent(out)
     linit_new_substr = .true.
     linside_delim = .false.
+    cur_pos = 1
     if (len_trim(str) .eq. 0) then
       allocate(substrs(1))
       substrs(1) = ''

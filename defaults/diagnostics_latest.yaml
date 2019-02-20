@@ -442,6 +442,12 @@ Jint_Fetot :
    operator : average
 
 # Particulate 2D diags
+calcToFloor :
+   longname : CaCO3 Flux Hitting Sea Floor
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : never
+   operator : average
 calcToSed :
    longname : CaCO3 Flux to Sediments
    units : nmol/cm^2/s
@@ -453,6 +459,12 @@ calcToSed_ALT_CO2 :
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
+   operator : average
+pocToFloor :
+   longname : POC Flux Hitting Sea Floor
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : never
    operator : average
 pocToSed :
    longname : POC Flux to Sediments
@@ -604,6 +616,14 @@ O2_PRODUCTION :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
+O2_CONSUMPTION_SCALEF :
+   dependencies :
+      lo2_consumption_scalef : .true.
+   longname : O2 Consumption Scale Factor
+   units : 1
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
 O2_CONSUMPTION :
    longname : O2 Consumption
    units : mmol/m^3/s
@@ -693,6 +713,12 @@ DOPr_remin :
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
+   operator : average
+DOP_loss_P_bal :
+   longname : DOP loss, due to P budget balancing
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : never
    operator : average
 Fe_scavenge :
    longname : Iron Scavenging
@@ -842,11 +868,31 @@ CaCO3_REMIN_zint_100m :
    operator : average
 
 # Particulate 3D diags
+P_REMIN_SCALEF :
+   dependencies :
+      lp_remin_scalef : .true.
+   longname : Particulate Remin Scale Factor
+   units : 1
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
 POC_FLUX_IN :
    longname : POC Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
+   operator : average
+POC_sFLUX_IN :
+   longname : POC sFlux into Cell
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : never
+   operator : average
+POC_hFLUX_IN :
+   longname : POC hFlux into Cell
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : never
    operator : average
 POC_PROD :
    longname : POC Production
@@ -1164,10 +1210,10 @@ CISO_DOCtot_d13C :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_zooC_d13C :
+CISO_zoototC_d13C :
    dependencies :
       ciso_on : .true.
-   longname : d13C of zooC
+   longname : d13C of total zooC
    units : permil
    vertical_grid : layer_avg
    frequency : medium
@@ -1260,10 +1306,10 @@ CISO_DOCtot_d14C :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-CISO_zooC_d14C :
+CISO_zoototC_d14C :
    dependencies :
       ciso_on : .true.
-   longname : d14C of zooC
+   longname : d14C of total zooC
    units : permil
    vertical_grid : layer_avg
    frequency : medium

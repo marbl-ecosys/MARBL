@@ -27,7 +27,7 @@ class MARBL_testcase(object):
   # Some tests will let you specify a compiler and / or input file
   # Some tests will require you to specify a machine
   def parse_args(self, desc, HaveCompiler=True, HaveInputFile=True,
-                 CleanLibOnly=False):
+                 HasPause=False, CleanLibOnly=False):
 
     import argparse
 
@@ -41,6 +41,10 @@ class MARBL_testcase(object):
     if HaveInputFile:
       parser.add_argument('-i', '--input_file', action='store', dest='input_file',
                           default=None, help='input file to read')
+
+    if HasPause:
+        parser.add_argument('--no_pause', action='store_true', dest='no_pause',
+                            help='do not pause between compilers')
 
     if CleanLibOnly:
       parser.add_argument('--clean', action='store_true',
@@ -112,6 +116,9 @@ class MARBL_testcase(object):
     self._mpitasks = int(args.mpitasks)
     sys.stdout.flush()
 
+    if HasPause:
+        self.pause = not args.no_pause
+
     # ERROR CHECKING
     if HaveCompiler:
       if not self._compiler in self.supported_compilers:
@@ -135,7 +142,10 @@ class MARBL_testcase(object):
     makecmd = 'make %s' % loc_compiler
     if self._mpitasks > 0:
       makecmd += ' USEMPI=TRUE'
-    sh_command('cd %s; %s' % (src_dir, makecmd))
+    status_code = sh_command('cd %s; %s' % (src_dir, makecmd))
+    if status_code != 0:
+        logging.error("ERROR building MARBL library")
+        sys.exit(1)
 
   # -----------------------------------------------
 
@@ -153,7 +163,10 @@ class MARBL_testcase(object):
     makecmd = 'make %s' % loc_compiler
     if self._mpitasks > 0:
       makecmd += ' USEMPI=TRUE'
-    sh_command('cd %s; %s' % (drv_dir, makecmd))
+    status_code = sh_command('cd %s; %s' % (drv_dir, makecmd))
+    if status_code != 0:
+        logging.error("ERROR building MARBL stand-alone driver")
+        sys.exit(1)
 
   # -----------------------------------------------
 
@@ -198,7 +211,7 @@ class MARBL_testcase(object):
     status_code = sh_command(execmd)
     if status_code != 0:
         logging.error("ERROR in executable")
-        sys.exit(status_code)
+        sys.exit(1)
 
   # -----------------------------------------------
   # PRIVATE ROUTINES

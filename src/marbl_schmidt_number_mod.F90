@@ -26,9 +26,6 @@ contains
     !        doi:10.4319/lom.2014.12.351
 
     use marbl_kinds_mod     , only : r8, int_kind
-    use marbl_constants_mod , only : c0
-
-    implicit none
 
     integer(int_kind)  , intent(in) :: n
     real (r8)          , intent(in) :: sst_in(n)
@@ -69,9 +66,6 @@ contains
     !  following Wanninkhof 2014, a 4th order polynomial is used
 
     use marbl_kinds_mod     , only : r8, int_kind
-    use marbl_constants_mod , only : c0
-
-    implicit none
 
     integer(int_kind)  , intent(in) :: n
     real (r8)          , intent(in) :: sst_in(n)
@@ -114,9 +108,6 @@ contains
     !  schmidt_nh3_air scales quadratically with atmpres
 
     use marbl_kinds_mod     , only : r8, int_kind
-    use marbl_constants_mod , only : c0
-
-    implicit none
 
     integer(int_kind)  , intent(in) :: n
     real (r8)          , intent(in) :: atmpres(n)

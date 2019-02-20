@@ -2,11 +2,8 @@
 
 module marbl_oxygen
 
-  use marbl_kinds_mod, only : log_kind
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : r8
-
-  use marbl_constants_mod, only : c0
 
   implicit none
 

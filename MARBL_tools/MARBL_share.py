@@ -82,7 +82,7 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
                     template_fill_dict['((restore_this_tracer))'] = True
                     break
         elif fill_source == 'autotrophs':
-            auto_prefix = "autotrophs(%d)%%" % item
+            auto_prefix = "autotroph_settings(%d)%%" % item
             key_fill_val = MARBL_settings.settings_dict[auto_prefix + "sname"].strip('"')
             # Autotroph properties
             imp_calcifier = (MARBL_settings.settings_dict[auto_prefix + "imp_calcifier"].strip('"'))
@@ -95,7 +95,7 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
             template_fill_dict['((autotroph_silicifier))'] = (silicifier == ".true.")
             template_fill_dict['((autotroph_Nfixer))'] = (Nfixer == ".true.")
         elif fill_source == 'zooplankton':
-            zoo_prefix = "zooplankton(%d)%%" % item
+            zoo_prefix = "zooplankton_settings(%d)%%" % item
             key_fill_val = MARBL_settings.settings_dict[zoo_prefix + "sname"].strip('"')
             template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict[zoo_prefix + "lname"].strip('"')
         elif fill_source == 'strings':

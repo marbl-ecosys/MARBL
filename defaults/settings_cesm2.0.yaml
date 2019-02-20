@@ -176,13 +176,13 @@ _tracer_list :
    ((zooplankton_sname))C :
       long_name : ((zooplankton_lname)) Carbon
       units : mmol/m^3
-   # Per-zooplankton (ciso only)
-   zoo13Ctot :
+   # Total zooplankton tracers (ciso only)
+   zootot13C :
       dependencies :
          ciso_on : .true.
       long_name : Zooplankton Carbon-13 (sum over all zooplankton)
       units : mmol/m^3
-   zoo14Ctot :
+   zootot14C :
       dependencies :
          ciso_on : .true.
       long_name : Zooplankton Carbon-14 (sum over all zooplankton)
@@ -203,13 +203,13 @@ general_parms :
             - CESM2
             - user-specified
       _CESM2_PFT_keys :
-         autotrophs :
+         autotroph_settings :
             - sp
             - diat
             - diaz
-         zooplankton :
+         zooplankton_settings :
             - zoo
-         grazing :
+         grazing_relationship_settings :
             - sp_zoo
             - diat_zoo
             - diaz_zoo
@@ -275,12 +275,54 @@ general_parms :
       datatype : logical
       default_value : .false.
       _append_to_config_keywords : true
+   lo2_consumption_scalef :
+      longname : Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)
+      subcategory : 2. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
+   lp_remin_scalef :
+      longname : Apply p_remin_scalef to particulate remin (and request it as a forcing)
+      subcategory : 2. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
    Jint_Ctot_thres_molpm2pyr :
       longname : MARBL will abort if abs(Jint_Ctot) exceeds this threshold
       subcategory : 4. general parameters
       units : mol m-2 yr-1
       datatype : real
-      default_value : 1.0e-10
+      default_value : 1.0e-9
+   gQsi_0 :
+      longname : initial Si/C ratio for growth
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.137
+   gQsi_max :
+      longname : max Si/C ratio for growth
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.685
+   gQsi_min :
+      longname : min Si/C ratio for growth
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.0457
+   gQ_Fe_kFe_thres :
+      longname : Fe:kFe ratio threshold in uptake ratio computations
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 10.0
+   gQ_Si_kSi_thres :
+      longname : Si:kSi ratio threshold in uptake ratio computations
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 5.0
    parm_Fe_bioavail :
       longname : Fraction of Fe flux that is bioavailable
       subcategory : 4. general parameters
@@ -386,23 +428,71 @@ general_parms :
          default : 0.07
          GRID == "CESM_x3" : 0.075
    parm_POC_diss :
-      longname : Base POC dissipation length scale
-      subcategory : 4. general parameters (dissipation)
+      longname : Base POC dissolution length scale
+      subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 100e2
    parm_SiO2_diss :
-      longname : Base SiO2 dissipation length scale
-      subcategory : 4. general parameters (dissipation)
+      longname : Base SiO2 dissolution length scale
+      subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 770e2
+   parm_SiO2_gamma :
+      longname : SiO2 gamma (fraction of production -> hard subclass)
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.1
+   parm_hPOC_SiO2_ratio :
+      longname : hPOC to SiO2 ratio
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.05
    parm_CaCO3_diss :
-      longname : Base CaCO3 dissipation length scale
-      subcategory : 4. general parameters (dissipation)
+      longname : Base CaCO3 dissolution length scale
+      subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 500e2
+   parm_CaCO3_gamma :
+      longname : CaCO3 gamma (fraction of production -> hard subclass)
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.1
+   parm_hPOC_CaCO3_ratio :
+      longname : hPOC to CaCO3 ratio
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.05
+   parm_hPOC_dust_ratio :
+      longname : hPOC to dust ratio
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 0.05
+   o2_sf_o2_range_hi :
+      longname : o2_scalefactor is applied to diss length scales for O2 less than this
+      subcategory : 4. general parameters
+      units : mmol/m^3
+      datatype : real
+      default_value : 45.0
+   o2_sf_o2_range_lo :
+      longname : o2_scalefactor is constant for O2 less than this
+      subcategory : 4. general parameters
+      units : mmol/m^3
+      datatype : real
+      default_value : 5.0
+   o2_sf_val_lo_o2 :
+      longname : o2_scalefactor constant for O2 less than o2_sf_o2_range_lo
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 3.0
    parm_sed_denitrif_coeff :
       longname : Global scaling factor for sed_denitrif
       subcategory : 4. general parameters
@@ -460,12 +550,30 @@ general_parms :
       units : cm
       datatype : real
       default_value : 3000e2
+   caco3_bury_thres_omega_calc :
+      longname : omega calcite threshold for CaCO3 burial when opt = 'omega_calc'
+      subcategory : 4. general parameters
+      units : 1
+      datatype : real
+      default_value : 1.0
    PON_bury_coeff :
       longname : Scale factor for burial of PON
       subcategory : 4. general parameters (bury coeffs)
       units : unitless
       datatype : real
       default_value : 0.5
+   POM_bury_frac_max :
+      longname : maximum bury fraction for POM
+      subcategory : 4. general parameters (bury coeffs)
+      units : unitless
+      datatype : real
+      default_value : 0.8
+   bSi_bury_frac_max :
+      longname : maximum bury fraction for bSi
+      subcategory : 4. general parameters (bury coeffs)
+      units : unitless
+      datatype : real
+      default_value : 1.0
    ciso_fract_factors :
       longname : Option for which biological fractionation calculation to use
       subcategory : 4. general parameters
@@ -531,13 +639,13 @@ PFT_counts :
 ################################################################################
 
 PFT_derived_types :
-   autotrophs :
+   autotroph_settings :
       _array_shape : autotroph_cnt
       _is_allocatable : true
       datatype :
          # Components of the derived type
          # (_* are not part of the type)
-         _type_name : autotrophs_type
+         _type_name : autotroph_settings_type
          sname :
             longname : Short name of the autotroph
             subcategory : 10. autotrophs
@@ -799,7 +907,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0
                ((autotroph_sname)) == "diat" : 0
                ((autotroph_sname)) == "diaz" : 0
-   zooplankton :
+   zooplankton_settings :
       _array_shape : zooplankton_cnt
       _is_allocatable : true
       datatype :
@@ -846,13 +954,13 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((zooplankton_sname)) == "zoo" : 0.075
-   grazing :
+   grazing_relationship_settings :
       _array_shape :
          - max_grazer_prey_cnt
          - zooplankton_cnt
       _is_allocatable : true
       datatype :
-         _type_name : grazing_type
+         _type_name : grazing_relationship_settings_type
          sname :
             longname : Short name of the grazing relationship
             subcategory : 12. grazing
@@ -860,9 +968,9 @@ PFT_derived_types :
             datatype : string
             default_value :
                default : UNSET
-               ((grazing_sname)) == "sp_zoo" : grz_sp_zoo
-               ((grazing_sname)) == "diat_zoo" : grz_diat_zoo
-               ((grazing_sname)) == "diaz_zoo" : grz_diaz_zoo
+               ((grazer_sname)) == "sp_zoo" : grz_sp_zoo
+               ((grazer_sname)) == "diat_zoo" : grz_diat_zoo
+               ((grazer_sname)) == "diaz_zoo" : grz_diaz_zoo
          lname :
             longname : Long name of the grazing relationship
             subcategory : 12. grazing
@@ -870,9 +978,9 @@ PFT_derived_types :
             datatype : string
             default_value :
                default : UNSET
-               ((grazing_sname)) == "sp_zoo" : Grazing of sp by zoo
-               ((grazing_sname)) == "diat_zoo" : Grazing of diat by zoo
-               ((grazing_sname)) == "diaz_zoo" : Grazing of diaz by zoo
+               ((grazer_sname)) == "sp_zoo" : Grazing of sp by zoo
+               ((grazer_sname)) == "diat_zoo" : Grazing of diat by zoo
+               ((grazer_sname)) == "diaz_zoo" : Grazing of diaz by zoo
          auto_ind_cnt :
             longname : Number of autotrophs being grazed
             subcategory : 12. grazing
@@ -901,9 +1009,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((grazing_sname)) == "sp_zoo" : 3.3
-               ((grazing_sname)) == "diat_zoo" : 3.1
-               ((grazing_sname)) == "diaz_zoo" : 3.25
+               ((grazer_sname)) == "sp_zoo" : 3.3
+               ((grazer_sname)) == "diat_zoo" : 3.1
+               ((grazer_sname)) == "diaz_zoo" : 3.25
          z_grz :
             longname : Grazing coefficient
             subcategory : 12. grazing
@@ -911,9 +1019,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((grazing_sname)) == "sp_zoo" : 1.2
-               ((grazing_sname)) == "diat_zoo" : 1.2
-               ((grazing_sname)) == "diaz_zoo" : 1.2
+               ((grazer_sname)) == "sp_zoo" : 1.2
+               ((grazer_sname)) == "diat_zoo" : 1.2
+               ((grazer_sname)) == "diaz_zoo" : 1.2
          graze_zoo :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -921,9 +1029,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((grazing_sname)) == "sp_zoo" : 0.3
-               ((grazing_sname)) == "diat_zoo" : 0.25
-               ((grazing_sname)) == "diaz_zoo" : 0.3
+               ((grazer_sname)) == "sp_zoo" : 0.3
+               ((grazer_sname)) == "diat_zoo" : 0.25
+               ((grazer_sname)) == "diaz_zoo" : 0.3
          graze_poc :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -931,9 +1039,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((grazing_sname)) == "sp_zoo" : 0
-               ((grazing_sname)) == "diat_zoo" : 0.38
-               ((grazing_sname)) == "diaz_zoo" : 0.1
+               ((grazer_sname)) == "sp_zoo" : 0
+               ((grazer_sname)) == "diat_zoo" : 0.38
+               ((grazer_sname)) == "diaz_zoo" : 0.1
          graze_doc :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -941,9 +1049,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((grazing_sname)) == "sp_zoo" : 0.06
-               ((grazing_sname)) == "diat_zoo" : 0.06
-               ((grazing_sname)) == "diaz_zoo" : 0.06
+               ((grazer_sname)) == "sp_zoo" : 0.06
+               ((grazer_sname)) == "diat_zoo" : 0.06
+               ((grazer_sname)) == "diaz_zoo" : 0.06
          f_zoo_detr :
             longname : Fraction of zoo losses to detrital
             subcategory : 12. grazing
@@ -951,9 +1059,9 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((grazing_sname)) == "sp_zoo" : 0.12
-               ((grazing_sname)) == "diat_zoo" : 0.24
-               ((grazing_sname)) == "diaz_zoo" : 0.12
+               ((grazer_sname)) == "sp_zoo" : 0.12
+               ((grazer_sname)) == "diat_zoo" : 0.24
+               ((grazer_sname)) == "diaz_zoo" : 0.12
          auto_ind :
             _array_shape : autotroph_cnt
             _array_len_to_print : auto_ind_cnt
@@ -964,9 +1072,9 @@ PFT_derived_types :
             datatype : integer
             default_value :
                default : 0
-               ((grazing_sname)) == "sp_zoo" : 1 # index where autotroph_name = sp
-               ((grazing_sname)) == "diat_zoo" : 2 # index where autotroph_name = diat
-               ((grazing_sname)) == "diaz_zoo" : 3 # index where autotroph_name = diaz
+               ((grazer_sname)) == "sp_zoo" : 1 # index where autotroph_name = sp
+               ((grazer_sname)) == "diat_zoo" : 2 # index where autotroph_name = diat
+               ((grazer_sname)) == "diaz_zoo" : 3 # index where autotroph_name = diaz
          zoo_ind :
             _array_shape : zooplankton_cnt
             _array_len_to_print : zoo_ind_cnt

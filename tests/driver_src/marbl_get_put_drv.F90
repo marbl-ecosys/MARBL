@@ -5,9 +5,9 @@ module marbl_get_put_drv
   use marbl_logging,       only : marbl_log_type
   use marbl_interface,     only : marbl_interface_class
 
-  Implicit None
-  Private
-  Save
+  implicit none
+  private
+  save
 
   ! List of keywords (from variable names) to ignore in put / get statements
   ! (necessary to prevent internal MARBL errors do to inconsistent settings)
@@ -53,7 +53,7 @@ Contains
     ! Call marbl_loc%init
     call marbl_instance_loc%init(gcm_num_levels = km,                         &
                                  gcm_num_PAR_subcols = 1,                     &
-                                 gcm_num_elements_surface_forcing = 1,        &
+                                 gcm_num_elements_surface_flux = 1,           &
                                  gcm_delta_z = delta_z,                       &
                                  gcm_zw = zw,                                 &
                                  gcm_zt = zt)
@@ -79,7 +79,7 @@ Contains
     ! Call marbl%init
     call marbl_instance%init(gcm_num_levels = km,                             &
                              gcm_num_PAR_subcols = 1,                         &
-                             gcm_num_elements_surface_forcing = 1,            &
+                             gcm_num_elements_surface_flux = 1,               &
                              gcm_delta_z = delta_z,                           &
                              gcm_zw = zw,                                     &
                              gcm_zt = zt,                                     &
@@ -108,8 +108,6 @@ Contains
   !*****************************************************************************
 
   subroutine set_all_vals(local_instance, marbl_instance, driver_status_log)
-
-    use marbl_mpi_mod, only : marbl_mpi_abort
 
     type(marbl_interface_class),       intent(inout) :: local_instance ! inout because inquire_settings_metadata updates StatusLog
     type(marbl_interface_class),       intent(inout) :: marbl_instance

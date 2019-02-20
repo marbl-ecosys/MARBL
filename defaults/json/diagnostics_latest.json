@@ -940,22 +940,22 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
-   "CISO_zooC_d13C": {
+   "CISO_zoototC_d13C": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "d13C of zooC",
+      "longname": "d13C of total zooC",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
    },
-   "CISO_zooC_d14C": {
+   "CISO_zoototC_d14C": {
       "dependencies": {
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "d14C of zooC",
+      "longname": "d14C of total zooC",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
@@ -1202,6 +1202,13 @@
       "longname": "((autotroph_lname)) DOP Uptake",
       "operator": "average",
       "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DOP_loss_P_bal": {
+      "frequency": "never",
+      "longname": "DOP loss, due to P budget balancing",
+      "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
@@ -1488,6 +1495,16 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "O2_CONSUMPTION_SCALEF": {
+      "dependencies": {
+         "lo2_consumption_scalef": ".true."
+      },
+      "frequency": "never",
+      "longname": "O2 Consumption Scale Factor",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "layer_avg"
+   },
    "O2_PRODUCTION": {
       "frequency": "medium",
       "longname": "O2 Production",
@@ -1622,6 +1639,20 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "POC_hFLUX_IN": {
+      "frequency": "never",
+      "longname": "POC hFlux into Cell",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
+   "POC_sFLUX_IN": {
+      "frequency": "never",
+      "longname": "POC sFlux into Cell",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "layer_avg"
+   },
    "PON_REMIN_DONr": {
       "frequency": "low",
       "longname": "PON Remineralization routed to DONr",
@@ -1684,6 +1715,16 @@
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
+   },
+   "P_REMIN_SCALEF": {
+      "dependencies": {
+         "lp_remin_scalef": ".true."
+      },
+      "frequency": "never",
+      "longname": "Particulate Remin Scale Factor",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "layer_avg"
    },
    "P_iron_FLUX_((particulate_flux_ref_depth_str))": {
       "frequency": "medium",
@@ -1772,6 +1813,13 @@
    "bsiToSed": {
       "frequency": "medium",
       "longname": "biogenic Si Flux to Sediments",
+      "operator": "average",
+      "units": "nmol/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "calcToFloor": {
+      "frequency": "never",
+      "longname": "CaCO3 Flux Hitting Sea Floor",
       "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
@@ -2178,6 +2226,13 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "pocToFloor": {
+      "frequency": "never",
+      "longname": "POC Flux Hitting Sea Floor",
+      "operator": "average",
+      "units": "nmol/cm^2/s",
+      "vertical_grid": "none"
    },
    "pocToSed": {
       "frequency": "medium",
