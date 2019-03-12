@@ -283,12 +283,6 @@ general_parms :
       default_value : # default value is resolution dependent!
          default : .false.
          GRID == "CESM_x1" : .true.
-   l_ea_on :
-      longname : Use the Arrhenius temperature scaling with activation energy Ea
-      subcategory : 2. config flags
-      units : unitless
-      datatype : logical
-      default_value : .false.
    lp_remin_scalef :
       longname : Apply p_remin_scalef to particulate remin (and request it as a forcing)
       subcategory : 2. config flags
@@ -337,6 +331,15 @@ general_parms :
       units : unitless
       datatype : real
       default_value : 1.0
+   temp_func_form_opt:
+      longname : Option for the temperature scaling functional form
+      subcategory : 4. general parameters
+      units : non-numeric
+      datatype : string
+      default_value : q_10
+      valid_values :
+         - q_10
+         - arrhenius
    particulate_flux_ref_depth :
       longname : reference depth for particulate flux diagnostics
       subcategory : 4. general parameters
@@ -906,9 +909,9 @@ PFT_derived_types :
                ((autotroph_sname)) == "diat" : 0
                ((autotroph_sname)) == "diaz" : 0
          Ea :
-            longname : Activation energy for Arrhenius equation (eV)
+            longname : Activation energy for Arrhenius equation
             subcategory : 10. autotrophs
-            units : unitless
+            units : eV
             datatype : real
             default_value :
                default : 1e34
@@ -962,6 +965,14 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((zooplankton_sname)) == "zoo" : 0.075
+         Ea :
+            longname : Activation energy for Arrhenius equation
+            subcategory : 11. zooplankton
+            units : eV
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "zoo" : 0.65
    grazing_relationship_settings :
       _array_shape :
          - max_grazer_prey_cnt

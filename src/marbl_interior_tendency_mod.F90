@@ -128,7 +128,6 @@ contains
     use marbl_restore_mod, only : marbl_restore_compute_interior_restore
     use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
-    use marbl_settings_mod, only : l_ea_on
 
 
     type(marbl_domain_type),                                 intent(in)    :: domain
@@ -321,13 +320,9 @@ contains
     call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
 
-    if (l_ea_on) then
-        call compute_temperature_scaling(temperature(:), Tfunc_auto(:,:), Ea_auto(:))
-        call compute_temperature_scaling(temperature(:), Tfunc_zoo(:,:), Ea_zoo(:))
-    else
-        call compute_temperature_scaling(temperature(:), Tfunc_auto(:,:))
-        call compute_temperature_scaling(temperature(:), Tfunc_zoo(:,:))
-    end if
+    call compute_temperature_functional_form(temperature(:), Tfunc_auto(:,:), Ea_auto(:))
+
+    call compute_temperature_functional_form(temperature(:), Tfunc_zoo(:,:), Ea_zoo(:))
 
     call compute_Pprime(km, domain%zt, autotroph_local, temperature, autotroph_derived_terms%Pprime)
 
@@ -1218,17 +1213,24 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_temperature_scaling(temperature, Tfunc, Ea)
+  subroutine compute_temperature_functional_form(temperature, Tfunc, Ea)
 
     !-----------------------------------------------------------------------
     !  Scaling of physiological rates by temperature
-    !  Set up for two alternate temperature functions, Q10 and Arrhenius
+    !  Use temp_func_form_iopt to select between two temperature functions,
+    !  Q10 and Arrhenius. 
+    !
+    !  Use slightly different reference temperatures as well
+    !  (Future development can attempt to merge the two; will require additional tuning)  
     !  Tref = 30.0 (deg C) reference temperature for Q10 formulation
     !  Tref = 25.0 (deg C) reference temperature for Arrhenius equation.
     !
-    !  Using q10 formulation with Q10 value of 2.0 (Doney et al., 1996).
-    !  growth, mort and grazing rates scaled by Tfunc where they are computed
+    !  Tfunc scales the growth, mort and grazing rates where they are computed
     !-----------------------------------------------------------------------
+
+    use marbl_settings_mod,  only : temp_func_form_iopt
+    use marbl_settings_mod,  only : temp_func_form_iopt_q10
+    use marbl_settings_mod,  only : temp_func_form_iopt_arrhenius
 
     use marbl_settings_mod,  only : Q_10
     use marbl_constants_mod, only : Tref
@@ -1236,25 +1238,26 @@ contains
     use marbl_constants_mod, only : c10
     use marbl_constants_mod, only : K_Boltz
 
-    real(r8), intent(in)  :: temperature(:)
-    real(r8), intent(out) :: Tfunc(:,:)
-    real(r8), optional, intent(in)  :: Ea(size(Tfunc, dim=1))
+    real(r8),          intent(in)  :: temperature(:)
+    real(r8),          intent(out) :: Tfunc(:,:)
+    real(r8),          intent(in)  :: Ea(size(Tfunc, dim=1))
 
     integer :: Tfunc_ind
 
-    if (present(Ea)) then
-        do Tfunc_ind = 1, size(Tfunc, dim=1)
-            Tfunc(Tfunc_ind,:) = exp(-Ea(:) * (Tref_A - temperature(:)) &
-                                     / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref_A + T0_Kelvin)))
-        end do
-    else
-        ! Q10 (Eppley) temperature scaling
+
+    select case (temp_func_form_iopt)
+      case (temp_func_form_iopt_q10)
         do Tfunc_ind = 1, size(Tfunc, dim=1)
             Tfunc(Tfunc_ind,:) = Q_10**(((temperature(:) + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
         end do
-    end if
+      case (temp_func_form_iopt_arrhenius)
+        do Tfunc_ind = 1, size(Tfunc, dim=1)
+            Tfunc(Tfunc_ind,:) = exp(-Ea(Tfunc_ind) * (Tref_A - temperature(:)) &
+                                     / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref_A + T0_Kelvin)))
+        end do
+    end select 
 
-  end subroutine compute_temperature_scaling
+  end subroutine compute_temperature_functional_form
 
   !***********************************************************************
 
@@ -1912,7 +1915,7 @@ contains
               zoo_graze(zoo_ind,k) = zoo_graze(zoo_ind,k) + work2
 
               ! routed to zooplankton
-              zoo_graze_zoo(zoo_ind,zoo_ind,k) = grazing_relationship_settings(prey_ind, pred_ind)%graze_zoo * work2
+              zoo_graze_zoo(zoo_ind, pred_ind, k) = grazing_relationship_settings(prey_ind, pred_ind)%graze_zoo * work2
               zoo_graze_zootot(zoo_ind,k) = zoo_graze_zootot(zoo_ind,k) &
                                        + grazing_relationship_settings(prey_ind, pred_ind)%graze_zoo * work2
               x_graze_zoo(pred_ind,k)  = x_graze_zoo(pred_ind,k)  &

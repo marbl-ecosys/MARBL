@@ -207,16 +207,16 @@ contains
          CaCO3_form         => autotroph_derived_terms%CaCO3_form,     & ! INPUT prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
          PCphoto            => autotroph_derived_terms%PCphoto,        & ! INPUT C-specific rate of photosynth. (1/sec)
 
-         zoototC_loc        => zooplankton_share%zoototC_loc_fields(:),      & ! INPUT local copy of model zoototC
-         zootot_loss        => zooplankton_share%zootot_loss_fields(:),      & ! INPUT mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-         zootot_loss_poc    => zooplankton_share%zootot_loss_poc_fields(:),  & ! INPUT zootot_loss routed to large detrital pool (mmol C/m^3/sec)
-         zootot_loss_doc    => zooplankton_share%zootot_loss_doc_fields(:),  & ! INPUT zootot_loss routed to doc (mmol C/m^3/sec)
-         zootot_loss_dic    => zooplankton_share%zootot_loss_dic_fields(:),  & ! INPUT zootot_loss routed to dic (mmol C/m^3/sec)
-         zootot_graze       => zooplankton_share%zootot_graze_fields(:),     & ! INPUT zooplankton losses due to grazing (mmol C/m^3/sec)
-         zootot_graze_zoo   => zooplankton_share%zootot_graze_zoo_fields(:), & ! INPUT grazing of zooplankton routed to zoo (mmol C/m^3/sec)
-         zootot_graze_poc   => zooplankton_share%zootot_graze_poc_fields(:), & ! INPUT grazing of zooplankton routed to poc (mmol C/m^3/sec)
-         zootot_graze_doc   => zooplankton_share%zootot_graze_doc_fields(:), & ! INPUT grazing of zooplankton routed to doc (mmol C/m^3/sec)
-         zootot_graze_dic   => zooplankton_share%zootot_graze_dic_fields(:), & ! INPUT grazing of zooplankton routed to dic (mmol C/m^3/sec)
+         zoototC_loc        => zooplankton_share%zoototC_loc_fields(:),         & ! INPUT local copy of model zoototC
+         zootot_loss        => zooplankton_share%zootot_loss_fields(:),         & ! INPUT mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+         zootot_loss_poc    => zooplankton_share%zootot_loss_poc_fields(:),     & ! INPUT zootot_loss routed to large detrital pool (mmol C/m^3/sec)
+         zootot_loss_doc    => zooplankton_share%zootot_loss_doc_fields(:),     & ! INPUT zootot_loss routed to doc (mmol C/m^3/sec)
+         zootot_loss_dic    => zooplankton_share%zootot_loss_dic_fields(:),     & ! INPUT zootot_loss routed to dic (mmol C/m^3/sec)
+         zootot_graze       => zooplankton_share%zootot_graze_fields(:),        & ! INPUT zooplankton losses due to grazing (mmol C/m^3/sec)
+         zootot_graze_zoo   => zooplankton_share%zootot_graze_zootot_fields(:), & ! INPUT grazing of zooplankton routed to total zoo (mmol C/m^3/sec)
+         zootot_graze_poc   => zooplankton_share%zootot_graze_poc_fields(:),    & ! INPUT grazing of zooplankton routed to poc (mmol C/m^3/sec)
+         zootot_graze_doc   => zooplankton_share%zootot_graze_doc_fields(:),    & ! INPUT grazing of zooplankton routed to doc (mmol C/m^3/sec)
+         zootot_graze_dic   => zooplankton_share%zootot_graze_dic_fields(:),    & ! INPUT grazing of zooplankton routed to dic (mmol C/m^3/sec)
 
          POC                => marbl_particulate_share%POC,     & ! INPUT
          P_CaCO3            => marbl_particulate_share%P_CaCO3, & ! INPUT

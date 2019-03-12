@@ -135,16 +135,16 @@ module marbl_interface_private_types
   !***********************************************************************
 
   type, public :: zooplankton_share_type
-     real(r8), allocatable :: zoototC_loc_fields(:)      ! local copy of model zooC
-     real(r8), allocatable :: zootot_loss_fields(:)      ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
-     real(r8), allocatable :: zootot_loss_poc_fields(:)  ! zoo_loss routed to large detrital (mmol C/m^3/sec)
-     real(r8), allocatable :: zootot_loss_doc_fields(:)  ! zoo_loss routed to doc (mmol C/m^3/sec)
-     real(r8), allocatable :: zootot_loss_dic_fields(:)  ! zoo_loss routed to dic (mmol C/m^3/sec)
-     real(r8), allocatable :: zootot_graze_fields(:)     ! zooplankton losses due to grazing (mmol C/m^3/sec)
-     real(r8), allocatable :: zootot_graze_zoo_fields(:) ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
-     real(r8), allocatable :: zootot_graze_poc_fields(:) ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
-     real(r8), allocatable :: zootot_graze_doc_fields(:) ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
-     real(r8), allocatable :: zootot_graze_dic_fields(:) ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
+     real(r8), allocatable :: zoototC_loc_fields(:)         ! local copy of model zooC
+     real(r8), allocatable :: zootot_loss_fields(:)         ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_loss_poc_fields(:)     ! zoo_loss routed to large detrital (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_loss_doc_fields(:)     ! zoo_loss routed to doc (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_loss_dic_fields(:)     ! zoo_loss routed to dic (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_fields(:)        ! zooplankton losses due to grazing (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_zootot_fields(:) ! grazing of zooplankton routed to total zoo (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_poc_fields(:)    ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_doc_fields(:)    ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_graze_dic_fields(:)    ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
    contains
      procedure, public :: construct => zooplankton_share_constructor
      procedure, public :: destruct => zooplankton_share_destructor
@@ -1234,7 +1234,7 @@ contains
     allocate(self%zootot_loss_doc_fields(km))
     allocate(self%zootot_loss_dic_fields(km))
     allocate(self%zootot_graze_fields(km))
-    allocate(self%zootot_graze_zoo_fields(km))
+    allocate(self%zootot_graze_zootot_fields(km))
     allocate(self%zootot_graze_poc_fields(km))
     allocate(self%zootot_graze_doc_fields(km))
     allocate(self%zootot_graze_dic_fields(km))
@@ -1253,7 +1253,7 @@ contains
     deallocate(self%zootot_loss_doc_fields)
     deallocate(self%zootot_loss_dic_fields)
     deallocate(self%zootot_graze_fields)
-    deallocate(self%zootot_graze_zoo_fields)
+    deallocate(self%zootot_graze_zootot_fields)
     deallocate(self%zootot_graze_poc_fields)
     deallocate(self%zootot_graze_doc_fields)
     deallocate(self%zootot_graze_dic_fields)

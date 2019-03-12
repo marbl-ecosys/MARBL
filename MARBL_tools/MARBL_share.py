@@ -107,21 +107,17 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
             key_fill_val = MARBL_settings.settings_dict[zoo_prefix + "sname"].strip('"')
             template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict[zoo_prefix + "lname"].strip('"')
         elif fill_source == 'phyto_graze_zoo':
-            auto_ind = item % MARBL_settings.settings_dict['autotroph_cnt']
-            if auto_ind==0:
-                auto_ind = MARBL_settings.settings_dict['autotroph_cnt']
+            auto_ind = (item-1) % MARBL_settings.settings_dict['autotroph_cnt'] + 1
             auto_prefix = "autotroph_settings(%d)%%" % auto_ind
-            zoo_ind = int(item / (MARBL_settings.settings_dict['autotroph_cnt'] + 0.1)) + 1
+            zoo_ind = (item-1) // MARBL_settings.settings_dict['autotroph_cnt'] + 1
             zoo_prefix = "zooplankton_settings(%d)%%" % zoo_ind
             key_fill_val = MARBL_settings.settings_dict[auto_prefix + "sname"].strip('"') + '_' + MARBL_settings.settings_dict[zoo_prefix + "sname"].strip('"')
             template_fill_dict['((autotroph_lname))'] = MARBL_settings.settings_dict[auto_prefix + "lname"].strip('"')
             template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict[zoo_prefix + "lname"].strip('"')
         elif fill_source == 'zoo_graze_zoo':
-            zoo_ind1 = item % MARBL_settings.settings_dict['zooplankton_cnt']
-            if zoo_ind1==0:
-                zoo_ind1 = MARBL_settings.settings_dict['zooplankton_cnt']
+            zoo_ind1 = (item-1) % MARBL_settings.settings_dict['zooplankton_cnt'] + 1
             zoo_prefix1 = "zooplankton_settings(%d)%%" % zoo_ind1
-            zoo_ind2 = int(item / (MARBL_settings.settings_dict['zooplankton_cnt'] + 0.1)) + 1
+            zoo_ind2 = (item-1) // MARBL_settings.settings_dict['zooplankton_cnt'] + 1
             zoo_prefix2 = "zooplankton_settings(%d)%%" % zoo_ind2
             key_fill_val = MARBL_settings.settings_dict[zoo_prefix1 + "sname"].strip('"') + '_' + MARBL_settings.settings_dict[zoo_prefix2 + "sname"].strip('"')
             template_fill_dict['((zooplankton_lname))1'] = MARBL_settings.settings_dict[zoo_prefix1 + "lname"].strip('"')

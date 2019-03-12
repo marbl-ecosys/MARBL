@@ -83,16 +83,16 @@ contains
 
     ! Populate fields used by carbon isotopes if running with ciso module
     if (ciso_on) then
-      zooplankton_share%zoototC_loc_fields(:)      = sum(zooplankton_local%C(:,:), dim=1)
-      zooplankton_share%zootot_loss_fields(:)      = sum(zooplankton_derived_terms%zoo_loss(:,:), dim=1)
-      zooplankton_share%zootot_loss_poc_fields(:)  = sum(zooplankton_derived_terms%zoo_loss_poc(:,:), dim=1)
-      zooplankton_share%zootot_loss_doc_fields(:)  = sum(zooplankton_derived_terms%zoo_loss_doc(:,:), dim=1)
-      zooplankton_share%zootot_loss_dic_fields(:)  = sum(zooplankton_derived_terms%zoo_loss_dic(:,:), dim=1)
-      zooplankton_share%zootot_graze_fields(:)     = sum(zooplankton_derived_terms%zoo_graze(:,:), dim=1)
-      zooplankton_share%zootot_graze_zoo_fields(:) = sum(zooplankton_derived_terms%zoo_graze_zootot(:,:), dim=1)
-      zooplankton_share%zootot_graze_poc_fields(:) = sum(zooplankton_derived_terms%zoo_graze_poc(:,:), dim=1)
-      zooplankton_share%zootot_graze_doc_fields(:) = sum(zooplankton_derived_terms%zoo_graze_doc(:,:), dim=1)
-      zooplankton_share%zootot_graze_dic_fields(:) = sum(zooplankton_derived_terms%zoo_graze_dic(:,:), dim=1)
+      zooplankton_share%zoototC_loc_fields(:)         = sum(zooplankton_local%C(:,:), dim=1)
+      zooplankton_share%zootot_loss_fields(:)         = sum(zooplankton_derived_terms%zoo_loss(:,:), dim=1)
+      zooplankton_share%zootot_loss_poc_fields(:)     = sum(zooplankton_derived_terms%zoo_loss_poc(:,:), dim=1)
+      zooplankton_share%zootot_loss_doc_fields(:)     = sum(zooplankton_derived_terms%zoo_loss_doc(:,:), dim=1)
+      zooplankton_share%zootot_loss_dic_fields(:)     = sum(zooplankton_derived_terms%zoo_loss_dic(:,:), dim=1)
+      zooplankton_share%zootot_graze_fields(:)        = sum(zooplankton_derived_terms%zoo_graze(:,:), dim=1)
+      zooplankton_share%zootot_graze_zootot_fields(:) = sum(zooplankton_derived_terms%zoo_graze_zootot(:,:), dim=1)
+      zooplankton_share%zootot_graze_poc_fields(:)    = sum(zooplankton_derived_terms%zoo_graze_poc(:,:), dim=1)
+      zooplankton_share%zootot_graze_doc_fields(:)    = sum(zooplankton_derived_terms%zoo_graze_doc(:,:), dim=1)
+      zooplankton_share%zootot_graze_dic_fields(:)    = sum(zooplankton_derived_terms%zoo_graze_dic(:,:), dim=1)
     end if
 
   end subroutine marbl_interior_tendency_share_export_zooplankton

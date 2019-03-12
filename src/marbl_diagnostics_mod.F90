@@ -3442,7 +3442,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer(int_kind) :: n, m, k
+    integer(int_kind) :: n, m
     real(r8) :: autotrophC_weight(marbl_domain%km)
     real(r8) :: autotrophC_zint_100m
     real(r8) :: limterm(marbl_domain%km)
@@ -3548,10 +3548,8 @@ contains
        diags(ind%auto_graze_zootot(n))%field_3d(:, 1) = autotroph_derived_terms%auto_graze_zootot(n,:)
 
        do m=1, zooplankton_cnt
-            do k=1, marbl_domain%km
-                  diags(ind%auto_graze_zoo(n,m))%field_3d(k, 1) = autotroph_derived_terms%auto_graze_zoo(n,m,k)
-            end do
-        end do
+            diags(ind%auto_graze_zoo(n,m))%field_3d(:, 1) = autotroph_derived_terms%auto_graze_zoo(n,m,:)
+       end do
 
        diags(ind%auto_loss(n))%field_3d(:, 1)      = autotroph_derived_terms%auto_loss(n,:)
        diags(ind%auto_loss_poc(n))%field_3d(:, 1)  = autotroph_derived_terms%auto_loss_poc(n,:)
@@ -3851,7 +3849,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer(int_kind) :: n, m, k
+    integer(int_kind) :: n, m
     !-----------------------------------------------------------------------
 
     associate(                                        &
@@ -3872,9 +3870,7 @@ contains
        diags(ind%x_graze_zoo(n))%field_3d(:, 1)   = zooplankton_derived_terms%x_graze_zoo(n,:)
 
        do m = 1, zooplankton_cnt
-           do k = 1, marbl_domain%km
-               diags(ind%zoo_graze_zoo(n,m))%field_3d(k, 1) = zooplankton_derived_terms%zoo_graze_zoo(n,m,k)
-           end do
+           diags(ind%zoo_graze_zoo(n,m))%field_3d(:, 1) = zooplankton_derived_terms%zoo_graze_zoo(n,m,:)
        end do
 
        ! vertical integrals

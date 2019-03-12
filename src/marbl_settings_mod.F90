@@ -229,7 +229,6 @@ module marbl_settings_mod
                                                               !   (this is done primarily in spinup runs)
   logical(log_kind), target :: lo2_consumption_scalef         ! Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)
   logical(log_kind), target :: lp_remin_scalef                ! Apply p_remin_scalef to particulate remin (and request it as a forcing)
-  logical(log_kind), target :: l_ea_on                        ! Use the Arrhenius temperature scaling with activation energy Ea
 
   character(len=char_len), target :: init_bury_coeff_opt
 
@@ -316,6 +315,11 @@ module marbl_settings_mod
   type(zooplankton_settings_type),          allocatable, target :: zooplankton_settings(:)
   type(grazing_relationship_settings_type), allocatable, target :: grazing_relationship_settings(:,:)
 
+  ! temperature functional form option
+  ! ------------------------------------------------------------
+  character(len=char_len), target :: temp_func_form_opt         ! temperature functional form option ['q_10', 'arrhenius']
+
+
   !  marbl_settings_define_tracer_dependent
   !    parameters that can not be set until MARBL knows what tracers
   !    have been enabled.
@@ -334,6 +338,9 @@ module marbl_settings_mod
   integer (int_kind)            :: caco3_bury_thres_iopt
   integer (int_kind), parameter :: caco3_bury_thres_iopt_fixed_depth = 1
   integer (int_kind), parameter :: caco3_bury_thres_iopt_omega_calc  = 2
+  integer (int_kind)            :: temp_func_form_iopt
+  integer (int_kind), parameter :: temp_func_form_iopt_q10           = 1
+  integer (int_kind), parameter :: temp_func_form_iopt_arrhenius     = 2
 
   !*****************************************************************************
 
@@ -379,7 +386,6 @@ contains
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lo2_consumption_scalef        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    l_ea_on                       = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     gQsi_0                        = 0.137_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -424,6 +430,7 @@ contains
     POM_bury_frac_max             = 0.8_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     bSi_bury_frac_max             = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_fract_factors            = 'Laws'          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    temp_func_form_opt            = 'q_10'          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
 
   end subroutine marbl_settings_set_defaults_general_parms
 
@@ -672,16 +679,6 @@ contains
                         marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    sname     = 'l_ea_on'
-    lname     = 'Use the Arrhenius temperature scaling with activation energy Ea'
-    units     = 'unitless'
-    datatype  = 'logical'
-    lptr      => l_ea_on
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, lptr=lptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-
     ! --------------------------
     category  = 'config strings'
     ! --------------------------
@@ -698,6 +695,15 @@ contains
     ! -----------------------------
     category  = 'general parmeters'
     ! -----------------------------
+
+    sname     = 'temp_func_form_opt'
+    lname     = 'Option for the temperature scaling functional form'
+    units     = 'unitless'
+    datatype  = 'string'
+    sptr      => temp_func_form_opt
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, sptr=sptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'particulate_flux_ref_depth'
     lname     = 'reference depth for particulate flux diagnostics'
@@ -1739,6 +1745,19 @@ contains
     integer :: m, n
 
     call marbl_status_log%log_header('Setting derived parms', subname)
+
+    select case (temp_func_form_opt)
+    case ('q_10')
+       temp_func_form_iopt = temp_func_form_iopt_q10
+    case ('arrhenius')
+       temp_func_form_iopt = temp_func_form_iopt_arrhenius
+    case default
+       write(log_message, "(2A)") "unknown temp_func_form_opt: ", trim(temp_func_form_opt)
+       call marbl_status_log%log_error(log_message, subname)
+       return
+    end select
+    call print_single_derived_parm('temp_func_form_opt', 'temp_func_form_iopt', &
+         temp_func_form_iopt, subname, marbl_status_log)
 
     select case (caco3_bury_thres_opt)
     case ('fixed_depth')
