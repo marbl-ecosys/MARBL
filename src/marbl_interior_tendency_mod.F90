@@ -1218,10 +1218,10 @@ contains
     !-----------------------------------------------------------------------
     !  Scaling of physiological rates by temperature
     !  Use temp_func_form_iopt to select between two temperature functions,
-    !  Q10 and Arrhenius. 
+    !  Q10 and Arrhenius.
     !
     !  Use slightly different reference temperatures as well
-    !  (Future development can attempt to merge the two; will require additional tuning)  
+    !  (Future development can attempt to merge the two; will require additional tuning)
     !  Tref = 30.0 (deg C) reference temperature for Q10 formulation
     !  Tref = 25.0 (deg C) reference temperature for Arrhenius equation.
     !
@@ -1255,7 +1255,7 @@ contains
             Tfunc(Tfunc_ind,:) = exp(-Ea(Tfunc_ind) * (Tref_A - temperature(:)) &
                                      / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref_A + T0_Kelvin)))
         end do
-    end select 
+    end select
 
   end subroutine compute_temperature_functional_form
 
