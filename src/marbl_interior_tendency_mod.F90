@@ -1135,7 +1135,7 @@ contains
          auto_CaCO3 => autotroph_local%CaCO3(:,:), &
 
          thetaC     => autotroph_derived_terms%thetaC(:,:), & ! current Chl/C ratio (mg Chl/mmol C)
-         QCaCO3     => autotroph_derived_terms%QCaCO3(:,:), & ! currenc CaCO3/C ratio (mmol CaCO3/mmol C)
+         QCaCO3     => autotroph_derived_terms%QCaCO3(:,:), & ! current CaCO3/C ratio (mmol CaCO3/mmol C)
          Qp         => autotroph_derived_terms%Qp(:,:),     & ! current P/C ratio (mmol P/mmol C)
          gQp        => autotroph_derived_terms%gQp(:,:),    & ! P/C for growth
          Qfe        => autotroph_derived_terms%Qfe(:,:),    & ! current Fe/C ratio (mmol Fe/mmol C)
@@ -1643,6 +1643,8 @@ contains
     ! loss terms
     !-----------------------------------------------------------------------
 
+    use marbl_settings_mod, only : auto_mort2_exp
+
     integer,                            intent(in)    :: km
     real(r8),                           intent(in)    :: Tfunc_auto(autotroph_cnt,km)
     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
@@ -1672,7 +1674,7 @@ contains
         auto_loss(auto_ind,:) = autotroph_settings(auto_ind)%mort * Pprime(auto_ind,:) * Tfunc_auto(auto_ind,:)
 
         auto_agg(auto_ind,:) = min((autotroph_settings(auto_ind)%agg_rate_max * dps) * Pprime(auto_ind,:), &
-                                   autotroph_settings(auto_ind)%mort2 * Pprime(auto_ind,:)**1.75_r8)
+                                   autotroph_settings(auto_ind)%mort2 * Pprime(auto_ind,:)**auto_mort2_exp)
         auto_agg(auto_ind,:) = max((autotroph_settings(auto_ind)%agg_rate_min * dps) * Pprime(auto_ind,:), &
                                    auto_agg(auto_ind,:))
 
@@ -1701,6 +1703,7 @@ contains
 
     use marbl_settings_mod, only : thres_z1_zoo
     use marbl_settings_mod, only : thres_z2_zoo
+    use marbl_settings_mod, only : zoo_mort2_exp
 
     integer(int_kind),                    intent(in)    :: km
     real(r8),                             intent(in)    :: zt(km)
@@ -1728,7 +1731,7 @@ contains
         C_loss_thres(:) = f_loss_thres(:) * zooplankton_settings(zoo_ind)%loss_thres
         Zprime(zoo_ind,:) = max(zooC(zoo_ind,:) - C_loss_thres, c0)
 
-        zoo_loss(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**1.5_r8 &
+        zoo_loss(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp &
                                + zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind,:)) * Tfunc_zoo(zoo_ind,:)
       end do
 

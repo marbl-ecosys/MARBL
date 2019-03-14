@@ -134,7 +134,6 @@ module marbl_settings_mod
       f_graze_sp_poc_lim    = 0.36_r8,  &
       f_photosp_CaCO3       = 0.40_r8,  & ! proportionality between small phyto
                                           !    production and CaCO3 production
-      f_graze_CaCO3_remin   = 0.33_r8,  & ! fraction of spCaCO3 grazing which is remin
       f_graze_si_remin      = 0.50_r8,  & ! fraction of diatom Si grazing which is remin
       f_toDON               = 0.70_r8,  & ! fraction DON relative to DOC
       f_toDOP               = 0.15_r8     ! fraction of remaining_P to DOP
@@ -144,9 +143,8 @@ module marbl_settings_mod
 
   ! SET parmaeters and RATIOS for N/C, P/C, SiO3/C, Fe/C, etc...
   real(r8), parameter :: &
-      Q             = 16.0_r8 / 117.0_r8, & !N/C ratio (mmol/mmol) of phyto & zoo
-      Qfe_zoo       = 3.0e-6_r8,          & !zooplankton Fe/C ratio
-      QCaCO3_max    = 0.40_r8,             & !max QCaCO3
+      Q             = 16.0_r8 / 117.0_r8, & ! N/C ratio (mmol/mmol) of phyto & zoo
+      Qfe_zoo       = 3.0e-6_r8,          & ! zooplankton Fe/C ratio
       ! parameters in GalbraithMartiny Pquota Model^M
       PquotaSlope     = 7.0_r8,        &
       PquotaIntercept = 5.571_r8,      &
@@ -156,13 +154,13 @@ module marbl_settings_mod
 
   ! loss term threshold parameters, chl:c ratios
   real(r8), parameter :: &
-      thres_z1_auto     =  80.0e2_r8, & !autotroph threshold = C_loss_thres for z shallower than this (cm)
-      thres_z2_auto     = 120.0e2_r8, & !autotroph threshold = 0 for z deeper than this (cm)
-      thres_z1_zoo      = 110.0e2_r8, & !zooplankton threshold = C_loss_thres for z shallower than this (cm)
-      thres_z2_zoo      = 150.0e2_r8, & !zooplankton threshold = 0 for z deeper than this (cm)
-      CaCO3_temp_thres1 = 4.0_r8,   & !upper temp threshold for CaCO3 prod
-      CaCO3_temp_thres2 = -2.0_r8,  & !lower temp threshold
-      CaCO3_sp_thres    = 2.5_r8      ! bloom condition thres (mmolC/m3)
+      thres_z1_auto     =  80.0e2_r8, & ! autotroph threshold = C_loss_thres for z shallower than this (cm)
+      thres_z2_auto     = 120.0e2_r8, & ! autotroph threshold = 0 for z deeper than this (cm)
+      thres_z1_zoo      = 110.0e2_r8, & ! zooplankton threshold = C_loss_thres for z shallower than this (cm)
+      thres_z2_zoo      = 150.0e2_r8, & ! zooplankton threshold = 0 for z deeper than this (cm)
+      CaCO3_temp_thres1 = 4.0_r8,     & ! upper temp threshold for CaCO3 prod
+      CaCO3_temp_thres2 = -2.0_r8,    & ! lower temp threshold
+      CaCO3_sp_thres    = 2.5_r8        ! bloom condition thres (mmolC/m3)
 
   ! fraction of incoming shortwave assumed to be PAR
   real(r8), parameter :: f_qsw_par = 0.45_r8   ! PAR fraction
@@ -277,6 +275,10 @@ module marbl_settings_mod
        o2_sf_o2_range_lo,          & ! o2_scalefactor is constant for O2 less than this
        o2_sf_val_lo_o2,            & ! o2_scalefactor constant for O2 less than o2_sf_o2_range_lo
        parm_sed_denitrif_coeff,    & ! global scaling factor for sed_denitrif
+       auto_mort2_exp,             & ! Value of power loss exponent for autotrophs
+       zoo_mort2_exp,              & ! Value of power loss exponent for zooplankton
+       QCaCO3_max,                 & ! Max CaCO3/C ratio for calcifiers
+       f_graze_CaCO3_remin,        & ! Fraction of spCaCO3 grazing which is remineralized in zooplankton guts
        bury_coeff_rmean_timescale_years
 
   real(r8), dimension(4), target :: &
@@ -432,6 +434,10 @@ contains
     ciso_fract_factors            = 'Laws'          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     temp_func_form_opt            = 'q_10'          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Tref                          = 30.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    auto_mort2_exp                = 1.75_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    zoo_mort2_exp                 = 1.5_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    QCaCO3_max                    = 0.40_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    f_graze_CaCO3_remin           = 0.33_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
 
 
   end subroutine marbl_settings_set_defaults_general_parms
@@ -1050,7 +1056,7 @@ contains
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     ! -----------------------------
-    category  = 'general parmeters'
+    category  = 'general parameters'
     ! -----------------------------
 
     sname     = 'caco3_bury_thres_opt'
@@ -1114,6 +1120,41 @@ contains
     sptr      => ciso_fract_factors
     call this%add_var(sname, lname, units, datatype, category,       &
                       marbl_status_log, sptr=sptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'auto_mort2_exp'
+    lname     = 'Value of power loss exponent for autotrophs'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => auto_mort2_exp
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'zoo_mort2_exp'
+    lname     = 'Value of power loss exponent for zooplankton'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => zoo_mort2_exp
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+
+    sname     = 'QCaCO3_max'
+    lname     = 'Max CaCO3/C ratio for calcifiers'
+    units     = 'mmol CaCO3/mmol C'
+    datatype  = 'real'
+    rptr      => QCaCO3_max
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+
+    sname     = 'f_graze_CaCO3_remin'
+    lname     = 'Fraction of spCaCO3 grazing which is remineralized in zooplankton guts'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => f_graze_CaCO3_remin
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     marbl_status_log%labort_marbl = labort_marbl_loc

@@ -816,6 +816,13 @@
          "subcategory": "4. general parameters (bury coeffs)",
          "units": "unitless"
       },
+      "QCaCO3_max": {
+         "datatype": "real",
+         "default_value": 0.4,
+         "longname": "Max CaCO3/C ratio for calcifiers",
+         "subcategory": "4. general parameters",
+         "units": "mmol CaCO3/mmol C"
+      },
       "Tref": {
          "datatype": "real",
          "default_value": {
@@ -825,6 +832,13 @@
          "longname": "reference temperature (C) used for the temperature scaling functional form",
          "subcategory": "4. general parameters",
          "units": "degC"
+      },
+      "auto_mort2_exp": {
+         "datatype": "real",
+         "default_value": 1.75,
+         "longname": "Value of power loss exponent for autotrophs",
+         "subcategory": "4. general parameters",
+         "units": "unitless"
       },
       "bSi_bury_frac_max": {
          "datatype": "real",
@@ -891,6 +905,13 @@
          "default_value": ".false.",
          "longname": "Control whether CISO tracer module is active",
          "subcategory": "2. config flags",
+         "units": "unitless"
+      },
+      "f_graze_CaCO3_remin": {
+         "datatype": "real",
+         "default_value": 0.33,
+         "longname": "Fraction of spCaCO3 grazing which is remineralized in zooplankton guts",
+         "subcategory": "4. general parameters",
          "units": "unitless"
       },
       "gQ_Fe_kFe_thres": {
@@ -1248,6 +1269,13 @@
             "q_10",
             "arrhenius"
          ]
+      },
+      "zoo_mort2_exp": {
+         "datatype": "real",
+         "default_value": 1.5,
+         "longname": "Value of power loss exponent for zooplankton",
+         "subcategory": "4. general parameters",
+         "units": "unitless"
       }
    },
    "general_parms2": {

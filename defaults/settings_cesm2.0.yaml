@@ -598,6 +598,31 @@ general_parms :
       units : non-numeric
       datatype : string
       default_value : Laws
+   auto_mort2_exp :
+      longname : Value of power loss exponent for autotrophs
+      subcategory : 4. general parameters
+      units : unitless
+      datatype : real
+      default_value : 1.75
+   zoo_mort2_exp :
+      longname : Value of power loss exponent for zooplankton
+      subcategory : 4. general parameters
+      units : unitless
+      datatype : real
+      default_value : 1.5
+   QCaCO3_max :
+      longname : Max CaCO3/C ratio for calcifiers
+      subcategory : 4. general parameters
+      units : mmol CaCO3/mmol C
+      datatype : real
+      default_value : 0.40
+   f_graze_CaCO3_remin :
+      longname : Fraction of spCaCO3 grazing which is remineralized in zooplankton guts
+      subcategory : 4. general parameters
+      units : unitless
+      datatype : real
+      default_value : 0.33
+
 
 ################################################################################
 #                    Category 1.5: General Parameters (cont)                   #
