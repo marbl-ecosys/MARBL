@@ -816,6 +816,16 @@
          "subcategory": "4. general parameters (bury coeffs)",
          "units": "unitless"
       },
+      "Tref": {
+         "datatype": "real",
+         "default_value": {
+            "default": 30.0,
+            "temp_func_form_opt == \"arrhenius\"": 25.0
+         },
+         "longname": "reference temperature (C) used for the temperature scaling functional form",
+         "subcategory": "4. general parameters",
+         "units": "degC"
+      },
       "bSi_bury_frac_max": {
          "datatype": "real",
          "default_value": 1.0,
@@ -1231,6 +1241,7 @@
          "units": "m"
       },
       "temp_func_form_opt": {
+         "_append_to_config_keywords": true,
          "datatype": "string",
          "default_value": "q_10",
          "longname": "Option for the temperature scaling functional form",

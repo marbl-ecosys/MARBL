@@ -318,7 +318,7 @@ module marbl_settings_mod
   ! temperature functional form option
   ! ------------------------------------------------------------
   character(len=char_len), target :: temp_func_form_opt         ! temperature functional form option ['q_10', 'arrhenius']
-
+  real(r8),                target :: Tref                       ! reference temperature (C) used for the temperature scaling functional form
 
   !  marbl_settings_define_tracer_dependent
   !    parameters that can not be set until MARBL knows what tracers
@@ -431,6 +431,8 @@ contains
     bSi_bury_frac_max             = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_fract_factors            = 'Laws'          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     temp_func_form_opt            = 'q_10'          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    Tref                          = 30.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+
 
   end subroutine marbl_settings_set_defaults_general_parms
 
@@ -703,6 +705,15 @@ contains
     sptr      => temp_func_form_opt
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, sptr=sptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'Tref'
+    lname     = 'Reference temperature for the temperature scaling function'
+    units     = 'degC'
+    datatype  = 'real'
+    rptr      => Tref
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'particulate_flux_ref_depth'

@@ -338,6 +338,15 @@ general_parms :
       valid_values :
          - q_10
          - arrhenius
+      _append_to_config_keywords : true
+   Tref:
+      longname : reference temperature (C) used for the temperature scaling functional form
+      subcategory : 4. general parameters
+      units : degC
+      datatype : real
+      default_value :
+         default : 30.0
+         temp_func_form_opt == "arrhenius" : 25.0
    particulate_flux_ref_depth :
       longname : reference depth for particulate flux diagnostics
       subcategory : 4. general parameters

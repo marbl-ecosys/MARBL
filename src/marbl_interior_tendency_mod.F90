@@ -1231,10 +1231,9 @@ contains
     use marbl_settings_mod,  only : temp_func_form_iopt
     use marbl_settings_mod,  only : temp_func_form_iopt_q10
     use marbl_settings_mod,  only : temp_func_form_iopt_arrhenius
-
     use marbl_settings_mod,  only : Q_10
-    use marbl_constants_mod, only : Tref
-    use marbl_constants_mod, only : Tref_A
+    use marbl_settings_mod,  only : Tref
+
     use marbl_constants_mod, only : c10
     use marbl_constants_mod, only : K_Boltz
 
@@ -1252,8 +1251,8 @@ contains
         end do
       case (temp_func_form_iopt_arrhenius)
         do Tfunc_ind = 1, size(Tfunc, dim=1)
-            Tfunc(Tfunc_ind,:) = exp(-Ea(Tfunc_ind) * (Tref_A - temperature(:)) &
-                                     / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref_A + T0_Kelvin)))
+            Tfunc(Tfunc_ind,:) = exp(-Ea(Tfunc_ind) * (Tref - temperature(:)) &
+                                     / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref + T0_Kelvin)))
         end do
     end select
 
