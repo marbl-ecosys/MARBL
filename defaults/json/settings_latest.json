@@ -823,16 +823,6 @@
          "subcategory": "4. general parameters",
          "units": "mmol CaCO3/mmol C"
       },
-      "Tref": {
-         "datatype": "real",
-         "default_value": {
-            "default": 30.0,
-            "temp_func_form_opt == \"arrhenius\"": 25.0
-         },
-         "longname": "reference temperature (C) used for the temperature scaling functional form",
-         "subcategory": "4. general parameters",
-         "units": "degC"
-      },
       "auto_mort2_exp": {
          "datatype": "real",
          "default_value": 1.75,
@@ -1282,6 +1272,16 @@
       }
    },
    "general_parms2": {
+      "Tref": {
+         "datatype": "real",
+         "default_value": {
+            "default": 30.0,
+            "temp_func_form_opt == \"arrhenius\"": 25.0
+         },
+         "longname": "reference temperature (C) used for the temperature scaling functional form",
+         "subcategory": "4. general parameters",
+         "units": "degC"
+      },
       "init_bury_coeff_opt": {
          "datatype": "string",
          "default_value": {
