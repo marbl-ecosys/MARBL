@@ -520,7 +520,7 @@
             "Ea": {
                "datatype": "real",
                "default_value": {
-                  "((autotroph_sname)) == \"zoo\"": 0.65,
+                  "((zooplankton_sname)) == \"zoo\"": 0.65,
                   "default": "1e34"
                },
                "longname": "Activation energy for Arrhenius equation",

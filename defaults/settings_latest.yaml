@@ -1005,7 +1005,7 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "zoo" : 0.65
+               ((zooplankton_sname)) == "zoo" : 0.65
    grazing_relationship_settings :
       _array_shape :
          - max_grazer_prey_cnt
