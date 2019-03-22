@@ -134,7 +134,6 @@ module marbl_settings_mod
       f_graze_sp_poc_lim    = 0.36_r8,  &
       f_photosp_CaCO3       = 0.40_r8,  & ! proportionality between small phyto
                                           !    production and CaCO3 production
-      f_graze_CaCO3_remin   = 0.33_r8,  & ! fraction of spCaCO3 grazing which is remin
       f_graze_si_remin      = 0.50_r8,  & ! fraction of diatom Si grazing which is remin
       f_toDON               = 0.70_r8,  & ! fraction DON relative to DOC
       f_toDOP               = 0.15_r8     ! fraction of remaining_P to DOP
@@ -144,9 +143,8 @@ module marbl_settings_mod
 
   ! SET parmaeters and RATIOS for N/C, P/C, SiO3/C, Fe/C, etc...
   real(r8), parameter :: &
-      Q             = 16.0_r8 / 117.0_r8, & !N/C ratio (mmol/mmol) of phyto & zoo
-      Qfe_zoo       = 3.0e-6_r8,          & !zooplankton Fe/C ratio
-      QCaCO3_max    = 0.4_r8,             & !max QCaCO3
+      Q             = 16.0_r8 / 117.0_r8, & ! N/C ratio (mmol/mmol) of phyto & zoo
+      Qfe_zoo       = 3.0e-6_r8,          & ! zooplankton Fe/C ratio
       ! parameters in GalbraithMartiny Pquota Model^M
       PquotaSlope     = 7.0_r8,        &
       PquotaIntercept = 5.571_r8,      &
@@ -156,13 +154,13 @@ module marbl_settings_mod
 
   ! loss term threshold parameters, chl:c ratios
   real(r8), parameter :: &
-      thres_z1_auto     =  80.0e2_r8, & !autotroph threshold = C_loss_thres for z shallower than this (cm)
-      thres_z2_auto     = 120.0e2_r8, & !autotroph threshold = 0 for z deeper than this (cm)
-      thres_z1_zoo      = 110.0e2_r8, & !zooplankton threshold = C_loss_thres for z shallower than this (cm)
-      thres_z2_zoo      = 150.0e2_r8, & !zooplankton threshold = 0 for z deeper than this (cm)
-      CaCO3_temp_thres1 = 4.0_r8,   & !upper temp threshold for CaCO3 prod
-      CaCO3_temp_thres2 = -2.0_r8,  & !lower temp threshold
-      CaCO3_sp_thres    = 2.5_r8      ! bloom condition thres (mmolC/m3)
+      thres_z1_auto     =  80.0e2_r8, & ! autotroph threshold = C_loss_thres for z shallower than this (cm)
+      thres_z2_auto     = 120.0e2_r8, & ! autotroph threshold = 0 for z deeper than this (cm)
+      thres_z1_zoo      = 110.0e2_r8, & ! zooplankton threshold = C_loss_thres for z shallower than this (cm)
+      thres_z2_zoo      = 150.0e2_r8, & ! zooplankton threshold = 0 for z deeper than this (cm)
+      CaCO3_temp_thres1 = 4.0_r8,     & ! upper temp threshold for CaCO3 prod
+      CaCO3_temp_thres2 = -2.0_r8,    & ! lower temp threshold
+      CaCO3_sp_thres    = 2.5_r8        ! bloom condition thres (mmolC/m3)
 
   ! fraction of incoming shortwave assumed to be PAR
   real(r8), parameter :: f_qsw_par = 0.45_r8   ! PAR fraction
@@ -277,6 +275,10 @@ module marbl_settings_mod
        o2_sf_o2_range_lo,          & ! o2_scalefactor is constant for O2 less than this
        o2_sf_val_lo_o2,            & ! o2_scalefactor constant for O2 less than o2_sf_o2_range_lo
        parm_sed_denitrif_coeff,    & ! global scaling factor for sed_denitrif
+       auto_mort2_exp,             & ! Value of power loss exponent for autotrophs
+       zoo_mort2_exp,              & ! Value of power loss exponent for zooplankton
+       QCaCO3_max,                 & ! Max CaCO3/C ratio for calcifiers
+       f_graze_CaCO3_remin,        & ! Fraction of spCaCO3 grazing which is remineralized in zooplankton guts
        bury_coeff_rmean_timescale_years
 
   real(r8), dimension(4), target :: &
@@ -315,6 +317,11 @@ module marbl_settings_mod
   type(zooplankton_settings_type),          allocatable, target :: zooplankton_settings(:)
   type(grazing_relationship_settings_type), allocatable, target :: grazing_relationship_settings(:,:)
 
+  ! temperature functional form option
+  ! ------------------------------------------------------------
+  character(len=char_len), target :: temp_func_form_opt         ! temperature functional form option ['q_10', 'arrhenius']
+  real(r8),                target :: Tref                       ! reference temperature (C) used for the temperature scaling functional form
+
   !  marbl_settings_define_tracer_dependent
   !    parameters that can not be set until MARBL knows what tracers
   !    have been enabled.
@@ -333,6 +340,9 @@ module marbl_settings_mod
   integer (int_kind)            :: caco3_bury_thres_iopt
   integer (int_kind), parameter :: caco3_bury_thres_iopt_fixed_depth = 1
   integer (int_kind), parameter :: caco3_bury_thres_iopt_omega_calc  = 2
+  integer (int_kind)            :: temp_func_form_iopt
+  integer (int_kind), parameter :: temp_func_form_iopt_q10           = 1
+  integer (int_kind), parameter :: temp_func_form_iopt_arrhenius     = 2
 
   !*****************************************************************************
 
@@ -422,6 +432,13 @@ contains
     POM_bury_frac_max             = 0.8_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     bSi_bury_frac_max             = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_fract_factors            = 'Laws'          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    temp_func_form_opt            = 'q_10'          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    Tref                          = 30.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    auto_mort2_exp                = 1.75_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    zoo_mort2_exp                 = 1.5_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    QCaCO3_max                    = 0.40_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    f_graze_CaCO3_remin           = 0.33_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+
 
   end subroutine marbl_settings_set_defaults_general_parms
 
@@ -686,6 +703,24 @@ contains
     ! -----------------------------
     category  = 'general parmeters'
     ! -----------------------------
+
+    sname     = 'temp_func_form_opt'
+    lname     = 'Option for the temperature scaling functional form'
+    units     = 'unitless'
+    datatype  = 'string'
+    sptr      => temp_func_form_opt
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, sptr=sptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'Tref'
+    lname     = 'Reference temperature for the temperature scaling function'
+    units     = 'degC'
+    datatype  = 'real'
+    rptr      => Tref
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'particulate_flux_ref_depth'
     lname     = 'reference depth for particulate flux diagnostics'
@@ -1021,7 +1056,7 @@ contains
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     ! -----------------------------
-    category  = 'general parmeters'
+    category  = 'general parameters'
     ! -----------------------------
 
     sname     = 'caco3_bury_thres_opt'
@@ -1085,6 +1120,41 @@ contains
     sptr      => ciso_fract_factors
     call this%add_var(sname, lname, units, datatype, category,       &
                       marbl_status_log, sptr=sptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'auto_mort2_exp'
+    lname     = 'Value of power loss exponent for autotrophs'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => auto_mort2_exp
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'zoo_mort2_exp'
+    lname     = 'Value of power loss exponent for zooplankton'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => zoo_mort2_exp
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+
+    sname     = 'QCaCO3_max'
+    lname     = 'Max CaCO3/C ratio for calcifiers'
+    units     = 'mmol CaCO3/mmol C'
+    datatype  = 'real'
+    rptr      => QCaCO3_max
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+
+    sname     = 'f_graze_CaCO3_remin'
+    lname     = 'Fraction of spCaCO3 grazing which is remineralized in zooplankton guts'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => f_graze_CaCO3_remin
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
+
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     marbl_status_log%labort_marbl = labort_marbl_loc
@@ -1345,11 +1415,11 @@ contains
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-      write(sname, "(2A)") trim(prefix), 'alphaPi_per_day'
+      write(sname, "(2A)") trim(prefix), 'alphaPI_per_day'
       lname    = 'Initial slope of P_I curve (GD98)'
       units    = 'mmol m^2 / (mg Chl W day)'
       datatype = 'real'
-      rptr     => autotroph_settings(n)%alphaPi_per_day
+      rptr     => autotroph_settings(n)%alphaPI_per_day
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1455,6 +1525,16 @@ contains
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
+      write(sname, "(2A)") trim(prefix), 'Ea'
+      lname    = 'activation energy for Arrhenius equation'
+      units    = 'eV'
+      datatype = 'real'
+      rptr     => autotroph_settings(n)%Ea
+      call this%add_var(sname, lname, units, datatype, category,     &
+                        marbl_status_log, rptr=rptr,                 &
+                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
     end do
 
     do n=1, zooplankton_cnt
@@ -1507,6 +1587,16 @@ contains
       datatype = 'real'
       rptr     => zooplankton_settings(n)%z_mort2_0_per_day
       call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr,                 &
+                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      write(sname, "(2A)") trim(prefix), 'Ea'
+      lname    = 'Activation energy for Arrhenius equation'
+      units    = 'eV'
+      datatype = 'real'
+      rptr     => zooplankton_settings(n)%Ea
+      call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
@@ -1707,6 +1797,19 @@ contains
     integer :: m, n
 
     call marbl_status_log%log_header('Setting derived parms', subname)
+
+    select case (temp_func_form_opt)
+    case ('q_10')
+       temp_func_form_iopt = temp_func_form_iopt_q10
+    case ('arrhenius')
+       temp_func_form_iopt = temp_func_form_iopt_arrhenius
+    case default
+       write(log_message, "(2A)") "unknown temp_func_form_opt: ", trim(temp_func_form_opt)
+       call marbl_status_log%log_error(log_message, subname)
+       return
+    end select
+    call print_single_derived_parm('temp_func_form_opt', 'temp_func_form_iopt', &
+         temp_func_form_iopt, subname, marbl_status_log)
 
     select case (caco3_bury_thres_opt)
     case ('fixed_depth')
