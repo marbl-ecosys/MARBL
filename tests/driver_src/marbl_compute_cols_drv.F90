@@ -177,7 +177,7 @@ Contains
     character(len=*), parameter :: subname = 'marbl_compute_cols_drv:initalize'
     character(len=char_len) :: log_message
     integer :: n, tmp_fid ! netCDF will return a file id
-    integer :: num_cols
+    integer :: num_cols, cols_remaining
 
     ! 1. Open necessary netCDF files
     !    1a. Input (grid info, forcing fields, initial conditions)
@@ -211,16 +211,15 @@ Contains
     !        (col_id_loc in [1, col_cnt(n)]), so
     !            col_id = col_start(n) + col_id_loc
     allocate(col_start(num_insts), col_cnt(num_insts))
-    col_start = 0
-    col_cnt = ceiling(real(num_cols, r8) / real(num_insts, r8))
-    do n=2, num_insts
-      col_start(n) = col_start(n-1) + col_cnt(n-1)
-      if (col_start(n) .ge. num_insts) then
-        col_start(n) = num_insts
-        col_cnt(n) = 0
+    cols_remaining = num_cols
+    do n=1, num_insts
+      if (n.eq.1) then
+        col_start(n) = 0
       else
-        col_cnt(n) = min(num_insts - col_start(n-1), col_cnt(n))
+        col_start(n) = col_start(n-1) + col_cnt(n-1)
       end if
+      col_cnt(n) = cols_remaining / (num_insts-n+1) ! remaining cols / remaining insts
+      cols_remaining = cols_remaining - col_cnt(n)
     end do
 
     !   2c. Log decomposition
