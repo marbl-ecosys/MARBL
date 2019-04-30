@@ -18,7 +18,7 @@ Contains
 
   !****************************************************************************
 
-  subroutine test(marbl_instances, num_PAR_subcols, driver_status_log)
+  subroutine test(marbl_instances, driver_status_log)
 
     use marbl_io_mod,  only : marbl_io_read_field
     use marbl_io_mod,  only : marbl_io_define_history
@@ -26,20 +26,19 @@ Contains
     use marbl_io_mod,  only : marbl_io_close_all
 
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
-    integer,                                   intent(in)    :: num_PAR_subcols
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_compute_cols_drv:test'
     character(len=*), parameter :: infile = 'marbl.nc'
     character(len=*), parameter :: outfile = 'history.nc'
-    integer :: num_levels, m, n, col_id_loc, col_id
+    integer :: num_levels, m, n, col_id_loc, col_id, num_PAR_subcols
     type(grid_data_type) :: grid_data
     integer, allocatable, dimension(:) :: num_active_levels, col_start, col_cnt
 
 
     ! 1. Initialize the test (reads grid info, sets up history files, etc)
-    call initialize(infile, outfile, size(marbl_instances), num_levels, num_active_levels, col_start, col_cnt, &
-                    grid_data, driver_status_log)
+    call initialize(infile, outfile, size(marbl_instances), num_levels, num_active_levels, num_PAR_subcols, &
+                    col_start, col_cnt, grid_data, driver_status_log)
     if (driver_status_log%labort_MARBL) then
       call driver_status_log%log_error_trace('initialize', subname)
       return
@@ -159,7 +158,8 @@ Contains
 
   !*****************************************************************************
 
-  subroutine initialize(infile, outfile, num_insts, num_levels, num_active_levels, col_start, col_cnt, grid_data, driver_status_log)
+  subroutine initialize(infile, outfile, num_insts, num_levels, num_active_levels, num_PAR_subcols, &
+                        col_start, col_cnt, grid_data, driver_status_log)
 
     use marbl_io_mod,  only : marbl_io_open
     use marbl_io_mod,  only : marbl_io_read_dim
@@ -169,6 +169,7 @@ Contains
     integer,                            intent(in)    :: num_insts
     integer,                            intent(out)   :: num_levels
     integer, dimension(:), allocatable, intent(out)   :: num_active_levels
+    integer,                            intent(out)   :: num_PAR_subcols
     integer, dimension(:), allocatable, intent(out)   :: col_start
     integer, dimension(:), allocatable, intent(out)   :: col_cnt
     type(grid_data_type),               intent(inout) :: grid_data
@@ -233,7 +234,7 @@ Contains
     ! 3. Read domain info, initial conditions, and forcing fields from netCDF file
     write(log_message, "(A, 1X, A)") "* Reading input from", infile
     call driver_status_log%log_noerror(log_message, subname)
-    call read_domain(infile, num_levels, grid_data, driver_status_log)
+    call read_domain(infile, num_levels, num_PAR_subcols, grid_data, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('read_domain', subname)
       return
@@ -247,13 +248,14 @@ Contains
 
   !*****************************************************************************
 
-  subroutine read_domain(infile, num_levels, grid_data, driver_status_log)
+  subroutine read_domain(infile, num_levels, num_PAR_subcols, grid_data, driver_status_log)
 
     use marbl_io_mod, only : marbl_io_read_dim
     use marbl_io_mod, only : marbl_io_read_field
 
     character(len=*),     intent(in)    :: infile
     integer,              intent(inout) :: num_levels
+    integer,              intent(inout) :: num_PAR_subcols
     type(grid_data_type), intent(inout) :: grid_data
     type(marbl_log_type), intent(inout) :: driver_status_log
 
@@ -262,6 +264,12 @@ Contains
     call marbl_io_read_dim(infile, 'zt', num_levels, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_read_field(zt)', subname)
+      return
+    end if
+
+    call marbl_io_read_dim(infile, 'nbin', num_PAR_subcols, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('marbl_io_read_field(nbin)', subname)
       return
     end if
 
