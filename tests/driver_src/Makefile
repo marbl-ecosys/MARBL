@@ -22,9 +22,11 @@ else
   override MAKE_DIR=$(realpath .)
 endif
 
-NETCDF_INC=-D_NETCDF -I$(shell nc-config --includedir)
-# hobart_intel version of nc-config does not have --libdir option
-NETCDF_LNK=-L$(shell nc-config --prefix)/lib -lnetcdf -lnetcdff
+ifeq ($(USE_NETCDF),TRUE)
+  NETCDF_INC=-D_NETCDF -I$(shell nc-config --includedir)
+  # hobart_intel version of nc-config does not have --libdir option
+  NETCDF_LNK=-L$(shell nc-config --prefix)/lib -lnetcdf -lnetcdff
+endif
 
 # (2) Default directories (can be changed by invoking "make LIB_SRC_DIR=...", etc)
 OBJ_ROOT = $(realpath $(MAKE_DIR)/../obj)

@@ -27,7 +27,7 @@ class MARBL_testcase(object):
   # Some tests will let you specify a compiler and / or input file
   # Some tests will require you to specify a machine
   def parse_args(self, desc, HaveCompiler=True, HaveInputFile=True,
-                 HasPause=False, CleanLibOnly=False):
+                 HasPause=False, CleanLibOnly=False, RequireNetCDF=False):
 
     import argparse
 
@@ -61,6 +61,8 @@ class MARBL_testcase(object):
 
     parser.add_argument('-n', '--namelist_file', action='store', dest='namelist_file',
                         default='test.nml', help='namelist file for the marbl standalone driver')
+    if not RequireNetCDF:
+      parser.add_argument('--netcdf', action='store_true', help='build with netcdf')
 
     args = parser.parse_args()
 
@@ -109,6 +111,11 @@ class MARBL_testcase(object):
 
     if HaveInputFile:
       self._input_file = args.input_file
+
+    if RequireNetCDF:
+      self._withnc = True
+    else:
+      self._withnc = args.netcdf
 
     self._namelist_file = args.namelist_file
     self._mpitasks = int(args.mpitasks)
@@ -159,6 +166,8 @@ class MARBL_testcase(object):
       machs.load_module(self._machine, loc_compiler, self._module_names[loc_compiler])
 
     makecmd = 'make %s' % loc_compiler
+    if self._withnc:
+      makecmd += ' USE_NETCDF=TRUE'
     if self._mpitasks > 0:
       makecmd += ' USEMPI=TRUE'
     status_code = sh_command('cd %s; %s' % (drv_dir, makecmd))

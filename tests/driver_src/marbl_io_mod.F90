@@ -23,6 +23,7 @@ module marbl_io_mod
   end type marbl_file_entry
   type(marbl_file_entry), pointer :: file_database => NULL()
 
+#ifdef _NETCDF
   ! MARBL needs to track dimension ids to use when defining netCDF variables
   type, private :: netcdf_dimids
     integer :: num_levels_id
@@ -46,6 +47,7 @@ module marbl_io_mod
 
   ! netCDF ids usd for writing diagnostic output
   integer, allocatable, dimension(:) :: surface_diag_ids, interior_diag_ids
+#endif
 
   public :: marbl_io_open
   public :: marbl_io_read_dim
@@ -100,8 +102,11 @@ contains
     nullify(dummy_entry)
 #ifndef _NETCDF
     ! Abort if not built with -D_NETCDF
-    call driver_status_log%log_error('Can not call marbl_io_open without netCDF support', subname)
-    file_id = -1
+    write(log_message, "(3A)") 'Can not call open(', trim(file_name), ') without netCDF support'
+    call driver_status_log%log_error(log_message, subname)
+    if (read_only .or. .true.) then ! use read_only to avoid warning when building without netcdf
+      file_id = -1
+    end if
     return
 #else
     file_id = 0
@@ -149,10 +154,18 @@ contains
     integer,              intent(inout) :: dim
     type(marbl_log_type), intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_dim_by_id'
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_dim_by_id'
     character(len=char_len) :: log_message
     integer :: dimid
 
+#ifndef _NETCDF
+    ! Abort if not built with -D_NETCDF
+    write(log_message, "(3A)") 'Can not call read_dim(', trim(dim_name), ') without netCDF support'
+    call driver_status_log%log_error(log_message, subname)
+    dim = file_id ! use file_id to avoid warning when building without netcdf
+    dimid = -1
+    return
+#else
     call netcdf_check(nf90_inq_dimid(file_id, trim(dim_name), dimid), driver_status_log)
     if (driver_status_log%labort_marbl) then
       write(log_message, "(3A)") 'nf90_inq_dimid(', trim(dim_name), ')'
@@ -166,6 +179,7 @@ contains
       call driver_status_log%log_error_trace(log_message, subname)
       return
     end if
+#endif
 
   end subroutine marbl_io_read_dim_by_id
 
@@ -178,9 +192,16 @@ contains
     integer,              intent(inout) :: dim
     type(marbl_log_type), intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_dim_by_id'
+    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_dim_by_name'
     integer :: file_id
 
+#ifndef _NETCDF
+    ! Abort if not built with -D_NETCDF
+    call driver_status_log%log_error('Can not call marbl_io_read_dim without netCDF support', subname)
+    file_id = -1 ! use file_id to avoid warning when building without netcdf
+    dim = len_trim(file_name) + len_trim(dim_name) ! use file_name to avoid warning when building without netcdf
+    return
+#else
     ! Get file_id given file_name
     file_id = get_nc_file_id(file_name, driver_status_log)
     if (driver_status_log%labort_marbl) then
@@ -193,6 +214,7 @@ contains
       call driver_status_log%log_error_trace('marbl_io_read_dim_by_id', subname)
       return
     end if
+#endif
 
   end subroutine marbl_io_read_dim_by_name
 
@@ -210,6 +232,14 @@ contains
     character(len=char_len) :: log_message
     integer :: varid
 
+#ifndef _NETCDF
+    ! Abort if not built with -D_NETCDF
+    write(log_message, "(3A)") 'Can not call read_field(', trim(field_name), ') without netCDF support'
+    call driver_status_log%log_error(log_message, subname)
+    if (present(col_id)) varid = col_id ! use varid and col_id to avoid warning when building without netcdf
+    field = file_id ! use file_id to avoid warning when building without netcdf
+    return
+#else
     call netcdf_check(nf90_inq_varid(file_id, trim(field_name), varid), driver_status_log)
     if (driver_status_log%labort_marbl) then
       write(log_message, "(3A)") 'nf90_inq_varid(', trim(field_name), ')'
@@ -227,6 +257,7 @@ contains
       call driver_status_log%log_error_trace(log_message, subname)
       return
     end if
+#endif
 
   end subroutine marbl_io_read_int_field_0d_by_id
 
@@ -273,6 +304,14 @@ contains
     character(len=char_len) :: log_message
     integer :: varid
 
+#ifndef _NETCDF
+    ! Abort if not built with -D_NETCDF
+    write(log_message, "(3A)") 'Can not call read_field(', trim(field_name), ') without netCDF support'
+    call driver_status_log%log_error(log_message, subname)
+    if (present(col_id)) varid = col_id ! use varid and col_id to avoid warning when building without netcdf
+    field = real(file_id, r8) ! use file_id to avoid warning when building without netcdf
+    return
+#else
     call netcdf_check(nf90_inq_varid(file_id, trim(field_name), varid), driver_status_log)
     if (driver_status_log%labort_marbl) then
       write(log_message, "(3A)") 'nf90_inq_varid(', trim(field_name), ')'
@@ -290,6 +329,7 @@ contains
       call driver_status_log%log_error_trace(log_message, subname)
       return
     end if
+#endif
 
   end subroutine marbl_io_read_r8_field_0d_by_id
 
@@ -354,6 +394,14 @@ contains
       surf_only_loc = .false.
     end if
 
+#ifndef _NETCDF
+    ! Abort if not built with -D_NETCDF
+    write(log_message, "(3A)") 'Can not call read_field(', trim(field_name),') without netCDF support'
+    call driver_status_log%log_error(log_message, subname)
+    field = 0._r8
+    varid = 0
+    return
+#else
     call netcdf_check(nf90_inq_varid(file_id, trim(field_name), varid), driver_status_log)
     if (driver_status_log%labort_marbl) then
       write(log_message, "(3A)") 'nf90_inq_varid(', trim(field_name), ')'
@@ -375,6 +423,7 @@ contains
       call driver_status_log%log_error_trace(log_message, subname)
       return
     end if
+#endif
 
   end subroutine marbl_io_read_r8_field_1d_by_id
 
@@ -431,7 +480,12 @@ contains
     end if
     num_tracers = size(marbl_instances(1)%tracer_metadata)
 
-#ifdef _NETCDF
+#ifndef _NETCDF
+    write(log_message, "(3A)") 'Can not call define_history(', trim(outfile), ') without netCDF support'
+    call driver_status_log%log_error(log_message, subname)
+    write(var_name, "(6I0)") n, diag_size, num_levels, num_cols, num_tracers, col_cnt
+    return
+#else
     ! netCDF dimensions
     ! 1) num_levels = number of levels (domain should be the same for all columns)
     num_levels = marbl_instances(1)%domain%km
@@ -543,7 +597,13 @@ contains
       return
     end if
 
-#ifdef _NETCDF
+#ifndef _NETCDF
+    write(log_message, "(3A)") 'Can not call write_history(', trim(outfile), ') without netCDF support'
+    call driver_status_log%log_error(log_message, subname)
+    write(log_message, "(9I0)") col_start, col_cnt, size(marbl_instances), num_active_levels, n, diag_size, col_id, &
+                                col_id_loc, num_inst
+    return
+#else
     ! 1) Domain variables
     call netcdf_check(nf90_put_var(file_id, domain_ids_out%zt_id, marbl_instances(1)%domain%zt), driver_status_log)
     call netcdf_check(nf90_put_var(file_id, domain_ids_out%zw_id, marbl_instances(1)%domain%zw), driver_status_log)
@@ -618,6 +678,7 @@ contains
 
 #ifndef _NETCDF
     ! Abort if not built with -D_NETCDF
+    prev_entry => file_database_entry ! avoid warning when building without netcdf
     call driver_status_log%log_error('Can not call marbl_io_close without netCDF support', subname)
     return
 #else
@@ -765,6 +826,7 @@ contains
 
   !*****************************************************************************
 
+#ifdef _NETCDF
   subroutine define_diag(file_id, diag, diag_ind, ncid, driver_status_log)
 
     use marbl_interface_public_types , only : marbl_diagnostics_type
@@ -817,9 +879,11 @@ contains
     end if
 
   end subroutine define_diag
+#endif
 
   !*****************************************************************************
 
+#ifdef _NETCDF
   subroutine write_diag(file_id, col_id, diag, diag_ind, num_active_levels, ncid, driver_status_log)
 
     use marbl_interface_public_types , only : marbl_diagnostics_type
@@ -853,6 +917,7 @@ contains
     end if
 
   end subroutine write_diag
+#endif
 
   !*****************************************************************************
 
@@ -866,6 +931,7 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_io_mod:netcdf_check'
     character(len=char_len) :: log_message
+
     if (status.ne.nf90_noerr) then
       call marbl_io_close_all(driver_status_log)
       write(log_message, "(2A)") "netCDF error: ", trim(nf90_strerror(status))

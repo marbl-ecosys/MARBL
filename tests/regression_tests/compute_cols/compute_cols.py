@@ -8,7 +8,7 @@ from marbl_testing_class import MARBL_testcase
 
 mt = MARBL_testcase()
 
-mt.parse_args(desc='Run set_surface_forcing and set_interior_forcing')
+mt.parse_args(desc='Run set_surface_forcing and set_interior_forcing', RequireNetCDF=True)
 
 mt.build_exe()
 
