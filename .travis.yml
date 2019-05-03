@@ -1,7 +1,7 @@
 language: python
 sudo: required
 before_install:
-  - sudo apt-get install gfortran mpich
+  - sudo apt-get install gfortran mpich libnetcdf-dev
 install:
   - pip install pyyaml
   - pip install -r docs/py_requirements.txt

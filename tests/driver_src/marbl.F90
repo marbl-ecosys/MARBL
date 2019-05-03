@@ -69,7 +69,7 @@ Program marbl
 
   type(marbl_interface_class), dimension(:), allocatable :: marbl_instances
   type(marbl_log_type)          :: driver_status_log
-  integer                       :: n, cnt, num_inst
+  integer                       :: n, cnt, num_inst, num_PAR_subcols
   character(len=char_len)       :: input_line, testname, varname, log_message, log_out_file
   logical                       :: lprint_marbl_log, lhas_namelist_file, lhas_input_file
   logical                       :: ldriver_log_to_file, lsummarize_timers
@@ -77,7 +77,7 @@ Program marbl
   ! Processing input file for put calls
   integer  :: ioerr
 
-  namelist /marbl_driver_nml/testname, log_out_file, num_inst
+  namelist /marbl_driver_nml/testname, log_out_file, num_inst, num_PAR_subcols
 
   !****************************************************************************
 
@@ -88,6 +88,7 @@ Program marbl
   !     Command line arguments?
   !     (a) set default values
   num_inst = 1
+  num_PAR_subcols = 1 ! Only used for request_forcings test
   labort_after_argparse = .false.
   lhas_namelist_file = .false.
   lhas_input_file = .false.
@@ -336,7 +337,7 @@ Program marbl
     case ('request_forcings')
       if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instances(1), lshutdown=.false.)
+      call marbl_init_test(marbl_instances(1), lshutdown=.false., num_PAR_subcols=num_PAR_subcols)
       ! Log requested surface forcing fields
       call driver_status_log%log_header('Requested surface forcing fields', subname)
       do n=1,size(marbl_instances(1)%surface_flux_forcings)
