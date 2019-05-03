@@ -130,11 +130,15 @@ contains
     ! Open the file
     if (read_only) then
       call netcdf_check(nf90_open(file_name, NF90_NOWRITE, new_entry%file_id), driver_status_log)
+      if (driver_status_log%labort_marbl) &
+        write(log_message, "(3A)") 'nf90_open(', trim(file_name), ')'
     else
       call netcdf_check(nf90_create(file_name, NF90_CLOBBER, new_entry%file_id), driver_status_log)
+      if (driver_status_log%labort_marbl) &
+        write(log_message, "(3A)") 'nf90_create(', trim(file_name), ')'
     end if
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('nf90_open or nf90_create', subname)
+      call driver_status_log%log_error_trace(log_message, subname)
       return
     end if
 
