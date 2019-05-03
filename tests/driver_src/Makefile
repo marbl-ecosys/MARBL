@@ -30,25 +30,6 @@ EXE_DIR = $(realpath $(MAKE_DIR)/../driver_exe)
 LIB_SRC_DIR = $(realpath $(MAKE_DIR)/../../src)
 EXE_SRC_DIR = $(realpath $(MAKE_DIR)/.)
 
-# (3) Determine if building with netCDF
-INFO_FILE = $(EXE_SRC_DIR)/.netcdf_info
-ifeq ($(USE_NETCDF),TRUE)
-  NETCDF_INC=-D_NETCDF -I$(shell nc-config --includedir)
-  # hobart_intel version of nc-config does not have --libdir option
-  NETCDF_LNK=-L$(shell nc-config --prefix)/lib -lnetcdf -lnetcdff
-endif
-
-# (4) Determine if existing build used netCDF
-ifneq ($(wildcard $(INFO_FILE)),)
-  OLD_NETCDF = $(shell cat $(INFO_FILE))
-else
-  OLD_NETCDF = FORCE_REBUILD
-endif
-
-ifneq ($(OLD_NETCDF), $(USE_NETCDF))
-  REBUILD = TRUE
-endif
-
 ###################################################
 # ERROR CHECKING: MAKE SURE ALL DIRECTORIES EXIST #
 ###################################################
@@ -83,6 +64,7 @@ endif
 
 COMP_NAME=NONE
 USEMPI=FALSE
+USE_NETCDF=FALSE
 
 ifeq ($(COMP_NAME),NONE)
   LIB_NAME = libmarbl.a
@@ -105,6 +87,27 @@ else
 
   LIB_NAME = libmarbl-$(COMP_NAME).a
   LFLAG = -lmarbl-$(COMP_NAME)
+endif
+
+# Determine if building with netCDF
+ifneq ($(COMP_NAME),NONE)
+  INFO_FILE = $(EXE_SRC_DIR)/.netcdf_info.$(COMP_NAME)
+  ifeq ($(USE_NETCDF),TRUE)
+    NETCDF_INC=-D_NETCDF -I$(shell nc-config --includedir)
+    # hobart_intel version of nc-config does not have --libdir option
+    NETCDF_LNK=-L$(shell nc-config --prefix)/lib -lnetcdf -lnetcdff
+  endif
+
+  # Determine if existing build used netCDF
+  ifneq ($(wildcard $(INFO_FILE)),)
+    OLD_NETCDF = $(shell cat $(INFO_FILE))
+  else
+    OLD_NETCDF = FORCE_REBUILD
+  endif
+endif
+
+ifneq ($(OLD_NETCDF), $(USE_NETCDF))
+  REBUILD = TRUE
 endif
 
 LIBCPPDEFS=
@@ -190,5 +193,5 @@ clean_exe:
 
 .PHONY: clean
 clean: clean_exe
-	rm -f $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl_*.{o,mod} $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl.{o,mod}
+	rm -f $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl_*.{o,mod} $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl.{o,mod} $(EXE_SRC_DIR)/.netcdf_info*
 	make -f $(LIB_SRC_DIR)/Makefile clean
