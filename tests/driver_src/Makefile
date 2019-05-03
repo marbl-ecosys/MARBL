@@ -22,12 +22,6 @@ else
   override MAKE_DIR=$(realpath .)
 endif
 
-ifeq ($(USE_NETCDF),TRUE)
-  NETCDF_INC=-D_NETCDF -I$(shell nc-config --includedir)
-  # hobart_intel version of nc-config does not have --libdir option
-  NETCDF_LNK=-L$(shell nc-config --prefix)/lib -lnetcdf -lnetcdff
-endif
-
 # (2) Default directories (can be changed by invoking "make LIB_SRC_DIR=...", etc)
 OBJ_ROOT = $(realpath $(MAKE_DIR)/../obj)
 INC_DIR = $(realpath $(MAKE_DIR)/../../include)
@@ -35,6 +29,25 @@ LIB_DIR = $(realpath $(MAKE_DIR)/../../lib)
 EXE_DIR = $(realpath $(MAKE_DIR)/../driver_exe)
 LIB_SRC_DIR = $(realpath $(MAKE_DIR)/../../src)
 EXE_SRC_DIR = $(realpath $(MAKE_DIR)/.)
+
+# (3) Determine if building with netCDF
+INFO_FILE = $(EXE_SRC_DIR)/.netcdf_info
+ifeq ($(USE_NETCDF),TRUE)
+  NETCDF_INC=-D_NETCDF -I$(shell nc-config --includedir)
+  # hobart_intel version of nc-config does not have --libdir option
+  NETCDF_LNK=-L$(shell nc-config --prefix)/lib -lnetcdf -lnetcdff
+endif
+
+# (4) Determine if existing build used netCDF
+ifneq ($(wildcard $(INFO_FILE)),)
+  OLD_NETCDF = $(shell cat $(INFO_FILE))
+else
+  OLD_NETCDF = FORCE_REBUILD
+endif
+
+ifneq ($(OLD_NETCDF), $(USE_NETCDF))
+  REBUILD = TRUE
+endif
 
 ###################################################
 # ERROR CHECKING: MAKE SURE ALL DIRECTORIES EXIST #
@@ -159,11 +172,16 @@ $(LIB_DIR)/%.a: $(LIB_SRC_DIR)/*.F90
 $(OBJ_DIR)/%.o: $(EXE_SRC_DIR)/%.F90 $(LIB_DIR)/$(LIB_NAME)
 	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(NETCDF_INC) $(INC2) $(INCLUDES) -c $< -o $@
 
+# Determine if output needs to be rebuilt with or without netcdf
+check:
+	$(if $(REBUILD), rm -f $(OBJ_DIR)/marbl_io_mod.*)
+
 # Executable
-$(EXE): clean_exe                        \
+$(EXE): check clean_exe                        \
         $(LIB_DIR)/$(LIB_NAME)           \
         $(addprefix $(OBJ_DIR)/,$(OBJS))
 	$(FC) -o $(EXE) $(OBJ_DIR)/*.o $(LINKS) $(NETCDF_LNK)
+	$(shell echo $(USE_NETCDF) > $(INFO_FILE))
 
 # Clean up previous builds
 .PHONY: clean_exe
