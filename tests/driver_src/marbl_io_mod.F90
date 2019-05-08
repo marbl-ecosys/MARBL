@@ -368,7 +368,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_r8_field_1d_by_id(file_id, field_name, field, driver_status_log, surf_only, col_id)
+  subroutine marbl_io_read_r8_field_1d_by_id(file_id, field_name, field, driver_status_log, surf_only, col_start, col_cnt)
     ! Given netCDF identifier, populate domain variables
 
     integer,                     intent(in)    :: file_id
@@ -376,7 +376,8 @@ contains
     real(kind=r8), dimension(:), intent(inout) :: field
     type(marbl_log_type),        intent(inout) :: driver_status_log
     logical, optional,           intent(in)    :: surf_only ! if true, only read surface values
-    integer, optional,           intent(in)    :: col_id
+    integer, optional,           intent(in)    :: col_start
+    integer, optional,           intent(in)    :: col_cnt
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_r8_field_1d_by_id'
     character(len=char_len) :: log_message
@@ -384,8 +385,8 @@ contains
     logical :: surf_only_loc
 
     if (present(surf_only)) then
-      if (.not.present(col_id)) then
-        call driver_status_log%log_error('Can not pass surf_only without col_id', subname)
+      if ((.not.present(col_start)) .or. (.not.present(col_cnt))) then
+        call driver_status_log%log_error('Can not pass surf_only without col_start and col_cnt', subname)
         return
       end if
       surf_only_loc = surf_only
@@ -414,10 +415,10 @@ contains
     end if
 
     if (surf_only_loc) then
-      call netcdf_check(nf90_get_var(file_id, varid, field, start=(/1, col_id/), count=(/1/)), driver_status_log)
+      call netcdf_check(nf90_get_var(file_id, varid, field, start=(/1, col_start/), count=(/1, col_cnt/)), driver_status_log)
     else
-      if (present(col_id)) then
-        call netcdf_check(nf90_get_var(file_id, varid, field, (/1, col_id/)), driver_status_log)
+      if (present(col_start)) then
+        call netcdf_check(nf90_get_var(file_id, varid, field, (/1, col_start/)), driver_status_log)
       else
         call netcdf_check(nf90_get_var(file_id, varid, field), driver_status_log)
       end if
@@ -433,7 +434,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_r8_field_1d_by_name(file_name, field_name, field, driver_status_log, surf_only, col_id)
+  subroutine marbl_io_read_r8_field_1d_by_name(file_name, field_name, field, driver_status_log, surf_only, col_start, col_cnt)
     ! Given netCDF identifier, populate domain variables
 
     character(len=*),            intent(in)    :: file_name
@@ -441,7 +442,8 @@ contains
     real(kind=r8), dimension(:), intent(inout) :: field
     type(marbl_log_type),        intent(inout) :: driver_status_log
     logical, optional,           intent(in)    :: surf_only ! if true, only read surface values
-    integer, optional,           intent(in)    :: col_id
+    integer, optional,           intent(in)    :: col_start
+    integer, optional,           intent(in)    :: col_cnt
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_r8_field_1d_by_name'
     integer :: file_id
@@ -453,7 +455,7 @@ contains
       return
     end if
 
-    call marbl_io_read_r8_field_1d_by_id(file_id, field_name, field, driver_status_log, surf_only, col_id)
+    call marbl_io_read_r8_field_1d_by_id(file_id, field_name, field, driver_status_log, surf_only, col_start, col_cnt)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_read_r8_field_1d_by_id', subname)
       return

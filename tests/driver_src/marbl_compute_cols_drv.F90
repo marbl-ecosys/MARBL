@@ -67,36 +67,36 @@ Contains
     ! Brunt of MARBL computations
     do n=1, size(marbl_instances)
       ! 4. Call surface_flux_compute() (all columns simultaneously)
+      !    4a. populate surface tracer values
+      call read_tracers_at_surface(infile, col_start(n)+1, col_cnt(n), marbl_instances(n)%tracer_metadata, &
+                                   marbl_instances(n)%tracers_at_surface, driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        call driver_status_log%log_error_trace('read_tracers_at_surface', subname)
+        return
+      end if
+
+      !    4b. populate surface_flux_forcings (per column)
       do col_id_loc = 1, col_cnt(n)
-        !    4a. populate surface tracer values
-        call read_tracers_at_surface(infile, col_start(n)+col_id_loc, marbl_instances(n)%tracer_metadata, &
-                                     marbl_instances(n)%tracers_at_surface, driver_status_log)
-        if (driver_status_log%labort_marbl) then
-          call driver_status_log%log_error_trace('read_tracers_at_surface', subname)
-          return
-        end if
-        !    4b. populate surface_flux_forcings
         call read_forcing_field(infile, col_id_loc, col_start(n), marbl_instances(n)%surface_flux_forcings, driver_status_log)
         if (driver_status_log%labort_marbl) then
           call driver_status_log%log_error_trace('read_forcing_field(surface)', subname)
           return
         end if
       end do
+
       !    4c. populate saved_state
       do m=1, size(marbl_instances(n)%surface_flux_saved_state%state)
         marbl_instances(n)%surface_flux_saved_state%state(m)%field_2d(:) = 0._r8
       end do
+
       !    4d. call surface_flux_compute()
       call marbl_instances(n)%surface_flux_compute()
       if (marbl_instances(n)%StatusLog%labort_MARBL) then
         call marbl_instances(n)%StatusLog%log_error_trace('surface_flux_compute', subname)
         return
       end if
+
       !    4e. write to history file?
-      do col_id_loc = 1, col_cnt(n)
-        write(*, "(A,I0,A,I0,A, E10.3)") "Inst ", n, ", col_id ", col_id_loc, ": ECOSYS_IFRAC = ", &
-                                         marbl_instances(n)%surface_flux_diags%diags(1)%field_2d(col_id_loc)
-      end do
 
 
       ! 5. Call interior_tendency_compute() (one column at a time)
@@ -360,22 +360,22 @@ Contains
                col_id=col_id+col_start)
         case('PAR Column Fraction')
           call marbl_io_read_field(infile, 'FRACR_BIN', forcing_fields(n)%field_1d(1,:), driver_status_log, &
-               col_id=col_id+col_start)
+               col_start=col_id+col_start)
         case('Surface Shortwave')
           call marbl_io_read_field(infile, 'QSW_BIN', forcing_fields(n)%field_1d(1,:), driver_status_log, &
-               col_id=col_id+col_start)
+               col_start=col_id+col_start)
         case('Potential Temperature')
           call marbl_io_read_field(infile, 'temperature', forcing_fields(n)%field_1d(1,:), driver_status_log, &
-               col_id=col_id+col_start)
+               col_start=col_id+col_start)
         case('Salinity')
           call marbl_io_read_field(infile, 'salinity', forcing_fields(n)%field_1d(1,:), driver_status_log, &
-               col_id=col_id+col_start)
+               col_start=col_id+col_start)
         case('Pressure')
           call marbl_io_read_field(infile, 'pressure', forcing_fields(n)%field_1d(1,:), driver_status_log, &
-               col_id=col_id+col_start)
+               col_start=col_id+col_start)
         case('Iron Sediment Flux')
          call marbl_io_read_field(infile, 'iron_sed_flux', forcing_fields(n)%field_1d(1,:), driver_status_log, &
-              col_id=col_id+col_start)
+              col_start=col_id+col_start)
         case DEFAULT
           write(log_message, "(3A)") "Unrecognized forcing field '", trim(forcing_fields(n)%metadata%varname), "'"
           call driver_status_log%log_error(log_message, subname)
@@ -392,13 +392,14 @@ Contains
 
   !****************************************************************************
 
-  subroutine read_tracers_at_surface(infile, col_id, tracer_metadata, tracers_at_surface, driver_status_log)
+  subroutine read_tracers_at_surface(infile, col_start, col_cnt, tracer_metadata, tracers_at_surface, driver_status_log)
 
     use marbl_interface_public_types, only : marbl_tracer_metadata_type
     use marbl_io_mod, only : marbl_io_read_field
 
     character(len=*),                                 intent(in)    :: infile
-    integer,                                          intent(in)    :: col_id
+    integer,                                          intent(in)    :: col_start
+    integer,                                          intent(in)    :: col_cnt
     type(marbl_tracer_metadata_type), dimension(:),   intent(in)    :: tracer_metadata
     real(kind=r8),                    dimension(:,:), intent(inout) :: tracers_at_surface ! (num_surface_elem, tracer_cnt)
     type(marbl_log_type),                             intent(inout) :: driver_status_log
@@ -408,8 +409,8 @@ Contains
     integer :: n
 
     do n = 1, size(tracer_metadata)
-      call marbl_io_read_field(infile, trim(tracer_metadata(n)%short_name), tracers_at_surface(n,:), driver_status_log, &
-                               surf_only=.true., col_id=col_id)
+      call marbl_io_read_field(infile, trim(tracer_metadata(n)%short_name), tracers_at_surface(:,n), driver_status_log, &
+                               surf_only=.true., col_start=col_start, col_cnt=col_cnt)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") "marbl_io_read_field(", trim(tracer_metadata(n)%short_name), " [surface])"
         call driver_status_log%log_error_trace(log_message, subname)
@@ -421,13 +422,13 @@ Contains
 
   !****************************************************************************
 
-  subroutine read_tracers(infile, col_id, tracer_metadata, tracers, driver_status_log)
+  subroutine read_tracers(infile, col_start, tracer_metadata, tracers, driver_status_log)
 
     use marbl_interface_public_types, only : marbl_tracer_metadata_type
     use marbl_io_mod, only : marbl_io_read_field
 
     character(len=*),                                 intent(in)    :: infile
-    integer,                                          intent(in)    :: col_id
+    integer,                                          intent(in)    :: col_start
     type(marbl_tracer_metadata_type), dimension(:),   intent(in)    :: tracer_metadata
     real(kind=r8),                    dimension(:,:), intent(inout) :: tracers            ! (tracer_cnt, num_levels)
     type(marbl_log_type),                             intent(inout) :: driver_status_log
@@ -437,7 +438,7 @@ Contains
     integer :: n
 
     do n = 1, size(tracer_metadata)
-      call marbl_io_read_field(infile, trim(tracer_metadata(n)%short_name), tracers(n,:), driver_status_log, col_id=col_id)
+      call marbl_io_read_field(infile, trim(tracer_metadata(n)%short_name), tracers(n,:), driver_status_log, col_start=col_start)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") "marbl_io_read_field(", trim(tracer_metadata(n)%short_name), ")"
         call driver_status_log%log_error_trace(log_message, subname)
