@@ -622,8 +622,8 @@ contains
         ! 2) Surface diagnostics
         diag_size = size(marbl_instances(num_inst)%surface_flux_diags%diags)
         do n=1, diag_size
-          call write_diag(file_id, col_id, marbl_instances(num_inst)%surface_flux_diags, n, &
-                          num_active_levels(col_id), surface_diag_ids(n), driver_status_log)
+          call write_diag(file_id, col_id_loc, col_start(num_inst), marbl_instances(num_inst)%surface_flux_diags, n, &
+                          num_active_levels(col_id), surface_diag_ids(n), driver_status_log, is_surf=.true.)
           if (driver_status_log%labort_marbl) then
             write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%surface_flux_diags%diags(n)%short_name), ')'
             call driver_status_log%log_error_trace(log_message, subname)
@@ -636,7 +636,7 @@ contains
         ! FIXME #176: changing num_active_levels to num_levels (km instead of kmt) will populate levels below
         !             num_active_levels with nonsensical values
         do n=1, diag_size
-          call write_diag(file_id, col_id, marbl_instances(num_inst)%interior_tendency_diags, n, &
+          call write_diag(file_id, col_id_loc, col_start(num_inst), marbl_instances(num_inst)%interior_tendency_diags, n, &
                           num_active_levels(col_id), interior_diag_ids(n), driver_status_log)
           if (driver_status_log%labort_marbl) then
             write(log_message, "(3A)") 'write_diag(', trim(marbl_instances(1)%interior_tendency_diags%diags(n)%short_name), ')'
@@ -892,27 +892,47 @@ contains
   !*****************************************************************************
 
 #ifdef _NETCDF
-  subroutine write_diag(file_id, col_id, diag, diag_ind, num_active_levels, ncid, driver_status_log)
+  subroutine write_diag(file_id, col_id, col_start, diag, diag_ind, num_active_levels, ncid, driver_status_log, is_surf)
 
     use marbl_interface_public_types , only : marbl_diagnostics_type
 
     integer,                      intent(in)    :: file_id
     integer,                      intent(in)    :: col_id
+    integer,                      intent(in)    :: col_start
     type(marbl_diagnostics_type), intent(in)    :: diag
     integer,                      intent(in)    :: diag_ind
     integer,                      intent(in)    :: num_active_levels
     integer,                      intent(in)    :: ncid
     type(marbl_log_type),         intent(inout) :: driver_status_log
+    logical, optional,            intent(in)    :: is_surf
 
     character(len=*), parameter :: subname = 'marbl_io_mod:write_diag'
     character(len=char_len) :: log_message
+    logical :: is_surf_loc
+
+    if (present(is_surf)) then
+      is_surf_loc = is_surf
+    else
+      is_surf_loc = .false.
+    end if
 
     select case (trim(diag%diags(diag_ind)%vertical_grid))
       case ('none')
-        call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_2d(1), start = (/col_id/)), driver_status_log)
+        if (is_surf_loc) then
+          call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_2d(col_id), &
+               start = (/col_id+col_start/)), driver_status_log)
+        else
+          call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_2d(1), &
+               start = (/col_id+col_start/)), driver_status_log)
+        end if
       case ('layer_avg')
-        call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_3d(1:num_active_levels,1), &
-                          start = (/1,col_id/)), driver_status_log)
+        if (is_surf_loc) then
+          call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_3d(1:num_active_levels,col_id), &
+                            start = (/1,col_id+col_start/)), driver_status_log)
+        else
+          call netcdf_check(nf90_put_var(file_id, ncid, diag%diags(diag_ind)%field_3d(1:num_active_levels,1), &
+                            start = (/1,col_id+col_start/)), driver_status_log)
+        end if
       case DEFAULT
         write(log_message, '(3A)') "'", trim(diag%diags(diag_ind)%vertical_grid), &
              "' is not a valid vertical grid"

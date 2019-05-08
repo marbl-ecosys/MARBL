@@ -47,11 +47,11 @@ Contains
 
     ! 2. Initialize each instance of MARBL
     do n=1, size(marbl_instances)
-      call marbl_instances(n)%init(gcm_num_levels = num_levels,           &
-                                   gcm_num_PAR_subcols = num_PAR_subcols, &
-                                   gcm_num_elements_surface_flux = 1,     &
-                                   gcm_delta_z = grid_data%delta_z,       &
-                                   gcm_zw = grid_data%zw,                 &
+      call marbl_instances(n)%init(gcm_num_levels = num_levels,                &
+                                   gcm_num_PAR_subcols = num_PAR_subcols,      &
+                                   gcm_num_elements_surface_flux = col_cnt(n), &
+                                   gcm_delta_z = grid_data%delta_z,            &
+                                   gcm_zw = grid_data%zw,                      &
                                    gcm_zt = grid_data%zt)
     end do
 
@@ -67,19 +67,21 @@ Contains
     ! Brunt of MARBL computations
     do n=1, size(marbl_instances)
       ! 4. Call surface_flux_compute() (all columns simultaneously)
-      !    4a. populate surface tracer values
-      call read_tracers_at_surface(infile, col_start(n)+1, marbl_instances(n)%tracer_metadata, &
-                                   marbl_instances(n)%tracers_at_surface, driver_status_log)
-      if (driver_status_log%labort_marbl) then
-        call driver_status_log%log_error_trace('read_tracers_at_surface', subname)
-        return
-      end if
-      !    4b. populate surface_flux_forcings
-      call read_forcing_field(infile, col_start(n)+1, marbl_instances(n)%surface_flux_forcings, driver_status_log)
-      if (driver_status_log%labort_marbl) then
-        call driver_status_log%log_error_trace('read_forcing_field(surface)', subname)
-        return
-      end if
+      do col_id_loc = 1, col_cnt(n)
+        !    4a. populate surface tracer values
+        call read_tracers_at_surface(infile, col_start(n)+col_id_loc, marbl_instances(n)%tracer_metadata, &
+                                     marbl_instances(n)%tracers_at_surface, driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          call driver_status_log%log_error_trace('read_tracers_at_surface', subname)
+          return
+        end if
+        !    4b. populate surface_flux_forcings
+        call read_forcing_field(infile, col_id_loc, col_start(n), marbl_instances(n)%surface_flux_forcings, driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          call driver_status_log%log_error_trace('read_forcing_field(surface)', subname)
+          return
+        end if
+      end do
       !    4c. populate saved_state
       do m=1, size(marbl_instances(n)%surface_flux_saved_state%state)
         marbl_instances(n)%surface_flux_saved_state%state(m)%field_2d(:) = 0._r8
@@ -91,6 +93,10 @@ Contains
         return
       end if
       !    4e. write to history file?
+      do col_id_loc = 1, col_cnt(n)
+        write(*, "(A,I0,A,I0,A, E10.3)") "Inst ", n, ", col_id ", col_id_loc, ": ECOSYS_IFRAC = ", &
+                                         marbl_instances(n)%surface_flux_diags%diags(1)%field_2d(col_id_loc)
+      end do
 
 
       ! 5. Call interior_tendency_compute() (one column at a time)
@@ -112,7 +118,7 @@ Contains
         end if
 
         !  5b. populate interior_tendency_forcings
-        call read_forcing_field(infile, col_id, marbl_instances(n)%interior_tendency_forcings, driver_status_log)
+        call read_forcing_field(infile, col_id_loc, col_start(n), marbl_instances(n)%interior_tendency_forcings, driver_status_log)
         if (driver_status_log%labort_marbl) then
           call driver_status_log%log_error_trace('read_forcing_field(interior)', subname)
           return
@@ -297,13 +303,14 @@ Contains
 
   !*****************************************************************************
 
-  subroutine read_forcing_field(infile, col_id, forcing_fields, driver_status_log)
+  subroutine read_forcing_field(infile, col_id, col_start, forcing_fields, driver_status_log)
 
     use marbl_interface_public_types, only : marbl_forcing_fields_type
     use marbl_io_mod, only : marbl_io_read_field
 
     character(len=*),                              intent(in)    :: infile
     integer,                                       intent(in)    :: col_id
+    integer,                                       intent(in)    :: col_start
     type(marbl_forcing_fields_type), dimension(:), intent(inout) :: forcing_fields
     type(marbl_log_type),                          intent(inout) :: driver_status_log
 
@@ -314,39 +321,61 @@ Contains
     do n=1, size(forcing_fields)
       select case(trim(forcing_fields(n)%metadata%varname))
         case('u10_sqr')
-          call marbl_io_read_field(infile, 'u10_sqr', forcing_fields(n)%field_0d(1), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'u10_sqr', forcing_fields(n)%field_0d(col_id), driver_status_log, &
+               col_id=col_id+col_start)
         case('sss')
-          call marbl_io_read_field(infile, 'SSS', forcing_fields(n)%field_0d(1), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'SSS', forcing_fields(n)%field_0d(col_id), driver_status_log, &
+               col_id=col_id+col_start)
         case('sst')
-          call marbl_io_read_field(infile, 'SST', forcing_fields(n)%field_0d(1), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'SST', forcing_fields(n)%field_0d(col_id), driver_status_log, &
+               col_id=col_id+col_start)
         case('Ice Fraction')
-          call marbl_io_read_field(infile, 'ice_frac', forcing_fields(n)%field_0d(1), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'ice_frac', forcing_fields(n)%field_0d(col_id), driver_status_log, &
+               col_id=col_id+col_start)
         case('Dust Flux')
-          call marbl_io_read_field(infile, 'dust_flux', forcing_fields(n)%field_0d(1), driver_status_log, col_id=col_id)
+          if (size(forcing_fields(n)%field_0d) .eq. 1) then ! interior forcing
+            call marbl_io_read_field(infile, 'dust_flux', forcing_fields(n)%field_0d(1), driver_status_log, &
+                 col_id=col_id+col_start)
+          else ! surface forcing
+            call marbl_io_read_field(infile, 'dust_flux', forcing_fields(n)%field_0d(col_id), driver_status_log, &
+                 col_id=col_id+col_start)
+          end if
         case('Iron Flux')
-          call marbl_io_read_field(infile, 'iron_flux', forcing_fields(n)%field_0d(1), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'iron_flux', forcing_fields(n)%field_0d(col_id), driver_status_log, &
+               col_id=col_id+col_start)
         case('NOx Flux')
-          call marbl_io_read_field(infile, 'nox_flux', forcing_fields(n)%field_0d(1), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'nox_flux', forcing_fields(n)%field_0d(col_id), driver_status_log, &
+               col_id=col_id+col_start)
         case('NHy Flux')
-          call marbl_io_read_field(infile, 'nhy_flux', forcing_fields(n)%field_0d(1), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'nhy_flux', forcing_fields(n)%field_0d(col_id), driver_status_log, &
+               col_id=col_id+col_start)
         case('Atmospheric Pressure')
-          call marbl_io_read_field(infile, 'atm_pressure', forcing_fields(n)%field_0d(1), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'atm_pressure', forcing_fields(n)%field_0d(col_id), driver_status_log, &
+               col_id=col_id+col_start)
         case('xco2')
-          call marbl_io_read_field(infile, 'atm_co2', forcing_fields(n)%field_0d(1), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'atm_co2', forcing_fields(n)%field_0d(col_id), driver_status_log, &
+               col_id=col_id+col_start)
         case('xco2_alt_co2')
-          call marbl_io_read_field(infile, 'atm_alt_co2', forcing_fields(n)%field_0d(1), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'atm_alt_co2', forcing_fields(n)%field_0d(col_id), driver_status_log, &
+               col_id=col_id+col_start)
         case('PAR Column Fraction')
-          call marbl_io_read_field(infile, 'FRACR_BIN', forcing_fields(n)%field_1d(1,:), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'FRACR_BIN', forcing_fields(n)%field_1d(1,:), driver_status_log, &
+               col_id=col_id+col_start)
         case('Surface Shortwave')
-          call marbl_io_read_field(infile, 'QSW_BIN', forcing_fields(n)%field_1d(1,:), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'QSW_BIN', forcing_fields(n)%field_1d(1,:), driver_status_log, &
+               col_id=col_id+col_start)
         case('Potential Temperature')
-          call marbl_io_read_field(infile, 'temperature', forcing_fields(n)%field_1d(1,:), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'temperature', forcing_fields(n)%field_1d(1,:), driver_status_log, &
+               col_id=col_id+col_start)
         case('Salinity')
-          call marbl_io_read_field(infile, 'salinity', forcing_fields(n)%field_1d(1,:), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'salinity', forcing_fields(n)%field_1d(1,:), driver_status_log, &
+               col_id=col_id+col_start)
         case('Pressure')
-          call marbl_io_read_field(infile, 'pressure', forcing_fields(n)%field_1d(1,:), driver_status_log, col_id=col_id)
+          call marbl_io_read_field(infile, 'pressure', forcing_fields(n)%field_1d(1,:), driver_status_log, &
+               col_id=col_id+col_start)
         case('Iron Sediment Flux')
-         call marbl_io_read_field(infile, 'iron_sed_flux', forcing_fields(n)%field_1d(1,:), driver_status_log, col_id=col_id)
+         call marbl_io_read_field(infile, 'iron_sed_flux', forcing_fields(n)%field_1d(1,:), driver_status_log, &
+              col_id=col_id+col_start)
         case DEFAULT
           write(log_message, "(3A)") "Unrecognized forcing field '", trim(forcing_fields(n)%metadata%varname), "'"
           call driver_status_log%log_error(log_message, subname)
