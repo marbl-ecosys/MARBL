@@ -555,18 +555,22 @@ contains
     allocate(prog_ids_out%tendency_ids(num_tracers))
     prog_ids_out%tendency_ids(:) = 0
     do n=1, num_tracers
+      ! NOTE: we use log_message as a temporary buffer for strings written as netCDF metadata
       write(var_name, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%short_name), "_SFLUX"
-      write(log_message, "(2A)") "Surface flux of ", trim(marbl_instances(1)%tracer_metadata(n)%long_name)
       call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_cols_id/), &
                         prog_ids_out%sflux_ids(n)), driver_status_log)
+      write(log_message, "(2A)") "Surface flux of ", trim(marbl_instances(1)%tracer_metadata(n)%long_name)
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%sflux_ids(n), "long_name", log_message), driver_status_log)
-      call netcdf_check(nf90_put_att(file_id, prog_ids_out%sflux_ids(n), "units", "FIXME"), driver_status_log)
+      write(log_message, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%units), ' cm/s'
+      call netcdf_check(nf90_put_att(file_id, prog_ids_out%sflux_ids(n), "units", log_message), driver_status_log)
+
       write(var_name, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%short_name), "_TEND"
-      write(log_message, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%long_name), "Tendency"
       call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_levels_id, dimids_out%num_cols_id/), &
                         prog_ids_out%tendency_ids(n)), driver_status_log)
+      write(log_message, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%long_name), " Tendency"
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%tendency_ids(n), "long_name", log_message), driver_status_log)
-      call netcdf_check(nf90_put_att(file_id, prog_ids_out%tendency_ids(n), "units", "FIXME"), driver_status_log)
+      write(log_message, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%units), '/s'
+      call netcdf_check(nf90_put_att(file_id, prog_ids_out%tendency_ids(n), "units", log_message), driver_status_log)
     end do
 
     ! Exit define mode
