@@ -19,7 +19,7 @@
 
 import logging
 
-def netcdf_comparison(baseline, new_file):
+def netcdf_comparison(baseline, new_file, rtol=1e-14, atol=1e-16, thres=1e-16):
     """
         Compare baseline to new_file using xarray
     """
@@ -35,7 +35,7 @@ def netcdf_comparison(baseline, new_file):
     fail = fail or _header_test(ds_base, ds_new)
 
     # Compare remaining variables
-    fail = fail or _variable_check(ds_base, ds_new)
+    fail = fail or _variable_check(ds_base, ds_new, rtol, atol, thres)
     #for var in common_vars:
 
     return fail
@@ -113,22 +113,17 @@ def _header_test(ds_base, ds_new):
 
 ##################
 
-def _variable_check(ds_base, ds_new):
+def _variable_check(ds_base, ds_new, rtol, atol, thres):
     """
         Assumes both datasets contain the same variables with the same dimensions
         Checks:
         1. If baseline is 0, then ds_new must be 0 as well
         2. Absolute vs relative error:
-           i. If baseline value is < abs_thres then want absolute difference < atol
-           ii. If baseline balue is >= abs_thres, then want relative difference < rtol
+           i. If baseline value is < thres then want absolute difference < atol
+           ii. If baseline balue is >= thres, then want relative difference < rtol
     """
     import numpy as np
     fail = False
-
-    # Parameters for the comparison
-    abs_thres = 1e-16
-    atol = 1e-16
-    rtol = 1e-14
 
     base_vars = ds_base.keys()
     new_vars = ds_new.keys()
@@ -136,13 +131,13 @@ def _variable_check(ds_base, ds_new):
     common_vars.sort()
     for var in common_vars:
         err_messages = []
-        # (1) compare everywhere that baseline is 0 (well, < abs_thres)
-        if np.any(np.where(np.abs(ds_base[var].data) < abs_thres,
-                           np.abs(ds_new[var].data) > abs_thres, False)):
+        # (1) compare everywhere that baseline is 0 (well, < thres)
+        if np.any(np.where(np.abs(ds_base[var].data) < thres,
+                           np.abs(ds_new[var].data) > thres, False)):
             err_messages.append('Baseline is 0 and new data is not')
-        # (2) Compare everywhere that |baseline| is > abs_thres
-        base_data = np.where(np.abs(ds_base[var].data) >= abs_thres, ds_base[var].data, 0)
-        new_data = np.where(np.abs(ds_base[var].data) >= abs_thres, ds_new[var].data, 0)
+        # (2) Compare everywhere that |baseline| is > thres
+        base_data = np.where(np.abs(ds_base[var].data) >= thres, ds_base[var].data, 0)
+        new_data = np.where(np.abs(ds_base[var].data) >= thres, ds_new[var].data, 0)
         rel_err = np.where(base_data != 0, np.abs(new_data - base_data), 0) / \
                   np.where(base_data != 0, np.abs(base_data), 1)
         if np.any(rel_err > rtol):
@@ -192,6 +187,16 @@ def _parse_args():
     parser.add_argument('-n', '--new-file', action='store', dest='new_file', required=True,
                         help="File to compare to baseline")
 
+    # Tolerances
+    parser.add_argument('-r', '--rtol', action='store', dest='rtol', default=1e-14, type=float,
+                        help="Maximum allowable relative tolerance")
+
+    parser.add_argument('-a', '--atol', action='store', dest='atol', default=1e-16, type=float,
+                        help="Maximum allowable absolute tolerance")
+
+    parser.add_argument('-t', '--thres', action='store', dest='thres', default=1e-16, type=float,
+                        help="Threshold where we switch from absolute tolerance to relative")
+
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -202,5 +207,5 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(message)s', level=logging.INFO)
 
     args = _parse_args() # pylint: disable=invalid-name
-    if netcdf_comparison(args.baseline, args.new_file):
+    if netcdf_comparison(args.baseline, args.new_file, args.rtol, args.atol, args.thres):
         os.sys.exit(1)
