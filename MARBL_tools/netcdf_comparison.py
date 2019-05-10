@@ -58,7 +58,6 @@ def netcdf_comparison(baseline, new_file):
     # 2. Can variables be compared?
     common_vars = list(common_vars)
     common_vars.sort()
-    bad_vars = []
     for var in common_vars:
         err_messages = []
         # (a) Are they the same type?
@@ -87,20 +86,18 @@ def netcdf_comparison(baseline, new_file):
         # Report errors
         if err_messages:
             fail = True
-            bad_vars.append(var)
             logger.info("Variable: %s", var)
             for err in err_messages:
                 logger.info("... %s", err)
+            ds_base.drop(var)
+            ds_new.drop(var)
+            common_vars.remove(var)
             logger.info("")
 
     # 3. Compare variables that match type and shape
-    ds_base.drop(bad_vars)
-    ds_new.drop(bad_vars)
-    common_vars = list(set(common_vars) - set(bad_vars))
-    common_vars.sort()
-    logger.info("Remaining vars:")
-    for var in common_vars:
-        logger.info("* %s", var)
+    # logger.info("Remaining vars:")
+    # for var in common_vars:
+    #     logger.info("* %s", var)
     #for var in common_vars:
 
     return fail
