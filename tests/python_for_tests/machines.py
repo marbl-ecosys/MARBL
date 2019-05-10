@@ -27,8 +27,12 @@ def load_module(mach, compiler, module_name):
     from env_modules_python import module
     module('purge')
     module('load', module_name)
+    module('load', 'netcdf')
     module('load', 'ncarcompilers')
-    module('load', 'mpt/2.15')
+    if compiler != 'gnu':
+      module('load', 'mpt')
+    else:
+      module('load', 'openmpi')
 
   if mach == 'hobart':
     sys.path.insert(0, os.path.join(os.sep, 'usr', 'share', 'Modules', 'init'))
@@ -62,8 +66,8 @@ def machine_specific(mach, supported_compilers, module_names):
     # NCAR machine
     supported_compilers.append('intel')
     supported_compilers.append('gnu')
-    module_names['intel'] = 'intel/17.0.1'
-    module_names['gnu'] = 'gnu/7.1.0'
+    module_names['intel'] = 'intel/19.0.2'
+    module_names['gnu'] = 'gnu/7.3.0'
     return
 
   if mach == 'hobart':

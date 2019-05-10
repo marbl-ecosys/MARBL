@@ -119,11 +119,16 @@ def _variable_check(ds_base, ds_new):
         Checks:
         1. If baseline is 0, then ds_new must be 0 as well
         2. Absolute vs relative error:
-           i. If baseline value is < 1e-12 then want absolute difference < 1e-12
-           ii. If baseline balue is >= 1e-12, then want relative difference < 1e-12
+           i. If baseline value is < abs_thres then want absolute difference < atol
+           ii. If baseline balue is >= abs_thres, then want relative difference < rtol
     """
     import numpy as np
     fail = False
+
+    # Parameters for the comparison
+    abs_thres = 1e-16
+    atol = 1e-16
+    rtol = 1e-14
 
     base_vars = ds_base.keys()
     new_vars = ds_new.keys()
@@ -131,24 +136,25 @@ def _variable_check(ds_base, ds_new):
     common_vars.sort()
     for var in common_vars:
         err_messages = []
-        # (1) compare everywhere that baseline is 0
-        if np.any(np.where(ds_base[var].data == 0, ds_new[var] != 0, False)):
+        # (1) compare everywhere that baseline is 0 (well, < abs_thres)
+        if np.any(np.where(np.abs(ds_base[var].data) < abs_thres,
+                           np.abs(ds_new[var].data) > abs_thres, False)):
             err_messages.append('Baseline is 0 and new data is not')
-        # (2) Compare everywhere that |baseline| is > 1e-12
-        base_data = np.where(np.abs(ds_base[var].data) >= 1e-12, ds_base[var].data, 0)
-        new_data = np.where(np.abs(ds_base[var].data) >= 1e-12, ds_new[var].data, 0)
+        # (2) Compare everywhere that |baseline| is > abs_thres
+        base_data = np.where(np.abs(ds_base[var].data) >= abs_thres, ds_base[var].data, 0)
+        new_data = np.where(np.abs(ds_base[var].data) >= abs_thres, ds_new[var].data, 0)
         rel_err = np.where(base_data != 0, np.abs(new_data - base_data), 0) / \
                   np.where(base_data != 0, np.abs(base_data), 1)
-        if np.any(rel_err > 1e-12):
-            err_messages.append("Max relative error ({}) exceeds 1e-12".format(np.max(rel_err)))
+        if np.any(rel_err > rtol):
+            err_messages.append("Max relative error ({}) exceeds {}".format(np.max(rel_err), rtol))
         # (3) Compare everywhere that 0 < |baseline| <= 1e-12
         base_data = np.where((ds_base[var].data != 0) & (np.abs(ds_base[var].data) < 1e-12),
                              ds_base[var].data, 0)
         new_data = np.where((ds_base[var].data != 0) & (np.abs(ds_base[var].data) < 1e-12),
                             ds_new[var].data, 0)
         abs_err = np.abs(new_data - base_data)
-        if np.any(abs_err > 1e-12):
-            err_messages.append("Max absolute error ({}) exceeds 1e-12".format(np.max(abs_err)))
+        if np.any(abs_err > atol):
+            err_messages.append("Max absolute error ({}) exceeds {}".format(np.max(abs_err), atol))
         if _report_errs(var, err_messages):
             fail = True
 
