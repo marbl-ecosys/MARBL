@@ -29,7 +29,27 @@ def netcdf_comparison(baseline, new_file):
     logger.info("Comparing %s to the baseline %s", new_file, baseline)
     ds_base = xr.open_dataset(baseline)
     ds_new = xr.open_dataset(new_file)
+    fail = False
 
+    # Compare file headers
+    fail = fail or _header_test(ds_base, ds_new)
+
+    # Compare remaining variables
+    fail = fail or _variable_check(ds_base, ds_new)
+    #for var in common_vars:
+
+    return fail
+
+##################
+
+def _header_test(ds_base, ds_new):
+    """
+        Are the file headers the same? Check for:
+            1. Variables in one file but not the other
+            2. Variables that are different types
+            3. Variables that are different dimensions
+    """
+    logger = logging.getLogger(__name__)
     fail = False
 
     # 1. Any variables in one file but not the other?
@@ -84,23 +104,70 @@ def netcdf_comparison(baseline, new_file):
             )
 
         # Report errors
-        if err_messages:
+        if _report_errs(var, err_messages):
             fail = True
-            logger.info("Variable: %s", var)
-            for err in err_messages:
-                logger.info("... %s", err)
             ds_base.drop(var)
             ds_new.drop(var)
-            common_vars.remove(var)
-            logger.info("")
 
-    # 3. Compare variables that match type and shape
-    # logger.info("Remaining vars:")
-    # for var in common_vars:
-    #     logger.info("* %s", var)
-    #for var in common_vars:
+        return fail
+
+##################
+
+def _variable_check(ds_base, ds_new):
+    """
+        Assumes both datasets contain the same variables with the same dimensions
+        Checks:
+        1. If baseline is 0, then ds_new must be 0 as well
+        2. Absolute vs relative error:
+           i. If baseline value is < 1e-12 then want absolute difference < 1e-12
+           ii. If baseline balue is >= 1e-12, then want relative difference < 1e-12
+    """
+    import numpy as np
+    fail = False
+
+    base_vars = ds_base.keys()
+    new_vars = ds_new.keys()
+    common_vars = list(set(base_vars) & set(new_vars))
+    common_vars.sort()
+    for var in common_vars:
+        err_messages = []
+        # (1) compare everywhere that baseline is 0
+        if np.any(np.where(ds_base[var].data == 0, ds_new[var] != 0, False)):
+            err_messages.append('Baseline is 0 and new data is not')
+        # (2) Compare everywhere that |baseline| is > 1e-12
+        base_data = np.where(np.abs(ds_base[var].data) >= 1e-12, ds_base[var].data, 0)
+        new_data = np.where(np.abs(ds_base[var].data) >= 1e-12, ds_new[var].data, 0)
+        rel_err = np.where(base_data != 0, np.abs(new_data - base_data), 0) / \
+                  np.where(base_data != 0, np.abs(base_data), 1)
+        if np.any(rel_err > 1e-12):
+            err_messages.append("Max relative error ({}) exceeds 1e-12".format(np.max(rel_err)))
+        # (3) Compare everywhere that 0 < |baseline| <= 1e-12
+        base_data = np.where((ds_base[var].data != 0) & (np.abs(ds_base[var].data) < 1e-12),
+                             ds_base[var].data, 0)
+        new_data = np.where((ds_base[var].data != 0) & (np.abs(ds_base[var].data) < 1e-12),
+                            ds_new[var].data, 0)
+        abs_err = np.abs(new_data - base_data)
+        if np.any(abs_err > 1e-12):
+            err_messages.append("Max absolute error ({}) exceeds 1e-12".format(np.max(abs_err)))
+        if _report_errs(var, err_messages):
+            fail = True
 
     return fail
+
+##################
+
+def _report_errs(var, err_messages):
+    """
+        err_messages is a list of all accumulated errors
+    """
+    logger = logging.getLogger(__name__)
+    if err_messages:
+        logger.info("Variable: %s", var)
+        for err in err_messages:
+            logger.info("... %s", err)
+        logger.info("")
+        return True
+    return False
 
 def _parse_args():
     """ Parse command line arguments
