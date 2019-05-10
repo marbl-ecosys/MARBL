@@ -19,7 +19,7 @@
 
 import logging
 
-def netcdf_comparison(baseline, new_file, rtol=1e-14, atol=1e-16, thres=1e-16):
+def netcdf_comparison(baseline, new_file, rtol=1e-12, atol=1e-16, thres=1e-16):
     """
         Compare baseline to new_file using xarray
     """
@@ -188,7 +188,7 @@ def _parse_args():
                         help="File to compare to baseline")
 
     # Tolerances
-    parser.add_argument('-r', '--rtol', action='store', dest='rtol', default=1e-14, type=float,
+    parser.add_argument('-r', '--rtol', action='store', dest='rtol', default=1e-12, type=float,
                         help="Maximum allowable relative tolerance")
 
     parser.add_argument('-a', '--atol', action='store', dest='atol', default=1e-16, type=float,
