@@ -20,10 +20,12 @@ Contains
 
   subroutine test(marbl_instances, driver_status_log)
 
-    use marbl_io_mod,  only : marbl_io_read_field
-    use marbl_io_mod,  only : marbl_io_define_history
-    use marbl_io_mod,  only : marbl_io_write_history
-    use marbl_io_mod,  only : marbl_io_close_all
+    use marbl_io_mod, only : marbl_io_read_field
+    use marbl_io_mod, only : marbl_io_define_history
+    use marbl_io_mod, only : marbl_io_write_history
+    use marbl_io_mod, only : marbl_io_close_all
+    use marbl_io_mod, only : surface_flux_diag_buffer
+    use marbl_io_mod, only : interior_tendency_diag_buffer
 
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
     type(marbl_log_type),                      intent(inout) :: driver_status_log
@@ -56,7 +58,11 @@ Contains
     end do
 
 
-    ! 3. Define diagnostic fields in output netCDF file
+    ! 3. Initialize diagnostic buffers and define diagnostic fields in output netCDF file
+    call surface_flux_diag_buffer%construct(num_levels, sum(col_cnt), &
+         marbl_instances(1)%surface_flux_diags)
+    call interior_tendency_diag_buffer%construct(num_levels, sum(col_cnt), &
+         marbl_instances(1)%interior_tendency_diags)
     call marbl_io_define_history(marbl_instances, col_cnt, outfile, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_define_history', subname)
@@ -96,8 +102,16 @@ Contains
         return
       end if
 
-      !    4e. write to history file?
-
+      !    4e. write to diagnostic buffer
+      do m=1, surface_flux_diag_buffer%num_diags
+        if (allocated(surface_flux_diag_buffer%diags(m)%field_2d)) then
+          surface_flux_diag_buffer%diags(m)%field_2d((col_start(n)+1):(col_start(n)+col_cnt(n))) = &
+              marbl_instances(n)%surface_flux_diags%diags(m)%field_2d(:)
+        else
+          surface_flux_diag_buffer%diags(m)%field_3d(:,(col_start(n)+1):(col_start(n)+col_cnt(n))) = &
+              marbl_instances(n)%surface_flux_diags%diags(m)%field_3d(:,:)
+        end if
+      end do
 
       ! 5. Call interior_tendency_compute() (one column at a time)
       do col_id_loc = 1, col_cnt(n)
@@ -140,13 +154,22 @@ Contains
           return
         end if
 
-        !  5e. write to history file?
+        !  5e. write to diagnostic buffer
+        do m=1, interior_tendency_diag_buffer%num_diags
+          if (allocated(interior_tendency_diag_buffer%diags(m)%field_2d)) then
+            interior_tendency_diag_buffer%diags(m)%field_2d(col_id) = &
+                marbl_instances(n)%interior_tendency_diags%diags(m)%field_2d(1)
+          else
+            interior_tendency_diag_buffer%diags(m)%field_3d(:,col_id) = &
+                marbl_instances(n)%interior_tendency_diags%diags(m)%field_3d(:,1)
+          end if
+        end do
       end do ! column
     end do ! instance
 
 
     ! 6. Output netCDF
-    call marbl_io_write_history(outfile, col_start, col_cnt, marbl_instances, num_active_levels, driver_status_log)
+    call marbl_io_write_history(outfile, marbl_instances(1), num_active_levels, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_write_history', subname)
       return
@@ -232,7 +255,7 @@ Contains
     !   2c. Log decomposition
     do n=1, num_insts
       write(log_message, "(A,I0,A,I0,A,I0)") "Instance ", n-1, " has ", col_cnt(n), &
-                                             " columns, beginning with ", col_start(n)
+                                             " columns, beginning with ", col_start(n)+1
       call driver_status_log%log_noerror(log_message, subname)
     end do
 
