@@ -57,6 +57,14 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
     elif template == '((zooplankton_sname))':
         fill_source = 'zooplankton'
         loop_for_replacement = range(1,MARBL_settings.settings_dict['zooplankton_cnt']+1)
+    elif '_((zooplankton_sname))' in template:
+        first_half = re.search('\(\(.*\)\)_', template).group()[:-1]
+        if first_half == '((autotroph_sname))':
+            loop_for_replacement = range(1,(MARBL_settings.settings_dict['autotroph_cnt'] * MARBL_settings.settings_dict['zooplankton_cnt'])+1)
+            fill_source = 'phyto_graze_zoo'
+        elif first_half == '((zooplankton_sname))':
+            loop_for_replacement = range(1, (MARBL_settings.settings_dict['zooplankton_cnt'] * MARBL_settings.settings_dict['zooplankton_cnt'])+1)
+            fill_source = 'zoo_graze_zoo'
     elif template == '((particulate_flux_ref_depth_str))':
         fill_source = 'strings'
         particulate_flux_ref_depth_str = '%dm' % MARBL_settings.settings_dict['particulate_flux_ref_depth']
@@ -98,6 +106,22 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
             zoo_prefix = "zooplankton_settings(%d)%%" % item
             key_fill_val = MARBL_settings.settings_dict[zoo_prefix + "sname"].strip('"')
             template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict[zoo_prefix + "lname"].strip('"')
+        elif fill_source == 'phyto_graze_zoo':
+            auto_ind = (item-1) % MARBL_settings.settings_dict['autotroph_cnt'] + 1
+            auto_prefix = "autotroph_settings(%d)%%" % auto_ind
+            zoo_ind = (item-1) // MARBL_settings.settings_dict['autotroph_cnt'] + 1
+            zoo_prefix = "zooplankton_settings(%d)%%" % zoo_ind
+            key_fill_val = MARBL_settings.settings_dict[auto_prefix + "sname"].strip('"') + '_' + MARBL_settings.settings_dict[zoo_prefix + "sname"].strip('"')
+            template_fill_dict['((autotroph_lname))'] = MARBL_settings.settings_dict[auto_prefix + "lname"].strip('"')
+            template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict[zoo_prefix + "lname"].strip('"')
+        elif fill_source == 'zoo_graze_zoo':
+            zoo_ind1 = (item-1) % MARBL_settings.settings_dict['zooplankton_cnt'] + 1
+            zoo_prefix1 = "zooplankton_settings(%d)%%" % zoo_ind1
+            zoo_ind2 = (item-1) // MARBL_settings.settings_dict['zooplankton_cnt'] + 1
+            zoo_prefix2 = "zooplankton_settings(%d)%%" % zoo_ind2
+            key_fill_val = MARBL_settings.settings_dict[zoo_prefix1 + "sname"].strip('"') + '_' + MARBL_settings.settings_dict[zoo_prefix2 + "sname"].strip('"')
+            template_fill_dict['((zooplankton_lname))1'] = MARBL_settings.settings_dict[zoo_prefix1 + "lname"].strip('"')
+            template_fill_dict['((zooplankton_lname))2'] = MARBL_settings.settings_dict[zoo_prefix2 + "lname"].strip('"')
         elif fill_source == 'strings':
             key_fill_val = item
             template_fill_dict[template] = item
@@ -116,13 +140,19 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
                     if re.search('\(\(.*\)\)', unprocessed_dict[key]) == None:
                         processed_dict[new_key_name][key] = unprocessed_dict[key]
                     else:
-                        template2 = re.search('\(\(.*\)\)', unprocessed_dict[key]).group()
+                        template2 = re.findall('\(\(.*?\)\)', unprocessed_dict[key])
                         try:
-                            replacement_text = template_fill_dict[template2]
+                            if (len(template2)==2) and (template2[0] == template2[1]):
+                                template2[0] = template2[0]+'1'
+                                template2[1] = template2[1]+'2'
+                            replacement_text = [template_fill_dict[i] for i in template2]
                         except:
                             logger.error("Can not replace '%s'" % template2)
                             abort(1)
-                        processed_dict[new_key_name][key] = unprocessed_dict[key].replace(template2, replacement_text)
+                        newtext = unprocessed_dict[key]
+                        for i in range(len(replacement_text)):
+                            newtext = newtext.replace(template2[i], replacement_text[i])
+                        processed_dict[new_key_name][key] = newtext
                 else:
                     processed_dict[new_key_name][key] = unprocessed_dict[key]
             else:

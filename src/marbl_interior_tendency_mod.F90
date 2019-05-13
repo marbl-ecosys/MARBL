@@ -129,6 +129,7 @@ contains
     use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
 
+
     type(marbl_domain_type),                                 intent(in)    :: domain
     type(marbl_forcing_fields_type),                         intent(in)    :: interior_tendency_forcings(:)
     real(r8),                                                intent(in)    :: tracers(:,:)         ! (tracer_cnt, km) tracer values
@@ -174,7 +175,8 @@ contains
     real (r8) :: denitrif(domain%km)         ! WC nitrification (NO3 -> N2) (mmol N/m^3/sec)
     real (r8) :: sed_denitrif(domain%km)     ! sedimentary denitrification (nmol N/cm^3/sec)
     real (r8) :: other_remin(domain%km)      ! organic C remin not due oxic or denitrif (nmolC/cm^3/sec)
-    real (r8) :: Tfunc(domain%km)
+    real (r8) :: Tfunc_auto(autotroph_cnt, domain%km)   ! Temperature scaling for autotrophs
+    real (r8) :: Tfunc_zoo(zooplankton_cnt, domain%km)   ! Temperature scaling for zooplankton
     real (r8) :: Fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient
     real (r8) :: Fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
     real (r8) :: Lig_scavenge(domain%km)     ! loss of Fe-binding Ligand from scavenging (mmol Fe/m^3/sec)
@@ -245,7 +247,9 @@ contains
          dop_ind           => marbl_tracer_indices%dop_ind,         &
          dopr_ind          => marbl_tracer_indices%dopr_ind,        &
          donr_ind          => marbl_tracer_indices%donr_ind,        &
-         docr_ind          => marbl_tracer_indices%docr_ind         &
+         docr_ind          => marbl_tracer_indices%docr_ind,        &
+         Ea_auto           => autotroph_settings(:)%Ea,             &
+         Ea_zoo            => zooplankton_settings(:)%Ea            &
          )
 
     !-----------------------------------------------------------------------
@@ -316,14 +320,16 @@ contains
     call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
 
-    call compute_function_scaling(temperature, Tfunc)
+    call compute_temperature_functional_form(temperature(:), Tfunc_auto(:,:), Ea_auto(:))
+
+    call compute_temperature_functional_form(temperature(:), Tfunc_zoo(:,:), Ea_zoo(:))
 
     call compute_Pprime(km, domain%zt, autotroph_local, temperature, autotroph_derived_terms%Pprime)
 
     call compute_autotroph_uptake(km, marbl_tracer_indices, tracer_local(:, :), autotroph_derived_terms)
 
     call compute_autotroph_photosynthesis(km, num_PAR_subcols, autotroph_local, temperature(:), &
-         Tfunc(:), PAR%col_frac(:), PAR%avg(:,:), autotroph_derived_terms)
+         Tfunc_auto(:,:), PAR%col_frac(:), PAR%avg(:,:), autotroph_derived_terms)
 
     call compute_autotroph_nutrient_uptake(marbl_tracer_indices, autotroph_derived_terms)
 
@@ -331,11 +337,11 @@ contains
 
     call compute_autotroph_nfixation(km, autotroph_derived_terms)
 
-    call compute_autotroph_loss(km, Tfunc, autotroph_derived_terms)
+    call compute_autotroph_loss(km, Tfunc_auto(:,:), autotroph_derived_terms)
 
-    call compute_Zprime(km, domain%zt, zooplankton_local%C, Tfunc, zooplankton_derived_terms)
+    call compute_Zprime(km, domain%zt, zooplankton_local%C, Tfunc_zoo(:,:), zooplankton_derived_terms)
 
-    call compute_grazing(km, Tfunc, zooplankton_local, zooplankton_derived_terms, autotroph_derived_terms)
+    call compute_grazing(km, Tfunc_zoo(:,:), zooplankton_local, zooplankton_derived_terms, autotroph_derived_terms)
 
     call compute_routing(km, zooplankton_derived_terms, autotroph_derived_terms)
 
@@ -1129,7 +1135,7 @@ contains
          auto_CaCO3 => autotroph_local%CaCO3(:,:), &
 
          thetaC     => autotroph_derived_terms%thetaC(:,:), & ! current Chl/C ratio (mg Chl/mmol C)
-         QCaCO3     => autotroph_derived_terms%QCaCO3(:,:), & ! currenc CaCO3/C ratio (mmol CaCO3/mmol C)
+         QCaCO3     => autotroph_derived_terms%QCaCO3(:,:), & ! current CaCO3/C ratio (mmol CaCO3/mmol C)
          Qp         => autotroph_derived_terms%Qp(:,:),     & ! current P/C ratio (mmol P/mmol C)
          gQp        => autotroph_derived_terms%gQp(:,:),    & ! P/C for growth
          Qfe        => autotroph_derived_terms%Qfe(:,:),    & ! current Fe/C ratio (mmol Fe/mmol C)
@@ -1207,24 +1213,50 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_function_scaling(temperature, Tfunc)
+  subroutine compute_temperature_functional_form(temperature, Tfunc, Ea)
 
     !-----------------------------------------------------------------------
-    !  Tref = 30.0 reference temperature (degC)
-    !  Using q10 formulation with Q10 value of 2.0 (Doney et al., 1996).
-    !  growth, mort and grazing rates scaled by Tfunc where they are computed
+    !  Scaling of physiological rates by temperature
+    !  Use temp_func_form_iopt to select between two temperature functions,
+    !  Q10 and Arrhenius.
+    !
+    !  Use slightly different reference temperatures as well
+    !  (Future development can attempt to merge the two; will require additional tuning)
+    !  Tref = 30.0 (deg C) reference temperature for Q10 formulation
+    !  Tref = 25.0 (deg C) reference temperature for Arrhenius equation.
+    !
+    !  Tfunc scales the growth, mort and grazing rates where they are computed
     !-----------------------------------------------------------------------
 
+    use marbl_settings_mod,  only : temp_func_form_iopt
+    use marbl_settings_mod,  only : temp_func_form_iopt_q10
+    use marbl_settings_mod,  only : temp_func_form_iopt_arrhenius
     use marbl_settings_mod,  only : Q_10
-    use marbl_constants_mod, only : Tref
+    use marbl_settings_mod,  only : Tref
+
     use marbl_constants_mod, only : c10
+    use marbl_constants_mod, only : K_Boltz
 
-    real(r8), intent(in)  :: temperature(:)
-    real(r8), intent(out) :: Tfunc(:)
+    real(r8),          intent(in)  :: temperature(:)
+    real(r8),          intent(out) :: Tfunc(:,:)
+    real(r8),          intent(in)  :: Ea(size(Tfunc, dim=1))
 
-    Tfunc = Q_10**(((temperature + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
+    integer :: Tfunc_ind
 
-  end subroutine compute_function_scaling
+
+    select case (temp_func_form_iopt)
+      case (temp_func_form_iopt_q10)
+        do Tfunc_ind = 1, size(Tfunc, dim=1)
+            Tfunc(Tfunc_ind,:) = Q_10**(((temperature(:) + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
+        end do
+      case (temp_func_form_iopt_arrhenius)
+        do Tfunc_ind = 1, size(Tfunc, dim=1)
+            Tfunc(Tfunc_ind,:) = exp(-Ea(Tfunc_ind) * (Tref - temperature(:)) &
+                                     / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref + T0_Kelvin)))
+        end do
+    end select
+
+  end subroutine compute_temperature_functional_form
 
   !***********************************************************************
 
@@ -1265,7 +1297,7 @@ contains
   !***********************************************************************
 
   subroutine compute_autotroph_photosynthesis(km, PAR_nsubcols, &
-       autotroph_local, temperature, Tfunc, PAR_col_frac, PAR_avg, &
+       autotroph_local, temperature, Tfunc_auto, PAR_col_frac, PAR_avg, &
        autotroph_derived_terms)
 
     !-----------------------------------------------------------------------
@@ -1278,7 +1310,7 @@ contains
     integer(int_kind),                  intent(in)    :: PAR_nsubcols
     type(autotroph_local_type),         intent(in)    :: autotroph_local
     real(r8),                           intent(in)    :: temperature(km)
-    real(r8),                           intent(in)    :: Tfunc(km)
+    real(r8),                           intent(in)    :: Tfunc_auto(autotroph_cnt,km)
     real(r8),                           intent(in)    :: PAR_col_frac(PAR_nsubcols)
     real(r8),                           intent(in)    :: PAR_avg(km,PAR_nsubcols)
     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
@@ -1311,7 +1343,7 @@ contains
           if (temperature(k) < autotroph_settings(auto_ind)%temp_thres) then
             PCmax = c0
           else
-            PCmax = autotroph_settings(auto_ind)%PCref * f_nut(auto_ind,k) * Tfunc(k)
+            PCmax = autotroph_settings(auto_ind)%PCref * f_nut(auto_ind,k) * Tfunc_auto(auto_ind,k)
           end if
 
           if (thetaC(auto_ind,k) > c0) then
@@ -1604,15 +1636,17 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_autotroph_loss(km, Tfunc, autotroph_derived_terms)
+  subroutine compute_autotroph_loss(km, Tfunc_auto, autotroph_derived_terms)
 
     !-----------------------------------------------------------------------
     ! Compute autotroph-loss, autotroph aggregation loss and routine of
     ! loss terms
     !-----------------------------------------------------------------------
 
+    use marbl_settings_mod, only : auto_mort2_exp
+
     integer,                            intent(in)    :: km
-    real(r8),                           intent(in)    :: Tfunc(km)
+    real(r8),                           intent(in)    :: Tfunc_auto(autotroph_cnt,km)
     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
 
     !-----------------------------------------------------------------------
@@ -1637,10 +1671,10 @@ contains
         !  autotroph agg loss
         !-----------------------------------------------------------------------
 
-        auto_loss(auto_ind,:) = autotroph_settings(auto_ind)%mort * Pprime(auto_ind,:) * Tfunc(:)
+        auto_loss(auto_ind,:) = autotroph_settings(auto_ind)%mort * Pprime(auto_ind,:) * Tfunc_auto(auto_ind,:)
 
         auto_agg(auto_ind,:) = min((autotroph_settings(auto_ind)%agg_rate_max * dps) * Pprime(auto_ind,:), &
-                                   autotroph_settings(auto_ind)%mort2 * Pprime(auto_ind,:)**1.75_r8)
+                                   autotroph_settings(auto_ind)%mort2 * Pprime(auto_ind,:)**auto_mort2_exp)
         auto_agg(auto_ind,:) = max((autotroph_settings(auto_ind)%agg_rate_min * dps) * Pprime(auto_ind,:), &
                                    auto_agg(auto_ind,:))
 
@@ -1665,15 +1699,16 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_Zprime(km, zt, zooC, Tfunc, zooplankton_derived_terms)
+  subroutine compute_Zprime(km, zt, zooC, Tfunc_zoo, zooplankton_derived_terms)
 
     use marbl_settings_mod, only : thres_z1_zoo
     use marbl_settings_mod, only : thres_z2_zoo
+    use marbl_settings_mod, only : zoo_mort2_exp
 
     integer(int_kind),                    intent(in)    :: km
     real(r8),                             intent(in)    :: zt(km)
     real(r8),                             intent(in)    :: zooC(zooplankton_cnt,km)
-    real(r8),                             intent(in)    :: Tfunc(km)
+    real(r8),                             intent(in)    :: Tfunc_zoo(zooplankton_cnt,km)
     type(zooplankton_derived_terms_type), intent(inout) :: zooplankton_derived_terms
 
     !-----------------------------------------------------------------------
@@ -1696,8 +1731,8 @@ contains
         C_loss_thres(:) = f_loss_thres(:) * zooplankton_settings(zoo_ind)%loss_thres
         Zprime(zoo_ind,:) = max(zooC(zoo_ind,:) - C_loss_thres, c0)
 
-        zoo_loss(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**1.5_r8 &
-                               + zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind,:)) * Tfunc(:)
+        zoo_loss(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp &
+                               + zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind,:)) * Tfunc_zoo(zoo_ind,:)
       end do
 
     end associate
@@ -1706,7 +1741,7 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_grazing(km, Tfunc, zooplankton_local, zooplankton_derived_terms, autotroph_derived_terms)
+  subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived_terms, autotroph_derived_terms)
 
     !-----------------------------------------------------------------------
     !  CALCULATE GRAZING
@@ -1726,7 +1761,7 @@ contains
     use marbl_pft_mod, only : grz_fnc_sigmoidal
 
     integer,                              intent(in)    :: km
-    real(r8),                             intent(in)    :: Tfunc(km)
+    real(r8),                             intent(in)    :: Tfunc_zoo(zooplankton_cnt,km)
     type(zooplankton_local_type),         intent(in)    :: zooplankton_local
     type(zooplankton_derived_terms_type), intent(inout) :: zooplankton_derived_terms
     type(autotroph_derived_terms_type),   intent(inout) :: autotroph_derived_terms
@@ -1750,24 +1785,28 @@ contains
          auto_graze_poc => autotroph_derived_terms%auto_graze_poc(:,:),  & ! output
          auto_graze_dic => autotroph_derived_terms%auto_graze_dic(:,:),  & ! output
          auto_graze_doc => autotroph_derived_terms%auto_graze_doc(:,:),  & ! output
-         auto_graze_zoo => autotroph_derived_terms%auto_graze_zoo(:,:),  & ! output
+         auto_graze_zoo => autotroph_derived_terms%auto_graze_zoo(:,:,:),  & ! output
+         auto_graze_zootot => autotroph_derived_terms%auto_graze_zootot(:,:),  & ! output
          zoo_graze      => zooplankton_derived_terms%zoo_graze(:,:),     & ! output
          zoo_graze_poc  => zooplankton_derived_terms%zoo_graze_poc(:,:), & ! output
          zoo_graze_dic  => zooplankton_derived_terms%zoo_graze_dic(:,:), & ! output
          zoo_graze_doc  => zooplankton_derived_terms%zoo_graze_doc(:,:), & ! output
-         zoo_graze_zoo  => zooplankton_derived_terms%zoo_graze_zoo(:,:), & ! output
+         zoo_graze_zoo  => zooplankton_derived_terms%zoo_graze_zoo(:,:,:), & ! output
+         zoo_graze_zootot  => zooplankton_derived_terms%zoo_graze_zootot(:,:), & ! output
          x_graze_zoo    => zooplankton_derived_terms%x_graze_zoo(:,:),   & ! output
          f_zoo_detr     => zooplankton_derived_terms%f_zoo_detr(:,:)     & ! output
          )
 
       auto_graze(:,:)     = c0 ! total grazing losses from autotroph pool at auto_ind
-      auto_graze_zoo(:,:) = c0 ! autotroph grazing losses routed to zooplankton at auto_ind
+      auto_graze_zoo(:,:,:) = c0 ! autotroph grazing losses routed to zooplankton at auto_ind
+      auto_graze_zootot(:,:) = c0 ! autotroph grazing losses routed to total zooplankton at auto_ind
       auto_graze_poc(:,:) = c0 ! autotroph grazing losses routed to poc
       auto_graze_doc(:,:) = c0 ! autotroph grazing losses routed to doc
       auto_graze_dic(:,:) = c0 ! autotroph grazing losses routed to dic (computed by residual)
 
       zoo_graze(:,:)     = c0 ! total grazing losses from zooplankton pool at zoo_ind
-      zoo_graze_zoo(:,:) = c0 ! zooplankton grazing losses routed to zooplankton at zoo_ind
+      zoo_graze_zoo(:,:,:) = c0 ! zooplankton grazing losses routed to zooplankton at zoo_ind
+      zoo_graze_zootot(:,:) = c0 ! zooplankton grazing losses routed to total zooplankton at zoo_ind
       zoo_graze_poc(:,:) = c0 ! zooplankton grazing losses routed to poc
       zoo_graze_doc(:,:) = c0 ! zooplankton grazing losses routed to doc
       zoo_graze_dic(:,:) = c0 ! zooplankton grazing losses routed to dic (computed by residual)
@@ -1803,7 +1842,7 @@ contains
               case (grz_fnc_michaelis_menten)
 
                 if (work1 > c0) then
-                  graze_rate = grazing_relationship_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc(k) &
+                  graze_rate = grazing_relationship_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc_zoo(pred_ind,k) &
                              * zooplankton_local%C(pred_ind,k) &
                              * ( work1 / (work1 + grazing_relationship_settings(prey_ind, pred_ind)%z_grz) )
                 end if
@@ -1811,7 +1850,7 @@ contains
               case (grz_fnc_sigmoidal)
 
                 if (work1 > c0) then
-                  graze_rate = grazing_relationship_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc(k) &
+                  graze_rate = grazing_relationship_settings(prey_ind, pred_ind)%z_umax_0 * Tfunc_zoo(pred_ind,k) &
                              * zooplankton_local%C(pred_ind,k) &
                              * ( work1**2 / (work1**2 + grazing_relationship_settings(prey_ind, pred_ind)%z_grz**2) )
                 end if
@@ -1834,8 +1873,9 @@ contains
               auto_graze(auto_ind,k) = auto_graze(auto_ind,k) + work2
 
               ! routed to zooplankton
-              auto_graze_zoo(auto_ind,k) = auto_graze_zoo(auto_ind,k) &
-                                         + grazing_relationship_settings(prey_ind, pred_ind)%graze_zoo * work2
+              auto_graze_zoo(auto_ind,pred_ind,k) = grazing_relationship_settings(prey_ind, pred_ind)%graze_zoo * work2
+              auto_graze_zootot(auto_ind,k) = auto_graze_zootot(auto_ind,k) &
+                                         + auto_graze_zoo(auto_ind, pred_ind, k)
               x_graze_zoo(pred_ind,k)    = x_graze_zoo(pred_ind,k)    &
                                          + grazing_relationship_settings(prey_ind, pred_ind)%graze_zoo * work2
 
@@ -1877,7 +1917,8 @@ contains
               zoo_graze(zoo_ind,k) = zoo_graze(zoo_ind,k) + work2
 
               ! routed to zooplankton
-              zoo_graze_zoo(zoo_ind,k) = zoo_graze_zoo(zoo_ind,k) &
+              zoo_graze_zoo(zoo_ind, pred_ind, k) = grazing_relationship_settings(prey_ind, pred_ind)%graze_zoo * work2
+              zoo_graze_zootot(zoo_ind,k) = zoo_graze_zootot(zoo_ind,k) &
                                        + grazing_relationship_settings(prey_ind, pred_ind)%graze_zoo * work2
               x_graze_zoo(pred_ind,k)  = x_graze_zoo(pred_ind,k)  &
                                        + grazing_relationship_settings(prey_ind, pred_ind)%graze_zoo * work2
@@ -1924,7 +1965,7 @@ contains
     associate(                                                           &
          Qp              => autotroph_derived_terms%Qp(:,:),             & ! input
          auto_graze      => autotroph_derived_terms%auto_graze(:,:),     & ! input
-         auto_graze_zoo  => autotroph_derived_terms%auto_graze_zoo(:,:), & ! input
+         auto_graze_zootot  => autotroph_derived_terms%auto_graze_zootot(:,:), & ! input
          auto_graze_poc  => autotroph_derived_terms%auto_graze_poc(:,:), & ! input
          auto_graze_doc  => autotroph_derived_terms%auto_graze_doc(:,:), & ! input
          auto_loss       => autotroph_derived_terms%auto_loss(:,:),      & ! input
@@ -1934,7 +1975,7 @@ contains
          zoo_graze       => zooplankton_derived_terms%zoo_graze(:,:),     & ! input
          zoo_graze_poc   => zooplankton_derived_terms%zoo_graze_poc(:,:), & ! input
          zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,:), & ! input
-         zoo_graze_zoo   => zooplankton_derived_terms%zoo_graze_zoo(:,:), & ! input
+         zoo_graze_zootot   => zooplankton_derived_terms%zoo_graze_zootot(:,:), & ! input
          zoo_loss        => zooplankton_derived_terms%zoo_loss(:,:),      & ! input
          f_zoo_detr      => zooplankton_derived_terms%f_zoo_detr(:,:),    & ! input
 
@@ -1955,12 +1996,12 @@ contains
         !-----------------------------------------------------------------------
         do auto_ind = 1, autotroph_cnt
           auto_graze_dic(auto_ind,k) = auto_graze(auto_ind,k) &
-                                     - (auto_graze_zoo(auto_ind,k) + auto_graze_poc(auto_ind,k) &
+                                     - (auto_graze_zootot(auto_ind,k) + auto_graze_poc(auto_ind,k) &
                                         + auto_graze_doc(auto_ind,k))
         end do
         do zoo_ind = 1, zooplankton_cnt
           zoo_graze_dic(zoo_ind,k) = zoo_graze(zoo_ind,k)  &
-                                   - (zoo_graze_zoo(zoo_ind,k) + zoo_graze_poc(zoo_ind,k) + zoo_graze_doc(zoo_ind,k))
+                                   - (zoo_graze_zootot(zoo_ind,k) + zoo_graze_poc(zoo_ind,k) + zoo_graze_doc(zoo_ind,k))
         end do
 
         !-----------------------------------------------------------------------
@@ -1983,7 +2024,7 @@ contains
                                     * Qp(auto_ind,k)
 
           remaining_P = (auto_graze(auto_ind,k) + auto_loss(auto_ind,k) + auto_agg(auto_ind,k)) * Qp(auto_ind,k) &
-                      - auto_graze_zoo(auto_ind,k) * Qp_zoo - remaining_P_pop(auto_ind,k)
+                      - auto_graze_zootot(auto_ind,k) * Qp_zoo - remaining_P_pop(auto_ind,k)
 
           !-----------------------------------------------------------------------
           ! reduce sinking pop if remaining_P is negative
@@ -3403,7 +3444,7 @@ contains
          auto_loss_doc   => autotroph_derived_terms%auto_loss_doc(:,:),   & ! auto_loss routed to doc (mmol C/m^3/sec)
          auto_agg        => autotroph_derived_terms%auto_agg(:,:),        & ! autotroph aggregation (mmol C/m^3/sec)
          auto_graze      => autotroph_derived_terms%auto_graze(:,:),      & ! autotroph grazing rate (mmol C/m^3/sec)
-         auto_graze_zoo  => autotroph_derived_terms%auto_graze_zoo(:,:),  & ! auto_graze routed to zoo (mmol C/m^3/sec)
+         auto_graze_zootot  => autotroph_derived_terms%auto_graze_zootot(:,:),  & ! auto_graze routed to total zoo (mmol C/m^3/sec)
          auto_graze_dic  => autotroph_derived_terms%auto_graze_dic(:,:),  & ! auto_graze routed to dic (mmol C/m^3/sec)
          auto_graze_doc  => autotroph_derived_terms%auto_graze_doc(:,:),  & ! auto_graze routed to doc (mmol C/m^3/sec)
          CaCO3_form      => autotroph_derived_terms%CaCO3_form(:,:),      & ! prod. of CaCO3 by small phyto (mmol CaCO3/m^3/sec)
@@ -3413,7 +3454,7 @@ contains
 
          x_graze_zoo     => zooplankton_derived_terms%x_graze_zoo(:,:),   & ! {auto, zoo}_graze routed to zoo (mmol C/m^3/sec)
          zoo_graze       => zooplankton_derived_terms%zoo_graze(:,:),     & ! zooplankton losses due to grazing (mmol C/m^3/sec)
-         zoo_graze_zoo   => zooplankton_derived_terms%zoo_graze_zoo(:,:), & ! grazing of zooplankton routed to zoo (mmol C/m^3/sec)
+         zoo_graze_zootot   => zooplankton_derived_terms%zoo_graze_zootot(:,:), & ! grazing of zooplankton routed to total zoo (mmol C/m^3/sec)
          zoo_graze_dic   => zooplankton_derived_terms%zoo_graze_dic(:,:), & ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
          zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,:), & ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
          zoo_loss        => zooplankton_derived_terms%zoo_loss(:,:),      & ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
@@ -3480,7 +3521,7 @@ contains
         do auto_ind = 1, autotroph_cnt
           interior_tendencies(fe_ind,k) = interior_tendencies(fe_ind,k) &
                                         + (Qfe(auto_ind,k) * (auto_loss_dic(auto_ind,k) + auto_graze_dic(auto_ind,k))) &
-                                        + auto_graze_zoo(auto_ind,k) * (Qfe(auto_ind,k) - Qfe_zoo) &
+                                        + auto_graze_zootot(auto_ind,k) * (Qfe(auto_ind,k) - Qfe_zoo) &
                                         + (Qfe(auto_ind,k) * (auto_loss_doc(auto_ind,k) + auto_graze_doc(auto_ind,k)))
         end do
 

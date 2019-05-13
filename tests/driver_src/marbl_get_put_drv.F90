@@ -11,8 +11,9 @@ module marbl_get_put_drv
 
   ! List of keywords (from variable names) to ignore in put / get statements
   ! (necessary to prevent internal MARBL errors do to inconsistent settings)
-  character(len=*), dimension(5), parameter :: ignore_in_varnames = (/"_ind                ", &
+  character(len=*), dimension(6), parameter :: ignore_in_varnames = (/"_ind                ", &
                                                                       "caco3_bury_thres_opt", &
+                                                                      "temp_func_form_opt  ", &
                                                                       "tracer_restore_vars ", &
                                                                       "PFT_defaults        ", &
                                                                       "_cnt                "/)
