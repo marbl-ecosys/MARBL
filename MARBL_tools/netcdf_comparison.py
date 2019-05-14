@@ -122,8 +122,8 @@ def _variable_check(ds_base, ds_new, rtol, atol, thres):
         Checks:
         1. If baseline is 0 at a given point, then ds_new must be 0 as well
         2. Absolute vs relative error:
-           i. If baseline value is < thres then want absolute difference < atol
-           ii. If baseline balue is >= thres, then want relative difference < rtol
+           i. If 0 < |baseline value| <= thres then want absolute difference < atol
+           ii. If |baseline value| > thres, then want relative difference < rtol
     """
     import numpy as np
     fail = False
@@ -132,23 +132,23 @@ def _variable_check(ds_base, ds_new, rtol, atol, thres):
     common_vars.sort()
     for var in common_vars:
         err_messages = []
-        # (1) compare everywhere that baseline is 0 (well, < thres)
-        if np.any(np.where(np.abs(ds_base[var].data) < thres,
+        # (1) compare everywhere that baseline is 0 (well, <= thres)
+        if np.any(np.where(np.abs(ds_base[var].data) <= thres,
                            np.abs(ds_new[var].data) > thres, False)):
             err_messages.append('Baseline is 0 at some indices where new data is non-zero')
 
         # (2) Compare everywhere that |baseline| is > thres
-        base_data = np.where(np.abs(ds_base[var].data) >= thres, ds_base[var].data, 0)
-        new_data = np.where(np.abs(ds_base[var].data) >= thres, ds_new[var].data, 0)
+        base_data = np.where(np.abs(ds_base[var].data) > thres, ds_base[var].data, 0)
+        new_data = np.where(np.abs(ds_base[var].data) > thres, ds_new[var].data, 0)
         rel_err = np.where(base_data != 0, np.abs(new_data - base_data), 0) / \
                   np.where(base_data != 0, np.abs(base_data), 1)
         if np.any(rel_err > rtol):
             err_messages.append("Max relative error ({}) exceeds {}".format(np.max(rel_err), rtol))
 
-        # (3) Compare everywhere that 0 < |baseline| <= 1e-12
-        base_data = np.where((ds_base[var].data != 0) & (np.abs(ds_base[var].data) < 1e-12),
+        # (3) Compare everywhere that 0 < |baseline| <= thres
+        base_data = np.where((ds_base[var].data != 0) & (np.abs(ds_base[var].data) <= thres),
                              ds_base[var].data, 0)
-        new_data = np.where((ds_base[var].data != 0) & (np.abs(ds_base[var].data) < 1e-12),
+        new_data = np.where((ds_base[var].data != 0) & (np.abs(ds_base[var].data) <= thres),
                             ds_new[var].data, 0)
         abs_err = np.abs(new_data - base_data)
         if np.any(abs_err > atol):
