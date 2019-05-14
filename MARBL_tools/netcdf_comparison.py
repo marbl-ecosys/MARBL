@@ -26,7 +26,7 @@ def netcdf_comparison(baseline, new_file, rtol=1e-12, atol=1e-16, thres=1e-16):
     import xarray as xr
 
     logger = logging.getLogger(__name__)
-    logger.info("Comparing %s to the baseline %s", new_file, baseline)
+    logger.info("Comparing %s to the baseline %s\n", new_file, baseline)
     ds_base = xr.open_dataset(baseline)
     ds_new = xr.open_dataset(new_file)
     fail = False
@@ -208,7 +208,10 @@ if __name__ == "__main__":
     # Set up logging
 #    logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.INFO)
     logging.basicConfig(format='%(message)s', level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
     args = _parse_args() # pylint: disable=invalid-name
     if netcdf_comparison(args.baseline, args.new_file, args.rtol, args.atol, args.thres):
+        logger.error("Differences found between files!")
         os.sys.exit(1)
+    logger.info("PASS: All variables match and are within specified tolerance.")
