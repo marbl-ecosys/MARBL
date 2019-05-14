@@ -18,7 +18,7 @@ Contains
 
   !****************************************************************************
 
-  subroutine test(marbl_instances, driver_status_log)
+  subroutine test(marbl_instances, hist_file, driver_status_log)
 
     use marbl_io_mod, only : marbl_io_read_field
     use marbl_io_mod, only : marbl_io_define_history
@@ -28,11 +28,11 @@ Contains
     use marbl_io_mod, only : interior_tendency_diag_buffer
 
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
+    character(len=*),                          intent(in)    :: hist_file
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_compute_cols_drv:test'
     character(len=*), parameter :: infile = 'marbl.nc'
-    character(len=*), parameter :: outfile = 'history.nc'
     real(r8), allocatable, dimension(:,:,:) :: interior_tendencies ! num_tracers x num_levels x num_cols
     real(r8), allocatable, dimension(:,:) :: surface_fluxes        ! num_tracers x num_cols
     integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols
@@ -41,8 +41,8 @@ Contains
 
 
     ! 1. Initialize the test (reads grid info, sets up history files, etc)
-    call initialize(infile, outfile, size(marbl_instances), num_levels, num_active_levels, num_PAR_subcols, &
-                    col_start, col_cnt, grid_data, driver_status_log)
+    call initialize(infile, hist_file, size(marbl_instances), num_levels, num_active_levels, &
+                    num_PAR_subcols, col_start, col_cnt, grid_data, driver_status_log)
     if (driver_status_log%labort_MARBL) then
       call driver_status_log%log_error_trace('initialize', subname)
       return
@@ -69,7 +69,7 @@ Contains
          marbl_instances(1)%interior_tendency_diags)
     allocate(surface_fluxes(num_cols, num_tracers))
     allocate(interior_tendencies(num_tracers, num_levels, num_cols))
-    call marbl_io_define_history(marbl_instances, col_cnt, outfile, driver_status_log)
+    call marbl_io_define_history(marbl_instances, col_cnt, hist_file, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_define_history', subname)
       return
@@ -177,7 +177,7 @@ Contains
 
 
     ! 6. Output netCDF
-    call marbl_io_write_history(outfile, marbl_instances(1), surface_fluxes, interior_tendencies, &
+    call marbl_io_write_history(hist_file, marbl_instances(1), surface_fluxes, interior_tendencies, &
                                 num_active_levels, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_write_history', subname)
@@ -196,14 +196,14 @@ Contains
 
   !*****************************************************************************
 
-  subroutine initialize(infile, outfile, num_insts, num_levels, num_active_levels, num_PAR_subcols, &
+  subroutine initialize(infile, hist_file, num_insts, num_levels, num_active_levels, num_PAR_subcols, &
                         col_start, col_cnt, grid_data, driver_status_log)
 
     use marbl_io_mod,  only : marbl_io_open
     use marbl_io_mod,  only : marbl_io_read_dim
 
     character(len=*),                   intent(in)    :: infile
-    character(len=*),                   intent(in)    :: outfile
+    character(len=*),                   intent(in)    :: hist_file
     integer,                            intent(in)    :: num_insts
     integer,                            intent(out)   :: num_levels
     integer, dimension(:), allocatable, intent(out)   :: num_active_levels
@@ -227,14 +227,13 @@ Contains
     end if
 
     !    1b. Output (diagnostics)
-    call marbl_io_open(outfile, .false., tmp_fid, driver_status_log)
+    call marbl_io_open(hist_file, .false., tmp_fid, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_open', subname)
       return
     end if
-    write(log_message, "(A, 1X, A)") "* MARBL output will be written to", outfile
+    write(log_message, "(A, 1X, A)") "* MARBL output will be written to", trim(hist_file)
     call driver_status_log%log_noerror(log_message, subname)
-
 
     ! 2. Domain decomposition (distribute columns among instances)
     !    2a. Get column count from netCDF

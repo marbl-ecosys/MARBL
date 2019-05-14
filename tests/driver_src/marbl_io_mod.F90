@@ -489,11 +489,11 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_define_history(marbl_instances, col_cnt, outfile, driver_status_log)
+  subroutine marbl_io_define_history(marbl_instances, col_cnt, hist_file, driver_status_log)
 
     type(marbl_interface_class), dimension(:), intent(in)    :: marbl_instances
     integer,                     dimension(:), intent(in)    :: col_cnt
-    character(len=*),                          intent(in)    :: outfile
+    character(len=*),                          intent(in)    :: hist_file
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_define_history'
@@ -503,7 +503,7 @@ contains
     integer :: num_levels, num_cols, num_tracers
 
     ! Get file_id given file_name
-    file_id = get_nc_file_id(outfile, driver_status_log)
+    file_id = get_nc_file_id(hist_file, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('get_nc_file_id', subname)
       return
@@ -511,7 +511,7 @@ contains
     num_tracers = size(marbl_instances(1)%tracer_metadata)
 
 #ifndef _NETCDF
-    write(log_message, "(3A)") 'Can not call define_history(', trim(outfile), ') without netCDF support'
+    write(log_message, "(3A)") 'Can not call define_history(', trim(hist_file), ') without netCDF support'
     call driver_status_log%log_error(log_message, subname)
     write(var_name, "(6I0)") n, diag_size, num_levels, num_cols, num_tracers, col_cnt
     return
@@ -611,10 +611,10 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_write_history(outfile, marbl_instance, surface_fluxes, interior_tendencies, &
+  subroutine marbl_io_write_history(hist_file, marbl_instance, surface_fluxes, interior_tendencies, &
                                     num_active_levels, driver_status_log)
 
-    character(len=*),                              intent(in)    :: outfile
+    character(len=*),                              intent(in)    :: hist_file
     type(marbl_interface_class),                   intent(in)    :: marbl_instance
     real(r8),                    dimension(:,:,:), intent(in)    :: interior_tendencies
     real(r8),                    dimension(:,:),   intent(in)    :: surface_fluxes
@@ -626,14 +626,14 @@ contains
     integer :: n, file_id, col_id
 
     ! Get file_id given file_name
-    file_id = get_nc_file_id(outfile, driver_status_log)
+    file_id = get_nc_file_id(hist_file, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('get_nc_file_id', subname)
       return
     end if
 
 #ifndef _NETCDF
-    write(log_message, "(3A)") 'Can not call write_history(', trim(outfile), ') without netCDF support'
+    write(log_message, "(3A)") 'Can not call write_history(', trim(hist_file), ') without netCDF support'
     call driver_status_log%log_error(log_message, subname)
     write(log_message, "(6I0)") size(marbl_instance%tracers), size(interior_tendencies), size(surface_fluxes), &
                                 num_active_levels(1), n, col_id

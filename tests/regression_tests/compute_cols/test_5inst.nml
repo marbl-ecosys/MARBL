@@ -1,5 +1,5 @@
 &marbl_driver_nml
 testname="compute_cols"
-num_inst=2
-hist_file="history_2inst.nc"
+num_inst=5
+hist_file="history_5inst.nc"
 /

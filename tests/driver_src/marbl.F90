@@ -69,15 +69,19 @@ Program marbl
 
   type(marbl_interface_class), dimension(:), allocatable :: marbl_instances
   type(marbl_log_type)          :: driver_status_log
-  integer                       :: n, cnt, num_inst, num_PAR_subcols
-  character(len=char_len)       :: input_line, testname, varname, log_message, log_out_file
+  integer                       :: n, cnt
+  character(len=char_len)       :: input_line, varname, log_message
   logical                       :: lprint_marbl_log, lhas_namelist_file, lhas_input_file
   logical                       :: ldriver_log_to_file, lsummarize_timers
+
+  ! Namelist vars
+  character(len=char_len) :: testname, hist_file, log_out_file
+  integer                 :: num_inst, num_PAR_subcols
 
   ! Processing input file for put calls
   integer  :: ioerr
 
-  namelist /marbl_driver_nml/testname, log_out_file, num_inst, num_PAR_subcols
+  namelist /marbl_driver_nml/testname, hist_file, log_out_file, num_inst, num_PAR_subcols
 
   !****************************************************************************
 
@@ -224,6 +228,7 @@ Program marbl
   ! (1) Set marbl_driver_nml defaults
   testname       = ''
   log_out_file   = 'marbl.out' ! only written if ldriver_log_to_file = .true.
+  hist_file      = 'history.nc'
 
   ! (2a) Read driver namelist to know what test to run
   if (my_task .eq. 0) open(98, file=trim(namelist_file), status="old", iostat=ioerr)
@@ -382,7 +387,7 @@ Program marbl
 
     case ('compute_cols')
       lprint_marbl_log = .false.
-      call marbl_compute_cols_test(marbl_instances, driver_status_log)
+      call marbl_compute_cols_test(marbl_instances, hist_file, driver_status_log)
 
     !    UNIT TESTS
     ! -- get_put test -- !
