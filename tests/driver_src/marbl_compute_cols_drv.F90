@@ -33,7 +33,9 @@ Contains
     character(len=*), parameter :: subname = 'marbl_compute_cols_drv:test'
     character(len=*), parameter :: infile = 'marbl.nc'
     character(len=*), parameter :: outfile = 'history.nc'
-    integer :: num_levels, m, n, col_id_loc, col_id, num_PAR_subcols
+    real(r8), allocatable, dimension(:,:,:) :: interior_tendencies ! num_tracers x num_levels x num_cols
+    real(r8), allocatable, dimension(:,:) :: surface_fluxes        ! num_tracers x num_cols
+    integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols
     type(grid_data_type) :: grid_data
     integer, allocatable, dimension(:) :: num_active_levels, col_start, col_cnt
 
@@ -59,10 +61,14 @@ Contains
 
 
     ! 3. Initialize diagnostic buffers and define diagnostic fields in output netCDF file
-    call surface_flux_diag_buffer%construct(num_levels, sum(col_cnt), &
+    num_cols = sum(col_cnt)
+    num_tracers = size(marbl_instances(1)%tracer_metadata)
+    call surface_flux_diag_buffer%construct(num_levels, num_cols, &
          marbl_instances(1)%surface_flux_diags)
-    call interior_tendency_diag_buffer%construct(num_levels, sum(col_cnt), &
+    call interior_tendency_diag_buffer%construct(num_levels, num_cols, &
          marbl_instances(1)%interior_tendency_diags)
+    allocate(surface_fluxes(num_cols, num_tracers))
+    allocate(interior_tendencies(num_tracers, num_levels, num_cols))
     call marbl_io_define_history(marbl_instances, col_cnt, outfile, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_define_history', subname)
@@ -112,6 +118,7 @@ Contains
               marbl_instances(n)%surface_flux_diags%diags(m)%field_3d(:,:)
         end if
       end do
+      surface_fluxes((col_start(n)+1):(col_start(n)+col_cnt(n)),:) = marbl_instances(n)%surface_fluxes(:,:)
 
       ! 5. Call interior_tendency_compute() (one column at a time)
       do col_id_loc = 1, col_cnt(n)
@@ -164,12 +171,14 @@ Contains
                 marbl_instances(n)%interior_tendency_diags%diags(m)%field_3d(:,1)
           end if
         end do
+        interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
       end do ! column
     end do ! instance
 
 
     ! 6. Output netCDF
-    call marbl_io_write_history(outfile, marbl_instances(1), num_active_levels, driver_status_log)
+    call marbl_io_write_history(outfile, marbl_instances(1), surface_fluxes, interior_tendencies, &
+                                num_active_levels, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_write_history', subname)
       return

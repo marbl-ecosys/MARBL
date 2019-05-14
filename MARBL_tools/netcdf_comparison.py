@@ -32,11 +32,12 @@ def netcdf_comparison(baseline, new_file, rtol=1e-12, atol=1e-16, thres=1e-16):
     fail = False
 
     # Compare file headers
-    fail = fail or _header_test(ds_base, ds_new)
+    header_fail = _header_test(ds_base, ds_new)
+    fail = fail or header_fail
 
     # Compare remaining variables
-    fail = fail or _variable_check(ds_base, ds_new, rtol, atol, thres)
-    #for var in common_vars:
+    var_check_fail = _variable_check(ds_base, ds_new, rtol, atol, thres)
+    fail = fail or var_check_fail
 
     return fail
 
@@ -109,7 +110,7 @@ def _header_test(ds_base, ds_new):
             ds_base.drop(var)
             ds_new.drop(var)
 
-        return fail
+    return fail
 
 ##################
 
