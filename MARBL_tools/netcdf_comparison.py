@@ -32,7 +32,7 @@ def netcdf_comparison(baseline, new_file, rtol=1e-12, atol=1e-16, thres=1e-16):
     fail = False
 
     # Compare file headers
-    header_fail = _header_test(ds_base, ds_new)
+    header_fail, ds_base, ds_new = _header_test(ds_base, ds_new)
     fail = fail or header_fail
 
     # Compare remaining variables
@@ -52,16 +52,17 @@ def _header_test(ds_base, ds_new):
     """
     logger = logging.getLogger(__name__)
     fail = False
+    failed_vars = []
 
     # 1. Any variables in one file but not the other?
-    base_vars = ds_base.keys()
-    new_vars = ds_new.keys()
+    base_vars = ds_base.variables
+    new_vars = ds_new.variables
     common_vars = set(base_vars) & set(new_vars)
     base_vars = list(set(base_vars) - common_vars)
     new_vars = list(set(new_vars) - common_vars)
     if base_vars:
         fail = True
-        ds_base.drop(base_vars)
+        ds_base = ds_base.drop(base_vars)
         logger.info("The following variables are in the baseline file but not the new file:")
         base_vars.sort()
         for var in base_vars:
@@ -69,7 +70,7 @@ def _header_test(ds_base, ds_new):
         logger.info("")
     if new_vars:
         fail = True
-        ds_new.drop(new_vars)
+        ds_new = ds_new.drop(new_vars)
         logger.info("The following variables are in the new file but not the baseline file:")
         new_vars.sort()
         for var in new_vars:
@@ -107,10 +108,11 @@ def _header_test(ds_base, ds_new):
         # Report errors
         if _report_errs(var, err_messages):
             fail = True
-            ds_base.drop(var)
-            ds_new.drop(var)
+            failed_vars.append(var)
 
-    return fail
+    ds_base = ds_base.drop(failed_vars)
+    ds_new = ds_new.drop(failed_vars)
+    return fail, ds_base, ds_new # return re-assigned ds_base and ds_new
 
 ##################
 
@@ -126,9 +128,7 @@ def _variable_check(ds_base, ds_new, rtol, atol, thres):
     import numpy as np
     fail = False
 
-    base_vars = ds_base.keys()
-    new_vars = ds_new.keys()
-    common_vars = list(set(base_vars) & set(new_vars))
+    common_vars = list(set(ds_base.variables) & set(ds_new.variables))
     common_vars.sort()
     for var in common_vars:
         err_messages = []
@@ -136,6 +136,7 @@ def _variable_check(ds_base, ds_new, rtol, atol, thres):
         if np.any(np.where(np.abs(ds_base[var].data) < thres,
                            np.abs(ds_new[var].data) > thres, False)):
             err_messages.append('Baseline is 0 and new data is not')
+
         # (2) Compare everywhere that |baseline| is > thres
         base_data = np.where(np.abs(ds_base[var].data) >= thres, ds_base[var].data, 0)
         new_data = np.where(np.abs(ds_base[var].data) >= thres, ds_new[var].data, 0)
@@ -143,6 +144,7 @@ def _variable_check(ds_base, ds_new, rtol, atol, thres):
                   np.where(base_data != 0, np.abs(base_data), 1)
         if np.any(rel_err > rtol):
             err_messages.append("Max relative error ({}) exceeds {}".format(np.max(rel_err), rtol))
+
         # (3) Compare everywhere that 0 < |baseline| <= 1e-12
         base_data = np.where((ds_base[var].data != 0) & (np.abs(ds_base[var].data) < 1e-12),
                              ds_base[var].data, 0)

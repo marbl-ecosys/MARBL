@@ -3,7 +3,7 @@ sudo: required
 before_install:
   - sudo apt-get install gfortran mpich libnetcdf-dev netcdf-bin
 install:
-  - pip install pyyaml
+  - pip install pyyaml numpy xarray netcdf4
   - pip install -r docs/py_requirements.txt
 python:
   - '2.7'

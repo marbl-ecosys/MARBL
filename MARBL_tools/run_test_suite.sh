@@ -150,6 +150,25 @@ if [ "${STATUS}" == "PASS" ]; then
   STATUS=$(check_return $?)
   print_status "compute_cols.py" >> $OUTFILE
 
+  # Same test, but with num_inst = 5 instead of 2
+  if [ "${STATUS}" == "PASS" ]; then
+    cd ${MARBL_ROOT}/tests/regression_tests/compute_cols
+    echo "$ ./compute_cols.py -n test_5inst.nml"
+    ./compute_cols.py -n test_5inst.nml
+    STATUS=$(check_return $?)
+    print_status "compute_cols.py -n test_5inst.nml" >> $OUTFILE
+  fi
+
+  # Compare 2-inst and 5-inst output
+  cd ${MARBL_ROOT}/MARBL_tools
+  HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/compute_cols
+  if [ -f ${HIST_ROOT}/history_2inst.nc ] && [ -f ${HIST_ROOT}/history_5inst.nc ]; then
+    echo "$ ./netcdf_comparison.py -b ${HIST_ROOT}/history_5inst.nc -n ${HIST_ROOT}/history_2inst.nc"
+    ./netcdf_comparison.py -b ${HIST_ROOT}/history_5inst.nc -n ${HIST_ROOT}/history_2inst.nc
+    STATUS=$(check_return $?)
+    print_status "netCDF Comparison" >> $OUTFILE
+  fi
+
   # Print all diagnostics MARBL can provide
   cd ${MARBL_ROOT}/tests/regression_tests/requested_diags
   echo "$ ./requested_diags.py"
