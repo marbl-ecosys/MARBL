@@ -120,7 +120,7 @@ def _variable_check(ds_base, ds_new, rtol, atol, thres):
     """
         Assumes both datasets contain the same variables with the same dimensions
         Checks:
-        1. If baseline is 0, then ds_new must be 0 as well
+        1. If baseline is 0 at a given point, then ds_new must be 0 as well
         2. Absolute vs relative error:
            i. If baseline value is < thres then want absolute difference < atol
            ii. If baseline balue is >= thres, then want relative difference < rtol
@@ -135,7 +135,7 @@ def _variable_check(ds_base, ds_new, rtol, atol, thres):
         # (1) compare everywhere that baseline is 0 (well, < thres)
         if np.any(np.where(np.abs(ds_base[var].data) < thres,
                            np.abs(ds_new[var].data) > thres, False)):
-            err_messages.append('Baseline is 0 and new data is not')
+            err_messages.append('Baseline is 0 at some indices where new data is non-zero')
 
         # (2) Compare everywhere that |baseline| is > thres
         base_data = np.where(np.abs(ds_base[var].data) >= thres, ds_base[var].data, 0)

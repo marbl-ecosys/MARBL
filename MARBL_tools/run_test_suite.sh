@@ -163,8 +163,10 @@ if [ "${STATUS}" == "PASS" ]; then
   cd ${MARBL_ROOT}/MARBL_tools
   HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/compute_cols
   if [ -f ${HIST_ROOT}/history_2inst.nc ] && [ -f ${HIST_ROOT}/history_5inst.nc ]; then
-    echo "$ ./netcdf_comparison.py -b ${HIST_ROOT}/history_5inst.nc -n ${HIST_ROOT}/history_2inst.nc"
-    ./netcdf_comparison.py -b ${HIST_ROOT}/history_5inst.nc -n ${HIST_ROOT}/history_2inst.nc
+    # We use -a 0 -r 0 because we want these two files to be identical
+    # When we introduce a baseline comparison, we will not use these flags
+    echo "$ ./netcdf_comparison.py -b ${HIST_ROOT}/history_5inst.nc -n ${HIST_ROOT}/history_2inst.nc -a 0 -r 0"
+    ./netcdf_comparison.py -b ${HIST_ROOT}/history_5inst.nc -n ${HIST_ROOT}/history_2inst.nc -a 0 -r 0
     STATUS=$(check_return $?)
     print_status "netCDF Comparison" >> $OUTFILE
   fi
