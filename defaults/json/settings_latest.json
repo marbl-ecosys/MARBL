@@ -38,6 +38,18 @@
          "_array_shape": "autotroph_cnt",
          "_is_allocatable": true,
          "datatype": {
+            "Ea": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"diat\"": 0.32,
+                  "((autotroph_sname)) == \"diaz\"": 0.32,
+                  "((autotroph_sname)) == \"sp\"": 0.32,
+                  "default": "1e34"
+               },
+               "longname": "Activation energy for Arrhenius equation",
+               "subcategory": "10. autotrophs",
+               "units": "eV"
+            },
             "Nfixer": {
                "datatype": "logical",
                "default_value": {
@@ -517,6 +529,16 @@
          "_array_shape": "zooplankton_cnt",
          "_is_allocatable": true,
          "datatype": {
+            "Ea": {
+               "datatype": "real",
+               "default_value": {
+                  "((zooplankton_sname)) == \"zoo\"": 0.65,
+                  "default": "1e34"
+               },
+               "longname": "Activation energy for Arrhenius equation",
+               "subcategory": "11. zooplankton",
+               "units": "eV"
+            },
             "_type_name": "zooplankton_settings_type",
             "lname": {
                "datatype": "string",
@@ -806,6 +828,27 @@
          "subcategory": "4. general parameters (bury coeffs)",
          "units": "unitless"
       },
+      "QCaCO3_max": {
+         "datatype": "real",
+         "default_value": 0.4,
+         "longname": "Max CaCO3/C ratio for implicit calcifiers",
+         "subcategory": "4. general parameters",
+         "units": "mmol CaCO3/mmol C"
+      },
+      "QCaCO3_max_exp": {
+         "datatype": "real",
+         "default_value": 2.0,
+         "longname": "Max CaCO3/C ratio for explicit calcifiers",
+         "subcategory": "4. general parameters",
+         "units": "mmol CaCO3/mmol C"
+      },
+      "auto_mort2_exp": {
+         "datatype": "real",
+         "default_value": 1.75,
+         "longname": "Value of power loss exponent for autotrophs",
+         "subcategory": "4. general parameters",
+         "units": "unitless"
+      },
       "bSi_bury_frac_max": {
          "datatype": "real",
          "default_value": 1.0,
@@ -871,6 +914,13 @@
          "default_value": ".false.",
          "longname": "Control whether CISO tracer module is active",
          "subcategory": "2. config flags",
+         "units": "unitless"
+      },
+      "f_graze_CaCO3_remin": {
+         "datatype": "real",
+         "default_value": 0.33,
+         "longname": "Fraction of spCaCO3 grazing which is remineralized in zooplankton guts",
+         "subcategory": "4. general parameters",
          "units": "unitless"
       },
       "gQ_Fe_kFe_thres": {
@@ -1219,9 +1269,38 @@
          "longname": "reference depth for particulate flux diagnostics",
          "subcategory": "4. general parameters",
          "units": "m"
+      },
+      "temp_func_form_opt": {
+         "_append_to_config_keywords": true,
+         "datatype": "string",
+         "default_value": "q_10",
+         "longname": "Option for the temperature scaling functional form",
+         "subcategory": "4. general parameters",
+         "units": "non-numeric",
+         "valid_values": [
+            "q_10",
+            "arrhenius"
+         ]
+      },
+      "zoo_mort2_exp": {
+         "datatype": "real",
+         "default_value": 1.5,
+         "longname": "Value of power loss exponent for zooplankton",
+         "subcategory": "4. general parameters",
+         "units": "unitless"
       }
    },
    "general_parms2": {
+      "Tref": {
+         "datatype": "real",
+         "default_value": {
+            "default": 30.0,
+            "temp_func_form_opt == \"arrhenius\"": 25.0
+         },
+         "longname": "reference temperature (C) used for the temperature scaling functional form",
+         "subcategory": "4. general parameters",
+         "units": "degC"
+      },
       "init_bury_coeff_opt": {
          "datatype": "string",
          "default_value": {

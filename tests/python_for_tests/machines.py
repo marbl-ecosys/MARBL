@@ -37,7 +37,7 @@ def load_module(mach, compiler, module_name):
     module('purge')
     module('load', module_name)
     module('load', 'ncarcompilers')
-    module('load', 'mpt/2.15')
+    module('load', 'mpt/2.16')
 
   if mach == 'hobart':
     sys.path.insert(0, os.path.join(os.sep, 'usr', 'share', 'Modules', 'init'))

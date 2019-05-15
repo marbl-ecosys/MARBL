@@ -82,7 +82,7 @@ def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, append=Fa
     # is also a dictionary containing frequency and operator information. Note that
     # string values of frequency and operator are converted to lists of len 1 when the
     # JSON file that generates this list is processed
-    for diag_name in MARBL_diagnostics.diagnostics_dict.keys():
+    for diag_name in sorted(MARBL_diagnostics.diagnostics_dict.keys()):
         frequencies = MARBL_diagnostics.diagnostics_dict[diag_name]['frequency']
         operators = MARBL_diagnostics.diagnostics_dict[diag_name]['operator']
         freq_op = []

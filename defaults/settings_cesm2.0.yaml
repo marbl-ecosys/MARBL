@@ -329,6 +329,16 @@ general_parms :
       units : unitless
       datatype : real
       default_value : 1.0
+   temp_func_form_opt:
+      longname : Option for the temperature scaling functional form
+      subcategory : 4. general parameters
+      units : non-numeric
+      datatype : string
+      default_value : q_10
+      valid_values :
+         - q_10
+         - arrhenius
+      _append_to_config_keywords : true
    particulate_flux_ref_depth :
       longname : reference depth for particulate flux diagnostics
       subcategory : 4. general parameters
@@ -580,6 +590,37 @@ general_parms :
       units : non-numeric
       datatype : string
       default_value : Laws
+   auto_mort2_exp :
+      longname : Value of power loss exponent for autotrophs
+      subcategory : 4. general parameters
+      units : unitless
+      datatype : real
+      default_value : 1.75
+   zoo_mort2_exp :
+      longname : Value of power loss exponent for zooplankton
+      subcategory : 4. general parameters
+      units : unitless
+      datatype : real
+      default_value : 1.5
+   QCaCO3_max :
+      longname : Max CaCO3/C ratio for implicit calcifiers
+      subcategory : 4. general parameters
+      units : mmol CaCO3/mmol C
+      datatype : real
+      default_value : 0.40
+   QCaCO3_max_exp :
+      longname : Max CaCO3/C ratio for explicit calcifiers
+      subcategory : 4. general parameters
+      units : mmol CaCO3/mmol C
+      datatype : real
+      default_value : 2.0
+   f_graze_CaCO3_remin :
+      longname : Fraction of spCaCO3 grazing which is remineralized in zooplankton guts
+      subcategory : 4. general parameters
+      units : unitless
+      datatype : real
+      default_value : 0.33
+
 
 ################################################################################
 #                    Category 1.5: General Parameters (cont)                   #
@@ -601,6 +642,14 @@ general_parms2 :
          default : settings_file
          not ladjust_bury_coeff : settings_file
          SAVED_STATE_VARS_SOURCE == "GCM" : GCM
+   Tref:
+      longname : reference temperature (C) used for the temperature scaling functional form
+      subcategory : 4. general parameters
+      units : degC
+      datatype : real
+      default_value :
+         default : 30.0
+         temp_func_form_opt == "arrhenius" : 25.0
 
 ################################################################################
 #                            Category 2: PFT_counts                            #
@@ -907,6 +956,16 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0
                ((autotroph_sname)) == "diat" : 0
                ((autotroph_sname)) == "diaz" : 0
+         Ea :
+            longname : Activation energy for Arrhenius equation
+            subcategory : 10. autotrophs
+            units : eV
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "sp" : 0.32
+               ((autotroph_sname)) == "diat" : 0.32
+               ((autotroph_sname)) == "diaz" : 0.32
    zooplankton_settings :
       _array_shape : zooplankton_cnt
       _is_allocatable : true
@@ -954,6 +1013,14 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((zooplankton_sname)) == "zoo" : 0.075
+         Ea :
+            longname : Activation energy for Arrhenius equation
+            subcategory : 11. zooplankton
+            units : eV
+            datatype : real
+            default_value :
+               default : 1e34
+               ((zooplankton_sname)) == "zoo" : 0.65
    grazing_relationship_settings :
       _array_shape :
          - max_grazer_prey_cnt
