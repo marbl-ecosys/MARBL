@@ -277,10 +277,10 @@ Program marbl
       if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
       call marbl_instances(1)%put_setting('ciso_on = .false.')
       call marbl_init_test(marbl_instances(1))
-      call summarize_timers(marbl_instances(1), driver_status_log, header_text = 'Without the CISO Tracers')
+      call summarize_timers(marbl_instances, driver_status_log, header_text = 'Without the CISO Tracers')
       call marbl_instances(1)%put_setting('ciso_on = .true.')
       call marbl_init_test(marbl_instances(1))
-      call summarize_timers(marbl_instances(1), driver_status_log, header_text = 'With the CISO Tracers')
+      call summarize_timers(marbl_instances, driver_status_log, header_text = 'With the CISO Tracers')
       lsummarize_timers = .false.
 
     ! -- gen_input_file test -- !
@@ -425,7 +425,7 @@ Program marbl
   !      note that if driver log was previously written to a file,
   !      timers are all that will be written to screen
   if (lsummarize_timers) &
-    call summarize_timers(marbl_instances(1), driver_status_log)
+    call summarize_timers(marbl_instances, driver_status_log)
   call print_marbl_log(driver_status_log)
 
 
@@ -533,38 +533,39 @@ Contains
 
   !****************************************************************************
 
-  subroutine summarize_timers(marbl_instance, driver_status_log, header_text)
+  subroutine summarize_timers(marbl_instances, driver_status_log, header_text)
 
     use marbl_kinds_mod, only : r8
 
-    type(marbl_interface_class), intent(in)   :: marbl_instance
+    type(marbl_interface_class), intent(in)   :: marbl_instances(:)
     type(marbl_log_type),       intent(inout) :: driver_status_log
     character(len=*), optional, intent(in)    :: header_text
 
     real(r8) :: min_runtime, ind_runtime, max_runtime, tot_runtime
     character(len=15) :: int_to_str
-    integer :: m, n
+    integer :: m, i, n
 
 100 format(A, ': ', F11.3, ' seconds',A)
 
-    associate(timers =>marbl_instance%timer_summary)
+    n = 1 ! FIXME: Figure out a smarter way to combine timers
+    associate(timers => marbl_instances(n)%timer_summary)
       if (present(header_text)) then
         call driver_status_log%log_header(header_text, subname)
       else
         call driver_status_log%log_header('Timer summary', subname)
       end if
-      write(log_message, "(A, I0, A)") 'There are ', timers%num_timers,       &
-                                       ' timers being returned'
+      write(log_message, "(A, I0, A, I0)") 'There are ', timers%num_timers,         &
+                                           ' timers being returned by instance ', n
       call driver_status_log%log_noerror(log_message, subname)
       call driver_status_log%log_noerror('----', subname)
-      do n=1, timers%num_timers
-        ind_runtime = timers%cumulative_runtimes(n)
+      do i=1, timers%num_timers
+        ind_runtime = timers%cumulative_runtimes(i)
         if (mpi_on) then
           min_runtime = ind_runtime
           max_runtime = ind_runtime
           tot_runtime = ind_runtime
           if (my_task.eq.0) then
-            write(log_message, 100) trim(timers%names(n)), ind_runtime,       &
+            write(log_message, 100) trim(timers%names(i)), ind_runtime,       &
                                     ' (Task 0)'
             call driver_status_log%log_noerror(log_message, subname)
             do m=1, num_tasks-1
@@ -573,7 +574,7 @@ Contains
               max_runtime = max(max_runtime, ind_runtime)
               tot_runtime = tot_runtime + ind_runtime
               write(int_to_str, "(' (Task ',I0,')')") m
-              write(log_message, 100) trim(timers%names(n)), ind_runtime,     &
+              write(log_message, 100) trim(timers%names(i)), ind_runtime,     &
                                       trim(int_to_str)
               call driver_status_log%log_noerror(log_message, subname)
             end do
@@ -582,15 +583,15 @@ Contains
           end if
 
           if (my_task.eq.0) then
-            write(log_message, 100) trim(timers%names(n)), tot_runtime/real(num_tasks,r8), ' (avg)'
+            write(log_message, 100) trim(timers%names(i)), tot_runtime/real(num_tasks,r8), ' (avg)'
             call driver_status_log%log_noerror(log_message, subname)
-            write(log_message, 100) trim(timers%names(n)), min_runtime, ' (min)'
+            write(log_message, 100) trim(timers%names(i)), min_runtime, ' (min)'
             call driver_status_log%log_noerror(log_message, subname)
-            write(log_message, 100) trim(timers%names(n)), max_runtime, ' (max)'
+            write(log_message, 100) trim(timers%names(i)), max_runtime, ' (max)'
             call driver_status_log%log_noerror(log_message, subname)
           end if
         else ! no MPI
-          write(log_message, 100) trim(timers%names(n)), ind_runtime, ''
+          write(log_message, 100) trim(timers%names(i)), ind_runtime, ''
           call driver_status_log%log_noerror(log_message, subname)
         end if
       end do

@@ -1029,7 +1029,7 @@ contains
       deallocate(this%tracers)
       deallocate(this%interior_tendencies)
       deallocate(this%tracer_metadata)
-      deallocate(tracer_restore_vars)
+      if (allocated(tracer_restore_vars)) deallocate(tracer_restore_vars)
     end if
     call this%tracer_indices%destruct()
     deallocate(this%tracer_indices)

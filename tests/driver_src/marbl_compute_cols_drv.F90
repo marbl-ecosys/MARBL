@@ -185,6 +185,11 @@ Contains
     end if
 
 
+    ! 7. Shutdown MARBL
+    do n=1, size(marbl_instances)
+      call marbl_instances(n)%shutdown()
+    end do
+
     ! 7. Close all netCDF files
     call marbl_io_close_all(driver_status_log)
     if (driver_status_log%labort_marbl) then
@@ -262,8 +267,8 @@ Contains
 
     !   2c. Log decomposition
     do n=1, num_insts
-      write(log_message, "(A,I0,A,I0,A,I0)") "Instance ", n-1, " has ", col_cnt(n), &
-                                             " columns, beginning with ", col_start(n)+1
+      write(log_message, "(A, I0, A, I0, A, I0)") "Instance ", n, " has ", col_cnt(n),        &
+                                                  " columns, beginning with ", col_start(n)+1
       call driver_status_log%log_noerror(log_message, subname)
     end do
 
