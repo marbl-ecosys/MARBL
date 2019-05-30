@@ -746,6 +746,12 @@ PFT_derived_types :
             default_value :
                default : .false.
                ((autotroph_sname)) == "diat" : .true.
+         is_carbon_limited :
+            longname : Flag set to true if autotroph is carbon limited
+            subcategory : 10. autotrophs
+            units : non-numeric
+            datatype : logical
+            default_value : .false.
          kFe :
             longname : Fe uptake half-sat constant
             subcategory : 10. autotrophs

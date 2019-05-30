@@ -1350,7 +1350,7 @@ CISO_eps_dic_g :
 
 ((autotroph_sname))_C_lim_surf :
    dependencies :
-      ((autotroph_calcifier)) : true
+      ((autotroph_is_carbon_limited)) : true
    longname : ((autotroph_lname)) C Limitation, Surface
    units : 1
    vertical_grid : none
@@ -1358,7 +1358,7 @@ CISO_eps_dic_g :
    operator : average
 ((autotroph_sname))_C_lim_Cweight_avg_100m :
    dependencies :
-      ((autotroph_calcifier)) : true
+      ((autotroph_is_carbon_limited)) : true
    longname : ((autotroph_lname)) C Limitation, carbon biomass weighted average over 0-100m
    units : 1
    vertical_grid : none

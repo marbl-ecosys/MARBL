@@ -1335,6 +1335,16 @@ contains
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
+      write(sname, "(2A)") trim(prefix), 'is_carbon_limited'
+      lname    = 'Flag is true if this autotroph is carbon limited'
+      units    = 'unitless'
+      datatype = 'logical'
+      lptr     => autotroph_settings(n)%is_carbon_limited
+      call this%add_var(sname, lname, units, datatype, category,     &
+                        marbl_status_log, lptr=lptr,                 &
+                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
       write(sname, "(2A)") trim(prefix), 'kFe'
       lname    = 'nutrient uptake half-sat constants'
       units    = 'nmol/cm^3'

@@ -1511,8 +1511,7 @@ contains
               ! AUTOTROPHS
               Nfixer        => autotroph_settings(:)%Nfixer,        &
               silicifier    => autotroph_settings(:)%silicifier,    &
-              imp_calcifier => autotroph_settings(:)%imp_calcifier, &
-              exp_calcifier => autotroph_settings(:)%exp_calcifier, &
+              is_carbon_limited => autotroph_settings(:)%is_carbon_limited, &
               kNO3   => autotroph_settings(:)%kNO3,           &
               kNH4   => autotroph_settings(:)%kNH4,           &
               kFe    => autotroph_settings(:)%kFe,            &
@@ -1560,7 +1559,7 @@ contains
           f_nut(auto_ind, :) = min(f_nut(auto_ind, :), VSiO3(auto_ind, :))
         endif
 
-        if (exp_calcifier(auto_ind)) then
+        if (is_carbon_limited(auto_ind)) then
           VCO2(auto_ind,:) = CO2_loc / (CO2_loc + kCO2(auto_ind))
           f_nut(auto_ind, :) = min(f_nut(auto_ind, :), VCO2(auto_ind, :))
         end if

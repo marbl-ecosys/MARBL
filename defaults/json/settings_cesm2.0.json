@@ -164,6 +164,13 @@
                "subcategory": "10. autotrophs",
                "units": "non-numeric"
             },
+            "is_carbon_limited": {
+               "datatype": "logical",
+               "default_value": ".false.",
+               "longname": "Flag set to true if autotroph is carbon limited",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric"
+            },
             "kCO2": {
                "datatype": "real",
                "default_value": {

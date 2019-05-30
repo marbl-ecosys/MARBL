@@ -23,6 +23,7 @@ module marbl_pft_mod
     logical(log_kind)       :: imp_calcifier                      ! flag set to true if this autotroph implicitly handles calcification
     logical(log_kind)       :: exp_calcifier                      ! flag set to true if this autotroph explicitly handles calcification
     logical(log_kind)       :: silicifier                         ! flag set to true if this autotroph is a silicifier
+    logical(log_kind)       :: is_carbon_limited                  ! flag set to true if this autotroph is carbon limited
 
     real(r8)                :: kFe, kPO4, kDOP, kNO3, kNH4, kSiO3, kCO2 ! nutrient uptake half-sat constants
     real(r8)                :: Qp_fixed                           ! P/C ratio for fixed P/C ratios
@@ -112,6 +113,7 @@ contains
         self%imp_calcifier = .true.
         self%exp_calcifier = .false.
         self%silicifier = .false.
+        self%is_carbon_limited = .false.
         self%kFe             = 0.03e-3_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kPO4            = 0.01_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kDOP            = 0.3_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -141,6 +143,7 @@ contains
         self%imp_calcifier = .false.
         self%exp_calcifier = .false.
         self%silicifier = .true.
+        self%is_carbon_limited = .false.
         self%kFe             = 0.07e-3_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kPO4            = 0.05_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kDOP            = 0.5_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -170,6 +173,7 @@ contains
         self%imp_calcifier = .false.
         self%exp_calcifier = .false.
         self%silicifier = .false.
+        self%is_carbon_limited = .false.
         self%kFe             = 0.045e-3_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kPO4            = 0.015_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kDOP            = 0.075_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -199,6 +203,7 @@ contains
         self%imp_calcifier = .false.
         self%exp_calcifier = .false.
         self%silicifier    = .false.
+        self%is_carbon_limited = .false.
         self%kFe             = UnsetValue
         self%kPO4            = UnsetValue
         self%kDOP            = UnsetValue
