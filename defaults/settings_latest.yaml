@@ -331,16 +331,6 @@ general_parms :
       units : unitless
       datatype : real
       default_value : 1.0
-   temp_func_form_opt:
-      longname : Option for the temperature scaling functional form
-      subcategory : 4. general parameters
-      units : non-numeric
-      datatype : string
-      default_value : q_10
-      valid_values :
-         - q_10
-         - arrhenius
-      _append_to_config_keywords : true
    particulate_flux_ref_depth :
       longname : reference depth for particulate flux diagnostics
       subcategory : 4. general parameters
@@ -643,14 +633,6 @@ general_parms2 :
          default : settings_file
          not ladjust_bury_coeff : settings_file
          SAVED_STATE_VARS_SOURCE == "GCM" : GCM
-   Tref:
-      longname : reference temperature (C) used for the temperature scaling functional form
-      subcategory : 4. general parameters
-      units : degC
-      datatype : real
-      default_value :
-         default : 30.0
-         temp_func_form_opt == "arrhenius" : 25.0
 
 ################################################################################
 #                            Category 2: PFT_counts                            #
@@ -716,6 +698,20 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : Small Phyto
                ((autotroph_sname)) == "diat" : Diatom
                ((autotroph_sname)) == "diaz" : Diazotroph
+         temp_func_form_opt:
+            longname : Option for the temperature scaling functional form
+            subcategory : 10. autotrophs
+            units : non-numeric
+            datatype : string
+            valid_values :
+               - q_10
+               - arrhenius
+               - power
+            default_value :
+               default : UNSET
+               ((autotroph_sname)) == "sp" : q_10
+               ((autotroph_sname)) == "diat" : q_10
+               ((autotroph_sname)) == "diaz" : q_10
          Nfixer :
             longname : Flag set to true if autotroph fixes nitrogen
             subcategory : 10. autotrophs
@@ -753,6 +749,16 @@ PFT_derived_types :
             units : non-numeric
             datatype : logical
             default_value : .false.
+         Tref:
+            longname : reference temperature (C) used for the temperature scaling functional form
+            subcategory : 10. autotrophs
+            units : degC
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "sp" : 30.0
+               ((autotroph_sname)) == "diat" : 30.0
+               ((autotroph_sname)) == "diaz" : 30.0
          kFe :
             longname : Fe uptake half-sat constant
             subcategory : 10. autotrophs
@@ -996,6 +1002,18 @@ PFT_derived_types :
             default_value :
                default : UNSET
                ((zooplankton_sname)) == "zoo" : Zooplankton
+         temp_func_form_opt:
+            longname : Option for the temperature scaling functional form
+            subcategory : 11. zooplankton
+            units : non-numeric
+            datatype : string
+            valid_values :
+               - q_10
+               - arrhenius
+               - power
+            default_value :
+               default : UNSET
+               ((zooplankton_sname)) == "zoo" : q_10
          z_mort_0_per_day :
             longname : Linear mortality rate
             subcategory : 11. zooplankton
@@ -1020,6 +1038,14 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((zooplankton_sname)) == "zoo" : 0.075
+         Tref:
+            longname : reference temperature (C) used for the temperature scaling functional form
+            subcategory : 11. zooplankton
+            units : degC
+            datatype : real
+            default_value :
+               default : 1e34
+               ((zooplankton_sname)) == "zoo" : 30.0
          Ea :
             longname : Activation energy for Arrhenius equation
             subcategory : 11. zooplankton

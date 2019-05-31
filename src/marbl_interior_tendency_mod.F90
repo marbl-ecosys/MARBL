@@ -237,7 +237,7 @@ contains
          sio3_ind          => marbl_tracer_indices%sio3_ind,        &
          nh4_ind           => marbl_tracer_indices%nh4_ind,         &
          fe_ind            => marbl_tracer_indices%fe_ind,          &
-         lig_ind           => marbl_tracer_indices%lig_ind,   &
+         lig_ind           => marbl_tracer_indices%lig_ind,         &
          o2_ind            => marbl_tracer_indices%o2_ind,          &
          dic_ind           => marbl_tracer_indices%dic_ind,         &
          dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind, &
@@ -247,8 +247,13 @@ contains
          dopr_ind          => marbl_tracer_indices%dopr_ind,        &
          donr_ind          => marbl_tracer_indices%donr_ind,        &
          docr_ind          => marbl_tracer_indices%docr_ind,        &
-         Ea_auto           => autotroph_settings(:)%Ea,             &
-         Ea_zoo            => zooplankton_settings(:)%Ea            &
+
+         Tref_auto          => autotroph_settings(:)%Tref,                  &
+         Tref_zoo           => zooplankton_settings(:)%Tref,                &
+         Ea_auto            => autotroph_settings(:)%Ea,                    &
+         Ea_zoo             => zooplankton_settings(:)%Ea,                  &
+         temp_func_opt_auto => autotroph_settings(:)%temp_func_form_iopt,   &
+         temp_func_opt_zoo  => zooplankton_settings(:)%temp_func_form_iopt  &
          )
 
     !-----------------------------------------------------------------------
@@ -319,10 +324,9 @@ contains
     call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
 
-    call compute_temperature_functional_form(temperature(:), Tfunc_auto(:,:), Ea_auto(:),                &
-                                             lexplicit_calcifier_in=autotroph_settings(:)%exp_calcifier)
+    call compute_temperature_functional_form(temperature(:), Tref_auto(:), temp_func_opt_auto(:), Tfunc_auto(:,:), Ea_auto(:))
 
-    call compute_temperature_functional_form(temperature(:), Tfunc_zoo(:,:), Ea_zoo(:))
+    call compute_temperature_functional_form(temperature(:), Tref_zoo(:), temp_func_opt_zoo(:), Tfunc_zoo(:,:), Ea_zoo(:))
 
     call compute_Pprime(km, domain%zt, autotroph_local, temperature, autotroph_derived_terms%Pprime)
 
@@ -1219,7 +1223,7 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_temperature_functional_form(temperature, Tfunc, Ea, lexplicit_calcifier_in)
+  subroutine compute_temperature_functional_form(temperature, Tref, temp_func_form_iopt, Tfunc, Ea)
 
     !-----------------------------------------------------------------------
     !  Scaling of physiological rates by temperature
@@ -1234,44 +1238,33 @@ contains
     !  Tfunc scales the growth, mort and grazing rates where they are computed
     !-----------------------------------------------------------------------
 
-    use marbl_settings_mod,  only : temp_func_form_iopt
     use marbl_settings_mod,  only : temp_func_form_iopt_q10
     use marbl_settings_mod,  only : temp_func_form_iopt_arrhenius
+    use marbl_settings_mod,  only : temp_func_form_iopt_power
     use marbl_settings_mod,  only : Q_10
-    use marbl_settings_mod,  only : Tref
 
     use marbl_constants_mod, only : c10
     use marbl_constants_mod, only : K_Boltz
 
-    real(r8),           intent(in)  :: temperature(:)
-    real(r8),           intent(out) :: Tfunc(:,:)
-    real(r8),           intent(in)  :: Ea(size(Tfunc, dim=1))
-    logical,  optional, intent(in)  :: lexplicit_calcifier_in(size(Tfunc, dim=1))
+    real(r8), intent(in)  :: temperature(:)
+    real(r8), intent(in)  :: Tref(:)
+    integer,  intent(in)  :: temp_func_form_iopt(:)
+    real(r8), intent(out) :: Tfunc(:,:)
+    real(r8), intent(in)  :: Ea(size(Tfunc, dim=1))
 
     integer :: Tfunc_ind
-    logical :: lexplicit_calcifier(size(Tfunc, dim=1))
 
-    if (present(lexplicit_calcifier_in)) then
-      lexplicit_calcifier = lexplicit_calcifier_in
-    else
-      lexplicit_calcifier = .false.
-    end if
-
-    select case (temp_func_form_iopt)
-      case (temp_func_form_iopt_q10)
-        do Tfunc_ind = 1, size(Tfunc, dim=1)
-          if (lexplicit_calcifier(Tfunc_ind)) then
-            Tfunc(Tfunc_ind,:) = 0.12_r8 * (max(c0, min(temperature(:), 27.0_r8))**0.4_r8)
-          else
-            Tfunc(Tfunc_ind,:) = Q_10**(((temperature(:) + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
-          end if
-        end do
-      case (temp_func_form_iopt_arrhenius)
-        do Tfunc_ind = 1, size(Tfunc, dim=1)
-            Tfunc(Tfunc_ind,:) = exp(-Ea(Tfunc_ind) * (Tref - temperature(:)) &
-                                     / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref + T0_Kelvin)))
-        end do
-    end select
+    do Tfunc_ind = 1, size(Tfunc, dim=1)
+      select case (temp_func_form_iopt(Tfunc_ind))
+        case (temp_func_form_iopt_q10)
+          Tfunc(Tfunc_ind,:) = Q_10**(((temperature(:) + T0_Kelvin) - (Tref(Tfunc_ind) + T0_Kelvin)) / c10)
+        case (temp_func_form_iopt_arrhenius)
+          Tfunc(Tfunc_ind,:) = exp(-Ea(Tfunc_ind) * (Tref(Tfunc_ind) - temperature(:)) &
+                                   / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref(Tfunc_ind) + T0_Kelvin)))
+        case (temp_func_form_iopt_power)
+          Tfunc(Tfunc_ind,:) = 0.12_r8 * (max(c0, min(temperature(:), 27.0_r8))**0.4_r8)
+      end select
+    end do
 
   end subroutine compute_temperature_functional_form
 

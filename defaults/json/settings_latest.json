@@ -84,6 +84,18 @@
                "subcategory": "10. autotrophs",
                "units": "unitless"
             },
+            "Tref": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"diat\"": 30.0,
+                  "((autotroph_sname)) == \"diaz\"": 30.0,
+                  "((autotroph_sname)) == \"sp\"": 30.0,
+                  "default": "1e34"
+               },
+               "longname": "reference temperature (C) used for the temperature scaling functional form",
+               "subcategory": "10. autotrophs",
+               "units": "degC"
+            },
             "_type_name": "autotroph_settings_type",
             "agg_rate_max": {
                "datatype": "real",
@@ -349,6 +361,23 @@
                "subcategory": "10. autotrophs",
                "units": "non-numeric"
             },
+            "temp_func_form_opt": {
+               "datatype": "string",
+               "default_value": {
+                  "((autotroph_sname)) == \"diat\"": "q_10",
+                  "((autotroph_sname)) == \"diaz\"": "q_10",
+                  "((autotroph_sname)) == \"sp\"": "q_10",
+                  "default": "UNSET"
+               },
+               "longname": "Option for the temperature scaling functional form",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric",
+               "valid_values": [
+                  "q_10",
+                  "arrhenius",
+                  "power"
+               ]
+            },
             "temp_thres": {
                "datatype": "real",
                "default_value": {
@@ -546,6 +575,16 @@
                "subcategory": "11. zooplankton",
                "units": "eV"
             },
+            "Tref": {
+               "datatype": "real",
+               "default_value": {
+                  "((zooplankton_sname)) == \"zoo\"": 30.0,
+                  "default": "1e34"
+               },
+               "longname": "reference temperature (C) used for the temperature scaling functional form",
+               "subcategory": "11. zooplankton",
+               "units": "degC"
+            },
             "_type_name": "zooplankton_settings_type",
             "lname": {
                "datatype": "string",
@@ -576,6 +615,21 @@
                "longname": "Short name of the zooplankton",
                "subcategory": "11. zooplankton",
                "units": "non-numeric"
+            },
+            "temp_func_form_opt": {
+               "datatype": "string",
+               "default_value": {
+                  "((zooplankton_sname)) == \"zoo\"": "q_10",
+                  "default": "UNSET"
+               },
+               "longname": "Option for the temperature scaling functional form",
+               "subcategory": "11. zooplankton",
+               "units": "non-numeric",
+               "valid_values": [
+                  "q_10",
+                  "arrhenius",
+                  "power"
+               ]
             },
             "z_mort2_0_per_day": {
                "datatype": "real",
@@ -1277,18 +1331,6 @@
          "subcategory": "4. general parameters",
          "units": "m"
       },
-      "temp_func_form_opt": {
-         "_append_to_config_keywords": true,
-         "datatype": "string",
-         "default_value": "q_10",
-         "longname": "Option for the temperature scaling functional form",
-         "subcategory": "4. general parameters",
-         "units": "non-numeric",
-         "valid_values": [
-            "q_10",
-            "arrhenius"
-         ]
-      },
       "zoo_mort2_exp": {
          "datatype": "real",
          "default_value": 1.5,
@@ -1298,16 +1340,6 @@
       }
    },
    "general_parms2": {
-      "Tref": {
-         "datatype": "real",
-         "default_value": {
-            "default": 30.0,
-            "temp_func_form_opt == \"arrhenius\"": 25.0
-         },
-         "longname": "reference temperature (C) used for the temperature scaling functional form",
-         "subcategory": "4. general parameters",
-         "units": "degC"
-      },
       "init_bury_coeff_opt": {
          "datatype": "string",
          "default_value": {
