@@ -84,18 +84,6 @@
                "subcategory": "10. autotrophs",
                "units": "unitless"
             },
-            "Tref": {
-               "datatype": "real",
-               "default_value": {
-                  "((autotroph_sname)) == \"diat\"": 30.0,
-                  "((autotroph_sname)) == \"diaz\"": 30.0,
-                  "((autotroph_sname)) == \"sp\"": 30.0,
-                  "default": "1e34"
-               },
-               "longname": "reference temperature (C) used for the temperature scaling functional form",
-               "subcategory": "10. autotrophs",
-               "units": "degC"
-            },
             "_type_name": "autotroph_settings_type",
             "agg_rate_max": {
                "datatype": "real",
@@ -574,16 +562,6 @@
                "longname": "Activation energy for Arrhenius equation",
                "subcategory": "11. zooplankton",
                "units": "eV"
-            },
-            "Tref": {
-               "datatype": "real",
-               "default_value": {
-                  "((zooplankton_sname)) == \"zoo\"": 30.0,
-                  "default": "1e34"
-               },
-               "longname": "reference temperature (C) used for the temperature scaling functional form",
-               "subcategory": "11. zooplankton",
-               "units": "degC"
             },
             "_type_name": "zooplankton_settings_type",
             "lname": {

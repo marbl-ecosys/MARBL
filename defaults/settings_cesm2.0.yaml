@@ -748,16 +748,6 @@ PFT_derived_types :
             units : non-numeric
             datatype : logical
             default_value : .false.
-         Tref:
-            longname : reference temperature (C) used for the temperature scaling functional form
-            subcategory : 10. autotrophs
-            units : degC
-            datatype : real
-            default_value :
-               default : 1e34
-               ((autotroph_sname)) == "sp" : 30.0
-               ((autotroph_sname)) == "diat" : 30.0
-               ((autotroph_sname)) == "diaz" : 30.0
          kFe :
             longname : Fe uptake half-sat constant
             subcategory : 10. autotrophs
@@ -1037,14 +1027,6 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((zooplankton_sname)) == "zoo" : 0.075
-         Tref:
-            longname : reference temperature (C) used for the temperature scaling functional form
-            subcategory : 11. zooplankton
-            units : degC
-            datatype : real
-            default_value :
-               default : 1e34
-               ((zooplankton_sname)) == "zoo" : 30.0
          Ea :
             longname : Activation energy for Arrhenius equation
             subcategory : 11. zooplankton
