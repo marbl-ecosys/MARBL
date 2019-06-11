@@ -44,6 +44,7 @@ module marbl_pft_mod
     real(r8)                :: agg_rate_max, agg_rate_min         ! max and min agg. rate (1/d)
     real(r8)                :: loss_poc                           ! routing of loss term
     real(r8)                :: Tref                               ! reference temperature (C) used for the temperature scaling functional form
+                                                                  !    (derived from temp_func_form_opt)
     real(r8)                :: Ea                                 ! activation energy for Arrhenius temperature function (eV)
   contains
     procedure, public :: set_to_default => autotroph_set_to_default
@@ -62,6 +63,7 @@ module marbl_pft_mod
      real(r8)                :: z_mort2_0           ! zoo quad mort rate (1/sec/((mmol C/m3)) (derived from z_mort2_0_per_day)
      real(r8)                :: loss_thres          ! zoo conc. where losses go to zero
      real(r8)                :: Tref                ! reference temperature (C) used for the temperature scaling functional form
+                                                    !    (derived from temp_func_form_opt)
      real(r8)                :: Ea                  ! activation energy for Arrhenius temperature function (eV)
    contains
      procedure, public :: set_to_default => zooplankton_set_to_default
@@ -142,7 +144,6 @@ contains
         self%agg_rate_max    = 0.5_r8
         self%agg_rate_min    = 0.01_r8
         self%loss_poc        = 0.0_r8
-        self%Tref            = 30.0_r8
         self%Ea              = 0.32_r8
 
       case ('diat')
@@ -175,7 +176,6 @@ contains
         self%agg_rate_max    = 0.5_r8
         self%agg_rate_min    = 0.02_r8
         self%loss_poc        = 0.0_r8
-        self%Tref            = 30.0_r8
         self%Ea              = 0.32_r8
       case ('diaz')
         self%sname = 'diaz'                      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -207,7 +207,6 @@ contains
         self%agg_rate_max    = 0.5_r8
         self%agg_rate_min    = 0.01_r8
         self%loss_poc        = 0.0_r8
-        self%Tref            = 30.0_r8
         self%Ea              = 0.32_r8
       case ('unset')
         self%sname = 'unknown'
@@ -239,7 +238,6 @@ contains
         self%agg_rate_max    = UnsetValue
         self%agg_rate_min    = UnsetValue
         self%loss_poc        = UnsetValue
-        self%Tref            = UnsetValue
         self%Ea              = UnsetValue
       case DEFAULT
         write(log_message, "(3A)") "'", autotroph_id, "' is not a valid autotroph ID"
@@ -268,7 +266,6 @@ contains
         self%z_mort_0_per_day   = 0.1_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%z_mort2_0_per_day  = 0.4_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%loss_thres         = 0.075_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
-        self%Tref               = 30.0_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%Ea                 = 0.65_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
       case ('unset')
         self%sname = 'unknown'
@@ -277,7 +274,6 @@ contains
         self%z_mort_0_per_day   = UnsetValue
         self%z_mort2_0_per_day  = UnsetValue
         self%loss_thres         = UnsetValue
-        self%Tref               = UnsetValue
         self%Ea                 = UnsetValue
       case DEFAULT
         write(log_message, "(3A)") "'", zooplankton_id, "' is not a valid zooplankton ID"

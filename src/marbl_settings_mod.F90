@@ -1540,16 +1540,6 @@ contains
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-      write(sname, "(2A)") trim(prefix), 'Tref'
-      lname    = 'Reference temperature for the temperature scaling function'
-      units    = 'degC'
-      datatype = 'real'
-      rptr     => autotroph_settings(n)%Tref
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr,                 &
-                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
       write(sname, "(2A)") trim(prefix), 'Ea'
       lname    = 'activation energy for Arrhenius equation'
       units    = 'eV'
@@ -1622,16 +1612,6 @@ contains
       datatype = 'real'
       rptr     => zooplankton_settings(n)%z_mort2_0_per_day
       call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr,                 &
-                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-      write(sname, "(2A)") trim(prefix), 'Tref'
-      lname    = 'Reference temperature for the temperature scaling function'
-      units    = 'degC'
-      datatype = 'real'
-      rptr     => zooplankton_settings(n)%Tref
-      call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
@@ -1891,16 +1871,19 @@ contains
     call marbl_status_log%log_noerror('', subname)
 
     do n = 1, autotroph_cnt
-       call set_temp_func_form_iopt(autotroph_settings(n)%temp_func_form_opt, &
-            autotroph_settings(n)%temp_func_form_iopt, marbl_status_log)
+       call set_derived_from_temp_func_form(autotroph_settings(n)%temp_func_form_opt, &
+            autotroph_settings(n)%temp_func_form_iopt, autotroph_settings(n)%Tref, marbl_status_log)
        write(sname_in,  "(A,I0,A)") 'autotroph_settings(', n, ')%temp_func_form_opt'
        write(sname_out, "(A,I0,A)") 'autotroph_settings(', n, ')%temp_func_form_iopt'
        if (marbl_status_log%labort_MARBL) then
-         write(log_message, "(3A)") "set_temp_func_form_iopt(", trim(sname_in), ")"
+         write(log_message, "(3A)") "set_derived_from_temp_func_form(", trim(sname_in), ")"
          call marbl_status_log%log_error_trace(log_message, subname)
        end if
        call print_single_derived_parm(sname_in, sname_out, &
             autotroph_settings(n)%temp_func_form_iopt, subname, marbl_status_log)
+       write(sname_out, "(A,I0,A)") 'autotroph_settings(', n, ')%Tref'
+       call print_single_derived_parm(sname_in, sname_out, &
+            autotroph_settings(n)%Tref, subname, marbl_status_log)
 
        autotroph_settings(n)%alphaPI = dps * autotroph_settings(n)%alphaPI_per_day
        write(sname_in,  "(A,I0,A)") 'autotroph_settings(', n, ')%alphaPI_per_day'
@@ -1930,16 +1913,19 @@ contains
     call marbl_status_log%log_noerror('', subname)
 
     do n = 1, zooplankton_cnt
-       call set_temp_func_form_iopt(zooplankton_settings(n)%temp_func_form_opt, &
-            zooplankton_settings(n)%temp_func_form_iopt, marbl_status_log)
+       call set_derived_from_temp_func_form(zooplankton_settings(n)%temp_func_form_opt, &
+            zooplankton_settings(n)%temp_func_form_iopt, zooplankton_settings(n)%Tref, marbl_status_log)
        write(sname_in,  "(A,I0,A)") 'zooplankton_settings(', n, ')%temp_func_form_opt'
        write(sname_out, "(A,I0,A)") 'zooplankton_settings(', n, ')%temp_func_form_iopt'
        if (marbl_status_log%labort_MARBL) then
-         write(log_message, "(3A)") "set_temp_func_form_iopt(", trim(sname_in), ")"
+         write(log_message, "(3A)") "set_derived_from_temp_func_form(", trim(sname_in), ")"
          call marbl_status_log%log_error_trace(log_message, subname)
        end if
        call print_single_derived_parm(sname_in, sname_out, &
             zooplankton_settings(n)%temp_func_form_iopt, subname, marbl_status_log)
+       write(sname_out, "(A,I0,A)") 'zooplankton_settings(', n, ')%Tref'
+       call print_single_derived_parm(sname_in, sname_out, &
+            zooplankton_settings(n)%Tref, subname, marbl_status_log)
 
        zooplankton_settings(n)%z_mort_0 = dps * zooplankton_settings(n)%z_mort_0_per_day
        write(sname_in,  "(A,I0,A)") 'zooplankton_settings(', n, ')%z_mort_0_per_day'
@@ -2910,28 +2896,32 @@ contains
 
   !*****************************************************************************
 
-  subroutine set_temp_func_form_iopt(temp_func_form_opt, temp_func_form_iopt, marbl_status_log)
+  subroutine set_derived_from_temp_func_form(temp_func_form_opt, temp_func_form_iopt, Tref, marbl_status_log)
 
     character(len=*),     intent(in)    :: temp_func_form_opt
     integer,              intent(out)   :: temp_func_form_iopt
+    real(r8),             intent(out)   :: Tref
     type(marbl_log_type), intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = "marbl_settings_mod:set_temp_func_form_iopt"
+    character(len=*), parameter :: subname = "marbl_settings_mod:set_derived_from_temp_func_form"
     character(len=char_len) :: log_message
     select case (temp_func_form_opt)
     case ('q_10')
        temp_func_form_iopt = temp_func_form_iopt_q10
+       Tref = 30.0_r8
     case ('arrhenius')
        temp_func_form_iopt = temp_func_form_iopt_arrhenius
+       Tref = 25.0_r8
     case ('power')
        temp_func_form_iopt = temp_func_form_iopt_power
+       Tref = 0.0_r8
     case default
        write(log_message, "(2A)") "unknown temp_func_form_opt: ", trim(temp_func_form_opt)
        call marbl_status_log%log_error(log_message, subname)
        return
     end select
 
-  end subroutine set_temp_func_form_iopt
+  end subroutine set_derived_from_temp_func_form
 
   !*****************************************************************************
 
