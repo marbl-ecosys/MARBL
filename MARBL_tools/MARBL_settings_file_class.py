@@ -225,10 +225,18 @@ class MARBL_settings_class(object):
             return
 
         # Process derived type!
+        # (a) check to see if PFT_defaults = "CESM2"
         append_to_keys = (('PFT_defaults == "CESM2"' in self._config_keyword) and
                           (category_name == "PFT_derived_types"))
         if append_to_keys:
             PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][variable_name]
+        else:
+            # (b) check to see if PFT_defaults = "CESM2.1+cocco"
+            append_to_keys = (('PFT_defaults == "CESM2.1+cocco"' in self._config_keyword) and
+                              (category_name == "PFT_derived_types"))
+            if append_to_keys:
+                PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2.1+cocco_PFT_keys'][variable_name]
+
         # Is the derived type an array? If so, treat each entry separately
         if ("_array_shape" in this_var.keys()):
             for n, elem_index in enumerate(_get_array_info(this_var["_array_shape"], self.settings_dict, self.tracers_dict)):

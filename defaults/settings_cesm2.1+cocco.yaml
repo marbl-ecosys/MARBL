@@ -198,21 +198,23 @@ general_parms :
       subcategory : 1. config PFTs
       units : unitless
       datatype : string
-      default_value : CESM2
+      default_value : CESM2.1+cocco
       valid_values :
-            - CESM2
+            - CESM2.1+cocco
             - user-specified
-      _CESM2_PFT_keys :
+      _CESM2.1+cocco_PFT_keys :
          autotroph_settings :
             - sp
             - diat
             - diaz
+            - cocco
          zooplankton_settings :
             - zoo
          grazing_relationship_settings :
             - sp_zoo
             - diat_zoo
             - diaz_zoo
+            - cocco_zoo
       _append_to_config_keywords : true
    ciso_on :
       longname : Control whether CISO tracer module is active
@@ -611,7 +613,7 @@ general_parms :
       subcategory : 4. general parameters
       units : unitless
       datatype : real
-      default_value : 0.33
+      default_value : 0.7
 
 ################################################################################
 #                    Category 1.5: General Parameters (cont)                   #
@@ -646,8 +648,8 @@ PFT_counts :
       datatype : integer
       default_value :
          default : 1
-         PFT_defaults == "CESM2" : 3
-      cannot change : PFT_defaults == 'CESM2'
+         PFT_defaults == "CESM2.1+cocco" : 4
+      cannot change : PFT_defaults == 'CESM2.1+cocco'
       must set : PFT_defaults == 'user-specified'
    zooplankton_cnt :
       longname : Number of zooplankton classes
@@ -656,7 +658,7 @@ PFT_counts :
       datatype : integer
       default_value :
          default : 1
-         PFT_defaults == "CESM2" : 1
+         PFT_defaults == "CESM2.1+cocco" : 1
    max_grazer_prey_cnt :
       longname : Number of grazer prey classes
       subcategory : 1. config PFTs
@@ -664,7 +666,7 @@ PFT_counts :
       datatype : integer
       default_value :
          default : 1
-         PFT_defaults == "CESM2" : 3
+         PFT_defaults == "CESM2.1+cocco" : 4
 
 ################################################################################
 #                         Category 3: PFT_derived_types                        #
@@ -688,6 +690,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : sp
                ((autotroph_sname)) == "diat" : diat
                ((autotroph_sname)) == "diaz" : diaz
+               ((autotroph_sname)) == "cocco" : cocco
          lname :
             longname : Long name of the autotroph
             subcategory : 10. autotrophs
@@ -698,6 +701,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : Small Phyto
                ((autotroph_sname)) == "diat" : Diatom
                ((autotroph_sname)) == "diaz" : Diazotroph
+               ((autotroph_sname)) == "cocco" : Coccolithophores
          temp_func_form_opt:
             longname : Option for the temperature scaling functional form
             subcategory : 10. autotrophs
@@ -712,6 +716,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : q_10
                ((autotroph_sname)) == "diat" : q_10
                ((autotroph_sname)) == "diaz" : q_10
+               ((autotroph_sname)) == "cocco" : power
          Nfixer :
             longname : Flag set to true if autotroph fixes nitrogen
             subcategory : 10. autotrophs
@@ -727,7 +732,6 @@ PFT_derived_types :
             datatype : logical
             default_value :
                default : .false.
-               ((autotroph_sname)) == "sp" : .true.
          exp_calcifier :
             longname : Flag set to true if autotroph explicitly handles calcification
             subcategory : 10. autotrophs
@@ -735,6 +739,7 @@ PFT_derived_types :
             datatype : logical
             default_value :
                default : .false.
+               ((autotroph_sname)) == "cocco" : .true.
          silicifier :
             longname : Flag set to true if autotroph is a silicifier
             subcategory : 10. autotrophs
@@ -748,7 +753,9 @@ PFT_derived_types :
             subcategory : 10. autotrophs
             units : non-numeric
             datatype : logical
-            default_value : .false.
+            default_value :
+               default : .false.
+               ((autotroph_sname)) == "cocco" : .true.
          kFe :
             longname : Fe uptake half-sat constant
             subcategory : 10. autotrophs
@@ -757,8 +764,9 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((autotroph_sname)) == "sp" : 0.03e-3
-               ((autotroph_sname)) == "diat" : 0.07e-3
+               ((autotroph_sname)) == "diat" : 0.08e-3
                ((autotroph_sname)) == "diaz" : 0.045e-3
+               ((autotroph_sname)) == "cocco" : 0.0315e-3
          kCO2 :
             longname : CO2 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -769,6 +777,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0
                ((autotroph_sname)) == "diat" : 0
                ((autotroph_sname)) == "diaz" : 0
+               ((autotroph_sname)) == "cocco" : 1
          kPO4 :
             longname : PO4 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -776,9 +785,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 0.01
+               ((autotroph_sname)) == "sp" : 0.005
                ((autotroph_sname)) == "diat" : 0.05
                ((autotroph_sname)) == "diaz" : 0.015
+               ((autotroph_sname)) == "cocco" : 0.006
          kDOP :
             longname : DOP uptake half-sat constant
             subcategory : 10. autotrophs
@@ -788,7 +798,8 @@ PFT_derived_types :
                default : 1e34
                ((autotroph_sname)) == "sp" : 0.3
                ((autotroph_sname)) == "diat" : 0.5
-               ((autotroph_sname)) == "diaz" : 0.075
+               ((autotroph_sname)) == "diaz" : 0.1
+               ((autotroph_sname)) == "cocco" : 0.25
          kNO3 :
             longname : NO3 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -796,9 +807,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 0.25
+               ((autotroph_sname)) == "sp" : 0.2
                ((autotroph_sname)) == "diat" : 0.5
                ((autotroph_sname)) == "diaz" : 2
+               ((autotroph_sname)) == "cocco" : 0.2
          kNH4 :
             longname : NH4 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -809,6 +821,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0.01
                ((autotroph_sname)) == "diat" : 0.05
                ((autotroph_sname)) == "diaz" : 0.2
+               ((autotroph_sname)) == "cocco" : 0.01
          kSiO3 :
             longname : SiO3 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -817,8 +830,9 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((autotroph_sname)) == "sp" : 0
-               ((autotroph_sname)) == "diat" : 0.7
+               ((autotroph_sname)) == "diat" : 1.8
                ((autotroph_sname)) == "diaz" : 0
+               ((autotroph_sname)) == "cocco" : 0
          Qp_fixed :
             longname : P/C ratio when using fixed P/C ratios
             subcategory : 10. autotrophs
@@ -829,6 +843,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 1.0/117
                ((autotroph_sname)) == "diat" : 1.0/117
                ((autotroph_sname)) == "diaz" : 0.32*(1.0/117)
+               ((autotroph_sname)) == "cocco" : 1.0/117
          gQfe_0 :
             longname : Initial Fe/C ratio for growth
             subcategory : 10. autotrophs
@@ -836,9 +851,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 30e-6
-               ((autotroph_sname)) == "diat" : 30e-6
-               ((autotroph_sname)) == "diaz" : 60e-6
+               ((autotroph_sname)) == "sp" : 35e-6
+               ((autotroph_sname)) == "diat" : 35e-6
+               ((autotroph_sname)) == "diaz" : 70e-6
+               ((autotroph_sname)) == "cocco" : 35e-6
          gQfe_min :
             longname : Minimum Fe/C ratio for growth
             subcategory : 10. autotrophs
@@ -846,9 +862,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 2.5e-6
-               ((autotroph_sname)) == "diat" : 2.5e-6
-               ((autotroph_sname)) == "diaz" : 2.5e-6
+               ((autotroph_sname)) == "sp" : 3e-6
+               ((autotroph_sname)) == "diat" : 3e-6
+               ((autotroph_sname)) == "diaz" : 6e-6
+               ((autotroph_sname)) == "cocco" : 3e-6
          alphaPI_per_day :
             longname : Initial slope of P_I curve (GD98)
             subcategory : 10. autotrophs
@@ -856,9 +873,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 0.39
-               ((autotroph_sname)) == "diat" : 0.28
+               ((autotroph_sname)) == "sp" : 0.35
+               ((autotroph_sname)) == "diat" : 0.39
                ((autotroph_sname)) == "diaz" : 0.39
+               ((autotroph_sname)) == "cocco" : 0.28
          PCref_per_day :
             longname : Maximum C-spec growth rate at Tref
             subcategory : 10. autotrophs
@@ -866,9 +884,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 5
+               ((autotroph_sname)) == "sp" : 4.4
                ((autotroph_sname)) == "diat" : 5
-               ((autotroph_sname)) == "diaz" : 2.5
+               ((autotroph_sname)) == "diaz" : 2.2
+               ((autotroph_sname)) == "cocco" : 4.7
          thetaN_max :
             longname : Maximum thetaN (Chl / N)
             subcategory : 10. autotrophs
@@ -879,6 +898,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 2.5
                ((autotroph_sname)) == "diat" : 4
                ((autotroph_sname)) == "diaz" : 2.5
+               ((autotroph_sname)) == "cocco" : 3.5
          loss_thres :
             longname : concentration where losses go to zero
             subcategory : 10. autotrophs
@@ -889,6 +909,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0.01
                ((autotroph_sname)) == "diat" : 0.02
                ((autotroph_sname)) == "diaz" : 0.02
+               ((autotroph_sname)) == "cocco" : 0.01
          loss_thres2 :
             longname : concentration where losses go to zero
             subcategory : 10. autotrophs
@@ -899,6 +920,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0
                ((autotroph_sname)) == "diat" : 0
                ((autotroph_sname)) == "diaz" : 0.001
+               ((autotroph_sname)) == "cocco" : 0
          temp_thres :
             longname : Temperature where concentration threshold and photosynthesis rate drops
             subcategory : 10. autotrophs
@@ -909,6 +931,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : -10
                ((autotroph_sname)) == "diat" : -10
                ((autotroph_sname)) == "diaz" : 15
+               ((autotroph_sname)) == "cocco" : 0
          mort_per_day :
             longname : Linear mortality rate
             subcategory : 10. autotrophs
@@ -919,6 +942,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0.1
                ((autotroph_sname)) == "diat" : 0.1
                ((autotroph_sname)) == "diaz" : 0.1
+               ((autotroph_sname)) == "cocco" : 0.1
          mort2_per_day :
             longname : Quadratic mortality rate
             subcategory : 10. autotrophs
@@ -929,6 +953,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0.01
                ((autotroph_sname)) == "diat" : 0.01
                ((autotroph_sname)) == "diaz" : 0.01
+               ((autotroph_sname)) == "cocco" : 0.01
          agg_rate_max :
             longname : Maximum agg rate
             subcategory : 10. autotrophs
@@ -939,6 +964,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0.5
                ((autotroph_sname)) == "diat" : 0.5
                ((autotroph_sname)) == "diaz" : 0.5
+               ((autotroph_sname)) == "cocco" : 0.5
          agg_rate_min :
             longname : Minimum agg rate
             subcategory : 10. autotrophs
@@ -949,6 +975,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0.01
                ((autotroph_sname)) == "diat" : 0.02
                ((autotroph_sname)) == "diaz" : 0.01
+               ((autotroph_sname)) == "cocco" : 0.01
          loss_poc :
             longname : Routing of loss term
             subcategory : 10. autotrophs
@@ -959,6 +986,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0
                ((autotroph_sname)) == "diat" : 0
                ((autotroph_sname)) == "diaz" : 0
+               ((autotroph_sname)) == "cocco" : 0
          Ea :
             longname : Activation energy for Arrhenius equation
             subcategory : 10. autotrophs
@@ -969,6 +997,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0.32
                ((autotroph_sname)) == "diat" : 0.32
                ((autotroph_sname)) == "diaz" : 0.32
+               ((autotroph_sname)) == "cocco" : 0.32
    zooplankton_settings :
       _array_shape : zooplankton_cnt
       _is_allocatable : true
@@ -1053,6 +1082,7 @@ PFT_derived_types :
                ((grazer_sname)) == "sp_zoo" : grz_sp_zoo
                ((grazer_sname)) == "diat_zoo" : grz_diat_zoo
                ((grazer_sname)) == "diaz_zoo" : grz_diaz_zoo
+               ((grazer_sname)) == "cocco_zoo" : grz_cocco_zoo
          lname :
             longname : Long name of the grazing relationship
             subcategory : 12. grazing
@@ -1063,6 +1093,7 @@ PFT_derived_types :
                ((grazer_sname)) == "sp_zoo" : Grazing of sp by zoo
                ((grazer_sname)) == "diat_zoo" : Grazing of diat by zoo
                ((grazer_sname)) == "diaz_zoo" : Grazing of diaz by zoo
+               ((grazer_sname)) == "cocco_zoo" : Grazing of cocco by zoo
          auto_ind_cnt :
             longname : Number of autotrophs being grazed
             subcategory : 12. grazing
@@ -1083,7 +1114,9 @@ PFT_derived_types :
             units : unitless
             datatype : integer
             _comment : 1 => Michaelis-Menten, 2 => Sigmoidal
-            default_value : 1
+            default_value :
+               default : 1
+               ((grazer_sname)) == "sp_zoo" : 2
          z_umax_0_per_day :
             longname : Max zoo growth rate at tref
             subcategory : 12. grazing
@@ -1091,9 +1124,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((grazer_sname)) == "sp_zoo" : 3.3
-               ((grazer_sname)) == "diat_zoo" : 3.15
-               ((grazer_sname)) == "diaz_zoo" : 3.3
+               ((grazer_sname)) == "sp_zoo" : 3.6
+               ((grazer_sname)) == "diat_zoo" : 3.41
+               ((grazer_sname)) == "diaz_zoo" : 3.35
+               ((grazer_sname)) == "cocco_zoo" : 2.95
          z_grz :
             longname : Grazing coefficient
             subcategory : 12. grazing
@@ -1101,9 +1135,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((grazer_sname)) == "sp_zoo" : 1.2
-               ((grazer_sname)) == "diat_zoo" : 1.2
-               ((grazer_sname)) == "diaz_zoo" : 1.2
+               ((grazer_sname)) == "sp_zoo" : 0.54
+               ((grazer_sname)) == "diat_zoo" : 0.72
+               ((grazer_sname)) == "diaz_zoo" : 0.6
+               ((grazer_sname)) == "cocco_zoo" : 0.854
          graze_zoo :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -1114,6 +1149,7 @@ PFT_derived_types :
                ((grazer_sname)) == "sp_zoo" : 0.3
                ((grazer_sname)) == "diat_zoo" : 0.25
                ((grazer_sname)) == "diaz_zoo" : 0.3
+               ((grazer_sname)) == "cocco_zoo" : 0.25
          graze_poc :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -1122,8 +1158,9 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((grazer_sname)) == "sp_zoo" : 0
-               ((grazer_sname)) == "diat_zoo" : 0.39
+               ((grazer_sname)) == "diat_zoo" : 0.38
                ((grazer_sname)) == "diaz_zoo" : 0.1
+               ((grazer_sname)) == "cocco_zoo" : 0.3
          graze_doc :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -1134,6 +1171,7 @@ PFT_derived_types :
                ((grazer_sname)) == "sp_zoo" : 0.06
                ((grazer_sname)) == "diat_zoo" : 0.06
                ((grazer_sname)) == "diaz_zoo" : 0.06
+               ((grazer_sname)) == "cocco_zoo" : 0.06
          f_zoo_detr :
             longname : Fraction of zoo losses to detrital
             subcategory : 12. grazing
@@ -1144,6 +1182,7 @@ PFT_derived_types :
                ((grazer_sname)) == "sp_zoo" : 0.12
                ((grazer_sname)) == "diat_zoo" : 0.24
                ((grazer_sname)) == "diaz_zoo" : 0.12
+               ((grazer_sname)) == "cocco_zoo" : 0.18
          auto_ind :
             _array_shape : autotroph_cnt
             _array_len_to_print : auto_ind_cnt
@@ -1157,6 +1196,7 @@ PFT_derived_types :
                ((grazer_sname)) == "sp_zoo" : 1 # index where autotroph_name = sp
                ((grazer_sname)) == "diat_zoo" : 2 # index where autotroph_name = diat
                ((grazer_sname)) == "diaz_zoo" : 3 # index where autotroph_name = diaz
+               ((grazer_sname)) == "cocco_zoo" : 4 # index where autotroph_name = cocco
          zoo_ind :
             _array_shape : zooplankton_cnt
             _array_len_to_print : zoo_ind_cnt
