@@ -277,8 +277,7 @@ module marbl_settings_mod
        parm_sed_denitrif_coeff,    & ! global scaling factor for sed_denitrif
        auto_mort2_exp,             & ! Value of power loss exponent for autotrophs
        zoo_mort2_exp,              & ! Value of power loss exponent for zooplankton
-       QCaCO3_max,                 & ! Max CaCO3/C ratio for implicit calcifiers
-       QCaCO3_max_exp,             & ! Max CaCO3/C ratio for explicit calcifiers
+       QCaCO3_max,                 & ! Max CaCO3/C ratio for calcifiers
        f_graze_CaCO3_remin,        & ! Fraction of spCaCO3 grazing which is remineralized in zooplankton guts
        bury_coeff_rmean_timescale_years
 
@@ -431,7 +430,6 @@ contains
     auto_mort2_exp                = 1.75_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     zoo_mort2_exp                 = 1.5_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     QCaCO3_max                    = 0.40_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    QCaCO3_max_exp                = 2.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     f_graze_CaCO3_remin           = 0.33_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
 
 
@@ -1128,14 +1126,6 @@ contains
     units     = 'mmol CaCO3/mmol C'
     datatype  = 'real'
     rptr      => QCaCO3_max
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-
-    sname     = 'QCaCO3_max_exp'
-    lname     = 'Max CaCO3/C ratio for explicit calcifiers'
-    units     = 'mmol CaCO3/mmol C'
-    datatype  = 'real'
-    rptr      => QCaCO3_max_exp
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
 

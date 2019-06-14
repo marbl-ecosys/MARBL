@@ -870,14 +870,7 @@
       "QCaCO3_max": {
          "datatype": "real",
          "default_value": 0.4,
-         "longname": "Max CaCO3/C ratio for implicit calcifiers",
-         "subcategory": "4. general parameters",
-         "units": "mmol CaCO3/mmol C"
-      },
-      "QCaCO3_max_exp": {
-         "datatype": "real",
-         "default_value": 2.0,
-         "longname": "Max CaCO3/C ratio for explicit calcifiers",
+         "longname": "Max CaCO3/C ratio for calcifiers",
          "subcategory": "4. general parameters",
          "units": "mmol CaCO3/mmol C"
       },

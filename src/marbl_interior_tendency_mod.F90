@@ -1114,7 +1114,6 @@ contains
     use marbl_settings_mod,  only : gQ_Si_kSi_thres
     use marbl_settings_mod,  only : PquotaSlope, PquotaIntercept, PquotaMinNP
     use marbl_settings_mod,  only : QCaCO3_max
-    use marbl_settings_mod,  only : QCaCO3_max_exp
 
     integer,                            intent(in)    :: km
     type(autotroph_local_type),         intent(in)    :: autotroph_local
@@ -1210,11 +1209,7 @@ contains
         !-----------------------------------------------------------------------
 
         if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
-          if (autotroph_settings(auto_ind)%exp_calcifier) then
-            QCaCO3(auto_ind,:) = min(auto_CaCO3(auto_ind,:) / (auto_C(auto_ind,:) + epsC), QCaCO3_max_exp)
-          else
-            QCaCO3(auto_ind,:) = min(auto_CaCO3(auto_ind,:) / (auto_C(auto_ind,:) + epsC), QCaCO3_max)
-          end if
+          QCaCO3(auto_ind,:) = min(auto_CaCO3(auto_ind,:) / (auto_C(auto_ind,:) + epsC), QCaCO3_max)
         end if
       end do
     end associate

@@ -597,13 +597,7 @@ general_parms :
       datatype : real
       default_value : 1.5
    QCaCO3_max :
-      longname : Max CaCO3/C ratio for implicit calcifiers
-      subcategory : 4. general parameters
-      units : mmol CaCO3/mmol C
-      datatype : real
-      default_value : 0.40
-   QCaCO3_max_exp :
-      longname : Max CaCO3/C ratio for explicit calcifiers
+      longname : Max CaCO3/C ratio for calcifiers
       subcategory : 4. general parameters
       units : mmol CaCO3/mmol C
       datatype : real

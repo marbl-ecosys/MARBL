@@ -593,17 +593,11 @@ general_parms :
       datatype : real
       default_value : 1.5
    QCaCO3_max :
-      longname : Max CaCO3/C ratio for implicit calcifiers
+      longname : Max CaCO3/C ratio for calcifiers
       subcategory : 4. general parameters
       units : mmol CaCO3/mmol C
       datatype : real
       default_value : 0.40
-   QCaCO3_max_exp :
-      longname : Max CaCO3/C ratio for explicit calcifiers
-      subcategory : 4. general parameters
-      units : mmol CaCO3/mmol C
-      datatype : real
-      default_value : 2.0
    f_graze_CaCO3_remin :
       longname : Fraction of spCaCO3 grazing which is remineralized in zooplankton guts
       subcategory : 4. general parameters
