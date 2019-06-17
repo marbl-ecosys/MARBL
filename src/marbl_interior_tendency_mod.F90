@@ -324,9 +324,9 @@ contains
     call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
 
-    call compute_temperature_functional_form(temperature(:), Tref_auto(:), temp_func_opt_auto(:), Tfunc_auto(:,:), Ea_auto(:))
+    call compute_temperature_functional_form(temperature(:), Tref_auto(:), temp_func_opt_auto(:), Ea_auto(:), Tfunc_auto(:,:))
 
-    call compute_temperature_functional_form(temperature(:), Tref_zoo(:), temp_func_opt_zoo(:), Tfunc_zoo(:,:), Ea_zoo(:))
+    call compute_temperature_functional_form(temperature(:), Tref_zoo(:), temp_func_opt_zoo(:), Ea_zoo(:), Tfunc_zoo(:,:))
 
     call compute_Pprime(km, domain%zt, autotroph_local, temperature, autotroph_derived_terms%Pprime)
 
@@ -1218,7 +1218,7 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_temperature_functional_form(temperature, Tref, temp_func_form_iopt, Tfunc, Ea)
+  subroutine compute_temperature_functional_form(temperature, Tref, temp_func_form_iopt, Ea, Tfunc)
 
     !-----------------------------------------------------------------------
     !  Scaling of physiological rates by temperature
@@ -1241,11 +1241,11 @@ contains
     use marbl_constants_mod, only : c10
     use marbl_constants_mod, only : K_Boltz
 
-    real(r8), intent(in)  :: temperature(:)
-    real(r8), intent(in)  :: Tref(:)
-    integer,  intent(in)  :: temp_func_form_iopt(:)
-    real(r8), intent(out) :: Tfunc(:,:)
-    real(r8), intent(in)  :: Ea(size(Tfunc, dim=1))
+    real(r8), intent(in)  :: temperature(:)         ! km
+    real(r8), intent(in)  :: Tref(:)                ! PFT_cnt
+    integer,  intent(in)  :: temp_func_form_iopt(:) ! PFT_cnt
+    real(r8), intent(in)  :: Ea(:)                  ! PFT_cnt
+    real(r8), intent(out) :: Tfunc(:,:)             ! PFT_cnt x km
 
     integer :: Tfunc_ind
 
