@@ -958,7 +958,7 @@ CaCO3_PROD :
    longname : CaCO3 Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : medium
+   frequency : low
    operator : average
 CaCO3_REMIN :
    longname : CaCO3 Remineralization

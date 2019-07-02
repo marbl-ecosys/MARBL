@@ -1441,18 +1441,20 @@ contains
                  (f_photosp_CaCO3 * photoC(auto_ind,:)))
           end where
         else if (autotroph_settings(auto_ind)%exp_calcifier) then
-          !first calculate PIC/POC in coccolithophore biomass----------
-          !temperature effect
+          !calculate the CaCO3/organicC production ratio for coccolithophores ('picpoc')
+          !For details, see Krumhardt et al., 2019, JAMES & Krumhardt et al., 2017, Progress in Oceanography
+
+          !temperature effect (linearly decreases calcification at temps < 11C)
           where (temperature < 11._r8)
             picpoc = max(0.,0.104 * temperature - 0.108)
           elsewhere
             picpoc = 1.
           end where
 
-          !CO2 effect
+          !CO2 effect (CaCO3/organicC ratio ('picpoc') decreases as CO2 increases)
           picpoc = max(0.,-0.0136 * CO2(:) + picpoc(:) + 0.21)
 
-          !nut lim effect (maybe just making this for P-limited areas? if (Plim(auto_ind) == f_nut(auto_ind) then..)
+          !P-limitation effect (CaCO2/organicC ratio increases when P limitation term is low)
           picpoc = max(0.,-0.48 * Plim(auto_ind,:) + picpoc(:) + 0.48)
 
           !multiply cocco growth rate by picpoc to get CaCO3 formation
