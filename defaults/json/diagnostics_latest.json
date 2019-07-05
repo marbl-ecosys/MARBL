@@ -1024,7 +1024,7 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_PROD": {
-      "frequency": "medium",
+      "frequency": "low",
       "longname": "CaCO3 Production",
       "operator": "average",
       "units": "mmol/m^3/s",
