@@ -66,6 +66,7 @@ module marbl_io_mod
   type, public :: netcdf_prognostic_ids
     integer, allocatable, dimension(:) :: sflux_ids
     integer, allocatable, dimension(:) :: tendency_ids
+    integer, allocatable, dimension(:) :: init_ids
   end type netcdf_prognostic_ids
   type(netcdf_prognostic_ids) :: prog_ids_out
 
@@ -575,13 +576,17 @@ contains
       end if
     end do
 
-    ! 4) Surface fluxes and Tracer tendencies
+    ! 4) Tracer surface fluxes, tendencies, and initial conditions
     allocate(prog_ids_out%sflux_ids(num_tracers))
     prog_ids_out%sflux_ids(:) = 0
     allocate(prog_ids_out%tendency_ids(num_tracers))
     prog_ids_out%tendency_ids(:) = 0
+    allocate(prog_ids_out%init_ids(num_tracers))
+    prog_ids_out%init_ids(:) = 0
     do n=1, num_tracers
       ! NOTE: we use log_message as a temporary buffer for strings written as netCDF metadata
+
+      ! Surface fluxes
       write(var_name, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%short_name), "_SFLUX"
       call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_cols_id/), &
                         prog_ids_out%sflux_ids(n)), driver_status_log)
@@ -590,6 +595,7 @@ contains
       write(log_message, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%units), ' cm/s'
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%sflux_ids(n), "units", log_message), driver_status_log)
 
+      ! Interior tendencies
       write(var_name, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%short_name), "_TEND"
       call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_levels_id, dimids_out%num_cols_id/), &
                         prog_ids_out%tendency_ids(n)), driver_status_log)
@@ -597,6 +603,16 @@ contains
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%tendency_ids(n), "long_name", log_message), driver_status_log)
       write(log_message, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%units), '/s'
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%tendency_ids(n), "units", log_message), driver_status_log)
+
+      ! Initial values
+      var_name = marbl_instances(1)%tracer_metadata(n)%short_name
+      call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_levels_id, dimids_out%num_cols_id/), &
+                        prog_ids_out%init_ids(n)), driver_status_log)
+      write(log_message, "(2A)") "Initial value of ", trim(marbl_instances(1)%tracer_metadata(n)%long_name)
+      call netcdf_check(nf90_put_att(file_id, prog_ids_out%init_ids(n), "long_name", log_message), driver_status_log)
+      log_message = marbl_instances(1)%tracer_metadata(n)%units
+      call netcdf_check(nf90_put_att(file_id, prog_ids_out%init_ids(n), "units", log_message), driver_status_log)
+
     end do
 
     ! Exit define mode
@@ -612,12 +628,13 @@ contains
   !*****************************************************************************
 
   subroutine marbl_io_write_history(hist_file, marbl_instance, surface_fluxes, interior_tendencies, &
-                                    num_active_levels, driver_status_log)
+                                    tracer_initial_vals, num_active_levels, driver_status_log)
 
     character(len=*),                              intent(in)    :: hist_file
     type(marbl_interface_class),                   intent(in)    :: marbl_instance
-    real(r8),                    dimension(:,:,:), intent(in)    :: interior_tendencies
-    real(r8),                    dimension(:,:),   intent(in)    :: surface_fluxes
+    real(r8),                    dimension(:,:),   intent(in)    :: surface_fluxes       ! num_cols x num_tracers
+    real(r8),                    dimension(:,:,:), intent(in)    :: interior_tendencies  ! num_tracers x num_levels x num_cols
+    real(r8),                    dimension(:,:,:), intent(in)    :: tracer_initial_vals  ! num_tracers x num_levels x num_cols
     integer,                     dimension(:),     intent(in)    :: num_active_levels
     type(marbl_log_type),                          intent(inout) :: driver_status_log
 
@@ -665,8 +682,9 @@ contains
       end if
     end do
 
-    ! 4) Surface fluxes and Tracer tendencies
-    do col_id = 1, 5
+    ! 4) Tracer surface fluxes, tendencies, and initial conditions
+    do col_id = 1, size(surface_fluxes, dim=1)
+      ! Surface fluxes
       do n=1, size(marbl_instance%tracer_metadata)
         call netcdf_check(nf90_put_var(file_id, prog_ids_out%sflux_ids(n), surface_fluxes(:,n)), driver_status_log)
         if (driver_status_log%labort_marbl) then
@@ -675,14 +693,26 @@ contains
           return
         end if
 
+        ! Interior tendencies
         call netcdf_check(nf90_put_var(file_id, prog_ids_out%tendency_ids(n), &
-                          interior_tendencies(n, 1:num_active_levels(col_id),col_id), &
+                          interior_tendencies(n, 1:num_active_levels(col_id), col_id), &
                           (/1, col_id/)), driver_status_log)
         if (driver_status_log%labort_marbl) then
           write(log_message, "(3A)") 'nf90_put_var(', trim(marbl_instance%tracer_metadata(n)%short_name), '_TEND)'
           call driver_status_log%log_error_trace(log_message, subname)
           return
         end if
+
+        ! Initial values
+        call netcdf_check(nf90_put_var(file_id, prog_ids_out%init_ids(n), &
+                          tracer_initial_vals(n, 1:num_active_levels(col_id), col_id), &
+                          (/1, col_id/)), driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          write(log_message, "(3A)") 'nf90_put_var(', trim(marbl_instance%tracer_metadata(n)%short_name), ')'
+          call driver_status_log%log_error_trace(log_message, subname)
+          return
+        end if
+
       end do
     end do
 #endif
