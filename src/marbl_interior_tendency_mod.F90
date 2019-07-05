@@ -1222,13 +1222,14 @@ contains
 
     !-----------------------------------------------------------------------
     !  Scaling of physiological rates by temperature
-    !  Use temp_func_form_iopt to select between two temperature functions,
-    !  Q10 and Arrhenius.
+    !  Use temp_func_form_iopt to select between three temperature functions,
+    !  Q10, Arrhenius, and a simple power function.
     !
     !  Use slightly different reference temperatures as well
     !  (Future development can attempt to merge the two; will require additional tuning)
     !  Tref = 30.0 (deg C) reference temperature for Q10 formulation
     !  Tref = 25.0 (deg C) reference temperature for Arrhenius equation.
+    !  Tref is not currently used in the power function
     !
     !  Tfunc scales the growth, mort and grazing rates where they are computed
     !-----------------------------------------------------------------------
@@ -1241,23 +1242,23 @@ contains
     use marbl_constants_mod, only : c10
     use marbl_constants_mod, only : K_Boltz
 
-    real(r8), intent(in)  :: temperature(:)         ! km
-    real(r8), intent(in)  :: Tref(:)                ! PFT_cnt
+    real(r8), intent(in)  :: temperature(:)         ! nlev
+    real(r8), intent(in)  :: Tref(:)                ! PFT_cnt (autotroph_cnt or zooplankton_cnt, depending on call)
     integer,  intent(in)  :: temp_func_form_iopt(:) ! PFT_cnt
     real(r8), intent(in)  :: Ea(:)                  ! PFT_cnt
-    real(r8), intent(out) :: Tfunc(:,:)             ! PFT_cnt x km
+    real(r8), intent(out) :: Tfunc(:,:)             ! PFT_cnt x nlev
 
-    integer :: Tfunc_ind
+    integer :: PFT_ind
 
-    do Tfunc_ind = 1, size(Tfunc, dim=1)
-      select case (temp_func_form_iopt(Tfunc_ind))
+    do PFT_ind = 1, size(Tref)
+      select case (temp_func_form_iopt(PFT_ind))
         case (temp_func_form_iopt_q10)
-          Tfunc(Tfunc_ind,:) = Q_10**(((temperature(:) + T0_Kelvin) - (Tref(Tfunc_ind) + T0_Kelvin)) / c10)
+          Tfunc(PFT_ind,:) = Q_10**(((temperature(:) + T0_Kelvin) - (Tref(PFT_ind) + T0_Kelvin)) / c10)
         case (temp_func_form_iopt_arrhenius)
-          Tfunc(Tfunc_ind,:) = exp(-Ea(Tfunc_ind) * (Tref(Tfunc_ind) - temperature(:)) &
-                                   / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref(Tfunc_ind) + T0_Kelvin)))
+          Tfunc(PFT_ind,:) = exp(-Ea(PFT_ind) * (Tref(PFT_ind) - temperature(:)) &
+                                   / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref(PFT_ind) + T0_Kelvin)))
         case (temp_func_form_iopt_power)
-          Tfunc(Tfunc_ind,:) = 0.12_r8 * (max(c0, min(temperature(:), 27.0_r8))**0.4_r8)
+          Tfunc(PFT_ind,:) = 0.12_r8 * (max(c0, min(temperature(:), 27.0_r8))**0.4_r8)
       end select
     end do
 
