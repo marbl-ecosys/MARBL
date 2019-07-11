@@ -835,6 +835,8 @@ contains
         allocate(ind%Fe_lim_Cweight_avg_100m(autotroph_cnt))
         allocate(ind%SiO3_lim_surf(autotroph_cnt))
         allocate(ind%SiO3_lim_Cweight_avg_100m(autotroph_cnt))
+        allocate(ind%C_lim_surf(autotroph_cnt))
+        allocate(ind%C_lim_Cweight_avg_100m(autotroph_cnt))
         allocate(ind%light_lim_surf(autotroph_cnt))
         allocate(ind%light_lim_Cweight_avg_100m(autotroph_cnt))
         allocate(ind%photoC_zint(autotroph_cnt))
@@ -959,6 +961,32 @@ contains
         else
           ind%SiO3_lim_surf(n) = -1
           ind%SiO3_lim_Cweight_avg_100m(n) = -1
+        end if
+
+        if (autotroph_settings(n)%is_carbon_limited) then
+          lname = trim(autotroph_settings(n)%lname) // ' C Limitation, Surface'
+          sname = trim(autotroph_settings(n)%sname) // '_C_lim_surf'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+               ind%C_lim_surf(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' C Limitation, carbon biomass weighted average over 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_C_lim_Cweight_avg_100m'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+               ind%C_lim_Cweight_avg_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
         end if
 
         lname = trim(autotroph_settings(n)%lname) // ' Light Limitation, Surface'
@@ -3506,6 +3534,13 @@ contains
           call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
                near_surface_integral=diags(ind%SiO3_lim_Cweight_avg_100m(n))%field_2d(1))
        endif
+
+       if (autotroph_settings(n)%is_carbon_limited) then
+          diags(ind%C_lim_surf(n))%field_2d(1) = autotroph_derived_terms%VCO2(n,1)
+          limterm = autotroph_derived_terms%VCO2(n,:) * autotrophC_weight(:)
+          call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
+               near_surface_integral=diags(ind%C_lim_Cweight_avg_100m(n))%field_2d(1))
+       end if
 
        diags(ind%light_lim_surf(n))%field_2d(1) = autotroph_derived_terms%light_lim(n,1)
        limterm = autotroph_derived_terms%light_lim(n,:) * autotrophC_weight(:)
