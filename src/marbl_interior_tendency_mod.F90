@@ -67,7 +67,6 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : parm_red_d_c_o2
   use marbl_settings_mod, only : parm_red_d_c_o2_diaz
   use marbl_settings_mod, only : parm_Remin_D_C_O2
-  use marbl_settings_mod, only : QCaCO3_max
   use marbl_settings_mod, only : Qfe_zoo
   use marbl_settings_mod, only : spc_poc_fac
   use marbl_settings_mod, only : grazing_relationship_settings
@@ -238,7 +237,7 @@ contains
          sio3_ind          => marbl_tracer_indices%sio3_ind,        &
          nh4_ind           => marbl_tracer_indices%nh4_ind,         &
          fe_ind            => marbl_tracer_indices%fe_ind,          &
-         lig_ind           => marbl_tracer_indices%lig_ind,   &
+         lig_ind           => marbl_tracer_indices%lig_ind,         &
          o2_ind            => marbl_tracer_indices%o2_ind,          &
          dic_ind           => marbl_tracer_indices%dic_ind,         &
          dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind, &
@@ -248,8 +247,13 @@ contains
          dopr_ind          => marbl_tracer_indices%dopr_ind,        &
          donr_ind          => marbl_tracer_indices%donr_ind,        &
          docr_ind          => marbl_tracer_indices%docr_ind,        &
-         Ea_auto           => autotroph_settings(:)%Ea,             &
-         Ea_zoo            => zooplankton_settings(:)%Ea            &
+
+         Tref_auto          => autotroph_settings(:)%Tref,                  &
+         Tref_zoo           => zooplankton_settings(:)%Tref,                &
+         Ea_auto            => autotroph_settings(:)%Ea,                    &
+         Ea_zoo             => zooplankton_settings(:)%Ea,                  &
+         temp_func_opt_auto => autotroph_settings(:)%temp_func_form_iopt,   &
+         temp_func_opt_zoo  => zooplankton_settings(:)%temp_func_form_iopt  &
          )
 
     !-----------------------------------------------------------------------
@@ -320,20 +324,20 @@ contains
     call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
 
-    call compute_temperature_functional_form(temperature(:), Tfunc_auto(:,:), Ea_auto(:))
+    call compute_temperature_functional_form(temperature(:), Tref_auto(:), temp_func_opt_auto(:), Ea_auto(:), Tfunc_auto(:,:))
 
-    call compute_temperature_functional_form(temperature(:), Tfunc_zoo(:,:), Ea_zoo(:))
+    call compute_temperature_functional_form(temperature(:), Tref_zoo(:), temp_func_opt_zoo(:), Ea_zoo(:), Tfunc_zoo(:,:))
 
     call compute_Pprime(km, domain%zt, autotroph_local, temperature, autotroph_derived_terms%Pprime)
 
-    call compute_autotroph_uptake(km, marbl_tracer_indices, tracer_local(:, :), autotroph_derived_terms)
+    call compute_autotroph_uptake(km, marbl_tracer_indices, tracer_local(:, :), carbonate, autotroph_derived_terms)
 
     call compute_autotroph_photosynthesis(km, num_PAR_subcols, autotroph_local, temperature(:), &
          Tfunc_auto(:,:), PAR%col_frac(:), PAR%avg(:,:), autotroph_derived_terms)
 
     call compute_autotroph_nutrient_uptake(marbl_tracer_indices, autotroph_derived_terms)
 
-    call compute_autotroph_calcification(km, autotroph_local, temperature, autotroph_derived_terms)
+    call compute_autotroph_calcification(km, autotroph_local, temperature, carbonate, autotroph_derived_terms)
 
     call compute_autotroph_nfixation(km, autotroph_derived_terms)
 
@@ -1102,13 +1106,14 @@ contains
        autotroph_derived_terms)
 
     use marbl_constants_mod, only : epsC
-    use marbl_settings_mod , only : lvariable_PtoC
-    use marbl_settings_mod , only : gQsi_0
-    use marbl_settings_mod , only : gQsi_max
-    use marbl_settings_mod , only : gQsi_min
-    use marbl_settings_mod , only : gQ_Fe_kFe_thres
-    use marbl_settings_mod , only : gQ_Si_kSi_thres
-    use marbl_settings_mod , only : PquotaSlope, PquotaIntercept, PquotaMinNP
+    use marbl_settings_mod,  only : lvariable_PtoC
+    use marbl_settings_mod,  only : gQsi_0
+    use marbl_settings_mod,  only : gQsi_max
+    use marbl_settings_mod,  only : gQsi_min
+    use marbl_settings_mod,  only : gQ_Fe_kFe_thres
+    use marbl_settings_mod,  only : gQ_Si_kSi_thres
+    use marbl_settings_mod,  only : PquotaSlope, PquotaIntercept, PquotaMinNP
+    use marbl_settings_mod,  only : QCaCO3_max
 
     integer,                            intent(in)    :: km
     type(autotroph_local_type),         intent(in)    :: autotroph_local
@@ -1213,48 +1218,49 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_temperature_functional_form(temperature, Tfunc, Ea)
+  subroutine compute_temperature_functional_form(temperature, Tref, temp_func_form_iopt, Ea, Tfunc)
 
     !-----------------------------------------------------------------------
     !  Scaling of physiological rates by temperature
-    !  Use temp_func_form_iopt to select between two temperature functions,
-    !  Q10 and Arrhenius.
+    !  Use temp_func_form_iopt to select between three temperature functions,
+    !  Q10, Arrhenius, and a simple power function.
     !
     !  Use slightly different reference temperatures as well
     !  (Future development can attempt to merge the two; will require additional tuning)
     !  Tref = 30.0 (deg C) reference temperature for Q10 formulation
     !  Tref = 25.0 (deg C) reference temperature for Arrhenius equation.
+    !  Tref is not currently used in the power function
     !
     !  Tfunc scales the growth, mort and grazing rates where they are computed
     !-----------------------------------------------------------------------
 
-    use marbl_settings_mod,  only : temp_func_form_iopt
     use marbl_settings_mod,  only : temp_func_form_iopt_q10
     use marbl_settings_mod,  only : temp_func_form_iopt_arrhenius
+    use marbl_settings_mod,  only : temp_func_form_iopt_power
     use marbl_settings_mod,  only : Q_10
-    use marbl_settings_mod,  only : Tref
 
     use marbl_constants_mod, only : c10
     use marbl_constants_mod, only : K_Boltz
 
-    real(r8),          intent(in)  :: temperature(:)
-    real(r8),          intent(out) :: Tfunc(:,:)
-    real(r8),          intent(in)  :: Ea(size(Tfunc, dim=1))
+    real(r8), intent(in)  :: temperature(:)         ! nlev
+    real(r8), intent(in)  :: Tref(:)                ! PFT_cnt (autotroph_cnt or zooplankton_cnt, depending on call)
+    integer,  intent(in)  :: temp_func_form_iopt(:) ! PFT_cnt
+    real(r8), intent(in)  :: Ea(:)                  ! PFT_cnt
+    real(r8), intent(out) :: Tfunc(:,:)             ! PFT_cnt x nlev
 
-    integer :: Tfunc_ind
+    integer :: PFT_ind
 
-
-    select case (temp_func_form_iopt)
-      case (temp_func_form_iopt_q10)
-        do Tfunc_ind = 1, size(Tfunc, dim=1)
-            Tfunc(Tfunc_ind,:) = Q_10**(((temperature(:) + T0_Kelvin) - (Tref + T0_Kelvin)) / c10)
-        end do
-      case (temp_func_form_iopt_arrhenius)
-        do Tfunc_ind = 1, size(Tfunc, dim=1)
-            Tfunc(Tfunc_ind,:) = exp(-Ea(Tfunc_ind) * (Tref - temperature(:)) &
-                                     / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref + T0_Kelvin)))
-        end do
-    end select
+    do PFT_ind = 1, size(Tref)
+      select case (temp_func_form_iopt(PFT_ind))
+        case (temp_func_form_iopt_q10)
+          Tfunc(PFT_ind,:) = Q_10**(((temperature(:) + T0_Kelvin) - (Tref(PFT_ind) + T0_Kelvin)) / c10)
+        case (temp_func_form_iopt_arrhenius)
+          Tfunc(PFT_ind,:) = exp(-Ea(PFT_ind) * (Tref(PFT_ind) - temperature(:)) &
+                                   / (K_Boltz * (temperature(:) + T0_Kelvin) * (Tref(PFT_ind) + T0_Kelvin)))
+        case (temp_func_form_iopt_power)
+          Tfunc(PFT_ind,:) = 0.12_r8 * (max(c0, min(temperature(:), 27.0_r8))**0.4_r8)
+      end select
+    end do
 
   end subroutine compute_temperature_functional_form
 
@@ -1385,7 +1391,7 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_autotroph_calcification(km, autotroph_local, temperature, autotroph_derived_terms)
+  subroutine compute_autotroph_calcification(km, autotroph_local, temperature, carbonate, autotroph_derived_terms)
 
     !-----------------------------------------------------------------------
     !  CaCO3 Production, parameterized as function of small phyto production
@@ -1403,17 +1409,21 @@ contains
     integer,                            intent(in)    :: km
     type(autotroph_local_type),         intent(in)    :: autotroph_local
     real(r8),                           intent(in)    :: temperature(km)
+    type(carbonate_type),               intent(in)    :: carbonate
     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
     integer  :: auto_ind
+    real(r8) :: picpoc(km)
     !-----------------------------------------------------------------------
 
     associate(                                                 &
+         CO2        => carbonate%H2CO3(:),                     & ! input
          f_nut      => autotroph_derived_terms%f_nut(:,:),     & ! input
          photoC     => autotroph_derived_terms%photoC(:,:),    & ! input
+         Plim       => autotroph_derived_terms%VPO4(:,:),      & ! input
          CaCO3_form => autotroph_derived_terms%CaCO3_form(:,:) & ! output
          )
 
@@ -1431,6 +1441,26 @@ contains
             CaCO3_form(auto_ind,:) = min((CaCO3_form(auto_ind,:) * autotroph_local%C(auto_ind,:) / CaCO3_sp_thres), &
                  (f_photosp_CaCO3 * photoC(auto_ind,:)))
           end where
+        else if (autotroph_settings(auto_ind)%exp_calcifier) then
+          !calculate the CaCO3/organicC production ratio for coccolithophores ('picpoc')
+          !For details, see Krumhardt et al., 2019, JAMES & Krumhardt et al., 2017, Progress in Oceanography
+
+          !temperature effect (linearly decreases calcification at temps < 11C)
+          where (temperature < 11._r8)
+            picpoc = max(0.,0.104 * temperature - 0.108)
+          elsewhere
+            picpoc = 1.
+          end where
+
+          !CO2 effect (CaCO3/organicC ratio ('picpoc') decreases as CO2 increases)
+          picpoc = max(0.,-0.0136 * CO2(:) + picpoc(:) + 0.21)
+
+          !P-limitation effect (CaCO2/organicC ratio increases when P limitation term is low)
+          picpoc = max(0.,-0.48 * Plim(auto_ind,:) + picpoc(:) + 0.48)
+
+          !multiply cocco growth rate by picpoc to get CaCO3 formation
+          CaCO3_form(auto_ind,:) = picpoc(:) * photoC(auto_ind,:)
+
         end if
 
       end do
@@ -1441,11 +1471,12 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_autotroph_uptake(km, marbl_tracer_indices, tracer_local, autotroph_derived_terms)
+  subroutine compute_autotroph_uptake(km, marbl_tracer_indices, tracer_local, carbonate, autotroph_derived_terms)
 
     integer,                            intent(in)    :: km
     type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
     real(r8),                           intent(in)    :: tracer_local(marbl_tracer_indices%total_cnt,km)
+    type(carbonate_type),               intent(in)    :: carbonate
     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
 
     !-----------------------------------------------------------------------
@@ -1467,15 +1498,18 @@ contains
               PO4_loc => tracer_local(marbl_tracer_indices%po4_ind,:),   &
               Fe_loc   => tracer_local(marbl_tracer_indices%fe_ind,:),   &
               SiO3_loc => tracer_local(marbl_tracer_indices%sio3_ind,:), &
+              CO2_loc  => carbonate%H2CO3(:),                            &
               ! AUTOTROPHS
-              Nfixer     => autotroph_settings(:)%Nfixer,     &
-              silicifier => autotroph_settings(:)%silicifier, &
+              Nfixer        => autotroph_settings(:)%Nfixer,        &
+              silicifier    => autotroph_settings(:)%silicifier,    &
+              is_carbon_limited => autotroph_settings(:)%is_carbon_limited, &
               kNO3   => autotroph_settings(:)%kNO3,           &
               kNH4   => autotroph_settings(:)%kNH4,           &
               kFe    => autotroph_settings(:)%kFe,            &
               kPO4   => autotroph_settings(:)%kPO4,           &
               kDOP   => autotroph_settings(:)%kDOP,           &
               kSiO3  => autotroph_settings(:)%kSiO3,          &
+              kCO2   => autotroph_settings(:)%kCO2,           &
               ! OUTPUTS
               VNO3  => autotroph_derived_terms%VNO3(:,:),  &
               VNH4  => autotroph_derived_terms%VNH4(:,:),  &
@@ -1485,7 +1519,8 @@ contains
               VDOP  => autotroph_derived_terms%VDOP(:,:),  &
               VPO4  => autotroph_derived_terms%VPO4(:,:),  &
               VPtot => autotroph_derived_terms%VPtot(:,:), &
-              VSiO3 => autotroph_derived_terms%VSiO3(:,:)  &
+              VSiO3 => autotroph_derived_terms%VSiO3(:,:), &
+              VCO2  => autotroph_derived_terms%VCO2(:,:)   &
               )
 
       do auto_ind = 1, autotroph_cnt
@@ -1514,6 +1549,11 @@ contains
           VSiO3(auto_ind, :) = SiO3_loc(:) / (SiO3_loc(:) + kSiO3(auto_ind))
           f_nut(auto_ind, :) = min(f_nut(auto_ind, :), VSiO3(auto_ind, :))
         endif
+
+        if (is_carbon_limited(auto_ind)) then
+          VCO2(auto_ind,:) = CO2_loc / (CO2_loc + kCO2(auto_ind))
+          f_nut(auto_ind, :) = min(f_nut(auto_ind, :), VCO2(auto_ind, :))
+        end if
 
       end do
 
@@ -1684,7 +1724,7 @@ contains
         !  min.%C routed from sp_loss = 0.59 * QCaCO3, or P_CaCO3%rho
         !-----------------------------------------------------------------------
 
-        if (autotroph_settings(auto_ind)%imp_calcifier) then
+        if (autotroph_settings(auto_ind)%imp_calcifier .or. autotroph_settings(auto_ind)%exp_calcifier) then
           auto_loss_poc(auto_ind,:) = QCaCO3(auto_ind,:) * auto_loss(auto_ind,:)
         else
           auto_loss_poc(auto_ind,:) = autotroph_settings(auto_ind)%loss_poc * auto_loss(auto_ind,:)
