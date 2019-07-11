@@ -225,17 +225,14 @@ class MARBL_settings_class(object):
             return
 
         # Process derived type!
-        # (a) check to see if PFT_defaults = "CESM2"
-        append_to_keys = (('PFT_defaults == "CESM2"' in self._config_keyword) and
-                          (category_name == "PFT_derived_types"))
-        if append_to_keys:
-            PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][variable_name]
-        else:
-            # (b) check to see if PFT_defaults = "CESM2.1+cocco"
-            append_to_keys = (('PFT_defaults == "CESM2.1+cocco"' in self._config_keyword) and
-                              (category_name == "PFT_derived_types"))
-            if append_to_keys:
-                PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2.1+cocco_PFT_keys'][variable_name]
+        # Check to see if PFT_defaults leads to specific PFT declarations
+        if (category_name == "PFT_derived_types"):
+            for valid_PFT_default in ["CESM2", "CESM2.1+cocco"]:
+                append_to_keys = 'PFT_defaults == "{}"'.format(valid_PFT_default) in self._config_keyword
+                if append_to_keys:
+                    settings_key = '_{}_PFT_keys'.format(valid_PFT_default)
+                    PFT_keys = self._settings['general_parms']['PFT_defaults'][settings_key][variable_name]
+                    break
 
         # Is the derived type an array? If so, treat each entry separately
         if ("_array_shape" in this_var.keys()):
