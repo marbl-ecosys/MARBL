@@ -102,7 +102,7 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
             template_fill_dict['((autotroph_lname))'] = MARBL_settings.settings_dict[auto_prefix + "lname"].strip('"')
             template_fill_dict['((autotroph_calcifier))'] = ".true." in [imp_calcifier, exp_calcifier]
             template_fill_dict['((autotroph_silicifier))'] = (silicifier == ".true.")
-            template_fill_dict['((autotroph_is_carbon_limited))'] = (is_carbon_limited== ".true.")
+            template_fill_dict['((autotroph_is_carbon_limited))'] = (is_carbon_limited == ".true.")
             template_fill_dict['((autotroph_Nfixer))'] = (Nfixer == ".true.")
         elif fill_source == 'zooplankton':
             zoo_prefix = "zooplankton_settings(%d)%%" % item
