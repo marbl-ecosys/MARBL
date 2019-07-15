@@ -652,8 +652,8 @@ contains
 #ifndef _NETCDF
     write(log_message, "(3A)") 'Can not call write_history(', trim(hist_file), ') without netCDF support'
     call driver_status_log%log_error(log_message, subname)
-    write(log_message, "(6I0)") size(marbl_instance%tracers), size(interior_tendencies), size(surface_fluxes), &
-                                num_active_levels(1), n, col_id
+    write(log_message, "(6I0,E10.4)") size(marbl_instance%tracers), size(interior_tendencies), size(surface_fluxes), &
+                                      num_active_levels(1), n, col_id, tracer_initial_vals(1,1,1)
     return
 #else
     ! 1) Domain variables
