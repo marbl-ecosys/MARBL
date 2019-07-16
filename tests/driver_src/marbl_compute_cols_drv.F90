@@ -332,18 +332,24 @@ Contains
       call driver_status_log%log_error_trace('marbl_io_read_field(delta_z)', subname)
       return
     end if
+    ! convert from m -> cm
+    grid_data%delta_z = grid_data%delta_z * 100._r8
 
     call marbl_io_read_field(infile, 'zt', grid_data%zt, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_read_field(zt)', subname)
       return
     end if
+    ! convert from m -> cm
+    grid_data%zt = grid_data%zt * 100._r8
 
     call marbl_io_read_field(infile, 'zw', grid_data%zw, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_read_field(zw)', subname)
       return
     end if
+    ! convert from m -> cm
+    grid_data%zw = grid_data%zw * 100._r8
 
   end subroutine read_domain
 
@@ -369,9 +375,13 @@ Contains
         case('u10_sqr')
           call marbl_io_read_field(infile, 'u10_sqr', forcing_fields(n)%field_0d(col_id), driver_status_log, &
                col_id=col_id+col_start)
+          ! convert from m^2 / s^2 -> cm^2 / s^2
+          forcing_fields(n)%field_0d(col_id) = forcing_fields(n)%field_0d(col_id) * 10000._r8
         case('sss')
           call marbl_io_read_field(infile, 'SSS', forcing_fields(n)%field_0d(col_id), driver_status_log, &
                col_id=col_id+col_start)
+          ! APPLY SCALE_FACTOR IN read_field
+          forcing_fields(n)%field_0d(col_id) = 1000._r8 * forcing_fields(n)%field_0d(col_id)
         case('sst')
           call marbl_io_read_field(infile, 'SST', forcing_fields(n)%field_0d(col_id), driver_status_log, &
                col_id=col_id+col_start)
@@ -382,19 +392,29 @@ Contains
           if (size(forcing_fields(n)%field_0d) .eq. 1) then ! interior forcing
             call marbl_io_read_field(infile, 'dust_flux', forcing_fields(n)%field_0d(1), driver_status_log, &
                  col_id=col_id+col_start)
+            ! convert from kg/m^2/s -> g/cm^2/s
+            forcing_fields(n)%field_0d(1) = forcing_fields(n)%field_0d(1) * 0.1_r8
           else ! surface forcing
             call marbl_io_read_field(infile, 'dust_flux', forcing_fields(n)%field_0d(col_id), driver_status_log, &
                  col_id=col_id+col_start)
+            ! convert from kg/m^2/s -> g/cm^2/s
+            forcing_fields(n)%field_0d(col_id) = forcing_fields(n)%field_0d(col_id) * 0.1_r8
           end if
         case('Iron Flux')
           call marbl_io_read_field(infile, 'iron_flux', forcing_fields(n)%field_0d(col_id), driver_status_log, &
                col_id=col_id+col_start)
+          ! convert from mmol/m^2/s -> nmol/cm^2/s
+          forcing_fields(n)%field_0d(col_id) = forcing_fields(n)%field_0d(col_id) * 100._r8
         case('NOx Flux')
           call marbl_io_read_field(infile, 'nox_flux', forcing_fields(n)%field_0d(col_id), driver_status_log, &
                col_id=col_id+col_start)
+          ! convert from mmol/m^2/s -> nmol/cm^2/s
+          forcing_fields(n)%field_0d(col_id) = forcing_fields(n)%field_0d(col_id) * 100._r8
         case('NHy Flux')
           call marbl_io_read_field(infile, 'nhy_flux', forcing_fields(n)%field_0d(col_id), driver_status_log, &
                col_id=col_id+col_start)
+          ! convert from mmol/m^2/s -> nmol/cm^2/s
+          forcing_fields(n)%field_0d(col_id) = forcing_fields(n)%field_0d(col_id) * 100._r8
         case('Atmospheric Pressure')
           call marbl_io_read_field(infile, 'atm_pressure', forcing_fields(n)%field_0d(col_id), driver_status_log, &
                col_id=col_id+col_start)
@@ -416,6 +436,8 @@ Contains
         case('Salinity')
           call marbl_io_read_field(infile, 'salinity', forcing_fields(n)%field_1d(1,:), driver_status_log, &
                col_start=col_id+col_start)
+          ! APPLY SCALE_FACTOR IN read_field
+          forcing_fields(n)%field_1d(1,:) = 1000._r8 * forcing_fields(n)%field_1d(1,:)
         case('Pressure')
           call marbl_io_read_field(infile, 'pressure', forcing_fields(n)%field_1d(1,:), driver_status_log, &
                col_start=col_id+col_start)
