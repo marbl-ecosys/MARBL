@@ -587,7 +587,7 @@ contains
       ! NOTE: we use log_message as a temporary buffer for strings written as netCDF metadata
 
       ! Surface fluxes
-      write(var_name, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%short_name), "_SFLUX"
+      write(var_name, "(2A)") "STF_", trim(marbl_instances(1)%tracer_metadata(n)%short_name)
       call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_cols_id/), &
                         prog_ids_out%sflux_ids(n)), driver_status_log)
       write(log_message, "(2A)") "Surface flux of ", trim(marbl_instances(1)%tracer_metadata(n)%long_name)
@@ -596,7 +596,7 @@ contains
       call netcdf_check(nf90_put_att(file_id, prog_ids_out%sflux_ids(n), "units", log_message), driver_status_log)
 
       ! Interior tendencies
-      write(var_name, "(2A)") "TEND_", trim(marbl_instances(1)%tracer_metadata(n)%short_name)
+      write(var_name, "(2A)") "J_", trim(marbl_instances(1)%tracer_metadata(n)%short_name)
       call netcdf_check(nf90_def_var(file_id, var_name, NF90_DOUBLE, (/dimids_out%num_levels_id, dimids_out%num_cols_id/), &
                         prog_ids_out%tendency_ids(n)), driver_status_log)
       write(log_message, "(2A)") trim(marbl_instances(1)%tracer_metadata(n)%long_name), " Tendency"
@@ -688,7 +688,7 @@ contains
       do n=1, size(marbl_instance%tracer_metadata)
         call netcdf_check(nf90_put_var(file_id, prog_ids_out%sflux_ids(n), surface_fluxes(:,n)), driver_status_log)
         if (driver_status_log%labort_marbl) then
-          write(log_message, "(3A)") 'nf90_put_var(', trim(marbl_instance%tracer_metadata(n)%short_name), '_SFLUX)'
+          write(log_message, "(3A)") 'nf90_put_var(STF_', trim(marbl_instance%tracer_metadata(n)%short_name), ')'
           call driver_status_log%log_error_trace(log_message, subname)
           return
         end if
@@ -698,7 +698,7 @@ contains
                           interior_tendencies(n, 1:num_active_levels(col_id), col_id), &
                           (/1, col_id/)), driver_status_log)
         if (driver_status_log%labort_marbl) then
-          write(log_message, "(3A)") 'nf90_put_var(TEND_', trim(marbl_instance%tracer_metadata(n)%short_name), ')'
+          write(log_message, "(3A)") 'nf90_put_var(J_', trim(marbl_instance%tracer_metadata(n)%short_name), ')'
           call driver_status_log%log_error_trace(log_message, subname)
           return
         end if
