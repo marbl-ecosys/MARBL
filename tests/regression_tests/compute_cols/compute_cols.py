@@ -8,7 +8,9 @@ from marbl_testing_class import MARBL_testcase
 
 mt = MARBL_testcase()
 
-mt.parse_args(desc='Run set_surface_forcing and set_interior_forcing', RequireNetCDF=True)
+mt.parse_args(desc='Run set_surface_forcing and set_interior_forcing',
+              RequireNetCDF=True,
+              DefaultInputFile='../../input_files/marbl_with_o2_consumption_scalef.input')
 
 mt.build_exe()
 

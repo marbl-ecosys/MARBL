@@ -27,7 +27,8 @@ class MARBL_testcase(object):
   # Some tests will let you specify a compiler and / or input file
   # Some tests will require you to specify a machine
   def parse_args(self, desc, HaveCompiler=True, HaveInputFile=True,
-                 HasPause=False, CleanLibOnly=False, RequireNetCDF=False):
+                 HasPause=False, CleanLibOnly=False, RequireNetCDF=False,
+                 DefaultInputFile=None):
 
     import argparse
 
@@ -40,7 +41,8 @@ class MARBL_testcase(object):
 
     if HaveInputFile:
       parser.add_argument('-i', '--input_file', action='store', dest='input_file',
-                          default=None, help='input file to read')
+                          default=DefaultInputFile,
+                          help='input file to read (default: {})'.format(DefaultInputFile))
 
     if HasPause:
         parser.add_argument('--no_pause', action='store_true', dest='no_pause',
@@ -65,6 +67,10 @@ class MARBL_testcase(object):
       parser.add_argument('--netcdf', action='store_true', help='build with netcdf')
 
     args = parser.parse_args()
+
+    # Allow user to run with "-i None" to use default settings
+    if args.input_file == "None":
+        args.input_file = None
 
     # Run make clean if option is specified
     if args.clean:
