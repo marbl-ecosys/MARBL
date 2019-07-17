@@ -444,6 +444,9 @@ Contains
         case('Iron Sediment Flux')
          call marbl_io_read_field(infile, 'iron_sed_flux', forcing_fields(n)%field_1d(1,:), driver_status_log, &
               col_start=col_id+col_start)
+        case('O2 Consumption Scale Factor')
+         call marbl_io_read_field(infile, 'o2_consumption_scalef', forcing_fields(n)%field_1d(1,:), driver_status_log, &
+              col_start=col_id+col_start)
         case DEFAULT
           write(log_message, "(3A)") "Unrecognized forcing field '", trim(forcing_fields(n)%metadata%varname), "'"
           call driver_status_log%log_error(log_message, subname)
