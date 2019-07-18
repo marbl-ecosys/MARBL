@@ -927,13 +927,6 @@
          "subcategory": "4. general parameters",
          "units": "non-numeric"
       },
-      "ciso_lecovars_full_depth_tavg": {
-         "datatype": "logical",
-         "default_value": ".false.",
-         "longname": "Control whether carbon isotope variables are written full depth",
-         "subcategory": "2. config flags",
-         "units": "unitless"
-      },
       "ciso_lsource_sink": {
          "datatype": "logical",
          "default_value": ".true.",
@@ -1008,7 +1001,7 @@
       "lecovars_full_depth_tavg": {
          "datatype": "logical",
          "default_value": ".false.",
-         "longname": "Control whether base ecosystem variables are written full depth",
+         "longname": "Some diagnostic fields are only provided to 150 m depth; this flag returns full column of those fields",
          "subcategory": "2. config flags",
          "units": "unitless"
       },

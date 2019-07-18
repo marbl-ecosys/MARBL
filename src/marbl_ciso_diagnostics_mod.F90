@@ -37,6 +37,7 @@ contains
        marbl_status_log)
 
     use marbl_settings_mod, only : ciso_on
+    use marbl_settings_mod, only : lecovars_full_depth_tavg
 
     type(marbl_diagnostics_type), intent(inout) :: marbl_interior_tendency_diags
     type(marbl_diagnostics_type), intent(inout) :: marbl_surface_flux_diags
@@ -365,7 +366,7 @@ contains
       sname    = 'CISO_photo13C_TOT'
       units    = 'mmol/m^3/s'
       vgrid    = 'layer_avg'
-      truncate = .true.
+      truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
           ind%CISO_photo13C_TOT, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -509,7 +510,7 @@ contains
       sname    = 'CISO_photo14C_TOT'
       units    = 'mmol/m^3/s'
       vgrid    = 'layer_avg'
-      truncate = .true.
+      truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
           ind%CISO_photo14C_TOT, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -626,7 +627,7 @@ contains
          sname    = 'CISO_' // trim(autotroph_settings(n)%sname) // '_Ca13CO3_form'
          units    = 'mmol/m^3/s'
          vgrid    = 'layer_avg'
-         truncate = .true.
+         truncate = .not. lecovars_full_depth_tavg
          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
               ind%CISO_Ca13CO3_form(n), marbl_status_log)
          if (marbl_status_log%labort_marbl) then
@@ -650,7 +651,7 @@ contains
          sname    = 'CISO_' // trim(autotroph_settings(n)%sname) // '_Ca14CO3_form'
          units    = 'mmol/m^3/s'
          vgrid    = 'layer_avg'
-         truncate = .true.
+         truncate = .not. lecovars_full_depth_tavg
          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
               ind%CISO_Ca14CO3_form(n), marbl_status_log)
          if (marbl_status_log%labort_marbl) then
@@ -706,7 +707,7 @@ contains
        sname    = 'CISO_photo13C_' // trim(autotroph_settings(n)%sname)
        units    = 'mmol/m^3/s'
        vgrid    = 'layer_avg'
-       truncate = .true.
+       truncate = .not. lecovars_full_depth_tavg
        call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
             ind%CISO_photo13C(n), marbl_status_log)
        if (marbl_status_log%labort_marbl) then
@@ -718,7 +719,7 @@ contains
        sname    = 'CISO_photo14C_' // trim(autotroph_settings(n)%sname)
        units    = 'mmol/m^3/s'
        vgrid    = 'layer_avg'
-       truncate = .true.
+       truncate = .not. lecovars_full_depth_tavg
        call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
             ind%CISO_photo14C(n), marbl_status_log)
        if (marbl_status_log%labort_marbl) then

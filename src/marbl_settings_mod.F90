@@ -213,8 +213,7 @@ module marbl_settings_mod
   logical(log_kind), target :: ciso_on                        ! control whether ciso tracer module is active
   logical(log_kind), target :: lsource_sink                   ! control which portion of code is executed, useful for debugging
   logical(log_kind), target :: ciso_lsource_sink              ! control which portion of carbon isotope code is executed, useful for debugging
-  logical(log_kind), target :: lecovars_full_depth_tavg       ! should base ecosystem vars be written full depth
-  logical(log_kind), target :: ciso_lecovars_full_depth_tavg  ! should carbon isotope vars be written full depth
+  logical(log_kind), target :: lecovars_full_depth_tavg       ! Some diagnostic fields are only provided to 150 m depth; this flag returns full column of those fields
   logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lcompute_nhx_surface_emis      ! control if NHx emissions are computed
@@ -374,7 +373,6 @@ contains
     lsource_sink                  = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_lsource_sink             = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lecovars_full_depth_tavg      = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    ciso_lecovars_full_depth_tavg = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lflux_gas_o2                  = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lflux_gas_co2                 = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lcompute_nhx_surface_emis     = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -598,7 +596,7 @@ contains
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'lecovars_full_depth_tavg'
-    lname     = 'Are base ecosystem tracers full depth?'
+    lname     = 'Some diagnostic fields are only provided to 150 m depth; this flag returns full column of those fields'
     units     = 'unitless'
     datatype  = 'logical'
     lptr      => lecovars_full_depth_tavg
@@ -611,15 +609,6 @@ contains
     units     = 'unitless'
     datatype  = 'logical'
     lptr      => ciso_lsource_sink
-    call this%add_var(sname, lname, units, datatype, category,       &
-                      marbl_status_log, lptr=lptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'ciso_lecovars_full_depth_tavg'
-    lname     = 'Are carbon isotope tracers full depth?'
-    units     = 'unitless'
-    datatype  = 'logical'
-    lptr      => ciso_lecovars_full_depth_tavg
     call this%add_var(sname, lname, units, datatype, category,       &
                       marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
