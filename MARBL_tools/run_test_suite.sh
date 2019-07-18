@@ -160,16 +160,16 @@ if [ "${STATUS}" == "PASS" ]; then
   fi
 
   # Compare 2-inst and 5-inst output
-  cd ${MARBL_ROOT}/MARBL_tools
-  HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/compute_cols
-  if [ -f ${HIST_ROOT}/history_2inst.nc ] && [ -f ${HIST_ROOT}/history_2inst.nc ]; then
+#  cd ${MARBL_ROOT}/MARBL_tools
+#  HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/compute_cols
+#  if [ -f ${HIST_ROOT}/history_2inst.nc ] && [ -f ${HIST_ROOT}/history_2inst.nc ]; then
     # We use "-a 0 -r 0 -t 0" because we want these two files to be identical
     # When we introduce a baseline comparison, we will not use these flags
-    echo "$ ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc -a 0 -r 0 -t 0"
-    ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc -a 0 -r 0 -t 0
-    STATUS=$(check_return $?)
-    print_status "netCDF Comparison" >> $OUTFILE
-  fi
+#    echo "$ ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc -a 0 -r 0 -t 0"
+#    ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc -a 0 -r 0 -t 0
+#    STATUS=$(check_return $?)
+#    print_status "netCDF Comparison" >> $OUTFILE
+#  fi
 
   # Print all diagnostics MARBL can provide
   cd ${MARBL_ROOT}/tests/regression_tests/requested_diags
