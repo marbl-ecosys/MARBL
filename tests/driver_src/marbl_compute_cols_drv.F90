@@ -32,7 +32,7 @@ Contains
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_compute_cols_drv:test'
-    character(len=*), parameter :: infile = 'marbl.nc'
+    character(len=*), parameter :: infile = '../../input_files/initial_conditions/compute_cols.20190718.nc'
     real(r8), allocatable, dimension(:,:) :: surface_fluxes        ! num_cols x num_tracers
     real(r8), allocatable, dimension(:,:,:) :: interior_tendencies ! num_tracers x num_levels x num_cols
     real(r8), allocatable, dimension(:,:,:) :: tracer_initial_vals ! num_tracers x num_levels x num_cols

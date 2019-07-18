@@ -195,7 +195,7 @@ if [ "${STATUS}" == "PASS" ]; then
   # Print all restoring fields being requested
   cd ${MARBL_ROOT}/tests/regression_tests/requested_restoring
   echo "$ ./requested_restoring.py"
-  ./requested_restoring.py -i ${MARBL_ROOT}/tests/input_files/marbl_with_restore.input
+  ./requested_restoring.py -i ${MARBL_ROOT}/tests/input_files/settings/marbl_with_restore.input
   STATUS=$(check_return $?)
   print_status "requested_restoring.py" >> $OUTFILE
 
