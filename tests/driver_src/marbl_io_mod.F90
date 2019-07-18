@@ -332,13 +332,16 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_r8_field_0d_by_id'
     character(len=char_len) :: log_message
-    integer :: varid
+    integer :: varid, nc_status
+    real(r8) :: scale_factor
 
 #ifndef _NETCDF
     ! Abort if not built with -D_NETCDF
     write(log_message, "(3A)") 'Can not call read_field(', trim(field_name), ') without netCDF support'
     call driver_status_log%log_error(log_message, subname)
-    if (present(col_id)) varid = col_id ! use varid and col_id to avoid warning when building without netcdf
+    if (present(col_id)) varid = 0 ! use col_id and var_id to avoid warning when building without netcdf
+    nc_status = 0 ! use nc_status to avoid warning when building without netcdf
+    scale_factor = 1.0_r8 ! use scale_factor to avoid warning when building without netcdf
     field = real(file_id, r8) ! use file_id to avoid warning when building without netcdf
     return
 #else
@@ -359,6 +362,17 @@ contains
       call driver_status_log%log_error_trace(log_message, subname)
       return
     end if
+
+    ! Get scale_factor, apply it if attribute exists
+    nc_status = nf90_get_att(file_id, varid, 'scale_factor', scale_factor)
+    call netcdf_check(nc_status, driver_status_log, ignore_err=NF90_ENOTATT)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_iquire_attribute(scale_factor)', subname)
+      return
+    end if
+    if (nc_status .ne. NF90_ENOTATT) &
+      field = scale_factor*field
+
 #endif
 
   end subroutine marbl_io_read_r8_field_0d_by_id
@@ -407,7 +421,8 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_r8_field_1d_by_id'
     character(len=char_len) :: log_message
-    integer :: varid, num_levels
+    integer :: varid, num_levels, nc_status
+    real(r8) :: scale_factor
     logical :: surf_only_loc
 
     if (present(surf_only)) then
@@ -431,6 +446,8 @@ contains
     call driver_status_log%log_error(log_message, subname)
     field = 0._r8
     varid = 0
+    nc_status = 0 ! use nc_status to avoid warning when building without netcdf
+    scale_factor = 1.0_r8 ! use scale_factor to avoid warning when building without netcdf
     return
 #else
     call netcdf_check(nf90_inq_varid(file_id, trim(field_name), varid), driver_status_log)
@@ -454,6 +471,17 @@ contains
       call driver_status_log%log_error_trace(log_message, subname)
       return
     end if
+
+    ! Get scale_factor, apply it if attribute exists
+    nc_status = nf90_get_att(file_id, varid, 'scale_factor', scale_factor)
+    call netcdf_check(nc_status, driver_status_log, ignore_err=NF90_ENOTATT)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('nf90_iquire_attribute(scale_factor)', subname)
+      return
+    end if
+    if (nc_status .ne. NF90_ENOTATT) &
+      field = scale_factor*field
+
 #endif
 
   end subroutine marbl_io_read_r8_field_1d_by_id
@@ -1034,19 +1062,25 @@ contains
   !*****************************************************************************
 
 #ifdef _NETCDF
-  subroutine netcdf_check(status, driver_status_log)
+  subroutine netcdf_check(status, driver_status_log, ignore_err)
     ! Private routine to handle errors returned from netcdf
     ! (can only be called if _NETCDF is defined)
 
-    integer, intent(in)                 :: status
+    integer,              intent(in)    :: status
     type(marbl_log_type), intent(inout) :: driver_status_log
+    integer, optional,    intent(in)    :: ignore_err
 
     character(len=*), parameter :: subname = 'marbl_io_mod:netcdf_check'
     character(len=char_len) :: log_message
 
+    ! User can specify an error to ignore
+    if (present(ignore_err)) then
+      if (status.eq.ignore_err) return
+    end if
+
     if (status.ne.nf90_noerr) then
       call marbl_io_close_all(driver_status_log)
-      write(log_message, "(2A)") "netCDF error: ", trim(nf90_strerror(status))
+      write(log_message, "(A,I0,2A)") "netCDF error (", status, "): ", trim(nf90_strerror(status))
       call driver_status_log%log_error(log_message, subname)
     end if
 

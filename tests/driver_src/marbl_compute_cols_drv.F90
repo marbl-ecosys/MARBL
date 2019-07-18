@@ -384,8 +384,6 @@ Contains
         case('sss')
           call marbl_io_read_field(infile, 'SSS', forcing_fields(n)%field_0d(col_id), driver_status_log, &
                col_id=col_id+col_start)
-          ! APPLY SCALE_FACTOR IN read_field
-          forcing_fields(n)%field_0d(col_id) = 1000._r8 * forcing_fields(n)%field_0d(col_id)
         case('sst')
           call marbl_io_read_field(infile, 'SST', forcing_fields(n)%field_0d(col_id), driver_status_log, &
                col_id=col_id+col_start)
@@ -440,8 +438,6 @@ Contains
         case('Salinity')
           call marbl_io_read_field(infile, 'salinity', forcing_fields(n)%field_1d(1,:), driver_status_log, &
                col_start=col_id+col_start)
-          ! APPLY SCALE_FACTOR IN read_field
-          forcing_fields(n)%field_1d(1,:) = 1000._r8 * forcing_fields(n)%field_1d(1,:)
         case('Pressure')
           call marbl_io_read_field(infile, 'pressure', forcing_fields(n)%field_1d(1,:), driver_status_log, &
                col_start=col_id+col_start)
