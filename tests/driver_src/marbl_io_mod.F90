@@ -695,7 +695,8 @@ contains
     ! 2) Surface diagnostics
     mask_2d = .true. ! all surface flux diagnostics are at the surface
     do n=1, surface_flux_diag_buffer%num_diags
-      call write_diag(file_id, surface_flux_diag_buffer%diags(n), num_active_levels, surface_diag_ids(n), mask_2d,  driver_status_log)
+      call write_diag(file_id, surface_flux_diag_buffer%diags(n), num_active_levels, surface_diag_ids(n), &
+                      mask_2d, driver_status_log)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") 'write_diag(', trim(marbl_instance%surface_flux_diags%diags(n)%short_name), ')'
         call driver_status_log%log_error_trace(log_message, subname)
@@ -712,7 +713,8 @@ contains
         mask_2d(col_id) = (marbl_instance%domain%zw(num_active_levels(col_id)) .ge. &
                            interior_tendency_diag_buffer%diags(n)%ref_depth_2d)
       end do
-      call write_diag(file_id, interior_tendency_diag_buffer%diags(n), num_active_levels, interior_diag_ids(n), mask_2d, driver_status_log)
+      call write_diag(file_id, interior_tendency_diag_buffer%diags(n), num_active_levels, interior_diag_ids(n), &
+                      mask_2d, driver_status_log)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") 'write_diag(', trim(marbl_instance%interior_tendency_diags%diags(n)%short_name), ')'
         call driver_status_log%log_error_trace(log_message, subname)
