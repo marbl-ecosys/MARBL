@@ -69,8 +69,9 @@ class MARBL_testcase(object):
     args = parser.parse_args()
 
     # Allow user to run with "-i None" to use default settings
-    if args.input_file == "None":
-        args.input_file = None
+    if HaveInputFile:
+      if args.input_file == "None":
+          args.input_file = None
 
     # Run make clean if option is specified
     if args.clean:
