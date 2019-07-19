@@ -975,9 +975,10 @@ contains
     end if
 
     ! 3) Default fill value
-    call netcdf_check(nf90_def_var_fill(file_id, varid, 0, NF90_FILL_DOUBLE), driver_status_log)
+    call netcdf_check(nf90_put_att(file_id, varid, "_FillValue", &
+         NF90_FILL_DOUBLE), driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('nf90_def_var_fill)', subname)
+      call driver_status_log%log_error_trace('nf90_put_att(_FillValue)', subname)
       return
     end if
 
