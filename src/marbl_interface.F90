@@ -541,7 +541,7 @@ contains
 
   !***********************************************************************
 
-  subroutine put_input_file_line(this, line, pgi_bugfix_var)
+  subroutine put_input_file_line(this, line)
 
     ! This subroutine takes a single line from MARBL's default input file format,
     ! determines the variable name and whether the value is a scalar or an array,
@@ -555,21 +555,12 @@ contains
 
     class(marbl_interface_class), intent(inout) :: this
     character(len=*),             intent(in)    :: line
-    ! For some reason PGI doesn't like this particular interface to put_setting()
-    ! --- Error from building stand-alone driver ---
-    ! PGF90-S-0155-cannot access PRIVATE type bound procedure
-    ! put_input_file_line$tbp (/NO_BACKUP/codes/marbl/tests/driver_src/marbl.F90: 239)
-    !
-    ! But adding another variable to the interface makes it okay
-    logical, optional,            intent(in)    :: pgi_bugfix_var(0)
 
     character(len=char_len), dimension(:), allocatable :: value, line_loc_arr
     character(len=char_len) :: varname, var_loc, line_loc
     integer(int_kind)       :: n, char_ind
 
     line_loc = ''
-    ! The included PGI bugfix variable triggers a warning from gfortran unless it's used
-    if (present(pgi_bugfix_var)) line_loc=''
     ! Strip out comments (denoted by '!'); line_loc_arr(1) is the line to be processed
     call marbl_utils_str_to_substrs(line, '!', line_loc_arr)
     line_loc = line_loc_arr(1)
