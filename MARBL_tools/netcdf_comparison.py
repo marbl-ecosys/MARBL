@@ -19,10 +19,9 @@
 
 import logging
 
-def netcdf_comparison(baseline, new_file, rtol=1e-12, atol=1e-16, thres=1e-16):
-    """
-        Compare baseline to new_file using xarray
-    """
+##################
+
+def _init(baseline, new_file):
     import xarray as xr
 
     logger = logging.getLogger(__name__)
@@ -35,11 +34,27 @@ def netcdf_comparison(baseline, new_file, rtol=1e-12, atol=1e-16, thres=1e-16):
     header_fail, ds_base, ds_new = _header_test(ds_base, ds_new)
     fail = fail or header_fail
 
+    return fail, ds_base, ds_new
+
+##################
+
+def netcdf_comparison(baseline, new_file, rtol=1e-12, atol=1e-16, thres=1e-16):
+    """
+        Compare baseline to new_file using xarray
+    """
+    fail, ds_base, ds_new = _init(baseline, new_file)
+
     # Compare remaining variables
     var_check_fail = _variable_check(ds_base, ds_new, rtol, atol, thres)
     fail = fail or var_check_fail
 
     return fail
+
+##################
+
+# def netcdf_strict_comparison(baseline, new_file):
+#
+#     return netcdf_comparison
 
 ##################
 
@@ -126,7 +141,6 @@ def _variable_check(ds_base, ds_new, rtol, atol, thres):
            ii. If |baseline value| > thres, then want relative difference < rtol
     """
     import numpy as np
-    fail = False
 
     common_vars = list(set(ds_base.variables) & set(ds_new.variables))
     common_vars.sort()
@@ -153,10 +167,8 @@ def _variable_check(ds_base, ds_new, rtol, atol, thres):
         abs_err = np.abs(new_data - base_data)
         if np.any(abs_err > atol):
             err_messages.append("Max absolute error ({}) exceeds {}".format(np.max(abs_err), atol))
-        if _report_errs(var, err_messages):
-            fail = True
 
-    return fail
+        return _report_errs(var, err_messages)
 
 ##################
 
@@ -208,10 +220,10 @@ if __name__ == "__main__":
     # Set up logging
 #    logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.INFO)
     logging.basicConfig(format='%(message)s', level=logging.INFO)
-    logger = logging.getLogger(__name__)
+    LOGGER = logging.getLogger(__name__)
 
     args = _parse_args() # pylint: disable=invalid-name
     if netcdf_comparison(args.baseline, args.new_file, args.rtol, args.atol, args.thres):
-        logger.error("Differences found between files!")
+        LOGGER.error("Differences found between files!")
         os.sys.exit(1)
-    logger.info("PASS: All variables match and are within specified tolerance.")
+    LOGGER.info("PASS: All variables match and are within specified tolerance.")
