@@ -38,23 +38,29 @@ def _init(baseline, new_file):
 
 ##################
 
-def netcdf_comparison(baseline, new_file, rtol=1e-12, atol=1e-16, thres=1e-16):
+def netcdf_comparison_exact(baseline, new_file):
     """
         Compare baseline to new_file using xarray
+        Will only pass if two files are identical (bfb)
+        (run with --strict=exact)
     """
-    fail, ds_base, ds_new = _init(baseline, new_file)
+    header_fail, ds_base, ds_new = _init(baseline, new_file)
 
     # Compare remaining variables
-    var_check_fail = _variable_check(ds_base, ds_new, rtol, atol, thres)
-    fail = fail or var_check_fail
-
-    return fail
+    return header_fail or _variable_check_exact(ds_base, ds_new)
 
 ##################
 
-# def netcdf_strict_comparison(baseline, new_file):
-#
-#     return netcdf_comparison
+def netcdf_comparison_loose(baseline, new_file, rtol=1e-12, atol=1e-16, thres=1e-16):
+    """
+        Compare baseline to new_file using xarray
+        Will pass if two files are within specified tolerance
+        (run with --strict=loose)
+    """
+    header_fail, ds_base, ds_new = _init(baseline, new_file)
+
+    # Compare remaining variables
+    return header_fail or _variable_check_loose(ds_base, ds_new, rtol, atol, thres)
 
 ##################
 
@@ -131,7 +137,47 @@ def _header_test(ds_base, ds_new):
 
 ##################
 
-def _variable_check(ds_base, ds_new, rtol, atol, thres):
+def _variable_check_exact(ds_base, ds_new):
+    """
+        Assumes both datasets contain the same variables with the same dimensions
+        Checks if two datasets are identical:
+        1. Are NaNs in the same place?
+        2. Are non-NaN values identical?
+    """
+
+    import numpy as np
+
+    var_check_fail = False
+    common_vars = list(set(ds_base.variables) & set(ds_new.variables))
+    common_vars.sort()
+
+    for var in common_vars:
+        err_messages = []
+        # (1) Are NaNs in the same place?
+        mask_base = ~np.isnan(ds_base[var].data)
+        mask_new = ~np.isnan(ds_new[var].data)
+        if np.any(mask_base ^ mask_new):
+            err_messages.append('NaNs are not in same place')
+
+        # (2) Compare non-NaN values
+        base_data = ds_base[var].data[mask_base]
+        new_data = ds_new[var].data[mask_base]
+        if np.any(base_data != new_data):
+            rel_err = np.where(base_data != 0, np.abs(new_data - base_data), 0) / \
+                      np.where(base_data != 0, np.abs(base_data), 1)
+            abs_err = np.abs(new_data - base_data)
+            err_messages.append("Values are not the same everywhere\n{}".format(
+                "    Max relative error: {}\n    Max absolute error: {}".format(np.max(rel_err),
+                                                                                np.max(abs_err))
+            ))
+
+        var_check_fail = _report_errs(var, err_messages) or var_check_fail
+
+    return var_check_fail
+
+##################
+
+def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
     """
         Assumes both datasets contain the same variables with the same dimensions
         Checks:
@@ -142,10 +188,13 @@ def _variable_check(ds_base, ds_new, rtol, atol, thres):
     """
     import numpy as np
 
+    var_check_fail = False
     common_vars = list(set(ds_base.variables) & set(ds_new.variables))
     common_vars.sort()
+
     for var in common_vars:
         err_messages = []
+
         # (1) compare everywhere that baseline is 0 (well, <= thres)
         if np.any(np.where(np.abs(ds_base[var].data) <= thres,
                            np.abs(ds_new[var].data) > thres, False)):
@@ -168,7 +217,9 @@ def _variable_check(ds_base, ds_new, rtol, atol, thres):
         if np.any(abs_err > atol):
             err_messages.append("Max absolute error ({}) exceeds {}".format(np.max(abs_err), atol))
 
-        return _report_errs(var, err_messages)
+        var_check_fail = _report_errs(var, err_messages) or var_check_fail
+
+    return var_check_fail
 
 ##################
 
@@ -203,14 +254,17 @@ def _parse_args():
                         help="File to compare to baseline")
 
     # Tolerances
+    parser.add_argument('--strict', choices=['exact', 'loose'], required=True,
+                        help="Should files be bit-for-bit [exact] or within some tolerance [loose]")
+
     parser.add_argument('-r', '--rtol', action='store', dest='rtol', default=1e-12, type=float,
-                        help="Maximum allowable relative tolerance")
+                        help="Maximum allowable relative tolerance (only if strict=loose)")
 
     parser.add_argument('-a', '--atol', action='store', dest='atol', default=1e-16, type=float,
-                        help="Maximum allowable absolute tolerance")
+                        help="Maximum allowable absolute tolerance (only if strict=loose)")
 
     parser.add_argument('-t', '--thres', action='store', dest='thres', default=1e-16, type=float,
-                        help="Threshold where we switch from absolute tolerance to relative")
+                        help="Threshold to switch from abs tolerance to rel (only if strict=loose)")
 
     return parser.parse_args()
 
@@ -223,7 +277,13 @@ if __name__ == "__main__":
     LOGGER = logging.getLogger(__name__)
 
     args = _parse_args() # pylint: disable=invalid-name
-    if netcdf_comparison(args.baseline, args.new_file, args.rtol, args.atol, args.thres):
-        LOGGER.error("Differences found between files!")
-        os.sys.exit(1)
-    LOGGER.info("PASS: All variables match and are within specified tolerance.")
+    if args.strict == 'loose':
+        if netcdf_comparison_loose(args.baseline, args.new_file, args.rtol, args.atol, args.thres):
+            LOGGER.error("Differences found between files!")
+            os.sys.exit(1)
+        LOGGER.info("PASS: All variables match and are within specified tolerance.")
+    if args.strict == 'exact':
+        if netcdf_comparison_exact(args.baseline, args.new_file):
+            LOGGER.error("Differences found between files!")
+            os.sys.exit(1)
+        LOGGER.info("PASS: All variables match and have exactly the same values.")
