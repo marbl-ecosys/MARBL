@@ -49,8 +49,8 @@ print_status "CodeConsistency.py" >> $OUTFILE
 command -v pylint 2>&1 > /dev/null
 if [ $? -eq 0 ]; then
   cd ${MARBL_ROOT}/MARBL_tools
-  echo "$ pylint --rcfile=pylintrc code_consistency.py"
-  pylint --rcfile=pylintrc code_consistency.py
+  echo "$ pylint --rcfile=pylintrc code_consistency.py netcdf_comparison.py"
+  pylint --rcfile=pylintrc code_consistency.py netcdf_comparison.py
   STATUS=$(check_return $?)
   print_status "pylint" >> $OUTFILE
 fi
@@ -159,17 +159,31 @@ if [ "${STATUS}" == "PASS" ]; then
     print_status "compute_cols.py -n test_2inst.nml" >> $OUTFILE
   fi
 
-  # Compare 2-inst and 5-inst output
-#  cd ${MARBL_ROOT}/MARBL_tools
-#  HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/compute_cols
-#  if [ -f ${HIST_ROOT}/history_2inst.nc ] && [ -f ${HIST_ROOT}/history_2inst.nc ]; then
-    # We use "-a 0 -r 0 -t 0" because we want these two files to be identical
-    # When we introduce a baseline comparison, we will not use these flags
-#    echo "$ ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc -a 0 -r 0 -t 0"
-#    ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc -a 0 -r 0 -t 0
-#    STATUS=$(check_return $?)
-#    print_status "netCDF Comparison" >> $OUTFILE
-#  fi
+  # Same test, but with num_inst = 5 instead of 1 or 2
+  if [ "${STATUS}" == "PASS" ]; then
+    cd ${MARBL_ROOT}/tests/regression_tests/compute_cols
+    echo "$ ./compute_cols.py -n test_5inst.nml"
+    ./compute_cols.py -n test_5inst.nml
+    STATUS=$(check_return $?)
+    print_status "compute_cols.py -n test_5inst.nml" >> $OUTFILE
+  fi
+
+  # Compare 1-inst, 2-inst and 5-inst output
+  if [ "${STATUS}" == "PASS" ]; then
+    cd ${MARBL_ROOT}/MARBL_tools
+    HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/compute_cols
+    # We use "--strict exact" because we want these two files to be identical
+    # When we introduce a baseline comparison, we will use "--strict loose"
+    echo "$ ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc --strict exact"
+    ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc --strict exact
+    STATUS=$(check_return $?)
+    print_status "netCDF Comparison (2 inst vs 1 inst)" >> $OUTFILE
+
+    echo "$ ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_5inst.nc --strict exact"
+    ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_5inst.nc --strict exact
+    STATUS=$(check_return $?)
+    print_status "netCDF Comparison (5 inst vs 1 inst)" >> $OUTFILE
+  fi
 
   # Print all diagnostics MARBL can provide
   cd ${MARBL_ROOT}/tests/regression_tests/requested_diags
