@@ -9,6 +9,7 @@ addons:
          - netcdf-bin libnetcdf-dev openmpi-bin libopenmpi-dev gfortran-5
 
 install:
+   - sudo ln -s /usr/bin/gfortran-5 /usr/bin/gfortran
    - pip install pyyaml numpy xarray netcdf4
    - pip install -r docs/py_requirements.txt
 
