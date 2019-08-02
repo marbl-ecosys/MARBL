@@ -151,7 +151,8 @@ Contains
         tracer_initial_vals(:,:,col_id) = marbl_instances(n)%tracers
 
         !  5b. populate interior_tendency_forcings
-        call read_forcing_field(infile, col_id_loc, col_start(n), marbl_instances(n)%interior_tendency_forcings, driver_status_log)
+        call read_forcing_field(infile, col_id_loc, col_start(n), marbl_instances(n)%interior_tendency_forcings, &
+                                driver_status_log, num_active_levels(col_id))
         if (driver_status_log%labort_marbl) then
           call driver_status_log%log_error_trace('read_forcing_field(interior)', subname)
           return
@@ -359,7 +360,7 @@ Contains
 
   !*****************************************************************************
 
-  subroutine read_forcing_field(infile, col_id, col_start, forcing_fields, driver_status_log)
+  subroutine read_forcing_field(infile, col_id, col_start, forcing_fields, driver_status_log, num_active_levels)
 
     use marbl_interface_public_types, only : marbl_forcing_fields_type
     use marbl_io_mod, only : marbl_io_read_field
@@ -369,6 +370,7 @@ Contains
     integer,                                       intent(in)    :: col_start
     type(marbl_forcing_fields_type), dimension(:), intent(inout) :: forcing_fields
     type(marbl_log_type),                          intent(inout) :: driver_status_log
+    integer, optional,                             intent(in)    :: num_active_levels
 
     character(len=*), parameter :: subname = 'marbl_compute_cols_drv:read_forcing_field'
     character(len=char_len)     :: log_message
@@ -456,6 +458,11 @@ Contains
         write(log_message, "(3A)") "marbl_io_read_field(", trim(forcing_fields(n)%metadata%varname), ")"
         call driver_status_log%log_error_trace(log_message, subname)
         return
+      end if
+      if (present(num_active_levels)) then
+        if (associated(forcing_fields(n)%field_1d)) then
+          forcing_fields(n)%field_1d(1,num_active_levels+1:) = real(0, r8)
+        end if
       end if
     end do
 
