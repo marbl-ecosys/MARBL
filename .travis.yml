@@ -1,8 +1,13 @@
 language: python
 sudo: required
 
-before_install:
-   - sudo apt-get install gfortran mpich libnetcdf-dev netcdf-bin
+addons:
+   apt:
+      sources:
+         - ubuntu-toolchain-r-test
+      packages:
+         - netcdf-bin libnetcdf-dev openmpi-bin libopenmpi-dev gfortran-4.8
+
 install:
    - pip install pyyaml numpy xarray netcdf4
    - pip install -r docs/py_requirements.txt
