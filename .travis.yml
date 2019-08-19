@@ -3,8 +3,6 @@ sudo: required
 
 addons:
    apt:
-      sources:
-         - ubuntu-toolchain-r-test
       packages:
          - netcdf-bin libnetcdf-dev openmpi-bin libopenmpi-dev gfortran
 
