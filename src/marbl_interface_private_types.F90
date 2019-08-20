@@ -766,8 +766,38 @@ module marbl_interface_private_types
 
   !***********************************************************************
 
+  type, public :: co2calc_coeffs_type
+     real(kind=r8) :: k0  ! equilibrium constants for CO2 species
+     real(kind=r8) :: k1  ! equilibrium constants for CO2 species
+     real(kind=r8) :: k2  ! equilibrium constants for CO2 species
+     real(kind=r8) :: ff  ! fugacity of CO2
+     real(kind=r8) :: kw  ! equilibrium coefficient of water
+     real(kind=r8) :: kb
+     real(kind=r8) :: ks
+     real(kind=r8) :: kf
+     real(kind=r8) :: k1p
+     real(kind=r8) :: k2p
+     real(kind=r8) :: k3p
+     real(kind=r8) :: ksi
+     real(kind=r8) :: bt
+     real(kind=r8) :: st
+     real(kind=r8) :: ft
+  end type co2calc_coeffs_type
+
+  type, public :: co2calc_state_type
+     real(kind=r8) :: dic  ! total dissolved inorganic carbon
+     real(kind=r8) :: ta   ! total alkalinity
+     real(kind=r8) :: pt   ! total phosphorous
+     real(kind=r8) :: sit  ! total silicon
+     real(kind=r8) :: temp ! temperature (for error reporting)
+     real(kind=r8) :: salt ! salinity (for error reporting)
+  end type co2calc_state_type
+
+  !***********************************************************************
+
   ! marbl interface should use marbl_internal_timers_type and
-  ! marbl_timer_indexing_type from here
+  ! marbl_timer_indexing_type from here, even though they originate
+  ! in marbl_timing_mod
   public :: marbl_internal_timers_type
   public :: marbl_timer_indexing_type
 

@@ -7,10 +7,15 @@ module marbl_co2calc_mod
   ! based upon OCMIP2 co2calc
   !-----------------------------------------------------------------------------
 
-  use marbl_kinds_mod     , only : int_kind, r8, log_kind, char_len
-  use marbl_logging       , only : marbl_log_type
-  use marbl_constants_mod , only : p001,c3, c10
-  use marbl_constants_mod , only : c0, p5, c1, c2, c1000, T0_Kelvin, rho_sw
+  use marbl_kinds_mod, only : int_kind, r8, log_kind, char_len
+
+  use marbl_logging, only : marbl_log_type
+
+  use marbl_constants_mod, only : p001,c3, c10
+  use marbl_constants_mod, only : c0, p5, c1, c2, c1000, T0_Kelvin, rho_sw
+
+  use marbl_interface_private_types, only : co2calc_coeffs_type
+  use marbl_interface_private_types, only : co2calc_state_type
 
   implicit none
 
@@ -44,37 +49,6 @@ module marbl_co2calc_mod
   real(kind=r8)          , parameter :: salt_min = 0.1_r8
   real(kind=r8)          , parameter :: dic_min  = salt_min / 35.0_r8 * 1944.0_r8
   real(kind=r8)          , parameter :: alk_min  = salt_min / 35.0_r8 * 2225.0_r8
-
-  !-----------------------------------------------------------------------------
-  !   declarations for function coefficients & species concentrations
-  !-----------------------------------------------------------------------------
-
-  type, public :: co2calc_coeffs_type
-     real(kind=r8) :: k0  ! equilibrium constants for CO2 species
-     real(kind=r8) :: k1  ! equilibrium constants for CO2 species
-     real(kind=r8) :: k2  ! equilibrium constants for CO2 species
-     real(kind=r8) :: ff  ! fugacity of CO2
-     real(kind=r8) :: kw  ! equilibrium coefficient of water
-     real(kind=r8) :: kb
-     real(kind=r8) :: ks
-     real(kind=r8) :: kf
-     real(kind=r8) :: k1p
-     real(kind=r8) :: k2p
-     real(kind=r8) :: k3p
-     real(kind=r8) :: ksi
-     real(kind=r8) :: bt
-     real(kind=r8) :: st
-     real(kind=r8) :: ft
-  end type co2calc_coeffs_type
-
-  type, public :: co2calc_state_type
-     real(kind=r8) :: dic  ! total dissolved inorganic carbon
-     real(kind=r8) :: ta   ! total alkalinity
-     real(kind=r8) :: pt   ! total phosphorous
-     real(kind=r8) :: sit  ! total silicon
-     real(kind=r8) :: temp ! temperature (for error reporting)
-     real(kind=r8) :: salt ! salinity (for error reporting)
-  end type co2calc_state_type
 
   !*****************************************************************************
 

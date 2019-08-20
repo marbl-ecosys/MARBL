@@ -29,6 +29,8 @@ module marbl_interior_tendency_mod
   use marbl_interface_private_types, only : dissolved_organic_matter_type
   use marbl_interface_private_types, only : carbonate_type
   use marbl_interface_private_types, only : column_sinking_particle_type
+  use marbl_interface_private_types, only : co2calc_coeffs_type
+  use marbl_interface_private_types, only : co2calc_state_type
 
   use marbl_interface_public_types, only : marbl_domain_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
@@ -109,6 +111,8 @@ contains
        interior_tendency_share,               &
        marbl_particulate_share,               &
        interior_tendency_diags,               &
+       co2calc_coeffs,                        &
+       co2calc_state,                         &
        interior_tendencies,                   &
        glo_avg_fields_interior_tendency,      &
        marbl_status_log)
@@ -150,6 +154,8 @@ contains
     type(marbl_interior_tendency_share_type),                intent(inout) :: interior_tendency_share
     type(marbl_particulate_share_type),                      intent(inout) :: marbl_particulate_share
     type(marbl_diagnostics_type),                            intent(inout) :: interior_tendency_diags
+    type(co2calc_coeffs_type),                               intent(inout) :: co2calc_coeffs(:)
+    type(co2calc_state_type),                                intent(inout) :: co2calc_state(:)
     real(r8),                                                intent(out)   :: interior_tendencies(:,:)          ! (tracer_cnt, km) computed source/sink terms
     real(r8),                                                intent(out)   :: glo_avg_fields_interior_tendency(:)
     type(marbl_log_type),                                    intent(inout) :: marbl_status_log
@@ -307,8 +313,9 @@ contains
     call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
                             marbl_status_log)
     call compute_carbonate_chemistry(domain, temperature, pressure,           &
-         salinity, tracer_local(:, :), marbl_tracer_indices, carbonate,       &
-         ph_prev_col(:), ph_prev_alt_co2_col(:), marbl_status_log)
+         salinity, tracer_local(:, :), marbl_tracer_indices, co2calc_coeffs,  &
+         co2calc_state, carbonate, ph_prev_col(:), ph_prev_alt_co2_col(:),    &
+         marbl_status_log)
     call marbl_timers%stop(marbl_timer_indices%carbonate_chem_id,             &
                             marbl_status_log)
 
@@ -922,13 +929,12 @@ contains
   !***********************************************************************
 
   subroutine compute_carbonate_chemistry(domain, temperature, press_bar, &
-       salinity, tracer_local, marbl_tracer_indices, carbonate, ph_prev_col,   &
+       salinity, tracer_local, marbl_tracer_indices, &
+       co2calc_coeffs, co2calc_state, carbonate, ph_prev_col,   &
        ph_prev_alt_co2_col, marbl_status_log)
 
     use marbl_co2calc_mod, only : marbl_co2calc_interior
     use marbl_co2calc_mod, only : marbl_co2calc_co3_sat_vals
-    use marbl_co2calc_mod, only : co2calc_coeffs_type
-    use marbl_co2calc_mod, only : co2calc_state_type
 
     type(marbl_domain_type),       intent(in)    :: domain
     real (r8),                     intent(in)    :: temperature(:)
@@ -936,6 +942,8 @@ contains
     real (r8),                     intent(in)    :: salinity(:)
     real (r8),                     intent(in)    :: tracer_local(:,:)       ! local copies of model tracer concentrations
     type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
+    type(co2calc_coeffs_type),     intent(inout) :: co2calc_coeffs(:)
+    type(co2calc_state_type),      intent(inout) :: co2calc_state(:)
     type(carbonate_type),          intent(inout) :: carbonate
     real(r8),                      intent(inout) :: ph_prev_col(:)          ! km
     real(r8),                      intent(inout) :: ph_prev_alt_co2_col(:)  ! km
@@ -947,8 +955,6 @@ contains
     character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:compute_carbonate_chemistry'
 
     integer :: k
-    type(co2calc_coeffs_type), dimension(domain%km) :: co2calc_coeffs
-    type(co2calc_state_type),  dimension(domain%km) :: co2calc_state
     real(r8),                  dimension(domain%km) :: ph_lower_bound
     real(r8),                  dimension(domain%km) :: ph_upper_bound
     real(r8),                  dimension(domain%km) :: dic_loc

@@ -64,6 +64,8 @@ contains
        surface_flux_internal,           &
        surface_flux_share,              &
        surface_flux_diags,              &
+       co2calc_coeffs,                  &
+       co2calc_state,                   &
        glo_avg_fields_surface_flux,     &
        marbl_status_log)
 
@@ -72,11 +74,11 @@ contains
     use marbl_interface_public_types, only : sfo_ind
     use marbl_interface_public_types, only : marbl_diagnostics_type
     use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
+    use marbl_interface_private_types, only : co2calc_coeffs_type
+    use marbl_interface_private_types, only : co2calc_state_type
     use marbl_schmidt_number_mod, only : schmidt_co2_surf
     use marbl_oxygen, only : schmidt_o2_surf
     use marbl_co2calc_mod, only : marbl_co2calc_surface
-    use marbl_co2calc_mod, only : co2calc_coeffs_type
-    use marbl_co2calc_mod, only : co2calc_state_type
     use marbl_oxygen, only : o2sat_surf
     use marbl_nhx_surface_emis_mod, only : marbl_nhx_surface_emis_compute
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
@@ -99,6 +101,8 @@ contains
     type(marbl_surface_flux_output_type)      , intent(inout) :: surface_flux_output
     type(marbl_surface_flux_share_type)       , intent(inout) :: surface_flux_share
     type(marbl_diagnostics_type)              , intent(inout) :: surface_flux_diags
+    type(co2calc_coeffs_type)                 , intent(inout) :: co2calc_coeffs(:)
+    type(co2calc_state_type)                  , intent(inout) :: co2calc_state(:)
     real (r8)                                 , intent(out)   :: glo_avg_fields_surface_flux(:,:)
     type(marbl_log_type)                      , intent(inout) :: marbl_status_log
 
@@ -114,8 +118,6 @@ contains
     real (r8)          :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (mmol/m^3)
     real (r8)          :: totalChl_loc(num_elements)  ! local value of totalChl
     real (r8)          :: flux_o2_loc(num_elements)   ! local value of o2 flux
-    type(co2calc_coeffs_type), dimension(num_elements) :: co2calc_coeffs
-    type(co2calc_state_type),  dimension(num_elements) :: co2calc_state
     !-----------------------------------------------------------------------
 
     associate(                                             &
