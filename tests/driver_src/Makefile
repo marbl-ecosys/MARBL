@@ -186,14 +186,19 @@ $(EXE): check clean_exe                        \
 	$(FC) -o $(EXE) $(OBJ_DIR)/*.o $(LINKS) $(NETCDF_LNK)
 	$(shell echo $(USE_NETCDF) > $(INFO_FILE))
 
-# Clean up previous builds
+# Clean up previous builds of the executable
 .PHONY: clean_exe
 clean_exe:
 	rm -f $(EXESRL) $(EXEMPI)
+	find $(OBJ_ROOT)/*/driver -name marbl.o | xargs rm -f
+
+# Clean up previous builds of the driver
+.PHONY: clean_driver
+clean_driver: clean_exe
+	find $(OBJ_ROOT)/*/driver -name marbl_*.o | xargs rm -f
+	find $(OBJ_ROOT)/*/driver -name marbl_*.mod | xargs rm -f
 
 .PHONY: clean
-clean: clean_exe
+clean: clean_driver
 	rm -f $(EXE_SRC_DIR)/.netcdf_info*
-	find $(OBJ_ROOT)/*/driver -name marbl*.o | xargs rm -f
-	find $(OBJ_ROOT)/*/driver -name marbl*.mod | xargs rm -f
 	make -f $(LIB_SRC_DIR)/Makefile clean
