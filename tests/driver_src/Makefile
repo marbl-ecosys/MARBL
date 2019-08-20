@@ -193,5 +193,7 @@ clean_exe:
 
 .PHONY: clean
 clean: clean_exe
-	rm -f $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl_*.{o,mod} $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl.{o,mod} $(EXE_SRC_DIR)/.netcdf_info*
+	rm -f $(EXE_SRC_DIR)/.netcdf_info*
+	find $(OBJ_ROOT)/*/driver -name marbl*.o | xargs rm -f
+	find $(OBJ_ROOT)/*/driver -name marbl*.mod | xargs rm -f
 	make -f $(LIB_SRC_DIR)/Makefile clean

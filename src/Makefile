@@ -152,4 +152,6 @@ $(DEP_FILE): $(MAKE_DEP) $(SRC_DIR)/*.F90
 # clean up previous builds
 .PHONY: clean
 clean:
-	/bin/rm -f $(OBJ_DIR)/{gnu,intel,nag,pgi,cray}{,-mpi}/$(DEP_FILENAME) $(OBJ_DIR)/{gnu,intel,nag,pgi,cray}{,-mpi}/marbl_*.{o,mod} $(INC_DIR)/{gnu,intel,nag,pgi,cray}{,-mpi}/marbl_*.mod $(LIB_DIR)/libmarbl*.a
+	rm -f $(OBJ_DIR)/*/$(DEP_FILENAME) $(LIB_DIR)/libmarbl*.a
+	find $(OBJ_DIR) -maxdepth 2 -name marbl_*.o | xargs rm -f
+	find $(OBJ_DIR) -maxdepth 2 -name marbl_*.mod | xargs rm -f
