@@ -1,15 +1,13 @@
+dist: trusty
 language: python
 sudo: required
 
 addons:
    apt:
-      sources:
-         - ubuntu-toolchain-r-test
       packages:
-         - netcdf-bin libnetcdf-dev openmpi-bin libopenmpi-dev gfortran-4.8
+         - netcdf-bin libnetcdf-dev openmpi-bin libopenmpi-dev gfortran
 
 install:
-   - sudo ln -s /usr/bin/gfortran-4.8 /usr/bin/gfortran
    - pip install pyyaml numpy xarray netcdf4
    - pip install -r docs/py_requirements.txt
 
