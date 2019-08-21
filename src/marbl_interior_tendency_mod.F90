@@ -154,8 +154,8 @@ contains
     type(marbl_interior_tendency_share_type),                intent(inout) :: interior_tendency_share
     type(marbl_particulate_share_type),                      intent(inout) :: marbl_particulate_share
     type(marbl_diagnostics_type),                            intent(inout) :: interior_tendency_diags
-    type(co2calc_coeffs_type),                               intent(inout) :: co2calc_coeffs(:)
-    type(co2calc_state_type),                                intent(inout) :: co2calc_state(:)
+    type(co2calc_coeffs_type),                               intent(inout) :: co2calc_coeffs
+    type(co2calc_state_type),                                intent(inout) :: co2calc_state
     real(r8),                                                intent(out)   :: interior_tendencies(:,:)          ! (tracer_cnt, km) computed source/sink terms
     real(r8),                                                intent(out)   :: glo_avg_fields_interior_tendency(:)
     type(marbl_log_type),                                    intent(inout) :: marbl_status_log
@@ -942,8 +942,8 @@ contains
     real (r8),                     intent(in)    :: salinity(:)
     real (r8),                     intent(in)    :: tracer_local(:,:)       ! local copies of model tracer concentrations
     type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
-    type(co2calc_coeffs_type),     intent(inout) :: co2calc_coeffs(:)
-    type(co2calc_state_type),      intent(inout) :: co2calc_state(:)
+    type(co2calc_coeffs_type),     intent(inout) :: co2calc_coeffs
+    type(co2calc_state_type),      intent(inout) :: co2calc_state
     type(carbonate_type),          intent(inout) :: carbonate
     real(r8),                      intent(inout) :: ph_prev_col(:)          ! km
     real(r8),                      intent(inout) :: ph_prev_alt_co2_col(:)  ! km

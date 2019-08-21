@@ -101,8 +101,8 @@ contains
     type(marbl_surface_flux_output_type)      , intent(inout) :: surface_flux_output
     type(marbl_surface_flux_share_type)       , intent(inout) :: surface_flux_share
     type(marbl_diagnostics_type)              , intent(inout) :: surface_flux_diags
-    type(co2calc_coeffs_type)                 , intent(inout) :: co2calc_coeffs(:)
-    type(co2calc_state_type)                  , intent(inout) :: co2calc_state(:)
+    type(co2calc_coeffs_type)                 , intent(inout) :: co2calc_coeffs
+    type(co2calc_state_type)                  , intent(inout) :: co2calc_state
     real (r8)                                 , intent(out)   :: glo_avg_fields_surface_flux(:,:)
     type(marbl_log_type)                      , intent(inout) :: marbl_status_log
 

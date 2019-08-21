@@ -98,8 +98,8 @@ contains
     real(kind=r8)                 , intent(inout) :: phhi(num_elements)     ! upper limit of ph range
     real(kind=r8)                 , intent(out)   :: ph(num_elements)       ! computed ph values, for initial guess on next time step
     real(kind=r8)                 , intent(out)   :: co3(num_elements)      ! Carbonate Ion Concentration
-    type(co2calc_coeffs_type)     , intent(inout) :: co2calc_coeffs(num_elements)
-    type(co2calc_state_type)      , intent(inout) :: co2calc_state(num_elements)
+    type(co2calc_coeffs_type)     , intent(inout) :: co2calc_coeffs
+    type(co2calc_state_type)      , intent(inout) :: co2calc_state
     real(kind=r8)                 , intent(out)   :: co2star(num_elements)  ! CO2*water (nmol/cm^3)
     real(kind=r8)                 , intent(out)   :: dco2star(num_elements) ! delta CO2 (nmol/cm^3)
     real(kind=r8)                 , intent(out)   :: pco2surf(num_elements) ! oceanic pCO2 (ppmv)
@@ -111,7 +111,6 @@ contains
     !---------------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_co2calc_mod:marbl_co2calc_surface'
 
-    type(co2calc_state_type) :: co2calc_state_in(num_elements)
     integer(kind=int_kind)   :: n
     real(kind=r8)            :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
     real(kind=r8)            :: vol_to_mass          ! (mmol/m^3) -> (mol/kg)
@@ -123,21 +122,14 @@ contains
 
     ! temp and salt are not used out of co2calc_state at this time but are
     ! set here to avoid having co2calc_state%temp and %salt uninitialized
-    co2calc_state(:)%temp = temp
-    co2calc_state(:)%salt = salt
-
-    co2calc_state_in(:)%dic  = dic_in
-    co2calc_state_in(:)%ta   = ta_in
-    co2calc_state_in(:)%pt   = pt_in
-    co2calc_state_in(:)%sit  = sit_in
-    co2calc_state_in(:)%temp = temp
-    co2calc_state_in(:)%salt = salt
+    co2calc_state%temp(:) = temp
+    co2calc_state%salt(:) = salt
 
     associate(                        &
-         k1  => co2calc_coeffs(:)%k1, &
-         k2  => co2calc_coeffs(:)%k2, &
-         ff  => co2calc_coeffs(:)%ff, &
-         dic => co2calc_state(:)%dic  &
+         k1  => co2calc_coeffs%k1(:), &
+         k2  => co2calc_coeffs%k2(:), &
+         ff  => co2calc_coeffs%ff(:), &
+         dic => co2calc_state%dic(:)  &
          )
 
     !---------------------------------------------------------------------------
@@ -152,15 +144,15 @@ contains
     !---------------------------------------------------------------------------
 
     if (lcomp_co2calc_coeffs) then
-       call comp_co2calc_coeffs(num_elements, co2calc_state_in, co2calc_coeffs)
+       call comp_co2calc_coeffs(num_elements, temp, salt, co2calc_coeffs)
     end if
 
     !---------------------------------------------------------------------------
     !   compute htotal
     !---------------------------------------------------------------------------
 
-    call comp_htotal(num_elements, num_elements, co2calc_state_in,            &
-                     co2calc_coeffs, co2calc_state, phlo, phhi, htotal,       &
+    call comp_htotal(num_elements, num_elements, dic_in, ta_in, pt_in, sit_in,      &
+                     temp, salt, co2calc_coeffs, co2calc_state, phlo, phhi, htotal, &
                      marbl_status_log)
 
     if (present (marbl_status_log)) then
@@ -238,8 +230,8 @@ contains
     real(kind=r8)             , intent(in)    :: ta_in(num_elements)     ! total alkalinity (neq/cm^3)
     real(kind=r8)             , intent(in)    :: pt_in(num_elements)     ! inorganic phosphate (nmol/cm^3)
     real(kind=r8)             , intent(in)    :: sit_in(num_elements)    ! inorganic silicate (nmol/cm^3)
-    type(co2calc_coeffs_type) , intent(inout) :: co2calc_coeffs(num_elements)
-    type(co2calc_state_type)  , intent(inout) :: co2calc_state(num_elements)
+    type(co2calc_coeffs_type) , intent(inout) :: co2calc_coeffs
+    type(co2calc_state_type)  , intent(inout) :: co2calc_state
     real(kind=r8)             , intent(inout) :: phlo(num_elements)      ! lower limit of pH range
     real(kind=r8)             , intent(inout) :: phhi(num_elements)      ! upper limit of pH range
     real(kind=r8)             , intent(out)   :: pH(num_elements)        ! computed ph values, for initial guess on next time step
@@ -253,7 +245,6 @@ contains
     !---------------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_co2calc_mod:marbl_co2calc_interior'
 
-    type(co2calc_state_type) :: co2calc_state_in(num_elements)
     integer(kind=int_kind)   :: c
     real(kind=r8)            :: mass_to_vol          ! (mol/kg) -> (mmol/m^3)
     real(kind=r8)            :: vol_to_mass          ! (mmol/m^3) -> (mol/kg)
@@ -263,35 +254,28 @@ contains
 
     ! temp and salt are not used out of co2calc_state at this time but are
     ! set here to avoid having co2calc_state%temp and %salt uninitialized
-    co2calc_state(:)%temp = temp
-    co2calc_state(:)%salt = salt
-
-    co2calc_state_in(:)%dic = dic_in
-    co2calc_state_in(:)%ta  = ta_in
-    co2calc_state_in(:)%pt  = pt_in
-    co2calc_state_in(:)%sit = sit_in
-    co2calc_state_in(:)%temp = temp
-    co2calc_state_in(:)%salt = salt
+    co2calc_state%temp(:) = temp
+    co2calc_state%salt(:) = salt
 
     associate(                         &
-         k0  => co2calc_coeffs(:)%k0,  &
-         k1  => co2calc_coeffs(:)%k1,  &
-         k2  => co2calc_coeffs(:)%k2,  &
-         ff  => co2calc_coeffs(:)%ff,  &
-         kw  => co2calc_coeffs(:)%kw,  &
-         kb  => co2calc_coeffs(:)%kb,  &
-         ks  => co2calc_coeffs(:)%ks,  &
-         kf  => co2calc_coeffs(:)%kf,  &
-         k1p => co2calc_coeffs(:)%k1p, &
-         k2p => co2calc_coeffs(:)%k2p, &
-         ksi => co2calc_coeffs(:)%ksi, &
-         bt  => co2calc_coeffs(:)%bt,  &
-         st  => co2calc_coeffs(:)%st,  &
-         ft  => co2calc_coeffs(:)%ft,  &
-         dic => co2calc_state(:)%dic,  &
-         ta  => co2calc_state(:)%ta,   &
-         pt  => co2calc_state(:)%pt,   &
-         sit => co2calc_state(:)%sit   &
+         k0  => co2calc_coeffs%k0(:),  &
+         k1  => co2calc_coeffs%k1(:),  &
+         k2  => co2calc_coeffs%k2(:),  &
+         ff  => co2calc_coeffs%ff(:),  &
+         kw  => co2calc_coeffs%kw(:),  &
+         kb  => co2calc_coeffs%kb(:),  &
+         ks  => co2calc_coeffs%ks(:),  &
+         kf  => co2calc_coeffs%kf(:),  &
+         k1p => co2calc_coeffs%k1p(:), &
+         k2p => co2calc_coeffs%k2p(:), &
+         ksi => co2calc_coeffs%ksi(:), &
+         bt  => co2calc_coeffs%bt(:),  &
+         st  => co2calc_coeffs%st(:),  &
+         ft  => co2calc_coeffs%ft(:),  &
+         dic => co2calc_state%dic(:),  &
+         ta  => co2calc_state%ta(:),   &
+         pt  => co2calc_state%pt(:),   &
+         sit => co2calc_state%sit(:)   &
          )
 
     !---------------------------------------------------------------------------
@@ -306,16 +290,16 @@ contains
     !------------------------------------------------------------------------
 
     if (lcomp_co2calc_coeffs) then
-       call comp_co2calc_coeffs(num_elements, co2calc_state_in, co2calc_coeffs, press_bar)
+       call comp_co2calc_coeffs(num_elements, temp, salt, co2calc_coeffs, press_bar)
     end if
 
     !------------------------------------------------------------------------
     !   compute htotal
     !------------------------------------------------------------------------
 
-    call comp_htotal(num_elements, num_active_elements, co2calc_state_in,     &
-                     co2calc_coeffs, co2calc_state, phlo, phhi, htotal,       &
-                     marbl_status_log)
+    call comp_htotal(num_elements, num_active_elements, dic_in, ta_in, pt_in,        &
+              sit_in, temp, salt, co2calc_coeffs, co2calc_state, phlo, phhi, htotal, &
+              marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace("comp_htotal()", subname)
@@ -355,17 +339,18 @@ contains
 
   !*****************************************************************************
 
-  subroutine comp_co2calc_coeffs(num_elements, co2calc_state_in, co2calc_coeffs, press_bar)
+  subroutine comp_co2calc_coeffs(num_elements, temp, salt, co2calc_coeffs, press_bar)
 
     !---------------------------------------------------------------------------
     ! FIXME #20: the computations for the individual constants need to
     !            be broken out into separate functions and unit tested
     !---------------------------------------------------------------------------
 
-    integer(kind=int_kind)    , intent(in)  :: num_elements
-    type(co2calc_state_type)  , intent(in)  :: co2calc_state_in(num_elements)
-    type(co2calc_coeffs_type) , intent(out) :: co2calc_coeffs(num_elements)
-    real(kind=r8), optional   , intent(in)  :: press_bar(num_elements) ! pressure at level (bars)
+    integer(kind=int_kind)    , intent(in)    :: num_elements
+    real(r8)                  , intent(in)    :: temp(num_elements)
+    real(r8)                  , intent(in)    :: salt(num_elements)
+    type(co2calc_coeffs_type) , intent(inout) :: co2calc_coeffs
+    real(kind=r8), optional   , intent(in)    :: press_bar(num_elements) ! pressure at level (bars)
 
     !---------------------------------------------------------------------------
     !   local variable declarations
@@ -389,23 +374,21 @@ contains
     !---------------------------------------------------------------------------
 
     associate(                         &
-         k0  => co2calc_coeffs(:)%k0,  &
-         k1  => co2calc_coeffs(:)%k1,  &
-         k2  => co2calc_coeffs(:)%k2,  &
-         ff  => co2calc_coeffs(:)%ff,  &
-         kw  => co2calc_coeffs(:)%kw,  &
-         kb  => co2calc_coeffs(:)%kb,  &
-         ks  => co2calc_coeffs(:)%ks,  &
-         kf  => co2calc_coeffs(:)%kf,  &
-         k1p => co2calc_coeffs(:)%k1p, &
-         k2p => co2calc_coeffs(:)%k2p, &
-         k3p => co2calc_coeffs(:)%k3p, &
-         ksi => co2calc_coeffs(:)%ksi, &
-         bt  => co2calc_coeffs(:)%bt,  &
-         st  => co2calc_coeffs(:)%st,  &
-         ft  => co2calc_coeffs(:)%ft,  &
-         temp => co2calc_state_in(:)%temp, &
-         salt => co2calc_state_in(:)%salt  &
+         k0  => co2calc_coeffs%k0(:),  &
+         k1  => co2calc_coeffs%k1(:),  &
+         k2  => co2calc_coeffs%k2(:),  &
+         ff  => co2calc_coeffs%ff(:),  &
+         kw  => co2calc_coeffs%kw(:),  &
+         kb  => co2calc_coeffs%kb(:),  &
+         ks  => co2calc_coeffs%ks(:),  &
+         kf  => co2calc_coeffs%kf(:),  &
+         k1p => co2calc_coeffs%k1p(:), &
+         k2p => co2calc_coeffs%k2p(:), &
+         k3p => co2calc_coeffs%k3p(:), &
+         ksi => co2calc_coeffs%ksi(:), &
+         bt  => co2calc_coeffs%bt(:),  &
+         st  => co2calc_coeffs%st(:),  &
+         ft  => co2calc_coeffs%ft(:)   &
          )
 
     !---------------------------------------------------------------------------
@@ -668,8 +651,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine comp_htotal(num_elements, num_active_elements, co2calc_state_in, &
-                  co2calc_coeffs, co2calc_state, phlo, phhi, htotal,          &
+  subroutine comp_htotal(num_elements, num_active_elements, dic_in, ta_in, pt_in,        &
+                  sit_in, temp, salt, co2calc_coeffs, co2calc_state, phlo, phhi, htotal, &
                   marbl_status_log)
 
     !---------------------------------------------------------------------------
@@ -678,9 +661,14 @@ contains
 
     integer(kind=int_kind)        , intent(in)    :: num_elements
     integer(kind=int_kind)        , intent(in)    :: num_active_elements
-    type(co2calc_state_type)      , intent(in)    :: co2calc_state_in(num_elements)
-    type(co2calc_coeffs_type)     , intent(inout) :: co2calc_coeffs(num_elements)
-    type(co2calc_state_type)      , intent(inout) :: co2calc_state(num_elements)
+    real(r8)                      , intent(in)    :: dic_in(num_elements)
+    real(r8)                      , intent(in)    :: ta_in(num_elements)
+    real(r8)                      , intent(in)    :: pt_in(num_elements)
+    real(r8)                      , intent(in)    :: sit_in(num_elements)
+    real(r8)                      , intent(in)    :: temp(num_elements)
+    real(r8)                      , intent(in)    :: salt(num_elements)
+    type(co2calc_coeffs_type)     , intent(inout) :: co2calc_coeffs
+    type(co2calc_state_type)      , intent(inout) :: co2calc_state
     real(kind=r8)                 , intent(inout) :: phlo(num_elements)   ! lower limit of pH range
     real(kind=r8)                 , intent(inout) :: phhi(num_elements)   ! upper limit of pH range
     real(kind=r8)                 , intent(out)   :: htotal(num_elements) ! free concentration of H ion
@@ -698,27 +686,23 @@ contains
     !---------------------------------------------------------------------------
 
     associate(                               &
-          k1  => co2calc_coeffs(:)%k1,       &
-          k2  => co2calc_coeffs(:)%k2,       &
-          kw  => co2calc_coeffs(:)%kw,       &
-          kb  => co2calc_coeffs(:)%kb,       &
-          ks  => co2calc_coeffs(:)%ks,       &
-          kf  => co2calc_coeffs(:)%kf,       &
-          k1p => co2calc_coeffs(:)%k1p,      &
-          k2p => co2calc_coeffs(:)%k2p,      &
-          k3p => co2calc_coeffs(:)%k3p,      &
-          ksi => co2calc_coeffs(:)%ksi,      &
-          bt  => co2calc_coeffs(:)%bt,       &
-          st  => co2calc_coeffs(:)%st,       &
-          ft  => co2calc_coeffs(:)%ft,       &
-          dic => co2calc_state(:)%dic,       &
-          ta  => co2calc_state(:)%ta,        &
-          pt  => co2calc_state(:)%pt,        &
-          sit => co2calc_state(:)%sit,       &
-          dic_in => co2calc_state_in(:)%dic, &
-          ta_in  => co2calc_state_in(:)%ta,  &
-          pt_in  => co2calc_state_in(:)%pt,  &
-          sit_in => co2calc_state_in(:)%sit  &
+          k1  => co2calc_coeffs%k1(:),       &
+          k2  => co2calc_coeffs%k2(:),       &
+          kw  => co2calc_coeffs%kw(:),       &
+          kb  => co2calc_coeffs%kb(:),       &
+          ks  => co2calc_coeffs%ks(:),       &
+          kf  => co2calc_coeffs%kf(:),       &
+          k1p => co2calc_coeffs%k1p(:),      &
+          k2p => co2calc_coeffs%k2p(:),      &
+          k3p => co2calc_coeffs%k3p(:),      &
+          ksi => co2calc_coeffs%ksi(:),      &
+          bt  => co2calc_coeffs%bt(:),       &
+          st  => co2calc_coeffs%st(:),       &
+          ft  => co2calc_coeffs%ft(:),       &
+          dic => co2calc_state%dic(:),       &
+          ta  => co2calc_state%ta(:),        &
+          pt  => co2calc_state%pt(:),        &
+          sit => co2calc_state%sit(:)        &
           )
 
     !---------------------------------------------------------------------------
@@ -757,9 +741,9 @@ contains
     !   set x1 and x2 to the previous value of the pH +/- ~0.5.
     !---------------------------------------------------------------------------
 
-    call drtsafe(num_elements, num_active_elements, k1, k2, co2calc_state_in, &
-                 co2calc_coeffs, co2calc_state, x1, x2, xacc, htotal,         &
-                 marbl_status_log)
+    call drtsafe(num_elements, num_active_elements, k1, k2, dic_in, ta_in, pt_in,      &
+              sit_in, temp, salt, co2calc_coeffs, co2calc_state, x1, x2, xacc, htotal, &
+              marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace("drtsafe", subname)
@@ -772,9 +756,9 @@ contains
 
   !*****************************************************************************
 
-  subroutine drtsafe(num_elements, num_active_elements, k1, k2, co2calc_state_in, &
-                     co2calc_coeffs, co2calc_state, x1, x2, xacc, soln,           &
-                     marbl_status_log)
+  subroutine drtsafe(num_elements, num_active_elements, k1, k2, dic_in, ta_in, pt_in,    &
+                  sit_in, temp, salt, co2calc_coeffs, co2calc_state, x1, x2, xacc, soln, &
+                  marbl_status_log)
 
     !---------------------------------------------------------------------------
     !   Vectorized version of drtsafe, which was a modified version of
@@ -791,9 +775,14 @@ contains
     integer(kind=int_kind)        , intent(in)    :: num_active_elements
     real(kind=r8)                 , intent(in)    :: k1(num_elements)
     real(kind=r8)                 , intent(in)    :: k2(num_elements)
-    type(co2calc_state_type)      , intent(in)    :: co2calc_state_in(num_elements)
-    type(co2calc_coeffs_type)     , intent(in)    :: co2calc_coeffs(num_elements)
-    type(co2calc_state_type)      , intent(in)    :: co2calc_state(num_elements)
+    real(kind=r8)                 , intent(in)    :: dic_in(num_elements)
+    real(kind=r8)                 , intent(in)    :: ta_in(num_elements)
+    real(kind=r8)                 , intent(in)    :: pt_in(num_elements)
+    real(kind=r8)                 , intent(in)    :: sit_in(num_elements)
+    real(kind=r8)                 , intent(in)    :: temp(num_elements)
+    real(kind=r8)                 , intent(in)    :: salt(num_elements)
+    type(co2calc_coeffs_type)     , intent(in)    :: co2calc_coeffs
+    type(co2calc_state_type)      , intent(in)    :: co2calc_state
     real(kind=r8)                 , intent(in)    :: xacc
     real(kind=r8)                 , intent(inout) :: x1(num_elements)
     real(kind=r8)                 , intent(inout) :: x2(num_elements)
@@ -811,7 +800,7 @@ contains
     logical(kind=log_kind), dimension(num_elements) :: mask
     logical(kind=log_kind), dimension(num_elements) :: active_mask
     integer(kind=int_kind)                          :: c, it
-    real(kind=r8)                                   :: temp
+    real(kind=r8)                                   :: temp_loc
     real(kind=r8), dimension(num_elements) :: xlo, xhi, flo, fhi, f, df, dxold, dx
     !---------------------------------------------------------------------------
 
@@ -868,32 +857,32 @@ contains
                 ! Original state values
                 ! total DIC
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
-                      'dic = ', co2calc_state_in(c)%dic
+                      'dic = ', dic_in(c)
                 call marbl_status_log%log_error(log_message, subname, c)
 
                 ! total alkalinity
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
-                      'ta = ', co2calc_state_in(c)%ta
+                      'ta = ', ta_in(c)
                 call marbl_status_log%log_error(log_message, subname, c)
 
                 ! total phosphorus
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
-                      'pt = ', co2calc_state_in(c)%pt
+                      'pt = ', pt_in(c)
                 call marbl_status_log%log_error(log_message, subname, c)
 
                 ! total silicon
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
-                      'sit = ', co2calc_state_in(c)%sit
+                      'sit = ', sit_in(c)
                 call marbl_status_log%log_error(log_message, subname, c)
 
                 ! temperature
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
-                      'temp = ', co2calc_state_in(c)%temp
+                      'temp = ', temp(c)
                 call marbl_status_log%log_error(log_message, subname, c)
 
                 ! salinity
                 WRITE(log_message,"(3A,1X,A,E15.7e3)") '(', subname, ')',     &
-                      'salt = ', co2calc_state_in(c)%salt
+                      'salt = ', salt(c)
                 call marbl_status_log%log_error(log_message, subname, c)
 
                 abort = .true.
@@ -918,9 +907,9 @@ contains
        else
           xlo(c) = x2(c)
           xhi(c) = x1(c)
-          temp = flo(c)
+          temp_loc = flo(c)
           flo(c) = fhi(c)
-          fhi(c) = temp
+          fhi(c) = temp_loc
        end if
        soln(c) = p5 * (xlo(c) + xhi(c))
        dxold(c) = ABS(xlo(c) - xhi(c))
@@ -947,9 +936,9 @@ contains
              else
                 dxold(c) = dx(c)
                 dx(c) = -f(c) / df(c)
-                temp = soln(c)
+                temp_loc = soln(c)
                 soln(c) = soln(c) + dx(c)
-                if (temp .EQ. soln(c)) mask(c) = .false.
+                if (temp_loc .EQ. soln(c)) mask(c) = .false.
              end if
              if (ABS(dx(c)) .LT. xacc) mask(c) = .false.
           end if
@@ -997,8 +986,8 @@ contains
     real(kind=r8)             , intent(in)  :: k1(num_elements)
     real(kind=r8)             , intent(in)  :: k2(num_elements)
     real(kind=r8)             , intent(in)  :: x(num_elements)
-    type(co2calc_coeffs_type) , intent(in)  :: co2calc_coeffs(num_elements)
-    type(co2calc_state_type)  , intent(in)  :: co2calc_state(num_elements)
+    type(co2calc_coeffs_type) , intent(in)  :: co2calc_coeffs
+    type(co2calc_state_type)  , intent(in)  :: co2calc_state
     real(kind=r8)             , intent(out) :: fn(num_elements)
     real(kind=r8)             , intent(out) :: df(num_elements)
 
@@ -1012,21 +1001,21 @@ contains
     !---------------------------------------------------------------------------
 
     associate(                         &
-         kw  => co2calc_coeffs(:)%kw,  &
-         kb  => co2calc_coeffs(:)%kb,  &
-         ks  => co2calc_coeffs(:)%ks,  &
-         kf  => co2calc_coeffs(:)%kf,  &
-         k1p => co2calc_coeffs(:)%k1p, &
-         k2p => co2calc_coeffs(:)%k2p, &
-         k3p => co2calc_coeffs(:)%k3p, &
-         ksi => co2calc_coeffs(:)%ksi, &
-         bt  => co2calc_coeffs(:)%bt,  &
-         st  => co2calc_coeffs(:)%st,  &
-         ft  => co2calc_coeffs(:)%ft,  &
-         dic => co2calc_state(:)%dic,  &
-         ta  => co2calc_state(:)%ta,   &
-         pt  => co2calc_state(:)%pt,   &
-         sit => co2calc_state(:)%sit   &
+         kw  => co2calc_coeffs%kw(:),  &
+         kb  => co2calc_coeffs%kb(:),  &
+         ks  => co2calc_coeffs%ks(:),  &
+         kf  => co2calc_coeffs%kf(:),  &
+         k1p => co2calc_coeffs%k1p(:), &
+         k2p => co2calc_coeffs%k2p(:), &
+         k3p => co2calc_coeffs%k3p(:), &
+         ksi => co2calc_coeffs%ksi(:), &
+         bt  => co2calc_coeffs%bt(:),  &
+         st  => co2calc_coeffs%st(:),  &
+         ft  => co2calc_coeffs%ft(:),  &
+         dic => co2calc_state%dic(:),  &
+         ta  => co2calc_state%ta(:),   &
+         pt  => co2calc_state%pt(:),   &
+         sit => co2calc_state%sit(:)   &
          )
 
     do c = 1,num_elements

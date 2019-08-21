@@ -122,14 +122,14 @@ module marbl_interface
      type(zooplankton_share_type),             private :: zooplankton_share
      type(marbl_particulate_share_type),       private :: particulate_share
      type(marbl_interior_tendency_share_type), private :: interior_tendency_share
-     type(co2calc_coeffs_type),                private, allocatable :: interior_co2calc_coeffs(:)
-     type(co2calc_state_type),                 private, allocatable :: interior_co2calc_state(:)
+     type(co2calc_coeffs_type),                private :: interior_co2calc_coeffs
+     type(co2calc_state_type),                 private :: interior_co2calc_state
      type(dissolved_organic_matter_type),      private :: dissolved_organic_matter
      type(carbonate_type),                     private :: carbonate
      type(marbl_surface_flux_share_type),      private :: surface_flux_share
      type(marbl_surface_flux_internal_type),   private :: surface_flux_internal
-     type(co2calc_coeffs_type),                private, allocatable :: surface_co2calc_coeffs(:)
-     type(co2calc_state_type),                 private, allocatable :: surface_co2calc_state(:)
+     type(co2calc_coeffs_type),                private :: surface_co2calc_coeffs
+     type(co2calc_state_type),                 private :: surface_co2calc_state
      logical,                                  private :: lallow_glo_ops
      type(marbl_internal_timers_type),         private :: timers
      type(marbl_timer_indexing_type),          private :: timer_ids
@@ -294,10 +294,10 @@ contains
       call this%zooplankton_share%construct(num_levels)
       call this%interior_tendency_share%construct(num_levels)
     end if
-    allocate(this%surface_co2calc_coeffs(num_elements_surface_flux))
-    allocate(this%surface_co2calc_state(num_elements_surface_flux))
-    allocate(this%interior_co2calc_coeffs(num_levels))
-    allocate(this%interior_co2calc_state(num_levels))
+    call this%surface_co2calc_coeffs%construct(num_elements_surface_flux)
+    call this%surface_co2calc_state%construct(num_elements_surface_flux)
+    call this%interior_co2calc_coeffs%construct(num_levels)
+    call this%interior_co2calc_state%construct(num_levels)
 
 
     !-----------------------------------------------------------------------
@@ -1062,10 +1062,10 @@ contains
       call this%interior_tendency_share%destruct()
     end if
     call this%domain%destruct()
-    deallocate(this%surface_co2calc_coeffs)
-    deallocate(this%surface_co2calc_state)
-    deallocate(this%interior_co2calc_coeffs)
-    deallocate(this%interior_co2calc_state)
+    call this%surface_co2calc_coeffs%destruct()
+    call this%surface_co2calc_state%destruct()
+    call this%interior_co2calc_coeffs%destruct()
+    call this%interior_co2calc_state%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
