@@ -195,27 +195,40 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
     for var in common_vars:
         err_messages = []
 
-        # (1) compare everywhere that baseline is 0 (well, <= thres)
-        if np.any(np.where(np.abs(ds_base[var].data) <= thres,
-                           np.abs(ds_new[var].data) > thres, False)):
-            err_messages.append('Baseline is 0 at some indices where new data is non-zero')
+        # (1) Are NaNs in the same place?
+        if np.any(np.isnan(ds_base[var].data) ^ np.isnan(ds_new[var].data)):
+            err_messages.append('NaNs are not in same place')
+        else:
+            mask = ~np.isnan(ds_base[var].data)
+            # (2) compare everywhere that baseline is 0 (well, <= thres)
+            if np.any(np.where(np.abs(ds_base[var].data[mask]) <= thres,
+                               np.abs(ds_new[var].data[mask]) > thres, False)):
+                err_messages.append('Baseline is 0 at some indices where new data is non-zero')
 
-        # (2) Compare everywhere that |baseline| is > thres
-        base_data = np.where(np.abs(ds_base[var].data) > thres, ds_base[var].data, 0)
-        new_data = np.where(np.abs(ds_base[var].data) > thres, ds_new[var].data, 0)
-        rel_err = np.where(base_data != 0, np.abs(new_data - base_data), 0) / \
-                  np.where(base_data != 0, np.abs(base_data), 1)
-        if np.any(rel_err > rtol):
-            err_messages.append("Max relative error ({}) exceeds {}".format(np.max(rel_err), rtol))
+            # (3) Compare everywhere that |baseline| is > thres
+            base_data = np.where(np.abs(ds_base[var].data[mask]) > thres,
+                                 ds_base[var].data[mask],
+                                 0)
+            new_data = np.where(np.abs(ds_base[var].data[mask]) > thres,
+                                ds_new[var].data[mask],
+                                0)
+            rel_err = np.where(base_data != 0, np.abs(new_data - base_data), 0) / \
+                      np.where(base_data != 0, np.abs(base_data), 1)
+            if np.any(rel_err > rtol):
+                err_messages.append("Max relative error ({}) exceeds {}".format(np.max(rel_err),
+                                                                                rtol))
 
-        # (3) Compare everywhere that 0 < |baseline| <= thres
-        base_data = np.where((ds_base[var].data != 0) & (np.abs(ds_base[var].data) <= thres),
-                             ds_base[var].data, 0)
-        new_data = np.where((ds_base[var].data != 0) & (np.abs(ds_base[var].data) <= thres),
-                            ds_new[var].data, 0)
-        abs_err = np.abs(new_data - base_data)
-        if np.any(abs_err > atol):
-            err_messages.append("Max absolute error ({}) exceeds {}".format(np.max(abs_err), atol))
+            # (4) Compare everywhere that 0 < |baseline| <= thres
+            base_data = np.where((ds_base[var].data[mask] != 0) &
+                                 (np.abs(ds_base[var].data[mask]) <= thres),
+                                 ds_base[var].data[mask], 0)
+            new_data = np.where((ds_base[var].data[mask] != 0) &
+                                (np.abs(ds_base[var].data[mask]) <= thres),
+                                ds_new[var].data[mask], 0)
+            abs_err = np.abs(new_data - base_data)
+            if np.any(abs_err > atol):
+                err_messages.append("Max absolute error ({}) exceeds {}".format(np.max(abs_err),
+                                                                                atol))
 
         var_check_fail = _report_errs(var, err_messages) or var_check_fail
 

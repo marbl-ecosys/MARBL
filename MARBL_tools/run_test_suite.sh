@@ -183,6 +183,12 @@ if [ "${STATUS}" == "PASS" ]; then
     ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_5inst.nc --strict exact
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (5 inst vs 1 inst)" >> $OUTFILE
+
+    BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
+    echo "$ ./netcdf_comparison.py -b ${BASE_ROOT}/compute_cols.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose"
+    ./netcdf_comparison.py -b ${BASE_ROOT}/compute_cols.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose
+    STATUS=$(check_return $?)
+    print_status "netCDF Comparison (1 inst vs baseline)" >> $OUTFILE
   fi
 
   # Print all diagnostics MARBL can provide
