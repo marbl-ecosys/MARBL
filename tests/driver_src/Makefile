@@ -130,6 +130,7 @@ endif
 COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(LIBCPPDEFS)"
 
 OBJS = marbl_mpi_mod.o          \
+       marbl_netcdf_mod.o       \
        marbl_io_mod.o           \
        marbl_init_drv.o         \
        marbl_compute_cols_drv.o \
@@ -177,7 +178,7 @@ $(OBJ_DIR)/%.o: $(EXE_SRC_DIR)/%.F90 $(LIB_DIR)/$(LIB_NAME)
 
 # Determine if output needs to be rebuilt with or without netcdf
 check:
-	$(if $(REBUILD), rm -f $(OBJ_DIR)/marbl_io_mod.*)
+	$(if $(REBUILD), rm -f $(OBJ_DIR)/marbl_netcdf_mod.*)
 
 # Executable
 $(EXE): check clean_exe                        \
