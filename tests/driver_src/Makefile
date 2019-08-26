@@ -172,9 +172,18 @@ cray:
 $(LIB_DIR)/%.a: $(LIB_SRC_DIR)/*.F90
 	make -f $(LIB_SRC_DIR)/Makefile FC=$(FC) FCFLAGS="$(FCFLAGS) $(INC)" USE_DEPS=TRUE $(COMP_ARGS) $@
 
+# Rebuild marbl_io_mod if marbl_netcdf_mod changes
+$(OBJ_DIR)/marbl_io_mod.o: $(OBJ_DIR)/marbl_netcdf_mod.o
+$(OBJ_DIR)/marbl_io_mod.mod: $(OBJ_DIR)/marbl_netcdf_mod.mod
+
+# Rebuild marbl_compute_cols_drv if marbl_io_mod changes
+$(OBJ_DIR)/marbl_compute_cols_drv.o: $(OBJ_DIR)/marbl_io_mod.o
+$(OBJ_DIR)/marbl_compute_cols_drv.mod: $(OBJ_DIR)/marbl_io_mod.mod
+
 # Driver object files
 $(OBJ_DIR)/%.o: $(EXE_SRC_DIR)/%.F90 $(LIB_DIR)/$(LIB_NAME)
 	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(NETCDF_INC) $(INC2) $(INCLUDES) -c $< -o $@
+
 
 # Determine if output needs to be rebuilt with or without netcdf
 check:

@@ -84,24 +84,11 @@ module marbl_netcdf_mod
   public :: marbl_netcdf_close
   public :: marbl_netcdf_close_all
 
-  interface marbl_netcdf_read_dim
-    module procedure marbl_netcdf_read_dim_by_id
-    module procedure marbl_netcdf_read_dim_by_name
-  end interface marbl_netcdf_read_dim
-
   interface marbl_netcdf_read_field
-    module procedure marbl_netcdf_read_int_field_0d_by_id
-    module procedure marbl_netcdf_read_int_field_0d_by_name
-    module procedure marbl_netcdf_read_r8_field_0d_by_id
-    module procedure marbl_netcdf_read_r8_field_0d_by_name
-    module procedure marbl_netcdf_read_r8_field_1d_by_id
-    module procedure marbl_netcdf_read_r8_field_1d_by_name
+    module procedure marbl_netcdf_read_int_field_0d
+    module procedure marbl_netcdf_read_r8_field_0d
+    module procedure marbl_netcdf_read_r8_field_1d
   end interface marbl_netcdf_read_field
-
-  interface marbl_netcdf_close
-    module procedure marbl_netcdf_close_by_id
-    module procedure marbl_netcdf_close_by_name
-  end interface marbl_netcdf_close
 
 contains
 
@@ -175,25 +162,34 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_netcdf_read_dim_by_id(file_id, dim_name, dim, driver_status_log)
+  subroutine marbl_netcdf_read_dim(file_name, dim_name, dim, driver_status_log)
 
-    integer,              intent(in)    :: file_id
+    character(len=*),     intent(in)    :: file_name
     character(len=*),     intent(in)    :: dim_name
     integer,              intent(inout) :: dim
     type(marbl_log_type), intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_dim_by_id'
+    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_dim'
     character(len=char_len) :: log_message
     integer :: dimid
+    integer :: file_id
 
 #ifndef _NETCDF
     ! Abort if not built with -D_NETCDF
-    write(log_message, "(3A)") 'Can not call read_dim(', trim(dim_name), ') without netCDF support'
+    log_message = 'Can not call marbl_netcdf_read_dim without netCDF support'
     call driver_status_log%log_error(log_message, subname)
-    dim = file_id ! use file_id to avoid warning when building without netcdf
-    dimid = -1
+    file_id = -1 ! use file_id to avoid warning when building without netcdf
+    dimid = -1 ! use file_id to avoid warning when building without netcdf
+    dim = len_trim(file_name) + len_trim(dim_name) ! use file_name to avoid warning when building without netcdf
     return
 #else
+    ! Get file_id given file_name
+    file_id = get_nc_file_id(file_name, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('get_nc_file_id', subname)
+      return
+    end if
+
     call netcdf_check(nf90_inq_dimid(file_id, trim(dim_name), dimid), driver_status_log)
     if (driver_status_log%labort_marbl) then
       write(log_message, "(3A)") 'nf90_inq_dimid(', trim(dim_name), ')'
@@ -209,56 +205,30 @@ contains
     end if
 #endif
 
-  end subroutine marbl_netcdf_read_dim_by_id
+  end subroutine marbl_netcdf_read_dim
 
   !*****************************************************************************
 
-  subroutine marbl_netcdf_read_dim_by_name(file_name, dim_name, dim, driver_status_log)
+  subroutine marbl_netcdf_read_int_field_0d(file_name, field_name, field, driver_status_log, col_id)
+    ! Given netCDF identifier, populate domain variables
 
     character(len=*),     intent(in)    :: file_name
-    character(len=*),     intent(in)    :: dim_name
-    integer,              intent(inout) :: dim
+    character(len=*),     intent(in)    :: field_name
+    integer,              intent(inout) :: field
     type(marbl_log_type), intent(inout) :: driver_status_log
+    integer, optional,    intent(in)    :: col_id
 
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_dim_by_name'
+    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_int_field_0d'
+    character(len=char_len) :: log_message
+    integer :: varid
     integer :: file_id
 
-#ifndef _NETCDF
-    ! Abort if not built with -D_NETCDF
-    call driver_status_log%log_error('Can not call marbl_netcdf_read_dim without netCDF support', subname)
-    file_id = -1 ! use file_id to avoid warning when building without netcdf
-    dim = len_trim(file_name) + len_trim(dim_name) ! use file_name to avoid warning when building without netcdf
-    return
-#else
     ! Get file_id given file_name
     file_id = get_nc_file_id(file_name, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('get_nc_file_id', subname)
       return
     end if
-
-    call marbl_netcdf_read_dim_by_id(file_id, dim_name, dim, driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_netcdf_read_dim_by_id', subname)
-      return
-    end if
-#endif
-
-  end subroutine marbl_netcdf_read_dim_by_name
-
-  !*****************************************************************************
-
-  subroutine marbl_netcdf_read_int_field_0d_by_id(file_id, field_name, field, driver_status_log, col_id)
-
-    integer,              intent(in)    :: file_id
-    character(len=*),     intent(in)    :: field_name
-    integer,              intent(inout) :: field
-    type(marbl_log_type), intent(inout) :: driver_status_log
-    integer, optional,    intent(in)    :: col_id
-
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_int_field_0d_by_id'
-    character(len=char_len) :: log_message
-    integer :: varid
 
 #ifndef _NETCDF
     ! Abort if not built with -D_NETCDF
@@ -287,20 +257,23 @@ contains
     end if
 #endif
 
-  end subroutine marbl_netcdf_read_int_field_0d_by_id
+  end subroutine marbl_netcdf_read_int_field_0d
 
   !*****************************************************************************
 
-  subroutine marbl_netcdf_read_int_field_0d_by_name(file_name, field_name, field, driver_status_log, col_id)
+  subroutine marbl_netcdf_read_r8_field_0d(file_name, field_name, field, driver_status_log, col_id)
     ! Given netCDF identifier, populate domain variables
 
     character(len=*),     intent(in)    :: file_name
     character(len=*),     intent(in)    :: field_name
-    integer,              intent(inout) :: field
+    real(kind=r8),        intent(inout) :: field
     type(marbl_log_type), intent(inout) :: driver_status_log
     integer, optional,    intent(in)    :: col_id
 
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_int_field_0d_by_id'
+    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_r8_field_0d'
+    character(len=char_len) :: log_message
+    integer :: varid, nc_status
+    real(r8) :: scale_factor
     integer :: file_id
 
     ! Get file_id given file_name
@@ -309,29 +282,6 @@ contains
       call driver_status_log%log_error_trace('get_nc_file_id', subname)
       return
     end if
-
-    call marbl_netcdf_read_int_field_0d_by_id(file_id, field_name, field, driver_status_log, col_id)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_netcdf_read_int_field_0d_by_id', subname)
-      return
-    end if
-
-  end subroutine marbl_netcdf_read_int_field_0d_by_name
-
-  !*****************************************************************************
-
-  subroutine marbl_netcdf_read_r8_field_0d_by_id(file_id, field_name, field, driver_status_log, col_id)
-
-    integer,              intent(in)    :: file_id
-    character(len=*),     intent(in)    :: field_name
-    real(kind=r8),        intent(inout) :: field
-    type(marbl_log_type), intent(inout) :: driver_status_log
-    integer, optional,    intent(in)    :: col_id
-
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_r8_field_0d_by_id'
-    character(len=char_len) :: log_message
-    integer :: varid, nc_status
-    real(r8) :: scale_factor
 
 #ifndef _NETCDF
     ! Abort if not built with -D_NETCDF
@@ -370,24 +320,29 @@ contains
     end if
     if (nc_status .ne. NF90_ENOTATT) &
       field = scale_factor*field
-
 #endif
 
-  end subroutine marbl_netcdf_read_r8_field_0d_by_id
+  end subroutine marbl_netcdf_read_r8_field_0d
 
   !*****************************************************************************
 
-  subroutine marbl_netcdf_read_r8_field_0d_by_name(file_name, field_name, field, driver_status_log, col_id)
+  subroutine marbl_netcdf_read_r8_field_1d(file_name, field_name, field, driver_status_log, surf_only, col_start, col_cnt)
     ! Given netCDF identifier, populate domain variables
 
-    character(len=*),     intent(in)    :: file_name
-    character(len=*),     intent(in)    :: field_name
-    real(kind=r8),        intent(inout) :: field
-    type(marbl_log_type), intent(inout) :: driver_status_log
-    integer, optional,    intent(in)    :: col_id
+    character(len=*),            intent(in)    :: file_name
+    character(len=*),            intent(in)    :: field_name
+    real(kind=r8), dimension(:), intent(inout) :: field
+    type(marbl_log_type),        intent(inout) :: driver_status_log
+    logical, optional,           intent(in)    :: surf_only ! if true, only read surface values
+    integer, optional,           intent(in)    :: col_start
+    integer, optional,           intent(in)    :: col_cnt
 
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_r8_field_0d_by_id'
+    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_r8_field_1d'
+    character(len=char_len) :: log_message
     integer :: file_id
+    integer :: varid, num_levels, nc_status
+    real(r8) :: scale_factor
+    logical :: surf_only_loc
 
     ! Get file_id given file_name
     file_id = get_nc_file_id(file_name, driver_status_log)
@@ -396,40 +351,13 @@ contains
       return
     end if
 
-    call marbl_netcdf_read_r8_field_0d_by_id(file_id, field_name, field, driver_status_log, col_id)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_netcdf_read_r8_field_0d_by_id', subname)
-      return
-    end if
-
-  end subroutine marbl_netcdf_read_r8_field_0d_by_name
-
-  !*****************************************************************************
-
-  subroutine marbl_netcdf_read_r8_field_1d_by_id(file_id, field_name, field, driver_status_log, surf_only, col_start, col_cnt)
-    ! Given netCDF identifier, populate domain variables
-
-    integer,                     intent(in)    :: file_id
-    character(len=*),            intent(in)    :: field_name
-    real(kind=r8), dimension(:), intent(inout) :: field
-    type(marbl_log_type),        intent(inout) :: driver_status_log
-    logical, optional,           intent(in)    :: surf_only ! if true, only read surface values
-    integer, optional,           intent(in)    :: col_start
-    integer, optional,           intent(in)    :: col_cnt
-
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_r8_field_1d_by_id'
-    character(len=char_len) :: log_message
-    integer :: varid, num_levels, nc_status
-    real(r8) :: scale_factor
-    logical :: surf_only_loc
-
     if (present(surf_only)) then
       if ((.not.present(col_start)) .or. (.not.present(col_cnt))) then
         call driver_status_log%log_error('Can not pass surf_only without col_start and col_cnt', subname)
         return
       end if
       surf_only_loc = surf_only
-      call marbl_netcdf_read_dim(file_id, 'zt', num_levels, driver_status_log)
+      call marbl_netcdf_read_dim(file_name, 'zt', num_levels, driver_status_log)
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('marbl_netcdf_read_field(zt)', subname)
         return
@@ -482,38 +410,7 @@ contains
 
 #endif
 
-  end subroutine marbl_netcdf_read_r8_field_1d_by_id
-
-  !*****************************************************************************
-
-  subroutine marbl_netcdf_read_r8_field_1d_by_name(file_name, field_name, field, driver_status_log, surf_only, col_start, col_cnt)
-    ! Given netCDF identifier, populate domain variables
-
-    character(len=*),            intent(in)    :: file_name
-    character(len=*),            intent(in)    :: field_name
-    real(kind=r8), dimension(:), intent(inout) :: field
-    type(marbl_log_type),        intent(inout) :: driver_status_log
-    logical, optional,           intent(in)    :: surf_only ! if true, only read surface values
-    integer, optional,           intent(in)    :: col_start
-    integer, optional,           intent(in)    :: col_cnt
-
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_read_r8_field_1d_by_name'
-    integer :: file_id
-
-    ! Get file_id given file_name
-    file_id = get_nc_file_id(file_name, driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('get_nc_file_id', subname)
-      return
-    end if
-
-    call marbl_netcdf_read_r8_field_1d_by_id(file_id, field_name, field, driver_status_log, surf_only, col_start, col_cnt)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_netcdf_read_r8_field_1d_by_id', subname)
-      return
-    end if
-
-  end subroutine marbl_netcdf_read_r8_field_1d_by_name
+  end subroutine marbl_netcdf_read_r8_field_1d
 
   !*****************************************************************************
 
@@ -761,7 +658,72 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_netcdf_close_by_database(file_database_entry, driver_status_log)
+  subroutine marbl_netcdf_close(file_name, driver_status_log)
+    ! Given netCDF file name, close the file and remove it from file_database
+
+    character(len=*),     intent(in)    :: file_name
+    type(marbl_log_type), intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_close'
+    character(len=char_len) :: log_message
+    type(marbl_file_entry), pointer :: entry_to_remove
+    integer :: file_id
+
+    ! Get file_id given file_name
+    file_id = get_nc_file_id(file_name, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('get_nc_file_id', subname)
+      return
+    end if
+
+    ! close the file
+    entry_to_remove => file_database
+    do while (associated(entry_to_remove))
+      if (file_id .eq. entry_to_remove%file_id) then
+        call close_by_database(entry_to_remove, driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          call driver_status_log%log_error_trace('close_by_database', subname)
+        end if
+        ! Return after closing file
+        return
+      end if
+      entry_to_remove => entry_to_remove%next
+    end do
+
+    ! If loop finishes then file name never matched
+    write(log_message, "(A,I0,A)") "File with identifier ", file_id, " is not open!"
+    call driver_status_log%log_error(log_message, subname)
+
+  end subroutine marbl_netcdf_close
+
+  !*****************************************************************************
+
+  subroutine marbl_netcdf_close_all(driver_status_log)
+    ! Close all the files in file_database
+
+    type(marbl_log_type), intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_close_all'
+    type(marbl_file_entry), pointer :: entry_to_remove
+
+    do while (associated(file_database))
+        ! Can not just pass file_database to close_by_database()
+        ! because argument is intent(inout) and gets deallocated; we don't
+        ! want to deallocate the module variable file_database, we want to
+        ! update it to point at next object in link list and then be able
+        ! to deallocate the first object in the list
+        entry_to_remove => file_database
+        call close_by_database(entry_to_remove, driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          call driver_status_log%log_error_trace('marbl_netcdf_close_by_id', subname)
+        end if
+    end do
+
+  end subroutine marbl_netcdf_close_all
+
+  !*****************************************************************************
+
+  subroutine close_by_database(file_database_entry, driver_status_log)
     ! Given an entry in file_database, close the netCDF file and then
     ! remove the entry from the linked list (private routine called from the
     ! public marbl_netcdf_close interface)
@@ -769,7 +731,7 @@ contains
     type(marbl_log_type),            intent(inout) :: driver_status_log
     type(marbl_file_entry), pointer, intent(inout) :: file_database_entry
 
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_close_by_database'
+    character(len=*), parameter :: subname = 'marbl_netcdf_mod:close_by_database'
     type(marbl_file_entry), pointer :: prev_entry
 
 #ifndef _NETCDF
@@ -802,89 +764,7 @@ contains
     deallocate(file_database_entry)
 #endif
 
-  end subroutine marbl_netcdf_close_by_database
-
-  !*****************************************************************************
-
-  subroutine marbl_netcdf_close_by_id(file_id, driver_status_log)
-    ! Given netCDF identifier, close the file and remove it from file_database
-
-    integer,              intent(in)    :: file_id
-    type(marbl_log_type), intent(inout) :: driver_status_log
-
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_close_by_id'
-    character(len=char_len) :: log_message
-    type(marbl_file_entry), pointer :: entry_to_remove
-
-    entry_to_remove => file_database
-    do while (associated(entry_to_remove))
-      if (file_id .eq. entry_to_remove%file_id) then
-        call marbl_netcdf_close_by_database(entry_to_remove, driver_status_log)
-        if (driver_status_log%labort_marbl) then
-          call driver_status_log%log_error_trace('marbl_netcdf_close_by_database', subname)
-        end if
-        ! Return after closing file
-        return
-      end if
-      entry_to_remove => entry_to_remove%next
-    end do
-    ! If loop finishes then file name never matched
-    write(log_message, "(A,I0,A)") "File with identifier ", file_id, " is not open!"
-    call driver_status_log%log_error(log_message, subname)
-
-  end subroutine marbl_netcdf_close_by_id
-
-  !*****************************************************************************
-
-  subroutine marbl_netcdf_close_by_name(file_name, driver_status_log)
-    ! Given netCDF file name, close the file and remove it from file_database
-
-    character(len=*),     intent(in)    :: file_name
-    type(marbl_log_type), intent(inout) :: driver_status_log
-
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_close_by_name'
-    integer :: file_id
-
-    ! Get file_id given file_name
-    file_id = get_nc_file_id(file_name, driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('get_nc_file_id', subname)
-      return
-    end if
-
-    ! close the file
-    call marbl_netcdf_close_by_id(file_id, driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_netcdf_close_by_id', subname)
-      return
-    end if
-
-  end subroutine marbl_netcdf_close_by_name
-
-  !*****************************************************************************
-
-  subroutine marbl_netcdf_close_all(driver_status_log)
-    ! Close all the files in file_database
-
-    type(marbl_log_type), intent(inout) :: driver_status_log
-
-    character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_close_all'
-    type(marbl_file_entry), pointer :: entry_to_remove
-
-    do while (associated(file_database))
-        ! Can not just pass file_database to marbl_netcdf_close_by_database()
-        ! because argument is intent(inout) and gets deallocated; we don't
-        ! want to deallocate the module variable file_database, we want to
-        ! update it to point at next object in link list and then be able
-        ! to deallocate the first object in the list
-        entry_to_remove => file_database
-        call marbl_netcdf_close_by_database(entry_to_remove, driver_status_log)
-        if (driver_status_log%labort_marbl) then
-          call driver_status_log%log_error_trace('marbl_netcdf_close_by_id', subname)
-        end if
-    end do
-
-  end subroutine marbl_netcdf_close_all
+  end subroutine close_by_database
 
   !*****************************************************************************
 
