@@ -305,16 +305,16 @@ Program marbl
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instances(1), lshutdown = .false.)
-      ! Log surface forcing diagnostics passed back to driver
+      ! Log surface flux diagnostics passed back to driver
       associate(diags => marbl_instances(1)%surface_flux_diags%diags)
-        call driver_status_log%log_header('Surface forcing diagnostics', subname)
+        call driver_status_log%log_header('Surface flux diagnostics', subname)
         do n=1, size(diags)
           write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &
                                         ' (units: ', trim(diags(n)%units),')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
       end associate
-      ! Log interior forcing diagnostics passed back to driver
+      ! Log interior tendency diagnostics passed back to driver
       associate(diags => marbl_instances(1)%interior_tendency_diags%diags)
         call driver_status_log%log_header('Interior tendency diagnostics', subname)
         do n=1, size(diags)
