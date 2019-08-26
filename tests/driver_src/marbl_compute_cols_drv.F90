@@ -239,19 +239,19 @@ Contains
 
     character(len=*), parameter :: subname = 'marbl_compute_cols_drv:initalize'
     character(len=char_len) :: log_message
-    integer :: n, tmp_fid ! netCDF will return a file id
+    integer :: n
     integer :: num_cols, cols_remaining
 
     ! 1. Open necessary netCDF files
     !    1a. Input (grid info, forcing fields, initial conditions)
-    call marbl_netcdf_open(infile, .true., tmp_fid, driver_status_log)
+    call marbl_netcdf_open(infile, .true., driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_netcdf_open', subname)
       return
     end if
 
     !    1b. Output (diagnostics)
-    call marbl_netcdf_open(hist_file, .false., tmp_fid, driver_status_log)
+    call marbl_netcdf_open(hist_file, .false., driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_netcdf_open', subname)
       return

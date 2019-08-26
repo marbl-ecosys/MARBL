@@ -107,7 +107,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_netcdf_open(file_name, read_only, file_id, driver_status_log)
+  subroutine marbl_netcdf_open(file_name, read_only, driver_status_log)
     ! Open a netCDF file
     ! if read_only is .true. then file is assumed to exist, but if
     ! read_only is not .true. then new file will be created or the old
@@ -118,7 +118,6 @@ contains
 
     character(len=*),     intent(in)    :: file_name
     logical,              intent(in)    :: read_only
-    integer,              intent(out)   :: file_id
     type(marbl_log_type), intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_open'
@@ -132,11 +131,9 @@ contains
     write(log_message, "(3A)") 'Can not call open(', trim(file_name), ') without netCDF support'
     call driver_status_log%log_error(log_message, subname)
     if (read_only .or. .true.) then ! use read_only to avoid warning when building without netcdf
-      file_id = -1
     end if
     return
 #else
-    file_id = 0
     ! Only make netCDF calls if built with -D_NETCDF
 
     ! Error check: if file_name is already in database, abort!
