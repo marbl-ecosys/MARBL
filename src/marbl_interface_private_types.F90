@@ -792,8 +792,6 @@ module marbl_interface_private_types
      real(kind=r8), allocatable :: ta(:)   ! total alkalinity
      real(kind=r8), allocatable :: pt(:)   ! total phosphorous
      real(kind=r8), allocatable :: sit(:)  ! total silicon
-     real(kind=r8), allocatable :: temp(:) ! temperature (for error reporting)
-     real(kind=r8), allocatable :: salt(:) ! salinity (for error reporting)
    contains
      procedure, public :: construct => co2calc_state_constructor
      procedure, public :: destruct => co2calc_state_destructor
@@ -2059,8 +2057,6 @@ contains
     allocate(this%ta(num_elements))
     allocate(this%pt(num_elements))
     allocate(this%sit(num_elements))
-    allocate(this%temp(num_elements))
-    allocate(this%salt(num_elements))
 
   end subroutine co2calc_state_constructor
 
@@ -2074,8 +2070,6 @@ contains
     deallocate(this%ta)
     deallocate(this%pt)
     deallocate(this%sit)
-    deallocate(this%temp)
-    deallocate(this%salt)
 
   end subroutine co2calc_state_destructor
 

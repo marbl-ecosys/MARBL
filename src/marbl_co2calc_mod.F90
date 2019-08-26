@@ -120,11 +120,6 @@ contains
     real(kind=r8)            :: htotal(num_elements) ! free concentration of H ion
     !---------------------------------------------------------------------------
 
-    ! temp and salt are not used out of co2calc_state at this time but are
-    ! set here to avoid having co2calc_state%temp and %salt uninitialized
-    co2calc_state%temp(:) = temp
-    co2calc_state%salt(:) = salt
-
     associate(                        &
          k1  => co2calc_coeffs%k1(:), &
          k2  => co2calc_coeffs%k2(:), &
@@ -251,11 +246,6 @@ contains
     real(kind=r8)            :: htotal2, denom
     real(kind=r8)            :: htotal(num_elements) ! free concentration of H ion
     !---------------------------------------------------------------------------
-
-    ! temp and salt are not used out of co2calc_state at this time but are
-    ! set here to avoid having co2calc_state%temp and %salt uninitialized
-    co2calc_state%temp(:) = temp
-    co2calc_state%salt(:) = salt
 
     associate(                         &
          k0  => co2calc_coeffs%k0(:),  &
