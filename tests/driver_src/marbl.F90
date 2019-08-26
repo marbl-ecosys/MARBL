@@ -269,12 +269,12 @@ Program marbl
     !    REGRESSION TESTS
     ! -- init regression test -- !
     case ('init')
-      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
+      call verify_single_instance(num_inst, trim(testname))
       call marbl_init_test(marbl_instances(1))
 
     ! -- init-twice test -- !
     case ('init-twice')
-      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
+      call verify_single_instance(num_inst, trim(testname))
       call marbl_instances(1)%put_setting('ciso_on = .false.')
       call marbl_init_test(marbl_instances(1))
       call summarize_timers(marbl_instances, driver_status_log, header_text = 'Without the CISO Tracers')
@@ -285,7 +285,7 @@ Program marbl
 
     ! -- gen_input_file test -- !
     case ('gen_input_file')
-      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
+      call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       ldriver_log_to_file = .true.
       call marbl_init_test(marbl_instances(1), lshutdown=.false.)
@@ -302,7 +302,7 @@ Program marbl
 
     ! -- request_diags test -- !
     case ('request_diags')
-      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
+      call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instances(1), lshutdown = .false.)
       ! Log surface forcing diagnostics passed back to driver
@@ -327,7 +327,7 @@ Program marbl
 
     ! -- request_tracers test -- !
     case ('request_tracers')
-      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
+      call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instances(1), lshutdown = .false.)
       ! Log tracers requested for initialization
@@ -341,7 +341,7 @@ Program marbl
 
     ! -- request_forcings test -- !
     case ('request_forcings')
-      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
+      call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instances(1), lshutdown=.false., num_PAR_subcols=num_PAR_subcols)
       ! Log requested surface forcing fields
@@ -364,7 +364,7 @@ Program marbl
 
     ! -- request_restoring test -- !
     case ('request_restoring')
-      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
+      call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instances(1), lshutdown = .false.)
 
@@ -392,13 +392,13 @@ Program marbl
     !    UNIT TESTS
     ! -- get_put test -- !
     case ('get_put')
-      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
+      call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       call marbl_get_put_test(marbl_instances(1), driver_status_log)
 
     ! -- marbl_utils test -- !
     case ('marbl_utils')
-      if (num_inst .ne. 1) call require_single_instance(num_inst, trim(testname))
+      call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       lsummarize_timers = .false.
       call marbl_utils_test(driver_status_log)
@@ -610,14 +610,16 @@ Contains
 
   !****************************************************************************
 
-  subroutine require_single_instance(num_inst, testname)
+  subroutine verify_single_instance(num_inst, testname)
 
     integer, intent(in) :: num_inst
     character(len=*), intent(in) :: testname
 
-    write(*,"(3A,I0)") "ERROR: The '", testname, "' test requires a single instance, but num_inst = ", num_inst
-    call marbl_mpi_abort()
+    if (num_inst .ne. 1) then
+      write(*,"(3A,I0)") "ERROR: The '", testname, "' test requires a single instance, but num_inst = ", num_inst
+      call marbl_mpi_abort()
+    end if
 
-  end subroutine require_single_instance
+  end subroutine verify_single_instance
 
 End Program marbl
