@@ -17,16 +17,16 @@ Contains
 
   subroutine test(marbl_instances, hist_file, driver_status_log)
 
-    use marbl_netcdf_mod, only : marbl_netcdf_read_field
-    use marbl_netcdf_mod, only : marbl_netcdf_define_history
-    use marbl_netcdf_mod, only : marbl_netcdf_write_history
+    use marbl_netcdf_mod, only : marbl_netcdf_read_var
     use marbl_netcdf_mod, only : marbl_netcdf_close_all
-    use marbl_netcdf_mod, only : surface_flux_diag_buffer
-    use marbl_netcdf_mod, only : interior_tendency_diag_buffer
 
+    use marbl_io_mod, only : marbl_io_define_history
+    use marbl_io_mod, only : marbl_io_write_history
     use marbl_io_mod, only : marbl_io_read_forcing_field
     use marbl_io_mod, only : marbl_io_read_tracers_at_surface
     use marbl_io_mod, only : marbl_io_read_tracers
+    use marbl_io_mod, only : surface_flux_diag_buffer
+    use marbl_io_mod, only : interior_tendency_diag_buffer
 
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
     character(len=*),                          intent(in)    :: hist_file
@@ -79,9 +79,9 @@ Contains
     allocate(tracer_initial_vals(num_tracers, num_levels, num_cols))
 
     !    (d) netCDF calls to create history file (dimensions are defined but data is not written)
-    call marbl_netcdf_define_history(marbl_instances, col_cnt, hist_file, driver_status_log)
+    call marbl_io_define_history(marbl_instances, col_cnt, hist_file, driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_netcdf_define_history', subname)
+      call driver_status_log%log_error_trace('marbl_io_define_history', subname)
       return
     end if
 
@@ -136,9 +136,9 @@ Contains
       ! 5. Call interior_tendency_compute() (one column at a time)
       do col_id_loc = 1, col_cnt(n)
         col_id = col_start(n)+col_id_loc
-        call marbl_netcdf_read_field(infile, 'active_level_cnt', marbl_instances(n)%domain%kmt, driver_status_log, col_id=col_id)
+        call marbl_netcdf_read_var(infile, 'active_level_cnt', marbl_instances(n)%domain%kmt, driver_status_log, col_id=col_id)
         if (driver_status_log%labort_marbl) then
-          call driver_status_log%log_error_trace('marbl_netcdf_read_field(active_level_cnt)', subname)
+          call driver_status_log%log_error_trace('marbl_netcdf_read_var(active_level_cnt)', subname)
           return
         end if
         num_active_levels(col_id) = marbl_instances(n)%domain%kmt
@@ -194,10 +194,10 @@ Contains
 
 
     ! 6. Output netCDF
-    call marbl_netcdf_write_history(hist_file, marbl_instances(1), surface_fluxes, interior_tendencies, &
-                                tracer_initial_vals, num_active_levels, driver_status_log)
+    call marbl_io_write_history(hist_file, marbl_instances(1), surface_fluxes, interior_tendencies, &
+                               tracer_initial_vals, num_active_levels, driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_netcdf_write_history', subname)
+      call driver_status_log%log_error_trace('marbl_io_write_history', subname)
       return
     end if
 
