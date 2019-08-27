@@ -27,12 +27,10 @@ def load_module(mach, compiler, module_name):
     from env_modules_python import module
     module('purge')
     module('load', module_name)
-    module('load', 'netcdf')
+    module('load', 'netcdf/4.6.1')
     module('load', 'ncarcompilers')
-    if compiler != 'gnu':
-      module('load', 'mpt')
-    else:
-      module('load', 'openmpi')
+    if compiler == 'intel':
+      module('load', 'mpt/2.19')
 
   if mach == 'hobart':
     sys.path.insert(0, os.path.join(os.sep, 'usr', 'share', 'Modules', 'init'))
