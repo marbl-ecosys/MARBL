@@ -11,13 +11,19 @@
     4. Variables with array members where the baseline is 0 and the new file is not
     5. Variables where the relative difference between the two files large
        -- NOTE: we do not flag points where the relative difference is large but
-                the absolute difference is smaller than 1e-12 (there are MARBL
+                the absolute difference is smaller than 1e-16 (there are MARBL
                 diagnostics that should be identically equal to 0 but are O(1e-19)
                 due to taking the difference between two numbers that are very close
                 to each other)
 """
 
 import logging
+
+##################
+
+# Store default values of rtol, atol, and thres in a global dictionary
+# to make it easy to update the default values if necessary
+DEFAULT_TOLS = {'rtol' : 1e-11, 'atol' : 1e-16, 'thres' : 1e-16}
 
 ##################
 
@@ -51,7 +57,8 @@ def netcdf_comparison_exact(baseline, new_file):
 
 ##################
 
-def netcdf_comparison_loose(baseline, new_file, rtol=1e-12, atol=1e-16, thres=1e-16):
+def netcdf_comparison_loose(baseline, new_file, rtol=DEFAULT_TOLS['rtol'],
+                            atol=DEFAULT_TOLS['atol'], thres=DEFAULT_TOLS['thres']):
     """
         Compare baseline to new_file using xarray
         Will pass if two files are within specified tolerance
@@ -270,13 +277,16 @@ def _parse_args():
     parser.add_argument('--strict', choices=['exact', 'loose'], required=True,
                         help="Should files be bit-for-bit [exact] or within some tolerance [loose]")
 
-    parser.add_argument('-r', '--rtol', action='store', dest='rtol', default=1e-12, type=float,
+    parser.add_argument('-r', '--rtol', action='store', dest='rtol',
+                        default=DEFAULT_TOLS['rtol'], type=float,
                         help="Maximum allowable relative tolerance (only if strict=loose)")
 
-    parser.add_argument('-a', '--atol', action='store', dest='atol', default=1e-16, type=float,
+    parser.add_argument('-a', '--atol', action='store', dest='atol',
+                        default=DEFAULT_TOLS['atol'], type=float,
                         help="Maximum allowable absolute tolerance (only if strict=loose)")
 
-    parser.add_argument('-t', '--thres', action='store', dest='thres', default=1e-16, type=float,
+    parser.add_argument('-t', '--thres', action='store', dest='thres',
+                        default=DEFAULT_TOLS['thres'], type=float,
                         help="Threshold to switch from abs tolerance to rel (only if strict=loose)")
 
     return parser.parse_args()
