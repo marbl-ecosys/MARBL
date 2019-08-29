@@ -1043,7 +1043,7 @@
       "lecovars_full_depth_tavg": {
          "datatype": "logical",
          "default_value": ".false.",
-         "longname": "Some diagnostic fields are only provided to 150 m depth; this flag returns full column of those fields",
+         "longname": "If .false., MARBL will recommend truncating the column for some diagnostics",
          "subcategory": "2. config flags",
          "units": "unitless"
       },

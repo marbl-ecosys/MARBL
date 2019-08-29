@@ -213,7 +213,7 @@ module marbl_settings_mod
   logical(log_kind), target :: ciso_on                        ! control whether ciso tracer module is active
   logical(log_kind), target :: lsource_sink                   ! control which portion of code is executed, useful for debugging
   logical(log_kind), target :: ciso_lsource_sink              ! control which portion of carbon isotope code is executed, useful for debugging
-  logical(log_kind), target :: lecovars_full_depth_tavg       ! Some diagnostic fields are only provided to 150 m depth; this flag returns full column of those fields
+  logical(log_kind), target :: lecovars_full_depth_tavg       ! If .false., MARBL will recommend truncating the column for some diagnostics
   logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lcompute_nhx_surface_emis      ! control if NHx emissions are computed
@@ -596,7 +596,7 @@ contains
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'lecovars_full_depth_tavg'
-    lname     = 'Some diagnostic fields are only provided to 150 m depth; this flag returns full column of those fields'
+    lname     = 'If .false., MARBL will recommend truncating the column for some diagnostics'
     units     = 'unitless'
     datatype  = 'logical'
     lptr      => lecovars_full_depth_tavg
