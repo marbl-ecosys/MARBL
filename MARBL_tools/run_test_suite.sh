@@ -137,11 +137,11 @@ if [ "${STATUS}" == "PASS" ]; then
   print_status "init-twice.py" >> $OUTFILE
 
   # Generate a settings file (Fortran)
-  cd ${MARBL_ROOT}/tests/regression_tests/gen_input_file
-  echo "$ ./gen_input_file.py"
-  ./gen_input_file.py
+  cd ${MARBL_ROOT}/tests/regression_tests/gen_settings_file
+  echo "$ ./gen_settings_file.py"
+  ./gen_settings_file.py
   STATUS=$(check_return $?)
-  print_status "gen_input_file.py" >> $OUTFILE
+  print_status "gen_settings_file.py" >> $OUTFILE
 
   # Initialize MARBL, compute surface fluxes and interior tendencies
   cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
@@ -215,7 +215,7 @@ if [ "${STATUS}" == "PASS" ]; then
   # Print all restoring fields being requested
   cd ${MARBL_ROOT}/tests/regression_tests/requested_restoring
   echo "$ ./requested_restoring.py"
-  ./requested_restoring.py -i ${MARBL_ROOT}/tests/input_files/settings/marbl_with_restore.input
+  ./requested_restoring.py
   STATUS=$(check_return $?)
   print_status "requested_restoring.py" >> $OUTFILE
 

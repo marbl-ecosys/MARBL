@@ -4,13 +4,13 @@ Program marbl
 ! The driver for MARBL's stand-alone testing. When built, the executable will
 ! run one of several tests based on the value of testname in &marbl_driver_nml
 !
-! usage: marbl.exe -n NAMELIST_FILE [-i INPUT_FILE]
+! usage: marbl.exe -n NAMELIST_FILE [-s SETTINGS_FILE]
 !   required argument:
 !      -n NAMELIST_FILE, --namelist_file NAMELIST_FILE
 !                     File containing &marbl_driver_nml
 !   optional argument:
-!      -i INPUT_FILE, --input_file INPUT_FILE
-!                     File containing MARBL input file
+!      -s SETTINGS_FILE, --settings_file SETTINGS_FILE
+!                     File containing MARBL settings file
 !
 ! In $MARBL/tests/ the actual tests are divided into the following categories:
 ! 1) Build tests ($MARBL/tests/bld_tests/)
@@ -25,15 +25,19 @@ Program marbl
 !                  variables and MARBL parameters
 ! 3) Regression tests ($MARBL/tests/regression_tests)
 !    * Tests that updates to the code don't unexpectedly change existing behavior
-!    i)   init_without_namelist/ -- Initialize MARBL without any namelist input
-!    ii)  init_from_namelist/ -- Initialize MARBL by reading &marbl_config_nml
-!                               and &marbl_parms_nml
-!    iii) requested_tracers/ -- Print out the list of tracers MARBL is computing
-!                               tendencies for (so GCM can initialize correctly)
-!    iv)  requested_forcings/ -- Print out the list of surface forcing fields
-!                                that MARBL expects the GCM to provide
-!    v)   requested_restoring/ -- Print out the list of tracers MARBL will be
-!                                 restoring to some given data field
+!    i)    init/                     -- Initialize MARBL and then call shutdown()
+!    ii)   init-twice/               -- Initialize MARBL, call shutdown(), and then repeat
+!    iii)  call_compute_subroutines/ -- Initialize MARBL, call surface_flux_compute() and
+!                                       interior_tendency_compute(), and then call shutdown()
+!    iv)   requested_diags/          -- Print out the list of diagnostics MARBL is returning
+!    v)    requested_tracers/        -- Print out the list of tracers MARBL is computing
+!                                       tendencies for (so GCM can initialize correctly)
+!    vi)   requested_forcings/       -- Print out the list of forcing fields for computing both
+!                                       surface flux and interior tendencies that MARBL expects
+!                                       the GCM to provide
+!    vii)  requested_restoring/      -- restoring to some given data field
+!    viii) gen_settings_file/        -- Generate a MARBL settings file (Fortran-based equivalent
+!                                       of MARBL_tools/MARBL_generate_settings_file.py)
 ! *****************************************************************************
 
   ! Use from libmarbl.a
@@ -63,15 +67,15 @@ Program marbl
 
   ! Variables for processing commandline arguments
   character(len=char_len) :: progname, argstr
-  character(len=char_len) :: namelist_file, input_file
+  character(len=char_len) :: namelist_file, settings_file
   integer        :: argcnt
   logical        :: labort_after_argparse, lshow_usage, lfound_file
 
   type(marbl_interface_class), dimension(:), allocatable :: marbl_instances
   type(marbl_log_type)          :: driver_status_log
   integer                       :: n, cnt
-  character(len=char_len)       :: input_line, varname, log_message
-  logical                       :: lprint_marbl_log, lhas_namelist_file, lhas_input_file
+  character(len=char_len)       :: settings_file_line, varname, log_message
+  logical                       :: lprint_marbl_log, lhas_namelist_file, lhas_settings_file
   logical                       :: ldriver_log_to_file, lsummarize_timers
 
   ! Namelist vars
@@ -95,8 +99,8 @@ Program marbl
   num_PAR_subcols = 1 ! Only used for request_forcings test
   labort_after_argparse = .false.
   lhas_namelist_file = .false.
-  lhas_input_file = .false.
-  input_file = ''
+  lhas_settings_file = .false.
+  settings_file = ''
   namelist_file = ''
 
   !     (b) get program name and argument count
@@ -141,11 +145,11 @@ Program marbl
           exit
         end if
 
-      case ('-i', '--input_file')
-        lhas_input_file = .true.
+      case ('-s', '--settings_file')
+        lhas_settings_file = .true.
 
-        ! Error checking: is this the second occurance of the '--input_file' argument?
-        if (len_trim(input_file) .ne. 0) then
+        ! Error checking: is this the second occurance of the '--settings_file' argument?
+        if (len_trim(settings_file) .ne. 0) then
           labort_after_argparse = .true.
           if (my_task .eq. 0) &
             write(*, "(A)") "ERROR: Input file specified multiple times on command line"
@@ -162,14 +166,14 @@ Program marbl
         end if
 
         n = n+1
-        call get_command_argument(n, input_file)
+        call get_command_argument(n, settings_file)
 
         ! Error checking: does the file exist?
-        inquire( file=trim(input_file), exist=lfound_file)
+        inquire( file=trim(settings_file), exist=lfound_file)
         if (.not. lfound_file) then
           labort_after_argparse = .true.
           if (my_task .eq. 0) &
-            write(*, "(2A)") "ERROR: Input file not found: ", trim(input_file)
+            write(*, "(2A)") "ERROR: Input file not found: ", trim(settings_file)
           exit
         end if
 
@@ -204,12 +208,12 @@ Program marbl
   if (lshow_usage) then
     labort_after_argparse = .true.
     if (my_task .eq. 0) then
-      write(*,"(3A)") "usage: ", trim(progname), " -n NAMELIST_FILE [-i INPUT_FILE]"
+      write(*,"(3A)") "usage: ", trim(progname), " -n NAMELIST_FILE [-s settings_file]"
       write(*,"(A)") "required argument:"
       write(*,"(A)") "  -n NAMELIST_FILE, --namelist_file NAMELIST_FILE"
       write(*,"(A)") "                        File containing &marbl_driver_nml"
       write(*,"(A)") "optional argument:"
-      write(*,"(A)") "  -i INPUT_FILE, --input_file INPUT_FILE"
+      write(*,"(A)") "  -s settings_file, --settings_file SETTINGS_FILE"
       write(*,"(A)") "                        File containing MARBL input file"
     end if
   end if
@@ -257,9 +261,9 @@ Program marbl
   allocate(marbl_instances(num_inst))
 
   ! (2c) Read input file
-  if (lhas_input_file) then
+  if (lhas_settings_file) then
     do n=1,num_inst
-      call read_input_file(input_file, marbl_instances(n))
+      call read_settings_file(settings_file, marbl_instances(n))
     end do
   end if
 
@@ -283,8 +287,8 @@ Program marbl
       call summarize_timers(marbl_instances, driver_status_log, header_text = 'With the CISO Tracers')
       lsummarize_timers = .false.
 
-    ! -- gen_input_file test -- !
-    case ('gen_input_file')
+    ! -- gen_settings_file test -- !
+    case ('gen_settings_file')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       ldriver_log_to_file = .true.
@@ -293,9 +297,9 @@ Program marbl
         do n=1,marbl_instances(1)%get_settings_var_cnt()
           call marbl_instances(1)%inquire_settings_metadata(n, sname=varname)
           if (marbl_instances(1)%StatusLog%labort_marbl) exit
-          call marbl_instances(1)%get_setting(varname, input_line, linput_file_format=.true.)
+          call marbl_instances(1)%get_setting(varname, settings_file_line, lsettings_file_format=.true.)
           if (marbl_instances(1)%StatusLog%labort_marbl) exit
-          call driver_status_log%log_noerror(input_line, subname)
+          call driver_status_log%log_noerror(settings_file_line, subname)
         end do
         call marbl_instances(1)%shutdown()
       end if
@@ -437,40 +441,40 @@ Contains
 
   !****************************************************************************
 
-  subroutine read_input_file(input_file, marbl_instance)
+  subroutine read_settings_file(settings_file, marbl_instance)
 
-    character(len=*),            intent(in)    :: input_file
+    character(len=*),            intent(in)    :: settings_file
     type(marbl_interface_class), intent(inout) :: marbl_instance
 
-    character(len=char_len), parameter :: subname = 'marbl::read_input_file'
-    character(len=char_len) :: input_line
+    character(len=char_len), parameter :: subname = 'marbl::read_settings_file'
+    character(len=char_len) :: settings_file_line
     integer :: ioerr
 
-    if (my_task .eq. 0) open(97, file=trim(input_file), status="old", iostat=ioerr)
+    if (my_task .eq. 0) open(97, file=trim(settings_file), status="old", iostat=ioerr)
     call marbl_mpi_bcast(ioerr, 0)
     if (ioerr .ne. 0) then
       if (my_task .eq. 0) then
         write(*,"(A,I0)") "ioerr = ", ioerr
-        write(*,"(2A)") "ERROR encountered when opening MARBL input file ", trim(input_file)
+        write(*,"(2A)") "ERROR encountered when opening MARBL input file ", trim(settings_file)
       end if
       call marbl_mpi_abort()
     end if
 
-    input_line = ''
+    settings_file_line = ''
     do while(ioerr .eq. 0)
-      ! (i) broadcast input_line and call put_setting(); abort if error
-      !     calling with empty input_line on first entry to loop is okay, and
+      ! (i) broadcast settings_file_line and call put_setting(); abort if error
+      !     calling with empty settings_file_line on first entry to loop is okay, and
       !     this ensures we don't call put_setting with a garbage line if
       !     ioerr is non-zero
-      call marbl_mpi_bcast(input_line, 0)
-      call marbl_instance%put_setting(input_line)
+      call marbl_mpi_bcast(settings_file_line, 0)
+      call marbl_instance%put_setting(settings_file_line)
       if (marbl_instance%StatusLog%labort_marbl) then
-        call marbl_instance%StatusLog%log_error_trace("put_setting(input_line)", subname)
+        call marbl_instance%StatusLog%log_error_trace("put_setting(settings_file_line)", subname)
         call print_marbl_log(marbl_instance%StatusLog)
       end if
 
       ! (ii) master task reads next line in input file
-      if (my_task .eq. 0) read(97,"(A)", iostat=ioerr) input_line
+      if (my_task .eq. 0) read(97,"(A)", iostat=ioerr) settings_file_line
 
       ! (iii) broadcast input file line to all tasks (along with iostat)
       call marbl_mpi_bcast(ioerr, 0)
@@ -479,14 +483,14 @@ Contains
     if (.not.is_iostat_end(ioerr)) then
       if (my_task .eq. 0) then
         write(*,"(A,I0)") "ioerr = ", ioerr
-        write(*,"(2A)") "ERROR encountered when reading MARBL input file ", trim(input_file)
+        write(*,"(2A)") "ERROR encountered when reading MARBL input file ", trim(settings_file)
       end if
       call marbl_mpi_abort()
     end if
 
     if (my_task .eq. 0) close(97)
 
-  end subroutine read_input_file
+  end subroutine read_settings_file
 
   !****************************************************************************
 

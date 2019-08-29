@@ -17,7 +17,7 @@ class MARBL_testcase(object):
     self._machine = None
     self._hostname = None
     self._namelist_file = None
-    self._input_file = None
+    self._settings_file = None
     self._mpitasks = 0
     self._marbl_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -28,7 +28,7 @@ class MARBL_testcase(object):
   # Some tests will require you to specify a machine
   def parse_args(self, desc, HaveCompiler=True, HaveInputFile=True,
                  HasPause=False, CleanLibOnly=False, RequireNetCDF=False,
-                 DefaultInputFile=None):
+                 DefaultSettingsFile=None):
 
     import argparse
 
@@ -40,9 +40,9 @@ class MARBL_testcase(object):
                           dest='compiler', help='compiler to build with')
 
     if HaveInputFile:
-      parser.add_argument('-i', '--input_file', action='store', dest='input_file',
-                          default=DefaultInputFile,
-                          help='input file to read (default: {})'.format(DefaultInputFile))
+      parser.add_argument('-s', '--settings_file', action='store', dest='settings_file',
+                          default=DefaultSettingsFile,
+                          help='input file to read (default: {})'.format(DefaultSettingsFile))
 
     if HasPause:
         parser.add_argument('--no_pause', action='store_true', dest='no_pause',
@@ -68,10 +68,10 @@ class MARBL_testcase(object):
 
     args = parser.parse_args()
 
-    # Allow user to run with "-i None" to use default settings
+    # Allow user to run with "-s None" to use default settings
     if HaveInputFile:
-      if args.input_file == "None":
-          args.input_file = None
+      if args.settings_file == "None":
+          args.settings_file = None
 
     # Run make clean if option is specified
     if args.clean:
@@ -117,7 +117,7 @@ class MARBL_testcase(object):
         logger.info('Testing with %s' % self._compiler)
 
     if HaveInputFile:
-      self._input_file = args.input_file
+      self._settings_file = args.settings_file
 
     if RequireNetCDF:
       self._withnc = True
@@ -207,8 +207,8 @@ class MARBL_testcase(object):
     execmd += " -n %s" % self._namelist_file
 
     # If an input file was specified, it should be the second argument
-    if self._input_file != None:
-      execmd += " -i %s" % self._input_file
+    if self._settings_file != None:
+      execmd += " -s %s" % self._settings_file
 
     # Log executable command
     logging.info("Running following command:")
