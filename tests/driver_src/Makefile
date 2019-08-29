@@ -129,13 +129,13 @@ endif
 
 COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(LIBCPPDEFS)"
 
-OBJS = marbl_mpi_mod.o          \
-       marbl_netcdf_mod.o       \
-       marbl_io_mod.o           \
-       marbl_init_drv.o         \
-       marbl_compute_cols_drv.o \
-       marbl_get_put_drv.o      \
-       marbl_utils_drv.o        \
+OBJS = marbl_mpi_mod.o                      \
+       marbl_netcdf_mod.o                   \
+       marbl_io_mod.o                       \
+       marbl_init_drv.o                     \
+       marbl_call_compute_subroutines_drv.o \
+       marbl_get_put_drv.o                  \
+       marbl_utils_drv.o                    \
        marbl.o
 
 MODS = marbl_mpi_mod.mod
@@ -176,9 +176,9 @@ $(LIB_DIR)/%.a: $(LIB_SRC_DIR)/*.F90
 $(OBJ_DIR)/marbl_io_mod.o: $(OBJ_DIR)/marbl_netcdf_mod.o
 $(OBJ_DIR)/marbl_io_mod.mod: $(OBJ_DIR)/marbl_netcdf_mod.mod
 
-# Rebuild marbl_compute_cols_drv if marbl_io_mod changes
-$(OBJ_DIR)/marbl_compute_cols_drv.o: $(OBJ_DIR)/marbl_io_mod.o
-$(OBJ_DIR)/marbl_compute_cols_drv.mod: $(OBJ_DIR)/marbl_io_mod.mod
+# Rebuild marbl_call_compute_subroutines_drv if marbl_io_mod changes
+$(OBJ_DIR)/marbl_call_compute_subroutines_drv.o: $(OBJ_DIR)/marbl_io_mod.o
+$(OBJ_DIR)/marbl_call_compute_subroutines_drv.mod: $(OBJ_DIR)/marbl_io_mod.mod
 
 # Driver object files
 $(OBJ_DIR)/%.o: $(EXE_SRC_DIR)/%.F90 $(LIB_DIR)/$(LIB_NAME)

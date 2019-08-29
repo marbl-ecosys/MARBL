@@ -1,4 +1,4 @@
-module marbl_compute_cols_drv
+module marbl_call_compute_subroutines_drv
 
   use marbl_interface, only : marbl_interface_class
   use marbl_kinds_mod, only : r8, char_len
@@ -32,8 +32,8 @@ Contains
     character(len=*),                          intent(in)    :: hist_file
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_compute_cols_drv:test'
-    character(len=*), parameter :: infile = '../../input_files/initial_conditions/compute_cols.20190718.nc'
+    character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:test'
+    character(len=*), parameter :: infile = '../../input_files/initial_conditions/call_compute_subroutines.20190718.nc'
     real(r8), allocatable, dimension(:,:) :: surface_fluxes        ! num_cols x num_tracers
     real(r8), allocatable, dimension(:,:,:) :: interior_tendencies ! num_tracers x num_levels x num_cols
     real(r8), allocatable, dimension(:,:,:) :: tracer_initial_vals ! num_tracers x num_levels x num_cols
@@ -237,7 +237,7 @@ Contains
     type(grid_data_type),               intent(inout) :: grid_data
     type(marbl_log_type),               intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_compute_cols_drv:initalize'
+    character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:initalize'
     character(len=char_len) :: log_message
     integer :: n
     integer :: num_cols, cols_remaining
@@ -309,4 +309,4 @@ Contains
 
   !****************************************************************************
 
-end module marbl_compute_cols_drv
+end module marbl_call_compute_subroutines_drv

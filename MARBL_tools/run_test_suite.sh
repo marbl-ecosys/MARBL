@@ -144,34 +144,34 @@ if [ "${STATUS}" == "PASS" ]; then
   print_status "gen_input_file.py" >> $OUTFILE
 
   # Initialize MARBL, compute surface fluxes and interior tendencies
-  cd ${MARBL_ROOT}/tests/regression_tests/compute_cols
-  echo "$ ./compute_cols.py"
-  ./compute_cols.py
+  cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
+  echo "$ ./call_compute_subroutines.py"
+  ./call_compute_subroutines.py
   STATUS=$(check_return $?)
-  print_status "compute_cols.py" >> $OUTFILE
+  print_status "call_compute_subroutines.py" >> $OUTFILE
 
   # Same test, but with num_inst = 2 instead of 1
   if [ "${STATUS}" == "PASS" ]; then
-    cd ${MARBL_ROOT}/tests/regression_tests/compute_cols
-    echo "$ ./compute_cols.py -n test_2inst.nml"
-    ./compute_cols.py -n test_2inst.nml
+    cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
+    echo "$ ./call_compute_subroutines.py -n test_2inst.nml"
+    ./call_compute_subroutines.py -n test_2inst.nml
     STATUS=$(check_return $?)
-    print_status "compute_cols.py -n test_2inst.nml" >> $OUTFILE
+    print_status "call_compute_subroutines.py -n test_2inst.nml" >> $OUTFILE
   fi
 
   # Same test, but with num_inst = 5 instead of 1 or 2
   if [ "${STATUS}" == "PASS" ]; then
-    cd ${MARBL_ROOT}/tests/regression_tests/compute_cols
-    echo "$ ./compute_cols.py -n test_5inst.nml"
-    ./compute_cols.py -n test_5inst.nml
+    cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
+    echo "$ ./call_compute_subroutines.py -n test_5inst.nml"
+    ./call_compute_subroutines.py -n test_5inst.nml
     STATUS=$(check_return $?)
-    print_status "compute_cols.py -n test_5inst.nml" >> $OUTFILE
+    print_status "call_compute_subroutines.py -n test_5inst.nml" >> $OUTFILE
   fi
 
   # Compare 1-inst, 2-inst and 5-inst output
   if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/MARBL_tools
-    HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/compute_cols
+    HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
     # We use "--strict exact" because we want these two files to be identical
     # When we introduce a baseline comparison, we will use "--strict loose"
     echo "$ ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc --strict exact"
@@ -185,8 +185,8 @@ if [ "${STATUS}" == "PASS" ]; then
     print_status "netCDF Comparison (5 inst vs 1 inst)" >> $OUTFILE
 
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
-    echo "$ ./netcdf_comparison.py -b ${BASE_ROOT}/compute_cols.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose"
-    ./netcdf_comparison.py -b ${BASE_ROOT}/compute_cols.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose
+    echo "$ ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose"
+    ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst vs baseline)" >> $OUTFILE
   fi
