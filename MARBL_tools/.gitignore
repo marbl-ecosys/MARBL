@@ -1,3 +1,4 @@
 *.pyc
 *.settings
 *.diags
+.test_suite.cache

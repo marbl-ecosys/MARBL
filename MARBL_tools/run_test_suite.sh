@@ -29,10 +29,10 @@ function print_status() {
 ###############
 
 MARBL_ROOT=`(cd ..; pwd -P)`
-OUTFILE=${MARBL_ROOT}/.test.out
+RESULTS_CACHE=${MARBL_ROOT}/MARBL_tools/.test_suite.cache
 TEST_CNT=0
 FAIL_CNT=0
-echo "Test Results:" > $OUTFILE
+echo "Test Results:" > ${RESULTS_CACHE}
 
 #########
 # TESTS #
@@ -43,7 +43,7 @@ cd ${MARBL_ROOT}/MARBL_tools
 echo "$ ./code_consistency.py"
 ./code_consistency.py
 STATUS=$(check_return $?)
-print_status "CodeConsistency.py" >> $OUTFILE
+print_status "CodeConsistency.py" >> ${RESULTS_CACHE}
 
 # Run pylint (if installed)
 command -v pylint 2>&1 > /dev/null
@@ -52,7 +52,7 @@ if [ $? -eq 0 ]; then
   echo "$ pylint --rcfile=pylintrc code_consistency.py netcdf_comparison.py"
   pylint --rcfile=pylintrc code_consistency.py netcdf_comparison.py
   STATUS=$(check_return $?)
-  print_status "pylint" >> $OUTFILE
+  print_status "pylint" >> ${RESULTS_CACHE}
 fi
 
 # Convert YAML to JSON
@@ -60,42 +60,42 @@ cd ${MARBL_ROOT}/MARBL_tools
 echo "$ ./yaml_to_json.py"
 ./yaml_to_json.py
 STATUS=$(check_return $?)
-print_status "yaml_to_json.py" >> $OUTFILE
+print_status "yaml_to_json.py" >> ${RESULTS_CACHE}
 
 # Check to see if JSON changed
 cd ${MARBL_ROOT}/defaults/json
 echo "$ git diff --exit-code ."
 git diff --exit-code .
 STATUS=$(check_return $?)
-print_status "JSON is unchanged" >> $OUTFILE
+print_status "JSON is unchanged" >> ${RESULTS_CACHE}
 
 # Generate a settings file (python)
 cd ${MARBL_ROOT}/MARBL_tools
 echo "$ ./MARBL_generate_settings_file.py"
 ./MARBL_generate_settings_file.py
 STATUS=$(check_return $?)
-print_status "MARBL_generate_settings_file.py" >> $OUTFILE
+print_status "MARBL_generate_settings_file.py" >> ${RESULTS_CACHE}
 
 # Test MARBL_generate_diagnostics_file.py
 cd ${MARBL_ROOT}/MARBL_tools
 echo "$ ./MARBL_generate_diagnostics_file.py"
 ./MARBL_generate_diagnostics_file.py
 STATUS=$(check_return $?)
-print_status "MARBL_generate_diagnostics_file.py" >> $OUTFILE
+print_status "MARBL_generate_diagnostics_file.py" >> ${RESULTS_CACHE}
 
 # Clean Fortran Code
 cd ${MARBL_ROOT}/tests/driver_src
 echo "$ make clean"
 make clean
 STATUS=$(check_return $?)
-print_status "make clean" >> $OUTFILE
+print_status "make clean" >> ${RESULTS_CACHE}
 
 # Build libmarbl.a
 cd ${MARBL_ROOT}/tests/bld_tests
 echo "$ ./bld_lib.py --no_pause"
 ./bld_lib.py --no_pause
 STATUS=$(check_return $?)
-print_status "bld_lib.py --no_pause" >> $OUTFILE
+print_status "bld_lib.py --no_pause" >> ${RESULTS_CACHE}
 
 # Build stand-alone executable (only if library built successfully)
 if [ "${STATUS}" == "PASS" ]; then
@@ -103,7 +103,7 @@ if [ "${STATUS}" == "PASS" ]; then
   echo "$ ./bld_exe.py --no_pause"
   ./bld_exe.py --no_pause
   STATUS=$(check_return $?)
-  print_status "bld_exe.py --no_pause" >> $OUTFILE
+  print_status "bld_exe.py --no_pause" >> ${RESULTS_CACHE}
 fi
 
 # Only test Fortran executable if build was successful
@@ -113,42 +113,42 @@ if [ "${STATUS}" == "PASS" ]; then
   echo "$ ./get_put.py"
   ./get_put.py
   STATUS=$(check_return $?)
-  print_status "get_put.py" >> $OUTFILE
+  print_status "get_put.py" >> ${RESULTS_CACHE}
 
   # marbl_utils unit test
   cd ${MARBL_ROOT}/tests/unit_tests/utils_routines
   echo "$ ./marbl_utils.py"
   ./marbl_utils.py
   STATUS=$(check_return $?)
-  print_status "marbl_utils.py" >> $OUTFILE
+  print_status "marbl_utils.py" >> ${RESULTS_CACHE}
 
   # Initialize MARBL
   cd ${MARBL_ROOT}/tests/regression_tests/init
   echo "$ ./init.py"
   ./init.py
   STATUS=$(check_return $?)
-  print_status "init.py" >> $OUTFILE
+  print_status "init.py" >> ${RESULTS_CACHE}
 
   # Initialize MARBL, clean up memory, initialize again
   cd ${MARBL_ROOT}/tests/regression_tests/init-twice
   echo "$ ./init-twice.py"
   ./init-twice.py
   STATUS=$(check_return $?)
-  print_status "init-twice.py" >> $OUTFILE
+  print_status "init-twice.py" >> ${RESULTS_CACHE}
 
   # Generate a settings file (Fortran)
   cd ${MARBL_ROOT}/tests/regression_tests/gen_settings_file
   echo "$ ./gen_settings_file.py"
   ./gen_settings_file.py
   STATUS=$(check_return $?)
-  print_status "gen_settings_file.py" >> $OUTFILE
+  print_status "gen_settings_file.py" >> ${RESULTS_CACHE}
 
   # Initialize MARBL, compute surface fluxes and interior tendencies
   cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
   echo "$ ./call_compute_subroutines.py"
   ./call_compute_subroutines.py
   STATUS=$(check_return $?)
-  print_status "call_compute_subroutines.py" >> $OUTFILE
+  print_status "call_compute_subroutines.py" >> ${RESULTS_CACHE}
 
   # Same test, but with num_inst = 2 instead of 1
   if [ "${STATUS}" == "PASS" ]; then
@@ -156,7 +156,7 @@ if [ "${STATUS}" == "PASS" ]; then
     echo "$ ./call_compute_subroutines.py -n test_2inst.nml"
     ./call_compute_subroutines.py -n test_2inst.nml
     STATUS=$(check_return $?)
-    print_status "call_compute_subroutines.py -n test_2inst.nml" >> $OUTFILE
+    print_status "call_compute_subroutines.py -n test_2inst.nml" >> ${RESULTS_CACHE}
   fi
 
   # Same test, but with num_inst = 5 instead of 1 or 2
@@ -165,7 +165,7 @@ if [ "${STATUS}" == "PASS" ]; then
     echo "$ ./call_compute_subroutines.py -n test_5inst.nml"
     ./call_compute_subroutines.py -n test_5inst.nml
     STATUS=$(check_return $?)
-    print_status "call_compute_subroutines.py -n test_5inst.nml" >> $OUTFILE
+    print_status "call_compute_subroutines.py -n test_5inst.nml" >> ${RESULTS_CACHE}
   fi
 
   # Compare 1-inst, 2-inst and 5-inst output
@@ -177,18 +177,18 @@ if [ "${STATUS}" == "PASS" ]; then
     echo "$ ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc --strict exact"
     ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc --strict exact
     STATUS=$(check_return $?)
-    print_status "netCDF Comparison (2 inst vs 1 inst)" >> $OUTFILE
+    print_status "netCDF Comparison (2 inst vs 1 inst)" >> ${RESULTS_CACHE}
 
     echo "$ ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_5inst.nc --strict exact"
     ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_5inst.nc --strict exact
     STATUS=$(check_return $?)
-    print_status "netCDF Comparison (5 inst vs 1 inst)" >> $OUTFILE
+    print_status "netCDF Comparison (5 inst vs 1 inst)" >> ${RESULTS_CACHE}
 
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     echo "$ ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose"
     ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose
     STATUS=$(check_return $?)
-    print_status "netCDF Comparison (1 inst vs baseline)" >> $OUTFILE
+    print_status "netCDF Comparison (1 inst vs baseline)" >> ${RESULTS_CACHE}
   fi
 
   # Print all diagnostics MARBL can provide
@@ -196,47 +196,47 @@ if [ "${STATUS}" == "PASS" ]; then
   echo "$ ./requested_diags.py"
   ./requested_diags.py
   STATUS=$(check_return $?)
-  print_status "requested_diags.py" >> $OUTFILE
+  print_status "requested_diags.py" >> ${RESULTS_CACHE}
 
   # Print all forcings MARBL requires without multiple PAR subcols
   cd ${MARBL_ROOT}/tests/regression_tests/requested_forcings
   echo "$ ./requested_forcings.py"
   ./requested_forcings.py
   STATUS=$(check_return $?)
-  print_status "requested_forcings.py" >> $OUTFILE
+  print_status "requested_forcings.py" >> ${RESULTS_CACHE}
 
   # Print all forcings MARBL requires with multiple PAR subcols
   cd ${MARBL_ROOT}/tests/regression_tests/requested_forcings
   echo "$ ./requested_forcings.py -n test_with_PAR.nml"
   ./requested_forcings.py -n test_with_PAR.nml
   STATUS=$(check_return $?)
-  print_status "requested_forcings.py -n test_with_PAR.nml" >> $OUTFILE
+  print_status "requested_forcings.py -n test_with_PAR.nml" >> ${RESULTS_CACHE}
 
   # Print all restoring fields being requested
   cd ${MARBL_ROOT}/tests/regression_tests/requested_restoring
   echo "$ ./requested_restoring.py"
   ./requested_restoring.py
   STATUS=$(check_return $?)
-  print_status "requested_restoring.py" >> $OUTFILE
+  print_status "requested_restoring.py" >> ${RESULTS_CACHE}
 
   # Print all tracers MARBL computes tendencies for
   cd ${MARBL_ROOT}/tests/regression_tests/requested_tracers
   echo "$ ./requested_tracers.py"
   ./requested_tracers.py
   STATUS=$(check_return $?)
-  print_status "requested_tracers.py" >> $OUTFILE
+  print_status "requested_tracers.py" >> ${RESULTS_CACHE}
 
   # Initialize MARBL (with MPI)
   cd ${MARBL_ROOT}/tests/regression_tests/init
   echo "$ ./init.py --mpitasks 2"
   ./init.py --mpitasks 2
   STATUS=$(check_return $?)
-  print_status "init.py --mpitasks 2" >> $OUTFILE
+  print_status "init.py --mpitasks 2" >> ${RESULTS_CACHE}
 fi
 
 echo "----"
-cat $OUTFILE
-rm -f $OUTFILE
+cat ${RESULTS_CACHE}
+rm -f ${RESULTS_CACHE}
 echo ""
 echo "${TEST_CNT} tests were run, and $FAIL_CNT failed."
 exit ${FAIL_CNT}
