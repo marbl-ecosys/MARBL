@@ -2,9 +2,10 @@
 
 """
     Usage:
-        $ ./netcdf_comparison.py --baseline BASELINE_FILE --compare NEW_FILE
+        $ ./netcdf_comparison.py --baseline BASELINE_FILE --new-file NEW_FILE
+                                 --strict {exact,loose} [-r RTOL] [-a ATOL] [-t THRES]
 
-    Compare two netcdf files. For each variable, flag
+    Use xarray and numpy to compare two netcdf files. For each variable, flag
     1. Variables that are present in one file but not the other
     2. Variables where the data type doesn't match across files
     3. Variables where the dimensions don't match across files
@@ -12,10 +13,10 @@
     5. Variables that differ in one of two ways (user specifies which strictness level to use):
        a. Variables that are not exactly the same (--strict exact)
        b. Variables that are not "close" to each other (--strict loose)
-          -- For values very close to 0 (<1e-16), variables that differ by
-             more than 1e-16 are flagged
-          -- For values larger than 1e-16, variables with a relative difference
-             of more than 1e-11 are flagged
+          -- For values very close to 0 (<THRES), variables that differ by
+             more than ATOL are flagged
+          -- For values larger than THRES variables with a relative difference
+             of more than RTOL are flagged
 """
 
 import logging
