@@ -8,13 +8,14 @@
     1. Variables that are present in one file but not the other
     2. Variables where the data type doesn't match across files
     3. Variables where the dimensions don't match across files
-    4. Variables with array members where the baseline is 0 and the new file is not
-    5. Variables where the relative difference between the two files large
-       -- NOTE: we do not flag points where the relative difference is large but
-                the absolute difference is smaller than 1e-16 (there are MARBL
-                diagnostics that should be identically equal to 0 but are O(1e-19)
-                due to taking the difference between two numbers that are very close
-                to each other)
+    4. Variables where the missing values are not aligned
+    5. Variables that differ in one of two ways (user specifies which strictness level to use):
+       a. Variables that are not exactly the same (--strict exact)
+       b. Variables that are not "close" to each other (--strict loose)
+          -- For values very close to 0 (<1e-16), variables that differ by
+             more than 1e-16 are flagged
+          -- For values larger than 1e-16, variables with a relative difference
+             of more than 1e-11 are flagged
 """
 
 import logging
