@@ -13,7 +13,7 @@ UNIBLOCK = u"\u2588"
 
 ##############
 
-class ConsistencyTestClass(object): # pylint: disable=useless-object-inheritance
+class ConsistencyTestClass(object):
     """
     This class contains all the Fortran consistency check tests.
     The logs dictionary contains a deque object with a list of all source lines
