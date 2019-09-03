@@ -119,10 +119,7 @@ class MARBL_testcase(object):
     if HaveInputFile:
       self._settings_file = args.settings_file
 
-    if RequireNetCDF:
-      self._withnc = True
-    else:
-      self._withnc = args.netcdf
+    self._withnc = RequireNetCDF or args.netcdf
 
     self._namelist_file = args.namelist_file
     self._mpitasks = int(args.mpitasks)
