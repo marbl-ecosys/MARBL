@@ -9,8 +9,11 @@ module marbl_io_mod
 
   use marbl_interface_public_types, only : marbl_tracer_metadata_type
 
+  use marbl_netcdf_mod, only : marbl_netcdf_def_var
+  use marbl_netcdf_mod, only : marbl_netcdf_inq_dimid
   use marbl_netcdf_mod, only : marbl_netcdf_inq_varid
   use marbl_netcdf_mod, only : marbl_netcdf_get_var
+  use marbl_netcdf_mod, only : marbl_netcdf_put_var
 
   implicit none
   private
@@ -105,7 +108,6 @@ contains
 
   subroutine marbl_io_get_init_file_dim_by_name(name, len, driver_status_log)
 
-    use marbl_netcdf_mod, only : marbl_netcdf_inq_dimid
     use marbl_netcdf_mod, only : marbl_netcdf_inquire_dimension
 
     character(len=*),     intent(in)    :: name
@@ -581,7 +583,6 @@ contains
     use marbl_interface, only : marbl_interface_class
 
     use marbl_netcdf_mod, only : marbl_netcdf_def_dim
-    use marbl_netcdf_mod, only : marbl_netcdf_def_var
     use marbl_netcdf_mod, only : marbl_netcdf_enddef
 
     type(marbl_interface_class), dimension(:), intent(in)    :: marbl_instances
@@ -699,8 +700,6 @@ contains
                                     tracer_initial_vals, active_level_cnt, driver_status_log)
 
     use marbl_interface, only : marbl_interface_class
-
-    use marbl_netcdf_mod, only : marbl_netcdf_put_var
 
     type(marbl_interface_class),                   intent(in)    :: marbl_instance
     real(r8),                    dimension(:,:),   intent(in)    :: surface_fluxes       ! num_cols x num_tracers
@@ -829,8 +828,6 @@ contains
   subroutine def_marbl_diag_in_ncid_out(diag, driver_status_log)
 
     use marbl_interface_public_types , only : marbl_diagnostics_type
-    use marbl_netcdf_mod, only : marbl_netcdf_inq_dimid
-    use marbl_netcdf_mod, only : marbl_netcdf_def_var
 
     type(marbl_diagnostics_type), intent(in)    :: diag
     type(marbl_log_type),         intent(inout) :: driver_status_log
@@ -922,8 +919,6 @@ contains
   !*****************************************************************************
 
   subroutine write_diag_buffer_to_nc(diag_buffer, active_level_cnt, driver_status_log, bot_depth)
-
-    use marbl_netcdf_mod, only : marbl_netcdf_put_var
 
     type(many_diags_type), intent(in)    :: diag_buffer
     integer,               intent(in)    :: active_level_cnt(:)
