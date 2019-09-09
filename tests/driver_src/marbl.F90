@@ -414,18 +414,22 @@ Program marbl
   end select
 
   ! (4) Print log(s)
-  ! (4a) If MARBL returns an error (or MARBL log was requested), print MARBL log
+  ! (4a) if test reports an error, let user know
+  if (driver_status_log%labort_MARBL) &
+    call print_marbl_log(driver_status_log)
+
+  ! (4b) If MARBL returns an error (or MARBL log was requested), print MARBL log
   do n=1,num_inst
     if (marbl_instances(n)%StatusLog%labort_marbl .or. lprint_marbl_log) &
         call print_marbl_log(marbl_instances(n)%StatusLog)
   end do
 
-  ! (4b) If driver log should be written to file, do so
+  ! (4c) If driver log should be written to file, do so
   if (ldriver_log_to_file) then
     call print_marbl_log(driver_status_log, outfile=log_out_file)
   end if
 
-  ! (4c) Add timer information to driver log, then print driver log
+  ! (4d) Add timer information to driver log, then print driver log
   !      note that if driver log was previously written to a file,
   !      timers are all that will be written to screen
   if (lsummarize_timers) &

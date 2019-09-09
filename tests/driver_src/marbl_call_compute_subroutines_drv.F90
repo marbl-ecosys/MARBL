@@ -17,9 +17,6 @@ Contains
 
   subroutine test(marbl_instances, hist_file, driver_status_log)
 
-    use marbl_netcdf_mod, only : marbl_netcdf_read_var
-    use marbl_netcdf_mod, only : marbl_netcdf_close_all
-
     use marbl_io_mod, only : marbl_io_define_history
     use marbl_io_mod, only : marbl_io_write_history
     use marbl_io_mod, only : marbl_io_read_forcing_field
@@ -27,6 +24,8 @@ Contains
     use marbl_io_mod, only : marbl_io_read_tracers
     use marbl_io_mod, only : surface_flux_diag_buffer
     use marbl_io_mod, only : interior_tendency_diag_buffer
+    use marbl_io_mod, only : marbl_io_get_init_file_var_by_name
+    use marbl_io_mod, only : marbl_io_close_files
 
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
     character(len=*),                          intent(in)    :: hist_file
@@ -39,11 +38,11 @@ Contains
     real(r8), allocatable, dimension(:,:,:) :: tracer_initial_vals ! num_tracers x num_levels x num_cols
     integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols
     type(grid_data_type) :: grid_data
-    integer, allocatable, dimension(:) :: num_active_levels, col_start, col_cnt
+    integer, allocatable, dimension(:) :: active_level_cnt, col_start, col_cnt
 
 
     ! 1. Initialize the test (reads grid info, sets up history files, etc)
-    call initialize(infile, hist_file, size(marbl_instances), num_levels, num_active_levels, &
+    call initialize(infile, hist_file, size(marbl_instances), num_levels, active_level_cnt, &
                     num_PAR_subcols, col_start, col_cnt, grid_data, driver_status_log)
     if (driver_status_log%labort_MARBL) then
       call driver_status_log%log_error_trace('initialize', subname)
@@ -79,7 +78,7 @@ Contains
     allocate(tracer_initial_vals(num_tracers, num_levels, num_cols))
 
     !    (d) netCDF calls to create history file (dimensions are defined but data is not written)
-    call marbl_io_define_history(marbl_instances, col_cnt, hist_file, driver_status_log)
+    call marbl_io_define_history(marbl_instances, col_cnt, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_define_history', subname)
       return
@@ -87,10 +86,16 @@ Contains
 
 
     ! Brunt of MARBL computations
+    call marbl_io_get_init_file_var_by_name('active_level_cnt', active_level_cnt, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('marbl_io_get_init_file_var_by_name(active_level_cnt)', subname)
+      return
+    end if
+
     do n=1, size(marbl_instances)
       ! 4. Call surface_flux_compute() (all columns simultaneously)
       !    4a. populate surface tracer values
-      call marbl_io_read_tracers_at_surface(infile, col_start(n)+1, col_cnt(n), marbl_instances(n)%tracer_metadata, &
+      call marbl_io_read_tracers_at_surface(col_start(n)+1, col_cnt(n), marbl_instances(n)%tracer_metadata, &
                                    marbl_instances(n)%tracers_at_surface, driver_status_log)
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('read_tracers_at_surface', subname)
@@ -99,7 +104,7 @@ Contains
 
       !    4b. populate surface_flux_forcings (per column)
       do col_id_loc = 1, col_cnt(n)
-        call marbl_io_read_forcing_field(infile, col_id_loc, col_start(n), marbl_instances(n)%surface_flux_forcings, &
+        call marbl_io_read_forcing_field(col_id_loc, col_start(n), marbl_instances(n)%surface_flux_forcings, &
                                          driver_status_log)
         if (driver_status_log%labort_marbl) then
           call driver_status_log%log_error_trace('read_forcing_field(surface)', subname)
@@ -136,15 +141,10 @@ Contains
       ! 5. Call interior_tendency_compute() (one column at a time)
       do col_id_loc = 1, col_cnt(n)
         col_id = col_start(n)+col_id_loc
-        call marbl_netcdf_read_var(infile, 'active_level_cnt', marbl_instances(n)%domain%kmt, driver_status_log, col_id=col_id)
-        if (driver_status_log%labort_marbl) then
-          call driver_status_log%log_error_trace('marbl_netcdf_read_var(active_level_cnt)', subname)
-          return
-        end if
-        num_active_levels(col_id) = marbl_instances(n)%domain%kmt
+        marbl_instances(n)%domain%kmt = active_level_cnt(col_id)
 
         !  5a. populate tracer values
-        call marbl_io_read_tracers(infile, col_id, marbl_instances(n)%tracer_metadata, marbl_instances(n)%tracers, &
+        call marbl_io_read_tracers(col_id, marbl_instances(n)%tracer_metadata, marbl_instances(n)%tracers, &
                           driver_status_log)
         if (driver_status_log%labort_marbl) then
           call driver_status_log%log_error_trace('read_tracers', subname)
@@ -153,8 +153,8 @@ Contains
         tracer_initial_vals(:,:,col_id) = marbl_instances(n)%tracers
 
         !  5b. populate interior_tendency_forcings
-        call marbl_io_read_forcing_field(infile, col_id_loc, col_start(n), marbl_instances(n)%interior_tendency_forcings, &
-                                driver_status_log, num_active_levels(col_id))
+        call marbl_io_read_forcing_field(col_id_loc, col_start(n), marbl_instances(n)%interior_tendency_forcings, &
+                                driver_status_log, active_level_cnt(col_id))
         if (driver_status_log%labort_marbl) then
           call driver_status_log%log_error_trace('read_forcing_field(interior)', subname)
           return
@@ -194,8 +194,8 @@ Contains
 
 
     ! 6. Output netCDF
-    call marbl_io_write_history(hist_file, marbl_instances(1), surface_fluxes, interior_tendencies, &
-                               tracer_initial_vals, num_active_levels, driver_status_log)
+    call marbl_io_write_history(marbl_instances(1), surface_fluxes, interior_tendencies, &
+                               tracer_initial_vals, active_level_cnt, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_write_history', subname)
       return
@@ -208,9 +208,9 @@ Contains
     end do
 
     ! 7. Close all netCDF files
-    call marbl_netcdf_close_all(driver_status_log)
+    call marbl_io_close_files(driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_netcdf_close_all', subname)
+      call driver_status_log%log_error_trace('marbl_io_close_files', subname)
       return
     end if
 
@@ -218,92 +218,59 @@ Contains
 
   !*****************************************************************************
 
-  subroutine initialize(infile, hist_file, num_insts, num_levels, num_active_levels, num_PAR_subcols, &
+  subroutine initialize(infile, hist_file, num_insts, num_levels, active_level_cnt, num_PAR_subcols, &
                         col_start, col_cnt, grid_data, driver_status_log)
 
-    use marbl_netcdf_mod, only : marbl_netcdf_open
-    use marbl_netcdf_mod, only : marbl_netcdf_read_dim
-
+    use marbl_io_mod, only : marbl_io_open_files
+    use marbl_io_mod, only : marbl_io_distribute_cols
     use marbl_io_mod, only : marbl_io_read_domain
 
     character(len=*),                   intent(in)    :: infile
     character(len=*),                   intent(in)    :: hist_file
     integer,                            intent(in)    :: num_insts
     integer,                            intent(out)   :: num_levels
-    integer, dimension(:), allocatable, intent(out)   :: num_active_levels
+    integer, dimension(:), allocatable, intent(out)   :: active_level_cnt
     integer,                            intent(out)   :: num_PAR_subcols
     integer, dimension(:), allocatable, intent(out)   :: col_start
     integer, dimension(:), allocatable, intent(out)   :: col_cnt
     type(grid_data_type),               intent(inout) :: grid_data
     type(marbl_log_type),               intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:initalize'
+    character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:initialize'
     character(len=char_len) :: log_message
-    integer :: n
-    integer :: num_cols, cols_remaining
+    integer :: num_cols
 
     ! 1. Open necessary netCDF files
     !    1a. Input (grid info, forcing fields, initial conditions)
-    call marbl_netcdf_open(infile, .true., driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_netcdf_open', subname)
-      return
-    end if
-
     !    1b. Output (diagnostics)
-    call marbl_netcdf_open(hist_file, .false., driver_status_log)
+    call marbl_io_open_files(infile, hist_file, driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_netcdf_open', subname)
+      call driver_status_log%log_error_trace('marbl_io_open', subname)
       return
     end if
     write(log_message, "(A, 1X, A)") "* MARBL output will be written to", trim(hist_file)
     call driver_status_log%log_noerror(log_message, subname)
 
     ! 2. Domain decomposition (distribute columns among instances)
-    !    2a. Get column count from netCDF
-    call marbl_netcdf_read_dim(infile, 'column', num_cols, driver_status_log)
+    allocate(col_start(num_insts), col_cnt(num_insts))
+    call marbl_io_distribute_cols(num_cols, col_start, col_cnt, driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_netcdf_read_dim(num_cols)', subname)
+      call driver_status_log%log_error_trace('marbl_io_distribute_cols', subname)
       return
     end if
-
-    !    2b. Determine which columns each instance owns
-    !        Note that we use 0-base indexing for
-    !        col_start and 1-base indexing for col_id_loc
-    !        (col_id_loc in [1, col_cnt(n)]), so
-    !            col_id = col_start(n) + col_id_loc
-    allocate(col_start(num_insts), col_cnt(num_insts))
-    cols_remaining = num_cols
-    do n=1, num_insts
-      if (n.eq.1) then
-        col_start(n) = 0
-      else
-        col_start(n) = col_start(n-1) + col_cnt(n-1)
-      end if
-      col_cnt(n) = cols_remaining / (num_insts-n+1) ! remaining cols / remaining insts
-      cols_remaining = cols_remaining - col_cnt(n)
-    end do
-
-    !   2c. Log decomposition
-    do n=1, num_insts
-      write(log_message, "(A, I0, A, I0, A, I0)") "Instance ", n, " has ", col_cnt(n),        &
-                                                  " columns, beginning with ", col_start(n)+1
-      call driver_status_log%log_noerror(log_message, subname)
-    end do
-
 
     ! 3. Read domain info, initial conditions, and forcing fields from netCDF file
     write(log_message, "(A, 1X, A)") "* Reading input from", infile
     call driver_status_log%log_noerror(log_message, subname)
-    call marbl_io_read_domain(infile, num_levels, num_PAR_subcols, grid_data, driver_status_log)
+    call marbl_io_read_domain(num_levels, num_PAR_subcols, grid_data, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('read_domain', subname)
       return
     end if
 
-    ! 4. Temporary: need to store number of active levels for each column
-    !    so it can be written later
-    allocate(num_active_levels(num_cols))
+    ! 4. Need to store number of active levels for each column to properly apply
+    !    mask when writing full-depth data to history file
+    allocate(active_level_cnt(num_cols))
 
   end subroutine initialize
 

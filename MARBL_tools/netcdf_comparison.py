@@ -50,7 +50,7 @@ def ds_comparison_loose(ds_base, ds_new, rtol=DEFAULT_TOLS['rtol'], atol=DEFAULT
     header_fail, ds_base, ds_new = _reduce_to_matching_variables(ds_base, ds_new)
 
     # Compare remaining variables
-    return header_fail or _variable_check_loose(ds_base, ds_new, rtol, atol, thres)
+    return  _variable_check_loose(ds_base, ds_new, rtol, atol, thres) or header_fail
 
 ##################
 
