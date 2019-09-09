@@ -1070,6 +1070,7 @@ contains
         deallocate(self%diags(n)%field_3d)
     end do
     self%num_diags = 0
+    deallocate(self%diags)
 
   end subroutine io_diag_destruct
 
