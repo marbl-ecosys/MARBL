@@ -18,14 +18,15 @@ Contains
   subroutine test(marbl_instances, hist_file, driver_status_log)
 
     use marbl_io_mod, only : marbl_io_open_files
+    use marbl_io_mod, only : marbl_io_construct_diag_buffers
     use marbl_io_mod, only : marbl_io_define_history
+    use marbl_io_mod, only : marbl_io_copy_into_diag_buffer
     use marbl_io_mod, only : marbl_io_write_history
     use marbl_io_mod, only : marbl_io_read_forcing_field
     use marbl_io_mod, only : marbl_io_read_tracers_at_surface
     use marbl_io_mod, only : marbl_io_read_tracers
-    use marbl_io_mod, only : surface_flux_diag_buffer
-    use marbl_io_mod, only : interior_tendency_diag_buffer
     use marbl_io_mod, only : marbl_io_close_files
+    use marbl_io_mod, only : marbl_io_destruct_diag_buffers
 
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
     character(len=*),                          intent(in)    :: hist_file
@@ -79,10 +80,7 @@ Contains
     num_tracers = size(marbl_instances(1)%tracer_metadata)
 
     !    (b) Initialize diagnostic buffers
-    call surface_flux_diag_buffer%construct(num_levels, num_cols, &
-         marbl_instances(1)%surface_flux_diags)
-    call interior_tendency_diag_buffer%construct(num_levels, num_cols, &
-         marbl_instances(1)%interior_tendency_diags)
+    call marbl_io_construct_diag_buffers(num_levels, num_cols, marbl_instances(1))
 
     !    (c) Initialize memory for fields that driver writes to history (not coming via MARBL diagnostic type)
     allocate(surface_fluxes(num_cols, num_tracers))
@@ -130,18 +128,9 @@ Contains
         return
       end if
 
-      !    5e. write to diagnostic buffer
-      do m=1, surface_flux_diag_buffer%num_diags
-        if (allocated(surface_flux_diag_buffer%diags(m)%field_2d)) then
-          surface_flux_diag_buffer%diags(m)%field_2d((col_start(n)+1):(col_start(n)+col_cnt(n))) = &
-              marbl_instances(n)%surface_flux_diags%diags(m)%field_2d(:)
-          surface_flux_diag_buffer%diags(m)%ref_depth_2d = &
-              marbl_instances(n)%surface_flux_diags%diags(m)%ref_depth * 100._r8 ! m -> cm
-        else
-          surface_flux_diag_buffer%diags(m)%field_3d(:,(col_start(n)+1):(col_start(n)+col_cnt(n))) = &
-              marbl_instances(n)%surface_flux_diags%diags(m)%field_3d(:,:)
-        end if
-      end do
+      !    5e. write to diagnostic buffers
+      !        Note: passing col_start and col_cnt => surface flux diagnostic buffer
+      call marbl_io_copy_into_diag_buffer(col_start(n), col_cnt(n), marbl_instances(n))
       surface_fluxes((col_start(n)+1):(col_start(n)+col_cnt(n)),:) = marbl_instances(n)%surface_fluxes(:,:)
 
 
@@ -184,17 +173,8 @@ Contains
         end if
 
         !  6e. write to diagnostic buffer
-        do m=1, interior_tendency_diag_buffer%num_diags
-          if (allocated(interior_tendency_diag_buffer%diags(m)%field_2d)) then
-            interior_tendency_diag_buffer%diags(m)%field_2d(col_id) = &
-                marbl_instances(n)%interior_tendency_diags%diags(m)%field_2d(1)
-            interior_tendency_diag_buffer%diags(m)%ref_depth_2d = &
-                marbl_instances(n)%interior_tendency_diags%diags(m)%ref_depth * 100._r8 ! m -> cm
-          else
-            interior_tendency_diag_buffer%diags(m)%field_3d(:,col_id) = &
-                marbl_instances(n)%interior_tendency_diags%diags(m)%field_3d(:,1)
-          end if
-        end do
+        !        Note: passing just col_id => interior tendency diagnostic buffer
+        call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
         interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
       end do ! column
     end do ! instance
@@ -217,7 +197,10 @@ Contains
     end if
 
 
-    ! 9. Shutdown MARBL
+    ! 9. Deallocate memory in marbl_io_mod
+    call marbl_io_destruct_diag_buffers()
+
+    ! 10. Shutdown MARBL
     do n=1, size(marbl_instances)
       call marbl_instances(n)%shutdown()
     end do

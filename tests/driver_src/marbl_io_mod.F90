@@ -7,6 +7,8 @@ module marbl_io_mod
 
   use marbl_logging, only : marbl_log_type
 
+  use marbl_interface, only : marbl_interface_class
+
   use marbl_interface_public_types, only : marbl_tracer_metadata_type
 
   use marbl_netcdf_mod, only : marbl_netcdf_def_var
@@ -50,24 +52,31 @@ module marbl_io_mod
     procedure :: construct => io_diag_construct
     procedure :: destruct  => io_diag_destruct
   end type many_diags_type
-
-  type(many_diags_type), public :: surface_flux_diag_buffer
-  type(many_diags_type), public :: interior_tendency_diag_buffer
+  type(many_diags_type) :: surface_flux_diag_buffer
+  type(many_diags_type) :: interior_tendency_diag_buffer
 
   public :: marbl_io_open_files
   public :: marbl_io_distribute_cols
+  public :: marbl_io_construct_diag_buffers
   public :: marbl_io_read_domain
   public :: marbl_io_read_forcing_field
   public :: marbl_io_read_tracers_at_surface
   public :: marbl_io_read_tracers
   public :: marbl_io_get_init_file_var_by_name
   public :: marbl_io_define_history
+  public :: marbl_io_copy_into_diag_buffer
   public :: marbl_io_write_history
   public :: marbl_io_close_files
+  public :: marbl_io_destruct_diag_buffers
+
+  interface marbl_io_copy_into_diag_buffer
+    module procedure marbl_io_copy_into_surface_diag_buffer
+    module procedure marbl_io_copy_into_interior_diag_buffer
+  end interface marbl_io_copy_into_diag_buffer
 
   interface marbl_io_get_init_file_var_by_name
     module procedure marbl_io_get_init_file_var_by_name_int_1d
-      module procedure marbl_io_get_init_file_var_by_name_r8_1d
+    module procedure marbl_io_get_init_file_var_by_name_r8_1d
   end interface marbl_io_get_init_file_var_by_name
 
 contains
@@ -241,6 +250,21 @@ contains
     end do
 
   end subroutine marbl_io_distribute_cols
+
+  !*****************************************************************************
+
+  subroutine marbl_io_construct_diag_buffers(num_levels, num_cols, marbl_instance)
+
+    integer,                     intent(in) :: num_levels
+    integer,                     intent(in) :: num_cols
+    type(marbl_interface_class), intent(in) :: marbl_instance
+
+    call surface_flux_diag_buffer%construct(num_levels, num_cols, &
+         marbl_instance%surface_flux_diags)
+    call interior_tendency_diag_buffer%construct(num_levels, num_cols, &
+         marbl_instance%interior_tendency_diags)
+
+  end subroutine marbl_io_construct_diag_buffers
 
   !*****************************************************************************
 
@@ -580,8 +604,6 @@ contains
 
   subroutine marbl_io_define_history(marbl_instances, col_cnt, driver_status_log)
 
-    use marbl_interface, only : marbl_interface_class
-
     use marbl_netcdf_mod, only : marbl_netcdf_def_dim
     use marbl_netcdf_mod, only : marbl_netcdf_enddef
 
@@ -696,10 +718,53 @@ contains
 
   !*****************************************************************************
 
+  subroutine marbl_io_copy_into_surface_diag_buffer(col_start, col_cnt, marbl_instance)
+    integer,                     intent(in) :: col_start
+    integer,                     intent(in) :: col_cnt
+    type(marbl_interface_class), intent(in) :: marbl_instance
+
+    integer :: m
+
+    do m=1, surface_flux_diag_buffer%num_diags
+      if (allocated(surface_flux_diag_buffer%diags(m)%field_2d)) then
+        surface_flux_diag_buffer%diags(m)%field_2d((col_start+1):(col_start+col_cnt)) = &
+            marbl_instance%surface_flux_diags%diags(m)%field_2d(:)
+        surface_flux_diag_buffer%diags(m)%ref_depth_2d = &
+            marbl_instance%surface_flux_diags%diags(m)%ref_depth * 100._r8 ! m -> cm
+      else
+        surface_flux_diag_buffer%diags(m)%field_3d(:,(col_start+1):(col_start+col_cnt)) = &
+            marbl_instance%surface_flux_diags%diags(m)%field_3d(:,:)
+      end if
+    end do
+
+  end subroutine marbl_io_copy_into_surface_diag_buffer
+
+  !*****************************************************************************
+
+  subroutine marbl_io_copy_into_interior_diag_buffer(col_id, marbl_instance)
+    integer,                     intent(in) :: col_id
+    type(marbl_interface_class), intent(in) :: marbl_instance
+
+    integer :: m
+
+    do m=1, interior_tendency_diag_buffer%num_diags
+      if (allocated(interior_tendency_diag_buffer%diags(m)%field_2d)) then
+        interior_tendency_diag_buffer%diags(m)%field_2d(col_id) = &
+            marbl_instance%interior_tendency_diags%diags(m)%field_2d(1)
+        interior_tendency_diag_buffer%diags(m)%ref_depth_2d = &
+            marbl_instance%interior_tendency_diags%diags(m)%ref_depth * 100._r8 ! m -> cm
+      else
+        interior_tendency_diag_buffer%diags(m)%field_3d(:,col_id) = &
+            marbl_instance%interior_tendency_diags%diags(m)%field_3d(:,1)
+      end if
+    end do
+
+  end subroutine marbl_io_copy_into_interior_diag_buffer
+
+  !*****************************************************************************
+
   subroutine marbl_io_write_history(marbl_instance, surface_fluxes, interior_tendencies, &
                                     tracer_initial_vals, active_level_cnt, driver_status_log)
-
-    use marbl_interface, only : marbl_interface_class
 
     type(marbl_interface_class),                   intent(in)    :: marbl_instance
     real(r8),                    dimension(:,:),   intent(in)    :: surface_fluxes       ! num_cols x num_tracers
@@ -822,6 +887,15 @@ contains
     end if
 
   end subroutine marbl_io_close_files
+
+  !*****************************************************************************
+
+  subroutine marbl_io_destruct_diag_buffers()
+
+    call surface_flux_diag_buffer%destruct()
+    call interior_tendency_diag_buffer%destruct()
+
+  end subroutine marbl_io_destruct_diag_buffers
 
   !*****************************************************************************
 
