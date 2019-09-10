@@ -54,11 +54,11 @@ Contains
     write(log_message, "(A, 1X, A)") "* MARBL output will be written to", trim(hist_file)
     call driver_status_log%log_noerror(log_message, subname)
 
-    ! 2. Initialize the test (reads grid info, sets up history files, etc)
-    call initialize(size(marbl_instances), num_levels, active_level_cnt, &
-                    num_PAR_subcols, col_start, col_cnt, grid_data, driver_status_log)
+    ! 2. Initialize the test (reads grid info, distributes columns, etc)
+    call set_domain(size(marbl_instances), num_levels, active_level_cnt, num_PAR_subcols, &
+                    col_start, col_cnt, grid_data, driver_status_log)
     if (driver_status_log%labort_MARBL) then
-      call driver_status_log%log_error_trace('initialize', subname)
+      call driver_status_log%log_error_trace('set_domain', subname)
       return
     end if
 
@@ -209,8 +209,8 @@ Contains
 
   !*****************************************************************************
 
-  subroutine initialize(num_insts, num_levels, active_level_cnt, num_PAR_subcols, &
-                        col_start, col_cnt, grid_data, driver_status_log)
+  subroutine set_domain(num_insts, num_levels, active_level_cnt, num_PAR_subcols, &
+                           col_start, col_cnt, grid_data, driver_status_log)
 
     use marbl_io_mod, only : marbl_io_distribute_cols
     use marbl_io_mod, only : marbl_io_read_domain
@@ -225,7 +225,7 @@ Contains
     type(grid_data_type),               intent(inout) :: grid_data
     type(marbl_log_type),               intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:initialize'
+    character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:set_domain'
     integer :: num_cols
 
     ! 1. Domain decomposition (distribute columns among instances)
@@ -253,7 +253,7 @@ Contains
     end if
 
 
-  end subroutine initialize
+  end subroutine set_domain
 
   !****************************************************************************
 
