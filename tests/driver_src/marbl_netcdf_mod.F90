@@ -145,7 +145,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_netcdf_def_var(ncid, varname, type, dimids, long_name, units, &
-                                  driver_status_log, ldef_fillval, varid_out)
+                                  driver_status_log, ldef_fillval)
 
     integer,              intent(in)    :: ncid
     character(len=*),     intent(in)    :: varname
@@ -155,7 +155,6 @@ contains
     character(len=*),     intent(in)    :: units
     type(marbl_log_type), intent(inout) :: driver_status_log
     logical,    optional, intent(in)    :: ldef_fillval
-    integer,    optional, intent(out)   :: varid_out
 
     character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_netcdf_def_var'
     character(len=char_len) :: log_message
@@ -167,7 +166,7 @@ contains
     write(log_message, "(3A)") 'Can not call def_var(', trim(varname),') without netCDF support'
     call driver_status_log%log_error(log_message, subname)
     ! avoid unused variable warnings when building without netCDF
-    if ((present(ldef_fillval)) .and. (present(varid_out))) then
+    if (present(ldef_fillval)) then
       varid = ncid + size(dimids) + len(long_name) + len(units) + len(type)
       xtype = 0
     end if
@@ -225,8 +224,6 @@ contains
         end if
       end if
     end if
-
-    if (present(varid_out)) varid_out = varid
 #endif
 
   end subroutine marbl_netcdf_def_var
