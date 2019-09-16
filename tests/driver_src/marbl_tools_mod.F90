@@ -23,6 +23,9 @@ contains
     !       * The goal is to get reasonable timing info when running a test
     !         that has multiple instances divided across multiple MPI tasks
 
+    use marbl_mpi_mod, only : marbl_mpi_send
+    use marbl_mpi_mod, only : marbl_mpi_recv
+
     type(marbl_interface_class), intent(in)   :: marbl_instances(:)
     type(marbl_log_type),       intent(inout) :: driver_status_log
     character(len=*), optional, intent(in)    :: header_text
