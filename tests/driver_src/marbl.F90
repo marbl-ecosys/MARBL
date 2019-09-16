@@ -56,10 +56,14 @@ Program marbl
   use marbl_mpi_mod, only : marbl_mpi_finalize
   use marbl_mpi_mod, only : marbl_mpi_abort
   use marbl_mpi_mod, only : marbl_mpi_bcast
-  use marbl_mpi_mod, only : marbl_mpi_send
-  use marbl_mpi_mod, only : marbl_mpi_recv
-  ! MPI-related variables (if .not.mpi_on, my_task = 0 and num_tasks = 1)
-  use marbl_mpi_mod, only : mpi_on, my_task, num_tasks, marbl_mpi_return_error
+  ! MPI-related variables (my_task = 0 for non-MPI runs)
+  use marbl_mpi_mod, only : my_task
+  use marbl_mpi_mod, only : marbl_mpi_return_error
+
+  use marbl_io_mod, only : marbl_io_read_settings_file
+  use marbl_io_mod, only : marbl_io_print_marbl_log
+
+  use marbl_tools_mod, only : marbl_tools_summarize_timers
 
   implicit none
 
@@ -263,7 +267,7 @@ Program marbl
   ! (2c) Read input file
   if (lhas_settings_file) then
     do n=1,num_inst
-      call read_settings_file(settings_file, marbl_instances(n))
+      call marbl_io_read_settings_file(settings_file, marbl_instances(n))
     end do
   end if
 
@@ -281,10 +285,10 @@ Program marbl
       call verify_single_instance(num_inst, trim(testname))
       call marbl_instances(1)%put_setting('ciso_on = .false.')
       call marbl_init_test(marbl_instances(1))
-      call summarize_timers(marbl_instances, driver_status_log, header_text = 'Without the CISO Tracers')
+      call marbl_tools_summarize_timers(marbl_instances, driver_status_log, header_text = 'Without the CISO Tracers')
       call marbl_instances(1)%put_setting('ciso_on = .true.')
       call marbl_init_test(marbl_instances(1))
-      call summarize_timers(marbl_instances, driver_status_log, header_text = 'With the CISO Tracers')
+      call marbl_tools_summarize_timers(marbl_instances, driver_status_log, header_text = 'With the CISO Tracers')
       lsummarize_timers = .false.
 
     ! -- gen_settings_file test -- !
@@ -416,25 +420,25 @@ Program marbl
   ! (4) Print log(s)
   ! (4a) if test reports an error, let user know
   if (driver_status_log%labort_MARBL) &
-    call print_marbl_log(driver_status_log)
+    call marbl_io_print_marbl_log(driver_status_log)
 
   ! (4b) If MARBL returns an error (or MARBL log was requested), print MARBL log
   do n=1,num_inst
     if (marbl_instances(n)%StatusLog%labort_marbl .or. lprint_marbl_log) &
-        call print_marbl_log(marbl_instances(n)%StatusLog)
+        call marbl_io_print_marbl_log(marbl_instances(n)%StatusLog)
   end do
 
   ! (4c) If driver log should be written to file, do so
   if (ldriver_log_to_file) then
-    call print_marbl_log(driver_status_log, outfile=log_out_file)
+    call marbl_io_print_marbl_log(driver_status_log, outfile=log_out_file)
   end if
 
   ! (4d) Add timer information to driver log, then print driver log
   !      note that if driver log was previously written to a file,
   !      timers are all that will be written to screen
   if (lsummarize_timers) &
-    call summarize_timers(marbl_instances, driver_status_log)
-  call print_marbl_log(driver_status_log)
+    call marbl_tools_summarize_timers(marbl_instances, driver_status_log)
+  call marbl_io_print_marbl_log(driver_status_log)
 
 
   call marbl_mpi_finalize()
@@ -442,179 +446,6 @@ Program marbl
   !****************************************************************************
 
 Contains
-
-  !****************************************************************************
-
-  subroutine read_settings_file(settings_file, marbl_instance)
-
-    character(len=*),            intent(in)    :: settings_file
-    type(marbl_interface_class), intent(inout) :: marbl_instance
-
-    character(len=char_len), parameter :: subname = 'marbl::read_settings_file'
-    character(len=char_len) :: settings_file_line
-    integer :: ioerr
-
-    if (my_task .eq. 0) open(97, file=trim(settings_file), status="old", iostat=ioerr)
-    call marbl_mpi_bcast(ioerr, 0)
-    if (ioerr .ne. 0) then
-      if (my_task .eq. 0) then
-        write(*,"(A,I0)") "ioerr = ", ioerr
-        write(*,"(2A)") "ERROR encountered when opening MARBL input file ", trim(settings_file)
-      end if
-      call marbl_mpi_abort()
-    end if
-
-    settings_file_line = ''
-    do while(ioerr .eq. 0)
-      ! (i) broadcast settings_file_line and call put_setting(); abort if error
-      !     calling with empty settings_file_line on first entry to loop is okay, and
-      !     this ensures we don't call put_setting with a garbage line if
-      !     ioerr is non-zero
-      call marbl_mpi_bcast(settings_file_line, 0)
-      call marbl_instance%put_setting(settings_file_line)
-      if (marbl_instance%StatusLog%labort_marbl) then
-        call marbl_instance%StatusLog%log_error_trace("put_setting(settings_file_line)", subname)
-        call print_marbl_log(marbl_instance%StatusLog)
-      end if
-
-      ! (ii) master task reads next line in input file
-      if (my_task .eq. 0) read(97,"(A)", iostat=ioerr) settings_file_line
-
-      ! (iii) broadcast input file line to all tasks (along with iostat)
-      call marbl_mpi_bcast(ioerr, 0)
-    end do
-
-    if (.not.is_iostat_end(ioerr)) then
-      if (my_task .eq. 0) then
-        write(*,"(A,I0)") "ioerr = ", ioerr
-        write(*,"(2A)") "ERROR encountered when reading MARBL input file ", trim(settings_file)
-      end if
-      call marbl_mpi_abort()
-    end if
-
-    if (my_task .eq. 0) close(97)
-
-  end subroutine read_settings_file
-
-  !****************************************************************************
-
-  subroutine print_marbl_log(log_to_print, outfile)
-
-    use marbl_logging, only : marbl_status_log_entry_type
-
-    class(marbl_log_type),      intent(inout) :: log_to_print
-    character(len=*), optional, intent(in)    :: outfile
-    type(marbl_status_log_entry_type), pointer :: tmp
-    integer :: out_unit
-
-    ! write to stdout unless outfile is provided (only task 0 writes to file)
-    out_unit = 6
-    if ((my_task .eq. 0) .and. (present(outfile))) then
-      out_unit = 99
-      open(out_unit, file=outfile, action="write", status="replace")
-      write(6, "(3A)") "  Writing log to ", trim(outfile), "..."
-    end if
-
-    tmp => log_to_print%FullLog
-    do while (associated(tmp))
-      if (mpi_on .and. (.not. tmp%lonly_master_writes)) then
-        ! If running in parallel and all tasks are writing to the log, prefix
-        ! the task # to log message
-        write(out_unit, "(I0,': ',A)") my_task, trim(tmp%LogMessage)
-      elseif (my_task.eq.0) then
-        ! Otherwise only task 0 writes to the log and no prefix is necessary
-        write(out_unit, "(A)") trim(tmp%LogMessage)
-      end if
-      tmp => tmp%next
-    end do
-
-    if ((my_task .eq. 0) .and. (present(outfile))) then
-      close(out_unit)
-      if (my_task .eq. 0) write(6, "(A)") "  ... Done writing to file!"
-    end if
-
-    call log_to_print%erase()
-
-    if (log_to_print%labort_marbl) call marbl_mpi_abort()
-
-  end subroutine print_marbl_log
-
-  !****************************************************************************
-
-  subroutine summarize_timers(marbl_instances, driver_status_log, header_text)
-    ! TODO: differentiate between multiple MPI tasks and multiple instances
-    !       * The goal is to get reasonable timing info when running a test
-    !         that has multiple instances divided across multiple MPI tasks
-
-    use marbl_kinds_mod, only : r8
-
-    type(marbl_interface_class), intent(in)   :: marbl_instances(:)
-    type(marbl_log_type),       intent(inout) :: driver_status_log
-    character(len=*), optional, intent(in)    :: header_text
-
-    real(r8) :: min_runtime, ind_runtime, max_runtime, tot_runtime
-    real(r8), dimension(:), allocatable :: per_timer_tot_runtime
-    character(len=15) :: int_to_str
-    integer :: m, i, n, num_timers
-
-100 format(A, ': ', F11.3, ' seconds',A)
-
-    num_timers = marbl_instances(1)%timer_summary%num_timers
-    allocate(per_timer_tot_runtime(num_timers))
-    per_timer_tot_runtime = marbl_instances(1)%timer_summary%cumulative_runtimes
-    do n=2, size(marbl_instances)
-      per_timer_tot_runtime = per_timer_tot_runtime + marbl_instances(n)%timer_summary%cumulative_runtimes
-    end do
-
-    associate(timer_names => marbl_instances(1)%timer_summary%names)
-      if (present(header_text)) then
-        call driver_status_log%log_header(header_text, subname)
-      else
-        call driver_status_log%log_header('Timer summary', subname)
-      end if
-      write(log_message, "(A, I0, A)") 'There are ', num_timers, ' timers being returned'
-      call driver_status_log%log_noerror(log_message, subname)
-      call driver_status_log%log_noerror('----', subname)
-      do i=1, num_timers
-        ind_runtime = per_timer_tot_runtime(i)
-        if (mpi_on) then
-          min_runtime = ind_runtime
-          max_runtime = ind_runtime
-          tot_runtime = ind_runtime
-          if (my_task.eq.0) then
-            write(log_message, 100) trim(timer_names(i)), ind_runtime,       &
-                                    ' (Task 0)'
-            call driver_status_log%log_noerror(log_message, subname)
-            do m=1, num_tasks-1
-              call marbl_mpi_recv(ind_runtime, m)
-              min_runtime = min(min_runtime, ind_runtime)
-              max_runtime = max(max_runtime, ind_runtime)
-              tot_runtime = tot_runtime + ind_runtime
-              write(int_to_str, "(' (Task ',I0,')')") m
-              write(log_message, 100) trim(timer_names(i)), ind_runtime,     &
-                                      trim(int_to_str)
-              call driver_status_log%log_noerror(log_message, subname)
-            end do
-          else ! not task 0
-            call marbl_mpi_send(ind_runtime, 0)
-          end if
-
-          if (my_task.eq.0) then
-            write(log_message, 100) trim(timer_names(i)), tot_runtime/real(num_tasks,r8), ' (avg)'
-            call driver_status_log%log_noerror(log_message, subname)
-            write(log_message, 100) trim(timer_names(i)), min_runtime, ' (min)'
-            call driver_status_log%log_noerror(log_message, subname)
-            write(log_message, 100) trim(timer_names(i)), max_runtime, ' (max)'
-            call driver_status_log%log_noerror(log_message, subname)
-          end if
-        else ! no MPI
-          write(log_message, 100) trim(timer_names(i)), ind_runtime, ''
-          call driver_status_log%log_noerror(log_message, subname)
-        end if
-      end do
-    end associate
-
-  end subroutine summarize_timers
 
   !****************************************************************************
 
@@ -629,5 +460,7 @@ Contains
     end if
 
   end subroutine verify_single_instance
+
+  !****************************************************************************
 
 End Program marbl

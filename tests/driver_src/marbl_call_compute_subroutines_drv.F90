@@ -212,7 +212,7 @@ Contains
   subroutine set_domain(num_insts, num_levels, active_level_cnt, num_PAR_subcols, &
                            col_start, col_cnt, grid_data, driver_status_log)
 
-    use marbl_io_mod, only : marbl_io_distribute_cols
+    use marbl_tools_mod, only : marbl_tools_distribute_cols
     use marbl_io_mod, only : marbl_io_read_domain
 
     integer,                            intent(in)    :: num_insts
@@ -235,7 +235,7 @@ Contains
     end if
 
     ! 2. Domain decomposition (distribute columns among instances)
-    call marbl_io_distribute_cols(num_cols, num_insts, col_start, col_cnt, driver_status_log)
+    call marbl_tools_distribute_cols(num_cols, num_insts, col_start, col_cnt, driver_status_log)
     ! NOTE: driver_status_log gets information but there are no abort conditions
 
   end subroutine set_domain

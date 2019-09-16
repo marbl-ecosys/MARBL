@@ -130,6 +130,7 @@ endif
 COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(LIBCPPDEFS)"
 
 OBJS = marbl_mpi_mod.o                      \
+       marbl_tools_mod.o                    \
        marbl_netcdf_mod.o                   \
        marbl_io_mod.o                       \
        marbl_init_drv.o                     \

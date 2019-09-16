@@ -1,7 +1,16 @@
 module marbl_io_mod
-! This module provides MARBL-specific routines that call marbl_netcdf_mod to perform
-! I/O. It is designed to build regardless of whether the model is built with netCDF support,
-! but will report errors from marbl_netcdf_mod if netCDF is not linked when required.
+! This module handles IO tasks for the stand-alone driver. These tasks fall in two
+! categories:
+! 1. Basic I/O -- reading a MARBL settings file (if provided), writing the MARBL log
+!                 to stdout, etc
+! 2. netCDF I/O -- call marbl_netcdf_mod to perform I/O. Can be built without linking
+!                  to the netCDF library, but calls to marbl_netcdf_mod will abort if
+!                  netCDF is not available.
+!
+! Additionally, This module handles some of the I/O bookkeeping:
+! * Storing ncid values for input and output files
+! * Providing buffers to copy MARBL diagnostic data into ahead of writing to netCDF
+! * Providing grid_data, an object used to store delta_z, zt, and zw
 
   use marbl_kinds_mod, only : r8, char_len
 
@@ -16,6 +25,9 @@ module marbl_io_mod
   use marbl_netcdf_mod, only : marbl_netcdf_inq_varid
   use marbl_netcdf_mod, only : marbl_netcdf_get_var
   use marbl_netcdf_mod, only : marbl_netcdf_put_var
+
+  use marbl_mpi_mod, only : my_task
+  use marbl_mpi_mod, only : marbl_mpi_abort
 
   implicit none
   private
@@ -55,8 +67,9 @@ module marbl_io_mod
   type(many_diags_type) :: surface_flux_diag_buffer
   type(many_diags_type) :: interior_tendency_diag_buffer
 
+  public :: marbl_io_read_settings_file
+  public :: marbl_io_print_marbl_log
   public :: marbl_io_open_files
-  public :: marbl_io_distribute_cols
   public :: marbl_io_construct_diag_buffers
   public :: marbl_io_read_domain
   public :: marbl_io_read_forcing_field
@@ -79,6 +92,105 @@ module marbl_io_mod
   end interface get_init_file_var_by_name
 
 contains
+
+  !****************************************************************************
+
+  subroutine marbl_io_read_settings_file(settings_file, marbl_instance)
+
+    use marbl_mpi_mod, only : marbl_mpi_bcast
+
+    character(len=*),            intent(in)    :: settings_file
+    type(marbl_interface_class), intent(inout) :: marbl_instance
+
+    character(len=char_len), parameter :: subname = 'marbl_io_mod:marbl_io_read_settings_file'
+    character(len=char_len) :: settings_file_line
+    integer :: ioerr
+
+    if (my_task .eq. 0) open(97, file=trim(settings_file), status="old", iostat=ioerr)
+    call marbl_mpi_bcast(ioerr, 0)
+    if (ioerr .ne. 0) then
+      if (my_task .eq. 0) then
+        write(*,"(A,I0)") "ioerr = ", ioerr
+        write(*,"(2A)") "ERROR encountered when opening MARBL input file ", trim(settings_file)
+      end if
+      call marbl_mpi_abort()
+    end if
+
+    settings_file_line = ''
+    do while(ioerr .eq. 0)
+      ! (i) broadcast settings_file_line and call put_setting(); abort if error
+      !     calling with empty settings_file_line on first entry to loop is okay, and
+      !     this ensures we don't call put_setting with a garbage line if
+      !     ioerr is non-zero
+      call marbl_mpi_bcast(settings_file_line, 0)
+      call marbl_instance%put_setting(settings_file_line)
+      if (marbl_instance%StatusLog%labort_marbl) then
+        call marbl_instance%StatusLog%log_error_trace("put_setting(settings_file_line)", subname)
+        call marbl_io_print_marbl_log(marbl_instance%StatusLog)
+      end if
+
+      ! (ii) master task reads next line in input file
+      if (my_task .eq. 0) read(97,"(A)", iostat=ioerr) settings_file_line
+
+      ! (iii) broadcast input file line to all tasks (along with iostat)
+      call marbl_mpi_bcast(ioerr, 0)
+    end do
+
+    if (.not.is_iostat_end(ioerr)) then
+      if (my_task .eq. 0) then
+        write(*,"(A,I0)") "ioerr = ", ioerr
+        write(*,"(2A)") "ERROR encountered when reading MARBL input file ", trim(settings_file)
+      end if
+      call marbl_mpi_abort()
+    end if
+
+    if (my_task .eq. 0) close(97)
+
+  end subroutine marbl_io_read_settings_file
+
+  !****************************************************************************
+
+  subroutine marbl_io_print_marbl_log(log_to_print, outfile)
+
+    use marbl_logging, only : marbl_status_log_entry_type
+    use marbl_mpi_mod, only : mpi_on
+
+    class(marbl_log_type),      intent(inout) :: log_to_print
+    character(len=*), optional, intent(in)    :: outfile
+    type(marbl_status_log_entry_type), pointer :: tmp
+    integer :: out_unit
+
+    ! write to stdout unless outfile is provided (only task 0 writes to file)
+    out_unit = 6
+    if ((my_task .eq. 0) .and. (present(outfile))) then
+      out_unit = 99
+      open(out_unit, file=outfile, action="write", status="replace")
+      write(6, "(3A)") "  Writing log to ", trim(outfile), "..."
+    end if
+
+    tmp => log_to_print%FullLog
+    do while (associated(tmp))
+      if (mpi_on .and. (.not. tmp%lonly_master_writes)) then
+        ! If running in parallel and all tasks are writing to the log, prefix
+        ! the task # to log message
+        write(out_unit, "(I0,': ',A)") my_task, trim(tmp%LogMessage)
+      elseif (my_task.eq.0) then
+        ! Otherwise only task 0 writes to the log and no prefix is necessary
+        write(out_unit, "(A)") trim(tmp%LogMessage)
+      end if
+      tmp => tmp%next
+    end do
+
+    if ((my_task .eq. 0) .and. (present(outfile))) then
+      close(out_unit)
+      if (my_task .eq. 0) write(6, "(A)") "  ... Done writing to file!"
+    end if
+
+    call log_to_print%erase()
+
+    if (log_to_print%labort_marbl) call marbl_mpi_abort()
+
+  end subroutine marbl_io_print_marbl_log
 
   !*****************************************************************************
 
@@ -203,48 +315,6 @@ contains
     end if
 
   end subroutine get_init_file_var_by_name_r8_1d
-
-  !*****************************************************************************
-
-  subroutine marbl_io_distribute_cols(num_cols, num_insts, col_start, col_cnt, driver_status_log)
-
-    integer,              intent(in)    :: num_cols
-    integer,              intent(in)    :: num_insts
-    integer, allocatable, intent(inout) :: col_start(:)
-    integer, allocatable, intent(inout) :: col_cnt(:)
-    type(marbl_log_type), intent(inout) :: driver_status_log
-
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_distribute_cols'
-    character(len=char_len) :: log_message
-    integer :: n, cols_remaining
-
-    ! 1. allocate memory for col_start and col_cnt
-    allocate(col_start(num_insts), col_cnt(num_insts))
-
-    ! 2. Determine which columns each instance owns
-    !    Note that we use 0-base indexing for
-    !    col_start and 1-base indexing for col_id_loc
-    !    (col_id_loc in [1, col_cnt(n)]), so
-    !        col_id = col_start(n) + col_id_loc
-    cols_remaining = num_cols
-    do n=1, num_insts
-      if (n.eq.1) then
-        col_start(n) = 0
-      else
-        col_start(n) = col_start(n-1) + col_cnt(n-1)
-      end if
-      col_cnt(n) = cols_remaining / (num_insts-n+1) ! remaining cols / remaining insts
-      cols_remaining = cols_remaining - col_cnt(n)
-    end do
-
-    !  3. Log decomposition
-    do n=1, num_insts
-      write(log_message, "(A, I0, A, I0, A, I0)") "Instance ", n, " has ", col_cnt(n),        &
-                                                  " columns, beginning with ", col_start(n)+1
-      call driver_status_log%log_noerror(log_message, subname)
-    end do
-
-  end subroutine marbl_io_distribute_cols
 
   !*****************************************************************************
 
