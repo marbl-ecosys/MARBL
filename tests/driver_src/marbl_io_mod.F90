@@ -69,8 +69,8 @@ module marbl_io_mod
   public :: marbl_io_destruct_diag_buffers
 
   interface marbl_io_copy_into_diag_buffer
-    module procedure marbl_io_copy_into_surface_diag_buffer
-    module procedure marbl_io_copy_into_interior_diag_buffer
+    module procedure marbl_io_copy_into_diag_buffer_surface
+    module procedure marbl_io_copy_into_diag_buffer_interior
   end interface marbl_io_copy_into_diag_buffer
 
   interface get_init_file_var_by_name
@@ -730,7 +730,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_copy_into_surface_diag_buffer(col_start, col_cnt, marbl_instance)
+  subroutine marbl_io_copy_into_diag_buffer_surface(col_start, col_cnt, marbl_instance)
     integer,                     intent(in) :: col_start
     integer,                     intent(in) :: col_cnt
     type(marbl_interface_class), intent(in) :: marbl_instance
@@ -749,11 +749,11 @@ contains
       end if
     end do
 
-  end subroutine marbl_io_copy_into_surface_diag_buffer
+  end subroutine marbl_io_copy_into_diag_buffer_surface
 
   !*****************************************************************************
 
-  subroutine marbl_io_copy_into_interior_diag_buffer(col_id, marbl_instance)
+  subroutine marbl_io_copy_into_diag_buffer_interior(col_id, marbl_instance)
     integer,                     intent(in) :: col_id
     type(marbl_interface_class), intent(in) :: marbl_instance
 
@@ -771,7 +771,7 @@ contains
       end if
     end do
 
-  end subroutine marbl_io_copy_into_interior_diag_buffer
+  end subroutine marbl_io_copy_into_diag_buffer_interior
 
   !*****************************************************************************
 
