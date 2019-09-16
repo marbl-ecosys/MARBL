@@ -62,7 +62,6 @@ module marbl_io_mod
   public :: marbl_io_read_forcing_field
   public :: marbl_io_read_tracers_at_surface
   public :: marbl_io_read_tracers
-  public :: marbl_io_get_init_file_var_by_name
   public :: marbl_io_define_history
   public :: marbl_io_copy_into_diag_buffer
   public :: marbl_io_write_history
@@ -74,10 +73,10 @@ module marbl_io_mod
     module procedure marbl_io_copy_into_interior_diag_buffer
   end interface marbl_io_copy_into_diag_buffer
 
-  interface marbl_io_get_init_file_var_by_name
-    module procedure marbl_io_get_init_file_var_by_name_int_1d
-    module procedure marbl_io_get_init_file_var_by_name_r8_1d
-  end interface marbl_io_get_init_file_var_by_name
+  interface get_init_file_var_by_name
+    module procedure get_init_file_var_by_name_int_1d
+    module procedure get_init_file_var_by_name_r8_1d
+  end interface get_init_file_var_by_name
 
 contains
 
@@ -115,7 +114,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_get_init_file_dim_by_name(name, len, driver_status_log)
+  subroutine get_init_file_dim_by_name(name, len, driver_status_log)
 
     use marbl_netcdf_mod, only : marbl_netcdf_inquire_dimension
 
@@ -123,7 +122,7 @@ contains
     integer,              intent(out)   :: len
     type(marbl_log_type), intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_get_init_file_dim_by_name'
+    character(len=*), parameter :: subname = 'marbl_io_mod:get_init_file_dim_by_name'
     character(len=char_len) :: log_message
     integer :: dimid
 
@@ -143,17 +142,17 @@ contains
       return
     end if
 
-  end subroutine marbl_io_get_init_file_dim_by_name
+  end subroutine get_init_file_dim_by_name
 
   !*****************************************************************************
 
-  subroutine marbl_io_get_init_file_var_by_name_int_1d(name, var, driver_status_log)
+  subroutine get_init_file_var_by_name_int_1d(name, var, driver_status_log)
 
     character(len=*),     intent(in)    :: name
     integer,              intent(out)   :: var(:)
     type(marbl_log_type), intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_get_init_file_var_by_name_int_1d'
+    character(len=*), parameter :: subname = 'marbl_io_mod:get_init_file_var_by_name_int_1d'
     character(len=char_len) :: log_message
     integer :: varid
 
@@ -173,17 +172,17 @@ contains
       return
     end if
 
-  end subroutine marbl_io_get_init_file_var_by_name_int_1d
+  end subroutine get_init_file_var_by_name_int_1d
 
   !*****************************************************************************
 
-  subroutine marbl_io_get_init_file_var_by_name_r8_1d(name, var, driver_status_log)
+  subroutine get_init_file_var_by_name_r8_1d(name, var, driver_status_log)
 
     character(len=*),     intent(in)    :: name
     real(r8),             intent(out)   :: var(:)
     type(marbl_log_type), intent(inout) :: driver_status_log
 
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_get_init_file_var_by_name_r8_1d'
+    character(len=*), parameter :: subname = 'marbl_io_mod:get_init_file_var_by_name_r8_1d'
     character(len=char_len) :: log_message
     integer :: varid
 
@@ -203,27 +202,24 @@ contains
       return
     end if
 
-  end subroutine marbl_io_get_init_file_var_by_name_r8_1d
+  end subroutine get_init_file_var_by_name_r8_1d
 
   !*****************************************************************************
 
-  subroutine marbl_io_distribute_cols(num_cols, col_start, col_cnt, driver_status_log)
+  subroutine marbl_io_distribute_cols(num_cols, num_insts, col_start, col_cnt, driver_status_log)
 
-    integer,              intent(out)   :: num_cols
-    integer,              intent(out)   :: col_start(:)
-    integer,              intent(out)   :: col_cnt(:)
+    integer,              intent(in)    :: num_cols
+    integer,              intent(in)    :: num_insts
+    integer, allocatable, intent(inout) :: col_start(:)
+    integer, allocatable, intent(inout) :: col_cnt(:)
     type(marbl_log_type), intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_distribute_cols'
     character(len=char_len) :: log_message
-    integer :: n, cols_remaining, num_insts
+    integer :: n, cols_remaining
 
-    ! 1. Get column count from netCDF
-    call marbl_io_get_init_file_dim_by_name('column', num_cols, driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_io_get_init_file_dim_by_name(column)', subname)
-      return
-    end if
+    ! 1. allocate memory for col_start and col_cnt
+    allocate(col_start(num_insts), col_cnt(num_insts))
 
     ! 2. Determine which columns each instance owns
     !    Note that we use 0-base indexing for
@@ -231,7 +227,6 @@ contains
     !    (col_id_loc in [1, col_cnt(n)]), so
     !        col_id = col_start(n) + col_id_loc
     cols_remaining = num_cols
-    num_insts = size(col_cnt)
     do n=1, num_insts
       if (n.eq.1) then
         col_start(n) = 0
@@ -268,53 +263,70 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_domain(num_levels, num_PAR_subcols, grid_data, driver_status_log)
+  subroutine marbl_io_read_domain(grid_data, active_level_cnt, num_cols, num_levels, num_PAR_subcols, driver_status_log)
 
-    integer,              intent(inout) :: num_levels
-    integer,              intent(inout) :: num_PAR_subcols
     type(grid_data_type), intent(inout) :: grid_data
+    integer, allocatable, intent(inout) :: active_level_cnt(:)
+    integer,              intent(out)   :: num_cols
+    integer,              intent(out)   :: num_levels
+    integer,              intent(out)   :: num_PAR_subcols
     type(marbl_log_type), intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_domain'
 
-    ! 1. Get dimensions (num_levels and num_PAR_subcols)
-    call marbl_io_get_init_file_dim_by_name('zt', num_levels, driver_status_log)
+    ! 1. Get dimensions (num_cols, num_levels and num_PAR_subcols)
+    call get_init_file_dim_by_name('column', num_cols, driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_io_get_init_file_dim_by_name(zt)', subname)
+      call driver_status_log%log_error_trace('get_init_file_dim_by_name(column)', subname)
       return
     end if
 
-    call marbl_io_get_init_file_dim_by_name('nbin', num_PAR_subcols, driver_status_log)
+    call get_init_file_dim_by_name('zt', num_levels, driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_io_get_init_file_dim_by_name(nbin)', subname)
+      call driver_status_log%log_error_trace('get_init_file_dim_by_name(zt)', subname)
       return
     end if
 
+    call get_init_file_dim_by_name('nbin', num_PAR_subcols, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('get_init_file_dim_by_name(nbin)', subname)
+      return
+    end if
+
+    ! 2. allocate memory for domain variables (grid_data and active_level_cnt)
     allocate(grid_data%delta_z(num_levels), grid_data%zt(num_levels), grid_data%zw(num_levels))
+    allocate(active_level_cnt(num_cols))
 
-    call marbl_io_get_init_file_var_by_name('delta_z', grid_data%delta_z, driver_status_log)
+    ! 3. Read domain data into newly-allocated memory
+    call get_init_file_var_by_name('delta_z', grid_data%delta_z, driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_io_get_init_file_var_by_name(delta_z)', subname)
+      call driver_status_log%log_error_trace('get_init_file_var_by_name(delta_z)', subname)
       return
     end if
     ! convert from m -> cm
     grid_data%delta_z = grid_data%delta_z * 100._r8
 
-    call marbl_io_get_init_file_var_by_name('zt', grid_data%zt, driver_status_log)
+    call get_init_file_var_by_name('zt', grid_data%zt, driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_io_get_init_file_var_by_name(zt)', subname)
+      call driver_status_log%log_error_trace('get_init_file_var_by_name(zt)', subname)
       return
     end if
     ! convert from m -> cm
     grid_data%zt = grid_data%zt * 100._r8
 
-    call marbl_io_get_init_file_var_by_name('zw', grid_data%zw, driver_status_log)
+    call get_init_file_var_by_name('zw', grid_data%zw, driver_status_log)
     if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_io_get_init_file_var_by_name(zw)', subname)
+      call driver_status_log%log_error_trace('get_init_file_var_by_name(zw)', subname)
       return
     end if
     ! convert from m -> cm
     grid_data%zw = grid_data%zw * 100._r8
+
+    call get_init_file_var_by_name('active_level_cnt', active_level_cnt, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('get_init_file_var_by_name(active_level_cnt)', subname)
+      return
+    end if
 
   end subroutine marbl_io_read_domain
 

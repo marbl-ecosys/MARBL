@@ -214,7 +214,6 @@ Contains
 
     use marbl_io_mod, only : marbl_io_distribute_cols
     use marbl_io_mod, only : marbl_io_read_domain
-    use marbl_io_mod, only : marbl_io_get_init_file_var_by_name
 
     integer,                            intent(in)    :: num_insts
     integer,                            intent(out)   :: num_levels
@@ -228,30 +227,16 @@ Contains
     character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:set_domain'
     integer :: num_cols
 
-    ! 1. Domain decomposition (distribute columns among instances)
-    allocate(col_start(num_insts), col_cnt(num_insts))
-    call marbl_io_distribute_cols(num_cols, col_start, col_cnt, driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_io_distribute_cols', subname)
-      return
-    end if
-
-    ! 2. Read domain info, initial conditions, and forcing fields from netCDF file
-    call marbl_io_read_domain(num_levels, num_PAR_subcols, grid_data, driver_status_log)
+    ! 1. Read domain info, initial conditions, and forcing fields from netCDF file
+    call marbl_io_read_domain(grid_data, active_level_cnt, num_cols, num_levels, num_PAR_subcols, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('read_domain', subname)
       return
     end if
 
-    ! 3. Need to store number of active levels for each column to properly apply
-    !    mask when writing full-depth data to history file
-    allocate(active_level_cnt(num_cols))
-    call marbl_io_get_init_file_var_by_name('active_level_cnt', active_level_cnt, driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('marbl_io_get_init_file_var_by_name(active_level_cnt)', subname)
-      return
-    end if
-
+    ! 2. Domain decomposition (distribute columns among instances)
+    call marbl_io_distribute_cols(num_cols, num_insts, col_start, col_cnt, driver_status_log)
+    ! NOTE: driver_status_log gets information but there are no abort conditions
 
   end subroutine set_domain
 
