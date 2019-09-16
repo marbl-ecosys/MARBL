@@ -227,7 +227,7 @@ Contains
     character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:set_domain'
     integer :: num_cols
 
-    ! 1. Read domain info, initial conditions, and forcing fields from netCDF file
+    ! 1. Read domain info from netCDF file
     call marbl_io_read_domain(grid_data, active_level_cnt, num_cols, num_levels, num_PAR_subcols, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('read_domain', subname)
