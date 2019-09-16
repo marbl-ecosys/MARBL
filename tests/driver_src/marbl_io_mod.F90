@@ -343,200 +343,65 @@ contains
     integer, optional,                             intent(in)    :: active_level_cnt
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_forcing_field'
-    character(len=char_len)     :: log_message
-    integer :: n, varid
+    character(len=char_len)     :: log_message, varname
+    real(r8) :: conv_factor
+    integer :: n, varid, rank, conv_id
 
     do n=1, size(forcing_fields)
-      select case(trim(forcing_fields(n)%metadata%varname))
-        case('u10_sqr')
-          call marbl_netcdf_inq_varid(ncid_in, 'u10_sqr', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
-                                       driver_status_log, col_id=col_id+col_start)
-          ! convert from m^2 / s^2 -> cm^2 / s^2
-          forcing_fields(n)%field_0d(col_id) = forcing_fields(n)%field_0d(col_id) * 10000._r8
-        case('sss')
-          call marbl_netcdf_inq_varid(ncid_in, 'SSS', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
-                                       driver_status_log, col_id=col_id+col_start)
-        case('sst')
-          call marbl_netcdf_inq_varid(ncid_in, 'SST', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
-                                       driver_status_log, col_id=col_id+col_start)
-        case('Ice Fraction')
-          call marbl_netcdf_inq_varid(ncid_in, 'ice_frac', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
-                                       driver_status_log, col_id=col_id+col_start)
-        case('Dust Flux')
-          call marbl_netcdf_inq_varid(ncid_in, 'dust_flux', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          if (size(forcing_fields(n)%field_0d) .eq. 1) then ! interior forcing
-            call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(1), &
-                                         driver_status_log, col_id=col_id+col_start)
-            ! convert from kg/m^2/s -> g/cm^2/s
-            forcing_fields(n)%field_0d(1) = forcing_fields(n)%field_0d(1) * 0.1_r8
-          else ! surface forcing
-            call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
-                                         driver_status_log, col_id=col_id+col_start)
-            ! convert from kg/m^2/s -> g/cm^2/s
-            forcing_fields(n)%field_0d(col_id) = forcing_fields(n)%field_0d(col_id) * 0.1_r8
-          end if
-        case('Iron Flux')
-          call marbl_netcdf_inq_varid(ncid_in, 'iron_flux', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
-                                       driver_status_log, col_id=col_id+col_start)
-          ! convert from mmol/m^2/s -> nmol/cm^2/s
-          forcing_fields(n)%field_0d(col_id) = forcing_fields(n)%field_0d(col_id) * 100._r8
-        case('NOx Flux')
-          call marbl_netcdf_inq_varid(ncid_in, 'nox_flux', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
-                                       driver_status_log, col_id=col_id+col_start)
-          ! convert from mmol/m^2/s -> nmol/cm^2/s
-          forcing_fields(n)%field_0d(col_id) = forcing_fields(n)%field_0d(col_id) * 100._r8
-        case('NHy Flux')
-          call marbl_netcdf_inq_varid(ncid_in, 'nhy_flux', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
-                                       driver_status_log, col_id=col_id+col_start)
-          ! convert from mmol/m^2/s -> nmol/cm^2/s
-          forcing_fields(n)%field_0d(col_id) = forcing_fields(n)%field_0d(col_id) * 100._r8
-        case('Atmospheric Pressure')
-          call marbl_netcdf_inq_varid(ncid_in, 'atm_pressure', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
-                                       driver_status_log, col_id=col_id+col_start)
-        case('xco2')
-          call marbl_netcdf_inq_varid(ncid_in, 'atm_co2', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
-                                       driver_status_log, col_id=col_id+col_start)
-        case('xco2_alt_co2')
-          call marbl_netcdf_inq_varid(ncid_in, 'atm_alt_co2', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
-                                       driver_status_log, col_id=col_id+col_start)
-        case('PAR Column Fraction')
-          call marbl_netcdf_inq_varid(ncid_in, 'FRACR_BIN', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_1d(1,:), &
-                                       driver_status_log, col_start=col_id+col_start)
-        case('Surface Shortwave')
-          call marbl_netcdf_inq_varid(ncid_in, 'QSW_BIN', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_1d(1,:), &
-                                       driver_status_log, col_start=col_id+col_start)
-        case('Potential Temperature')
-          call marbl_netcdf_inq_varid(ncid_in, 'temperature', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_1d(1,:), &
-                                       driver_status_log, col_start=col_id+col_start)
-        case('Salinity')
-          call marbl_netcdf_inq_varid(ncid_in, 'salinity', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_1d(1,:), &
-                                       driver_status_log, col_start=col_id+col_start)
-        case('Pressure')
-          call marbl_netcdf_inq_varid(ncid_in, 'pressure', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_1d(1,:), &
-                                       driver_status_log, col_start=col_id+col_start)
-        case('Iron Sediment Flux')
-          call marbl_netcdf_inq_varid(ncid_in, 'iron_sed_flux', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_1d(1,:), &
-                                       driver_status_log, col_start=col_id+col_start)
-        case('O2 Consumption Scale Factor')
-          call marbl_netcdf_inq_varid(ncid_in, 'o2_consumption_scalef', varid, driver_status_log)
-          if (driver_status_log%labort_marbl) then
-            write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(forcing_fields(n)%metadata%varname), ")"
-            call driver_status_log%log_error_trace(log_message, subname)
-            return
-          end if
-         call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_1d(1,:), &
-                                      driver_status_log, col_start=col_id+col_start)
-        case DEFAULT
-          write(log_message, "(3A)") "Unrecognized forcing field '", trim(forcing_fields(n)%metadata%varname), "'"
-          call driver_status_log%log_error(log_message, subname)
-          return
-      end select
+      ! Convert netcdf varname from forcing field name (also get rank and unit conversion factor)
+      call get_forcing_varname_rank_and_conv_factor(forcing_fields(n)%metadata%varname, varname, &
+                                                    rank, conv_factor, driver_status_log)
       if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") "marbl_netcdf_get_var(", trim(forcing_fields(n)%metadata%varname), ")"
+        write(log_message, "(3A)") "get_forcing_varname_rank_and_conv_factor(", &
+                                   trim(forcing_fields(n)%metadata%varname), ")"
         call driver_status_log%log_error_trace(log_message, subname)
         return
       end if
+
+      ! Get netcdf varid
+      call marbl_netcdf_inq_varid(ncid_in, varname, varid, driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(varname), ")"
+        call driver_status_log%log_error_trace(log_message, subname)
+        return
+      end if
+
+      ! Reading from netCDF will depend on rank of field to read
+      if (rank .eq. 0) then
+        ! Some 1D forcing_fields are requested for surface flux computation
+        ! but others are needed for interior tendency -- the latter are
+        ! read 1 column at a time
+        if (size(forcing_fields(n)%field_0d) .eq. 1) then ! interior tendency
+          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(1), &
+                                    driver_status_log, col_id=col_id+col_start)
+          conv_id = 1
+        else ! surface flux
+          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
+                                    driver_status_log, col_id=col_id+col_start)
+          conv_id = col_id
+        end if
+
+        ! Apply the conversion factor
+        if (conv_factor .ne. 1.0_r8) &
+          forcing_fields(n)%field_0d(conv_id) = forcing_fields(n)%field_0d(conv_id) * conv_factor
+
+      else ! rank == 1
+        ! Read forcing field
+        call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_1d(1,:), &
+                                  driver_status_log, col_start=col_id+col_start)
+        ! Apply the conversion factor
+        if (conv_factor .ne. 1.0_r8) &
+          forcing_fields(n)%field_1d(col_id, :) = forcing_fields(n)%field_1d(col_id, :) * conv_factor
+      end if
+
+      ! Report error from get_var()
+      if (driver_status_log%labort_marbl) then
+        write(log_message, "(3A)") "marbl_netcdf_get_var(", trim(varname), ")"
+        call driver_status_log%log_error_trace(log_message, subname)
+        return
+      end if
+
+      ! Set forcing to 0 below ocean bottom
       if (present(active_level_cnt)) then
         if (associated(forcing_fields(n)%field_1d)) then
           forcing_fields(n)%field_1d(1,active_level_cnt+1:) = real(0, r8)
@@ -1068,6 +933,94 @@ contains
     end do
 
   end subroutine io_diag_construct
+
+  !*****************************************************************************
+
+  subroutine get_forcing_varname_rank_and_conv_factor(forcing_name, varname, rank, conv_factor, driver_status_log)
+
+    character(len=*),        intent(in)    :: forcing_name
+    character(len=char_len), intent(out)   :: varname
+    integer,                 intent(out)   :: rank
+    real(r8),                intent(out)   :: conv_factor
+    type(marbl_log_type),    intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:get_forcing_varname_rank_and_conv_factor'
+    character(len=char_len) :: log_message
+
+    conv_factor = 1.0_r8 ! Assume units are correct unless explicitly changed
+    select case (forcing_name)
+      case('u10_sqr')
+        varname = 'u10_sqr'
+        rank = 0
+        ! convert from m^2 / s^2 -> cm^2 / s^2
+        conv_factor = 10000._r8
+      case('sss')
+        varname = 'SSS'
+        rank = 0
+      case('sst')
+        varname = 'SST'
+        rank = 0
+      case('Ice Fraction')
+        varname = 'ice_frac'
+        rank = 0
+      case('Dust Flux')
+        varname = 'dust_flux'
+        rank = 0
+        ! convert from kg/m^2/s -> g/cm^2/s
+        conv_factor = 0.1_r8
+      case('Iron Flux')
+        varname = 'iron_flux'
+        rank = 0
+        ! convert from mmol/m^2/s -> nmol/cm^2/s
+        conv_factor = 100._r8
+      case('NOx Flux')
+        varname = 'nox_flux'
+        rank = 0
+        ! convert from mmol/m^2/s -> nmol/cm^2/s
+        conv_factor = 100._r8
+      case('NHy Flux')
+        varname = 'nhy_flux'
+        rank = 0
+        ! convert from mmol/m^2/s -> nmol/cm^2/s
+        conv_factor = 100._r8
+      case('Atmospheric Pressure')
+        varname = 'atm_pressure'
+        rank = 0
+      case('xco2')
+        varname = 'atm_co2'
+        rank = 0
+      case('xco2_alt_co2')
+        varname = 'atm_alt_co2'
+        rank = 0
+      case('PAR Column Fraction')
+        varname = 'FRACR_BIN'
+        rank = 1
+      case('Surface Shortwave')
+        varname = 'QSW_BIN'
+        rank = 1
+      case('Potential Temperature')
+        varname = 'temperature'
+        rank = 1
+      case('Salinity')
+        varname = 'salinity'
+        rank = 1
+      case('Pressure')
+        varname = 'pressure'
+        rank = 1
+      case('Iron Sediment Flux')
+        varname = 'iron_sed_flux'
+        rank = 1
+      case('O2 Consumption Scale Factor')
+        varname = 'o2_consumption_scalef'
+        rank = 1
+      case DEFAULT
+        rank = -1
+        write(log_message, "(3A)") "Unrecognized forcing field '", trim(forcing_name), "'"
+        call driver_status_log%log_error(log_message, subname)
+        return
+    end select
+
+  end subroutine get_forcing_varname_rank_and_conv_factor
 
   !*****************************************************************************
 
