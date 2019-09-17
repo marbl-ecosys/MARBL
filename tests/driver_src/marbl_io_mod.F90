@@ -111,7 +111,7 @@ contains
     if (ioerr .ne. 0) then
       if (my_task .eq. 0) then
         write(*,"(A,I0)") "ioerr = ", ioerr
-        write(*,"(2A)") "ERROR encountered when opening MARBL input file ", trim(settings_file)
+        write(*,"(2A)") "ERROR encountered when opening MARBL settings file ", trim(settings_file)
       end if
       call marbl_mpi_abort()
     end if
@@ -129,17 +129,17 @@ contains
         call marbl_io_print_marbl_log(marbl_instance%StatusLog)
       end if
 
-      ! (ii) master task reads next line in input file
+      ! (ii) master task reads next line in settings file
       if (my_task .eq. 0) read(97,"(A)", iostat=ioerr) settings_file_line
 
-      ! (iii) broadcast input file line to all tasks (along with iostat)
+      ! (iii) broadcast settings file line to all tasks (along with iostat)
       call marbl_mpi_bcast(ioerr, 0)
     end do
 
     if (.not.is_iostat_end(ioerr)) then
       if (my_task .eq. 0) then
         write(*,"(A,I0)") "ioerr = ", ioerr
-        write(*,"(2A)") "ERROR encountered when reading MARBL input file ", trim(settings_file)
+        write(*,"(2A)") "ERROR encountered when reading MARBL settings file ", trim(settings_file)
       end if
       call marbl_mpi_abort()
     end if
