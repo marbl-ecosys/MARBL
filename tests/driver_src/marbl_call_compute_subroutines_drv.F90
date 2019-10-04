@@ -98,7 +98,11 @@ Contains
     ! Brunt of MARBL computations
     do n=1, size(marbl_instances)
       ! 5. Call surface_flux_compute() (all columns simultaneously)
-      !    5a. populate surface tracer values
+      !    5a. call set_global_scalars() for consistent setting of time-varying scalars
+      !        [surface_flux computation doesn't currently have any time-varying scalars]
+      call marbl_instances(n)%set_global_scalars('surface_flux')
+
+      !    5b. populate surface tracer values
       call marbl_io_read_tracers_at_surface(col_start(n)+1, col_cnt(n), marbl_instances(n)%tracer_metadata, &
                                    marbl_instances(n)%tracers_at_surface, driver_status_log)
       if (driver_status_log%labort_marbl) then
@@ -106,7 +110,7 @@ Contains
         return
       end if
 
-      !    5b. populate surface_flux_forcings (per column)
+      !    5c. populate surface_flux_forcings (per column)
       do col_id_loc = 1, col_cnt(n)
         call marbl_io_read_forcing_field(col_id_loc, col_start(n), marbl_instances(n)%surface_flux_forcings, &
                                          driver_status_log)
@@ -116,19 +120,19 @@ Contains
         end if
       end do
 
-      !    5c. populate saved_state
+      !    5d. populate saved_state
       do m=1, size(marbl_instances(n)%surface_flux_saved_state%state)
         marbl_instances(n)%surface_flux_saved_state%state(m)%field_2d(:) = 0._r8
       end do
 
-      !    5d. call surface_flux_compute()
+      !    5e. call surface_flux_compute()
       call marbl_instances(n)%surface_flux_compute()
       if (marbl_instances(n)%StatusLog%labort_MARBL) then
         call marbl_instances(n)%StatusLog%log_error_trace('surface_flux_compute', subname)
         return
       end if
 
-      !    5e. write to diagnostic buffers
+      !    5f. write to diagnostic buffers
       !        Note: passing col_start and col_cnt => surface flux diagnostic buffer
       call marbl_io_copy_into_diag_buffer(col_start(n), col_cnt(n), marbl_instances(n))
       surface_fluxes((col_start(n)+1):(col_start(n)+col_cnt(n)),:) = marbl_instances(n)%surface_fluxes(:,:)
@@ -139,7 +143,12 @@ Contains
         col_id = col_start(n)+col_id_loc
         marbl_instances(n)%domain%kmt = active_level_cnt(col_id)
 
-        !  6a. populate tracer values
+        !  6a. call set_global_scalars() for consistent setting of time-varying scalars
+        !      [necessary when running ladjust_bury_coeff, since GCM is responsible
+        !       for computing running means of values needed to compute burial coefficients]
+        call marbl_instances(n)%set_global_scalars('interior_tendency')
+
+        !  6b. populate tracer values
         call marbl_io_read_tracers(col_id, marbl_instances(n)%tracer_metadata, marbl_instances(n)%tracers, &
                           driver_status_log)
         if (driver_status_log%labort_marbl) then
@@ -148,7 +157,7 @@ Contains
         end if
         tracer_initial_vals(:,:,col_id) = marbl_instances(n)%tracers
 
-        !  6b. populate interior_tendency_forcings
+        !  6c. populate interior_tendency_forcings
         call marbl_io_read_forcing_field(col_id_loc, col_start(n), marbl_instances(n)%interior_tendency_forcings, &
                                 driver_status_log, active_level_cnt(col_id))
         if (driver_status_log%labort_marbl) then
@@ -156,7 +165,7 @@ Contains
           return
         end if
 
-        !  6c. populate saved_state
+        !  6d. populate saved_state
         do m=1, size(marbl_instances(n)%interior_tendency_saved_state%state)
           if (allocated(marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d)) then
             marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d(:) = 0._r8
@@ -165,14 +174,14 @@ Contains
           end if
         end do
 
-        !  6d. call interior_tendency_compute()
+        !  6e. call interior_tendency_compute()
         call marbl_instances(n)%interior_tendency_compute()
         if (marbl_instances(n)%StatusLog%labort_MARBL) then
           call marbl_instances(n)%StatusLog%log_error_trace('interior_tendency_compute', subname)
           return
         end if
 
-        !  6e. write to diagnostic buffer
+        !  6f. write to diagnostic buffer
         !        Note: passing just col_id => interior tendency diagnostic buffer
         call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
         interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
