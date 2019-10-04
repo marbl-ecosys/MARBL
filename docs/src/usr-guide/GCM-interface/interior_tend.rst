@@ -1,5 +1,7 @@
 .. _interior_tend:
 
+.. _ref-compute-interior-tendencies:
+
 ==================================
 Compute Interior Tracer Tendencies
 ==================================
@@ -22,6 +24,8 @@ What MARBL needs prior to calling interior_tendency_compute
 
 The GCM needs to make sure the MARBL instance has all the data it needs to compute interior tendencies correctly.
 Specifically it needs to to the following.
+
+.. _ref-global-scalars-interior-tend:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 1. Set global scalars
@@ -81,6 +85,8 @@ For each column, MARBL needs to know the following:
     marbl_instances(bid)%interior_tendency_saved_state%state(n)%field_3d(:,1) = &
       interior_tendency_saved_state(n)%field_3d(:,i,c,bid)
   end do
+
+.. _ref-GCM-update-interior-tend:
 
 --------------------------------------
 What the GCM needs after MARBL returns
