@@ -1,14 +1,16 @@
 .. _global-scalars:
 
-.. _ref-global-scalars:
-
 ==============
 Global Scalars
 ==============
 
 In some configurations, MARBL needs to know the value of some globally-averaged scalars.
-Currently, the only such configuration is setting ``ladjust_bury_coeff = .true.`` to allow MARBL to recompute various burial coefficients.
+Currently, the only example of such is setting ``ladjust_bury_coeff = .true.`` to allow MARBL to recompute various burial coefficients.
 These burial coefficients are used to :ref:`ref-compute-interior-tendencies`.
+
+.. note::
+
+  In these configurations, the GCM must explicitly tell MARBL it can perform global operations :ref:`during initialization <ref-init-interface>` otherwise MARBL will abort.
 
 ---------------------------
 Subroutine on the Interface

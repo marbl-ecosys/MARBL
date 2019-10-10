@@ -22,7 +22,7 @@ The following blocks of code can all be found in ``tests/driver_src/marbl_call_c
 Step 1. Set global scalars
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Currently, there are no MARBL configurations requiring :ref:`global scalars <ref-global-scalars>` to compute the surface fluxes.
+Currently, there are no MARBL configurations requiring :ref:`global scalars <global-scalars>` to compute the surface fluxes.
 To prepare for future updates where that is no longer the case, it is recommended that the GCM calls
 
 .. block comes from marbl_call_compute_subroutines_drv.F90
