@@ -141,14 +141,19 @@ Contains
       ! 6. Call interior_tendency_compute() (one column at a time)
       do col_id_loc = 1, col_cnt(n)
         col_id = col_start(n)+col_id_loc
-        marbl_instances(n)%domain%kmt = active_level_cnt(col_id)
 
         !  6a. call set_global_scalars() for consistent setting of time-varying scalars
         !      [necessary when running ladjust_bury_coeff, since GCM is responsible
         !       for computing running means of values needed to compute burial coefficients]
         call marbl_instances(n)%set_global_scalars('interior_tendency')
 
-        !  6b. populate tracer values
+        !  6b. set domain information
+        !      In this example, the vertical grid is the same from column to column and
+        !      therefore set during initialization. The columns vary in depth, so
+        !      the index of the bottom layer must be updated for each column.
+        marbl_instances(n)%domain%kmt = active_level_cnt(col_id)
+
+        !  6c. populate tracer values
         call marbl_io_read_tracers(col_id, marbl_instances(n)%tracer_metadata, marbl_instances(n)%tracers, &
                           driver_status_log)
         if (driver_status_log%labort_marbl) then
@@ -157,7 +162,7 @@ Contains
         end if
         tracer_initial_vals(:,:,col_id) = marbl_instances(n)%tracers
 
-        !  6c. populate interior_tendency_forcings
+        !  6d. populate interior_tendency_forcings
         call marbl_io_read_forcing_field(col_id_loc, col_start(n), marbl_instances(n)%interior_tendency_forcings, &
                                 driver_status_log, active_level_cnt(col_id))
         if (driver_status_log%labort_marbl) then
@@ -165,7 +170,7 @@ Contains
           return
         end if
 
-        !  6d. populate saved_state
+        !  6e. populate saved_state
         do m=1, size(marbl_instances(n)%interior_tendency_saved_state%state)
           if (allocated(marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d)) then
             marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d(:) = 0._r8
@@ -174,14 +179,14 @@ Contains
           end if
         end do
 
-        !  6e. call interior_tendency_compute()
+        !  6f. call interior_tendency_compute()
         call marbl_instances(n)%interior_tendency_compute()
         if (marbl_instances(n)%StatusLog%labort_MARBL) then
           call marbl_instances(n)%StatusLog%log_error_trace('interior_tendency_compute', subname)
           return
         end if
 
-        !  6f. write to diagnostic buffer
+        !  6g. write to diagnostic buffer
         !        Note: passing just col_id => interior tendency diagnostic buffer
         call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
         interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
