@@ -75,17 +75,20 @@ Since all the data is available on the class object, the call to the routine doe
 .. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-       call marbl_instances(n)%surface_flux_compute()
+  !    5e. call surface_flux_compute()
+  call marbl_instances(n)%surface_flux_compute()
+
+.. _ref-after-surface-flux-call:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 4. Copy values MARBL will need later into a local buffer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-MARBL returns several different fields to the GCM.
+After computing the surface fluxes, MARBL returns several different fields to the GCM.
 Each GCM will handle these fields in its own way, but it is important to know where to find them.
 In the descriptions below, ``num_elements_surface_flux`` is the number of grid cells MARBL computes surface fluxes for simultaneously.
 
-#. Surface fluxes, which are needed in the source term of the advection solver
+#. The surface fluxes themselves, which are needed in the source term of the advection solver
 
    * ``marbl_instance%surface_fluxes(:,:)`` is a ``num_elements_surface_flux`` by ``marbl_tracer_cnt`` array
 
@@ -107,6 +110,11 @@ In the descriptions below, ``num_elements_surface_flux`` is the number of grid c
    * ``marbl_instance%surface_flux_diags`` is ``marbl_diagnostics_type``
    * ``marbl_instance%surface_flux_diags%diags(:)`` is array of ``marbl_single_diagnostic_type`` containing data GCM should add to diagnostic output
 
+The stand-alone driver does not hold on to saved state (there is no time stepping involved).
+It also does not request any surface forcing fields or compute global averages.
+After the call to ``surface_flux_compute()``, the standalone driver copies diags into the buffer and stores the surface fluxes
+(which are also written to the netCDF output file).
+
 .. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
@@ -114,3 +122,5 @@ In the descriptions below, ``num_elements_surface_flux`` is the number of grid c
   !        Note: passing col_start and col_cnt => surface flux diagnostic buffer
   call marbl_io_copy_into_diag_buffer(col_start(n), col_cnt(n), marbl_instances(n))
   surface_fluxes((col_start(n)+1):(col_start(n)+col_cnt(n)),:) = marbl_instances(n)%surface_fluxes(:,:)
+
+A more complete example can be found in :ref:`how POP handles MARBL output <ref-surface_flux_in_POP>`.
