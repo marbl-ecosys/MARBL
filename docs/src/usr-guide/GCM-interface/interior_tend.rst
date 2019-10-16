@@ -96,6 +96,8 @@ Since all the data is available on the class object, the call to the routine doe
   !  6f. call interior_tendency_compute()
   call marbl_instances(n)%interior_tendency_compute()
 
+.. _ref-after-interior-tend-call:
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 4. Copy values MARBL will need later into a local buffer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
