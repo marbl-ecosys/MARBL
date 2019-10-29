@@ -4,7 +4,7 @@
 Testing the MARBL Build System
 ==============================
 
-There are two build test scripts: ``bld_lib.py`` and ``bld_exe.py``.
+There are two build test scripts in ``$MARBLROOT/tests/bld_tests``: ``bld_lib.py`` and ``bld_exe.py``.
 The former just builds ``libmarbl.a`` while the latter also builds the standalone driver that runs the :ref:`unit tests <unit_tests>` and :ref:`regression tests <regression_tests>`.
 For known super computers, these scripts build with all defined compilers.
 For unknown computers, these scripts check to see what supported compilers are in ``$PATH`` and test with each of them.
