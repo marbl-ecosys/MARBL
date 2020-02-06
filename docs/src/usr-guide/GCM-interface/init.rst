@@ -109,7 +109,7 @@ The stand-alone MARBL driver / test suite use settings files (``*.settings`` in 
     call marbl_mpi_abort()
   end if
 
-``init()`` is then called from the individual test, storing the tracer count in the local variable ``nt``:
+``init()`` is then called from the individual test:
 
 .. block comes from marbl_init_drv
 .. code-block:: fortran
@@ -379,7 +379,6 @@ This script creates ``marbl.settings``, and organizes the output better than the
 .. block comes from MARBL_tools/marbl.settings
 .. code-block:: none
 
-  ! config PFTs
   ! config PFTs
   PFT_defaults = "CESM2"
   autotroph_cnt = 3
