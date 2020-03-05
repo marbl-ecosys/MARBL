@@ -102,7 +102,7 @@ Contains
       !        [surface_flux computation doesn't currently have any time-varying scalars]
       call marbl_instances(n)%set_global_scalars('surface_flux')
 
-      !    5b. populate surface tracer values
+      !    5b. populate surface tracer values into marbl_instances(n)%tracers_at_surface
       call marbl_io_read_tracers_at_surface(col_start(n)+1, col_cnt(n), marbl_instances(n)%tracer_metadata, &
                                    marbl_instances(n)%tracers_at_surface, driver_status_log)
       if (driver_status_log%labort_marbl) then
