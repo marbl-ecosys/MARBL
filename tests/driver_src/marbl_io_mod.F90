@@ -150,15 +150,21 @@ contains
 
   !****************************************************************************
 
-  subroutine marbl_io_print_marbl_log(log_to_print, outfile)
+  subroutine marbl_io_print_marbl_log(log_to_print, outfile, labort_on_error)
 
     use marbl_logging, only : marbl_status_log_entry_type
     use marbl_mpi_mod, only : mpi_on
 
     class(marbl_log_type),      intent(inout) :: log_to_print
     character(len=*), optional, intent(in)    :: outfile
+    logical,          optional, intent(in)    :: labort_on_error
+
     type(marbl_status_log_entry_type), pointer :: tmp
     integer :: out_unit
+    logical :: labort_on_error_loc
+
+    labort_on_error_loc = .true.
+    if (present(labort_on_error)) labort_on_error_loc = labort_on_error
 
     ! write to stdout unless outfile is provided (only task 0 writes to file)
     out_unit = 6
@@ -188,7 +194,7 @@ contains
 
     call log_to_print%erase()
 
-    if (log_to_print%labort_marbl) call marbl_mpi_abort()
+    if (log_to_print%labort_marbl .and. labort_on_error_loc) call marbl_mpi_abort()
 
   end subroutine marbl_io_print_marbl_log
 
