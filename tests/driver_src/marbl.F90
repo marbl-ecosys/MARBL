@@ -375,7 +375,6 @@ Program marbl
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instances(1), lshutdown = .false.)
-
       ! Log tracers requested for restoring
       call driver_status_log%log_header('Requested tracers to restore', subname)
       cnt = 0

@@ -50,6 +50,11 @@ as well as what diagnostics are being returned to the GCM.
 ``requested_restoring/``
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+Running ``./requested_restoring.py`` returns a list of tracers to be restored.
+By default, it relies on the settings file ``tests/input_files/settings/marbl_with_restore.settings``,
+which sets a few elements of ``tracer_restore_vars``.
+
+.. block comes from output of requested_restoring.py
 .. code-block:: none
 
   ----------------------------
@@ -61,6 +66,41 @@ as well as what diagnostics are being returned to the GCM.
   3. PO4
   4. ALK
   5. ALK_ALT_CO2
+
+If no tracers are to be restored (as per ``./requested_restoring.py -s None``) the output should be
+
+.. block comes from output of requested_restoring.py -s None
+.. code-block:: none
+
+  ----------------------------
+  Requested tracers to restore
+  ----------------------------
+
+  No tracers to restore!
+
+The details are found in ``$MARBL/tests/driver_src/marbl.F90``:
+
+.. block comes from tests/driver_src/marbl.F90
+.. code-block:: fortran
+
+  ! Log tracers requested for restoring
+  call driver_status_log%log_header('Requested tracers to restore', subname)
+  cnt = 0
+  do n=1,size(marbl_instances(1)%interior_tendency_forcings)
+    varname = marbl_instances(1)%interior_tendency_forcings(n)%metadata%varname
+    if (index(varname, 'Restoring Field').gt.0) then
+      cnt = cnt + 1
+      varname = varname(1:scan(varname,' ')-1)
+      write(log_message, "(I0, 2A)") cnt, '. ', trim(varname)
+  call driver_status_log%log_noerror(log_message, subname)
+    end if
+  end do
+  if (cnt.eq.0) then
+    call driver_status_log%log_noerror('No tracers to restore!', subname)
+  end if
+
+The driver looks at metadata for ``interior_tendency_forcings(:)`` and tracks forcings containing
+``'Restoring Field'``.
 
 ~~~~~~~~~~~~~~~~~~~~
 ``requested_diags/``
