@@ -126,6 +126,8 @@ The stand-alone MARBL driver / test suite use settings files (``*.settings`` in 
     return
   end if
 
+.. _marbl_settings.gen:
+
 Default Parameter Values
 ------------------------
 

@@ -88,6 +88,61 @@ The ``marbl_forcing_fields_metadata_type`` contains metadata for each tracer:
 
 The ``varnames`` member of this data type is the only unique identifier provided.
 
+.. _restoring_as_forcing:
+
+---------------------------------------
+Restoring Tracers Towards a Prior State
+---------------------------------------
+
+Some GCMs restore certain tracers towards observations in particular regions.
+For example, POP restores ``PO4``, ``NO3``, ``SiO3``, ``ALK``, and ``ALK_ALT_CO2`` in marginal seas.
+MARBL treats tracer restoring terms as an interior forcing, which can be seen by running
+``./requested_forcings.py -s ../../input_files/settings/marbl_with_restore.settings``:
+
+.. block comes from output of requested_forcings.py -s ../../input_files/settings/marbl_with_restore.settings
+.. code-block:: none
+
+  --------------------------------
+  Requested surface forcing fields
+  --------------------------------
+
+  1. u10_sqr (units: cm^2/s^2)
+  2. sss (units: psu)
+  3. sst (units: degC)
+  4. Ice Fraction (units: unitless)
+  5. Dust Flux (units: g/cm^2/s)
+  6. Iron Flux (units: nmol/cm^2/s)
+  7. NOx Flux (units: nmol/cm^2/s)
+  8. NHy Flux (units: nmol/cm^2/s)
+  9. Atmospheric Pressure (units: atmospheres)
+  10. xco2 (units: ppmv)
+  11. xco2_alt_co2 (units: ppmv)
+
+  ---------------------------------
+  Requested interior forcing fields
+  ---------------------------------
+
+  1. Dust Flux (units: g/cm^2/s)
+  2. Surface Shortwave (units: W/m^2)
+  3. Potential Temperature (units: degC)
+  4. Salinity (units: psu)
+  5. Pressure (units: bars)
+  6. Iron Sediment Flux (units: nmol/cm^2/s)
+  7. SiO3 Restoring Field (units: mmol/m^3)
+  8. SiO3 Restoring Inverse Timescale (units: 1/s)
+  9. NO3 Restoring Field (units: mmol/m^3)
+  10. NO3 Restoring Inverse Timescale (units: 1/s)
+  11. PO4 Restoring Field (units: mmol/m^3)
+  12. PO4 Restoring Inverse Timescale (units: 1/s)
+  13. ALK Restoring Field (units: meq/m^3)
+  14. ALK Restoring Inverse Timescale (units: 1/s)
+  15. ALK_ALT_CO2 Restoring Field (units: meq/m^3)
+  16. ALK_ALT_CO2 Restoring Inverse Timescale (units: 1/s)
+
+MARBL is not aware of the horizontal grid, and will request these forcings for all columns.
+Set a tracer's ``Restoring Inverse Timescale`` to 0 in columns where restoring is not desired.
+Note that the surface forcing fields are the same, but there are 10 additional interior forcing fields to pass to MARBL.
+
 ------------------------------------------------
 Example: Accessing Forcing Field Metadata in POP
 ------------------------------------------------
