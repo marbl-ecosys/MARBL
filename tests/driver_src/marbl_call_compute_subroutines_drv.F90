@@ -46,8 +46,8 @@ Contains
     integer, allocatable, dimension(:) :: active_level_cnt, col_start, col_cnt
 
     ! 1. Open necessary netCDF files
-    !    1a. Input (grid info, forcing fields, initial conditions)
-    !    1b. Output (diagnostics)
+    !    (a) Input (grid info, forcing fields, initial conditions)
+    !    (b) Output (diagnostics)
     call marbl_io_open_files(infile, hist_file, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_open', subname)
@@ -55,6 +55,8 @@ Contains
     end if
     write(log_message, "(A, 1X, A)") "* MARBL output will be written to", trim(hist_file)
     call driver_status_log%log_noerror(log_message, subname)
+
+    ! --------------------------------------------------------------------------
 
     ! 2. Initialize the test (reads grid info, distributes columns, etc)
     call set_domain(size(marbl_instances), num_levels, active_level_cnt, num_PAR_subcols, &
@@ -64,6 +66,7 @@ Contains
       return
     end if
 
+    ! --------------------------------------------------------------------------
 
     ! 3. Initialize each instance of MARBL
     do n=1, size(marbl_instances)
@@ -75,6 +78,7 @@ Contains
                                    gcm_zt = grid_data%zt)
     end do
 
+    ! --------------------------------------------------------------------------
 
     ! 4. Initialize diagnostic buffers, define diagnostic fields in output netCDF file, and
     !    read initial conditions / forcing data
@@ -86,9 +90,35 @@ Contains
     call marbl_io_construct_diag_buffers(num_levels, num_cols, marbl_instances(1))
 
     !    (c) Initialize memory for fields that driver writes to history (not coming via MARBL diagnostic type)
+    !        as well as fields that driver reads (forcing fields)
     allocate(surface_fluxes(num_cols, num_tracers))
     allocate(interior_tendencies(num_tracers, num_levels, num_cols))
     allocate(tracer_initial_vals(num_tracers, num_levels, num_cols))
+    allocate(surface_flux_forcings(size(marbl_instances(1)%surface_flux_forcings)))
+    allocate(interior_tendency_forcings(num_cols, size(marbl_instances(1)%interior_tendency_forcings)))
+    ! Allocate memory inside surface_flux_forcings
+    do m=1, size(marbl_instances(1)%surface_flux_forcings)
+      if (associated(marbl_instances(1)%surface_flux_forcings(m)%field_0d)) then
+        allocate(surface_flux_forcings(m)%field_0d(num_cols))
+      else
+        allocate(surface_flux_forcings(m)%field_1d(num_cols, &
+            size(marbl_instances(1)%surface_flux_forcings(m)%field_1d, dim=2)))
+      end if
+    end do
+    ! Allocate memory inside interior_tendency_forcings
+    do n=1, size(marbl_instances)
+      do col_id_loc = 1, col_cnt(n)
+        col_id = col_start(n)+col_id_loc
+        do m=1, size(marbl_instances(n)%interior_tendency_forcings)
+          if (associated(marbl_instances(n)%interior_tendency_forcings(m)%field_0d)) then
+            allocate(interior_tendency_forcings(col_id,m)%field_0d(1))
+          else
+            allocate(interior_tendency_forcings(col_id,m)%field_1d(1, &
+                size(marbl_instances(n)%interior_tendency_forcings(m)%field_1d, dim=2)))
+          end if
+        end do
+      end do
+    end do
 
     !    (d) netCDF calls to create history file (dimensions are defined but data is not written)
     call marbl_io_define_history(marbl_instances, col_cnt, driver_status_log)
@@ -99,22 +129,9 @@ Contains
 
     !    (e) Read initial conditions and forcing data
     allocate(tracers_at_surface(num_cols, num_tracers))
-    ! Set up memory for for local reads of forcing
-    allocate(surface_flux_forcings(size(marbl_instances(1)%surface_flux_forcings)))
-    allocate(interior_tendency_forcings(num_cols, size(marbl_instances(1)%interior_tendency_forcings)))
-
-    ! Allocate memory inside surface_flux_forcings
-    do m=1, size(marbl_instances(1)%surface_flux_forcings)
-      if (associated(marbl_instances(1)%surface_flux_forcings(m)%field_0d)) then
-        allocate(surface_flux_forcings(m)%field_0d(num_cols))
-      else
-        allocate(surface_flux_forcings(m)%field_1d(num_cols, &
-            size(marbl_instances(1)%surface_flux_forcings(m)%field_1d, dim=2)))
-      end if
-    end do
 
     do n=1, num_cols
-      ! Read tracer values over full column
+      !      (i) Read tracer values over full column
       call marbl_io_read_tracers(n, marbl_instances(1)%tracer_metadata, tracer_initial_vals(:,:,n), &
                         driver_status_log)
       if (driver_status_log%labort_marbl) then
@@ -122,10 +139,10 @@ Contains
         return
       end if
 
-      ! Set surface tracer values
+      !      (ii) Set surface tracer values
       tracers_at_surface(n,:) = tracer_initial_vals(:, 1, n)
 
-      ! Read surface_flux_forcings values
+      !      (iii) Read surface flux forcing fields
       call marbl_io_read_forcing_field(n, 0, marbl_instances(1)%surface_flux_forcings, &
                                        surface_flux_forcings, driver_status_log)
       if (driver_status_log%labort_marbl) then
@@ -134,21 +151,10 @@ Contains
       end if
     end do
 
+    !        (iv) Read interior tendency forcing fields
     do n=1, size(marbl_instances)
       do col_id_loc = 1, col_cnt(n)
         col_id = col_start(n)+col_id_loc
-
-        ! Allocate memory inside interior_tendency_forcings
-        do m=1, size(marbl_instances(n)%interior_tendency_forcings)
-          if (associated(marbl_instances(n)%interior_tendency_forcings(m)%field_0d)) then
-            allocate(interior_tendency_forcings(col_id,m)%field_0d(1))
-          else
-            allocate(interior_tendency_forcings(col_id,m)%field_1d(1, &
-                size(marbl_instances(n)%interior_tendency_forcings(m)%field_1d, dim=2)))
-          end if
-        end do
-
-        ! Read interior_tendency_forcings values
         call marbl_io_read_forcing_field(col_id, 0, marbl_instances(n)%interior_tendency_forcings, &
                                          interior_tendency_forcings(col_id,:), driver_status_log, active_level_cnt(col_id))
         if (driver_status_log%labort_marbl) then
@@ -158,20 +164,23 @@ Contains
       end do
     end do
 
+    ! --------------------------------------------------------------------------
     ! Brunt of MARBL computations
+    ! --------------------------------------------------------------------------
+
     do n=1, size(marbl_instances)
       ! 5. Call surface_flux_compute() (all columns simultaneously)
-      !    5a. call set_global_scalars() for consistent setting of time-varying scalars
+      !    (a) call set_global_scalars() for consistent setting of time-varying scalars
       !        [surface_flux computation doesn't currently have any time-varying scalars]
       call marbl_instances(n)%set_global_scalars('surface_flux')
 
       do col_id_loc = 1, col_cnt(n)
         col_id = col_start(n)+col_id_loc
 
-        !    5b. populate surface tracer values into marbl_instances(n)%tracers_at_surface
+        !  (b) populate surface tracer values into marbl_instances(n)%tracers_at_surface
         marbl_instances(n)%tracers_at_surface(col_id_loc, :) = tracers_at_surface(col_id_loc+col_start(n), :)
 
-        !    5c. populate surface_flux_forcings (per column)
+        !  (c) populate surface_flux_forcings (per column)
         do m=1, size(marbl_instances(n)%surface_flux_forcings)
           if (associated(marbl_instances(n)%surface_flux_forcings(m)%field_0d)) then
             marbl_instances(n)%surface_flux_forcings(m)%field_0d(col_id_loc) = surface_flux_forcings(m)%field_0d(col_id)
@@ -181,43 +190,44 @@ Contains
         end do
       end do
 
-      !    5d. populate saved_state
+      !    (d) populate saved_state
       do m=1, size(marbl_instances(n)%surface_flux_saved_state%state)
         marbl_instances(n)%surface_flux_saved_state%state(m)%field_2d(:) = 0._r8
       end do
 
-      !    5e. call surface_flux_compute()
+      !    (e) call surface_flux_compute()
       call marbl_instances(n)%surface_flux_compute()
       if (marbl_instances(n)%StatusLog%labort_MARBL) then
         call marbl_instances(n)%StatusLog%log_error_trace('surface_flux_compute', subname)
         return
       end if
 
-      !    5f. write to diagnostic buffers
+      !    (f) write to diagnostic buffers
       !        Note: passing col_start and col_cnt => surface flux diagnostic buffer
       call marbl_io_copy_into_diag_buffer(col_start(n), col_cnt(n), marbl_instances(n))
       surface_fluxes((col_start(n)+1):(col_start(n)+col_cnt(n)),:) = marbl_instances(n)%surface_fluxes(:,:)
 
+      ! ------------------------------------------------------------------------
 
       ! 6. Call interior_tendency_compute() (one column at a time)
       do col_id_loc = 1, col_cnt(n)
         col_id = col_start(n)+col_id_loc
 
-        !  6a. call set_global_scalars() for consistent setting of time-varying scalars
+        !  (a) call set_global_scalars() for consistent setting of time-varying scalars
         !      [necessary when running ladjust_bury_coeff, since GCM is responsible
         !       for computing running means of values needed to compute burial coefficients]
         call marbl_instances(n)%set_global_scalars('interior_tendency')
 
-        !  6b. set domain information
+        !  (b) set domain information
         !      In this example, the vertical grid is the same from column to column and
         !      therefore set during initialization. The columns vary in depth, so
         !      the index of the bottom layer must be updated for each column.
         marbl_instances(n)%domain%kmt = active_level_cnt(col_id)
 
-        !  6c. populate tracer values
+        !  (c) populate tracer values
         marbl_instances(n)%tracers = tracer_initial_vals(:,:,col_id)
 
-        !  6d. populate interior_tendency_forcings
+        !  (d) populate interior_tendency_forcings
         do m=1, size(marbl_instances(n)%interior_tendency_forcings)
           if (associated(marbl_instances(n)%interior_tendency_forcings(m)%field_0d)) then
             marbl_instances(n)%interior_tendency_forcings(m)%field_0d(1) = &
@@ -228,7 +238,7 @@ Contains
           end if
         end do
 
-        !  6e. populate saved_state
+        !  (e) populate saved_state
         do m=1, size(marbl_instances(n)%interior_tendency_saved_state%state)
           if (allocated(marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d)) then
             marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d(:) = 0._r8
@@ -237,20 +247,21 @@ Contains
           end if
         end do
 
-        !  6f. call interior_tendency_compute()
+        !  (f) call interior_tendency_compute()
         call marbl_instances(n)%interior_tendency_compute()
         if (marbl_instances(n)%StatusLog%labort_MARBL) then
           call marbl_instances(n)%StatusLog%log_error_trace('interior_tendency_compute', subname)
           return
         end if
 
-        !  6g. write to diagnostic buffer
+        !  (g) write to diagnostic buffer
         !        Note: passing just col_id => interior tendency diagnostic buffer
         call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
         interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
       end do ! column
     end do ! instance
 
+    ! --------------------------------------------------------------------------
 
     ! 7. Output netCDF
     call marbl_io_write_history(marbl_instances(1), surface_fluxes, interior_tendencies, &
@@ -260,6 +271,7 @@ Contains
       return
     end if
 
+    ! --------------------------------------------------------------------------
 
     ! 8. Close all netCDF files
     call marbl_io_close_files(driver_status_log)
@@ -268,9 +280,12 @@ Contains
       return
     end if
 
+    ! --------------------------------------------------------------------------
 
     ! 9. Deallocate memory in marbl_io_mod
     call marbl_io_destruct_diag_buffers()
+
+    ! --------------------------------------------------------------------------
 
     ! 10. Shutdown MARBL
     do n=1, size(marbl_instances)
