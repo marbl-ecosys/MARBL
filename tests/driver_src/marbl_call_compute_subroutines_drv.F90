@@ -36,12 +36,13 @@ Contains
     character(len=*), parameter :: infile = '../../input_files/initial_conditions/call_compute_subroutines.20190718.nc'
     character(len=char_len) :: log_message
     real(r8), allocatable, dimension(:,:) :: surface_fluxes        ! num_cols x num_tracers
+    real(r8), allocatable, dimension(:,:) :: tracers_at_surface    ! num_cols x num_tracers
+    ! real(r8), allocatable, dimension(:,:) :: surface_flux_forcings ! num_cols x num_tracers
     real(r8), allocatable, dimension(:,:,:) :: interior_tendencies ! num_tracers x num_levels x num_cols
     real(r8), allocatable, dimension(:,:,:) :: tracer_initial_vals ! num_tracers x num_levels x num_cols
     integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols
     type(grid_data_type) :: grid_data
     integer, allocatable, dimension(:) :: active_level_cnt, col_start, col_cnt
-
 
     ! 1. Open necessary netCDF files
     !    1a. Input (grid info, forcing fields, initial conditions)
@@ -74,7 +75,8 @@ Contains
     end do
 
 
-    ! 4. Initialize diagnostic buffers and define diagnostic fields in output netCDF file
+    ! 4. Initialize diagnostic buffers, define diagnostic fields in output netCDF file, and
+    !    read initial conditions / forcing data
     !    (a) Set constants
     num_cols = sum(col_cnt)
     num_tracers = size(marbl_instances(1)%tracer_metadata)
@@ -94,6 +96,19 @@ Contains
       return
     end if
 
+    !    (e) Read initial conditions and forcing data
+    allocate(tracers_at_surface(num_cols, num_tracers))
+    ! allocate(surface_flux_forcings(num_cols, num_tracers))
+    call marbl_io_read_tracers_at_surface(num_cols, marbl_instances(1)%tracer_metadata, &
+                                          tracers_at_surface, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('read_tracers_at_surface', subname)
+      return
+    end if
+    ! do n=1, num_cols
+    !   call marbl_io_read_forcing_field(col_id_loc, col_start(n), marbl_instances(n)%surface_flux_forcings, &
+    !                                    driver_status_log)
+
 
     ! Brunt of MARBL computations
     do n=1, size(marbl_instances)
@@ -102,16 +117,12 @@ Contains
       !        [surface_flux computation doesn't currently have any time-varying scalars]
       call marbl_instances(n)%set_global_scalars('surface_flux')
 
-      !    5b. populate surface tracer values into marbl_instances(n)%tracers_at_surface
-      call marbl_io_read_tracers_at_surface(col_start(n)+1, col_cnt(n), marbl_instances(n)%tracer_metadata, &
-                                   marbl_instances(n)%tracers_at_surface, driver_status_log)
-      if (driver_status_log%labort_marbl) then
-        call driver_status_log%log_error_trace('read_tracers_at_surface', subname)
-        return
-      end if
-
-      !    5c. populate surface_flux_forcings (per column)
       do col_id_loc = 1, col_cnt(n)
+        !    5b. populate surface tracer values into marbl_instances(n)%tracers_at_surface
+        marbl_instances(n)%tracers_at_surface(col_id_loc, :) = tracers_at_surface(col_id_loc+col_start(n), :)
+
+        !    5c. populate surface_flux_forcings (per column)
+        ! marbl_instances(n)%surface_flux_forcings(col_id_loc, :) = surface_flux_forcings(col_id_loc+col_start(n), :)
         call marbl_io_read_forcing_field(col_id_loc, col_start(n), marbl_instances(n)%surface_flux_forcings, &
                                          driver_status_log)
         if (driver_status_log%labort_marbl) then

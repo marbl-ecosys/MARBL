@@ -489,11 +489,9 @@ contains
 
   !****************************************************************************
 
-  subroutine marbl_io_read_tracers_at_surface(col_start, col_cnt, tracer_metadata, &
-                                              tracers_at_surface, driver_status_log)
+  subroutine marbl_io_read_tracers_at_surface(num_cols, tracer_metadata, tracers_at_surface, driver_status_log)
 
-    integer,                                          intent(in)    :: col_start
-    integer,                                          intent(in)    :: col_cnt
+    integer,                                          intent(in)    :: num_cols
     type(marbl_tracer_metadata_type), dimension(:),   intent(in)    :: tracer_metadata
     real(kind=r8),                    dimension(:,:), intent(inout) :: tracers_at_surface ! (num_surface_elem, tracer_cnt)
     type(marbl_log_type),                             intent(inout) :: driver_status_log
@@ -511,8 +509,7 @@ contains
       end if
 
       call marbl_netcdf_get_var(ncid_in, varid, tracers_at_surface(:,n), &
-                                   driver_status_log, surf_only=.true., col_start=col_start,             &
-                                   col_cnt=col_cnt)
+                                   driver_status_log, surf_only=.true., col_start=1, col_cnt=num_cols)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") "marbl_netcdf_get_var(", trim(tracer_metadata(n)%short_name), " [surface])"
         call driver_status_log%log_error_trace(log_message, subname)
