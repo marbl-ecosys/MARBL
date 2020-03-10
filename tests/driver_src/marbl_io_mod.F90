@@ -37,6 +37,13 @@ module marbl_io_mod
     real(kind=r8), allocatable, dimension(:) :: delta_z, zt, zw
   end type grid_data_type
 
+  type, public :: forcing_fields_type
+     ! This is modelled after the marbl_forcing_fields_type, and is used to
+     ! pass forcing data from POP to MARBL. Slimmed down to just read data
+     real(r8), allocatable              :: field_0d(:)    ! (num_col)
+     real(r8), allocatable              :: field_1d(:,:)  ! (num_col x num_levels [or other dimension])
+  end type forcing_fields_type
+
   ! There may be two netCDF files open simultaneously:
   ! 1. File containing initial conditions to be read
   ! 2. File where we write diagnostics and other output
@@ -407,13 +414,14 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_forcing_field(col_id, col_start, forcing_fields, driver_status_log, active_level_cnt)
+  subroutine marbl_io_read_forcing_field(col_id, col_start, forcing_fields, forcing_fields_out, driver_status_log, active_level_cnt)
 
     use marbl_interface_public_types, only : marbl_forcing_fields_type
 
     integer,                                       intent(in)    :: col_id
     integer,                                       intent(in)    :: col_start
-    type(marbl_forcing_fields_type), dimension(:), intent(inout) :: forcing_fields
+    type(marbl_forcing_fields_type), dimension(:), intent(in)    :: forcing_fields
+    type(forcing_fields_type),       dimension(:), intent(inout) :: forcing_fields_out
     type(marbl_log_type),                          intent(inout) :: driver_status_log
     integer, optional,                             intent(in)    :: active_level_cnt
 
@@ -446,27 +454,27 @@ contains
         ! Some 1D forcing_fields are requested for surface flux computation
         ! but others are needed for interior tendency -- the latter are
         ! read 1 column at a time
-        if (size(forcing_fields(n)%field_0d) .eq. 1) then ! interior tendency
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(1), &
+        if (size(forcing_fields_out(n)%field_0d) .eq. 1) then ! interior tendency
+          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields_out(n)%field_0d(1), &
                                     driver_status_log, col_id=col_id+col_start)
           conv_id = 1
         else ! surface flux
-          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_0d(col_id), &
+          call marbl_netcdf_get_var(ncid_in, varid, forcing_fields_out(n)%field_0d(col_id), &
                                     driver_status_log, col_id=col_id+col_start)
           conv_id = col_id
         end if
 
         ! Apply the conversion factor
         if (conv_factor .ne. 1.0_r8) &
-          forcing_fields(n)%field_0d(conv_id) = forcing_fields(n)%field_0d(conv_id) * conv_factor
+          forcing_fields_out(n)%field_0d(conv_id) = forcing_fields_out(n)%field_0d(conv_id) * conv_factor
 
       else ! rank == 1
         ! Read forcing field
-        call marbl_netcdf_get_var(ncid_in, varid, forcing_fields(n)%field_1d(1,:), &
+        call marbl_netcdf_get_var(ncid_in, varid, forcing_fields_out(n)%field_1d(1,:), &
                                   driver_status_log, col_start=col_id+col_start)
         ! Apply the conversion factor
         if (conv_factor .ne. 1.0_r8) &
-          forcing_fields(n)%field_1d(col_id, :) = forcing_fields(n)%field_1d(col_id, :) * conv_factor
+          forcing_fields_out(n)%field_1d(col_id, :) = forcing_fields_out(n)%field_1d(col_id, :) * conv_factor
       end if
 
       ! Report error from get_var()
@@ -478,8 +486,8 @@ contains
 
       ! Set forcing to 0 below ocean bottom
       if (present(active_level_cnt)) then
-        if (associated(forcing_fields(n)%field_1d)) then
-          forcing_fields(n)%field_1d(1,active_level_cnt+1:) = real(0, r8)
+        if (allocated(forcing_fields_out(n)%field_1d)) then
+          forcing_fields_out(n)%field_1d(1,active_level_cnt+1:) = real(0, r8)
         end if
       end if
     end do
