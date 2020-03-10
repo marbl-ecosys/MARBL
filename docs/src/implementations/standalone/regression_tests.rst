@@ -106,6 +106,16 @@ The driver looks at metadata for ``interior_tendency_forcings(:)`` and tracks fo
 ``requested_diags/``
 ~~~~~~~~~~~~~~~~~~~~
 
+Running ``./requested_diags.py`` returns a list of diagnostics returned from MARBL.
+The list is split between surface flux diagnostics and interior tendency diagnostics.
+
+.. Toggle switch from https://stackoverflow.com/a/60394068
+.. raw:: html
+
+  <details>
+  <summary><a><i>Show / hide output</i></a></summary>
+
+.. block comes from output of requested_diags.py
 .. code-block:: none
 
   ------------------------
@@ -456,3 +466,80 @@ The driver looks at metadata for ``interior_tendency_forcings(:)`` and tracks fo
   310. diazC_RESTORE_TEND: Diazotroph Carbon Restoring Tendency (units: mmol/m^3/s)
   311. diazP_RESTORE_TEND: Diazotroph Phosphorus Restoring Tendency (units: mmol/m^3/s)
   312. diazFe_RESTORE_TEND: Diazotroph Iron Restoring Tendency (units: mmol/m^3/s)
+
+.. raw:: html
+
+  </details>
+  </p>
+
+The details are found in ``$MARBL/tests/driver_src/marbl.F90``:
+
+.. block comes from tests/driver_src/marbl.F90
+.. code-block:: fortran
+
+  ! Log surface flux diagnostics passed back to driver
+  associate(diags => marbl_instances(1)%surface_flux_diags%diags)
+    call driver_status_log%log_header('Surface flux diagnostics', subname)
+    do n=1, size(diags)
+      write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &
+                                    ' (units: ', trim(diags(n)%units),')'
+      call driver_status_log%log_noerror(log_message, subname)
+    end do
+  end associate
+  ! Log interior tendency diagnostics passed back to driver
+  associate(diags => marbl_instances(1)%interior_tendency_diags%diags)
+    call driver_status_log%log_header('Interior tendency diagnostics', subname)
+    do n=1, size(diags)
+      write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &
+                                    ' (units: ', trim(diags(n)%units),')'
+      call driver_status_log%log_noerror(log_message, subname)
+    end do
+  end associate
+
+The ``marbl_interface_class`` contains two objects (``surface_flux_diags`` and ``interior_tendency_diags``).
+Both are of type ``marbl_diagnostics_type``, and contain an array named ``diags``.
+The length of this array is equal to the number of surface flux or interior tendency diagnostics.
+This ``marbl_single_diagnostic_type`` contains the data and metadata for each diagnostic:
+
+.. block comes from marbl_interface_public_types
+.. code-block:: fortran
+
+  type, private :: marbl_single_diagnostic_type
+     ! marbl_single_diagnostic :
+     ! a private type, this contains both the metadata
+     ! and the actual diagnostic data for a single
+     ! diagnostic quantity. Data must be accessed via
+     ! the marbl_diagnostics_type data structure.
+     character (len=char_len)                    :: long_name
+     character (len=char_len)                    :: short_name
+     character (len=char_len)                    :: units
+     character (len=char_len)                    :: vertical_grid ! 'none', 'layer_avg', 'layer_iface'
+     logical   (log_kind)                        :: compute_now
+     logical   (log_kind)                        :: ltruncated_vertical_extent
+     integer   (int_kind)                        :: ref_depth ! depth that diagnostic nominally resides at
+     real      (r8), allocatable, dimension(:)   :: field_2d
+     real      (r8), allocatable, dimension(:,:) :: field_3d
+
+   contains
+     procedure :: initialize  => marbl_single_diag_init
+  end type marbl_single_diagnostic_type
+
+  !*****************************************************************************
+
+  type, public :: marbl_diagnostics_type
+     ! marbl_diagnostics :
+     ! used to pass diagnostic information from marbl back to
+     ! the driver.
+     integer :: num_elements
+     integer :: num_levels
+     type(marbl_single_diagnostic_type), dimension(:), pointer :: diags
+
+   contains
+     procedure, public :: construct      => marbl_diagnostics_constructor
+     procedure, public :: set_to_zero    => marbl_diagnostics_set_to_zero
+     procedure, public :: add_diagnostic => marbl_diagnostics_add
+     procedure, public :: deconstruct    => marbl_diagnostics_deconstructor
+  end type marbl_diagnostics_type
+
+The short name of the diagnostic is the recommended name for the variable if writing a netCDF output file.
+The long name is a more descriptive name and, as the example output shows, the units are also included in the metadata.
