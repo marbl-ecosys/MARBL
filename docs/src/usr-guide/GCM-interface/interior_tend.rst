@@ -27,7 +27,7 @@ If MARBL is configured with ``ladjust_bury_coeff = .true.`` then it will request
 .. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-  !  6a. call set_global_scalars() for consistent setting of time-varying scalars
+  !  (a) call set_global_scalars() for consistent setting of time-varying scalars
   !      [necessary when running ladjust_bury_coeff, since GCM is responsible
   !       for computing running means of values needed to compute burial coefficients]
   call marbl_instances(n)%set_global_scalars('interior_tendency')
@@ -47,33 +47,30 @@ For each column, MARBL needs to know the following:
 #. Interior forcing data
 #. Saved state
 
-.. block comes from ecosys_driver in POP
+.. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-  !  6b. set domain information
+  !  (b) set domain information
   !      In this example, the vertical grid is the same from column to column and
   !      therefore set during initialization. The columns vary in depth, so
   !      the index of the bottom layer must be updated for each column.
   marbl_instances(n)%domain%kmt = active_level_cnt(col_id)
 
-  !  6c. populate tracer values
-  call marbl_io_read_tracers(col_id, marbl_instances(n)%tracer_metadata, marbl_instances(n)%tracers, &
-                    driver_status_log)
-  if (driver_status_log%labort_marbl) then
-    call driver_status_log%log_error_trace('read_tracers', subname)
-    return
-  end if
-  tracer_initial_vals(:,:,col_id) = marbl_instances(n)%tracers
+  !  (c) copy tracer values into marbl_instances(n)%tracers
+  marbl_instances(n)%tracers = tracer_initial_vals(:,:,col_id)
 
-  !  6d. populate interior_tendency_forcings
-  call marbl_io_read_forcing_field(col_id_loc, col_start(n), marbl_instances(n)%interior_tendency_forcings, &
-                          driver_status_log, active_level_cnt(col_id))
-  if (driver_status_log%labort_marbl) then
-    call driver_status_log%log_error_trace('read_forcing_field(interior)', subname)
-    return
-  end if
+  !  (d) copy interior tendency forcings into marbl_instances(n)%interior_tendency_forcings
+  do m=1, size(marbl_instances(n)%interior_tendency_forcings)
+    if (associated(marbl_instances(n)%interior_tendency_forcings(m)%field_0d)) then
+      marbl_instances(n)%interior_tendency_forcings(m)%field_0d(1) = &
+           interior_tendency_forcings(col_id,m)%field_0d(1)
+    else
+      marbl_instances(n)%interior_tendency_forcings(m)%field_1d(1,:) = &
+           interior_tendency_forcings(col_id,m)%field_1d(1,:)
+    end if
+  end do
 
-  !  6e. populate saved_state
+  !  (e) populate marbl_instances(n)%interior_tendency_saved_state (with 0s)
   do m=1, size(marbl_instances(n)%interior_tendency_saved_state%state)
     if (allocated(marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d)) then
       marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d(:) = 0._r8
@@ -93,7 +90,7 @@ Since all the data is available on the class object, the call to the routine doe
 .. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-  !  6f. call interior_tendency_compute()
+  !  (f) call interior_tendency_compute()
   call marbl_instances(n)%interior_tendency_compute()
 
 .. _ref-after-interior-tend-call:
@@ -134,7 +131,7 @@ After the call to ``interior_tendency_compute()``, the standalone driver copies 
 .. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-  !  6g. write to diagnostic buffer
+  !  (g) write to diagnostic buffer
   !        Note: passing just col_id => interior tendency diagnostic buffer
   call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
   interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)

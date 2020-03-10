@@ -28,7 +28,8 @@ To prepare for future updates where that is no longer the case, it is recommende
 .. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-  !    5a. call set_global_scalars() for consistent setting of time-varying scalars
+  ! 5. Call surface_flux_compute() (all columns simultaneously)
+  !    (a) call set_global_scalars() for consistent setting of time-varying scalars
   !        [surface_flux computation doesn't currently have any time-varying scalars]
   call marbl_instances(n)%set_global_scalars('surface_flux')
 
@@ -43,25 +44,23 @@ These are copied to ``marbl_instances(n)%tracers_at_surface``, ``marbl_instances
 .. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-  !    5b. populate surface tracer values into marbl_instances(n)%tracers_at_surface
-  call marbl_io_read_tracers_at_surface(col_start(n)+1, col_cnt(n), marbl_instances(n)%tracer_metadata, &
-                               marbl_instances(n)%tracers_at_surface, driver_status_log)
-  if (driver_status_log%labort_marbl) then
-    call driver_status_log%log_error_trace('read_tracers_at_surface', subname)
-    return
-  end if
-
-  !    5c. populate surface_flux_forcings (per column)
   do col_id_loc = 1, col_cnt(n)
-    call marbl_io_read_forcing_field(col_id_loc, col_start(n), marbl_instances(n)%surface_flux_forcings, &
-                                     driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('read_forcing_field(surface)', subname)
-      return
-    end if
+    col_id = col_start(n)+col_id_loc
+
+    !  (b) copy surface tracer values into marbl_instances(n)%tracers_at_surface
+    marbl_instances(n)%tracers_at_surface(col_id_loc, :) = tracers_at_surface(col_id_loc+col_start(n), :)
+
+    !  (c) copy surface flux forcings into marbl_instances(n)%surface_flux_forcings
+    do m=1, size(marbl_instances(n)%surface_flux_forcings)
+      if (associated(marbl_instances(n)%surface_flux_forcings(m)%field_0d)) then
+        marbl_instances(n)%surface_flux_forcings(m)%field_0d(col_id_loc) = surface_flux_forcings(m)%field_0d(col_id)
+      else
+        marbl_instances(n)%surface_flux_forcings(m)%field_1d(col_id_loc,:) = surface_flux_forcings(m)%field_1d(col_id,:)
+      end if
+    end do
   end do
 
-  !    5d. populate saved_state
+  !    (d) populate marbl_instances(n)%surface_flux_saved_state (with 0s)
   do m=1, size(marbl_instances(n)%surface_flux_saved_state%state)
     marbl_instances(n)%surface_flux_saved_state%state(m)%field_2d(:) = 0._r8
   end do
@@ -75,7 +74,7 @@ Since all the data is available on the class object, the call to the routine doe
 .. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-  !    5e. call surface_flux_compute()
+  !    (e) call surface_flux_compute()
   call marbl_instances(n)%surface_flux_compute()
 
 .. _ref-after-surface-flux-call:
@@ -118,7 +117,7 @@ After the call to ``surface_flux_compute()``, the standalone driver copies diags
 .. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-  !    5f. write to diagnostic buffers
+  !    (f) write to diagnostic buffers
   !        Note: passing col_start and col_cnt => surface flux diagnostic buffer
   call marbl_io_copy_into_diag_buffer(col_start(n), col_cnt(n), marbl_instances(n))
   surface_fluxes((col_start(n)+1):(col_start(n)+col_cnt(n)),:) = marbl_instances(n)%surface_fluxes(:,:)
