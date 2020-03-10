@@ -73,7 +73,6 @@ module marbl_io_mod
   public :: marbl_io_construct_diag_buffers
   public :: marbl_io_read_domain
   public :: marbl_io_read_forcing_field
-  public :: marbl_io_read_tracers_at_surface
   public :: marbl_io_read_tracers
   public :: marbl_io_define_history
   public :: marbl_io_copy_into_diag_buffer
@@ -486,38 +485,6 @@ contains
     end do
 
   end subroutine marbl_io_read_forcing_field
-
-  !****************************************************************************
-
-  subroutine marbl_io_read_tracers_at_surface(num_cols, tracer_metadata, tracers_at_surface, driver_status_log)
-
-    integer,                                          intent(in)    :: num_cols
-    type(marbl_tracer_metadata_type), dimension(:),   intent(in)    :: tracer_metadata
-    real(kind=r8),                    dimension(:,:), intent(inout) :: tracers_at_surface ! (num_surface_elem, tracer_cnt)
-    type(marbl_log_type),                             intent(inout) :: driver_status_log
-
-    character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_tracers_at_surface'
-    character(len=char_len) :: log_message
-    integer :: n, varid
-
-    do n = 1, size(tracer_metadata)
-      call marbl_netcdf_inq_varid(ncid_in, trim(tracer_metadata(n)%short_name), varid, driver_status_log)
-      if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(tracer_metadata(n)%short_name), " [surface])"
-        call driver_status_log%log_error_trace(log_message, subname)
-        return
-      end if
-
-      call marbl_netcdf_get_var(ncid_in, varid, tracers_at_surface(:,n), &
-                                   driver_status_log, surf_only=.true., col_start=1, col_cnt=num_cols)
-      if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") "marbl_netcdf_get_var(", trim(tracer_metadata(n)%short_name), " [surface])"
-        call driver_status_log%log_error_trace(log_message, subname)
-        return
-      end if
-    end do
-
-  end subroutine marbl_io_read_tracers_at_surface
 
   !****************************************************************************
 

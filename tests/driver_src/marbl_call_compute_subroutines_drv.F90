@@ -23,7 +23,6 @@ Contains
     use marbl_io_mod, only : marbl_io_copy_into_diag_buffer
     use marbl_io_mod, only : marbl_io_write_history
     use marbl_io_mod, only : marbl_io_read_forcing_field
-    use marbl_io_mod, only : marbl_io_read_tracers_at_surface
     use marbl_io_mod, only : marbl_io_read_tracers
     use marbl_io_mod, only : marbl_io_close_files
     use marbl_io_mod, only : marbl_io_destruct_diag_buffers
@@ -99,16 +98,18 @@ Contains
     !    (e) Read initial conditions and forcing data
     allocate(tracers_at_surface(num_cols, num_tracers))
     ! allocate(surface_flux_forcings(num_cols, num_tracers))
-    call marbl_io_read_tracers_at_surface(num_cols, marbl_instances(1)%tracer_metadata, &
-                                          tracers_at_surface, driver_status_log)
-    if (driver_status_log%labort_marbl) then
-      call driver_status_log%log_error_trace('read_tracers_at_surface', subname)
-      return
-    end if
-    ! do n=1, num_cols
+
+    do n=1, num_cols
+      call marbl_io_read_tracers(n, marbl_instances(1)%tracer_metadata, tracer_initial_vals(:,:,n), &
+                        driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        call driver_status_log%log_error_trace('read_tracers', subname)
+        return
+      end if
+      tracers_at_surface(n,:) = tracer_initial_vals(:, 1, n)
     !   call marbl_io_read_forcing_field(col_id_loc, col_start(n), marbl_instances(n)%surface_flux_forcings, &
     !                                    driver_status_log)
-
+    end do
 
     ! Brunt of MARBL computations
     do n=1, size(marbl_instances)
@@ -165,13 +166,7 @@ Contains
         marbl_instances(n)%domain%kmt = active_level_cnt(col_id)
 
         !  6c. populate tracer values
-        call marbl_io_read_tracers(col_id, marbl_instances(n)%tracer_metadata, marbl_instances(n)%tracers, &
-                          driver_status_log)
-        if (driver_status_log%labort_marbl) then
-          call driver_status_log%log_error_trace('read_tracers', subname)
-          return
-        end if
-        tracer_initial_vals(:,:,col_id) = marbl_instances(n)%tracers
+        marbl_instances(n)%tracers = tracer_initial_vals(:,:,col_id)
 
         !  6d. populate interior_tendency_forcings
         call marbl_io_read_forcing_field(col_id_loc, col_start(n), marbl_instances(n)%interior_tendency_forcings, &
