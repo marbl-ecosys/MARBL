@@ -176,10 +176,10 @@ Contains
       do col_id_loc = 1, col_cnt(n)
         col_id = col_start(n)+col_id_loc
 
-        !  (b) populate surface tracer values into marbl_instances(n)%tracers_at_surface
+        !  (b) copy surface tracer values into marbl_instances(n)%tracers_at_surface
         marbl_instances(n)%tracers_at_surface(col_id_loc, :) = tracers_at_surface(col_id_loc+col_start(n), :)
 
-        !  (c) populate surface_flux_forcings (per column)
+        !  (c) copy surface flux forcings into marbl_instances(n)%surface_flux_forcings
         do m=1, size(marbl_instances(n)%surface_flux_forcings)
           if (associated(marbl_instances(n)%surface_flux_forcings(m)%field_0d)) then
             marbl_instances(n)%surface_flux_forcings(m)%field_0d(col_id_loc) = surface_flux_forcings(m)%field_0d(col_id)
@@ -189,7 +189,7 @@ Contains
         end do
       end do
 
-      !    (d) populate saved_state
+      !    (d) populate marbl_instances(n)%surface_flux_saved_state (with 0s)
       do m=1, size(marbl_instances(n)%surface_flux_saved_state%state)
         marbl_instances(n)%surface_flux_saved_state%state(m)%field_2d(:) = 0._r8
       end do
@@ -223,10 +223,10 @@ Contains
         !      the index of the bottom layer must be updated for each column.
         marbl_instances(n)%domain%kmt = active_level_cnt(col_id)
 
-        !  (c) populate tracer values
+        !  (c) copy tracer values into marbl_instances(n)%tracers
         marbl_instances(n)%tracers = tracer_initial_vals(:,:,col_id)
 
-        !  (d) populate interior_tendency_forcings
+        !  (d) copy interior tendency forcings into marbl_instances(n)%interior_tendency_forcings
         do m=1, size(marbl_instances(n)%interior_tendency_forcings)
           if (associated(marbl_instances(n)%interior_tendency_forcings(m)%field_0d)) then
             marbl_instances(n)%interior_tendency_forcings(m)%field_0d(1) = &
@@ -237,7 +237,7 @@ Contains
           end if
         end do
 
-        !  (e) populate saved_state
+        !  (e) populate marbl_instances(n)%interior_tendency_saved_state (with 0s)
         do m=1, size(marbl_instances(n)%interior_tendency_saved_state%state)
           if (allocated(marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d)) then
             marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d(:) = 0._r8
