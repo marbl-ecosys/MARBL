@@ -94,6 +94,7 @@ Contains
     allocate(surface_fluxes(num_cols, num_tracers))
     allocate(interior_tendencies(num_tracers, num_levels, num_cols))
     allocate(tracer_initial_vals(num_tracers, num_levels, num_cols))
+    allocate(tracers_at_surface(num_cols, num_tracers))
     allocate(surface_flux_forcings(size(marbl_instances(1)%surface_flux_forcings)))
     allocate(interior_tendency_forcings(num_cols, size(marbl_instances(1)%interior_tendency_forcings)))
     ! Allocate memory inside surface_flux_forcings
@@ -128,8 +129,6 @@ Contains
     end if
 
     !    (e) Read initial conditions and forcing data
-    allocate(tracers_at_surface(num_cols, num_tracers))
-
     do n=1, num_cols
       !      (i) Read tracer values over full column
       call marbl_io_read_tracers(n, marbl_instances(1)%tracer_metadata, tracer_initial_vals(:,:,n), &
@@ -282,8 +281,35 @@ Contains
 
     ! --------------------------------------------------------------------------
 
-    ! 9. Deallocate memory in marbl_io_mod
+    ! 9. Deallocate local variables as well as those in marbl_io_mod
     call marbl_io_destruct_diag_buffers()
+    deallocate(surface_fluxes)
+    deallocate(interior_tendencies)
+    deallocate(tracer_initial_vals)
+    deallocate(tracers_at_surface)
+    ! Deallocate memory inside surface_flux_forcings
+    do m=1, size(marbl_instances(1)%surface_flux_forcings)
+      if (associated(marbl_instances(1)%surface_flux_forcings(m)%field_0d)) then
+        deallocate(surface_flux_forcings(m)%field_0d)
+      else
+        deallocate(surface_flux_forcings(m)%field_1d)
+      end if
+    end do
+    ! Deallocate memory inside interior_tendency_forcings
+    do n=1, size(marbl_instances)
+      do col_id_loc = 1, col_cnt(n)
+        col_id = col_start(n)+col_id_loc
+        do m=1, size(marbl_instances(n)%interior_tendency_forcings)
+          if (associated(marbl_instances(n)%interior_tendency_forcings(m)%field_0d)) then
+            deallocate(interior_tendency_forcings(col_id,m)%field_0d)
+          else
+            deallocate(interior_tendency_forcings(col_id,m)%field_1d)
+          end if
+        end do
+      end do
+    end do
+    deallocate(surface_flux_forcings)
+    deallocate(interior_tendency_forcings)
 
     ! --------------------------------------------------------------------------
 
