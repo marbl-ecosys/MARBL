@@ -35,15 +35,16 @@ Contains
     character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:test'
     character(len=*), parameter :: infile = '../../input_files/initial_conditions/call_compute_subroutines.20190718.nc'
     character(len=char_len) :: log_message
-    type(forcing_fields_type), dimension(:),   allocatable :: surface_flux_forcings       ! num_forcings
-    type(forcing_fields_type), dimension(:,:), allocatable :: interior_tendency_forcings  ! num_cols, num_forcings
-    real(r8), allocatable, dimension(:,:) :: surface_fluxes        ! num_cols x num_tracers
-    real(r8), allocatable, dimension(:,:) :: tracers_at_surface    ! num_cols x num_tracers
-    real(r8), allocatable, dimension(:,:,:) :: interior_tendencies ! num_tracers x num_levels x num_cols
-    real(r8), allocatable, dimension(:,:,:) :: tracer_initial_vals ! num_tracers x num_levels x num_cols
+    real(r8),                  allocatable, dimension(:,:)   :: surface_fluxes              ! num_cols x num_tracers
+    real(r8),                  allocatable, dimension(:,:)   :: tracers_at_surface          ! num_cols x num_tracers
+    real(r8),                  allocatable, dimension(:,:,:) :: interior_tendencies         ! num_tracers x num_levels x num_cols
+    real(r8),                  allocatable, dimension(:,:,:) :: tracer_initial_vals         ! num_tracers x num_levels x num_cols
+    type(forcing_fields_type), allocatable, dimension(:)     :: surface_flux_forcings       ! num_forcings
+    type(forcing_fields_type), allocatable, dimension(:,:)   :: interior_tendency_forcings  ! num_cols, num_forcings
+    integer,                   allocatable, dimension(:)     :: active_level_cnt, col_start, col_cnt
+
     integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols
     type(grid_data_type) :: grid_data
-    integer, allocatable, dimension(:) :: active_level_cnt, col_start, col_cnt
 
     ! 1. Open necessary netCDF files
     !    (a) Input (grid info, forcing fields, initial conditions)
@@ -92,9 +93,9 @@ Contains
     !    (c) Initialize memory for fields that driver writes to history (not coming via MARBL diagnostic type)
     !        as well as fields that driver reads (forcing fields)
     allocate(surface_fluxes(num_cols, num_tracers))
+    allocate(tracers_at_surface(num_cols, num_tracers))
     allocate(interior_tendencies(num_tracers, num_levels, num_cols))
     allocate(tracer_initial_vals(num_tracers, num_levels, num_cols))
-    allocate(tracers_at_surface(num_cols, num_tracers))
     allocate(surface_flux_forcings(size(marbl_instances(1)%surface_flux_forcings)))
     allocate(interior_tendency_forcings(num_cols, size(marbl_instances(1)%interior_tendency_forcings)))
     ! Allocate memory inside surface_flux_forcings
@@ -284,9 +285,9 @@ Contains
     ! 9. Deallocate local variables as well as those in marbl_io_mod
     call marbl_io_destruct_diag_buffers()
     deallocate(surface_fluxes)
+    deallocate(tracers_at_surface)
     deallocate(interior_tendencies)
     deallocate(tracer_initial_vals)
-    deallocate(tracers_at_surface)
     ! Deallocate memory inside surface_flux_forcings
     do m=1, size(marbl_instances(1)%surface_flux_forcings)
       if (associated(marbl_instances(1)%surface_flux_forcings(m)%field_0d)) then
@@ -310,6 +311,9 @@ Contains
     end do
     deallocate(surface_flux_forcings)
     deallocate(interior_tendency_forcings)
+    deallocate(active_level_cnt)
+    deallocate(col_start)
+    deallocate(col_cnt)
 
     ! --------------------------------------------------------------------------
 
