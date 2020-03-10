@@ -36,7 +36,6 @@ Contains
     character(len=*), parameter :: infile = '../../input_files/initial_conditions/call_compute_subroutines.20190718.nc'
     character(len=char_len) :: log_message
     real(r8),                  allocatable, dimension(:,:)   :: surface_fluxes              ! num_cols x num_tracers
-    real(r8),                  allocatable, dimension(:,:)   :: tracers_at_surface          ! num_cols x num_tracers
     real(r8),                  allocatable, dimension(:,:,:) :: interior_tendencies         ! num_tracers x num_levels x num_cols
     real(r8),                  allocatable, dimension(:,:,:) :: tracer_initial_vals         ! num_tracers x num_levels x num_cols
     type(forcing_fields_type), allocatable, dimension(:)     :: surface_flux_forcings       ! num_forcings
@@ -93,7 +92,6 @@ Contains
     !    (c) Initialize memory for fields that driver writes to history (not coming via MARBL diagnostic type)
     !        as well as fields that driver reads (forcing fields)
     allocate(surface_fluxes(num_cols, num_tracers))
-    allocate(tracers_at_surface(num_cols, num_tracers))
     allocate(interior_tendencies(num_tracers, num_levels, num_cols))
     allocate(tracer_initial_vals(num_tracers, num_levels, num_cols))
     allocate(surface_flux_forcings(size(marbl_instances(1)%surface_flux_forcings)))
@@ -139,10 +137,7 @@ Contains
         return
       end if
 
-      !      (ii) Set surface tracer values
-      tracers_at_surface(n,:) = tracer_initial_vals(:, 1, n)
-
-      !      (iii) Read surface flux forcing fields
+      !      (ii) Read surface flux forcing fields
       call marbl_io_read_forcing_field(n, 0, marbl_instances(1)%surface_flux_forcings, &
                                        surface_flux_forcings, driver_status_log)
       if (driver_status_log%labort_marbl) then
@@ -151,7 +146,7 @@ Contains
       end if
     end do
 
-    !        (iv) Read interior tendency forcing fields
+    !        (iii) Read interior tendency forcing fields
     do n=1, size(marbl_instances)
       do col_id_loc = 1, col_cnt(n)
         col_id = col_start(n)+col_id_loc
@@ -178,7 +173,7 @@ Contains
         col_id = col_start(n)+col_id_loc
 
         !  (b) copy surface tracer values into marbl_instances(n)%tracers_at_surface
-        marbl_instances(n)%tracers_at_surface(col_id_loc, :) = tracers_at_surface(col_id_loc+col_start(n), :)
+        marbl_instances(n)%tracers_at_surface(col_id_loc, :) = tracer_initial_vals(:, 1, col_id)
 
         !  (c) copy surface flux forcings into marbl_instances(n)%surface_flux_forcings
         do m=1, size(marbl_instances(n)%surface_flux_forcings)
@@ -285,7 +280,6 @@ Contains
     ! 9. Deallocate local variables as well as those in marbl_io_mod
     call marbl_io_destruct_diag_buffers()
     deallocate(surface_fluxes)
-    deallocate(tracers_at_surface)
     deallocate(interior_tendencies)
     deallocate(tracer_initial_vals)
     ! Deallocate memory inside surface_flux_forcings

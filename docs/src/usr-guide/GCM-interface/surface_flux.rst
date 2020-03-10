@@ -48,7 +48,7 @@ These are copied to ``marbl_instances(n)%tracers_at_surface``, ``marbl_instances
     col_id = col_start(n)+col_id_loc
 
     !  (b) copy surface tracer values into marbl_instances(n)%tracers_at_surface
-    marbl_instances(n)%tracers_at_surface(col_id_loc, :) = tracers_at_surface(col_id_loc+col_start(n), :)
+    marbl_instances(n)%tracers_at_surface(col_id_loc, :) = tracer_initial_vals(:, 1, col_id)
 
     !  (c) copy surface flux forcings into marbl_instances(n)%surface_flux_forcings
     do m=1, size(marbl_instances(n)%surface_flux_forcings)
