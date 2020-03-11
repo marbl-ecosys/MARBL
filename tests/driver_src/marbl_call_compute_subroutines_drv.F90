@@ -39,7 +39,7 @@ Contains
     real(r8),                  allocatable, dimension(:,:,:) :: interior_tendencies         ! num_tracers x num_levels x num_cols
     real(r8),                  allocatable, dimension(:,:,:) :: tracer_initial_vals         ! num_tracers x num_levels x num_cols
     type(forcing_fields_type), allocatable, dimension(:)     :: surface_flux_forcings       ! num_forcings
-    type(forcing_fields_type), allocatable, dimension(:,:)   :: interior_tendency_forcings  ! num_cols, num_forcings
+    type(forcing_fields_type), allocatable, dimension(:)     :: interior_tendency_forcings  ! num_forcings
     integer,                   allocatable, dimension(:)     :: active_level_cnt, col_start, col_cnt
 
     integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols
@@ -95,7 +95,7 @@ Contains
     allocate(interior_tendencies(num_tracers, num_levels, num_cols))
     allocate(tracer_initial_vals(num_tracers, num_levels, num_cols))
     allocate(surface_flux_forcings(size(marbl_instances(1)%surface_flux_forcings)))
-    allocate(interior_tendency_forcings(num_cols, size(marbl_instances(1)%interior_tendency_forcings)))
+    allocate(interior_tendency_forcings(size(marbl_instances(1)%interior_tendency_forcings)))
     ! Allocate memory inside surface_flux_forcings
     do m=1, size(marbl_instances(1)%surface_flux_forcings)
       if (associated(marbl_instances(1)%surface_flux_forcings(m)%field_0d)) then
@@ -106,18 +106,13 @@ Contains
       end if
     end do
     ! Allocate memory inside interior_tendency_forcings
-    do n=1, size(marbl_instances)
-      do col_id_loc = 1, col_cnt(n)
-        col_id = col_start(n)+col_id_loc
-        do m=1, size(marbl_instances(n)%interior_tendency_forcings)
-          if (associated(marbl_instances(n)%interior_tendency_forcings(m)%field_0d)) then
-            allocate(interior_tendency_forcings(col_id,m)%field_0d(1))
-          else
-            allocate(interior_tendency_forcings(col_id,m)%field_1d(1, &
-                size(marbl_instances(n)%interior_tendency_forcings(m)%field_1d, dim=2)))
-          end if
-        end do
-      end do
+    do m=1, size(marbl_instances(1)%interior_tendency_forcings)
+      if (associated(marbl_instances(1)%interior_tendency_forcings(m)%field_0d)) then
+        allocate(interior_tendency_forcings(m)%field_0d(num_cols))
+      else
+        allocate(interior_tendency_forcings(m)%field_1d(num_cols, &
+            size(marbl_instances(1)%interior_tendency_forcings(m)%field_1d, dim=2)))
+      end if
     end do
 
     !    (d) netCDF calls to create history file (dimensions are defined but data is not written)
@@ -138,25 +133,20 @@ Contains
       end if
 
       !      (ii) Read surface flux forcing fields
-      call marbl_io_read_forcing_field(n, 0, marbl_instances(1)%surface_flux_forcings, &
+      call marbl_io_read_forcing_field(n, marbl_instances(1)%surface_flux_forcings, &
                                        surface_flux_forcings, driver_status_log)
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('read_forcing_field(surface)', subname)
         return
       end if
-    end do
 
-    !        (iii) Read interior tendency forcing fields
-    do n=1, size(marbl_instances)
-      do col_id_loc = 1, col_cnt(n)
-        col_id = col_start(n)+col_id_loc
-        call marbl_io_read_forcing_field(col_id, 0, marbl_instances(n)%interior_tendency_forcings, &
-                                         interior_tendency_forcings(col_id,:), driver_status_log, active_level_cnt(col_id))
-        if (driver_status_log%labort_marbl) then
-          call driver_status_log%log_error_trace('read_forcing_field(interior)', subname)
-          return
-        end if
-      end do
+      !      (iii) Read interior tendency forcing fields
+      call marbl_io_read_forcing_field(n, marbl_instances(1)%interior_tendency_forcings, &
+                                       interior_tendency_forcings, driver_status_log, active_level_cnt(n))
+      if (driver_status_log%labort_marbl) then
+        call driver_status_log%log_error_trace('read_forcing_field(interior)', subname)
+        return
+      end if
     end do
 
     ! --------------------------------------------------------------------------
@@ -226,10 +216,10 @@ Contains
         do m=1, size(marbl_instances(n)%interior_tendency_forcings)
           if (associated(marbl_instances(n)%interior_tendency_forcings(m)%field_0d)) then
             marbl_instances(n)%interior_tendency_forcings(m)%field_0d(1) = &
-                 interior_tendency_forcings(col_id,m)%field_0d(1)
+                 interior_tendency_forcings(m)%field_0d(col_id)
           else
             marbl_instances(n)%interior_tendency_forcings(m)%field_1d(1,:) = &
-                 interior_tendency_forcings(col_id,m)%field_1d(1,:)
+                 interior_tendency_forcings(m)%field_1d(col_id,:)
           end if
         end do
 
@@ -291,17 +281,12 @@ Contains
       end if
     end do
     ! Deallocate memory inside interior_tendency_forcings
-    do n=1, size(marbl_instances)
-      do col_id_loc = 1, col_cnt(n)
-        col_id = col_start(n)+col_id_loc
-        do m=1, size(marbl_instances(n)%interior_tendency_forcings)
-          if (associated(marbl_instances(n)%interior_tendency_forcings(m)%field_0d)) then
-            deallocate(interior_tendency_forcings(col_id,m)%field_0d)
-          else
-            deallocate(interior_tendency_forcings(col_id,m)%field_1d)
-          end if
-        end do
-      end do
+    do m=1, size(marbl_instances(1)%interior_tendency_forcings)
+      if (associated(marbl_instances(1)%interior_tendency_forcings(m)%field_0d)) then
+        deallocate(interior_tendency_forcings(m)%field_0d)
+      else
+        deallocate(interior_tendency_forcings(m)%field_1d)
+      end if
     end do
     deallocate(surface_flux_forcings)
     deallocate(interior_tendency_forcings)
