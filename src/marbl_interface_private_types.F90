@@ -766,8 +766,42 @@ module marbl_interface_private_types
 
   !***********************************************************************
 
+  type, public :: co2calc_coeffs_type
+     real(kind=r8), allocatable :: k0(:)  ! equilibrium constants for CO2 species
+     real(kind=r8), allocatable :: k1(:)  ! equilibrium constants for CO2 species
+     real(kind=r8), allocatable :: k2(:)  ! equilibrium constants for CO2 species
+     real(kind=r8), allocatable :: ff(:)  ! fugacity of CO2
+     real(kind=r8), allocatable :: kw(:)  ! equilibrium coefficient of water
+     real(kind=r8), allocatable :: kb(:)
+     real(kind=r8), allocatable :: ks(:)
+     real(kind=r8), allocatable :: kf(:)
+     real(kind=r8), allocatable :: k1p(:)
+     real(kind=r8), allocatable :: k2p(:)
+     real(kind=r8), allocatable :: k3p(:)
+     real(kind=r8), allocatable :: ksi(:)
+     real(kind=r8), allocatable :: bt(:)
+     real(kind=r8), allocatable :: st(:)
+     real(kind=r8), allocatable :: ft(:)
+   contains
+     procedure, public :: construct => co2calc_coeffs_constructor
+     procedure, public :: destruct => co2calc_coeffs_destructor
+  end type co2calc_coeffs_type
+
+  type, public :: co2calc_state_type
+     real(kind=r8), allocatable :: dic(:)  ! total dissolved inorganic carbon
+     real(kind=r8), allocatable :: ta(:)   ! total alkalinity
+     real(kind=r8), allocatable :: pt(:)   ! total phosphorous
+     real(kind=r8), allocatable :: sit(:)  ! total silicon
+   contains
+     procedure, public :: construct => co2calc_state_constructor
+     procedure, public :: destruct => co2calc_state_destructor
+  end type co2calc_state_type
+
+  !***********************************************************************
+
   ! marbl interface should use marbl_internal_timers_type and
-  ! marbl_timer_indexing_type from here
+  ! marbl_timer_indexing_type from here, even though they originate
+  ! in marbl_timing_mod
   public :: marbl_internal_timers_type
   public :: marbl_timer_indexing_type
 
@@ -1962,6 +1996,82 @@ contains
     end if
 
   end subroutine interior_diag_ind_destructor
+
+  !*****************************************************************************
+
+  subroutine co2calc_coeffs_constructor(this, num_elements)
+
+    class(co2calc_coeffs_type), intent(inout) :: this
+    integer,                    intent(in)    :: num_elements
+
+    allocate(this%k0(num_elements))
+    allocate(this%k1(num_elements))
+    allocate(this%k2(num_elements))
+    allocate(this%ff(num_elements))
+    allocate(this%kw(num_elements))
+    allocate(this%kb(num_elements))
+    allocate(this%ks(num_elements))
+    allocate(this%kf(num_elements))
+    allocate(this%k1p(num_elements))
+    allocate(this%k2p(num_elements))
+    allocate(this%k3p(num_elements))
+    allocate(this%ksi(num_elements))
+    allocate(this%bt(num_elements))
+    allocate(this%st(num_elements))
+    allocate(this%ft(num_elements))
+
+  end subroutine co2calc_coeffs_constructor
+
+  !*****************************************************************************
+
+  subroutine co2calc_coeffs_destructor(this)
+
+    class(co2calc_coeffs_type), intent(inout) :: this
+
+    deallocate(this%k0)
+    deallocate(this%k1)
+    deallocate(this%k2)
+    deallocate(this%ff)
+    deallocate(this%kw)
+    deallocate(this%kb)
+    deallocate(this%ks)
+    deallocate(this%kf)
+    deallocate(this%k1p)
+    deallocate(this%k2p)
+    deallocate(this%k3p)
+    deallocate(this%ksi)
+    deallocate(this%bt)
+    deallocate(this%st)
+    deallocate(this%ft)
+
+  end subroutine co2calc_coeffs_destructor
+
+  !*****************************************************************************
+
+  subroutine co2calc_state_constructor(this, num_elements)
+
+    class(co2calc_state_type), intent(inout) :: this
+    integer,                   intent(in)    :: num_elements
+
+    allocate(this%dic(num_elements))
+    allocate(this%ta(num_elements))
+    allocate(this%pt(num_elements))
+    allocate(this%sit(num_elements))
+
+  end subroutine co2calc_state_constructor
+
+  !*****************************************************************************
+
+  subroutine co2calc_state_destructor(this)
+
+    class(co2calc_state_type), intent(inout) :: this
+
+    deallocate(this%dic)
+    deallocate(this%ta)
+    deallocate(this%pt)
+    deallocate(this%sit)
+
+  end subroutine co2calc_state_destructor
 
   !*****************************************************************************
 

@@ -21,3 +21,4 @@ This document provides technical documentation of the MARBL code.
    coding-conventions.rst
    marbl-interface.rst
    development-examples.rst
+   code-details/index.rst

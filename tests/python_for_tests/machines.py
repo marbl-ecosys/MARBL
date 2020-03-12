@@ -5,7 +5,6 @@ from os import system as sh_command
 
 # Supported machines for running MARBL tests
 supported_machines = ['local',
-                      'yellowstone',
                       'cheyenne',
                       'hobart',
                       'edison']
@@ -23,21 +22,15 @@ def load_module(mach, compiler, module_name):
   logger.info("Building with %s on %s" % (compiler, mach))
   logger.info("Loading module %s..." % module_name)
 
-  if mach == 'yellowstone':
-    sys.path.insert(0, os.path.join(os.sep, 'glade', 'apps', 'opt', 'lmod', 'lmod', 'init'))
-    from env_modules_python import module
-    module('purge')
-    module('load', module_name)
-    module('load', 'ncarcompilers')
-    module('load', 'ncarbinlibs')
-
   if mach == 'cheyenne':
     sys.path.insert(0, os.path.join(os.sep, 'glade', 'u', 'apps', 'ch', 'opt', 'lmod', '7.2.1', 'lmod', 'lmod', 'init'))
     from env_modules_python import module
     module('purge')
     module('load', module_name)
+    module('load', 'netcdf/4.6.1')
     module('load', 'ncarcompilers')
-    module('load', 'mpt/2.16')
+    if compiler == 'intel':
+      module('load', 'mpt/2.19')
 
   if mach == 'hobart':
     sys.path.insert(0, os.path.join(os.sep, 'usr', 'share', 'Modules', 'init'))
@@ -67,22 +60,12 @@ def machine_specific(mach, supported_compilers, module_names):
     logger.info(supported_machines)
     sys.exit(1)
 
-  if mach == 'yellowstone':
-    # NCAR machine
-    supported_compilers.append('intel')
-    supported_compilers.append('gnu')
-    supported_compilers.append('pgi')
-    module_names['intel'] = 'intel/17.0.1'
-    module_names['gnu'] = 'gnu/6.1.0'
-    module_names['pgi'] = 'pgi/17.5'
-    return
-
   if mach == 'cheyenne':
     # NCAR machine
     supported_compilers.append('intel')
     supported_compilers.append('gnu')
-    module_names['intel'] = 'intel/17.0.1'
-    module_names['gnu'] = 'gnu/7.1.0'
+    module_names['intel'] = 'intel/19.0.2'
+    module_names['gnu'] = 'gnu/7.3.0'
     return
 
   if mach == 'hobart':

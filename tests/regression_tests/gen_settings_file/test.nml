@@ -1,0 +1,4 @@
+&marbl_driver_nml
+testname="gen_settings_file"
+log_out_file='marbl_settings.gen'
+/

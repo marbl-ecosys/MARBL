@@ -235,13 +235,7 @@ general_parms :
       datatype : logical
       default_value : .true.
    lecovars_full_depth_tavg :
-      longname : Control whether base ecosystem variables are written full depth
-      subcategory : 2. config flags
-      units : unitless
-      datatype : logical
-      default_value : .false.
-   ciso_lecovars_full_depth_tavg :
-      longname : Control whether carbon isotope variables are written full depth
+      longname : If .false., MARBL will recommend truncating the column for some diagnostics
       subcategory : 2. config flags
       units : unitless
       datatype : logical

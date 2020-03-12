@@ -29,6 +29,8 @@ module marbl_interior_tendency_mod
   use marbl_interface_private_types, only : dissolved_organic_matter_type
   use marbl_interface_private_types, only : carbonate_type
   use marbl_interface_private_types, only : column_sinking_particle_type
+  use marbl_interface_private_types, only : co2calc_coeffs_type
+  use marbl_interface_private_types, only : co2calc_state_type
 
   use marbl_interface_public_types, only : marbl_domain_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
@@ -109,6 +111,8 @@ contains
        interior_tendency_share,               &
        marbl_particulate_share,               &
        interior_tendency_diags,               &
+       co2calc_coeffs,                        &
+       co2calc_state,                         &
        interior_tendencies,                   &
        glo_avg_fields_interior_tendency,      &
        marbl_status_log)
@@ -150,6 +154,8 @@ contains
     type(marbl_interior_tendency_share_type),                intent(inout) :: interior_tendency_share
     type(marbl_particulate_share_type),                      intent(inout) :: marbl_particulate_share
     type(marbl_diagnostics_type),                            intent(inout) :: interior_tendency_diags
+    type(co2calc_coeffs_type),                               intent(inout) :: co2calc_coeffs
+    type(co2calc_state_type),                                intent(inout) :: co2calc_state
     real(r8),                                                intent(out)   :: interior_tendencies(:,:)          ! (tracer_cnt, km) computed source/sink terms
     real(r8),                                                intent(out)   :: glo_avg_fields_interior_tendency(:)
     type(marbl_log_type),                                    intent(inout) :: marbl_status_log
@@ -246,14 +252,7 @@ contains
          dop_ind           => marbl_tracer_indices%dop_ind,         &
          dopr_ind          => marbl_tracer_indices%dopr_ind,        &
          donr_ind          => marbl_tracer_indices%donr_ind,        &
-         docr_ind          => marbl_tracer_indices%docr_ind,        &
-
-         Tref_auto          => autotroph_settings(:)%Tref,                  &
-         Tref_zoo           => zooplankton_settings(:)%Tref,                &
-         Ea_auto            => autotroph_settings(:)%Ea,                    &
-         Ea_zoo             => zooplankton_settings(:)%Ea,                  &
-         temp_func_opt_auto => autotroph_settings(:)%temp_func_form_iopt,   &
-         temp_func_opt_zoo  => zooplankton_settings(:)%temp_func_form_iopt  &
+         docr_ind          => marbl_tracer_indices%docr_ind         &
          )
 
     !-----------------------------------------------------------------------
@@ -307,8 +306,9 @@ contains
     call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
                             marbl_status_log)
     call compute_carbonate_chemistry(domain, temperature, pressure,           &
-         salinity, tracer_local(:, :), marbl_tracer_indices, carbonate,       &
-         ph_prev_col(:), ph_prev_alt_co2_col(:), marbl_status_log)
+         salinity, tracer_local(:, :), marbl_tracer_indices, co2calc_coeffs,  &
+         co2calc_state, carbonate, ph_prev_col(:), ph_prev_alt_co2_col(:),    &
+         marbl_status_log)
     call marbl_timers%stop(marbl_timer_indices%carbonate_chem_id,             &
                             marbl_status_log)
 
@@ -324,9 +324,11 @@ contains
     call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
 
-    call compute_temperature_functional_form(temperature(:), Tref_auto(:), temp_func_opt_auto(:), Ea_auto(:), Tfunc_auto(:,:))
+    call compute_temperature_functional_form(temperature(:), autotroph_settings(:)%Tref, &
+         autotroph_settings(:)%temp_func_form_iopt, autotroph_settings(:)%Ea, Tfunc_auto(:,:))
 
-    call compute_temperature_functional_form(temperature(:), Tref_zoo(:), temp_func_opt_zoo(:), Ea_zoo(:), Tfunc_zoo(:,:))
+    call compute_temperature_functional_form(temperature(:), zooplankton_settings(:)%Tref, &
+         zooplankton_settings(:)%temp_func_form_iopt, zooplankton_settings(:)%Ea, Tfunc_zoo(:,:))
 
     call compute_Pprime(km, domain%zt, autotroph_local, temperature, autotroph_derived_terms%Pprime)
 
@@ -922,13 +924,12 @@ contains
   !***********************************************************************
 
   subroutine compute_carbonate_chemistry(domain, temperature, press_bar, &
-       salinity, tracer_local, marbl_tracer_indices, carbonate, ph_prev_col,   &
+       salinity, tracer_local, marbl_tracer_indices, &
+       co2calc_coeffs, co2calc_state, carbonate, ph_prev_col,   &
        ph_prev_alt_co2_col, marbl_status_log)
 
     use marbl_co2calc_mod, only : marbl_co2calc_interior
     use marbl_co2calc_mod, only : marbl_co2calc_co3_sat_vals
-    use marbl_co2calc_mod, only : co2calc_coeffs_type
-    use marbl_co2calc_mod, only : co2calc_state_type
 
     type(marbl_domain_type),       intent(in)    :: domain
     real (r8),                     intent(in)    :: temperature(:)
@@ -936,6 +937,8 @@ contains
     real (r8),                     intent(in)    :: salinity(:)
     real (r8),                     intent(in)    :: tracer_local(:,:)       ! local copies of model tracer concentrations
     type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
+    type(co2calc_coeffs_type),     intent(inout) :: co2calc_coeffs
+    type(co2calc_state_type),      intent(inout) :: co2calc_state
     type(carbonate_type),          intent(inout) :: carbonate
     real(r8),                      intent(inout) :: ph_prev_col(:)          ! km
     real(r8),                      intent(inout) :: ph_prev_alt_co2_col(:)  ! km
@@ -947,8 +950,6 @@ contains
     character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:compute_carbonate_chemistry'
 
     integer :: k
-    type(co2calc_coeffs_type), dimension(domain%km) :: co2calc_coeffs
-    type(co2calc_state_type),  dimension(domain%km) :: co2calc_state
     real(r8),                  dimension(domain%km) :: ph_lower_bound
     real(r8),                  dimension(domain%km) :: ph_upper_bound
     real(r8),                  dimension(domain%km) :: dic_loc
@@ -1339,8 +1340,7 @@ contains
          light_lim => autotroph_derived_terms%light_lim(:,:), &
          PCPhoto   => autotroph_derived_terms%PCPhoto(:,:),   &
          photoC    => autotroph_derived_terms%photoC(:,:),    &
-         photoacc  => autotroph_derived_terms%photoacc(:,:),  &
-         alphaPI   => autotroph_settings(:)%alphaPI           &
+         photoacc  => autotroph_derived_terms%photoacc(:,:)   &
          )
 
       do auto_ind = 1, autotroph_cnt
@@ -1359,14 +1359,15 @@ contains
 
             do subcol_ind = 1, PAR_nsubcols
               if (PAR_avg(k,subcol_ind) > c0) then
-                light_lim_subcol = (c1 - exp((-c1 * alphaPI(auto_ind) * thetaC(auto_ind,k) * PAR_avg(k,subcol_ind)) &
+                light_lim_subcol = (c1 - exp((-c1 * autotroph_settings(auto_ind)%alphaPI &
+                                              * thetaC(auto_ind,k) * PAR_avg(k,subcol_ind)) &
                                        / (PCmax + epsTinv)))
 
                 PCphoto_subcol = PCmax * light_lim_subcol
 
                 ! GD 98 Chl. synth. term
                 pChl_subcol = autotroph_settings(auto_ind)%thetaN_max * PCphoto_subcol &
-                            / (alphaPI(auto_ind) * thetaC(auto_ind,k) * PAR_avg(k,subcol_ind))
+                            / (autotroph_settings(auto_ind)%alphaPI * thetaC(auto_ind,k) * PAR_avg(k,subcol_ind))
                 photoacc_subcol = (pChl_subcol * PCphoto_subcol * Q / thetaC(auto_ind,k)) &
                                 * autotroph_local%Chl(auto_ind,k)
 
@@ -1499,17 +1500,6 @@ contains
               Fe_loc   => tracer_local(marbl_tracer_indices%fe_ind,:),   &
               SiO3_loc => tracer_local(marbl_tracer_indices%sio3_ind,:), &
               CO2_loc  => carbonate%H2CO3(:),                            &
-              ! AUTOTROPHS
-              Nfixer        => autotroph_settings(:)%Nfixer,        &
-              silicifier    => autotroph_settings(:)%silicifier,    &
-              is_carbon_limited => autotroph_settings(:)%is_carbon_limited, &
-              kNO3   => autotroph_settings(:)%kNO3,           &
-              kNH4   => autotroph_settings(:)%kNH4,           &
-              kFe    => autotroph_settings(:)%kFe,            &
-              kPO4   => autotroph_settings(:)%kPO4,           &
-              kDOP   => autotroph_settings(:)%kDOP,           &
-              kSiO3  => autotroph_settings(:)%kSiO3,          &
-              kCO2   => autotroph_settings(:)%kCO2,           &
               ! OUTPUTS
               VNO3  => autotroph_derived_terms%VNO3(:,:),  &
               VNH4  => autotroph_derived_terms%VNH4(:,:),  &
@@ -1525,33 +1515,37 @@ contains
 
       do auto_ind = 1, autotroph_cnt
 
-        VNO3(auto_ind,:) = (NO3_loc(:) / kNO3(auto_ind)) &
-                         / (c1 + (NO3_loc(:) / kNO3(auto_ind)) + (NH4_loc(:) / kNH4(auto_ind)))
-        VNH4(auto_ind,:) = (NH4_loc(:) / kNH4(auto_ind)) &
-                         / (c1 + (NO3_loc(:) / kNO3(auto_ind)) + (NH4_loc(:) / kNH4(auto_ind)))
-        if (Nfixer(auto_ind)) then
+        VNO3(auto_ind,:) = (NO3_loc(:) / autotroph_settings(auto_ind)%kNO3) &
+                         / (c1 + (NO3_loc(:) / autotroph_settings(auto_ind)%kNO3) &
+                            + (NH4_loc(:) / autotroph_settings(auto_ind)%kNH4))
+        VNH4(auto_ind,:) = (NH4_loc(:) / autotroph_settings(auto_ind)%kNH4) &
+                         / (c1 + (NO3_loc(:) / autotroph_settings(auto_ind)%kNO3) &
+                            + (NH4_loc(:) / autotroph_settings(auto_ind)%kNH4))
+        if (autotroph_settings(auto_ind)%Nfixer) then
           VNtot(auto_ind,:) = c1
         else
           VNtot(auto_ind,:) = VNO3(auto_ind,:) + VNH4(auto_ind,:)
         end if
 
-        VFe(auto_ind, :) = Fe_loc(:) / (Fe_loc(:) + kFe(auto_ind))
+        VFe(auto_ind, :) = Fe_loc(:) / (Fe_loc(:) + autotroph_settings(auto_ind)%kFe)
         f_nut(auto_ind, :) = min(VNtot(auto_ind, :), VFe(auto_ind, :))
 
-        VPO4(auto_ind, :) = (PO4_loc(:) / kPO4(auto_ind)) &
-                          / (c1 + (PO4_loc(:) / kPO4(auto_ind)) + (DOP_loc(:) / kDOP(auto_ind)))
-        VDOP(auto_ind, :) = (DOP_loc(:) / kDOP(auto_ind)) &
-                          / (c1 + (PO4_loc(:) / kPO4(auto_ind)) + (DOP_loc(:) / kDOP(auto_ind)))
+        VPO4(auto_ind, :) = (PO4_loc(:) / autotroph_settings(auto_ind)%kPO4) &
+                          / (c1 + (PO4_loc(:) / autotroph_settings(auto_ind)%kPO4) &
+                             + (DOP_loc(:) / autotroph_settings(auto_ind)%kDOP))
+        VDOP(auto_ind, :) = (DOP_loc(:) / autotroph_settings(auto_ind)%kDOP) &
+                          / (c1 + (PO4_loc(:) / autotroph_settings(auto_ind)%kPO4) &
+                             + (DOP_loc(:) / autotroph_settings(auto_ind)%kDOP))
         VPtot(auto_ind, :) = VPO4(auto_ind, :) + VDOP(auto_ind, :)
         f_nut(auto_ind, :) = min(f_nut(auto_ind, :), VPtot(auto_ind, :))
 
-        if (silicifier(auto_ind)) then
-          VSiO3(auto_ind, :) = SiO3_loc(:) / (SiO3_loc(:) + kSiO3(auto_ind))
+        if (autotroph_settings(auto_ind)%silicifier) then
+          VSiO3(auto_ind, :) = SiO3_loc(:) / (SiO3_loc(:) + autotroph_settings(auto_ind)%kSiO3)
           f_nut(auto_ind, :) = min(f_nut(auto_ind, :), VSiO3(auto_ind, :))
         endif
 
-        if (is_carbon_limited(auto_ind)) then
-          VCO2(auto_ind,:) = CO2_loc / (CO2_loc + kCO2(auto_ind))
+        if (autotroph_settings(auto_ind)%is_carbon_limited) then
+          VCO2(auto_ind,:) = CO2_loc / (CO2_loc + autotroph_settings(auto_ind)%kCO2)
           f_nut(auto_ind, :) = min(f_nut(auto_ind, :), VCO2(auto_ind, :))
         end if
 

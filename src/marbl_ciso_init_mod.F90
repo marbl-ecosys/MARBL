@@ -18,7 +18,7 @@ contains
                                              marbl_tracer_indices)
 
     !  Set tracer and forcing metadata
-    use marbl_settings_mod, only : ciso_lecovars_full_depth_tavg
+    use marbl_settings_mod, only : lecovars_full_depth_tavg
     use marbl_settings_mod, only : autotroph_cnt
     use marbl_settings_mod, only : autotroph_settings
 
@@ -103,24 +103,24 @@ contains
     !  set lfull_depth_tavg flag for short-lived ecosystem tracers
     !-----------------------------------------------------------------------
 
-    marbl_tracer_metadata(zootot13C_ind)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
-    marbl_tracer_metadata(zootot14C_ind)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
+    marbl_tracer_metadata(zootot13C_ind)%lfull_depth_tavg = lecovars_full_depth_tavg
+    marbl_tracer_metadata(zootot14C_ind)%lfull_depth_tavg = lecovars_full_depth_tavg
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
-       marbl_tracer_metadata(n)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
+       marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
-       marbl_tracer_metadata(n)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
+       marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
        if (n > 0) then
-          marbl_tracer_metadata(n)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
+          marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
        endif
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
        if (n > 0) then
-          marbl_tracer_metadata(n)%lfull_depth_tavg = ciso_lecovars_full_depth_tavg
+          marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
        endif
     end do
 

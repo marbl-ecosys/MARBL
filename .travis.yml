@@ -1,19 +1,26 @@
+os: linux
+dist: trusty
 language: python
-sudo: required
-before_install:
-  - sudo apt-get install gfortran mpich
+
+addons:
+   apt:
+      packages:
+         - netcdf-bin libnetcdf-dev openmpi-bin libopenmpi-dev gfortran
+
 install:
-  - pip install pyyaml
-  - pip install -r docs/py_requirements.txt
+   - pip install pyyaml numpy xarray netcdf4
+   - pip install -r docs/py_requirements.txt
+
 python:
-  - '2.7'
-  - '3.6'
+   - '2.7'
+   - '3.6'
+
 script:
-  - cd docs/src; make html
-  - cd ../../MARBL_tools; ./run_test_suite.sh
+   - cd docs/src; make html
+   - cd ../../MARBL_tools; ./run_test_suite.sh
 
 branches:
-  only:
-  - development
-  - stable
-  - cesm2.0
+   only:
+      - development
+      - stable
+      - cesm2.0

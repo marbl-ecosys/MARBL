@@ -14,8 +14,8 @@ From the command line
 
 usage: MARBL_generate_diagnostics_file.py [-h] [-f DEFAULT_SETTINGS_FILE]
                                           [-j DEFAULT_DIAGNOSTICS_FILE]
-                                          [-s {GCM,settings_file}] [-g GRID]
-                                          [-i SETTINGS_FILE_IN]
+                                          [-v {GCM,settings_file}] [-g GRID]
+                                          [-s SETTINGS_FILE_IN]
                                           [-o DIAGNOSTICS_FILE_OUT]
 
 Generate a MARBL settings file from a JSON file
@@ -30,12 +30,12 @@ optional arguments:
                         Location of JSON-formatted MARBL diagnostics
                         configuration file (default: $MARBLROOT/
                         defaults/json/diagnostics_latest.json)
-  -s {GCM,settings_file}, --saved_state_vars_source {GCM,settings_file}
+  -v {GCM,settings_file}, --saved_state_vars_source {GCM,settings_file}
                         Source of initial value for saved state vars that can
                         come from GCM or settings file (default:
                         settings_file)
   -g GRID, --grid GRID  Some default values are grid-dependent (default: None)
-  -i SETTINGS_FILE_IN, --settings_file_in SETTINGS_FILE_IN
+  -s SETTINGS_FILE_IN, --settings_file_in SETTINGS_FILE_IN
                         A file that overrides values in settings JSON file
                         (default: None)
   -o DIAGNOSTICS_FILE_OUT, --diagnostics_file_out DIAGNOSTICS_FILE_OUT
@@ -113,7 +113,7 @@ def _parse_args(marbl_root):
                         help='Location of JSON-formatted MARBL diagnostics configuration file')
 
     # Is the GCM providing initial bury coefficients via saved state?
-    parser.add_argument('-s', '--saved_state_vars_source', action='store', dest='saved_state_vars_source',
+    parser.add_argument('-v', '--saved_state_vars_source', action='store', dest='saved_state_vars_source',
                         default='settings_file', choices = set(('settings_file', 'GCM')),
                         help="Source of initial value for saved state vars that can come from GCM or settings file")
 
@@ -121,11 +121,11 @@ def _parse_args(marbl_root):
     parser.add_argument('-g', '--grid', action='store', dest='grid',
                         help='Some default values are grid-dependent')
 
-    # Command line argument to specify an input settings file which would override the JSON
-    parser.add_argument('-i', '--settings_file_in', action='store', dest='settings_file_in', default=None,
+    # Command line argument to specify a settings file which would override the JSON
+    parser.add_argument('-s', '--settings_file_in', action='store', dest='settings_file_in', default=None,
                         help='A file that overrides values in settings JSON file')
 
-    # Command line argument to where to write the input file being generated
+    # Command line argument to where to write the diagnostic file being generated
     parser.add_argument('-o', '--diagnostics_file_out', action='store', dest='diagnostics_file_out', default='marbl.diags',
                         help='Name of file to be written')
 
@@ -154,5 +154,5 @@ if __name__ == "__main__":
     DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in)
     MARBL_diagnostics = MARBL_diagnostics_class(args.default_diagnostics_file, DefaultSettings)
 
-    # Write the input file
+    # Write the diagnostic file
     generate_diagnostics_file(MARBL_diagnostics, args.diagnostics_file_out, args.append)

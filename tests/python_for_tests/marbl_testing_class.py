@@ -17,7 +17,7 @@ class MARBL_testcase(object):
     self._machine = None
     self._hostname = None
     self._namelist_file = None
-    self._input_file = None
+    self._settings_file = None
     self._mpitasks = 0
     self._marbl_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -27,7 +27,8 @@ class MARBL_testcase(object):
   # Some tests will let you specify a compiler and / or input file
   # Some tests will require you to specify a machine
   def parse_args(self, desc, HaveCompiler=True, HaveInputFile=True,
-                 HasPause=False, CleanLibOnly=False):
+                 HasPause=False, CleanLibOnly=False, RequireNetCDF=False,
+                 DefaultSettingsFile=None):
 
     import argparse
 
@@ -39,8 +40,9 @@ class MARBL_testcase(object):
                           dest='compiler', help='compiler to build with')
 
     if HaveInputFile:
-      parser.add_argument('-i', '--input_file', action='store', dest='input_file',
-                          default=None, help='input file to read')
+      parser.add_argument('-s', '--settings_file', action='store', dest='settings_file',
+                          default=DefaultSettingsFile,
+                          help='input file to read (default: {})'.format(DefaultSettingsFile))
 
     if HasPause:
         parser.add_argument('--no_pause', action='store_true', dest='no_pause',
@@ -61,8 +63,15 @@ class MARBL_testcase(object):
 
     parser.add_argument('-n', '--namelist_file', action='store', dest='namelist_file',
                         default='test.nml', help='namelist file for the marbl standalone driver')
+    if not RequireNetCDF:
+      parser.add_argument('--netcdf', action='store_true', help='build with netcdf')
 
     args = parser.parse_args()
+
+    # Allow user to run with "-s None" to use default settings
+    if HaveInputFile:
+      if args.settings_file == "None":
+          args.settings_file = None
 
     # Run make clean if option is specified
     if args.clean:
@@ -77,9 +86,7 @@ class MARBL_testcase(object):
       from socket import gethostname
       self._hostname = gethostname()
       found = True
-      if any(host in self._hostname for host in ['geyser', 'caldera', 'prong', 'yslogin']):
-        self._machine = 'yellowstone'
-      elif 'cheyenne' in self._hostname:
+      if 'cheyenne' in self._hostname:
         self._machine = 'cheyenne'
       elif 'hobart' in self._hostname:
         self._machine = 'hobart'
@@ -110,7 +117,9 @@ class MARBL_testcase(object):
         logger.info('Testing with %s' % self._compiler)
 
     if HaveInputFile:
-      self._input_file = args.input_file
+      self._settings_file = args.settings_file
+
+    self._withnc = RequireNetCDF or args.netcdf
 
     self._namelist_file = args.namelist_file
     self._mpitasks = int(args.mpitasks)
@@ -161,6 +170,8 @@ class MARBL_testcase(object):
       machs.load_module(self._machine, loc_compiler, self._module_names[loc_compiler])
 
     makecmd = 'make %s' % loc_compiler
+    if self._withnc:
+      makecmd += ' USE_NETCDF=TRUE'
     if self._mpitasks > 0:
       makecmd += ' USEMPI=TRUE'
     status_code = sh_command('cd %s; %s' % (drv_dir, makecmd))
@@ -183,15 +194,7 @@ class MARBL_testcase(object):
       execmd += "marbl-mpi.exe"
 
       # need to launch with mpirun
-      # Note that yellowstone actually uses mpirun.lsf
-      # (and we want to avoid running on a login node)
-      if self._machine == 'yellowstone':
-        execmd = 'mpirun.lsf %s' % execmd
-        if 'yslogin' in self._hostname:
-          # on login node => request caldera node!
-          execmd = 'execca %s' % execmd
-      else:
-        execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
+      execmd = 'mpirun -n %d %s' % (self._mpitasks, execmd)
 
     # if running in serial, executable is marbl.exe
     else:
@@ -201,8 +204,8 @@ class MARBL_testcase(object):
     execmd += " -n %s" % self._namelist_file
 
     # If an input file was specified, it should be the second argument
-    if self._input_file != None:
-      execmd += " -i %s" % self._input_file
+    if self._settings_file != None:
+      execmd += " -s %s" % self._settings_file
 
     # Log executable command
     logging.info("Running following command:")
