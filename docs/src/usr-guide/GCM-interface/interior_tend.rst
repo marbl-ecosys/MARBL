@@ -63,10 +63,10 @@ For each column, MARBL needs to know the following:
   do m=1, size(marbl_instances(n)%interior_tendency_forcings)
     if (associated(marbl_instances(n)%interior_tendency_forcings(m)%field_0d)) then
       marbl_instances(n)%interior_tendency_forcings(m)%field_0d(1) = &
-           interior_tendency_forcings(col_id,m)%field_0d(1)
+           interior_tendency_forcings(m)%field_0d(col_id)
     else
       marbl_instances(n)%interior_tendency_forcings(m)%field_1d(1,:) = &
-           interior_tendency_forcings(col_id,m)%field_1d(1,:)
+           interior_tendency_forcings(m)%field_1d(col_id,:)
     end if
   end do
 
