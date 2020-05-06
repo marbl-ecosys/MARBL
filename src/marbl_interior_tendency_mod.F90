@@ -1331,6 +1331,7 @@ contains
     real(r8) :: PCphoto_subcol   ! PCphoto for a sub-column
     real(r8) :: pChl_subcol      ! Chl synth. regulation term (mg Chl/mmol N)
     real(r8) :: photoacc_subcol  ! photoacc for a sub-column
+    real(r8) :: work             ! intermediate term common to multiple expressions
     !-----------------------------------------------------------------------
 
     associate(                                                &
@@ -1358,16 +1359,14 @@ contains
             photoacc(auto_ind,k)  = c0
 
             do subcol_ind = 1, PAR_nsubcols
-              if (PAR_avg(k,subcol_ind) > c0) then
-                light_lim_subcol = (c1 - exp((-c1 * autotroph_settings(auto_ind)%alphaPI &
-                                              * thetaC(auto_ind,k) * PAR_avg(k,subcol_ind)) &
-                                       / (PCmax + epsTinv)))
+              work = autotroph_settings(auto_ind)%alphaPI * thetaC(auto_ind,k) * PAR_avg(k,subcol_ind)
+              if (work > c0) then
+                light_lim_subcol = (c1 - exp(-work / (PCmax + epsTinv)))
 
                 PCphoto_subcol = PCmax * light_lim_subcol
 
                 ! GD 98 Chl. synth. term
-                pChl_subcol = autotroph_settings(auto_ind)%thetaN_max * PCphoto_subcol &
-                            / (autotroph_settings(auto_ind)%alphaPI * thetaC(auto_ind,k) * PAR_avg(k,subcol_ind))
+                pChl_subcol = autotroph_settings(auto_ind)%thetaN_max * PCphoto_subcol / work
                 photoacc_subcol = (pChl_subcol * PCphoto_subcol * Q / thetaC(auto_ind,k)) &
                                 * autotroph_local%Chl(auto_ind,k)
 
