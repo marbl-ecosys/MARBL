@@ -8,11 +8,10 @@ addons:
          - netcdf-bin libnetcdf-dev openmpi-bin libopenmpi-dev gfortran
 
 install:
-   - pip install pyyaml numpy xarray netcdf4
+   - pip install pyyaml "numpy>=1.16" xarray netcdf4
    - pip install -r docs/py_requirements.txt
 
 python:
-   - '2.7'
    - '3.6'
 
 script:
