@@ -8,7 +8,7 @@ addons:
          - netcdf-bin libnetcdf-dev openmpi-bin libopenmpi-dev gfortran
 
 install:
-   - pip install pyyaml numpy xarray netcdf4
+   - pip install pyyaml numpy xarray netcdf4 "cftime<1.1.2"
    - pip install -r docs/py_requirements.txt
 
 python:
