@@ -285,18 +285,24 @@ class MARBL_settings_class(object):
             for n, elem_index in enumerate(_get_array_info(array_len, self.settings_dict, self.tracers_dict, base_name)):
                 full_name = var_name + elem_index
                 var_value = _get_var_value(full_name, this_var, self._config_keyword, self._input_dict)
+                self.settings_dict[full_name] = dict()
                 if isinstance(var_value, list):
                     if this_var["datatype"] == "string" and n>=len(var_value):
-                        self.settings_dict[full_name] = '""'
+                        self.settings_dict[full_name]['value'] = '""'
                     else:
-                        self.settings_dict[full_name] = _translate_JSON_value(var_value[n], this_var["datatype"])
+                        self.settings_dict[full_name]['value'] = _translate_JSON_value(var_value[n], this_var["datatype"])
                 else:
-                    self.settings_dict[full_name] = var_value
+                    self.settings_dict[full_name]['value'] = var_value
                 this_var['_list_of_settings_names'].append(full_name)
+                self.settings_dict[full_name]['units'] = this_var['units']
+                self.settings_dict[full_name]['longname'] = this_var['longname']
 
         else:
             # get value from either input file or JSON
-            self.settings_dict[var_name] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict)
+            self.settings_dict[var_name] = dict()
+            self.settings_dict[var_name]['value'] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict)
+            self.settings_dict[var_name]['units'] = this_var['units']
+            self.settings_dict[var_name]['longname'] = this_var['longname']
             this_var['_list_of_settings_names'].append(var_name)
 
 ################################################################################
@@ -457,10 +463,10 @@ def _get_value(val_in, settings_dict, tracers_dict, dict_prefix=''):
         # Otherwise, val_in must refer to a variable that could be
         # in the dictionary with or without the prefix
         try:
-            val_out = settings_dict[dict_prefix+val_in]
+            val_out = settings_dict[dict_prefix+val_in]['value']
         except:
             try:
-                val_out = settings_dict[val_in]
+                val_out = settings_dict[val_in]['value']
             except:
                 logger.error('Unknown variable name in _get_value: %s' % val_in)
                 MARBL_tools.abort(1)
