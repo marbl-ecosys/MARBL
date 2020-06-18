@@ -1445,9 +1445,9 @@ contains
           !calculate the CaCO3/organicC production ratio for coccolithophores ('picpoc')
           !For details, see Krumhardt et al., 2019, JAMES & Krumhardt et al., 2017, Progress in Oceanography
 
-          !temperature effect (linearly decreases calcification at temps < 11C)
-          where (temperature < 11._r8)
-            picpoc = max(0._r8,0.104_r8 * temperature - 0.108_r8)
+          !temperature effect (new cubic function)
+          where (temperature < 21.5_r8)
+            picpoc = max(0._r8,0.0001_r8 * temperature**3)
           elsewhere
             picpoc = 1._r8
           end where
