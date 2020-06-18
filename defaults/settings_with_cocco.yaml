@@ -302,7 +302,7 @@ general_parms :
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.822
+      default_value : 0.685
    gQsi_min :
       longname : min Si/C ratio for growth
       subcategory : 4. general parameters
@@ -320,7 +320,7 @@ general_parms :
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 6.0
+      default_value : 5.0
    parm_Fe_bioavail :
       longname : Fraction of Fe flux that is bioavailable
       subcategory : 4. general parameters
@@ -369,7 +369,7 @@ general_parms :
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
-         default : 2.54
+         default : 1.1
          GRID == "CESM_x3" : 5.0
    parm_init_POP_bury_coeff :
       longname : Initial scale factor for burial of POP
@@ -377,7 +377,7 @@ general_parms :
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
-         default : 0.36
+         default : 1.1
          GRID == "CESM_x3" : 5.0
    parm_init_bSi_bury_coeff :
       longname : Initial scale factor for burial of bSi
@@ -385,14 +385,14 @@ general_parms :
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
-         default : 1.53
+         default : 1.0
          GRID == "CESM_x3" : 1.1
    parm_Fe_scavenge_rate0 :
       longname : Scavenging base rate for Fe
       subcategory : 4. general parameters (scavenging)
       units : unitless
       datatype : real
-      default_value : 22.0
+      default_value : 24.0
    parm_Lig_scavenge_rate0 :
       longname : Scavenging base rate for bound ligand
       subcategory : 4. general parameters (scavenging)
@@ -404,7 +404,7 @@ general_parms :
       subcategory : 4. general parameters (scavenging)
       units : unitless
       datatype : real
-      default_value : 1.2
+      default_value : 1.3
    parm_Lig_degrade_rate0 :
       longname : Fe-binding ligand bacterial degradation base rate coefficient
       subcategory : 4. general parameters
@@ -436,19 +436,19 @@ general_parms :
       subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
-      default_value : 650e2
+      default_value : 700e2
    parm_SiO2_gamma :
       longname : SiO2 gamma (fraction of production -> hard subclass)
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.0
+      default_value : 0.1
    parm_hPOC_SiO2_ratio :
       longname : hPOC to SiO2 ratio
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.01
+      default_value : 0.05
    parm_CaCO3_diss :
       longname : Base CaCO3 dissolution length scale
       subcategory : 4. general parameters (dissolution)
@@ -460,19 +460,19 @@ general_parms :
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.02
+      default_value : 0.1
    parm_hPOC_CaCO3_ratio :
       longname : hPOC to CaCO3 ratio
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.01
+      default_value : 0.05
    parm_hPOC_dust_ratio :
       longname : hPOC to dust ratio
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.01
+      default_value : 0.05
    o2_sf_o2_range_hi :
       longname : o2_scalefactor is applied to diss length scales for O2 less than this
       subcategory : 4. general parameters
@@ -490,7 +490,7 @@ general_parms :
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 2.6
+      default_value : 3.0
    parm_sed_denitrif_coeff :
       longname : Global scaling factor for sed_denitrif
       subcategory : 4. general parameters
@@ -515,7 +515,7 @@ general_parms :
          - 100.0e2
          - 250.0e2
          - 500.0e2
-         - 1000.0e2
+         - 2000.0e2
    parm_scalelen_vals :
       longname : Prescribed scalelen values
       subcategory : 5. Scale lengths
@@ -526,8 +526,8 @@ general_parms :
          default :
             - 1
             - 3.6
-            - 4.7
-            - 4.8
+            - 5.0
+            - 5.3
          GRID == "CESM_x3" :
             - 1
             - 3.3
@@ -553,7 +553,7 @@ general_parms :
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.89
+      default_value : 1.0
    PON_bury_coeff :
       longname : Scale factor for burial of PON
       subcategory : 4. general parameters (bury coeffs)
@@ -752,9 +752,9 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((autotroph_sname)) == "sp" : 0.03e-3
-               ((autotroph_sname)) == "diat" : 0.08e-3
+               ((autotroph_sname)) == "diat" : 0.05e-3
                ((autotroph_sname)) == "diaz" : 0.045e-3
-               ((autotroph_sname)) == "cocco" : 0.0315e-3
+               ((autotroph_sname)) == "cocco" : 0.031e-3
          kCO2 :
             longname : CO2 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -773,7 +773,7 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 0.005
+               ((autotroph_sname)) == "sp" : 0.01
                ((autotroph_sname)) == "diat" : 0.05
                ((autotroph_sname)) == "diaz" : 0.015
                ((autotroph_sname)) == "cocco" : 0.006
@@ -786,7 +786,7 @@ PFT_derived_types :
                default : 1e34
                ((autotroph_sname)) == "sp" : 0.3
                ((autotroph_sname)) == "diat" : 0.5
-               ((autotroph_sname)) == "diaz" : 0.1
+               ((autotroph_sname)) == "diaz" : 0.075
                ((autotroph_sname)) == "cocco" : 0.25
          kNO3 :
             longname : NO3 uptake half-sat constant
@@ -796,9 +796,9 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((autotroph_sname)) == "sp" : 0.2
-               ((autotroph_sname)) == "diat" : 0.5
+               ((autotroph_sname)) == "diat" : 0.4
                ((autotroph_sname)) == "diaz" : 2
-               ((autotroph_sname)) == "cocco" : 0.2
+               ((autotroph_sname)) == "cocco" : 0.41
          kNH4 :
             longname : NH4 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -818,7 +818,7 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((autotroph_sname)) == "sp" : 0
-               ((autotroph_sname)) == "diat" : 1.8
+               ((autotroph_sname)) == "diat" : 1.6
                ((autotroph_sname)) == "diaz" : 0
                ((autotroph_sname)) == "cocco" : 0
          Qp_fixed :
@@ -839,10 +839,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 35e-6
-               ((autotroph_sname)) == "diat" : 35e-6
-               ((autotroph_sname)) == "diaz" : 70e-6
-               ((autotroph_sname)) == "cocco" : 35e-6
+               ((autotroph_sname)) == "sp" : 30e-6
+               ((autotroph_sname)) == "diat" : 30e-6
+               ((autotroph_sname)) == "diaz" : 60e-6
+               ((autotroph_sname)) == "cocco" : 30e-6
          gQfe_min :
             longname : Minimum Fe/C ratio for growth
             subcategory : 10. autotrophs
@@ -850,10 +850,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 3e-6
-               ((autotroph_sname)) == "diat" : 3e-6
-               ((autotroph_sname)) == "diaz" : 6e-6
-               ((autotroph_sname)) == "cocco" : 3e-6
+               ((autotroph_sname)) == "sp" : 2.5e-6
+               ((autotroph_sname)) == "diat" : 2.5e-6
+               ((autotroph_sname)) == "diaz" : 2.5e-6
+               ((autotroph_sname)) == "cocco" : 2.5e-6
          alphaPI_per_day :
             longname : Initial slope of P_I curve (GD98)
             subcategory : 10. autotrophs
@@ -864,7 +864,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0.35
                ((autotroph_sname)) == "diat" : 0.39
                ((autotroph_sname)) == "diaz" : 0.39
-               ((autotroph_sname)) == "cocco" : 0.28
+               ((autotroph_sname)) == "cocco" : 0.30
          PCref_per_day :
             longname : Maximum C-spec growth rate at Tref
             subcategory : 10. autotrophs
@@ -872,10 +872,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((autotroph_sname)) == "sp" : 4.4
-               ((autotroph_sname)) == "diat" : 5
-               ((autotroph_sname)) == "diaz" : 2.2
-               ((autotroph_sname)) == "cocco" : 4.7
+               ((autotroph_sname)) == "sp" : 4.7
+               ((autotroph_sname)) == "diat" : 5.3
+               ((autotroph_sname)) == "diaz" : 2.33
+               ((autotroph_sname)) == "cocco" : 4.92
          thetaN_max :
             longname : Maximum thetaN (Chl / N)
             subcategory : 10. autotrophs
@@ -1112,10 +1112,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((grazer_sname)) == "sp_zoo" : 3.6
-               ((grazer_sname)) == "diat_zoo" : 3.41
-               ((grazer_sname)) == "diaz_zoo" : 3.35
-               ((grazer_sname)) == "cocco_zoo" : 2.95
+               ((grazer_sname)) == "sp_zoo" : 3.3
+               ((grazer_sname)) == "diat_zoo" : 3.125
+               ((grazer_sname)) == "diaz_zoo" : 3.3
+               ((grazer_sname)) == "cocco_zoo" : 2.68
          z_grz :
             longname : Grazing coefficient
             subcategory : 12. grazing
@@ -1123,10 +1123,10 @@ PFT_derived_types :
             datatype : real
             default_value :
                default : 1e34
-               ((grazer_sname)) == "sp_zoo" : 0.54
-               ((grazer_sname)) == "diat_zoo" : 0.72
-               ((grazer_sname)) == "diaz_zoo" : 0.6
-               ((grazer_sname)) == "cocco_zoo" : 0.854
+               ((grazer_sname)) == "sp_zoo" : 0.68
+               ((grazer_sname)) == "diat_zoo" : 1.15
+               ((grazer_sname)) == "diaz_zoo" : 1.2
+               ((grazer_sname)) == "cocco_zoo" : 1.33
          graze_zoo :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -1146,7 +1146,7 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((grazer_sname)) == "sp_zoo" : 0
-               ((grazer_sname)) == "diat_zoo" : 0.38
+               ((grazer_sname)) == "diat_zoo" : 0.39
                ((grazer_sname)) == "diaz_zoo" : 0.1
                ((grazer_sname)) == "cocco_zoo" : 0.3
          graze_doc :
