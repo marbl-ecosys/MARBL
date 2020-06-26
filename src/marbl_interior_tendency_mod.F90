@@ -1448,16 +1448,16 @@ contains
 
           !temperature effect (new cubic function)
           where (temperature < picpoc_temp_threshold)
-            picpoc = max(0._r8,0.0001_r8 * temperature**3)
+            picpoc = max(0.0_r8,0.0001_r8 * temperature**3)
           elsewhere
-            picpoc = 1._r8
+            picpoc = 1.0_r8
           end where
 
           !CO2 effect (CaCO3/organicC ratio ('picpoc') decreases as CO2 increases)
-          picpoc = max(0._r8,-0.0136_r8 * CO2(:) + picpoc(:) + 0.21_r8)
+          picpoc = max(0.0_r8,-0.0136_r8 * CO2(:) + picpoc(:) + 0.21_r8)
 
           !P-limitation effect (CaCO2/organicC ratio increases when P limitation term is low)
-          picpoc = max(0._r8,-0.48_r8 * Plim(auto_ind,:) + picpoc(:) + 0.48_r8)
+          picpoc = max(0.0_r8,-0.48_r8 * Plim(auto_ind,:) + picpoc(:) + 0.48_r8)
 
           !multiply cocco growth rate by picpoc to get CaCO3 formation
           CaCO3_form(auto_ind,:) = picpoc(:) * photoC(auto_ind,:)
