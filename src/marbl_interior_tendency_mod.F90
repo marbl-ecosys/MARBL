@@ -1415,6 +1415,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
+    real(r8), parameter :: picpoc_temp_threshold = 10000._r8**(1._r8/3._r8)
     integer  :: auto_ind
     real(r8) :: picpoc(km)
     !-----------------------------------------------------------------------
@@ -1446,7 +1447,7 @@ contains
           !For details, see Krumhardt et al., 2019, JAMES & Krumhardt et al., 2017, Progress in Oceanography
 
           !temperature effect (new cubic function)
-          where (temperature < 21.5_r8)
+          where (temperature < picpoc_temp_threshold)
             picpoc = max(0._r8,0.0001_r8 * temperature**3)
           elsewhere
             picpoc = 1._r8
