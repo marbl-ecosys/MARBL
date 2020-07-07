@@ -198,11 +198,11 @@ general_parms :
       subcategory : 1. config PFTs
       units : unitless
       datatype : string
-      default_value : CESM2.1+cocco
+      default_value : CESM2+cocco
       valid_values :
-            - CESM2.1+cocco
+            - CESM2+cocco
             - user-specified
-      _CESM2.1+cocco_PFT_keys :
+      _CESM2+cocco_PFT_keys :
          autotroph_settings :
             - sp
             - diat
@@ -636,8 +636,8 @@ PFT_counts :
       datatype : integer
       default_value :
          default : 1
-         PFT_defaults == "CESM2.1+cocco" : 4
-      cannot change : PFT_defaults == 'CESM2.1+cocco'
+         PFT_defaults == "CESM2+cocco" : 4
+      cannot change : PFT_defaults == 'CESM2+cocco'
       must set : PFT_defaults == 'user-specified'
    zooplankton_cnt :
       longname : Number of zooplankton classes
@@ -646,7 +646,7 @@ PFT_counts :
       datatype : integer
       default_value :
          default : 1
-         PFT_defaults == "CESM2.1+cocco" : 1
+         PFT_defaults == "CESM2+cocco" : 1
    max_grazer_prey_cnt :
       longname : Number of grazer prey classes
       subcategory : 1. config PFTs
@@ -654,7 +654,7 @@ PFT_counts :
       datatype : integer
       default_value :
          default : 1
-         PFT_defaults == "CESM2.1+cocco" : 4
+         PFT_defaults == "CESM2+cocco" : 4
 
 ################################################################################
 #                         Category 3: PFT_derived_types                        #
