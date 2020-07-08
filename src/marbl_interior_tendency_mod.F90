@@ -1415,7 +1415,6 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    real(r8), parameter :: picpoc_temp_threshold = 10000.0_r8**(1.0_r8/3.0_r8)
     integer  :: auto_ind
     real(r8) :: picpoc(km)
     !-----------------------------------------------------------------------
@@ -1446,18 +1445,14 @@ contains
           !calculate the CaCO3/organicC production ratio for coccolithophores ('picpoc')
           !For details, see Krumhardt et al., 2019, JAMES & Krumhardt et al., 2017, Progress in Oceanography
 
-          !temperature effect (new cubic function)
-          where (temperature < picpoc_temp_threshold)
-            picpoc = max(0.0_r8,0.0001_r8 * temperature**3)
-          elsewhere
-            picpoc = 1.0_r8
-          end where
+          !temperature effect (cubic function; Krumhardt et al., in review 2020 GBC)
+          picpoc = min(1.0_r8, max(0.0_r8, 0.0001_r8 * temperature**3))
 
           !CO2 effect (CaCO3/organicC ratio ('picpoc') decreases as CO2 increases)
-          picpoc = max(0.0_r8,-0.0136_r8 * CO2(:) + picpoc(:) + 0.21_r8)
+          picpoc = max(0.0_r8, -0.0136_r8 * CO2(:) + picpoc(:) + 0.21_r8)
 
           !P-limitation effect (CaCO2/organicC ratio increases when P limitation term is low)
-          picpoc = max(0.0_r8,-0.48_r8 * Plim(auto_ind,:) + picpoc(:) + 0.48_r8)
+          picpoc = max(0.0_r8, -0.48_r8 * Plim(auto_ind,:) + picpoc(:) + 0.48_r8)
 
           !multiply cocco growth rate by picpoc to get CaCO3 formation
           CaCO3_form(auto_ind,:) = picpoc(:) * photoC(auto_ind,:)
