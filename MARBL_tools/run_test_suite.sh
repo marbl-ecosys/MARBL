@@ -16,10 +16,14 @@ function check_return() {
 # Output test results
 function print_status() {
   TEST_CNT=$((TEST_CNT+1))
+  HEAD="   "
+  TAIL=""
   if [ "${STATUS}" == "FAIL" ]; then
     FAIL_CNT=$((FAIL_CNT+1))
+    HEAD="***"
+    TAIL=" ***"
   fi
-  echo "${TEST_CNT}. $1: ${STATUS}"
+  echo "${HEAD} ${TEST_CNT}. $1: ${STATUS}${TAIL}"
 }
 
 #################################################
