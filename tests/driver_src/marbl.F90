@@ -285,11 +285,15 @@ Program marbl
       call verify_single_instance(num_inst, trim(testname))
       call marbl_instances(1)%put_setting('ciso_on = .false.')
       call marbl_init_test(marbl_instances(1))
-      call marbl_tools_summarize_timers(marbl_instances, driver_status_log, header_text = 'Without the CISO Tracers')
-      call marbl_instances(1)%put_setting('ciso_on = .true.')
-      call marbl_init_test(marbl_instances(1))
-      call marbl_tools_summarize_timers(marbl_instances, driver_status_log, header_text = 'With the CISO Tracers')
-      lsummarize_timers = .false.
+      if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
+        call marbl_tools_summarize_timers(marbl_instances, driver_status_log, header_text = 'Without the CISO Tracers')
+        call marbl_instances(1)%put_setting('ciso_on = .true.')
+        call marbl_init_test(marbl_instances(1))
+        if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
+          call marbl_tools_summarize_timers(marbl_instances, driver_status_log, header_text = 'With the CISO Tracers')
+          lsummarize_timers = .false.
+        end if
+      end if
 
     ! -- gen_settings_file test -- !
     case ('gen_settings_file')
@@ -313,84 +317,92 @@ Program marbl
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instances(1), lshutdown = .false.)
-      ! Log surface flux diagnostics passed back to driver
-      associate(diags => marbl_instances(1)%surface_flux_diags%diags)
-        call driver_status_log%log_header('Surface flux diagnostics', subname)
-        do n=1, size(diags)
-          write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &
-                                        ' (units: ', trim(diags(n)%units),')'
-          call driver_status_log%log_noerror(log_message, subname)
-        end do
-      end associate
-      ! Log interior tendency diagnostics passed back to driver
-      associate(diags => marbl_instances(1)%interior_tendency_diags%diags)
-        call driver_status_log%log_header('Interior tendency diagnostics', subname)
-        do n=1, size(diags)
-          write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &
-                                        ' (units: ', trim(diags(n)%units),')'
-          call driver_status_log%log_noerror(log_message, subname)
-        end do
-      end associate
-      call marbl_instances(1)%shutdown()
+      if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
+        ! Log surface flux diagnostics passed back to driver
+        associate(diags => marbl_instances(1)%surface_flux_diags%diags)
+          call driver_status_log%log_header('Surface flux diagnostics', subname)
+          do n=1, size(diags)
+            write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &
+                                          ' (units: ', trim(diags(n)%units),')'
+            call driver_status_log%log_noerror(log_message, subname)
+          end do
+        end associate
+        ! Log interior tendency diagnostics passed back to driver
+        associate(diags => marbl_instances(1)%interior_tendency_diags%diags)
+          call driver_status_log%log_header('Interior tendency diagnostics', subname)
+          do n=1, size(diags)
+            write(log_message, "(I0,7A)") n, '. ', trim(diags(n)%short_name), ': ', trim(diags(n)%long_name), &
+                                          ' (units: ', trim(diags(n)%units),')'
+            call driver_status_log%log_noerror(log_message, subname)
+          end do
+        end associate
+        call marbl_instances(1)%shutdown()
+      end if
 
     ! -- request_tracers test -- !
     case ('request_tracers')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instances(1), lshutdown = .false.)
-      ! Log tracers requested for initialization
-      call driver_status_log%log_header('Requested tracers', subname)
-      do n=1, size(marbl_instances(1)%tracer_metadata)
-        write(log_message, "(I0, 2A)") n, '. ',                               &
-          trim(marbl_instances(1)%tracer_metadata(n)%short_name)
-        call driver_status_log%log_noerror(log_message, subname)
-      end do
-      call marbl_instances(1)%shutdown()
+      if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
+        ! Log tracers requested for initialization
+        call driver_status_log%log_header('Requested tracers', subname)
+        do n=1, size(marbl_instances(1)%tracer_metadata)
+          write(log_message, "(I0, 2A)") n, '. ',                               &
+            trim(marbl_instances(1)%tracer_metadata(n)%short_name)
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+        call marbl_instances(1)%shutdown()
+      end if
 
     ! -- request_forcings test -- !
     case ('request_forcings')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instances(1), lshutdown=.false., num_PAR_subcols=num_PAR_subcols)
-      ! Log requested surface forcing fields
-      call driver_status_log%log_header('Requested surface forcing fields', subname)
-      do n=1,size(marbl_instances(1)%surface_flux_forcings)
-        write(log_message, "(I0, 5A)") n, '. ', &
-              trim(marbl_instances(1)%surface_flux_forcings(n)%metadata%varname), &
-              ' (units: ', trim(marbl_instances(1)%surface_flux_forcings(n)%metadata%field_units),')'
-        call driver_status_log%log_noerror(log_message, subname)
-      end do
-      ! Log requested interior forcing fields
-      call driver_status_log%log_header('Requested interior forcing fields', subname)
-      do n=1,size(marbl_instances(1)%interior_tendency_forcings)
-        write(log_message, "(I0, 5A)") n, '. ', &
-             trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%varname), &
-             ' (units: ', trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%field_units),')'
-        call driver_status_log%log_noerror(log_message, subname)
-      end do
-      call marbl_instances(1)%shutdown()
+      if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
+        ! Log requested surface forcing fields
+        call driver_status_log%log_header('Requested surface forcing fields', subname)
+        do n=1,size(marbl_instances(1)%surface_flux_forcings)
+          write(log_message, "(I0, 5A)") n, '. ', &
+                trim(marbl_instances(1)%surface_flux_forcings(n)%metadata%varname), &
+                ' (units: ', trim(marbl_instances(1)%surface_flux_forcings(n)%metadata%field_units),')'
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+        ! Log requested interior forcing fields
+        call driver_status_log%log_header('Requested interior forcing fields', subname)
+        do n=1,size(marbl_instances(1)%interior_tendency_forcings)
+          write(log_message, "(I0, 5A)") n, '. ', &
+               trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%varname), &
+               ' (units: ', trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%field_units),')'
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+        call marbl_instances(1)%shutdown()
+      end if
 
     ! -- request_restoring test -- !
     case ('request_restoring')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       call marbl_init_test(marbl_instances(1), lshutdown = .false.)
-      ! Log tracers requested for restoring
-      call driver_status_log%log_header('Requested tracers to restore', subname)
-      cnt = 0
-      do n=1,size(marbl_instances(1)%interior_tendency_forcings)
-        varname = marbl_instances(1)%interior_tendency_forcings(n)%metadata%varname
-        if (index(varname, 'Restoring Field').gt.0) then
-          cnt = cnt + 1
-          varname = varname(1:scan(varname,' ')-1)
-          write(log_message, "(I0, 2A)") cnt, '. ', trim(varname)
-      call driver_status_log%log_noerror(log_message, subname)
+      if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
+        ! Log tracers requested for restoring
+        call driver_status_log%log_header('Requested tracers to restore', subname)
+        cnt = 0
+        do n=1,size(marbl_instances(1)%interior_tendency_forcings)
+          varname = marbl_instances(1)%interior_tendency_forcings(n)%metadata%varname
+          if (index(varname, 'Restoring Field').gt.0) then
+            cnt = cnt + 1
+            varname = varname(1:scan(varname,' ')-1)
+            write(log_message, "(I0, 2A)") cnt, '. ', trim(varname)
+            call driver_status_log%log_noerror(log_message, subname)
+          end if
+        end do
+        if (cnt.eq.0) then
+          call driver_status_log%log_noerror('No tracers to restore!', subname)
         end if
-      end do
-      if (cnt.eq.0) then
-        call driver_status_log%log_noerror('No tracers to restore!', subname)
+        call marbl_instances(1)%shutdown()
       end if
-      call marbl_instances(1)%shutdown()
 
     case ('call_compute_subroutines')
       lprint_marbl_log = .false.
