@@ -3452,6 +3452,7 @@ contains
     !-----------------------------------------------------------------------
     integer  :: k, auto_ind, zoo_ind, n
     real(r8) :: auto_sum
+    real(r8) :: o2_production_denom
     !-----------------------------------------------------------------------
 
     associate(                                                            &
@@ -3691,7 +3692,8 @@ contains
         o2_production(k) = c0
         do auto_ind = 1, autotroph_cnt
           if (.not. autotroph_settings(auto_ind)%Nfixer) then
-            if (photoC(auto_ind,k) > c0) then
+            o2_production_denom = NO3_V(auto_ind,k) + NH4_V(auto_ind,k)
+            if (o2_production_denom > c0) then
               o2_production(k) = o2_production(k) + photoC(auto_ind,k) &
                                * ((NO3_V(auto_ind,k) / (NO3_V(auto_ind,k) + NH4_V(auto_ind,k))) &
                                  / parm_Red_D_C_O2 &
@@ -3699,7 +3701,8 @@ contains
                                  / parm_Remin_D_C_O2)
             end if
           else
-            if (photoC(auto_ind,k) > c0) then
+            o2_production_denom = NO3_V(auto_ind,k) + NH4_V(auto_ind,k) + Nfix(auto_ind,k)
+            if (o2_production_denom > c0) then
               o2_production(k) = o2_production(k) + photoC(auto_ind,k) &
                                * ((NO3_V(auto_ind,k) / (NO3_V(auto_ind,k) + NH4_V(auto_ind,k) + Nfix(auto_ind,k))) &
                                   / parm_Red_D_C_O2 &
