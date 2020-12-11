@@ -92,6 +92,8 @@ class MARBL_testcase(object):
         self._machine = 'hobart'
       elif 'edison' in self._hostname:
         self._machine = 'edison'
+      elif self._hostname.startswith('gplogin'):
+        self._machine = 'greenplanet'
       else:
         found = False
         logger.info('No machine specified and %s is not recognized' % self._hostname)
