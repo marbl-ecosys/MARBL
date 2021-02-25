@@ -2974,10 +2974,32 @@ contains
 
      else
 
-        dzr_loc = c0 ! avoid 'dzr_loc' may be used uninitialized warning from gfortran
+        ! Set lots of variables to 0 to avoid potential uninitialized-memory warnings / errors
+        dzr_loc = c0
+
+        P_CaCO3%remin(k) = c0
+        P_CaCO3_ALT_CO2%remin(k) = c0
+        P_SiO2%remin(k) = c0
+        dust%remin(k) = c0
         POC%remin(k) = c0
+        P_iron%remin(k) = c0
+        POP%remin(k) = c0
+        PON_remin = c0
+
+        P_CaCO3%sflux_out(k) = c0
+        P_CaCO3%hflux_out(k) = c0
+        P_CaCO3_ALT_CO2%sflux_out(k) = c0
+        P_CaCO3_ALT_CO2%hflux_out(k) = c0
+        P_SiO2%sflux_out(k) = c0
+        P_SiO2%hflux_out(k) = c0
+        dust%sflux_out(k) = c0
+        dust%hflux_out(k) = c0
         POC%sflux_out(k) = c0
         POC%hflux_out(k) = c0
+        P_iron%sflux_out(k) = c0
+        P_iron%hflux_out(k) = c0
+        POP%sflux_out(k) = c0
+        POP%hflux_out(k) = c0
 
      endif
 
