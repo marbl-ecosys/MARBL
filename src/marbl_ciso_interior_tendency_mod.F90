@@ -1211,6 +1211,7 @@ contains
     else ! k > column_kmt
       call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POC_ciso)
       call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3_ciso)
+      dzr_loc = c0
     endif
 
     !-----------------------------------------------------------------------
