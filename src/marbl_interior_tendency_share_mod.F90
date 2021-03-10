@@ -2,12 +2,14 @@ module marbl_interior_tendency_share_mod
 
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : r8
+  use marbl_constants_mod, only : c0
   use marbl_settings_mod, only : ciso_on
 
   implicit none
   private
 
   public :: marbl_interior_tendency_share_update_particle_flux_from_above
+  public :: marbl_interior_tendency_share_set_used_particle_terms_to_zero
   public :: marbl_interior_tendency_share_export_variables
   public :: marbl_interior_tendency_share_export_zooplankton
   public :: marbl_interior_tendency_share_export_particulate
@@ -28,6 +30,20 @@ contains
     sinking_particle%hflux_in(k)  = sinking_particle%hflux_out(k-1)
 
   end subroutine marbl_interior_tendency_share_update_particle_flux_from_above
+
+  !***********************************************************************
+
+  subroutine marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, sinking_particle)
+
+    use marbl_interface_private_types, only : column_sinking_particle_type
+
+    integer (int_kind), intent(in) :: k
+    type(column_sinking_particle_type), intent(inout) :: sinking_particle
+
+    sinking_particle%sflux_out(k) = c0
+    sinking_particle%hflux_out(k) = c0
+
+  end subroutine marbl_interior_tendency_share_set_used_particle_terms_to_zero
 
   !***********************************************************************
 
@@ -126,6 +142,7 @@ contains
        marbl_particulate_share%caco3_diss_fields(k)     = caco3_diss
     endif
   end subroutine marbl_interior_tendency_share_export_particulate
+
   !***********************************************************************
 
 end module marbl_interior_tendency_share_mod

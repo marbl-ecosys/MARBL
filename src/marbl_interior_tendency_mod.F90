@@ -2636,6 +2636,7 @@ contains
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff
      use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_particulate
+     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_set_used_particle_terms_to_zero
 
      integer (int_kind)                , intent(in)    :: k                   ! vertical model level
      type(marbl_domain_type)           , intent(in)    :: domain
@@ -2974,32 +2975,15 @@ contains
 
      else
 
-        ! Set lots of variables to 0 to avoid potential uninitialized-memory warnings / errors
-        dzr_loc = c0
-
-        P_CaCO3%remin(k) = c0
-        P_CaCO3_ALT_CO2%remin(k) = c0
-        P_SiO2%remin(k) = c0
-        dust%remin(k) = c0
-        POC%remin(k) = c0
-        P_iron%remin(k) = c0
-        POP%remin(k) = c0
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3_ALT_CO2)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_SiO2)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, dust)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POC)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_iron)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POP)
         PON_remin = c0
-
-        P_CaCO3%sflux_out(k) = c0
-        P_CaCO3%hflux_out(k) = c0
-        P_CaCO3_ALT_CO2%sflux_out(k) = c0
-        P_CaCO3_ALT_CO2%hflux_out(k) = c0
-        P_SiO2%sflux_out(k) = c0
-        P_SiO2%hflux_out(k) = c0
-        dust%sflux_out(k) = c0
-        dust%hflux_out(k) = c0
-        POC%sflux_out(k) = c0
-        POC%hflux_out(k) = c0
-        P_iron%sflux_out(k) = c0
-        P_iron%hflux_out(k) = c0
-        POP%sflux_out(k) = c0
-        POP%hflux_out(k) = c0
+        dzr_loc = c0
 
      endif
 
