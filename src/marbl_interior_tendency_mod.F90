@@ -2973,7 +2973,7 @@ contains
 
         POP%hflux_out(k) = POP%hflux_in(k)
 
-     else
+     else ! k > column_kmt
 
         call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3)
         call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3_ALT_CO2)

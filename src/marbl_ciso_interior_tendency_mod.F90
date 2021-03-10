@@ -1074,6 +1074,7 @@ contains
     use marbl_settings_mod , only : caco3_bury_thres_iopt_fixed_depth
     use marbl_settings_mod , only : caco3_bury_thres_depth
     use marbl_settings_mod , only : caco3_bury_thres_omega_calc
+    use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_set_used_particle_terms_to_zero
 
     integer (int_kind),                       intent(in)    :: k                 ! vertical model level
     type(marbl_domain_type),                  intent(in)    :: domain
@@ -1207,6 +1208,9 @@ contains
             ((POC_ciso%sflux_in(k) - POC_ciso%sflux_out(k)) + &
              (POC_ciso%hflux_in(k) - POC_ciso%hflux_out(k))) * dzr_loc
 
+    else ! k > column_kmt
+      call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POC_ciso)
+      call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3_ciso)
     endif
 
     !-----------------------------------------------------------------------
@@ -1276,7 +1280,6 @@ contains
        if (POC_ciso%to_floor > c0) then
           POC_ciso%remin(k) = POC_ciso%remin(k) + ((POC_ciso%to_floor - POC_ciso%sed_loss(k)) * dzr_loc)
        endif
-
     endif
 
     end associate
