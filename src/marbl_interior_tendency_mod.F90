@@ -2636,6 +2636,7 @@ contains
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff
      use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_particulate
+     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_set_used_particle_terms_to_zero
 
      integer (int_kind)                , intent(in)    :: k                   ! vertical model level
      type(marbl_domain_type)           , intent(in)    :: domain
@@ -2972,12 +2973,17 @@ contains
 
         POP%hflux_out(k) = POP%hflux_in(k)
 
-     else
+     else ! k > column_kmt
 
-        dzr_loc = c0 ! avoid 'dzr_loc' may be used uninitialized warning from gfortran
-        POC%remin(k) = c0
-        POC%sflux_out(k) = c0
-        POC%hflux_out(k) = c0
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3_ALT_CO2)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_SiO2)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, dust)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POC)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_iron)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POP)
+        PON_remin = c0
+        dzr_loc = c0
 
      endif
 
