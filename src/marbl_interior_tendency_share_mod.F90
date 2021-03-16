@@ -42,6 +42,7 @@ contains
 
     sinking_particle%sflux_out(k) = c0
     sinking_particle%hflux_out(k) = c0
+    sinking_particle%remin(k) = c0
 
   end subroutine marbl_interior_tendency_share_set_used_particle_terms_to_zero
 
