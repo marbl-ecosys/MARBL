@@ -442,7 +442,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_set_defaults_PFT_counts'
     character(len=char_len)     :: log_message
 
-    if (trim(PFT_defaults) .eq. 'CESM2.1+cocco') then
+    if (trim(PFT_defaults) .eq. 'CESM2+cocco') then
       write(log_message, '(3A)') 'PFT_defaults = "', trim(PFT_defaults), &
                                  '" in input file, but being treated as "user-specified"'
       call marbl_status_log%log_noerror(log_message, subname)
@@ -460,7 +460,7 @@ contains
         zooplankton_cnt               = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
         max_grazer_prey_cnt           = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
       case DEFAULT
-        write(log_message, "(3A)") "'", trim(PFT_defaults), "'' is not a valid value for PFT_defaults"
+        write(log_message, "(3A)") "'", trim(PFT_defaults), "' is not a valid value for PFT_defaults"
         call marbl_status_log%log_error(log_message, subname)
     end select
 

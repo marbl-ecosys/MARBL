@@ -227,7 +227,7 @@ class MARBL_settings_class(object):
         # Process derived type!
         # Check to see if PFT_defaults leads to specific PFT declarations
         if (category_name == "PFT_derived_types"):
-            for valid_PFT_default in ["CESM2", "CESM2.1+cocco"]:
+            for valid_PFT_default in ["CESM2", "CESM2+cocco"]:
                 append_to_keys = 'PFT_defaults == "{}"'.format(valid_PFT_default) in self._config_keyword
                 if append_to_keys:
                     settings_key = '_{}_PFT_keys'.format(valid_PFT_default)

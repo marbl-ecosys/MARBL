@@ -1445,18 +1445,14 @@ contains
           !calculate the CaCO3/organicC production ratio for coccolithophores ('picpoc')
           !For details, see Krumhardt et al., 2019, JAMES & Krumhardt et al., 2017, Progress in Oceanography
 
-          !temperature effect (linearly decreases calcification at temps < 11C)
-          where (temperature < 11._r8)
-            picpoc = max(0.,0.104 * temperature - 0.108)
-          elsewhere
-            picpoc = 1.
-          end where
+          !temperature effect (cubic function; Krumhardt et al., in review 2020 GBC)
+          picpoc = min(1.0_r8, max(0.0_r8, 0.0001_r8 * temperature**3))
 
           !CO2 effect (CaCO3/organicC ratio ('picpoc') decreases as CO2 increases)
-          picpoc = max(0.,-0.0136 * CO2(:) + picpoc(:) + 0.21)
+          picpoc = max(0.0_r8, -0.0136_r8 * CO2(:) + picpoc(:) + 0.21_r8)
 
           !P-limitation effect (CaCO2/organicC ratio increases when P limitation term is low)
-          picpoc = max(0.,-0.48 * Plim(auto_ind,:) + picpoc(:) + 0.48)
+          picpoc = max(0.0_r8, -0.48_r8 * Plim(auto_ind,:) + picpoc(:) + 0.48_r8)
 
           !multiply cocco growth rate by picpoc to get CaCO3 formation
           CaCO3_form(auto_ind,:) = picpoc(:) * photoC(auto_ind,:)
@@ -2640,6 +2636,7 @@ contains
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff
      use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_particulate
+     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_set_used_particle_terms_to_zero
 
      integer (int_kind)                , intent(in)    :: k                   ! vertical model level
      type(marbl_domain_type)           , intent(in)    :: domain
@@ -2976,12 +2973,17 @@ contains
 
         POP%hflux_out(k) = POP%hflux_in(k)
 
-     else
+     else ! k > column_kmt
 
-        dzr_loc = c0 ! avoid 'dzr_loc' may be used uninitialized warning from gfortran
-        POC%remin(k) = c0
-        POC%sflux_out(k) = c0
-        POC%hflux_out(k) = c0
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3_ALT_CO2)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_SiO2)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, dust)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POC)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_iron)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POP)
+        PON_remin = c0
+        dzr_loc = c0
 
      endif
 
@@ -3456,6 +3458,7 @@ contains
     !-----------------------------------------------------------------------
     integer  :: k, auto_ind, zoo_ind, n
     real(r8) :: auto_sum
+    real(r8) :: o2_production_denom
     !-----------------------------------------------------------------------
 
     associate(                                                            &
@@ -3695,7 +3698,8 @@ contains
         o2_production(k) = c0
         do auto_ind = 1, autotroph_cnt
           if (.not. autotroph_settings(auto_ind)%Nfixer) then
-            if (photoC(auto_ind,k) > c0) then
+            o2_production_denom = NO3_V(auto_ind,k) + NH4_V(auto_ind,k)
+            if (o2_production_denom > c0) then
               o2_production(k) = o2_production(k) + photoC(auto_ind,k) &
                                * ((NO3_V(auto_ind,k) / (NO3_V(auto_ind,k) + NH4_V(auto_ind,k))) &
                                  / parm_Red_D_C_O2 &
@@ -3703,7 +3707,8 @@ contains
                                  / parm_Remin_D_C_O2)
             end if
           else
-            if (photoC(auto_ind,k) > c0) then
+            o2_production_denom = NO3_V(auto_ind,k) + NH4_V(auto_ind,k) + Nfix(auto_ind,k)
+            if (o2_production_denom > c0) then
               o2_production(k) = o2_production(k) + photoC(auto_ind,k) &
                                * ((NO3_V(auto_ind,k) / (NO3_V(auto_ind,k) + NH4_V(auto_ind,k) + Nfix(auto_ind,k))) &
                                   / parm_Red_D_C_O2 &

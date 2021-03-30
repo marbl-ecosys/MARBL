@@ -249,7 +249,7 @@ if __name__ == "__main__":
                 #Tests.check_for_spaces(file_and_line_number, line_without_cr)
                 #Tests.check_for_double_quotes(file_and_line_number, line_without_cr)
                 #Tests.check_logical_statements(file_and_line_number, line_without_cr)
-                #Tests.check_r8_settings(file_and_line_number, line_without_cr)
+                Tests.check_r8_settings(file_and_line_number, line_without_cr)
     FORTRAN_ERROR_COUNT = Tests.process()
     LOGGER.info("Fortran errors found: %d", FORTRAN_ERROR_COUNT)
 
