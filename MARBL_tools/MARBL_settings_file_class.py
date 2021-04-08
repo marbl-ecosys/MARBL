@@ -42,12 +42,9 @@ class MARBL_settings_class(object):
 
         # 5. Use an ordered dictionary for keeping variable, value pairs
         #    Also, tracer information is in its own dictionary (initialized to None)
-        #    and we define a class variable to track what keys from the json file
-        #    each variable will store in settings_dict.
         from collections import OrderedDict
         self.settings_dict = OrderedDict()
         self.tracers_dict = None
-        self._settings_dict_attrs = ['longname', 'units']
         for cat_name in self.get_category_names():
             for var_name in self.get_variable_names(cat_name):
                 self._process_variable_value(cat_name, var_name)
@@ -277,6 +274,10 @@ class MARBL_settings_class(object):
             is populated with a list of all the keys added to self.settings_dict for this variable
             (just varname for scalars, but multiple keys for arrays)
         """
+
+        # Keys copied out of the settings file into settings_dict[varname]['attrs']
+        settings_dict_attrs = ['longname', 'units']
+
         if ("_array_shape" in this_var.keys()):
             # Get length of array
             try:
@@ -298,7 +299,7 @@ class MARBL_settings_class(object):
                 else:
                     self.settings_dict[full_name]['value'] = var_value
                 this_var['_list_of_settings_names'].append(full_name)
-                for key in self._settings_dict_attrs:
+                for key in settings_dict_attrs:
                     self.settings_dict[full_name]['attrs'][key] = this_var[key]
 
         else:
@@ -306,7 +307,7 @@ class MARBL_settings_class(object):
             self.settings_dict[var_name] = dict()
             self.settings_dict[var_name]['attrs'] = dict()
             self.settings_dict[var_name]['value'] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict)
-            for key in self._settings_dict_attrs:
+            for key in settings_dict_attrs:
                 self.settings_dict[var_name]['attrs'][key] = this_var[key]
             this_var['_list_of_settings_names'].append(var_name)
 
