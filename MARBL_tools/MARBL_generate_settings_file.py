@@ -47,7 +47,7 @@ def generate_settings_file(MARBL_settings, settings_file_out):
     for subcat_name in MARBL_settings.get_subcategory_names():
         fout.write("! %s\n" % subcat_name.split('. ')[1])
         for varname in MARBL_settings.get_settings_dict_variable_names(subcat_name):
-            fout.write("%s = %s\n" % (varname, MARBL_settings.settings_dict[varname]))
+            fout.write("%s = %s\n" % (varname, MARBL_settings.settings_dict[varname]['value']))
         if subcat_name != MARBL_settings.get_subcategory_names()[-1]:
             fout.write("\n")
     fout.close()
