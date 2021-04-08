@@ -289,6 +289,7 @@ class MARBL_settings_class(object):
                 full_name = var_name + elem_index
                 var_value = _get_var_value(full_name, this_var, self._config_keyword, self._input_dict)
                 self.settings_dict[full_name] = dict()
+                self.settings_dict[full_name]['attrs'] = dict()
                 if isinstance(var_value, list):
                     if this_var["datatype"] == "string" and n>=len(var_value):
                         self.settings_dict[full_name]['value'] = '""'
@@ -298,14 +299,15 @@ class MARBL_settings_class(object):
                     self.settings_dict[full_name]['value'] = var_value
                 this_var['_list_of_settings_names'].append(full_name)
                 for key in self._settings_dict_attrs:
-                    self.settings_dict[full_name][key] = this_var[key]
+                    self.settings_dict[full_name]['attrs'][key] = this_var[key]
 
         else:
             # get value from either input file or JSON
             self.settings_dict[var_name] = dict()
+            self.settings_dict[var_name]['attrs'] = dict()
             self.settings_dict[var_name]['value'] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict)
             for key in self._settings_dict_attrs:
-                self.settings_dict[var_name][key] = this_var[key]
+                self.settings_dict[var_name]['attrs'][key] = this_var[key]
             this_var['_list_of_settings_names'].append(var_name)
 
 ################################################################################
