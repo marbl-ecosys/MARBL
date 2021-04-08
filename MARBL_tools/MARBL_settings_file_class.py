@@ -42,9 +42,12 @@ class MARBL_settings_class(object):
 
         # 5. Use an ordered dictionary for keeping variable, value pairs
         #    Also, tracer information is in its own dictionary (initialized to None)
+        #    and we define a class variable to track what keys from the json file
+        #    each variable will store in settings_dict.
         from collections import OrderedDict
         self.settings_dict = OrderedDict()
         self.tracers_dict = None
+        self._settings_dict_attrs = ['longname', 'units']
         for cat_name in self.get_category_names():
             for var_name in self.get_variable_names(cat_name):
                 self._process_variable_value(cat_name, var_name)
@@ -294,15 +297,15 @@ class MARBL_settings_class(object):
                 else:
                     self.settings_dict[full_name]['value'] = var_value
                 this_var['_list_of_settings_names'].append(full_name)
-                self.settings_dict[full_name]['units'] = this_var['units']
-                self.settings_dict[full_name]['longname'] = this_var['longname']
+                for key in self._settings_dict_attrs:
+                    self.settings_dict[full_name][key] = this_var[key]
 
         else:
             # get value from either input file or JSON
             self.settings_dict[var_name] = dict()
             self.settings_dict[var_name]['value'] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict)
-            self.settings_dict[var_name]['units'] = this_var['units']
-            self.settings_dict[var_name]['longname'] = this_var['longname']
+            for key in self._settings_dict_attrs:
+                self.settings_dict[var_name][key] = this_var[key]
             this_var['_list_of_settings_names'].append(var_name)
 
 ################################################################################
