@@ -86,6 +86,7 @@ module marbl_interface
      real (r8), allocatable                             , public  :: tracers(:,:)                  ! input
      type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
+     real (r8), allocatable                             , public  :: bottom_fluxes(:)              ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
      type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
 
@@ -306,8 +307,8 @@ contains
 
     call marbl_init_tracers(num_levels, num_elements_surface_flux, &
                             this%tracer_indices, this%tracers_at_surface, this%surface_fluxes, &
-                            this%tracers, this%interior_tendencies, this%tracer_metadata, &
-                            this%StatusLog)
+                            this%tracers, this%interior_tendencies, this%bottom_fluxes, &
+                            this%tracer_metadata, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_tracers", subname)
       return
@@ -904,6 +905,7 @@ contains
          co2calc_coeffs                    = this%interior_co2calc_coeffs,          &
          co2calc_state                     = this%interior_co2calc_state,           &
          interior_tendencies               = this%interior_tendencies,              &
+         bottom_fluxes                     = this%bottom_fluxes,                    &
          glo_avg_fields_interior_tendency  = this%glo_avg_fields_interior_tendency, &
          marbl_status_log                  = this%StatusLog)
 
@@ -1043,6 +1045,7 @@ contains
       deallocate(this%surface_fluxes)
       deallocate(this%tracers)
       deallocate(this%interior_tendencies)
+      deallocate(this%bottom_fluxes)
       deallocate(this%tracer_metadata)
       if (allocated(tracer_restore_vars)) deallocate(tracer_restore_vars)
     end if

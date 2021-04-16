@@ -114,6 +114,7 @@ contains
        co2calc_coeffs,                        &
        co2calc_state,                         &
        interior_tendencies,                   &
+       bottom_fluxes,                         &
        glo_avg_fields_interior_tendency,      &
        marbl_status_log)
 
@@ -157,6 +158,7 @@ contains
     type(co2calc_coeffs_type),                               intent(inout) :: co2calc_coeffs
     type(co2calc_state_type),                                intent(inout) :: co2calc_state
     real(r8),                                                intent(out)   :: interior_tendencies(:,:)          ! (tracer_cnt, km) computed source/sink terms
+    real(r8),                                                intent(out)   :: bottom_fluxes(:)                  ! (tracer_cnt) computed fluxes at bottom of column
     real(r8),                                                intent(out)   :: glo_avg_fields_interior_tendency(:)
     type(marbl_log_type),                                    intent(inout) :: marbl_status_log
 
@@ -206,6 +208,7 @@ contains
     ! computations.
 
     interior_tendencies(:, :) = c0
+    bottom_fluxes(:) = c0
 
     if (.not. lsource_sink) then
        !-----------------------------------------------------------------------
@@ -416,7 +419,7 @@ contains
          tracer_local(:,:), &
          o2_consumption_scalef(:), &
          o2_production(:), o2_consumption(:), &
-         interior_tendencies(:,:))
+         interior_tendencies(:,:), bottom_fluxes(:))
 
     ! Compute interior diagnostics
     call marbl_diagnostics_interior_tendency_compute(       &
@@ -3426,7 +3429,7 @@ contains
        zooplankton_derived_terms, dissolved_organic_matter, nitrif, denitrif, sed_denitrif, &
        Fe_scavenge, Lig_prod, Lig_loss, P_iron_remin, POC_remin, POP_remin, P_SiO2_remin, &
        P_CaCO3_remin, P_CaCO3_ALT_CO2_remin, other_remin, PON_remin, tracer_local, &
-       o2_consumption_scalef, o2_production, o2_consumption, interior_tendencies)
+       o2_consumption_scalef, o2_production, o2_consumption, interior_tendencies, bottom_fluxes)
 
     integer,                              intent(in)    :: km
     type(marbl_tracer_index_type),        intent(in)    :: marbl_tracer_indices
@@ -3452,6 +3455,7 @@ contains
     real(r8),                             intent(out)   :: o2_production(km)
     real(r8),                             intent(out)   :: o2_consumption(km)
     real(r8),                             intent(inout) :: interior_tendencies(marbl_tracer_indices%total_cnt, km)
+    real(r8),                             intent(inout) :: bottom_fluxes(marbl_tracer_indices%total_cnt)
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -3528,6 +3532,8 @@ contains
          docr_ind          => marbl_tracer_indices%docr_ind                 &
          )
 
+      ! TODO: actually compute bottom_fluxes here (or maybe in compute_particulate_terms?)
+      bottom_fluxes(:) = c0
       do k=1, km
         !-----------------------------------------------------------------------
         !  nitrate & ammonium
