@@ -599,6 +599,16 @@ contains
         return
       end if
 
+      ! Bottom fluxes
+      call get_bottom_flux_desc_from_metadata(marbl_instances(1)%tracer_metadata(n), varname, long_name, units)
+      call marbl_netcdf_def_var(ncid_out, varname, 'double', (/dimid_num_cols/), long_name, units, &
+                                driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        write(log_message, "(3A)") 'marbl_netcdf_def_var(', trim(varname), ')'
+        call driver_status_log%log_error_trace(log_message, subname)
+        return
+      end if
+
       ! Interior tendencies
       call get_interior_tendency_desc_from_metadata(marbl_instances(1)%tracer_metadata(n), varname, long_name, units)
       call marbl_netcdf_def_var(ncid_out, varname, 'double', (/dimid_num_levels, dimid_num_cols/), &
@@ -679,11 +689,12 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_write_history(marbl_instance, surface_fluxes, interior_tendencies, &
+  subroutine marbl_io_write_history(marbl_instance, surface_fluxes, bottom_fluxes, interior_tendencies, &
                                     tracer_initial_vals, active_level_cnt, driver_status_log)
 
     type(marbl_interface_class),                   intent(in)    :: marbl_instance
     real(r8),                    dimension(:,:),   intent(in)    :: surface_fluxes       ! num_cols x num_tracers
+    real(r8),                    dimension(:,:),   intent(in)    :: bottom_fluxes        ! num_cols x num_tracers
     real(r8),                    dimension(:,:,:), intent(in)    :: interior_tendencies  ! num_tracers x num_levels x num_cols
     real(r8),                    dimension(:,:,:), intent(in)    :: tracer_initial_vals  ! num_tracers x num_levels x num_cols
     integer,                     dimension(:),     intent(in)    :: active_level_cnt
@@ -728,7 +739,7 @@ contains
     call write_diag_buffer_to_nc(interior_tendency_diag_buffer, active_level_cnt, &
                                  driver_status_log, bot_depth=bot_depth)
 
-    ! 4) Tracer surface fluxes, tendencies, and initial conditions
+    ! 4) Tracer surface fluxes, bottom fluxes, tendencies, and initial conditions
     do n=1, size(marbl_instance%tracer_metadata)
       ! Surface fluxes
       call get_surface_flux_desc_from_metadata(marbl_instance%tracer_metadata(n), varname)
@@ -739,6 +750,21 @@ contains
         return
       end if
       call marbl_netcdf_put_var(ncid_out, varid, surface_fluxes(:,n), driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        write(log_message, "(3A)") 'marbl_netcdf_put_var(', trim(marbl_instance%tracer_metadata(n)%short_name), ')'
+        call driver_status_log%log_error_trace(log_message, subname)
+        return
+      end if
+
+      ! Bottom fluxes
+      call get_bottom_flux_desc_from_metadata(marbl_instance%tracer_metadata(n), varname)
+      call marbl_netcdf_inq_varid(ncid_out, varname, varid, driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        write(log_message, "(3A)") 'marbl_netcdf_inq_varid(', trim(varname), ')'
+        call driver_status_log%log_error_trace(log_message, subname)
+        return
+      end if
+      call marbl_netcdf_put_var(ncid_out, varid, bottom_fluxes(:,n), driver_status_log)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") 'marbl_netcdf_put_var(', trim(marbl_instance%tracer_metadata(n)%short_name), ')'
         call driver_status_log%log_error_trace(log_message, subname)
@@ -888,6 +914,23 @@ contains
       write(units, "(2A)") trim(metadata%units), ' cm/s'
 
   end subroutine get_surface_flux_desc_from_metadata
+
+  !*****************************************************************************
+
+  subroutine get_bottom_flux_desc_from_metadata(metadata, varname, long_name, units)
+
+    type(marbl_tracer_metadata_type), intent(in)  :: metadata
+    character(len=*),                 intent(out) :: varname
+    character(len=*), optional,       intent(out) :: long_name
+    character(len=*), optional,       intent(out) :: units
+
+    write(varname, "(2A)") "BTF_", trim(metadata%short_name)
+    if (present(long_name)) &
+      write(long_name, "(2A)") "Bottom flux of ", trim(metadata%long_name)
+    if (present(units)) &
+      write(units, "(2A)") trim(metadata%units), ' cm/s'
+
+  end subroutine get_bottom_flux_desc_from_metadata
 
   !*****************************************************************************
 
