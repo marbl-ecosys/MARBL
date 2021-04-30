@@ -3137,7 +3137,7 @@ contains
          Fefree, Lig_photochem, Lig_deg, marbl_interior_tendency_diags)
 
     call store_diagnostics_nitrogen_fluxes(domain, &
-         PON_sed_loss, denitrif, sed_denitrif, autotroph_derived_terms, interior_tendencies, &
+         PON_sed_loss, denitrif, autotroph_derived_terms, interior_tendencies, &
          marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_nitrogen_fluxes', subname)
@@ -4093,7 +4093,7 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, &
-       PON_sed_loss, denitrif, sed_denitrif, autotroph_derived_terms, interior_tendencies, &
+       PON_sed_loss, denitrif, autotroph_derived_terms, interior_tendencies, &
        marbl_tracer_indices, marbl_diags, marbl_status_log)
 
     use marbl_settings_mod, only : Q
@@ -4102,7 +4102,6 @@ contains
     type(marbl_domain_type),            intent(in)    :: marbl_domain
     real(r8),                           intent(in)    :: PON_sed_loss(:) ! km
     real(r8),                           intent(in)    :: denitrif(:)     ! km
-    real(r8),                           intent(in)    :: sed_denitrif(:) ! km
     type(autotroph_derived_terms_type), intent(in)    :: autotroph_derived_terms
     real(r8),                           intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
@@ -4136,7 +4135,7 @@ contains
            interior_tendencies(don_ind,:) + interior_tendencies(donr_ind,:) +               &
            Q * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +  &
            Q * sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%C_ind,:), dim=1) + &
-           denitrif(:) + sed_denitrif(:)
+           denitrif(:)
 
     ! subtract out N fixation
     do n = 1, autotroph_cnt

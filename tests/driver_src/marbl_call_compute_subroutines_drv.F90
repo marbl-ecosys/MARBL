@@ -42,7 +42,7 @@ Contains
     type(forcing_fields_type), allocatable, dimension(:)     :: interior_tendency_forcings  ! num_forcings
     integer,                   allocatable, dimension(:)     :: active_level_cnt, col_start, col_cnt
 
-    integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols
+    integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols, kmt
     type(grid_data_type) :: grid_data
 
     ! 1. Open necessary netCDF files
@@ -207,7 +207,8 @@ Contains
         !      In this example, the vertical grid is the same from column to column and
         !      therefore set during initialization. The columns vary in depth, so
         !      the index of the bottom layer must be updated for each column.
-        marbl_instances(n)%domain%kmt = active_level_cnt(col_id)
+        kmt = active_level_cnt(col_id)
+        marbl_instances(n)%domain%kmt = kmt
 
         !  (c) copy tracer values into marbl_instances(n)%tracers
         marbl_instances(n)%tracers = tracer_initial_vals(:,:,col_id)
@@ -243,6 +244,8 @@ Contains
         !        Note: passing just col_id => interior tendency diagnostic buffer
         call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
         interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
+        interior_tendencies(:,kmt,col_id) = interior_tendencies(:,kmt,col_id) + &
+                                            marbl_instances(n)%bottom_fluxes(:) / marbl_instances(n)%domain%delta_z(kmt)
       end do ! column
     end do ! instance
 
