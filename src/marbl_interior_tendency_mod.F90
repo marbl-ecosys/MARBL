@@ -2713,6 +2713,7 @@ contains
           no3_ind                  => marbl_tracer_indices%no3_ind,                     &
           nh4_ind                  => marbl_tracer_indices%nh4_ind,                     &
           o2_ind                   => marbl_tracer_indices%o2_ind,                      &
+          donr_ind                 => marbl_tracer_indices%donr_ind,                    &
           alk_ind                  => marbl_tracer_indices%alk_ind,                     &
           alk_alt_co2_ind          => marbl_tracer_indices%alk_alt_co2_ind,             &
           O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind),        &
@@ -3120,8 +3121,6 @@ contains
                 * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
            bottom_fluxes(no3_ind) = -delta_z(k) * sed_denitrif
-           bottom_fluxes(alk_ind) = -bottom_fluxes(no3_ind) + bottom_fluxes(nh4_ind)
-           bottom_fluxes(alk_alt_co2_ind) = bottom_fluxes(alk_ind)
 
            flux_alt = POC%to_floor*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
            other_remin = dzr_loc &
@@ -3205,7 +3204,6 @@ contains
         !  flux used to hold sinking fluxes before update.
         !----------------------------------------------------------------------------------
 
-        ! TODO: see comment about PON_remin, apply similarly for other remin terms
         if (P_CaCO3%to_floor > c0) then
            P_CaCO3%remin(k) = P_CaCO3%remin(k) &
                 + ((P_CaCO3%to_floor - P_CaCO3%sed_loss(k)) * dzr_loc)
@@ -3225,10 +3223,8 @@ contains
            POC%remin(k) = POC%remin(k) &
                 + ((POC%to_floor - POC%sed_loss(k)) * dzr_loc)
 
-           ! instead of adding to PON_remin, this becomes bottom_flux(nh4_ind) and bottom_flux(donr_ind) [PONremin_refract]
-           ! (without the dzr_loc term, because bottom_flux is a flux rather than a tendency)
-           PON_remin = PON_remin &
-                + ((Q * POC%to_floor - PON_sed_loss) * dzr_loc)
+           bottom_fluxes(nh4_ind) = (Q * POC%to_floor - PON_sed_loss) * (c1 - PONremin_refract)
+           bottom_fluxes(donr_ind) = (Q * POC%to_floor - PON_sed_loss) * PONremin_refract
         endif
 
         if (POP%to_floor > c0) then
@@ -3248,6 +3244,10 @@ contains
 
         dust%to_floor = dust%sflux_out(k) + dust%hflux_out(k)
         dust%sed_loss(k) = dust%to_floor
+
+        bottom_fluxes(alk_ind) = -bottom_fluxes(no3_ind) + bottom_fluxes(nh4_ind)
+        bottom_fluxes(alk_alt_co2_ind) = bottom_fluxes(alk_ind)
+
 
      endif
 

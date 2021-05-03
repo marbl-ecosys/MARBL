@@ -3136,13 +3136,15 @@ contains
          fe_scavenge, fe_scavenge_rate, Lig_prod, Lig_loss, Lig_scavenge, &
          Fefree, Lig_photochem, Lig_deg, marbl_interior_tendency_diags)
 
-    call store_diagnostics_nitrogen_fluxes(domain, &
+    associate( POC => marbl_particulate_share%POC )
+    call store_diagnostics_nitrogen_fluxes(domain, POC, &
          PON_sed_loss, denitrif, autotroph_derived_terms, interior_tendencies, &
          marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_nitrogen_fluxes', subname)
       return
     end if
+    end associate
 
     associate( POP => marbl_particulate_share%POP )
     call store_diagnostics_phosphorus_fluxes(domain, POP, &
@@ -4092,7 +4094,7 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, &
+  subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, POC, &
        PON_sed_loss, denitrif, autotroph_derived_terms, interior_tendencies, &
        marbl_tracer_indices, marbl_diags, marbl_status_log)
 
@@ -4100,6 +4102,7 @@ contains
     use marbl_settings_mod, only : Jint_Ntot_thres
 
     type(marbl_domain_type),            intent(in)    :: marbl_domain
+    type(column_sinking_particle_type), intent(in)    :: POC
     real(r8),                           intent(in)    :: PON_sed_loss(:) ! km
     real(r8),                           intent(in)    :: denitrif(:)     ! km
     type(autotroph_derived_terms_type), intent(in)    :: autotroph_derived_terms
@@ -4115,6 +4118,7 @@ contains
     character(len=char_len)     :: log_message
     integer(int_kind) :: n
     real(r8), dimension(marbl_domain%km) :: work
+    ! real(r8) :: dzr_loc
     !-----------------------------------------------------------------------
 
     associate(                                        &
@@ -4130,12 +4134,20 @@ contains
          donr_ind => marbl_tracer_indices%donr_ind &
          )
 
+    ! dzr_loc = 1._r8 / delta_z(kmt)
     ! vertical integrals
     work = interior_tendencies(no3_ind,:) + interior_tendencies(nh4_ind,:) +                &
            interior_tendencies(don_ind,:) + interior_tendencies(donr_ind,:) +               &
            Q * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +  &
            Q * sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%C_ind,:), dim=1) + &
            denitrif(:)
+    ! Add bottom flux term in bottom layer
+    ! NOTE: this may be a temporary work-around that cancels as other terms get moved to bottom flux?
+    !       if not, it would be nice to include this in the work sum rather than keeping it as an
+    !       after-thought in the bottom layer; at that point, it would make sense to introduce dzr_loc
+    !       and turn the division into multiplication
+    !       Another possibility is to pass in bottom_fluxes(:) and use those values in this line
+    work(kmt) = work(kmt) + (Q * POC%to_floor - PON_sed_loss(kmt)) / delta_z(kmt)
 
     ! subtract out N fixation
     do n = 1, autotroph_cnt
