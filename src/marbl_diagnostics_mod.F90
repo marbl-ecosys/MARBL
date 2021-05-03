@@ -4068,6 +4068,7 @@ contains
          interior_tendencies(docr_ind,:) +                                               &
          sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +     &
          sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%C_ind,:),dim=1)
+    work(kmt) = work(kmt) + (P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt)) / delta_z(kmt)
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind

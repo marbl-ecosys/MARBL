@@ -2716,6 +2716,8 @@ contains
           donr_ind                 => marbl_tracer_indices%donr_ind,                    &
           alk_ind                  => marbl_tracer_indices%alk_ind,                     &
           alk_alt_co2_ind          => marbl_tracer_indices%alk_alt_co2_ind,             &
+          dic_ind                  => marbl_tracer_indices%dic_ind,                     &
+          dic_alt_co2_ind          => marbl_tracer_indices%dic_alt_co2_ind,             &
           O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind),        &
           NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind),       &
           POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff,           & ! IN/OUT
@@ -3205,13 +3207,13 @@ contains
         !----------------------------------------------------------------------------------
 
         if (P_CaCO3%to_floor > c0) then
-           P_CaCO3%remin(k) = P_CaCO3%remin(k) &
-                + ((P_CaCO3%to_floor - P_CaCO3%sed_loss(k)) * dzr_loc)
+           bottom_fluxes(alk_ind) = c2 * (P_CaCO3%to_floor - P_CaCO3%sed_loss(k))
+           bottom_fluxes(dic_ind) = P_CaCO3%to_floor - P_CaCO3%sed_loss(k)
         endif
 
         if (P_CaCO3_ALT_CO2%to_floor > c0) then
-           P_CaCO3_ALT_CO2%remin(k) = P_CaCO3_ALT_CO2%remin(k) &
-                + ((P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) * dzr_loc)
+           bottom_fluxes(alk_alt_co2_ind) = c2 * (P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k))
+           bottom_fluxes(dic_alt_co2_ind) = P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)
         endif
 
         if (P_SiO2%to_floor > c0) then
@@ -3245,8 +3247,10 @@ contains
         dust%to_floor = dust%sflux_out(k) + dust%hflux_out(k)
         dust%sed_loss(k) = dust%to_floor
 
-        bottom_fluxes(alk_ind) = -bottom_fluxes(no3_ind) + bottom_fluxes(nh4_ind)
-        bottom_fluxes(alk_alt_co2_ind) = bottom_fluxes(alk_ind)
+        bottom_fluxes(alk_ind) = bottom_fluxes(alk_ind) - bottom_fluxes(no3_ind) + &
+                                 bottom_fluxes(nh4_ind)
+        bottom_fluxes(alk_alt_co2_ind) = bottom_fluxes(alk_alt_co2_ind) - bottom_fluxes(no3_ind) + &
+                                         bottom_fluxes(nh4_ind)
 
 
      endif
