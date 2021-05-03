@@ -4048,7 +4048,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_carbon_fluxes'
     character(len=char_len)     :: log_message
     integer(int_kind) :: n, auto_ind
-    real(r8), dimension(marbl_domain%km) :: work
+    real(r8), dimension(marbl_domain%km) :: work, work2
     !-----------------------------------------------------------------------
 
     associate(                                        &
@@ -4068,7 +4068,6 @@ contains
          interior_tendencies(docr_ind,:) +                                               &
          sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +     &
          sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%C_ind,:),dim=1)
-    work(kmt) = work(kmt) + (P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt)) / delta_z(kmt)
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
@@ -4077,9 +4076,12 @@ contains
        end if
     end do
 
+    ! Already-integrated terms
+    work2 = POC%sed_loss + P_CaCO3%sed_loss
+    work2(kmt) = work2(kmt) + (P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt))
     call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
          full_depth_integral=diags(ind%Jint_Ctot)%field_2d(1),                  &
-         integrated_terms = POC%sed_loss + P_CaCO3%sed_loss)
+         integrated_terms = work2)
 
     if (abs(diags(ind%Jint_Ctot)%field_2d(1)) .gt. Jint_Ctot_thres) then
        write(log_message,"(A,E11.3e3,A,E11.3e3)") &
@@ -4118,7 +4120,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_nitrogen_fluxes'
     character(len=char_len)     :: log_message
     integer(int_kind) :: n
-    real(r8), dimension(marbl_domain%km) :: work
+    real(r8), dimension(marbl_domain%km) :: work, work2
     ! real(r8) :: dzr_loc
     !-----------------------------------------------------------------------
 
@@ -4142,13 +4144,6 @@ contains
            Q * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +  &
            Q * sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%C_ind,:), dim=1) + &
            denitrif(:)
-    ! Add bottom flux term in bottom layer
-    ! NOTE: this may be a temporary work-around that cancels as other terms get moved to bottom flux?
-    !       if not, it would be nice to include this in the work sum rather than keeping it as an
-    !       after-thought in the bottom layer; at that point, it would make sense to introduce dzr_loc
-    !       and turn the division into multiplication
-    !       Another possibility is to pass in bottom_fluxes(:) and use those values in this line
-    work(kmt) = work(kmt) + (Q * POC%to_floor - PON_sed_loss(kmt)) / delta_z(kmt)
 
     ! subtract out N fixation
     do n = 1, autotroph_cnt
@@ -4157,9 +4152,11 @@ contains
        end if
     end do
 
+    work2 = PON_sed_loss
+    work2(kmt) = work2(kmt) + (Q * POC%to_floor - PON_sed_loss(kmt))
     call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
          full_depth_integral=diags(ind%Jint_Ntot)%field_2d(1),                  &
-         integrated_terms = PON_sed_loss)
+         integrated_terms = work2)
 
     if (abs(diags(ind%Jint_Ntot)%field_2d(1)) .gt. Jint_Ntot_thres) then
        write(log_message,"(A,E11.3e3,A,E11.3e3)") &
