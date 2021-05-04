@@ -2711,6 +2711,7 @@ contains
           column_kmt               => domain%kmt,                                       &
           delta_z                  => domain%delta_z,                                   &
           zw                       => domain%zw,                                        &
+          po4_ind                  => marbl_tracer_indices%po4_ind,                     &
           no3_ind                  => marbl_tracer_indices%no3_ind,                     &
           sio3_ind                 => marbl_tracer_indices%sio3_ind,                    &
           nh4_ind                  => marbl_tracer_indices%nh4_ind,                     &
@@ -2719,6 +2720,7 @@ contains
           dic_alt_co2_ind          => marbl_tracer_indices%dic_alt_co2_ind,             &
           alk_ind                  => marbl_tracer_indices%alk_ind,                     &
           alk_alt_co2_ind          => marbl_tracer_indices%alk_alt_co2_ind,             &
+          dopr_ind                 => marbl_tracer_indices%dopr_ind,                    &
           donr_ind                 => marbl_tracer_indices%donr_ind,                    &
           docr_ind                 => marbl_tracer_indices%docr_ind,                    &
           O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind),        &
@@ -3236,8 +3238,8 @@ contains
         endif
 
         if (POP%to_floor > c0) then
-           POP%remin(k) = POP%remin(k) &
-                + ((POP%to_floor - POP%sed_loss(k)) * dzr_loc)
+           bottom_fluxes(po4_ind) = (POP%to_floor - POP%sed_loss(k)) * (c1 - POPremin_refract)
+           bottom_fluxes(dopr_ind) = (POP%to_floor - POP%sed_loss(k)) * POPremin_refract
         endif
 
         !-----------------------------------------------------------------------

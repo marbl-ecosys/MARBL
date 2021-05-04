@@ -4195,7 +4195,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_phosphorus_fluxes'
     character(len=char_len)     :: log_message
     integer(int_kind) :: n
-    real(r8), dimension(marbl_domain%km) :: work
+    real(r8), dimension(marbl_domain%km) :: work, work2
     !-----------------------------------------------------------------------
 
     associate(                                         &
@@ -4220,9 +4220,11 @@ contains
        end do
     endif
 
+    work2 = POP%sed_loss
+    work2(kmt) = work2(kmt) + (POP%to_floor - POP%sed_loss(kmt))
     call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
          full_depth_integral=diags(ind%Jint_Ptot)%field_2d(1),                  &
-         integrated_terms = POP%sed_loss)
+         integrated_terms = work2)
 
     if (abs(diags(ind%Jint_Ptot)%field_2d(1)) .gt. Jint_Ptot_thres) then
        write(log_message,"(A,E11.3e3,A,E11.3e3)") &
