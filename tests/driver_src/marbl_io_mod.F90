@@ -592,7 +592,7 @@ contains
       ! Surface fluxes
       call get_surface_flux_desc_from_metadata(marbl_instances(1)%tracer_metadata(n), varname, long_name, units)
       call marbl_netcdf_def_var(ncid_out, varname, 'double', (/dimid_num_cols/), long_name, units, &
-                                driver_status_log)
+                                driver_status_log, ldef_fillval=.true.)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") 'marbl_netcdf_def_var(', trim(varname), ')'
         call driver_status_log%log_error_trace(log_message, subname)
@@ -602,7 +602,7 @@ contains
       ! Bottom fluxes
       call get_bottom_flux_desc_from_metadata(marbl_instances(1)%tracer_metadata(n), varname, long_name, units)
       call marbl_netcdf_def_var(ncid_out, varname, 'double', (/dimid_num_cols/), long_name, units, &
-                                driver_status_log)
+                                driver_status_log, ldef_fillval=.true.)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") 'marbl_netcdf_def_var(', trim(varname), ')'
         call driver_status_log%log_error_trace(log_message, subname)
@@ -612,7 +612,7 @@ contains
       ! Interior tendencies
       call get_interior_tendency_desc_from_metadata(marbl_instances(1)%tracer_metadata(n), varname, long_name, units)
       call marbl_netcdf_def_var(ncid_out, varname, 'double', (/dimid_num_levels, dimid_num_cols/), &
-                                long_name, units, driver_status_log)
+                                long_name, units, driver_status_log, ldef_fillval=.true.)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") 'marbl_netcdf_def_var(', varname, ')'
         call driver_status_log%log_error_trace(log_message, subname)
@@ -624,7 +624,7 @@ contains
       write(long_name, "(2A)") "Initial value of ", trim(marbl_instances(1)%tracer_metadata(n)%long_name)
       units = trim(marbl_instances(1)%tracer_metadata(n)%units)
       call marbl_netcdf_def_var(ncid_out, varname, 'double', (/dimid_num_levels, dimid_num_cols/), &
-                                long_name, units, driver_status_log)
+                                long_name, units, driver_status_log, ldef_fillval=.true.)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") 'marbl_netcdf_def_var(', varname, ')'
         call driver_status_log%log_error_trace(log_message, subname)
