@@ -3092,6 +3092,9 @@ contains
      if (k == column_kmt) then
 
         POC%to_floor = POC%sflux_out(k) + POC%hflux_out(k)
+        o2_btf_coeff = delta_z(k) * o2_consumption_scalef(k) * &
+                       min(max((O2_loc - parm_o2_min) / parm_o2_min_delta, c0), c1) / &
+                       parm_Remin_D_C_O2
 
         if (POC%to_floor > c0) then
            flux_alt = POC%to_floor*mpercm*spd ! convert to mmol/m^2/day
@@ -3142,9 +3145,6 @@ contains
               other_remin = dzr_loc * &
                    (POC%to_floor - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N))
            endif
-           o2_btf_coeff = delta_z(k) * o2_consumption_scalef(k) * &
-                          min(max((O2_loc - parm_o2_min) / parm_o2_min_delta, c0), c1) / &
-                          parm_Remin_D_C_O2
            bottom_fluxes(o2_ind) =  o2_btf_coeff * (sed_denitrif * denitrif_C_N + other_remin)
 
         else
