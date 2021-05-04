@@ -2633,6 +2633,7 @@ contains
      use marbl_settings_mod, only : o2_sf_o2_range_hi
      use marbl_settings_mod, only : o2_sf_o2_range_lo
      use marbl_settings_mod, only : o2_sf_val_lo_o2
+     use marbl_settings_mod, only : remin_to_Lig
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_CaCO3_bury
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_POC_bury
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_POP_bury
@@ -2715,6 +2716,7 @@ contains
           no3_ind                  => marbl_tracer_indices%no3_ind,                     &
           sio3_ind                 => marbl_tracer_indices%sio3_ind,                    &
           nh4_ind                  => marbl_tracer_indices%nh4_ind,                     &
+          lig_ind                  => marbl_tracer_indices%lig_ind,                     &
           o2_ind                   => marbl_tracer_indices%o2_ind,                      &
           dic_ind                  => marbl_tracer_indices%dic_ind,                     &
           dic_alt_co2_ind          => marbl_tracer_indices%dic_alt_co2_ind,             &
@@ -3232,9 +3234,11 @@ contains
                                     (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract)
            bottom_fluxes(o2_ind) = bottom_fluxes(o2_ind) + &
                                   o2_btf_coeff *  (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract)
+           bottom_fluxes(lig_ind) = (POC%to_floor - POC%sed_loss(k)) * remin_to_Lig
 
            bottom_fluxes(nh4_ind) = (Q * POC%to_floor - PON_sed_loss) * (c1 - PONremin_refract)
            bottom_fluxes(donr_ind) = (Q * POC%to_floor - PON_sed_loss) * PONremin_refract
+
         endif
 
         if (POP%to_floor > c0) then
