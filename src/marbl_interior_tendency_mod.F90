@@ -2713,6 +2713,7 @@ contains
           no3_ind                  => marbl_tracer_indices%no3_ind,                     &
           nh4_ind                  => marbl_tracer_indices%nh4_ind,                     &
           o2_ind                   => marbl_tracer_indices%o2_ind,                      &
+          sio3_ind                 => marbl_tracer_indices%sio3_ind,                    &
           donr_ind                 => marbl_tracer_indices%donr_ind,                    &
           alk_ind                  => marbl_tracer_indices%alk_ind,                     &
           alk_alt_co2_ind          => marbl_tracer_indices%alk_alt_co2_ind,             &
@@ -3217,8 +3218,7 @@ contains
         endif
 
         if (P_SiO2%to_floor > c0) then
-           P_SiO2%remin(k) = P_SiO2%remin(k) &
-                + ((P_SiO2%to_floor - P_SiO2%sed_loss(k)) * dzr_loc)
+           bottom_fluxes(sio3_ind) = P_SiO2%to_floor - P_SiO2%sed_loss(k)
         endif
 
         if (POC%to_floor > c0) then

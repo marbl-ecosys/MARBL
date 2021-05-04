@@ -4255,7 +4255,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_silicon_fluxes'
     character(len=char_len)     :: log_message
     integer(int_kind) :: n
-    real(r8), dimension(marbl_domain%km) :: work
+    real(r8), dimension(marbl_domain%km) :: work, work2
     !-----------------------------------------------------------------------
 
     associate(                                        &
@@ -4275,9 +4275,11 @@ contains
        end if
     end do
 
+    work2 = P_SiO2%sed_loss
+    work2(kmt) = work2(kmt) + P_SiO2%to_floor - P_SiO2%sed_loss(kmt)
     call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
          full_depth_integral=diags(ind%Jint_Sitot)%field_2d(1),                 &
-         integrated_terms = P_SiO2%sed_loss)
+         integrated_terms = work2)
 
     if (abs(diags(ind%Jint_Sitot)%field_2d(1)) .gt. Jint_Sitot_thres) then
        write(log_message,"(A,E11.3e3,A,E11.3e3)") &
