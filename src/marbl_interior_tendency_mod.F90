@@ -2692,6 +2692,7 @@ contains
           new_QA_dust_def,    & ! outgoing deficit in the QA(dust) POC flux
           scalelength,        & ! used to scale dissolution length scales as function of depth
           o2_scalefactor,     & ! used to scale dissolution length scales as function of o2
+          o2_btf_coeff,       & ! Coefficient multiplying o2 bottom flux
           ztop,               & ! depth of top of layer
           flux_top, flux_bot, & ! total (sflux+hflux) particulate fluxes at top and bottom of layer
           wbot,               & ! weight for interpolating fluxes vertically
@@ -2711,14 +2712,15 @@ contains
           delta_z                  => domain%delta_z,                                   &
           zw                       => domain%zw,                                        &
           no3_ind                  => marbl_tracer_indices%no3_ind,                     &
+          sio3_ind                 => marbl_tracer_indices%sio3_ind,                    &
           nh4_ind                  => marbl_tracer_indices%nh4_ind,                     &
           o2_ind                   => marbl_tracer_indices%o2_ind,                      &
-          sio3_ind                 => marbl_tracer_indices%sio3_ind,                    &
-          donr_ind                 => marbl_tracer_indices%donr_ind,                    &
-          alk_ind                  => marbl_tracer_indices%alk_ind,                     &
-          alk_alt_co2_ind          => marbl_tracer_indices%alk_alt_co2_ind,             &
           dic_ind                  => marbl_tracer_indices%dic_ind,                     &
           dic_alt_co2_ind          => marbl_tracer_indices%dic_alt_co2_ind,             &
+          alk_ind                  => marbl_tracer_indices%alk_ind,                     &
+          alk_alt_co2_ind          => marbl_tracer_indices%alk_alt_co2_ind,             &
+          donr_ind                 => marbl_tracer_indices%donr_ind,                    &
+          docr_ind                 => marbl_tracer_indices%docr_ind,                    &
           O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind),        &
           NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind),       &
           POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff,           & ! IN/OUT
@@ -3138,9 +3140,10 @@ contains
               other_remin = dzr_loc * &
                    (POC%to_floor - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N))
            endif
-           bottom_fluxes(o2_ind) = delta_z(k) * o2_consumption_scalef(k) * &
-                                   min(max((O2_loc - parm_o2_min) / parm_o2_min_delta, c0), c1) * &
-                                   (sed_denitrif * denitrif_C_N + other_remin) / parm_Remin_D_C_O2
+           o2_btf_coeff = delta_z(k) * o2_consumption_scalef(k) * &
+                          min(max((O2_loc - parm_o2_min) / parm_o2_min_delta, c0), c1) / &
+                          parm_Remin_D_C_O2
+           bottom_fluxes(o2_ind) =  o2_btf_coeff * (sed_denitrif * denitrif_C_N + other_remin)
 
         else
 
@@ -3222,8 +3225,11 @@ contains
         endif
 
         if (POC%to_floor > c0) then
-           POC%remin(k) = POC%remin(k) &
-                + ((POC%to_floor - POC%sed_loss(k)) * dzr_loc)
+           bottom_fluxes(docr_ind) = (POC%to_floor - POC%sed_loss(k)) * POCremin_refract
+           bottom_fluxes(dic_ind) = bottom_fluxes(dic_ind) + &
+                                    (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract)
+           bottom_fluxes(o2_ind) = bottom_fluxes(o2_ind) + &
+                                  o2_btf_coeff *  (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract)
 
            bottom_fluxes(nh4_ind) = (Q * POC%to_floor - PON_sed_loss) * (c1 - PONremin_refract)
            bottom_fluxes(donr_ind) = (Q * POC%to_floor - PON_sed_loss) * PONremin_refract

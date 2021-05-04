@@ -4078,7 +4078,8 @@ contains
 
     ! Already-integrated terms
     work2 = POC%sed_loss + P_CaCO3%sed_loss
-    work2(kmt) = work2(kmt) + (P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt))
+    work2(kmt) = work2(kmt) + (P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt)) + &
+                              (POC%to_floor - POC%sed_loss(kmt))
     call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
          full_depth_integral=diags(ind%Jint_Ctot)%field_2d(1),                  &
          integrated_terms = work2)
