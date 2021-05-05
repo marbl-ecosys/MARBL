@@ -2634,6 +2634,7 @@ contains
      use marbl_settings_mod, only : o2_sf_o2_range_lo
      use marbl_settings_mod, only : o2_sf_val_lo_o2
      use marbl_settings_mod, only : remin_to_Lig
+     use marbl_settings_mod, only : parm_Lig_degrade_rate0
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_CaCO3_bury
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_POC_bury
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_POP_bury
@@ -2693,7 +2694,6 @@ contains
           new_QA_dust_def,    & ! outgoing deficit in the QA(dust) POC flux
           scalelength,        & ! used to scale dissolution length scales as function of depth
           o2_scalefactor,     & ! used to scale dissolution length scales as function of o2
-          o2_btf_coeff,       & ! Coefficient multiplying o2 bottom flux
           ztop,               & ! depth of top of layer
           flux_top, flux_bot, & ! total (sflux+hflux) particulate fluxes at top and bottom of layer
           wbot,               & ! weight for interpolating fluxes vertically
@@ -3094,9 +3094,6 @@ contains
      if (k == column_kmt) then
 
         POC%to_floor = POC%sflux_out(k) + POC%hflux_out(k)
-        o2_btf_coeff = delta_z(k) * o2_consumption_scalef(k) * &
-                       min(max((O2_loc - parm_o2_min) / parm_o2_min_delta, c0), c1) / &
-                       parm_Remin_D_C_O2
 
         if (POC%to_floor > c0) then
            flux_alt = POC%to_floor*mpercm*spd ! convert to mmol/m^2/day
@@ -3147,7 +3144,6 @@ contains
               other_remin = dzr_loc * &
                    (POC%to_floor - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N))
            endif
-           bottom_fluxes(o2_ind) =  o2_btf_coeff * (sed_denitrif * denitrif_C_N + other_remin)
 
         else
 
@@ -3220,8 +3216,17 @@ contains
         endif
 
         if (P_CaCO3_ALT_CO2%to_floor > c0) then
-           bottom_fluxes(alk_alt_co2_ind) = c2 * (P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k))
-           bottom_fluxes(dic_alt_co2_ind) = P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)
+           if (P_CaCO3%to_floor > c0) then
+              bottom_fluxes(alk_alt_co2_ind) = bottom_fluxes(alk_ind) + &
+                                               c2 * (P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) - &
+                                               c2 * (P_CaCO3%to_floor - P_CaCO3%sed_loss(k))
+              bottom_fluxes(dic_alt_co2_ind) = bottom_fluxes(dic_ind) + &
+                                               (P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) - &
+                                               (P_CaCO3%to_floor - P_CaCO3%sed_loss(k))
+           else
+              bottom_fluxes(alk_alt_co2_ind) = c2 * (P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k))
+              bottom_fluxes(dic_alt_co2_ind) = P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)
+           endif
         endif
 
         if (P_SiO2%to_floor > c0) then
@@ -3232,9 +3237,13 @@ contains
            bottom_fluxes(docr_ind) = (POC%to_floor - POC%sed_loss(k)) * POCremin_refract
            bottom_fluxes(dic_ind) = bottom_fluxes(dic_ind) + &
                                     (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract)
-           bottom_fluxes(o2_ind) = bottom_fluxes(o2_ind) + &
-                                  o2_btf_coeff *  (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract)
-           bottom_fluxes(lig_ind) = (POC%to_floor - POC%sed_loss(k)) * remin_to_Lig
+           bottom_fluxes(dic_alt_co2_ind) = bottom_fluxes(dic_alt_co2_ind) + &
+                                            (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract)
+           bottom_fluxes(o2_ind) = delta_z(k) * o2_consumption_scalef(k) * &
+                                   min(max((O2_loc - parm_o2_min) / parm_o2_min_delta, c0), c1) / &
+                                   parm_Remin_D_C_O2 * ((sed_denitrif * denitrif_C_N + other_remin) - &
+                                                        (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract))
+           bottom_fluxes(lig_ind) = (POC%to_floor - POC%sed_loss(k)) * (remin_to_Lig - parm_Lig_degrade_rate0)
 
            bottom_fluxes(nh4_ind) = (Q * POC%to_floor - PON_sed_loss) * (c1 - PONremin_refract)
            bottom_fluxes(donr_ind) = (Q * POC%to_floor - PON_sed_loss) * PONremin_refract
