@@ -3239,9 +3239,9 @@ contains
                                     (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract)
            bottom_fluxes(dic_alt_co2_ind) = bottom_fluxes(dic_alt_co2_ind) + &
                                             (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract)
-           bottom_fluxes(o2_ind) = delta_z(k) * o2_consumption_scalef(k) * &
+           bottom_fluxes(o2_ind) = o2_consumption_scalef(k) * &
                                    min(max((O2_loc - parm_o2_min) / parm_o2_min_delta, c0), c1) / &
-                                   parm_Remin_D_C_O2 * ((sed_denitrif * denitrif_C_N + other_remin) - &
+                                   parm_Remin_D_C_O2 * (delta_z(k) * (sed_denitrif * denitrif_C_N + other_remin) - &
                                                         (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract))
            bottom_fluxes(lig_ind) = (POC%to_floor - POC%sed_loss(k)) * (remin_to_Lig - parm_Lig_degrade_rate0)
 
