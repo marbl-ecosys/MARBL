@@ -55,6 +55,7 @@ contains
        temperature,                                &
        marbl_tracer_indices,                       &
        interior_tendencies,                        &
+       bottom_fluxes,                              &
        marbl_interior_diags,                       &
        marbl_status_log)
 
@@ -80,6 +81,7 @@ contains
     real (r8),                                intent(in)    :: temperature(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
     real (r8),                                intent(inout) :: interior_tendencies(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
+    real(r8),                                 intent(inout) :: bottom_fluxes(:)          ! computed fluxes at bottom of column (inout because we don't touch non-ciso tracers)
     type(marbl_diagnostics_type),             intent(inout) :: marbl_interior_diags
     type(marbl_log_type),                     intent(inout) :: marbl_status_log
 
@@ -556,10 +558,10 @@ contains
        !-----------------------------------------------------------------------
 
        call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3)
+            interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3, bottom_fluxes(di13c_ind))
 
        call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3)
+            interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3, bottom_fluxes(di14c_ind))
 
        !-----------------------------------------------------------------------
        ! Update interior_tendencies for the 7 carbon pools for each Carbon isotope
@@ -1057,7 +1059,8 @@ contains
   !***********************************************************************
 
   subroutine compute_particulate_terms(k, domain, tracer_local, marbl_tracer_indices, &
-             interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
+             interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso, &
+             bottom_flux_DIC_ciso)
 
     !----------------------------------------------------------------------------------------
     !  Compute outgoing fluxes and remineralization terms for Carbon isotopes.
@@ -1084,6 +1087,7 @@ contains
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
     type(column_sinking_particle_type),       intent(inout) :: POC_ciso          ! base units = nmol particulate organic Carbon isotope
     type(column_sinking_particle_type),       intent(inout) :: P_CaCO3_ciso      ! base units = nmol CaCO3 Carbon isotope
+    real(r8),                                 intent(inout) :: bottom_flux_DIC_ciso
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -1275,11 +1279,11 @@ contains
        !----------------------------------------------------------------------------------
 
        if (P_CaCO3_ciso%to_floor > c0) then
-          P_CaCO3_ciso%remin(k) = P_CaCO3_ciso%remin(k) + ((P_CaCO3_ciso%to_floor - P_CaCO3_ciso%sed_loss(k)) * dzr_loc)
+          bottom_flux_DIC_ciso = P_CaCO3_ciso%to_floor - P_CaCO3_ciso%sed_loss(k)
        endif
 
        if (POC_ciso%to_floor > c0) then
-          POC_ciso%remin(k) = POC_ciso%remin(k) + ((POC_ciso%to_floor - POC_ciso%sed_loss(k)) * dzr_loc)
+          bottom_flux_DIC_ciso = bottom_flux_DIC_ciso + (POC_ciso%to_floor - POC_ciso%sed_loss(k))
        endif
     endif
 

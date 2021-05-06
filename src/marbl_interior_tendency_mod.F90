@@ -478,6 +478,7 @@ contains
          temperature             = temperature,                 &
          marbl_tracer_indices    = marbl_tracer_indices,        &
          interior_tendencies     = interior_tendencies,         &
+         bottom_fluxes           = bottom_fluxes,               &
          marbl_interior_diags    = interior_tendency_diags,     &
          marbl_status_log        = marbl_status_log)
 

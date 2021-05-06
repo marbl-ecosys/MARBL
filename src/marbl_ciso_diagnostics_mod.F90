@@ -1059,7 +1059,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_ciso_diagnostics_mod:store_diagnostics_ciso_interior'
     character(len=char_len)     :: log_message
     integer (int_kind) :: k, n, auto_ind
-    real (r8)          :: work(marbl_domain%km)
+    real (r8)          :: work(marbl_domain%km), work2(marbl_domain%km)
     !-----------------------------------------------------------------------
 
     associate( &
@@ -1099,9 +1099,13 @@ contains
           work = work + interior_tendencies(n,:)
        end if
     end do
+
+    work2 = PO13C%sed_loss + P_Ca13CO3%sed_loss
+    work2(kmt) = work2(kmt) + (PO13C%to_floor - PO13C%sed_loss(kmt)) + &
+                              (P_Ca13CO3%to_floor - P_Ca13CO3%sed_loss(kmt))
     call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
          full_depth_integral=diags(ind%CISO_Jint_13Ctot)%field_2d(1),           &
-         integrated_terms = PO13C%sed_loss + P_Ca13CO3%sed_loss)
+         integrated_terms = work2)
 
     if (abs(diags(ind%CISO_Jint_13Ctot)%field_2d(1)) .gt. CISO_Jint_13Ctot_thres) then
        write(log_message,"(A,E11.3e3,A,E11.3e3)") &
@@ -1121,9 +1125,12 @@ contains
           work = work + interior_tendencies(n,:)
        end if
     end do
+    work2 = PO14C%sed_loss + P_Ca14CO3%sed_loss
+    work2(kmt) = work2(kmt) + (PO14C%to_floor - PO14C%sed_loss(kmt)) + &
+                              (P_Ca14CO3%to_floor - P_Ca14CO3%sed_loss(kmt))
     call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
          full_depth_integral=diags(ind%CISO_Jint_14Ctot)%field_2d(1),           &
-         integrated_terms = PO14C%sed_loss + P_Ca14CO3%sed_loss)
+         integrated_terms = work2)
 
     if (abs(diags(ind%CISO_Jint_14Ctot)%field_2d(1)) .gt. CISO_Jint_14Ctot_thres) then
        write(log_message,"(A,E11.3e3,A,E11.3e3)") &
