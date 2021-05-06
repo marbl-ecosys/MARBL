@@ -113,7 +113,9 @@ module marbl_interface_private_types
     real(r8), allocatable :: zoo_graze_poc(:,:)    ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_graze_doc(:,:)    ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_graze_dic(:,:)    ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
-    real(r8), allocatable :: zoo_loss(:,:)         ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss(:,:)         ! mortality & higher trophic level predation on zooplankton (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_linear_loss(:,:)  ! zooplankton linear mortality, or basal respiration (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_agg_loss(:,:)     ! higher trophic level predation on zooplankton (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_loss_poc(:,:)     ! zoo_loss routed to poc (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_loss_doc(:,:)     ! zoo_loss routed to doc (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_loss_dic(:,:)     ! zoo_loss routed to dic (mmol C/m^3/sec)
@@ -136,7 +138,7 @@ module marbl_interface_private_types
 
   type, public :: zooplankton_share_type
      real(r8), allocatable :: zoototC_loc_fields(:)         ! local copy of model zooC
-     real(r8), allocatable :: zootot_loss_fields(:)         ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_loss_fields(:)         ! mortality & higher trophic level predation on zooplankton (mmol C/m^3/sec)
      real(r8), allocatable :: zootot_loss_poc_fields(:)     ! zoo_loss routed to large detrital (mmol C/m^3/sec)
      real(r8), allocatable :: zootot_loss_doc_fields(:)     ! zoo_loss routed to doc (mmol C/m^3/sec)
      real(r8), allocatable :: zootot_loss_dic_fields(:)     ! zoo_loss routed to dic (mmol C/m^3/sec)
@@ -562,6 +564,8 @@ module marbl_interface_private_types
     ! Zooplankton 2D diags
     integer(int_kind), allocatable :: zoo_loss_zint(:)
     integer(int_kind), allocatable :: zoo_loss_zint_100m(:)
+    integer(int_kind), allocatable :: zoo_linear_loss_zint(:)
+    integer(int_kind), allocatable :: zoo_linear_loss_zint_100m(:)
     integer(int_kind), allocatable :: zoo_loss_poc_zint(:)
     integer(int_kind), allocatable :: zoo_loss_poc_zint_100m(:)
     integer(int_kind), allocatable :: zoo_loss_doc_zint(:)
@@ -692,6 +696,7 @@ module marbl_interface_private_types
 
     ! Zooplankton 3D diags
     integer(int_kind), allocatable :: zoo_loss(:)
+    integer(int_kind), allocatable :: zoo_linear_loss(:)
     integer(int_kind), allocatable :: zoo_loss_poc(:)
     integer(int_kind), allocatable :: zoo_loss_doc(:)
     integer(int_kind), allocatable :: zoo_graze(:)
@@ -1170,6 +1175,8 @@ contains
     allocate(self%zoo_graze_doc(zooplankton_cnt, km))
     allocate(self%zoo_graze_dic(zooplankton_cnt, km))
     allocate(self%zoo_loss(zooplankton_cnt, km))
+    allocate(self%zoo_linear_loss(zooplankton_cnt, km))
+    allocate(self%zoo_agg_loss(zooplankton_cnt, km))
     allocate(self%zoo_loss_poc(zooplankton_cnt, km))
     allocate(self%zoo_loss_doc(zooplankton_cnt, km))
     allocate(self%zoo_loss_dic(zooplankton_cnt, km))
@@ -1192,6 +1199,8 @@ contains
     deallocate(self%zoo_graze_doc)
     deallocate(self%zoo_graze_dic)
     deallocate(self%zoo_loss)
+    deallocate(self%zoo_linear_loss)
+    deallocate(self%zoo_agg_loss)
     deallocate(self%zoo_loss_poc)
     deallocate(self%zoo_loss_doc)
     deallocate(self%zoo_loss_dic)
@@ -1892,6 +1901,8 @@ contains
       deallocate(this%auto_agg_zint_100m)
       deallocate(this%zoo_loss_zint)
       deallocate(this%zoo_loss_zint_100m)
+      deallocate(this%zoo_linear_loss_zint)
+      deallocate(this%zoo_linear_loss_zint_100m)
       deallocate(this%zoo_loss_poc_zint)
       deallocate(this%zoo_loss_poc_zint_100m)
       deallocate(this%zoo_loss_doc_zint)

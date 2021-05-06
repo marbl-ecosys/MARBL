@@ -1721,7 +1721,9 @@ contains
 
     associate(                                               &
          Zprime   => zooplankton_derived_terms%Zprime(:,:),  & !(zooplankton_cnt)
-         zoo_loss => zooplankton_derived_terms%zoo_loss(:,:) & !(zooplankton_cnt) output
+         zoo_loss => zooplankton_derived_terms%zoo_loss(:,:), & !(zooplankton_cnt) output
+         zoo_linear_loss => zooplankton_derived_terms%zoo_linear_loss(:,:), & !(zooplankton_cnt) output
+         zoo_agg_loss => zooplankton_derived_terms%zoo_agg_loss(:,:) & !(zooplankton_cnt) output
          )
 
       !  calculate the loss threshold interpolation factor
@@ -1731,8 +1733,10 @@ contains
         C_loss_thres(:) = f_loss_thres(:) * zooplankton_settings(zoo_ind)%loss_thres
         Zprime(zoo_ind,:) = max(zooC(zoo_ind,:) - C_loss_thres, c0)
 
-        zoo_loss(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp &
-                               + zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind,:)) * Tfunc_zoo(zoo_ind,:)
+        zoo_linear_loss(zoo_ind,:) = zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind,:) * Tfunc_zoo(zoo_ind,:)
+        zoo_agg_loss(zoo_ind,:) = zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp * Tfunc_zoo(zoo_ind,:)
+
+        zoo_loss(zoo_ind,:) = zoo_linear_loss(zoo_ind,:) + zoo_agg_loss(zoo_ind,:)
       end do
 
     end associate
@@ -1977,6 +1981,8 @@ contains
          zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,:), & ! input
          zoo_graze_zootot   => zooplankton_derived_terms%zoo_graze_zootot(:,:), & ! input
          zoo_loss        => zooplankton_derived_terms%zoo_loss(:,:),      & ! input
+         zoo_linear_loss => zooplankton_derived_terms%zoo_linear_loss(:,:), & ! input
+         zoo_agg_loss    => zooplankton_derived_terms%zoo_agg_loss(:,:),  & ! input
          f_zoo_detr      => zooplankton_derived_terms%f_zoo_detr(:,:),    & ! input
 
          auto_graze_dic  => autotroph_derived_terms%auto_graze_dic(:,:),  & ! output
@@ -2006,11 +2012,13 @@ contains
 
         !-----------------------------------------------------------------------
         ! compute zooplankton loss routing
+        !   - linear losses only contribute to DIC
+        !   - aggregation losses contribute to DOC, DIC, and POC
         !-----------------------------------------------------------------------
         do zoo_ind = 1, zooplankton_cnt
-          zoo_loss_poc(zoo_ind,k) = f_zoo_detr(zoo_ind,k) * zoo_loss(zoo_ind,k)
-          zoo_loss_doc(zoo_ind,k) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss(zoo_ind,k)
-          zoo_loss_dic(zoo_ind,k) = parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss(zoo_ind,k)
+          zoo_loss_poc(zoo_ind,k) = f_zoo_detr(zoo_ind,k) * zoo_agg_loss(zoo_ind,k)
+          zoo_loss_doc(zoo_ind,k) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_agg_loss(zoo_ind,k)
+          zoo_loss_dic(zoo_ind,k) = (parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_agg_loss(zoo_ind,k)) + zoo_linear_loss(zoo_ind,k)
         end do
 
         !-----------------------------------------------------------------------
