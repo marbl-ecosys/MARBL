@@ -558,10 +558,10 @@ contains
        !-----------------------------------------------------------------------
 
        call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3, bottom_fluxes(di13c_ind))
+            interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3)
 
        call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3, bottom_fluxes(di14c_ind))
+            interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3)
 
        !-----------------------------------------------------------------------
        ! Update interior_tendencies for the 7 carbon pools for each Carbon isotope
@@ -600,6 +600,26 @@ contains
              decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local%Ca14CO3(auto_ind,k)
           endif
        end do
+
+       !-----------------------------------------------------------------------
+       !  bottom fluxes: dissolved inorganic Carbon 13 and 14
+       !-----------------------------------------------------------------------
+
+       if (k == column_kmt) then
+          if (P_Ca13CO3%to_floor > c0) then
+             bottom_fluxes(di13c_ind) = P_Ca13CO3%to_floor - P_Ca13CO3%sed_loss(k)
+          endif
+          if (P_Ca14CO3%to_floor > c0) then
+             bottom_fluxes(di14c_ind) = P_Ca14CO3%to_floor - P_Ca14CO3%sed_loss(k)
+          endif
+
+          if (PO13C%to_floor > c0) then
+             bottom_fluxes(di13c_ind) = bottom_fluxes(di13c_ind) + (PO13C%to_floor - PO13C%sed_loss(k))
+          endif
+          if (PO14C%to_floor > c0) then
+             bottom_fluxes(di14c_ind) = bottom_fluxes(di14c_ind) + (PO14C%to_floor - PO14C%sed_loss(k))
+          endif
+       end if
 
        !-----------------------------------------------------------------------
        !  interior_tendencies: zoo 13 and 14 Carbon
@@ -1059,8 +1079,7 @@ contains
   !***********************************************************************
 
   subroutine compute_particulate_terms(k, domain, tracer_local, marbl_tracer_indices, &
-             interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso, &
-             bottom_flux_DIC_ciso)
+             interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
 
     !----------------------------------------------------------------------------------------
     !  Compute outgoing fluxes and remineralization terms for Carbon isotopes.
@@ -1087,7 +1106,6 @@ contains
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
     type(column_sinking_particle_type),       intent(inout) :: POC_ciso          ! base units = nmol particulate organic Carbon isotope
     type(column_sinking_particle_type),       intent(inout) :: P_CaCO3_ciso      ! base units = nmol CaCO3 Carbon isotope
-    real(r8),                                 intent(inout) :: bottom_flux_DIC_ciso
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -1273,18 +1291,6 @@ contains
          endif
        end if
 
-       !----------------------------------------------------------------------------------
-       ! Update sinking fluxes and remin fluxes, accounting for sediments.
-       ! flux used to hold sinking fluxes before update.
-       !----------------------------------------------------------------------------------
-
-       if (P_CaCO3_ciso%to_floor > c0) then
-          bottom_flux_DIC_ciso = P_CaCO3_ciso%to_floor - P_CaCO3_ciso%sed_loss(k)
-       endif
-
-       if (POC_ciso%to_floor > c0) then
-          bottom_flux_DIC_ciso = bottom_flux_DIC_ciso + (POC_ciso%to_floor - POC_ciso%sed_loss(k))
-       endif
     endif
 
     end associate

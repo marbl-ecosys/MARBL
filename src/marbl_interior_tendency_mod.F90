@@ -380,10 +380,9 @@ contains
             marbl_particulate_share, p_remin_scalef(k),            &
             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                    &
             P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),   &
-            QA_dust_def(k), o2_consumption_scalef(:),              &
-            tracer_local(:, k), carbonate, sed_denitrif(k),        &
-            other_remin(k), fesedflux(k), marbl_tracer_indices,    &
-            glo_avg_fields_interior_tendency, bottom_fluxes(:),    &
+            QA_dust_def(k), tracer_local(:, k), carbonate,         &
+            sed_denitrif(k), other_remin(k), fesedflux(k),         &
+            marbl_tracer_indices, glo_avg_fields_interior_tendency,&
             marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
@@ -408,6 +407,10 @@ contains
          dissolved_organic_matter%DOC_remin(:), &
          dissolved_organic_matter%DOCr_remin(:), &
          POC%remin(:), other_remin(:), sed_denitrif(:), denitrif(:))
+
+    call compute_bottom_fluxes(domain, marbl_tracer_indices, o2_consumption_scalef(kmt), POC, POP, P_CaCO3, &
+                               P_CaCO3_ALT_CO2, P_SiO2, tracer_local(marbl_tracer_indices%o2_ind, kmt), &
+                               PON_sed_loss(kmt), sed_denitrif(kmt), other_remin(kmt), bottom_fluxes)
 
     call compute_local_tendencies(km, marbl_tracer_indices, autotroph_derived_terms, &
          zooplankton_derived_terms, &
@@ -2568,10 +2571,9 @@ contains
               marbl_particulate_share, p_remin_scalef,                    &
               POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                         &
               P_SiO2, dust, P_iron, PON_remin, PON_sed_loss, QA_dust_def, &
-              o2_consumption_scalef, tracer_local, carbonate,             &
-              sed_denitrif, other_remin,fesedflux, marbl_tracer_indices,  &
-              glo_avg_fields_interior_tendency, bottom_fluxes,            &
-              marbl_status_log)
+              tracer_local, carbonate, sed_denitrif, other_remin,         &
+              fesedflux, marbl_tracer_indices,                            &
+              glo_avg_fields_interior_tendency, marbl_status_log)
 
      !  Compute outgoing fluxes and remineralization terms. Assumes that
      !  production terms have been set. Incoming fluxes are assumed to be the
@@ -2634,8 +2636,6 @@ contains
      use marbl_settings_mod, only : o2_sf_o2_range_hi
      use marbl_settings_mod, only : o2_sf_o2_range_lo
      use marbl_settings_mod, only : o2_sf_val_lo_o2
-     use marbl_settings_mod, only : remin_to_Lig
-     use marbl_settings_mod, only : parm_Lig_degrade_rate0
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_CaCO3_bury
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_POC_bury
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_POP_bury
@@ -2662,13 +2662,11 @@ contains
      type(column_sinking_particle_type), intent(inout) :: dust                ! base units = g
      type(column_sinking_particle_type), intent(inout) :: P_iron              ! base units = nmol Fe
      real (r8)                         , intent(inout) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux
-     real(r8)                          , intent(in)    :: o2_consumption_scalef(domain%km)
      real (r8)                         , intent(out)   :: sed_denitrif        ! sedimentary denitrification (umolN/cm^2/s)
      real (r8)                         , intent(out)   :: other_remin         ! sedimentary remin not due to oxic or denitrification
      type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
      type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
      real (r8)                         , intent(inout) :: glo_avg_fields_interior_tendency(:)
-     real (r8)                         , intent(inout) :: bottom_fluxes(:)
      type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
      !-----------------------------------------------------------------------
@@ -2713,19 +2711,6 @@ contains
           column_kmt               => domain%kmt,                                       &
           delta_z                  => domain%delta_z,                                   &
           zw                       => domain%zw,                                        &
-          po4_ind                  => marbl_tracer_indices%po4_ind,                     &
-          no3_ind                  => marbl_tracer_indices%no3_ind,                     &
-          sio3_ind                 => marbl_tracer_indices%sio3_ind,                    &
-          nh4_ind                  => marbl_tracer_indices%nh4_ind,                     &
-          lig_ind                  => marbl_tracer_indices%lig_ind,                     &
-          o2_ind                   => marbl_tracer_indices%o2_ind,                      &
-          dic_ind                  => marbl_tracer_indices%dic_ind,                     &
-          dic_alt_co2_ind          => marbl_tracer_indices%dic_alt_co2_ind,             &
-          alk_ind                  => marbl_tracer_indices%alk_ind,                     &
-          alk_alt_co2_ind          => marbl_tracer_indices%alk_alt_co2_ind,             &
-          dopr_ind                 => marbl_tracer_indices%dopr_ind,                    &
-          donr_ind                 => marbl_tracer_indices%donr_ind,                    &
-          docr_ind                 => marbl_tracer_indices%docr_ind,                    &
           O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind),        &
           NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind),       &
           POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff,           & ! IN/OUT
@@ -3130,8 +3115,6 @@ contains
            sed_denitrif = dzr_loc * parm_sed_denitrif_coeff * POC%to_floor &
                 * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
-           bottom_fluxes(no3_ind) = -delta_z(k) * sed_denitrif
-
            flux_alt = POC%to_floor*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
            other_remin = dzr_loc &
                 * min(min(0.1_r8 + flux_alt, 0.5_r8) * (POC%to_floor - POC%sed_loss(k)), &
@@ -3211,51 +3194,6 @@ contains
         !  flux used to hold sinking fluxes before update.
         !----------------------------------------------------------------------------------
 
-        if (P_CaCO3%to_floor > c0) then
-           bottom_fluxes(alk_ind) = c2 * (P_CaCO3%to_floor - P_CaCO3%sed_loss(k))
-           bottom_fluxes(dic_ind) = P_CaCO3%to_floor - P_CaCO3%sed_loss(k)
-        endif
-
-        if (P_CaCO3_ALT_CO2%to_floor > c0) then
-           if (P_CaCO3%to_floor > c0) then
-              bottom_fluxes(alk_alt_co2_ind) = bottom_fluxes(alk_ind) + &
-                                               c2 * (P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) - &
-                                               c2 * (P_CaCO3%to_floor - P_CaCO3%sed_loss(k))
-              bottom_fluxes(dic_alt_co2_ind) = bottom_fluxes(dic_ind) + &
-                                               (P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) - &
-                                               (P_CaCO3%to_floor - P_CaCO3%sed_loss(k))
-           else
-              bottom_fluxes(alk_alt_co2_ind) = c2 * (P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k))
-              bottom_fluxes(dic_alt_co2_ind) = P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)
-           endif
-        endif
-
-        if (P_SiO2%to_floor > c0) then
-           bottom_fluxes(sio3_ind) = P_SiO2%to_floor - P_SiO2%sed_loss(k)
-        endif
-
-        if (POC%to_floor > c0) then
-           bottom_fluxes(docr_ind) = (POC%to_floor - POC%sed_loss(k)) * POCremin_refract
-           bottom_fluxes(dic_ind) = bottom_fluxes(dic_ind) + &
-                                    (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract)
-           bottom_fluxes(dic_alt_co2_ind) = bottom_fluxes(dic_alt_co2_ind) + &
-                                            (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract)
-           bottom_fluxes(o2_ind) = o2_consumption_scalef(k) * &
-                                   min(max((O2_loc - parm_o2_min) / parm_o2_min_delta, c0), c1) / &
-                                   parm_Remin_D_C_O2 * (delta_z(k) * (sed_denitrif * denitrif_C_N + other_remin) - &
-                                                        (POC%to_floor - POC%sed_loss(k)) * (c1 - POCremin_refract))
-           bottom_fluxes(lig_ind) = (POC%to_floor - POC%sed_loss(k)) * (remin_to_Lig - parm_Lig_degrade_rate0)
-
-           bottom_fluxes(nh4_ind) = (Q * POC%to_floor - PON_sed_loss) * (c1 - PONremin_refract)
-           bottom_fluxes(donr_ind) = (Q * POC%to_floor - PON_sed_loss) * PONremin_refract
-
-        endif
-
-        if (POP%to_floor > c0) then
-           bottom_fluxes(po4_ind) = (POP%to_floor - POP%sed_loss(k)) * (c1 - POPremin_refract)
-           bottom_fluxes(dopr_ind) = (POP%to_floor - POP%sed_loss(k)) * POPremin_refract
-        endif
-
         !-----------------------------------------------------------------------
         !   Remove all Piron and dust that hits bottom, sedimentary Fe source
         !        accounted for by fesedflux elsewhere.
@@ -3268,12 +3206,6 @@ contains
 
         dust%to_floor = dust%sflux_out(k) + dust%hflux_out(k)
         dust%sed_loss(k) = dust%to_floor
-
-        bottom_fluxes(alk_ind) = bottom_fluxes(alk_ind) - bottom_fluxes(no3_ind) + &
-                                 bottom_fluxes(nh4_ind)
-        bottom_fluxes(alk_alt_co2_ind) = bottom_fluxes(alk_alt_co2_ind) - bottom_fluxes(no3_ind) + &
-                                         bottom_fluxes(nh4_ind)
-
 
      endif
 
@@ -3467,6 +3399,100 @@ contains
     end associate
 
   end subroutine compute_denitrif
+
+  !***********************************************************************
+
+  subroutine compute_bottom_fluxes(domain, marbl_tracer_indices, o2_consumption_scalef, POC, POP, P_CaCO3, &
+                                   P_CaCO3_ALT_CO2, P_SiO2, O2_loc, PON_sed_loss, sed_denitrif, other_remin, &
+                                   bottom_fluxes)
+
+    use marbl_settings_mod, only : remin_to_Lig
+    use marbl_settings_mod, only : parm_Lig_degrade_rate0
+
+    type(marbl_domain_type)           , intent(in)    :: domain
+    type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
+    real(r8)                          , intent(in)    :: o2_consumption_scalef
+    type(column_sinking_particle_type), intent(in)    :: POC                 ! base units = nmol C
+    type(column_sinking_particle_type), intent(in)    :: POP                 ! base units = nmol P
+    type(column_sinking_particle_type), intent(in)    :: P_CaCO3             ! base units = nmol CaCO3
+    type(column_sinking_particle_type), intent(in)    :: P_CaCO3_ALT_CO2     ! base units = nmol CaCO3
+    type(column_sinking_particle_type), intent(in)    :: P_SiO2              ! base units = nmol SiO2
+    real(r8),                           intent(in)    :: O2_loc
+    real(r8),                           intent(in)    :: PON_sed_loss        ! loss of PON to sediments
+    real (r8),                          intent(in)    :: sed_denitrif        ! sedimentary denitrification (umolN/cm^2/s)
+    real (r8),                          intent(in)    :: other_remin         ! sedimentary remin not due to oxic or denitrification
+    real(r8),                           intent(inout) :: bottom_fluxes(:)
+
+    associate(&
+      kmt                      => domain%kmt,                                       &
+      delta_z                  => domain%delta_z,                                   &
+      po4_ind                  => marbl_tracer_indices%po4_ind,                     &
+      no3_ind                  => marbl_tracer_indices%no3_ind,                     &
+      sio3_ind                 => marbl_tracer_indices%sio3_ind,                    &
+      nh4_ind                  => marbl_tracer_indices%nh4_ind,                     &
+      lig_ind                  => marbl_tracer_indices%lig_ind,                     &
+      o2_ind                   => marbl_tracer_indices%o2_ind,                      &
+      dic_ind                  => marbl_tracer_indices%dic_ind,                     &
+      dic_alt_co2_ind          => marbl_tracer_indices%dic_alt_co2_ind,             &
+      alk_ind                  => marbl_tracer_indices%alk_ind,                     &
+      alk_alt_co2_ind          => marbl_tracer_indices%alk_alt_co2_ind,             &
+      dopr_ind                 => marbl_tracer_indices%dopr_ind,                    &
+      donr_ind                 => marbl_tracer_indices%donr_ind,                    &
+      docr_ind                 => marbl_tracer_indices%docr_ind                     &
+      )
+
+    if (P_CaCO3%to_floor > c0) then
+      bottom_fluxes(alk_ind) = c2 * (P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt))
+      bottom_fluxes(dic_ind) = P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt)
+    endif
+
+    if (P_CaCO3_ALT_CO2%to_floor > c0) then
+      if (P_CaCO3%to_floor > c0) then
+        bottom_fluxes(alk_alt_co2_ind) = bottom_fluxes(alk_ind) + &
+                                         c2 * (P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(kmt)) - &
+                                         c2 * (P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt))
+        bottom_fluxes(dic_alt_co2_ind) = bottom_fluxes(dic_ind) + &
+                                         (P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(kmt)) - &
+                                         (P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt))
+      else
+        bottom_fluxes(alk_alt_co2_ind) = c2 * (P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(kmt))
+        bottom_fluxes(dic_alt_co2_ind) = P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(kmt)
+      endif
+    endif
+
+    if (P_SiO2%to_floor > c0) then
+      bottom_fluxes(sio3_ind) = P_SiO2%to_floor - P_SiO2%sed_loss(kmt)
+    endif
+
+    if (POC%to_floor > c0) then
+      bottom_fluxes(docr_ind) = (POC%to_floor - POC%sed_loss(kmt)) * POCremin_refract
+      bottom_fluxes(dic_ind) = bottom_fluxes(dic_ind) + &
+                               (POC%to_floor - POC%sed_loss(kmt)) * (c1 - POCremin_refract)
+      bottom_fluxes(dic_alt_co2_ind) = bottom_fluxes(dic_alt_co2_ind) + &
+                                       (POC%to_floor - POC%sed_loss(kmt)) * (c1 - POCremin_refract)
+      bottom_fluxes(o2_ind) = o2_consumption_scalef * &
+                              min(max((O2_loc - parm_o2_min) / parm_o2_min_delta, c0), c1) / &
+                              parm_Remin_D_C_O2 * (delta_z(kmt) * (sed_denitrif * denitrif_C_N + other_remin) - &
+                                                   (POC%to_floor - POC%sed_loss(kmt)) * (c1 - POCremin_refract))
+      bottom_fluxes(lig_ind) = (POC%to_floor - POC%sed_loss(kmt)) * (remin_to_Lig - parm_Lig_degrade_rate0)
+
+      bottom_fluxes(nh4_ind) = (Q * POC%to_floor - PON_sed_loss) * (c1 - PONremin_refract)
+      bottom_fluxes(donr_ind) = (Q * POC%to_floor - PON_sed_loss) * PONremin_refract
+    endif
+
+    if (POP%to_floor > c0) then
+      bottom_fluxes(po4_ind) = (POP%to_floor - POP%sed_loss(kmt)) * (c1 - POPremin_refract)
+      bottom_fluxes(dopr_ind) = (POP%to_floor - POP%sed_loss(kmt)) * POPremin_refract
+    endif
+
+    bottom_fluxes(no3_ind) = -delta_z(kmt) * sed_denitrif
+    bottom_fluxes(alk_ind) = bottom_fluxes(alk_ind) - bottom_fluxes(no3_ind) + &
+    bottom_fluxes(nh4_ind)
+    bottom_fluxes(alk_alt_co2_ind) = bottom_fluxes(alk_alt_co2_ind) - bottom_fluxes(no3_ind) + &
+            bottom_fluxes(nh4_ind)
+
+    end associate
+  end subroutine compute_bottom_fluxes
 
   !***********************************************************************
 
