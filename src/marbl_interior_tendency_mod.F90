@@ -3189,11 +3189,6 @@ contains
            glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_CaCO3_bury) = P_CaCO3%sed_loss(k)
         endif
 
-        !----------------------------------------------------------------------------------
-        !  Update sinking fluxes and remin fluxes, accounting for sediments.
-        !  flux used to hold sinking fluxes before update.
-        !----------------------------------------------------------------------------------
-
         !-----------------------------------------------------------------------
         !   Remove all Piron and dust that hits bottom, sedimentary Fe source
         !        accounted for by fesedflux elsewhere.
@@ -3441,6 +3436,10 @@ contains
       docr_ind                 => marbl_tracer_indices%docr_ind                     &
       )
 
+    !----------------------------------------------------------------------------------
+    ! Compute bottom fluxes from sediments into column
+    !----------------------------------------------------------------------------------
+
     if (P_CaCO3%to_floor > c0) then
       bottom_fluxes(alk_ind) = c2 * (P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt))
       bottom_fluxes(dic_ind) = P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt)
@@ -3492,6 +3491,7 @@ contains
             bottom_fluxes(nh4_ind)
 
     end associate
+
   end subroutine compute_bottom_fluxes
 
   !***********************************************************************

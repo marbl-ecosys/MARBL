@@ -3138,7 +3138,7 @@ contains
 
     associate( POC => marbl_particulate_share%POC )
     call store_diagnostics_nitrogen_fluxes(domain, POC, &
-         PON_sed_loss, denitrif, autotroph_derived_terms, interior_tendencies, &
+         denitrif, autotroph_derived_terms, interior_tendencies, &
          marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_nitrogen_fluxes', subname)
@@ -4048,7 +4048,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_carbon_fluxes'
     character(len=char_len)     :: log_message
     integer(int_kind) :: n, auto_ind
-    real(r8), dimension(marbl_domain%km) :: work, work2
+    real(r8), dimension(marbl_domain%km) :: integrand, integrated_terms
     !-----------------------------------------------------------------------
 
     associate(                                        &
@@ -4064,25 +4064,24 @@ contains
          )
 
     ! vertical integrals
-    work = interior_tendencies(dic_ind,:) + interior_tendencies(doc_ind,:) +             &
-         interior_tendencies(docr_ind,:) +                                               &
-         sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +     &
-         sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%C_ind,:),dim=1)
+    integrand = interior_tendencies(dic_ind,:) + interior_tendencies(doc_ind,:) +             &
+                interior_tendencies(docr_ind,:) +                                             &
+                sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +   &
+                sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%C_ind,:),dim=1)
 
     do auto_ind = 1, autotroph_cnt
        n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
        if (n .gt. 0) then
-          work = work + interior_tendencies(n,:)
+          integrand = integrand + interior_tendencies(n,:)
        end if
     end do
 
     ! Already-integrated terms
-    work2 = POC%sed_loss + P_CaCO3%sed_loss
-    work2(kmt) = work2(kmt) + (P_CaCO3%to_floor - P_CaCO3%sed_loss(kmt)) + &
-                              (POC%to_floor - POC%sed_loss(kmt))
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
-         full_depth_integral=diags(ind%Jint_Ctot)%field_2d(1),                  &
-         integrated_terms = work2)
+    integrated_terms(:) = c0
+    integrated_terms(kmt) = P_CaCO3%to_floor  + POC%to_floor
+    call marbl_diagnostics_share_compute_vertical_integrals(integrand, delta_z, kmt, &
+         full_depth_integral=diags(ind%Jint_Ctot)%field_2d(1),                       &
+         integrated_terms = integrated_terms)
 
     if (abs(diags(ind%Jint_Ctot)%field_2d(1)) .gt. Jint_Ctot_thres) then
        write(log_message,"(A,E11.3e3,A,E11.3e3)") &
@@ -4099,7 +4098,7 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, POC, &
-       PON_sed_loss, denitrif, autotroph_derived_terms, interior_tendencies, &
+       denitrif, autotroph_derived_terms, interior_tendencies, &
        marbl_tracer_indices, marbl_diags, marbl_status_log)
 
     use marbl_settings_mod, only : Q
@@ -4107,7 +4106,6 @@ contains
 
     type(marbl_domain_type),            intent(in)    :: marbl_domain
     type(column_sinking_particle_type), intent(in)    :: POC
-    real(r8),                           intent(in)    :: PON_sed_loss(:) ! km
     real(r8),                           intent(in)    :: denitrif(:)     ! km
     type(autotroph_derived_terms_type), intent(in)    :: autotroph_derived_terms
     real(r8),                           intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
@@ -4121,7 +4119,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_nitrogen_fluxes'
     character(len=char_len)     :: log_message
     integer(int_kind) :: n
-    real(r8), dimension(marbl_domain%km) :: work, work2
+    real(r8), dimension(marbl_domain%km) :: integrand, integrated_terms
     ! real(r8) :: dzr_loc
     !-----------------------------------------------------------------------
 
@@ -4140,24 +4138,24 @@ contains
 
     ! dzr_loc = 1._r8 / delta_z(kmt)
     ! vertical integrals
-    work = interior_tendencies(no3_ind,:) + interior_tendencies(nh4_ind,:) +                &
-           interior_tendencies(don_ind,:) + interior_tendencies(donr_ind,:) +               &
-           Q * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +  &
-           Q * sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%C_ind,:), dim=1) + &
-           denitrif(:)
+    integrand = interior_tendencies(no3_ind,:) + interior_tendencies(nh4_ind,:) +                &
+                interior_tendencies(don_ind,:) + interior_tendencies(donr_ind,:) +               &
+                Q * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +  &
+                Q * sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%C_ind,:), dim=1) + &
+                denitrif(:)
 
     ! subtract out N fixation
     do n = 1, autotroph_cnt
        if (autotroph_settings(n)%Nfixer) then
-          work = work - autotroph_derived_terms%Nfix(n,:)
+          integrand = integrand - autotroph_derived_terms%Nfix(n,:)
        end if
     end do
 
-    work2 = PON_sed_loss
-    work2(kmt) = work2(kmt) + (Q * POC%to_floor - PON_sed_loss(kmt))
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
-         full_depth_integral=diags(ind%Jint_Ntot)%field_2d(1),                  &
-         integrated_terms = work2)
+    integrated_terms(:) = c0
+    integrated_terms(kmt) = Q * POC%to_floor
+    call marbl_diagnostics_share_compute_vertical_integrals(integrand, delta_z, kmt, &
+         full_depth_integral=diags(ind%Jint_Ntot)%field_2d(1),                       &
+         integrated_terms = integrated_terms)
 
     if (abs(diags(ind%Jint_Ntot)%field_2d(1)) .gt. Jint_Ntot_thres) then
        write(log_message,"(A,E11.3e3,A,E11.3e3)") &
@@ -4195,7 +4193,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_phosphorus_fluxes'
     character(len=char_len)     :: log_message
     integer(int_kind) :: n
-    real(r8), dimension(marbl_domain%km) :: work, work2
+    real(r8), dimension(marbl_domain%km) :: integrand, integrated_terms
     !-----------------------------------------------------------------------
 
     associate(                                         &
@@ -4209,22 +4207,23 @@ contains
          )
 
     ! vertical integrals
-    work = interior_tendencies(po4_ind,:) + interior_tendencies(dop_ind,:) + interior_tendencies(dopr_ind,:) + &
-         Qp_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1)
+    integrand = interior_tendencies(po4_ind,:) + interior_tendencies(dop_ind,:) + interior_tendencies(dopr_ind,:) + &
+                Qp_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1)
 
     if (lvariable_PtoC) then
-       work = work + sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%P_ind,:),dim=1)
+     integrand = integrand + sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%P_ind,:),dim=1)
     else
        do n = 1, autotroph_cnt
-          work = work + autotroph_derived_terms%Qp(n,:) * interior_tendencies(marbl_tracer_indices%auto_inds(n)%C_ind,:)
+          integrand = integrand + &
+                      autotroph_derived_terms%Qp(n,:) * interior_tendencies(marbl_tracer_indices%auto_inds(n)%C_ind,:)
        end do
     endif
 
-    work2 = POP%sed_loss
-    work2(kmt) = work2(kmt) + (POP%to_floor - POP%sed_loss(kmt))
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
-         full_depth_integral=diags(ind%Jint_Ptot)%field_2d(1),                  &
-         integrated_terms = work2)
+    integrated_terms(:) = c0
+    integrated_terms(kmt) = POP%to_floor
+    call marbl_diagnostics_share_compute_vertical_integrals(integrand, delta_z, kmt, &
+         full_depth_integral=diags(ind%Jint_Ptot)%field_2d(1),                       &
+         integrated_terms = integrated_terms)
 
     if (abs(diags(ind%Jint_Ptot)%field_2d(1)) .gt. Jint_Ptot_thres) then
        write(log_message,"(A,E11.3e3,A,E11.3e3)") &
@@ -4258,7 +4257,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_silicon_fluxes'
     character(len=char_len)     :: log_message
     integer(int_kind) :: n
-    real(r8), dimension(marbl_domain%km) :: work, work2
+    real(r8), dimension(marbl_domain%km) :: integrand, integrated_terms
     !-----------------------------------------------------------------------
 
     associate(                                        &
@@ -4270,19 +4269,19 @@ contains
          )
 
     ! vertical integrals
-    work = interior_tendencies(marbl_tracer_indices%sio3_ind,:)
+    integrand = interior_tendencies(marbl_tracer_indices%sio3_ind,:)
 
     do n = 1, autotroph_cnt
        if (marbl_tracer_indices%auto_inds(n)%Si_ind > 0) then
-          work = work + interior_tendencies(marbl_tracer_indices%auto_inds(n)%Si_ind,:)
+          integrand = integrand + interior_tendencies(marbl_tracer_indices%auto_inds(n)%Si_ind,:)
        end if
     end do
 
-    work2 = P_SiO2%sed_loss
-    work2(kmt) = work2(kmt) + P_SiO2%to_floor - P_SiO2%sed_loss(kmt)
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
-         full_depth_integral=diags(ind%Jint_Sitot)%field_2d(1),                 &
-         integrated_terms = work2)
+    integrated_terms(:) = c0
+    integrated_terms(kmt) = P_SiO2%to_floor
+    call marbl_diagnostics_share_compute_vertical_integrals(integrand, delta_z, kmt, &
+         full_depth_integral=diags(ind%Jint_Sitot)%field_2d(1),                      &
+         integrated_terms = integrated_terms)
 
     if (abs(diags(ind%Jint_Sitot)%field_2d(1)) .gt. Jint_Sitot_thres) then
        write(log_message,"(A,E11.3e3,A,E11.3e3)") &
@@ -4319,7 +4318,7 @@ contains
     !-----------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:store_diagnostics_iron_fluxes'
     character(len=char_len)     :: log_message
-    real(r8), dimension(marbl_domain%km) :: work
+    real(r8), dimension(marbl_domain%km) :: integrand
     !-----------------------------------------------------------------------
 
     associate(                                        &
@@ -4333,13 +4332,13 @@ contains
 
     diags(ind%fesedflux)%field_3d(:,1) = fesedflux(:)
     ! vertical integrals
-    work = interior_tendencies(fe_ind, :) +                                              &
-           sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) + &
-           Qfe_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1) - &
-           dust%remin(:) * dust_to_Fe
+    integrand = interior_tendencies(fe_ind, :) +                                              &
+                sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) + &
+                Qfe_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1) - &
+                dust%remin(:) * dust_to_Fe
 
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
-         full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),                 &
+    call marbl_diagnostics_share_compute_vertical_integrals(integrand, delta_z, kmt, &
+         full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),                      &
          integrated_terms = P_iron%sed_loss - fesedflux)
 
     if (abs(diags(ind%Jint_Fetot)%field_2d(1)) .gt. Jint_Fetot_thres) then
