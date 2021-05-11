@@ -276,6 +276,7 @@ Contains
     ! 9. Deallocate local variables as well as those in marbl_io_mod
     call marbl_io_destruct_diag_buffers()
     deallocate(surface_fluxes)
+    deallocate(bottom_fluxes)
     deallocate(interior_tendencies)
     deallocate(tracer_initial_vals)
     ! Deallocate memory inside surface_flux_forcings
