@@ -3475,6 +3475,8 @@ contains
                                                    (POC%to_floor - POC%sed_loss(kmt)) * (c1 - POCremin_refract))
       bottom_fluxes(lig_ind) = (POC%to_floor - POC%sed_loss(kmt)) * (remin_to_Lig - parm_Lig_degrade_rate0)
 
+      bottom_fluxes(no3_ind) = -min(max(((parm_o2_min + parm_o2_min_delta) - O2_loc) / parm_o2_min_delta, c0), c1) * &
+                               (POC%to_floor - POC%sed_loss(kmt)) * (c1 - POCremin_refract) / denitrif_C_N
       bottom_fluxes(nh4_ind) = (Q * POC%to_floor - PON_sed_loss) * (c1 - PONremin_refract)
       bottom_fluxes(donr_ind) = (Q * POC%to_floor - PON_sed_loss) * PONremin_refract
     endif
@@ -3484,7 +3486,7 @@ contains
       bottom_fluxes(dopr_ind) = (POP%to_floor - POP%sed_loss(kmt)) * POPremin_refract
     endif
 
-    bottom_fluxes(no3_ind) = -delta_z(kmt) * sed_denitrif
+    bottom_fluxes(no3_ind) = bottom_fluxes(no3_ind) - delta_z(kmt) * sed_denitrif
     bottom_fluxes(alk_ind) = bottom_fluxes(alk_ind) - bottom_fluxes(no3_ind) + &
     bottom_fluxes(nh4_ind)
     bottom_fluxes(alk_alt_co2_ind) = bottom_fluxes(alk_alt_co2_ind) - bottom_fluxes(no3_ind) + &
