@@ -2826,6 +2826,7 @@ contains
       ! Zooplankton 3D diags
       if (.not.ind%lconstructed()) then
         allocate(ind%zoo_loss(zooplankton_cnt))
+        allocate(ind%zoo_linear_loss(zooplankton_cnt))
         allocate(ind%zoo_loss_poc(zooplankton_cnt))
         allocate(ind%zoo_loss_doc(zooplankton_cnt))
         allocate(ind%zoo_graze(zooplankton_cnt))
@@ -2843,6 +2844,18 @@ contains
         truncate = .true.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%zoo_loss(n), marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = trim(zooplankton_settings(n)%lname) // ' Linear Loss'
+        sname    = trim(zooplankton_settings(n)%sname) // '_linear_loss'
+        units    = 'mmol/m^3/s'
+        vgrid    = 'layer_avg'
+        truncate = .true.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%zoo_linear_loss(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return

@@ -243,6 +243,28 @@
       "units": "((tracer_tend_units))",
       "vertical_grid": "layer_avg"
    },
+   "((zooplankton_sname))_linear_loss": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Linear Loss",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "((zooplankton_sname))_linear_loss_zint": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Linear Loss Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((zooplankton_sname))_linear_loss_zint_100m": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Linear Loss Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "((zooplankton_sname))_loss": {
       "frequency": "never",
       "longname": "((zooplankton_lname)) Loss",

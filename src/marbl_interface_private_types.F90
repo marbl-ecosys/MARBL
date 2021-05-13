@@ -1938,6 +1938,7 @@ contains
       deallocate(this%CaCO3_form)
       deallocate(this%Nfix)
       deallocate(this%zoo_loss)
+      deallocate(this%zoo_linear_loss)
       deallocate(this%zoo_loss_poc)
       deallocate(this%zoo_loss_doc)
       deallocate(this%zoo_graze)
