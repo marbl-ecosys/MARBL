@@ -4120,7 +4120,6 @@ contains
     character(len=char_len)     :: log_message
     integer(int_kind) :: n
     real(r8), dimension(marbl_domain%km) :: integrand, integrated_terms
-    ! real(r8) :: dzr_loc
     !-----------------------------------------------------------------------
 
     associate(                                        &
@@ -4136,7 +4135,6 @@ contains
          donr_ind => marbl_tracer_indices%donr_ind &
          )
 
-    ! dzr_loc = 1._r8 / delta_z(kmt)
     ! vertical integrals
     integrand = interior_tendencies(no3_ind,:) + interior_tendencies(nh4_ind,:) +                &
                 interior_tendencies(don_ind,:) + interior_tendencies(donr_ind,:) +               &
