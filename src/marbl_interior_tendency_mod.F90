@@ -197,7 +197,7 @@ contains
     real (r8) :: Lig_loss(domain%km)         ! loss of Fe-binding Ligand
     real (r8) :: totalChl_local(domain%km)   ! local value of totalChl
 
-    real (r8) :: denitrif_coeff_kmt
+    real (r8) :: denitrif_scalef_floor
 
     ! NOTE(bja, 2015-07) vectorization: arrays that are (n, k, c, i)
     ! probably can not be vectorized reasonably over c without memory
@@ -408,11 +408,11 @@ contains
     call compute_denitrif(kmt, km, marbl_tracer_indices, tracer_local(:, :), &
          dissolved_organic_matter%DOC_remin(:), &
          dissolved_organic_matter%DOCr_remin(:), &
-         POC%remin(:), other_remin(:), sed_denitrif(:), denitrif(:), denitrif_coeff_kmt)
+         POC%remin(:), other_remin(:), sed_denitrif(:), denitrif(:), denitrif_scalef_floor)
 
-    call compute_bottom_fluxes(domain, marbl_tracer_indices, o2_consumption_scalef(kmt), POC, POP, P_CaCO3, &
-                               P_CaCO3_ALT_CO2, P_SiO2, tracer_local(marbl_tracer_indices%o2_ind, kmt),     &
-                               PON_sed_loss(kmt), sed_denitrif(kmt), denitrif_coeff_kmt, other_remin(kmt),  &
+    call compute_bottom_fluxes(domain, marbl_tracer_indices, o2_consumption_scalef(kmt), POC, POP, P_CaCO3,   &
+                               P_CaCO3_ALT_CO2, P_SiO2, tracer_local(marbl_tracer_indices%o2_ind, kmt),       &
+                               PON_sed_loss(kmt), sed_denitrif(kmt), denitrif_scalef_floor, other_remin(kmt), &
                                bottom_fluxes)
 
     call compute_local_tendencies(km, marbl_tracer_indices, autotroph_derived_terms, &
@@ -3353,7 +3353,7 @@ contains
   !***********************************************************************
 
   subroutine compute_denitrif(kmt, km, marbl_tracer_indices, tracer_local, DOC_remin, DOCr_remin,   &
-       POC_remin, other_remin, sed_denitrif, denitrif, denitrif_coeff_kmt)
+       POC_remin, other_remin, sed_denitrif, denitrif, denitrif_scalef_floor)
 
     !-----------------------------------------------------------------------
     !  Compute denitrification under low O2 conditions
@@ -3369,7 +3369,7 @@ contains
     real(r8),                      intent(in)    :: other_remin(km)
     real(r8),                      intent(inout) :: sed_denitrif(km)
     real(r8),                      intent(out)   :: denitrif(km)
-    real(r8),                      intent(out)   :: denitrif_coeff_kmt
+    real(r8),                      intent(out)   :: denitrif_scalef_floor
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -3382,7 +3382,7 @@ contains
               O2_loc  => tracer_local(marbl_tracer_indices%o2_ind,:),  &
               NO3_loc => tracer_local(marbl_tracer_indices%no3_ind,:)  &
              )
-      denitrif_coeff_kmt = c1
+      denitrif_scalef_floor = c1
       do k=1,km
         work = ((parm_o2_min + parm_o2_min_delta) - O2_loc(k)) / parm_o2_min_delta
         work = min(max(work, c0), c1)
@@ -3394,7 +3394,7 @@ contains
           work = NO3_loc(k) / ((c10*spd)*(denitrif(k)+sed_denitrif(k)))
           denitrif(k) = denitrif(k) * work
           sed_denitrif(k) = sed_denitrif(k) * work
-          if (k == kmt) denitrif_coeff_kmt = work
+          if (k == kmt) denitrif_scalef_floor = work
         end if
       end do
 
@@ -3406,7 +3406,7 @@ contains
 
   subroutine compute_bottom_fluxes(domain, marbl_tracer_indices, o2_consumption_scalef, POC, POP, P_CaCO3, &
                                    P_CaCO3_ALT_CO2, P_SiO2, O2_loc, PON_sed_loss, sed_denitrif,            &
-                                   denitrif_coeff_kmt, other_remin, bottom_fluxes)
+                                   denitrif_scalef_floor, other_remin, bottom_fluxes)
 
     use marbl_settings_mod, only : remin_to_Lig
     use marbl_settings_mod, only : parm_Lig_degrade_rate0
@@ -3422,7 +3422,7 @@ contains
     real(r8),                           intent(in)    :: O2_loc
     real(r8),                           intent(in)    :: PON_sed_loss        ! loss of PON to sediments
     real (r8),                          intent(in)    :: sed_denitrif        ! sedimentary denitrification (umolN/cm^2/s)
-    real (r8),                          intent(in)    :: denitrif_coeff_kmt  ! scaling applied to denitrif in low-N situations
+    real (r8),                          intent(in)    :: denitrif_scalef_floor  ! scaling applied to denitrif in low-N situations
     real (r8),                          intent(in)    :: other_remin         ! sedimentary remin not due to oxic or denitrification
     real(r8),                           intent(inout) :: bottom_fluxes(:)
 
@@ -3485,7 +3485,7 @@ contains
                                parm_Remin_D_C_O2
       bottom_fluxes(lig_ind) = (POC%to_floor - POC%sed_loss(kmt)) * (remin_to_Lig - parm_Lig_degrade_rate0)
 
-      bottom_fluxes(no3_ind) = -(c1 - o2_loc_transform) * denitrif_coeff_kmt * &
+      bottom_fluxes(no3_ind) = -(c1 - o2_loc_transform) * denitrif_scalef_floor * &
                                 (POC%to_floor - POC%sed_loss(kmt)) * (c1 - POCremin_refract) / denitrif_C_N
       bottom_fluxes(nh4_ind) = (Q * POC%to_floor - PON_sed_loss) * (c1 - PONremin_refract)
       bottom_fluxes(donr_ind) = (Q * POC%to_floor - PON_sed_loss) * PONremin_refract
