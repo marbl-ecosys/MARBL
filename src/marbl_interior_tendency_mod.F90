@@ -376,7 +376,7 @@ contains
        call compute_particulate_terms(k, domain,                   &
             marbl_particulate_share, p_remin_scalef(k),            &
             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                    &
-            P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),   &
+            P_SiO2, dust, P_iron, PON_remin(:), PON_sed_loss(k),   &
             QA_dust_def(k),                                        &
             tracer_local(:, k), carbonate, sed_denitrif(k),        &
             other_remin(k), fesedflux(k), marbl_tracer_indices,    &
@@ -2644,7 +2644,7 @@ contains
      real (r8), dimension(:)           , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
      type(carbonate_type)              , intent(in)    :: carbonate
      real(r8)                          , intent(in)    :: fesedflux           ! sedimentary Fe input
-     real(r8)                          , intent(out)   :: PON_remin           ! remin of PON
+     real(r8)                          , intent(inout) :: PON_remin(domain%km)! remin of PON
      real(r8)                          , intent(out)   :: PON_sed_loss        ! loss of PON to sediments
      type(column_sinking_particle_type), intent(inout) :: POC                 ! base units = nmol C
      type(column_sinking_particle_type), intent(inout) :: POP                 ! base units = nmol P
@@ -2668,6 +2668,7 @@ contains
           sio2_diss, & ! diss. length varies spatially with O2
           caco3_diss, &
           dust_diss
+     real (r8) :: bot_flux_to_tend(domain%kmt)
 
      character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:compute_particulate_terms'
      character(len=char_len)     :: log_message
@@ -2709,6 +2710,16 @@ contains
           POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff,           & ! IN/OUT
           bSi_bury_coeff           => marbl_particulate_share%bSi_bury_coeff            & ! IN/OUT
           )
+
+     !-----------------------------------------------------------------------
+     ! (temporary) initialize weights for applying bottom fluxes
+     ! TODO: this should be an argument from the GCM
+     !       - POP will use a similar construction as below
+     !       - MOM will apply a unit bottom flux to the bottom of a dummy
+     !         tracers of 0s and then divide by dz to convert to tendency
+     !-----------------------------------------------------------------------
+     bot_flux_to_tend = c0
+     bot_flux_to_tend(column_kmt) = c1 / delta_z(column_kmt)
 
      !-----------------------------------------------------------------------
      !  initialize local copy of percent sed
@@ -2906,7 +2917,7 @@ contains
              ((POC%sflux_in(k) - POC%sflux_out(k)) + &
              (POC%hflux_in(k) - POC%hflux_out(k))) * dzr_loc
 
-        PON_remin = Q * POC%remin(k)
+        PON_remin(k) = Q * POC%remin(k)
 
         dust%remin(k) = &
              ((dust%sflux_in(k) - dust%sflux_out(k)) + &
@@ -2982,7 +2993,7 @@ contains
         call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POC)
         call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_iron)
         call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POP)
-        PON_remin = c0
+        PON_remin(k) = c0
         dzr_loc = c0
 
      endif
@@ -3187,31 +3198,31 @@ contains
         !----------------------------------------------------------------------------------
 
         if (P_CaCO3%to_floor > c0) then
-           P_CaCO3%remin(k) = P_CaCO3%remin(k) &
-                + ((P_CaCO3%to_floor - P_CaCO3%sed_loss(k)) * dzr_loc)
+           P_CaCO3%remin(1:column_kmt) = P_CaCO3%remin(1:column_kmt) &
+                + ((P_CaCO3%to_floor - P_CaCO3%sed_loss(k)) * bot_flux_to_tend(:))
         endif
 
         if (P_CaCO3_ALT_CO2%to_floor > c0) then
-           P_CaCO3_ALT_CO2%remin(k) = P_CaCO3_ALT_CO2%remin(k) &
-                + ((P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) * dzr_loc)
+           P_CaCO3_ALT_CO2%remin(1:column_kmt) = P_CaCO3_ALT_CO2%remin(1:column_kmt) &
+                + ((P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) * bot_flux_to_tend(:))
         endif
 
         if (P_SiO2%to_floor > c0) then
-           P_SiO2%remin(k) = P_SiO2%remin(k) &
-                + ((P_SiO2%to_floor - P_SiO2%sed_loss(k)) * dzr_loc)
+           P_SiO2%remin(1:column_kmt) = P_SiO2%remin(1:column_kmt) &
+                + ((P_SiO2%to_floor - P_SiO2%sed_loss(k)) * bot_flux_to_tend(:))
         endif
 
         if (POC%to_floor > c0) then
-           POC%remin(k) = POC%remin(k) &
-                + ((POC%to_floor - POC%sed_loss(k)) * dzr_loc)
+           POC%remin(1:column_kmt) = POC%remin(1:column_kmt) &
+                + ((POC%to_floor - POC%sed_loss(k)) * bot_flux_to_tend(:))
 
-           PON_remin = PON_remin &
-                + ((Q * POC%to_floor - PON_sed_loss) * dzr_loc)
+           PON_remin(1:column_kmt) = PON_remin(1:column_kmt) &
+                + ((Q * POC%to_floor - PON_sed_loss) * bot_flux_to_tend(:))
         endif
 
         if (POP%to_floor > c0) then
-           POP%remin(k) = POP%remin(k) &
-                + ((POP%to_floor - POP%sed_loss(k)) * dzr_loc)
+           POP%remin(1:column_kmt) = POP%remin(1:column_kmt) &
+                + ((POP%to_floor - POP%sed_loss(k)) * bot_flux_to_tend(:))
         endif
 
         !-----------------------------------------------------------------------
