@@ -2668,7 +2668,7 @@ contains
           sio2_diss, & ! diss. length varies spatially with O2
           caco3_diss, &
           dust_diss
-     real (r8) :: bot_flux_to_tend(domain%kmt)
+     real (r8) :: bot_flux_to_tend(domain%km)
 
      character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:compute_particulate_terms'
      character(len=char_len)     :: log_message
@@ -3198,31 +3198,31 @@ contains
         !----------------------------------------------------------------------------------
 
         if (P_CaCO3%to_floor > c0) then
-           P_CaCO3%remin(1:column_kmt) = P_CaCO3%remin(1:column_kmt) &
-                + ((P_CaCO3%to_floor - P_CaCO3%sed_loss(k)) * bot_flux_to_tend(:))
+           P_CaCO3%remin(1:k) = P_CaCO3%remin(1:k) &
+                + ((P_CaCO3%to_floor - P_CaCO3%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         if (P_CaCO3_ALT_CO2%to_floor > c0) then
-           P_CaCO3_ALT_CO2%remin(1:column_kmt) = P_CaCO3_ALT_CO2%remin(1:column_kmt) &
-                + ((P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) * bot_flux_to_tend(:))
+           P_CaCO3_ALT_CO2%remin(1:k) = P_CaCO3_ALT_CO2%remin(1:k) &
+                + ((P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         if (P_SiO2%to_floor > c0) then
-           P_SiO2%remin(1:column_kmt) = P_SiO2%remin(1:column_kmt) &
-                + ((P_SiO2%to_floor - P_SiO2%sed_loss(k)) * bot_flux_to_tend(:))
+           P_SiO2%remin(1:k) = P_SiO2%remin(1:k) &
+                + ((P_SiO2%to_floor - P_SiO2%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         if (POC%to_floor > c0) then
-           POC%remin(1:column_kmt) = POC%remin(1:column_kmt) &
-                + ((POC%to_floor - POC%sed_loss(k)) * bot_flux_to_tend(:))
+           POC%remin(1:k) = POC%remin(1:k) &
+                + ((POC%to_floor - POC%sed_loss(k)) * bot_flux_to_tend(1:k))
 
-           PON_remin(1:column_kmt) = PON_remin(1:column_kmt) &
-                + ((Q * POC%to_floor - PON_sed_loss) * bot_flux_to_tend(:))
+           PON_remin(1:k) = PON_remin(1:k) &
+                + ((Q * POC%to_floor - PON_sed_loss) * bot_flux_to_tend(1:k))
         endif
 
         if (POP%to_floor > c0) then
-           POP%remin(1:column_kmt) = POP%remin(1:column_kmt) &
-                + ((POP%to_floor - POP%sed_loss(k)) * bot_flux_to_tend(:))
+           POP%remin(1:k) = POP%remin(1:k) &
+                + ((POP%to_floor - POP%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         !-----------------------------------------------------------------------
