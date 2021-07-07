@@ -1096,6 +1096,7 @@ contains
          Rciso_POC_hflux_out, & ! ciso/12C of outgoing flux of hard POC
          sed_denitrif,        & ! sedimentary denitrification (umolN/cm^2/s)
          other_remin            ! sedimentary remin not due to oxic or denitrification
+     real (r8) :: bot_flux_to_tend(domain%km)
     !-----------------------------------------------------------------------
 
     associate(                                                                &
@@ -1118,6 +1119,16 @@ contains
          POC_remin         => marbl_particulate_share%POC_remin_fields      , & ! IN
          POC_bury_coeff    => marbl_particulate_share%POC_bury_coeff          & ! IN
          )
+
+     !-----------------------------------------------------------------------
+     ! (temporary) initialize weights for applying bottom fluxes
+     ! TODO: this should be an argument from the GCM
+     !       - POP will use a similar construction as below
+     !       - MOM will apply a unit bottom flux to the bottom of a dummy
+     !         tracers of 0s and then divide by dz to convert to tendency
+     !-----------------------------------------------------------------------
+     bot_flux_to_tend(:) = c0
+     bot_flux_to_tend(column_kmt) = c1 / domain%delta_z(column_kmt)
 
     !-----------------------------------------------------------------------
     !  initialize loss to sediments = 0 and local copy of percent sed
@@ -1275,13 +1286,15 @@ contains
        !----------------------------------------------------------------------------------
 
        if (P_CaCO3_ciso%to_floor > c0) then
-          P_CaCO3_ciso%remin(k) = P_CaCO3_ciso%remin(k) + ((P_CaCO3_ciso%to_floor - P_CaCO3_ciso%sed_loss(k)) * dzr_loc)
+          P_CaCO3_ciso%remin(1:k) = P_CaCO3_ciso%remin(1:k) &
+               + ((P_CaCO3_ciso%to_floor - P_CaCO3_ciso%sed_loss(k)) * bot_flux_to_tend(1:k))
        endif
 
        if (POC_ciso%to_floor > c0) then
-          POC_ciso%remin(k) = POC_ciso%remin(k) + ((POC_ciso%to_floor - POC_ciso%sed_loss(k)) * dzr_loc)
+          POC_ciso%remin(1:k) = POC_ciso%remin(1:k) &
+               + ((POC_ciso%to_floor - POC_ciso%sed_loss(k)) * bot_flux_to_tend(1:k))
        endif
-    endif
+    endif  ! k == column_kmt
 
     end associate
 

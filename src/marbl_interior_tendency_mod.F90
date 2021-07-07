@@ -2718,7 +2718,7 @@ contains
      !       - MOM will apply a unit bottom flux to the bottom of a dummy
      !         tracers of 0s and then divide by dz to convert to tendency
      !-----------------------------------------------------------------------
-     bot_flux_to_tend = c0
+     bot_flux_to_tend(:) = c0
      bot_flux_to_tend(column_kmt) = c1 / delta_z(column_kmt)
 
      !-----------------------------------------------------------------------
