@@ -46,6 +46,7 @@ contains
 
   subroutine marbl_ciso_interior_tendency_compute( &
        marbl_domain,                               &
+       bot_flux_to_tend,                           &
        interior_tendency_share,                    &
        zooplankton_share,                          &
        marbl_particulate_share,                    &
@@ -71,6 +72,7 @@ contains
     use marbl_ciso_diagnostics_mod, only : store_diagnostics_ciso_interior
 
     type(marbl_domain_type),                  intent(in)    :: marbl_domain
+    real (r8),                                intent(in)    :: bot_flux_to_tend(:)
     type(marbl_interior_tendency_share_type), intent(in)    :: interior_tendency_share
     type(zooplankton_share_type),             intent(in)    :: zooplankton_share
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
@@ -555,11 +557,11 @@ contains
        ! Compute carbon isotope particulate terms
        !-----------------------------------------------------------------------
 
-       call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3)
+       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,k), &
+            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3)
 
-       call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3)
+       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,k), &
+            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3)
 
        !-----------------------------------------------------------------------
        ! Update interior_tendencies for the 7 carbon pools for each Carbon isotope
@@ -1056,7 +1058,7 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_particulate_terms(k, domain, tracer_local, marbl_tracer_indices, &
+  subroutine compute_particulate_terms(k, domain, bot_flux_to_tend, tracer_local, marbl_tracer_indices, &
              interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
 
     !----------------------------------------------------------------------------------------
@@ -1078,6 +1080,7 @@ contains
 
     integer (int_kind),                       intent(in)    :: k                 ! vertical model level
     type(marbl_domain_type),                  intent(in)    :: domain
+    real(r8),                                 intent(in)    :: bot_flux_to_tend(:)
     real(r8),                                 intent(in)    :: tracer_local(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
     type(marbl_interior_tendency_share_type), intent(in)    :: interior_tendency_share
@@ -1096,7 +1099,6 @@ contains
          Rciso_POC_hflux_out, & ! ciso/12C of outgoing flux of hard POC
          sed_denitrif,        & ! sedimentary denitrification (umolN/cm^2/s)
          other_remin            ! sedimentary remin not due to oxic or denitrification
-     real (r8) :: bot_flux_to_tend(domain%km)
     !-----------------------------------------------------------------------
 
     associate(                                                                &
@@ -1119,16 +1121,6 @@ contains
          POC_remin         => marbl_particulate_share%POC_remin_fields      , & ! IN
          POC_bury_coeff    => marbl_particulate_share%POC_bury_coeff          & ! IN
          )
-
-     !-----------------------------------------------------------------------
-     ! (temporary) initialize weights for applying bottom fluxes
-     ! TODO: this should be an argument from the GCM
-     !       - POP will use a similar construction as below
-     !       - MOM will apply a unit bottom flux to the bottom of a dummy
-     !         tracers of 0s and then divide by dz to convert to tendency
-     !-----------------------------------------------------------------------
-     bot_flux_to_tend(:) = c0
-     bot_flux_to_tend(column_kmt) = c1 / domain%delta_z(column_kmt)
 
     !-----------------------------------------------------------------------
     !  initialize loss to sediments = 0 and local copy of percent sed

@@ -167,6 +167,7 @@ contains
 
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
     real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
+    real(r8), dimension(domain%km) :: bot_flux_to_tend
 
     integer (int_kind) :: k         ! vertical level index
 
@@ -254,6 +255,16 @@ contains
          donr_ind          => marbl_tracer_indices%donr_ind,        &
          docr_ind          => marbl_tracer_indices%docr_ind         &
          )
+
+     !-----------------------------------------------------------------------
+     ! (temporary) initialize weights for applying bottom fluxes
+     ! TODO: this should be an argument from the GCM
+     !       - POP will use a similar construction as below
+     !       - MOM will apply a unit bottom flux to the bottom of a dummy
+     !         tracers of 0s and then divide by dz to convert to tendency
+     !-----------------------------------------------------------------------
+     bot_flux_to_tend(:) = c0
+     bot_flux_to_tend(kmt) = c1 / domain%delta_z(kmt)
 
     !-----------------------------------------------------------------------
     !  Compute in situ temp
@@ -373,7 +384,7 @@ contains
 
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
-       call compute_particulate_terms(k, domain,                   &
+       call compute_particulate_terms(k, domain, bot_flux_to_tend, &
             marbl_particulate_share, p_remin_scalef(k),            &
             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                    &
             P_SiO2, dust, P_iron, PON_remin(:), PON_sed_loss(k),   &
@@ -465,6 +476,7 @@ contains
     ! call marbl_ciso_interior_tendency_compute()
     call marbl_ciso_interior_tendency_compute(                  &
          marbl_domain            = domain,                      &
+         bot_flux_to_tend        = bot_flux_to_tend(:),         &
          interior_tendency_share = interior_tendency_share,     &
          zooplankton_share = zooplankton_share,                 &
          marbl_particulate_share = marbl_particulate_share,     &
@@ -2559,7 +2571,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_particulate_terms(k, domain,                        &
+   subroutine compute_particulate_terms(k, domain, bot_flux_to_tend,      &
               marbl_particulate_share, p_remin_scalef,                    &
               POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                         &
               P_SiO2, dust, P_iron, PON_remin, PON_sed_loss, QA_dust_def, &
@@ -2640,6 +2652,7 @@ contains
 
      integer (int_kind)                , intent(in)    :: k                   ! vertical model level
      type(marbl_domain_type)           , intent(in)    :: domain
+     real (r8), dimension(:)           , intent(in)    :: bot_flux_to_tend    ! Array of weights for converting bottom flux to tendency (km)
      real (r8)                         , intent(in)    :: p_remin_scalef      ! Particulate Remin Scale Factor
      real (r8), dimension(:)           , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
      type(carbonate_type)              , intent(in)    :: carbonate
@@ -2668,7 +2681,6 @@ contains
           sio2_diss, & ! diss. length varies spatially with O2
           caco3_diss, &
           dust_diss
-     real (r8) :: bot_flux_to_tend(domain%km)
 
      character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:compute_particulate_terms'
      character(len=char_len)     :: log_message
@@ -2710,16 +2722,6 @@ contains
           POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff,           & ! IN/OUT
           bSi_bury_coeff           => marbl_particulate_share%bSi_bury_coeff            & ! IN/OUT
           )
-
-     !-----------------------------------------------------------------------
-     ! (temporary) initialize weights for applying bottom fluxes
-     ! TODO: this should be an argument from the GCM
-     !       - POP will use a similar construction as below
-     !       - MOM will apply a unit bottom flux to the bottom of a dummy
-     !         tracers of 0s and then divide by dz to convert to tendency
-     !-----------------------------------------------------------------------
-     bot_flux_to_tend(:) = c0
-     bot_flux_to_tend(column_kmt) = c1 / delta_z(column_kmt)
 
      !-----------------------------------------------------------------------
      !  initialize local copy of percent sed
