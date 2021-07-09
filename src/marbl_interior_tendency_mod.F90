@@ -91,6 +91,7 @@ contains
 
   subroutine marbl_interior_tendency_compute( &
        domain,                                &
+       bot_flux_to_tend,                      &
        interior_tendency_forcings,            &
        tracers,                               &
        surface_flux_forcing_indices,          &
@@ -134,6 +135,7 @@ contains
 
 
     type(marbl_domain_type),                                 intent(in)    :: domain
+    real(r8),                                                intent(in)    :: bot_flux_to_tend(:)  ! (km)
     type(marbl_forcing_fields_type),                         intent(in)    :: interior_tendency_forcings(:)
     real(r8),                                                intent(in)    :: tracers(:,:)         ! (tracer_cnt, km) tracer values
     type(marbl_surface_flux_forcing_indexing_type),          intent(in)    :: surface_flux_forcing_indices
@@ -167,7 +169,6 @@ contains
 
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
     real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
-    real(r8), dimension(domain%km) :: bot_flux_to_tend
 
     integer (int_kind) :: k         ! vertical level index
 
@@ -255,16 +256,6 @@ contains
          donr_ind          => marbl_tracer_indices%donr_ind,        &
          docr_ind          => marbl_tracer_indices%docr_ind         &
          )
-
-     !-----------------------------------------------------------------------
-     ! (temporary) initialize weights for applying bottom fluxes
-     ! TODO: this should be an argument from the GCM
-     !       - POP will use a similar construction as below
-     !       - MOM will apply a unit bottom flux to the bottom of a dummy
-     !         tracers of 0s and then divide by dz to convert to tendency
-     !-----------------------------------------------------------------------
-     bot_flux_to_tend(:) = c0
-     bot_flux_to_tend(kmt) = c1 / domain%delta_z(kmt)
 
     !-----------------------------------------------------------------------
     !  Compute in situ temp

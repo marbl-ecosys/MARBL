@@ -84,6 +84,7 @@ module marbl_interface
 
      ! public data related to computing interior tendencies
      real (r8), allocatable                             , public  :: tracers(:,:)                  ! input
+     real (r8), allocatable                             , public  :: bot_flux_to_tend(:)           ! input
      type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
@@ -306,8 +307,8 @@ contains
 
     call marbl_init_tracers(num_levels, num_elements_surface_flux, &
                             this%tracer_indices, this%tracers_at_surface, this%surface_fluxes, &
-                            this%tracers, this%interior_tendencies, this%tracer_metadata, &
-                            this%StatusLog)
+                            this%tracers, this%bot_flux_to_tend, this%interior_tendencies, &
+                            this%tracer_metadata, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_tracers", subname)
       return
@@ -881,6 +882,7 @@ contains
 
     call marbl_interior_tendency_compute(                                           &
          domain                            = this%domain,                           &
+         bot_flux_to_tend                  = this%bot_flux_to_tend,                 &
          interior_tendency_forcings        = this%interior_tendency_forcings,       &
          tracers                           = this%tracers,                          &
          surface_flux_forcing_indices      = this%surface_flux_forcing_ind,         &
@@ -1042,6 +1044,7 @@ contains
       deallocate(this%tracers_at_surface)
       deallocate(this%surface_fluxes)
       deallocate(this%tracers)
+      deallocate(this%bot_flux_to_tend)
       deallocate(this%interior_tendencies)
       deallocate(this%tracer_metadata)
       if (allocated(tracer_restore_vars)) deallocate(tracer_restore_vars)
