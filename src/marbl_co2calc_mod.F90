@@ -43,7 +43,7 @@ module marbl_co2calc_mod
   !   10**-9 drops precision to 2 significant figures).
 
   real(kind=r8)          , parameter :: xacc = 1e-10_r8
-  integer(kind=int_kind) , parameter :: max_bracket_grow_it = 3
+  integer(kind=int_kind) , parameter :: max_bracket_grow_it = 5
   integer(kind=int_kind) , parameter :: maxit = 100
 
   real(kind=r8)          , parameter :: salt_min = 0.1_r8
