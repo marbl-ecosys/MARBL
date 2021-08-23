@@ -209,7 +209,7 @@ contains
     ! computations.
 
     interior_tendencies(:, :) = c0
-    if (abs(c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:))) > 1e-12) then
+    if (abs(c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:))) > 1e-10) then
       write(log_message, "(A, E11.3, A)") "1 - sum(bot_flux_to_tend * dz) = ", &
                                           c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:)), &
                                           ", which is too far from 0 for conservation"
