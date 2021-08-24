@@ -209,11 +209,16 @@ contains
     ! computations.
 
     interior_tendencies(:, :) = c0
-    if (abs(c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:))) > 1e-10) then
+    if (abs(c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:))) > 1e-14) then
       write(log_message, "(A, E11.3, A)") "1 - sum(bot_flux_to_tend * dz) = ", &
                                           c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:)), &
                                           ", which is too far from 0 for conservation"
       call marbl_status_log%log_error(log_message, subname)
+      do k=1,domain%km
+        write(log_message, *) k, domain%delta_z(k), bot_flux_to_tend(k), domain%zw(k), &
+                              c1 - sum(domain%delta_z(1:k) * bot_flux_to_tend(1:k))
+        call marbl_status_log%log_error(log_message, subname)
+      end do
       return
     end if
 
