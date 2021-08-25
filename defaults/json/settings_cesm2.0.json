@@ -888,6 +888,13 @@
          "subcategory": "4. general parameters (bury coeffs)",
          "units": "unitless"
       },
+      "bftt_dz_sum_thres": {
+         "datatype": "real",
+         "default_value": 1e-14,
+         "longname": "MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold",
+         "subcategory": "4. general parameters",
+         "units": "unitless"
+      },
       "bury_coeff_rmean_timescale_years": {
          "datatype": "real",
          "default_value": 10,

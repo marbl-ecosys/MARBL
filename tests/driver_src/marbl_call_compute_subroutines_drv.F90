@@ -37,6 +37,7 @@ Contains
     character(len=char_len) :: log_message
     real(r8),                  allocatable, dimension(:,:)   :: surface_fluxes              ! num_cols x num_tracers
     real(r8),                  allocatable, dimension(:,:,:) :: interior_tendencies         ! num_tracers x num_levels x num_cols
+    type(forcing_fields_type), allocatable, dimension(:)     :: bot_flux_to_tend            ! num_levels
     real(r8),                  allocatable, dimension(:,:,:) :: tracer_initial_vals         ! num_tracers x num_levels x num_cols
     type(forcing_fields_type), allocatable, dimension(:)     :: surface_flux_forcings       ! num_forcings
     type(forcing_fields_type), allocatable, dimension(:)     :: interior_tendency_forcings  ! num_forcings
@@ -93,6 +94,7 @@ Contains
     !        as well as fields that driver reads (forcing fields)
     allocate(surface_fluxes(num_cols, num_tracers))
     allocate(interior_tendencies(num_tracers, num_levels, num_cols))
+    allocate(bot_flux_to_tend(num_levels))
     allocate(tracer_initial_vals(num_tracers, num_levels, num_cols))
     allocate(surface_flux_forcings(size(marbl_instances(1)%surface_flux_forcings)))
     allocate(interior_tendency_forcings(size(marbl_instances(1)%interior_tendency_forcings)))
@@ -232,14 +234,18 @@ Contains
           end if
         end do
 
-        !  (f) call interior_tendency_compute()
+        !  (f) set bot_flux_to_tend(:) [1/dz in level kmt, 0 elsewhere]
+        marbl_instances(n)%bot_flux_to_tend(:) = 0._r8
+        marbl_instances(n)%bot_flux_to_tend(active_level_cnt(col_id)) = 1._r8 / grid_data%delta_z(active_level_cnt(col_id))
+
+        !  (g) call interior_tendency_compute()
         call marbl_instances(n)%interior_tendency_compute()
         if (marbl_instances(n)%StatusLog%labort_MARBL) then
           call marbl_instances(n)%StatusLog%log_error_trace('interior_tendency_compute', subname)
           return
         end if
 
-        !  (g) write to diagnostic buffer
+        !  (h) write to diagnostic buffer
         !        Note: passing just col_id => interior tendency diagnostic buffer
         call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
         interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
@@ -271,6 +277,7 @@ Contains
     call marbl_io_destruct_diag_buffers()
     deallocate(surface_fluxes)
     deallocate(interior_tendencies)
+    deallocate(bot_flux_to_tend)
     deallocate(tracer_initial_vals)
     ! Deallocate memory inside surface_flux_forcings
     do m=1, size(marbl_instances(1)%surface_flux_forcings)

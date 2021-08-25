@@ -46,6 +46,7 @@ contains
 
   subroutine marbl_ciso_interior_tendency_compute( &
        marbl_domain,                               &
+       bot_flux_to_tend,                           &
        interior_tendency_share,                    &
        zooplankton_share,                          &
        marbl_particulate_share,                    &
@@ -71,6 +72,7 @@ contains
     use marbl_ciso_diagnostics_mod, only : store_diagnostics_ciso_interior
 
     type(marbl_domain_type),                  intent(in)    :: marbl_domain
+    real (r8),                                intent(in)    :: bot_flux_to_tend(:)
     type(marbl_interior_tendency_share_type), intent(in)    :: interior_tendency_share
     type(zooplankton_share_type),             intent(in)    :: zooplankton_share
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
@@ -555,11 +557,11 @@ contains
        ! Compute carbon isotope particulate terms
        !-----------------------------------------------------------------------
 
-       call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3)
+       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,k), &
+            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3)
 
-       call compute_particulate_terms(k, marbl_domain, tracer_local(:,k), marbl_tracer_indices, &
-            interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3)
+       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,k), &
+            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3)
 
        !-----------------------------------------------------------------------
        ! Update interior_tendencies for the 7 carbon pools for each Carbon isotope
@@ -1056,7 +1058,7 @@ contains
 
   !***********************************************************************
 
-  subroutine compute_particulate_terms(k, domain, tracer_local, marbl_tracer_indices, &
+  subroutine compute_particulate_terms(k, domain, bot_flux_to_tend, tracer_local, marbl_tracer_indices, &
              interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
 
     !----------------------------------------------------------------------------------------
@@ -1078,6 +1080,7 @@ contains
 
     integer (int_kind),                       intent(in)    :: k                 ! vertical model level
     type(marbl_domain_type),                  intent(in)    :: domain
+    real(r8),                                 intent(in)    :: bot_flux_to_tend(:)
     real(r8),                                 intent(in)    :: tracer_local(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
     type(marbl_interior_tendency_share_type), intent(in)    :: interior_tendency_share
@@ -1275,13 +1278,15 @@ contains
        !----------------------------------------------------------------------------------
 
        if (P_CaCO3_ciso%to_floor > c0) then
-          P_CaCO3_ciso%remin(k) = P_CaCO3_ciso%remin(k) + ((P_CaCO3_ciso%to_floor - P_CaCO3_ciso%sed_loss(k)) * dzr_loc)
+          P_CaCO3_ciso%remin(1:k) = P_CaCO3_ciso%remin(1:k) &
+               + ((P_CaCO3_ciso%to_floor - P_CaCO3_ciso%sed_loss(k)) * bot_flux_to_tend(1:k))
        endif
 
        if (POC_ciso%to_floor > c0) then
-          POC_ciso%remin(k) = POC_ciso%remin(k) + ((POC_ciso%to_floor - POC_ciso%sed_loss(k)) * dzr_loc)
+          POC_ciso%remin(1:k) = POC_ciso%remin(1:k) &
+               + ((POC_ciso%to_floor - POC_ciso%sed_loss(k)) * bot_flux_to_tend(1:k))
        endif
-    endif
+    endif  ! k == column_kmt
 
     end associate
 

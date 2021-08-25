@@ -76,6 +76,7 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : del_ph
   use marbl_settings_mod, only : phhi_3d_init
   use marbl_settings_mod, only : phlo_3d_init
+  use marbl_settings_mod, only : bftt_dz_sum_thres
 
   use marbl_pft_mod, only : Qp_zoo
 
@@ -91,6 +92,7 @@ contains
 
   subroutine marbl_interior_tendency_compute( &
        domain,                                &
+       bot_flux_to_tend,                      &
        interior_tendency_forcings,            &
        tracers,                               &
        surface_flux_forcing_indices,          &
@@ -134,6 +136,7 @@ contains
 
 
     type(marbl_domain_type),                                 intent(in)    :: domain
+    real(r8),                                                intent(in)    :: bot_flux_to_tend(:)  ! (km)
     type(marbl_forcing_fields_type),                         intent(in)    :: interior_tendency_forcings(:)
     real(r8),                                                intent(in)    :: tracers(:,:)         ! (tracer_cnt, km) tracer values
     type(marbl_surface_flux_forcing_indexing_type),          intent(in)    :: surface_flux_forcing_indices
@@ -164,6 +167,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:marbl_interior_tendency_compute'
+    character(len=char_len)     :: log_message
 
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
     real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
@@ -206,6 +210,18 @@ contains
     ! computations.
 
     interior_tendencies(:, :) = c0
+    if (abs(c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:))) > bftt_dz_sum_thres) then
+      write(log_message, "(A, E11.3, A)") "1 - sum(bot_flux_to_tend * dz) = ", &
+                                          c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:)), &
+                                          ", which is too far from 0 for conservation"
+      call marbl_status_log%log_error(log_message, subname)
+      do k=1,domain%km
+        write(log_message, *) k, domain%delta_z(k), bot_flux_to_tend(k), domain%zw(k), &
+                              c1 - sum(domain%delta_z(1:k) * bot_flux_to_tend(1:k))
+        call marbl_status_log%log_error(log_message, subname)
+      end do
+      return
+    end if
 
     if (.not. lsource_sink) then
        !-----------------------------------------------------------------------
@@ -373,10 +389,10 @@ contains
 
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
-       call compute_particulate_terms(k, domain,                   &
+       call compute_particulate_terms(k, domain, bot_flux_to_tend, &
             marbl_particulate_share, p_remin_scalef(k),            &
             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                    &
-            P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),   &
+            P_SiO2, dust, P_iron, PON_remin(:), PON_sed_loss(k),   &
             QA_dust_def(k),                                        &
             tracer_local(:, k), carbonate, sed_denitrif(k),        &
             other_remin(k), fesedflux(k), marbl_tracer_indices,    &
@@ -465,6 +481,7 @@ contains
     ! call marbl_ciso_interior_tendency_compute()
     call marbl_ciso_interior_tendency_compute(                  &
          marbl_domain            = domain,                      &
+         bot_flux_to_tend        = bot_flux_to_tend(:),         &
          interior_tendency_share = interior_tendency_share,     &
          zooplankton_share = zooplankton_share,                 &
          marbl_particulate_share = marbl_particulate_share,     &
@@ -2559,7 +2576,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_particulate_terms(k, domain,                        &
+   subroutine compute_particulate_terms(k, domain, bot_flux_to_tend,      &
               marbl_particulate_share, p_remin_scalef,                    &
               POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                         &
               P_SiO2, dust, P_iron, PON_remin, PON_sed_loss, QA_dust_def, &
@@ -2640,11 +2657,12 @@ contains
 
      integer (int_kind)                , intent(in)    :: k                   ! vertical model level
      type(marbl_domain_type)           , intent(in)    :: domain
+     real (r8), dimension(:)           , intent(in)    :: bot_flux_to_tend    ! Array of weights for converting bottom flux to tendency (km)
      real (r8)                         , intent(in)    :: p_remin_scalef      ! Particulate Remin Scale Factor
      real (r8), dimension(:)           , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
      type(carbonate_type)              , intent(in)    :: carbonate
      real(r8)                          , intent(in)    :: fesedflux           ! sedimentary Fe input
-     real(r8)                          , intent(out)   :: PON_remin           ! remin of PON
+     real(r8)                          , intent(inout) :: PON_remin(domain%km)! remin of PON
      real(r8)                          , intent(out)   :: PON_sed_loss        ! loss of PON to sediments
      type(column_sinking_particle_type), intent(inout) :: POC                 ! base units = nmol C
      type(column_sinking_particle_type), intent(inout) :: POP                 ! base units = nmol P
@@ -2906,7 +2924,7 @@ contains
              ((POC%sflux_in(k) - POC%sflux_out(k)) + &
              (POC%hflux_in(k) - POC%hflux_out(k))) * dzr_loc
 
-        PON_remin = Q * POC%remin(k)
+        PON_remin(k) = Q * POC%remin(k)
 
         dust%remin(k) = &
              ((dust%sflux_in(k) - dust%sflux_out(k)) + &
@@ -2982,7 +3000,7 @@ contains
         call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POC)
         call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_iron)
         call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POP)
-        PON_remin = c0
+        PON_remin(k) = c0
         dzr_loc = c0
 
      endif
@@ -3187,31 +3205,31 @@ contains
         !----------------------------------------------------------------------------------
 
         if (P_CaCO3%to_floor > c0) then
-           P_CaCO3%remin(k) = P_CaCO3%remin(k) &
-                + ((P_CaCO3%to_floor - P_CaCO3%sed_loss(k)) * dzr_loc)
+           P_CaCO3%remin(1:k) = P_CaCO3%remin(1:k) &
+                + ((P_CaCO3%to_floor - P_CaCO3%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         if (P_CaCO3_ALT_CO2%to_floor > c0) then
-           P_CaCO3_ALT_CO2%remin(k) = P_CaCO3_ALT_CO2%remin(k) &
-                + ((P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) * dzr_loc)
+           P_CaCO3_ALT_CO2%remin(1:k) = P_CaCO3_ALT_CO2%remin(1:k) &
+                + ((P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         if (P_SiO2%to_floor > c0) then
-           P_SiO2%remin(k) = P_SiO2%remin(k) &
-                + ((P_SiO2%to_floor - P_SiO2%sed_loss(k)) * dzr_loc)
+           P_SiO2%remin(1:k) = P_SiO2%remin(1:k) &
+                + ((P_SiO2%to_floor - P_SiO2%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         if (POC%to_floor > c0) then
-           POC%remin(k) = POC%remin(k) &
-                + ((POC%to_floor - POC%sed_loss(k)) * dzr_loc)
+           POC%remin(1:k) = POC%remin(1:k) &
+                + ((POC%to_floor - POC%sed_loss(k)) * bot_flux_to_tend(1:k))
 
-           PON_remin = PON_remin &
-                + ((Q * POC%to_floor - PON_sed_loss) * dzr_loc)
+           PON_remin(1:k) = PON_remin(1:k) &
+                + ((Q * POC%to_floor - PON_sed_loss) * bot_flux_to_tend(1:k))
         endif
 
         if (POP%to_floor > c0) then
-           POP%remin(k) = POP%remin(k) &
-                + ((POP%to_floor - POP%sed_loss(k)) * dzr_loc)
+           POP%remin(1:k) = POP%remin(1:k) &
+                + ((POP%to_floor - POP%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         !-----------------------------------------------------------------------
