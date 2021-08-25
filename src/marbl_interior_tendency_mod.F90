@@ -76,6 +76,7 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : del_ph
   use marbl_settings_mod, only : phhi_3d_init
   use marbl_settings_mod, only : phlo_3d_init
+  use marbl_settings_mod, only : bftt_dz_sum_thres
 
   use marbl_pft_mod, only : Qp_zoo
 
@@ -209,7 +210,7 @@ contains
     ! computations.
 
     interior_tendencies(:, :) = c0
-    if (abs(c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:))) > 1e-14) then
+    if (abs(c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:))) > bftt_dz_sum_thres) then
       write(log_message, "(A, E11.3, A)") "1 - sum(bot_flux_to_tend * dz) = ", &
                                           c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:)), &
                                           ", which is too far from 0 for conservation"

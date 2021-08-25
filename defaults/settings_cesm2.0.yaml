@@ -281,6 +281,12 @@ general_parms :
       units : unitless
       datatype : logical
       default_value : .false.
+   bftt_dz_sum_thres:
+      longname : MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold
+      subcategory : 4. general parameters
+      units : unitless
+      datatype : real
+      default_value : 1.0e-14
    Jint_Ctot_thres_molpm2pyr :
       longname : MARBL will abort if abs(Jint_Ctot) exceeds this threshold
       subcategory : 4. general parameters
