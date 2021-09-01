@@ -3128,8 +3128,8 @@ contains
 
            flux_alt = POC%to_floor*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
            other_remin(1:k) = min(bot_flux_to_tend(1:k) * &
-                                  min(0.1_r8 + flux_alt, 0.5_r8) * (POC%to_floor - POC%sed_loss(1:k)), &
-                                      bot_flux_to_tend(1:k) * (POC%to_floor - POC%sed_loss(1:k)) - &
+                                  min(0.1_r8 + flux_alt, 0.5_r8) * (POC%to_floor - POC%sed_loss(k)), &
+                                      bot_flux_to_tend(1:k) * (POC%to_floor - POC%sed_loss(k)) - &
                                       (sed_denitrif(1:k)*denitrif_C_N))
 
            !----------------------------------------------------------------------------------
@@ -3137,7 +3137,7 @@ contains
            !----------------------------------------------------------------------------------
 
            where (O2_loc_col(1:k) < c1)
-              other_remin(1:k) = bot_flux_to_tend(1:k) * (POC%to_floor - POC%sed_loss(1:k)) - &
+              other_remin(1:k) = bot_flux_to_tend(1:k) * (POC%to_floor - POC%sed_loss(k)) - &
                                  sed_denitrif(1:k)*denitrif_C_N
            endwhere
 
