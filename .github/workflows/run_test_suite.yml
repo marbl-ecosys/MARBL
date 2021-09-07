@@ -20,12 +20,16 @@ jobs:
                     - 3.7
         steps:
             - uses: actions/checkout@v2
-            - name: load-env
-              run: |
-                sudo apt-get update
-                sudo apt install python3 python-is-python3 make
-                sudo apt install gfortran netcdf-bin libnetcdf-dev libnetcdff-dev openmpi-bin libopenmpi-dev
+
+            - name: Load Environment
+              run: sudo apt-get update ; sudo apt install make gfortran netcdf-bin libnetcdf-dev libnetcdff-dev openmpi-bin libopenmpi-dev
+
+            - name: Setup Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v2
+              with:
+                python-version: $ {{ matrix.python-version }}
+
 #            - name: build-docs
-            - name: run-tests
-              run : |
-                cd MARBL_tools; ./run_test_suite.sh
+
+            - name: Run Tests
+              run : cd MARBL_tools; ./run_test_suite.sh
