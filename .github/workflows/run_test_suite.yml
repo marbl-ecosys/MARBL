@@ -1,0 +1,29 @@
+# MARBL continuous integration testing (via Github Actions)
+name: MARBL CI
+
+on:
+    push:
+        branches:
+            - stable
+            - development
+    pull_request:
+        branches:
+            - stable
+            - development
+
+jobs:
+    build:
+        runs-on: ubuntu-20.04
+        strategy:
+            matrix:
+                python-version:
+                    - 3.7
+        steps:
+            - uses: actions/checkout@v2
+            - name: load-env
+                run: |
+                    sudo apt-get update
+                    sudo apt install python3 python-is-python3 make gfortran netcdf-bin libnetcdf-dev libnetcdff-dev mpich libmpich-dev
+#            - name: build-docs
+            - name: run-tests
+                cd MARBL_tools; ./run_test_suite.sh
