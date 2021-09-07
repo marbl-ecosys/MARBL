@@ -2,24 +2,27 @@
 name: MARBL CI
 
 on:
-    - push
-    - pull_request:
-        branches:
-            - development
-            - stable
+    push:
+        branches: [ stable, development ]
+    pull_request:
+        branches: [ stable, development ]
 
 jobs:
-    build:
+    MARBL-Testing:
         runs-on: ubuntu-20.04
+
         strategy:
             matrix:
                 python-version:
                     - 3.7
+
         steps:
             - uses: actions/checkout@v2
 
             - name: Load Environment
-              run: sudo apt-get update ; sudo apt install make gfortran netcdf-bin libnetcdf-dev libnetcdff-dev openmpi-bin libopenmpi-dev
+              run: |
+                sudo apt-get update
+                sudo apt install make gfortran netcdf-bin libnetcdf-dev libnetcdff-dev openmpi-bin libopenmpi-dev
 
             - name: Setup Python ${{ matrix.python-version }}
               uses: actions/setup-python@v2
@@ -29,4 +32,6 @@ jobs:
 #            - name: build-docs
 
             - name: Run Tests
-              run : cd MARBL_tools; ./run_test_suite.sh
+              run : |
+                cd MARBL_tools
+                ./run_test_suite.sh
