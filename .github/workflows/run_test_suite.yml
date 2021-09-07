@@ -2,14 +2,11 @@
 name: MARBL CI
 
 on:
-    push:
+    - push
+    - pull_request:
         branches:
-            - stable
             - development
-    pull_request:
-        branches:
             - stable
-            - development
 
 jobs:
     build:
