@@ -23,7 +23,9 @@ jobs:
             - name: load-env
               run: |
                 sudo apt-get update
-                sudo apt install python3 python-is-python3 make gfortran netcdf-bin libnetcdf-dev libnetcdff-dev openmpi-bin libopenmpi-dev
+                sudo apt install python3 python-is-python3 make
+                sudo apt install gfortran netcdf-bin libnetcdf-dev libnetcdff-dev openmpi-bin libopenmpi-dev
 #            - name: build-docs
             - name: run-tests
+              run : |
                 cd MARBL_tools; ./run_test_suite.sh
