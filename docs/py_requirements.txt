@@ -1,5 +1,4 @@
-pylint==1.9.2
-isort<5
+pylint==2.10.2
 Sphinx==1.7.5
 sphinxcontrib-bibtex==0.4.0
 pybtex==0.22
