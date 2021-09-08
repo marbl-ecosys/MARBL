@@ -1,0 +1,35 @@
+name: MARBL CI
+on: [push, pull_request]
+jobs:
+  MARBL-Testing:
+    runs-on: ubuntu-latest
+
+    strategy:
+        matrix:
+            python-version:
+                - 3.7
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Setup python environment
+        run: |
+          pip install pyyaml numpy xarray netcdf4
+          pip install -r docs/py_requirements.txt
+      - name: Load Environment
+        run: |
+          sudo apt-get update
+          sudo apt install make gfortran netcdf-bin libnetcdf-dev libnetcdff-dev openmpi-bin libopenmpi-dev
+      - name: Build docs
+        run: |
+          cd docs/src
+          make html
+      - name: Run Test Suite
+        run: |
+          cd MARBL_tools
+          ./run_test_suite.sh
