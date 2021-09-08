@@ -557,10 +557,10 @@ contains
        ! Compute carbon isotope particulate terms
        !-----------------------------------------------------------------------
 
-       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,k), &
+       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,:), &
             marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3)
 
-       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,k), &
+       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,:), &
             marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3)
 
        !-----------------------------------------------------------------------
@@ -1072,6 +1072,7 @@ contains
 
     use marbl_constants_mod, only : spd
     use marbl_settings_mod , only : denitrif_C_N
+    use marbl_settings_mod , only : parm_sed_denitrif_coeff
     use marbl_settings_mod , only : caco3_bury_thres_iopt
     use marbl_settings_mod , only : caco3_bury_thres_iopt_fixed_depth
     use marbl_settings_mod , only : caco3_bury_thres_depth
@@ -1081,7 +1082,7 @@ contains
     integer (int_kind),                       intent(in)    :: k                 ! vertical model level
     type(marbl_domain_type),                  intent(in)    :: domain
     real(r8),                                 intent(in)    :: bot_flux_to_tend(:)
-    real(r8),                                 intent(in)    :: tracer_local(:)
+    real(r8),                                 intent(in)    :: tracer_local(:,:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
     type(marbl_interior_tendency_share_type), intent(in)    :: interior_tendency_share
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
@@ -1094,11 +1095,13 @@ contains
     real (r8) ::              &
          dz_loc,              & ! dz at a particular i,j location
          dzr_loc,             & ! dzr at a particular i,j location
-         flux_alt,           & ! flux to floor in alternative units, to match particular parameterizations
+         flux_alt,            & ! flux to floor in alternative units, to match particular parameterizations
          POC_ciso_PROD_avail, & ! 13C POC production available for excess POC flux
-         Rciso_POC_hflux_out, & ! ciso/12C of outgoing flux of hard POC
-         sed_denitrif,        & ! sedimentary denitrification (umolN/cm^2/s)
-         other_remin            ! sedimentary remin not due to oxic or denitrification
+         Rciso_POC_hflux_out    ! ciso/12C of outgoing flux of hard POC
+
+    real (r8), dimension(domain%km) :: &
+         sed_denitrif,                 & ! sedimentary denitrification (umolN/cm^2/s)
+         other_remin                     ! sedimentary remin not due to oxic or denitrification
     !-----------------------------------------------------------------------
 
     associate(                                                                &
@@ -1106,8 +1109,9 @@ contains
          column_kmt        => domain%kmt                                    , & ! IN
          column_delta_z    => domain%delta_z(k)                             , & ! IN
          column_zw         => domain%zw(k)                                  , & ! IN
-         O2_loc            => tracer_local(marbl_tracer_indices%O2_ind)     , & ! IN
-         NO3_loc           => tracer_local(marbl_tracer_indices%NO3_ind)    , & ! IN
+         O2_loc            => tracer_local(marbl_tracer_indices%O2_ind,k)   , & ! IN
+         O2_loc_col        => tracer_local(marbl_tracer_indices%O2_ind,:)   , & ! IN
+         NO3_loc           => tracer_local(marbl_tracer_indices%NO3_ind,k)  , & ! IN
          CO3               => interior_tendency_share%CO3_fields(k)         , & ! IN
          CO3_sat_calcite   => interior_tendency_share%CO3_sat_calcite(k)    , & ! IN
          decay_CaCO3       => marbl_particulate_share%decay_CaCO3_fields    , & ! IN
@@ -1129,8 +1133,8 @@ contains
     POC_ciso%sed_loss(k)     = c0
     P_CaCO3_ciso%sed_loss(k) = c0
 
-    sed_denitrif             = c0
-    other_remin              = c0
+    sed_denitrif(k)          = c0
+    other_remin(k)           = c0
 
     !-----------------------------------------------------------------------
     ! if any incoming carbon flux is zero, set carbon isotope flux to zero
@@ -1247,17 +1251,20 @@ contains
                * (0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2))
 
 
-          sed_denitrif = dzr_loc * POC_ciso%to_floor * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
+          sed_denitrif(1:k) = bot_flux_to_tend(1:k) * parm_sed_denitrif_coeff * POC_ciso%to_floor * &
+                              (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
           flux_alt = POC_ciso%to_floor*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
-          other_remin = dzr_loc &
-               * min ( min(0.1_r8 + flux_alt,0.5_r8) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)) , &
-                      (POC_ciso%to_floor - POC_ciso%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N)))
+          other_remin = min(bot_flux_to_tend(1:k) * &
+                            min(0.1_r8 + flux_alt,0.5_r8) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)), &
+                            bot_flux_to_tend(1:k) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)) - &
+                            sed_denitrif(1:k) * denitrif_C_N)
 
           ! if bottom water O2 is depleted, assume all remin is denitrif + other
-          if (O2_loc < c1) then
-             other_remin = dzr_loc * (POC_ciso%to_floor - POC_ciso%sed_loss(k) - (sed_denitrif * dz_loc * denitrif_C_N))
-          endif
+          where (O2_loc_col(1:k) < c1)
+             other_remin(1:k) = bot_flux_to_tend(1:k) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)) - &
+                                sed_denitrif(1:k) * denitrif_C_N
+          endwhere
        endif
 
        P_CaCO3_ciso%to_floor = P_CaCO3_ciso%sflux_out(k) + P_CaCO3_ciso%hflux_out(k)

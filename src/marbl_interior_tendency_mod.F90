@@ -394,8 +394,8 @@ contains
             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                    &
             P_SiO2, dust, P_iron, PON_remin(:), PON_sed_loss(k),   &
             QA_dust_def(k),                                        &
-            tracer_local(:, k), carbonate, sed_denitrif(k),        &
-            other_remin(k), fesedflux(k), marbl_tracer_indices,    &
+            tracer_local(:, :), carbonate, sed_denitrif(:),        &
+            other_remin(:), fesedflux(k), marbl_tracer_indices,    &
             glo_avg_fields_interior_tendency, marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
@@ -2659,7 +2659,7 @@ contains
      type(marbl_domain_type)           , intent(in)    :: domain
      real (r8), dimension(:)           , intent(in)    :: bot_flux_to_tend    ! Array of weights for converting bottom flux to tendency (km)
      real (r8)                         , intent(in)    :: p_remin_scalef      ! Particulate Remin Scale Factor
-     real (r8), dimension(:)           , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
+     real (r8), dimension(:,:)         , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
      type(carbonate_type)              , intent(in)    :: carbonate
      real(r8)                          , intent(in)    :: fesedflux           ! sedimentary Fe input
      real(r8)                          , intent(inout) :: PON_remin(domain%km)! remin of PON
@@ -2672,8 +2672,8 @@ contains
      type(column_sinking_particle_type), intent(inout) :: dust                ! base units = g
      type(column_sinking_particle_type), intent(inout) :: P_iron              ! base units = nmol Fe
      real (r8)                         , intent(inout) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux
-     real (r8)                         , intent(out)   :: sed_denitrif        ! sedimentary denitrification (umolN/cm^2/s)
-     real (r8)                         , intent(out)   :: other_remin         ! sedimentary remin not due to oxic or denitrification
+     real (r8), dimension(:)           , intent(inout) :: sed_denitrif        ! sedimentary denitrification (umolN/cm^2/s)
+     real (r8), dimension(:)           , intent(inout) :: other_remin         ! sedimentary remin not due to oxic or denitrification
      type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
      type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
      real (r8)                         , intent(inout) :: glo_avg_fields_interior_tendency(:)
@@ -2721,8 +2721,9 @@ contains
           column_kmt               => domain%kmt,                                       &
           delta_z                  => domain%delta_z,                                   &
           zw                       => domain%zw,                                        &
-          O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind),        &
-          NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind),       &
+          O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind,k),      &
+          O2_loc_col               => tracer_local(marbl_tracer_indices%o2_ind,:),      &
+          NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind,k),     &
           POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff,           & ! IN/OUT
           POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff,           & ! IN/OUT
           bSi_bury_coeff           => marbl_particulate_share%bSi_bury_coeff            & ! IN/OUT
@@ -2731,8 +2732,8 @@ contains
      !-----------------------------------------------------------------------
      !  initialize local copy of percent sed
      !-----------------------------------------------------------------------
-     sed_denitrif = c0
-     other_remin = c0
+     sed_denitrif(k) = c0
+     other_remin(k) = c0
 
      !-----------------------------------------------------------------------
      !  compute scalelength and decay factors
@@ -3122,22 +3123,23 @@ contains
               endif
            endif
 
-           sed_denitrif = dzr_loc * parm_sed_denitrif_coeff * POC%to_floor &
+           sed_denitrif(1:k) = bot_flux_to_tend(1:k) * parm_sed_denitrif_coeff * POC%to_floor &
                 * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
            flux_alt = POC%to_floor*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
-           other_remin = dzr_loc &
-                * min(min(0.1_r8 + flux_alt, 0.5_r8) * (POC%to_floor - POC%sed_loss(k)), &
-                (POC%to_floor - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N)))
+           other_remin(1:k) = min(bot_flux_to_tend(1:k) * &
+                                  min(0.1_r8 + flux_alt, 0.5_r8) * (POC%to_floor - POC%sed_loss(k)), &
+                                      bot_flux_to_tend(1:k) * (POC%to_floor - POC%sed_loss(k)) - &
+                                      (sed_denitrif(1:k)*denitrif_C_N))
 
            !----------------------------------------------------------------------------------
            !              if bottom water O2 is depleted, assume all remin is denitrif + other
            !----------------------------------------------------------------------------------
 
-           if (O2_loc < c1) then
-              other_remin = dzr_loc * &
-                   (POC%to_floor - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N))
-           endif
+           where (O2_loc_col(1:k) < c1)
+              other_remin(1:k) = bot_flux_to_tend(1:k) * (POC%to_floor - POC%sed_loss(k)) - &
+                                 sed_denitrif(1:k)*denitrif_C_N
+           endwhere
 
         else
 
