@@ -233,6 +233,7 @@ module marbl_settings_mod
        particulate_flux_ref_depth    ! reference depth for particulate flux diagnostics (m)
 
   real(r8), target :: &
+       bftt_dz_sum_thres,          & ! MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold
        Jint_Ctot_thres_molpm2pyr,  & ! MARBL will abort if abs(Jint_Ctot) exceeds this threshold
        Jint_Ctot_thres,            & ! MARBL will abort if abs(Jint_Ctot) exceeds this threshold (derived from Jint_Ctot_thres_molpm2pyr)
        Jint_Ntot_thres,            & ! MARBL will abort if abs(Jint_Ntot) exceeds this threshold (derived from Jint_Ctot_thres)
@@ -382,6 +383,7 @@ contains
     lo2_consumption_scalef        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    bftt_dz_sum_thres             = 1.0e-14_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     gQsi_0                        = 0.137_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     gQsi_max                      = 0.822_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -700,6 +702,15 @@ contains
     iptr      => particulate_flux_ref_depth
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, iptr=iptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'bftt_dz_sum_thres'
+    lname     = 'MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => bftt_dz_sum_thres
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'Jint_Ctot_thres_molpm2pyr'

@@ -3,16 +3,16 @@ module marbl_mpi_mod
   ! This module contains wrappers for all MPI calls so that marbl.F90
   ! does not need to have #ifdef macros scattered throughout
 
-  implicit none
-  public
-
 #define MPI 1
 #if MARBL_TIMING_OPT == MPI
 #define MARBL_WITH_MPI
+  use mpi
 #endif
 
+  implicit none
+  public
+
 #ifdef MARBL_WITH_MPI
-  include 'mpif.h'
   logical, parameter :: mpi_on = .true.
 #else
   logical, parameter :: mpi_on = .false.
