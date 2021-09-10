@@ -1255,10 +1255,10 @@ contains
                               (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
           flux_alt = POC_ciso%to_floor*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
-          other_remin = min(bot_flux_to_tend(1:k) * &
-                            min(0.1_r8 + flux_alt,0.5_r8) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)), &
-                            bot_flux_to_tend(1:k) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)) - &
-                            sed_denitrif(1:k) * denitrif_C_N)
+          other_remin(1:k) = min(bot_flux_to_tend(1:k) * &
+                                 min(0.1_r8 + flux_alt,0.5_r8) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)), &
+                                 bot_flux_to_tend(1:k) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)) - &
+                                 sed_denitrif(1:k) * denitrif_C_N)
 
           ! if bottom water O2 is depleted, assume all remin is denitrif + other
           where (O2_loc_col(1:k) < c1)
