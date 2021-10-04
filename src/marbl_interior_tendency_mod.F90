@@ -1015,6 +1015,8 @@ contains
 
       if (marbl_status_log%labort_marbl) then
         call marbl_status_log%log_error_trace('marbl_co2calc_interior() with dic_alt_co2', subname)
+! NOTE ignore problems with ALT_CO2 for now
+        marbl_status_log%labort_marbl = .false.
         return
       end if
 

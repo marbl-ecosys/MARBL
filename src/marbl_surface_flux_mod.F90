@@ -333,7 +333,10 @@ contains
 
           if (marbl_status_log%labort_marbl) then
              call marbl_status_log%log_error_trace('marbl_co2calc_surface() with flux_alt_co2', subname)
-             return
+! NOTE ignore problems with ALT_CO2 for now, including comment out return statement
+             dco2star_alt(:) = 0.0
+             marbl_status_log%labort_marbl = .false.
+!            return
           end if
 
           if (marbl_status_log%lwarning) then
