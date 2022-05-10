@@ -3473,7 +3473,7 @@ contains
     !-----------------------------------------------------------------------
     integer(int_kind) :: n, m
     real(r8) :: autotrophC_weight(marbl_domain%km)
-    real(r8) :: autotrophC_zint_100m
+    real(r8) :: autotrophC_zint_100m, photoC_NO3_zint_100m
     real(r8) :: limterm(marbl_domain%km)
     !-----------------------------------------------------------------------
 
@@ -3495,6 +3495,7 @@ contains
     diags(ind%photoC_TOT_zint)%field_2d(1) = c0
     diags(ind%photoC_TOT_zint_100m)%field_2d(1) = c0
     diags(ind%photoC_NO3_TOT_zint)%field_2d(1) = c0
+    diags(ind%photoC_NO3_TOT_zint_100m)%field_2d(1) = c0
 
     do n = 1, autotroph_cnt
        ! compute biomass weighted average of limitation terms over 0..100m
@@ -3628,10 +3629,14 @@ contains
             diags(ind%photoC_zint_100m(n))%field_2d(1)
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%photoC_NO3(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%photoC_NO3_zint(n))%field_2d(1))
+            delta_z, kmt, full_depth_integral=diags(ind%photoC_NO3_zint(n))%field_2d(1), &
+            near_surface_integral=photoC_NO3_zint_100m)
 
        diags(ind%photoC_NO3_TOT_zint)%field_2d(1) = diags(ind%photoC_NO3_TOT_zint)%field_2d(1) + &
             diags(ind%photoC_NO3_zint(n))%field_2d(1)
+
+       diags(ind%photoC_NO3_TOT_zint_100m)%field_2d(1) = diags(ind%photoC_NO3_TOT_zint_100m)%field_2d(1) + &
+            photoC_NO3_zint_100m
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%auto_graze(n))%field_3d(:, 1), &
             delta_z, kmt, full_depth_integral=diags(ind%auto_graze_zint(n))%field_2d(1), &
