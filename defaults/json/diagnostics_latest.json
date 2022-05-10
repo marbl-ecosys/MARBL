@@ -2244,7 +2244,7 @@
       "vertical_grid": "layer_avg"
    },
    "pocToFloor": {
-      "frequency": "never",
+      "frequency": "medium",
       "longname": "POC Flux Hitting Sea Floor",
       "operator": "average",
       "units": "nmol/cm^2/s",
