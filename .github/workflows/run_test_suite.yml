@@ -25,12 +25,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install make gfortran netcdf-bin libnetcdf-dev libnetcdff-dev openmpi-bin libopenmpi-dev
-      - name: Build docs
-        continue-on-error: True
-        run: |
-          cd docs/src
-          make html
       - name: Run Test Suite
         run: |
           cd MARBL_tools
           ./run_test_suite.sh
+      - name: Build docs
+        run: |
+          cd docs/src
+          make html
