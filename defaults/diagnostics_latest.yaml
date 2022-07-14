@@ -464,7 +464,7 @@ pocToFloor :
    longname : POC Flux Hitting Sea Floor
    units : nmol/cm^2/s
    vertical_grid : none
-   frequency : never
+   frequency : medium
    operator : average
 pocToSed :
    longname : POC Flux to Sediments
