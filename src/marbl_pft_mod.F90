@@ -52,6 +52,8 @@ module marbl_pft_mod
      character(len=char_len) :: lname
      real(r8)                :: z_mort_0_per_day   ! zoo linear mort rate (1/day)
      real(r8)                :: z_mort_0           ! zoo linear mort rate (1/sec) (derived from z_mort_0_per_day)
+     real(r8)                :: basal_metabolic_rate_per_day ! zoo basal respiration rate (1/day)
+     real(r8)                :: basal_metabolic_rate ! zoo basal respiration rate (1/sec) (derived from basal_metabolic_rate_per_day)
      real(r8)                :: z_mort2_0_per_day  ! zoo quad mort rate (1/day/((mmol C/m3))
      real(r8)                :: z_mort2_0          ! zoo quad mort rate (1/sec/((mmol C/m3)) (derived from z_mort2_0_per_day)
      real(r8)                :: loss_thres         ! zoo conc. where losses go to zero
@@ -242,6 +244,7 @@ contains
         self%lname = 'Zooplankton'               ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%z_mort_0_per_day   = 0.1_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%z_mort2_0_per_day  = 0.4_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%basal_metabolic_rate_per_day  = 0.0_r8 ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%loss_thres         = 0.075_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%Ea                 = 0.65_r8
       case ('unset')
@@ -249,6 +252,7 @@ contains
         self%lname = 'unknown'
         self%z_mort_0_per_day   = UnsetValue
         self%z_mort2_0_per_day  = UnsetValue
+        self%basal_metabolic_rate_per_day  = UnsetValue
         self%loss_thres         = UnsetValue
         self%Ea                 = UnsetValue
       case DEFAULT
