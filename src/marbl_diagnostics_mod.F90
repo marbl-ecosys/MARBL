@@ -1316,8 +1316,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton_settings(n)%lname) // ' Linear Loss Vertical Integral'
-        sname = trim(zooplankton_settings(n)%sname) // '_linear_loss_zint'
+        lname = trim(zooplankton_settings(n)%lname) // ' Basal Respiration Vertical Integral'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_basal_zint'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -1328,8 +1328,8 @@ contains
           return
         end if
 
-        lname = trim(zooplankton_settings(n)%lname) // ' Linear Loss Vertical Integral, 0-100m'
-        sname = trim(zooplankton_settings(n)%sname) // '_linear_loss_zint_100m'
+        lname = trim(zooplankton_settings(n)%lname) // ' Basal Respiration Vertical Integral, 0-100m'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_basal_zint_100m'
         units = 'mmol/m^3 cm/s'
         vgrid = 'none'
         truncate = .false.
@@ -2849,8 +2849,8 @@ contains
           return
         end if
 
-        lname    = trim(zooplankton_settings(n)%lname) // ' Linear Loss'
-        sname    = trim(zooplankton_settings(n)%sname) // '_linear_loss'
+        lname    = trim(zooplankton_settings(n)%lname) // ' Basal Respiration'
+        sname    = trim(zooplankton_settings(n)%sname) // '_loss_basal'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
         truncate = .true.
