@@ -1983,8 +1983,8 @@ contains
          zoo_graze_poc   => zooplankton_derived_terms%zoo_graze_poc(:,:), & ! input
          zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,:), & ! input
          zoo_graze_zootot   => zooplankton_derived_terms%zoo_graze_zootot(:,:), & ! input
-         zoo_loss        => zooplankton_derived_terms%zoo_loss(:,:),      & ! input
          zoo_loss_bulk   => zooplankton_derived_terms%zoo_loss_bulk(:,:), & ! input
+         zoo_loss_basal  => zooplankton_derived_terms%zoo_loss_basal(:,:), & ! input
          f_zoo_detr      => zooplankton_derived_terms%f_zoo_detr(:,:),    & ! input
 
          auto_graze_dic  => autotroph_derived_terms%auto_graze_dic(:,:),  & ! output
@@ -2021,7 +2021,8 @@ contains
         do zoo_ind = 1, zooplankton_cnt
           zoo_loss_poc(zoo_ind,k) = f_zoo_detr(zoo_ind,k) * zoo_loss_bulk(zoo_ind,k)
           zoo_loss_doc(zoo_ind,k) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss_bulk(zoo_ind,k)
-          zoo_loss_dic(zoo_ind,k) = parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss(zoo_ind,k) 
+          zoo_loss_dic(zoo_ind,k) = (parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_bulk(zoo_ind,k)) + &
+                                    zoo_loss_basal(zoo_ind,k) 
 		  
         end do
 
