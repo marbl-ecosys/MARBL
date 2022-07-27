@@ -1734,7 +1734,7 @@ contains
         Zprime(zoo_ind,:) = max(zooC(zoo_ind,:) - C_loss_thres, c0)
 
         zoo_loss_basal(zoo_ind,:) = zooplankton_settings(zoo_ind)%basal_metabolic_rate * Zprime(zoo_ind,:) * Tfunc_zoo(zoo_ind,:)
-		
+
         zoo_loss_bulk(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort_0 * Zprime(zoo_ind,:) + &
                               zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp) * Tfunc_zoo(zoo_ind,:)
 
@@ -2014,16 +2014,16 @@ contains
 
         !-----------------------------------------------------------------------
         ! compute zooplankton loss routing
-		!   - zooplankton linear and quadratic losses get routed to DOC, DIC, and POC
+        !   - zooplankton linear and quadratic losses get routed to DOC, DIC, and POC
         !   - basal respiration losses only contribute to DIC
         !-----------------------------------------------------------------------
-	
+
         do zoo_ind = 1, zooplankton_cnt
           zoo_loss_poc(zoo_ind,k) = f_zoo_detr(zoo_ind,k) * zoo_loss_bulk(zoo_ind,k)
           zoo_loss_doc(zoo_ind,k) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss_bulk(zoo_ind,k)
           zoo_loss_dic(zoo_ind,k) = (parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss_bulk(zoo_ind,k)) + &
-                                    zoo_loss_basal(zoo_ind,k) 
-		  
+                                    zoo_loss_basal(zoo_ind,k)
+
         end do
 
         !-----------------------------------------------------------------------
