@@ -34,13 +34,18 @@ Step 1. Create new module-level variable
 All parameter settings are module variables in ``marbl_settings_mod.F90``.
 Further, all subroutines and module variables are public in this module.
 
+.. block comes from marbl_settings_mod
 .. code-block:: fortran
 
   real(kind=r8), target :: &
+  real(r8), target :: &
+       Jint_Ctot_thres_molpm2pyr,  & ! MARBL will abort if abs(Jint_Ctot) exceeds this threshold
+       .
+       .
+       .
        parm_Fe_bioavail,           & ! fraction of Fe flux that is bioavailable
        parm_o2_min,                & ! min O2 needed for prod & consump. (nmol/cm^3)
        parm_o2_min_delta,          & ! width of min O2 range (nmol/cm^3)
-       parm_kappa_nitrif_per_day,  & ! nitrification inverse time constant (1/day)
        .
        .
        .
@@ -55,6 +60,7 @@ Step 2. Add the parameter to MARBL registry
 This registry allows the parameter to be both set by and returned to the GCM.
 Parameters in each of the four possible categories are defined separately from each other, in one of the following subroutines:
 
+.. block comes from marbl_settings_mod
 .. code-block:: fortran
 
   subroutine marbl_settings_define_general_parms(this, marbl_status_log)
@@ -64,9 +70,10 @@ Parameters in each of the four possible categories are defined separately from e
 
 ``parm_o2_min`` is registered in ``marbl_settings_define_general_parms``:
 
+.. block comes from marbl_settings_mod
 .. code-block:: fortran
 
-  subroutine marbl_define_parameters(this, marbl_status_log)
+  subroutine marbl_settings_define_general_parms(this, marbl_status_log)
   .
   .
   .
@@ -87,6 +94,7 @@ MARBL convention is to have a reasonable default value defined in case the varia
 Defaults for each of the four categories are set separately from each other, immediately after parameters for that category are defined.
 The subroutines for setting defaults are
 
+.. block comes from marbl_settings_mod
 .. code-block:: fortran
 
   subroutine marbl_settings_set_defaults_general_parms()
@@ -97,6 +105,7 @@ The subroutines for setting defaults are
 
 ``parm_o2_min`` is set in ``marbl_settings_set_defaults_general_parms``:
 
+.. block comes from marbl_settings_mod
 .. code-block:: fortran
 
   subroutine marbl_settings_set_defaults_general_parms()
@@ -106,7 +115,6 @@ The subroutines for setting defaults are
     parm_Fe_bioavail              = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min                   = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min_delta             = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    parm_kappa_nitrif_per_day     = 0.06_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
 
 --------------------------------------
 Step 4. Update the settings YAML files
@@ -116,6 +124,7 @@ We use a YAML file to provide an easy-to-edit and human-readable text file conta
 On the ``development`` branch, make changes to ``defaults/settings_latest.yaml``.
 Release branches may only offer specific versions of this file, such as ``defaults/settings_cesm2.1.yaml``.
 
+.. block comes from settings_latest.yaml
 .. code-block:: yaml
 
   # ABOUT THIS FILE
@@ -166,10 +175,10 @@ Release branches may only offer specific versions of this file, such as ``defaul
   ################################################################################
 
   general_parms :
-    .
-    .
-    .
-    parm_o2_min :
+     .
+     .
+     .
+     parm_o2_min :
         longname : Minimum O2 needed for production & consumption
         subcategory : 4. general parameters
         units : nmol/cm^3
@@ -193,6 +202,7 @@ The ``MARBL_tools/yaml_to_json.py`` script is provided to do just that:
 The rest of the python scripts provided in the ``MARBL_tools/`` subdirectory rely on the JSON file rather than the YAML.
 ``MARBL_tools/MARBL_generate_settings_file.py`` will turn the JSON file into a list for the GCM to parse:
 
+.. block comes from marbl.input
 .. code-block:: none
 
   ! general parameters

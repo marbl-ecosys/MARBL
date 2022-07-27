@@ -1,26 +1,22 @@
 .. _interior_tend:
 
+.. _ref-compute-interior-tendencies:
+
 ==================================
 Compute Interior Tracer Tendencies
 ==================================
 
 ``interior_tendency_compute()`` computes interior tracer tendencies (and related diagnostics) for a single column.
 (Recall that ``num_elements_interior_tendency = 1``, per :ref:`ref-init-interface`.)
-The stand-alone test suite does not yet call this routine, so examples come from the POP driver.
-The call to the routine is straightforward:
 
-.. code-block:: fortran
+------------------------------
+Example from Stand-Alone MARBL
+------------------------------
 
-       call marbl_instances(iblock)%interior_tendency_compute()
+The GCM needs to make sure the MARBL instance has all the data it needs to compute surface fluxes correctly.
+The following blocks of code can all be found in ``tests/driver_src/marbl_call_compute_subroutines_drv.F90``:
 
-As with :ref:`ref-compute-surface-fluxes`, the details are in the surrounding calls.
-
------------------------------------------------------------
-What MARBL needs prior to calling interior_tendency_compute
------------------------------------------------------------
-
-The GCM needs to make sure the MARBL instance has all the data it needs to compute interior tendencies correctly.
-Specifically it needs to to the following.
+.. _ref-global-scalars-interior-tend:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 1. Set global scalars
@@ -28,11 +24,16 @@ Step 1. Set global scalars
 
 If MARBL is configured with ``ladjust_bury_coeff = .true.`` then it will request running means of global averages of a few fields.
 
+.. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-       call marbl_instances(iblock)%set_global_scalars('interior_tendency')
+  !  (a) call set_global_scalars() for consistent setting of time-varying scalars
+  !      [necessary when running ladjust_bury_coeff, since GCM is responsible
+  !       for computing running means of values needed to compute burial coefficients]
+  call marbl_instances(n)%set_global_scalars('interior_tendency')
 
-Note that at this point, MARBL is responsible for both the global averaging and keeping the running means; in the future running means will be computed in MARBL (and requested as part of saved state).
+Note that at this point, the GCM is responsible for both the global averaging and keeping the running means; in the future running means will be computed in MARBL (and requested as part of saved state).
+At present there is not an example of this behavior in the stand-alone driver.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 2. Copy data into MARBL
@@ -41,86 +42,98 @@ Step 2. Copy data into MARBL
 Interior tracer tendencies are computed for a single column in MARBL.
 For each column, MARBL needs to know the following:
 
-#. domain information (including ``kmt``, the index of the level containing the ocean bottom)
-#. Interior forcing data
+#. Domain information (level depths, layer thicknesses, number of active levels, etc)
 #. Tracer values (for each level and each tracer)
+#. Interior forcing data
 #. Saved state
 
+.. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-  ! --- set marbl_domain kmt and if partial bottom cells then also delta_z ---
+  !  (b) set domain information
+  !      In this example, the vertical grid is the same from column to column and
+  !      therefore set during initialization. The columns vary in depth, so
+  !      the index of the bottom layer must be updated for each column.
+  marbl_instances(n)%domain%kmt = active_level_cnt(col_id)
 
-  marbl_instances(bid)%domain%kmt = KMT(i, c, bid)
-  if (partial_bottom_cells) then
-    marbl_instances(bid)%domain%delta_z(:) = DZT(i, c, :, bid)
-  end if
+  !  (c) copy tracer values into marbl_instances(n)%tracers
+  marbl_instances(n)%tracers = tracer_initial_vals(:,:,col_id)
 
-  ! --- set forcing fields ---
-
-  do n = 1, size(interior_tendency_forcings)
-   if (interior_tendency_forcings(n)%rank == 2) then
-     marbl_instances(bid)%interior_tendency_forcings(n)%field_0d(1) = &
-          interior_tendency_forcings(n)%field_0d(i,c,bid)
-   else
-     marbl_instances(bid)%interior_tendency_forcings(n)%field_1d(1,:) = &
-          interior_tendency_forcings(n)%field_1d(i,c,:,bid)
-   end if
+  !  (d) copy interior tendency forcings into marbl_instances(n)%interior_tendency_forcings
+  do m=1, size(marbl_instances(n)%interior_tendency_forcings)
+    if (associated(marbl_instances(n)%interior_tendency_forcings(m)%field_0d)) then
+      marbl_instances(n)%interior_tendency_forcings(m)%field_0d(1) = &
+           interior_tendency_forcings(m)%field_0d(col_id)
+    else
+      marbl_instances(n)%interior_tendency_forcings(m)%field_1d(1,:) = &
+           interior_tendency_forcings(m)%field_1d(col_id,:)
+    end if
   end do
 
-  ! --- set column tracers, averaging 2 time levels into 1 ---
-
-  do n = 1, ecosys_tracer_cnt
-    marbl_instances(bid)%tracers(n, :) = p5*(tracer_module_old(i, c, :, n) + tracer_module_cur(i, c, :, n))
+  !  (e) populate marbl_instances(n)%interior_tendency_saved_state (with 0s)
+  do m=1, size(marbl_instances(n)%interior_tendency_saved_state%state)
+    if (allocated(marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d)) then
+      marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d(:) = 0._r8
+    else
+      marbl_instances(n)%interior_tendency_saved_state%state(m)%field_3d(:,1) = 0._r8
+    end if
   end do
 
-  ! --- copy data from slab to column for marbl_saved_state ---
-  do n=1,size(interior_tendency_saved_state)
-   marbl_instances(bid)%interior_tendency_saved_state%state(n)%field_3d(:,1) = &
-     interior_tendency_saved_state(n)%field_3d(:,i,c,bid)
-  end do
+.. _ref-GCM-update-interior-tend:
 
---------------------------------------
-What the GCM needs after MARBL returns
---------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 3. Call ``interior_tendency_compute()``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-MARBL returns tracer tendencies on a per-column basis, and that needs to be stored in the GCM.
+Since all the data is available on the class object, the call to the routine does not require any arguments:
+
+.. block comes from marbl_call_compute_subroutines_drv.F90
+.. code-block:: fortran
+
+  !  (f) call interior_tendency_compute()
+  call marbl_instances(n)%interior_tendency_compute()
+
+.. _ref-after-interior-tend-call:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 4. Copy values MARBL will need later into a local buffer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After computing the tracer tendencies, MARBL returns several fields to the GCM.
+Each GCM will handle these fields in its own way, but it is important to know where to find them.
+MARBL returns all these fields on a per-column basis.
+Some variables may have a ``num_elements_interior_tendency`` dimension, but that dimension is hard-coded to be 1.
 POP checks to ensure that MARBL does set any values to ``NaN``, other GCMs may or may not want to do so as well.
-Additionally, saved state needs to be saved so it is available in the next time step and any fields that are globally averaged also need to be stored.
 
+#. The interior tendencies themselves, which are needed in the source term of the advection solver
+
+   * ``marbl_instance%interior_tendencies(:,:)`` is a ``marbl_tracer_cnt`` by ``num_levels`` array
+
+#. Saved state, which the GCM should store and then provide to MARBL on the next time step
+
+   * ``marbl_instance%interior_tendency_saved_state`` is ``marbl_saved_state_type``
+   * ``marbl_instance%interior_tendency_saved_state%state(:)`` is array of ``marbl_single_saved_state_type`` containing data GCM should store for next time step
+
+#. Values that need a global operation performed
+
+   * ``marbl_instance%glo_avg_fields_interior_tendency(:)`` is an array of length ``glo_avg_field_cnt_interior_tendency``
+   * The global average should be computed prior to the next ``interior_tendency_compute()`` call
+
+#. Diagnostics for the GCM to provide to the user
+
+   * ``marbl_instance%interior_tendency_diags`` is ``marbl_diagnostics_type``
+   * ``marbl_instance%interior_tendency_diags%diags(:)`` is array of ``marbl_single_diagnostic_type`` containing data GCM should add to diagnostic output
+
+The stand-alone driver does not hold on to saved state (there is no time stepping involved) or compute global averages.
+After the call to ``interior_tendency_compute()``, the standalone driver copies diags into the buffer and stores the tendencies
+(which are also written to the netCDF output file).
+
+.. block comes from marbl_call_compute_subroutines_drv.F90
 .. code-block:: fortran
 
-  do k = 1, KMT(i, c, bid)
-     if (any(shr_infnan_isnan(marbl_instances(bid)%interior_tendencies(:, k)))) then
-        write(stdout, *) subname, ': NaN in dtracer_module, (i,j,k)=(', &
-           this_block%i_glob(i), ',', this_block%j_glob(c), ',', k, ')'
-        write(stdout, *) '(lon,lat)=(', TLOND(i,c,bid), ',', TLATD(i,c,bid), ')'
-        do n = 1, ecosys_tracer_cnt
-           write(stdout, *) trim(marbl_instances(1)%tracer_metadata(n)%short_name), ' ', &
-              marbl_instances(bid)%tracers(n, k), ' ', &
-              marbl_instances(bid)%interior_tendencies(n, k)
-        end do
-        do n = 1, size(interior_tendency_forcings)
-           associate (forcing_field => interior_tendency_forcings(n))
-              write(stdout, *) trim(forcing_field%metadata%marbl_varname)
-              if (forcing_field%rank == 2) then
-                 write(stdout, *) forcing_field%field_0d(i,c,bid)
-              else
-                 if (forcing_field%ldim3_is_depth) then
-                    write(stdout, *) forcing_field%field_1d(i,c,k,bid)
-                 else
-                    write(stdout, *) forcing_field%field_1d(i,c,:,bid)
-                 end if
-              end if
-           end associate
-        end do
-        call exit_POP(sigAbort, 'Stopping in ' // subname)
-     end if
-  end do
+  !  (g) write to diagnostic buffer
+  !        Note: passing just col_id => interior tendency diagnostic buffer
+  call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
+  interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
 
-  do n = 1, ecosys_tracer_cnt
-     dtracer_module(i, c, 1:KMT(i, c, bid), n) = marbl_instances(bid)%interior_tendencies(n, 1:KMT(i, c, bid))
-  end do
-
-  ! copy values to be used in computing requested global averages
-  ! arrays have zero extent if none are requested
-  glo_avg_fields_interior(i, c, bid, :) = marbl_instances(bid)%glo_avg_fields_interior_tendency(:)
+A more complete example can be found in :ref:`how POP handles MARBL output <ref-interior_tend_in_POP>`.

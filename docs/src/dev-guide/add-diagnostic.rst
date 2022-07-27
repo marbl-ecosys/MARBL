@@ -23,9 +23,10 @@ These indices are packed into datatypes to group common indices together.
 So the indices for diagnostics variables are split into ``marbl_surface_flux_diagnostics_indexing_type`` and ``marbl_interior_tendency_diagnostics_indexing_type``.
 ``insitu_temp`` is an interior forcing diagnostic.
 
+.. block comes from marbl_interface_private_types
 .. code-block:: fortran
 
-   type, private :: marbl_interior_tendency_diagnostics_indexing_type
+   type, public :: marbl_interior_tendency_diagnostics_indexing_type
      ! General 2D diags
      integer(int_kind) :: zsatcalc
      integer(int_kind) :: zsatarag
@@ -48,6 +49,7 @@ Most derived types, including as ``marbl_diagnostics_type``,  are "reallocating"
 when a field is added, a new array of size ``N+1`` is created, the existing array is copied into the first ``N`` elements and then deallocated, and the new entry becomes element ``N+1``.
 In these situations, pointers are used instead of allocatable arrays so that ``marbl_instance%{surface,interior}_forcing_diags%diags`` can point to the new array.
 
+.. block comes from marbl_diagnostics_mod
 .. code-block:: fortran
 
   lname = 'in situ temperature'
@@ -58,7 +60,7 @@ In these situations, pointers are used instead of allocatable arrays so that ``m
   call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
        ind%insitu_temp, marbl_status_log)
   if (marbl_status_log%labort_marbl) then
-    call log_add_diagnostics_error(marbl_status_log, sname, subname)
+    call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
     return
   end if
 
@@ -69,12 +71,13 @@ Step 3. Populate diagnostic type with data
 The purpose of the ``marbl_diagnostics_type`` structure is to allow an easy way to pass diagnostics through the interface.
 This step copies data only available in MARBL into the datatype that is available to the GCM.
 
+.. block comes from marbl_diagnostics_mod
 .. code-block:: fortran
 
   associate( &
        kmt   => domain%kmt, &
-       diags => marbl_interior_forcing_diags%diags, &
-       ind   => marbl_interior_diag_ind &
+       diags => marbl_interior_tendency_diags%diags, &
+       ind   => marbl_interior_tendency_diag_ind &
        )
   diags(ind%insitu_temp)%field_3d(1:kmt, 1) = temperature(1:kmt)
   end associate
@@ -92,6 +95,7 @@ Step 4. Update the Diagnostics YAML files
 We use a YAML file to provide an easy-to-edit and human-readable text file containing a list of all diagnostics and the recommended frequency of output.
 Developers adding or removing diagnostics should make changes to ``defaults/diagnostics_latest.yaml``.
 
+.. block comes from diagnostics_latest.yaml
 .. code-block:: yaml
 
   insitu_temp :
@@ -109,6 +113,7 @@ The operator means "average over this time period."
 Other acceptable operators are ``instantaneous``, ``minimum``, and ``maximum``.
 You can recommend multiple frequencies by adding a list to the YAML, as long as the operator key is a list of the same size:
 
+.. block comes from diagnostics_latest.yaml
 .. code-block:: yaml
 
   CaCO3_form_zint :
@@ -139,6 +144,7 @@ The ``MARBL_tools/yaml_to_json.py`` script is provided to do just that:
 The rest of the python scripts provided in the ``MARBL_tools/`` subdirectory rely on the JSON file rather than the YAML.
 ``MARBL_tools/MARBL_generate_diagnostics_file.py`` will turn the JSON file into a list for the GCM to parse:
 
+.. block comes from marbl.diags
 .. code-block:: none
 
   # This file contains a list of all diagnostics MARBL can compute for a given configuration,

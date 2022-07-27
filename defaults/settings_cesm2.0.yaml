@@ -233,13 +233,7 @@ general_parms :
       datatype : logical
       default_value : .true.
    lecovars_full_depth_tavg :
-      longname : Control whether base ecosystem variables are written full depth
-      subcategory : 2. config flags
-      units : unitless
-      datatype : logical
-      default_value : .false.
-   ciso_lecovars_full_depth_tavg :
-      longname : Control whether carbon isotope variables are written full depth
+      longname : If .false., MARBL will recommend truncating the column for some diagnostics
       subcategory : 2. config flags
       units : unitless
       datatype : logical
@@ -287,6 +281,12 @@ general_parms :
       units : unitless
       datatype : logical
       default_value : .false.
+   bftt_dz_sum_thres:
+      longname : MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold
+      subcategory : 4. general parameters
+      units : unitless
+      datatype : real
+      default_value : 1.0e-14
    Jint_Ctot_thres_molpm2pyr :
       longname : MARBL will abort if abs(Jint_Ctot) exceeds this threshold
       subcategory : 4. general parameters
@@ -329,16 +329,6 @@ general_parms :
       units : unitless
       datatype : real
       default_value : 1.0
-   temp_func_form_opt:
-      longname : Option for the temperature scaling functional form
-      subcategory : 4. general parameters
-      units : non-numeric
-      datatype : string
-      default_value : q_10
-      valid_values :
-         - q_10
-         - arrhenius
-      _append_to_config_keywords : true
    particulate_flux_ref_depth :
       longname : reference depth for particulate flux diagnostics
       subcategory : 4. general parameters
@@ -636,14 +626,6 @@ general_parms2 :
          default : settings_file
          not ladjust_bury_coeff : settings_file
          SAVED_STATE_VARS_SOURCE == "GCM" : GCM
-   Tref:
-      longname : reference temperature (C) used for the temperature scaling functional form
-      subcategory : 4. general parameters
-      units : degC
-      datatype : real
-      default_value :
-         default : 30.0
-         temp_func_form_opt == "arrhenius" : 25.0
 
 ################################################################################
 #                            Category 2: PFT_counts                            #
@@ -709,6 +691,20 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : Small Phyto
                ((autotroph_sname)) == "diat" : Diatom
                ((autotroph_sname)) == "diaz" : Diazotroph
+         temp_func_form_opt:
+            longname : Option for the temperature scaling functional form
+            subcategory : 10. autotrophs
+            units : non-numeric
+            datatype : string
+            valid_values :
+               - q_10
+               - arrhenius
+               - power
+            default_value :
+               default : UNSET
+               ((autotroph_sname)) == "sp" : q_10
+               ((autotroph_sname)) == "diat" : q_10
+               ((autotroph_sname)) == "diaz" : q_10
          Nfixer :
             longname : Flag set to true if autotroph fixes nitrogen
             subcategory : 10. autotrophs
@@ -740,6 +736,12 @@ PFT_derived_types :
             default_value :
                default : .false.
                ((autotroph_sname)) == "diat" : .true.
+         is_carbon_limited :
+            longname : Flag set to true if autotroph is carbon limited
+            subcategory : 10. autotrophs
+            units : non-numeric
+            datatype : logical
+            default_value : .false.
          kFe :
             longname : Fe uptake half-sat constant
             subcategory : 10. autotrophs
@@ -750,6 +752,16 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0.03e-3
                ((autotroph_sname)) == "diat" : 0.06e-3
                ((autotroph_sname)) == "diaz" : 0.045e-3
+         kCO2 :
+            longname : CO2 uptake half-sat constant
+            subcategory : 10. autotrophs
+            units : nmol/cm^3
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "sp" : 0
+               ((autotroph_sname)) == "diat" : 0
+               ((autotroph_sname)) == "diaz" : 0
          kPO4 :
             longname : PO4 uptake half-sat constant
             subcategory : 10. autotrophs
@@ -973,6 +985,18 @@ PFT_derived_types :
             default_value :
                default : UNSET
                ((zooplankton_sname)) == "zoo" : Zooplankton
+         temp_func_form_opt:
+            longname : Option for the temperature scaling functional form
+            subcategory : 11. zooplankton
+            units : non-numeric
+            datatype : string
+            valid_values :
+               - q_10
+               - arrhenius
+               - power
+            default_value :
+               default : UNSET
+               ((zooplankton_sname)) == "zoo" : q_10
          z_mort_0_per_day :
             longname : Linear mortality rate
             subcategory : 11. zooplankton

@@ -1,4 +1,24 @@
 {
+   "((autotroph_sname))_C_lim_Cweight_avg_100m": {
+      "dependencies": {
+         "((autotroph_is_carbon_limited))": true
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) C Limitation, carbon biomass weighted average over 0-100m",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
+   },
+   "((autotroph_sname))_C_lim_surf": {
+      "dependencies": {
+         "((autotroph_is_carbon_limited))": true
+      },
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) C Limitation, Surface",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
+   },
    "((autotroph_sname))_CaCO3_form": {
       "dependencies": {
          "((autotroph_calcifier))": true

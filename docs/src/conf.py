@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'MARBL'
-copyright = u'2018, National Science Foundation and U.S. Department of Energy'
+copyright = u'2019, National Science Foundation and U.S. Department of Energy'
 author = u'MARBL developers'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -54,9 +54,9 @@ author = u'MARBL developers'
 # built documents.
 #
 # The short X.Y version.
-version = u'cesm2.0'
+version = u'cesm2.1'
 # The full version, including alpha/beta/rc tags.
-release = u'cesm2.0'
+release = u'cesm2.1'
 
 # Suppress "Created Using Sphinx" footer
 #html_show_sphinx = False
@@ -96,7 +96,7 @@ html_theme = 'sphinx_rtd_theme'
 # documentation.
 #
 html_theme_options = {}
-html_theme_options['versions'] = {'latest': '../latest', 'cesm2.0': '../cesm2.0'}
+html_theme_options['versions'] = {'latest': '../latest', 'cesm2.1': '../cesm2.1'}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

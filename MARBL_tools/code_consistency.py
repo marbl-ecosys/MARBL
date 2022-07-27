@@ -236,7 +236,7 @@ if __name__ == "__main__":
     # Fortran error checks
     LOGGER.info("Check Fortran files for coding standard violations:")
     for thisfile in fortran_files:
-        with open(thisfile, "r") as fortran_file:
+        with open(thisfile, "r", encoding="utf-8") as fortran_file:
             line_cnt = 0
             for thisline in fortran_file.readlines():
                 line_without_cr = thisline.rstrip("\n")
@@ -249,14 +249,14 @@ if __name__ == "__main__":
                 #Tests.check_for_spaces(file_and_line_number, line_without_cr)
                 #Tests.check_for_double_quotes(file_and_line_number, line_without_cr)
                 #Tests.check_logical_statements(file_and_line_number, line_without_cr)
-                #Tests.check_r8_settings(file_and_line_number, line_without_cr)
+                Tests.check_r8_settings(file_and_line_number, line_without_cr)
     FORTRAN_ERROR_COUNT = Tests.process()
     LOGGER.info("Fortran errors found: %d", FORTRAN_ERROR_COUNT)
 
     # Python error checks
     LOGGER.info("\nCheck python files for coding standard violations:")
     for thisfile in python_files:
-        with open(thisfile, "r") as python_file:
+        with open(thisfile, "r", encoding="utf-8") as python_file:
             line_cnt = 0
             for thisline in python_file.readlines():
                 line_without_cr = thisline.rstrip("\n")

@@ -8,4 +8,5 @@ Examples of MARBL Implementation
    :maxdepth: 1
    :caption: Contents:
 
+   standalone/index.rst
    pop/index.rst

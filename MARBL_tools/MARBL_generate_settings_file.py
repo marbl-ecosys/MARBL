@@ -32,14 +32,14 @@ optional arguments:
   -i SETTINGS_FILE_IN, --settings_file_in SETTINGS_FILE_IN
                         A file that overrides values in JSON (default: None)
   -o SETTINGS_FILE_OUT, --settings_file_out SETTINGS_FILE_OUT
-                        Name of file to be written (default: marbl.input)
+                        Name of file to be written (default: marbl.settings)
 
 """
 
 #######################################
 
 def generate_settings_file(MARBL_settings, settings_file_out):
-    """ Produce a valid MARBL input file from a JSON parameter file
+    """ Produce a valid MARBL settings file from a JSON parameter file
     """
 
     fout = open(settings_file_out,"w")
@@ -47,7 +47,7 @@ def generate_settings_file(MARBL_settings, settings_file_out):
     for subcat_name in MARBL_settings.get_subcategory_names():
         fout.write("! %s\n" % subcat_name.split('. ')[1])
         for varname in MARBL_settings.get_settings_dict_variable_names(subcat_name):
-            fout.write("%s = %s\n" % (varname, MARBL_settings.settings_dict[varname]))
+            fout.write("%s = %s\n" % (varname, MARBL_settings.settings_dict[varname]['value']))
         if subcat_name != MARBL_settings.get_subcategory_names()[-1]:
             fout.write("\n")
     fout.close()
@@ -77,12 +77,12 @@ def _parse_args(marbl_root):
     parser.add_argument('-g', '--grid', action='store', dest='grid',
                         help='Some default values are grid-dependent')
 
-    # Command line argument to specify an input file which would override the JSON
+    # Command line argument to specify a settings file which would override the JSON
     parser.add_argument('-i', '--settings_file_in', action='store', dest='settings_file_in', default=None,
                         help='A file that overrides values in JSON')
 
-    # Command line argument to where to write the input file being generated
-    parser.add_argument('-o', '--settings_file_out', action='store', dest='settings_file_out', default='marbl.input',
+    # Command line argument to where to write the settings file being generated
+    parser.add_argument('-o', '--settings_file_out', action='store', dest='settings_file_out', default='marbl.settings',
                         help='Name of file to be written')
 
     return parser.parse_args()
@@ -105,5 +105,5 @@ if __name__ == "__main__":
     from MARBL_tools import MARBL_settings_class
     DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in)
 
-    # Write the input file
+    # Write the settings file
     generate_settings_file(DefaultSettings, args.settings_file_out)

@@ -225,10 +225,15 @@ class MARBL_settings_class(object):
             return
 
         # Process derived type!
-        append_to_keys = (('PFT_defaults == "CESM2"' in self._config_keyword) and
-                          (category_name == "PFT_derived_types"))
-        if append_to_keys:
-            PFT_keys = self._settings['general_parms']['PFT_defaults']['_CESM2_PFT_keys'][variable_name]
+        # Check to see if PFT_defaults leads to specific PFT declarations
+        if (category_name == "PFT_derived_types"):
+            for valid_PFT_default in ["CESM2", "CESM2+cocco"]:
+                append_to_keys = 'PFT_defaults == "{}"'.format(valid_PFT_default) in self._config_keyword
+                if append_to_keys:
+                    settings_key = '_{}_PFT_keys'.format(valid_PFT_default)
+                    PFT_keys = self._settings['general_parms']['PFT_defaults'][settings_key][variable_name]
+                    break
+
         # Is the derived type an array? If so, treat each entry separately
         if ("_array_shape" in this_var.keys()):
             for n, elem_index in enumerate(_get_array_info(this_var["_array_shape"], self.settings_dict, self.tracers_dict)):
@@ -269,6 +274,10 @@ class MARBL_settings_class(object):
             is populated with a list of all the keys added to self.settings_dict for this variable
             (just varname for scalars, but multiple keys for arrays)
         """
+
+        # Keys copied out of the settings file into settings_dict[varname]['attrs']
+        settings_dict_attrs = ['longname', 'units']
+
         if ("_array_shape" in this_var.keys()):
             # Get length of array
             try:
@@ -280,18 +289,26 @@ class MARBL_settings_class(object):
             for n, elem_index in enumerate(_get_array_info(array_len, self.settings_dict, self.tracers_dict, base_name)):
                 full_name = var_name + elem_index
                 var_value = _get_var_value(full_name, this_var, self._config_keyword, self._input_dict)
+                self.settings_dict[full_name] = dict()
+                self.settings_dict[full_name]['attrs'] = dict()
                 if isinstance(var_value, list):
                     if this_var["datatype"] == "string" and n>=len(var_value):
-                        self.settings_dict[full_name] = '""'
+                        self.settings_dict[full_name]['value'] = '""'
                     else:
-                        self.settings_dict[full_name] = _translate_JSON_value(var_value[n], this_var["datatype"])
+                        self.settings_dict[full_name]['value'] = _translate_JSON_value(var_value[n], this_var["datatype"])
                 else:
-                    self.settings_dict[full_name] = var_value
+                    self.settings_dict[full_name]['value'] = var_value
                 this_var['_list_of_settings_names'].append(full_name)
+                for key in settings_dict_attrs:
+                    self.settings_dict[full_name]['attrs'][key] = this_var[key]
 
         else:
             # get value from either input file or JSON
-            self.settings_dict[var_name] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict)
+            self.settings_dict[var_name] = dict()
+            self.settings_dict[var_name]['attrs'] = dict()
+            self.settings_dict[var_name]['value'] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict)
+            for key in settings_dict_attrs:
+                self.settings_dict[var_name]['attrs'][key] = this_var[key]
             this_var['_list_of_settings_names'].append(var_name)
 
 ################################################################################
@@ -452,10 +469,10 @@ def _get_value(val_in, settings_dict, tracers_dict, dict_prefix=''):
         # Otherwise, val_in must refer to a variable that could be
         # in the dictionary with or without the prefix
         try:
-            val_out = settings_dict[dict_prefix+val_in]
+            val_out = settings_dict[dict_prefix+val_in]['value']
         except:
             try:
-                val_out = settings_dict[val_in]
+                val_out = settings_dict[val_in]['value']
             except:
                 logger.error('Unknown variable name in _get_value: %s' % val_in)
                 MARBL_tools.abort(1)

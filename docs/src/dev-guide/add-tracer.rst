@@ -20,6 +20,7 @@ Step 1. Add to MARBL tracer index type
 As mentioned in :ref:`ref-add-diag`, the ``indexing_type`` is a common structure in MARBL.
 Due to the many ways to introduce tracers (different modules, living tracers, etc), the tracer indexing type is a little more complex than others.
 
+.. block comes from marbl_interface_private_types.F90
 .. code-block:: fortran
 
   type, public :: marbl_tracer_index_type
@@ -62,21 +63,22 @@ If you are adding a tracer that is only active in certain configurations, you wo
 At this point in time, all the base ecosystem tracers are present in all configurations, so there is no such restriction.
 For example, here we set in index for the refractory DOC tracer:
 
+.. block comes from marbl_interface_private_types
 .. code-block:: fortran
 
-  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotrophs, &
-             zooplankton, marbl_status_log)
-  .
-  .
-  .
-      ! General ecosys tracers
-  .
-  .
-  .
-      call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
-  .
-  .
-  .
+  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotroph_settings, &
+             zooplankton_settings, marbl_status_log)
+    .
+    .
+    .
+    ! General ecosys tracers
+    .
+    .
+    .
+    call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
+    .
+    .
+    .
   end subroutine tracer_index_constructor
 
 .. note::
@@ -89,6 +91,7 @@ Step 3. Set tracer metadata
 
 MARBL provides the following metadata to describe each tracer:
 
+.. block comes from marbl_interface_public_types
 .. code-block:: fortran
 
   type, public :: marbl_tracer_metadata_type
@@ -102,18 +105,21 @@ MARBL provides the following metadata to describe each tracer:
   end type marbl_tracer_metadata_type
 
 There are a few different subroutines in ``marbl_init_mod.F90`` to define the metadata for different classes of tracers.
-(Metadata for carbon isotope tracers is handled in ``marbl_ciso_mod::marbl_ciso_init_tracer_metadata``.)
+(Metadata for carbon isotope tracers is handled in ``marbl_ciso_init_mod::marbl_ciso_init_tracer_metadata``.)
 
+.. block comes from marbl_init_mod
 .. code-block:: fortran
 
-  private :: marbl_init_non_autotroph_tracer_metadata
-  private :: marbl_init_non_autotroph_tracers_metadata
-  private :: marbl_init_zooplankton_tracer_metadata
-  private :: marbl_init_autotroph_tracer_metadata
+  subroutine marbl_init_tracer_metadata
+  subroutine marbl_init_non_autotroph_tracer_metadata
+  subroutine marbl_init_non_autotroph_tracers_metadata
+  subroutine marbl_init_zooplankton_tracer_metadata
+  subroutine marbl_init_autotroph_tracer_metadata
 
 The last three subroutines above are called from ``marbl_init_tracer_metadata()``, and ``marbl_init_non_autotroph_tracer_metadata()`` is called from ``marbl_init_non_autotroph_tracers_metadata()``
 Prior to those calls, ``marbl_init_tracer_metadata()`` sets two attributes in the metadata type:
 
+.. block from marbl_init_mod
 .. code-block:: fortran
 
     marbl_tracer_metadata(:)%lfull_depth_tavg   = .true.
@@ -122,6 +128,7 @@ Prior to those calls, ``marbl_init_tracer_metadata()`` sets two attributes in th
 Metadata for all base ecosystem non-living tracers is set in ``marbl_init_non_autotroph_tracers_metadata()``.
 For example, here is where the dissolved inorganic phosphate index is set:
 
+.. block from marbl_init_mod
 .. code-block:: fortran
 
   subroutine marbl_init_non_autotroph_tracers_metadata(marbl_tracer_metadata, &
@@ -140,21 +147,22 @@ Not all tracers return a surface flux, so this may not be necessary for your tra
 For this example, we will follow the oxygen tracer.
 Surface fluxes are computed in ``marbl_surface_flux_mod::marbl_surface_flux_compute``:
 
+.. block from marbl_surface_flux_mod
 .. code-block:: fortran
 
   subroutine marbl_surface_flux_compute( &
-  .
-  .
-  .
+    .
+    .
+    .
     associate(                                                                                      &
-    .
-    .
-    .
-         o2_ind            => marbl_tracer_indices%o2_ind,                                      &
-         .
-         .
-         .
-         )
+      .
+      .
+      .
+      o2_ind            => marbl_tracer_indices%o2_ind,                                      &
+      .
+      .
+      .
+      )
 
     !-----------------------------------------------------------------------
     !  fluxes initially set to 0
@@ -173,13 +181,13 @@ Surface fluxes are computed in ``marbl_surface_flux_mod::marbl_surface_flux_comp
        .
        .
        if (lflux_gas_o2) then
-       .
-       .
-       .
-       pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
-       o2sat(:) = ap_used(:) * o2sat_1atm(:)
-       flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - surface_vals(:, o2_ind))
-       surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
+         .
+         .
+         .
+         pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
+         o2sat(:) = ap_used(:) * o2sat_1atm(:)
+         flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - tracers_at_surface(:, o2_ind))
+         surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 5. Compute tracer tendency
@@ -189,87 +197,112 @@ The tracer tendencies are computed in a two step process - MARBL computes the tr
 Given the modular nature of MARBL, the tendencies from each process are computed in their own routine.
 This is done in ``marbl_interior_tendency_mod::interior_tendency_compute``:
 
+.. block from marbl_interior_tendency_mod
 .. code-block:: fortran
 
   subroutine marbl_interior_tendency_compute( &
-  .
-  .
-  .
-    call marbl_compute_PAR(domain, interior_forcings, interior_forcing_indices, &
-                           autotroph_cnt, totalChl_local, PAR)
+    .
+    .
+    .
+    call compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_indices, &
+                     totalChl_local, PAR)
 
+    call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
+         autotroph_derived_terms)
+
+    call compute_function_scaling(temperature, Tfunc)
+    .
+    .
+    .
     do k = 1, km
-    .
-    .
-    .
-       call marbl_compute_autotroph_uptake(autotroph_cnt, autotrophs,  &
-            tracer_local(:, k), marbl_tracer_indices,                  &
-            autotroph_secondary_species(:, k))
-    .
-    .
-    .
-       call marbl_compute_denitrif(tracer_local(o2_ind, k), tracer_local(no3_ind, k), &
-            dissolved_organic_matter(k)%DOC_remin, &
-            dissolved_organic_matter(k)%DOCr_remin, &
-            POC%remin(k), other_remin(k), sed_denitrif(k), denitrif(k))
 
-       call marbl_compute_dtracer_local (autotroph_cnt, zooplankton_cnt,      &
-            autotrophs, zooplankton,           &
-            autotroph_secondary_species(:, k), &
-            zooplankton_secondary_species(:, k), &
-            dissolved_organic_matter(k), &
-            nitrif(k), denitrif(k), sed_denitrif(k), &
-            Fe_scavenge(k), Lig_prod(k), Lig_loss(k), &
-            P_iron%remin(k), POC%remin(k), POP%remin(k), &
-            P_SiO2%remin(k), P_CaCO3%remin(k), P_CaCO3_ALT_CO2%remin(k), &
-            other_remin(k), PON_remin(k), &
-            interior_restore(:, k), &
-            tracer_local(o2_ind, k), &
-            o2_production(k), o2_consumption(k), &
-            dtracers(:, k), marbl_tracer_indices )
-    .
-    .
-    .
-    end do
+       call compute_scavenging(k, km, marbl_tracer_indices, tracer_local(:,:), &
+            POC, P_CaCO3, P_SiO2, dust, Fefree(:), Fe_scavenge_rate(:), &
+            Fe_scavenge(:), Lig_scavenge(:), marbl_status_log)
 
-The tendencies are combined in ``marbl_compute_dtracer_local`` while subroutines like ``marbl_compute_PAR``, ``marbl_compute_autotroph_uptake``, and ``marbl_compute_denitrif`` are the per-process computations.
-So you will need to update ``marbl_compute_dtracer_local`` to compute the tracer tendency for your new tracer correctly:
+       if (marbl_status_log%labort_marbl) then
+          call marbl_status_log%log_error_trace('compute_scavenging()', subname)
+          return
+       end if
 
+       call compute_large_detritus_prod(k, domain, marbl_tracer_indices, zooplankton_derived_terms, &
+            autotroph_derived_terms, Fe_scavenge(k),                    &
+            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron,   &
+            dissolved_organic_matter%DOP_loss_P_bal(k), marbl_status_log)
+
+       ! FIXME #28: need to pull particulate share out
+       !            of compute_particulate_terms!
+       call compute_particulate_terms(k, domain,                   &
+            marbl_particulate_share, p_remin_scalef(k),            &
+            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                    &
+            P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),   &
+            QA_dust_def(k),                                        &
+            tracer_local(:, k), carbonate, sed_denitrif(k),        &
+            other_remin(k), fesedflux(k), marbl_tracer_indices,    &
+            glo_avg_fields_interior_tendency, marbl_status_log)
+
+       if (marbl_status_log%labort_marbl) then
+          call marbl_status_log%log_error_trace('compute_particulate_terms()', subname)
+          return
+       end if
+
+       if  (k < km) then
+          call update_particulate_terms_from_prior_level(k+1, POC, POP, P_CaCO3, &
+               P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:))
+       endif
+
+    end do ! k
+    .
+    .
+    .
+    call compute_denitrif(km, marbl_tracer_indices, tracer_local(:, :), &
+         dissolved_organic_matter%DOC_remin(:), &
+         dissolved_organic_matter%DOCr_remin(:), &
+         POC%remin(:), other_remin(:), sed_denitrif(:), denitrif(:))
+
+    call compute_local_tendencies(km, marbl_tracer_indices, autotroph_derived_terms, &
+         zooplankton_derived_terms, &
+         dissolved_organic_matter, &
+         nitrif(:), denitrif(:), sed_denitrif(:), &
+         Fe_scavenge(:), Lig_prod(:), Lig_loss(:), &
+         P_iron%remin(:), POC%remin(:), POP%remin(:), &
+         P_SiO2%remin(:), P_CaCO3%remin(:), P_CaCO3_ALT_CO2%remin(:), &
+         other_remin(:), PON_remin(:), &
+         tracer_local(:,:), &
+         o2_consumption_scalef(:), &
+         o2_production(:), o2_consumption(:), &
+         interior_tendencies(:,:))
+
+The tendencies are combined in ``compute_local_tendencies`` while subroutines like ``compute_PAR``, ``compute_autotroph_uptake``, and ``compute_denitrif`` are the per-process computations.
+So you will need to update ``compute_local_tendencies`` to compute the tracer tendency for your new tracer correctly:
+
+.. block comes from marbl_interior_tendency_mod
 .. code-block:: fortran
 
-  subroutine marbl_compute_dtracer_local (auto_cnt, zoo_cnt, autotrophs,       &
-             zooplankton, autotroph_secondary_species,                  &
-             zooplankton_secondary_species, dissolved_organic_matter,           &
-             nitrif, denitrif, sed_denitrif, Fe_scavenge, Lig_prod, Lig_loss,   &
-             P_iron_remin, POC_remin, POP_remin, P_SiO2_remin, P_CaCO3_remin,   &
-             P_CaCO3_ALT_CO2_remin, other_remin, PON_remin, interior_restore,   &
-             O2_loc, o2_production, o2_consumption, dtracers, marbl_tracer_indices)
-  .
-  .
-  .
-    associate(                                                            &
+  subroutine compute_local_tendencies(km, marbl_tracer_indices, autotroph_derived_terms, &
+       zooplankton_derived_terms, dissolved_organic_matter, nitrif, denitrif, sed_denitrif, &
+       Fe_scavenge, Lig_prod, Lig_loss, P_iron_remin, POC_remin, POP_remin, P_SiO2_remin, &
+       P_CaCO3_remin, P_CaCO3_ALT_CO2_remin, other_remin, PON_remin, tracer_local, &
+       o2_consumption_scalef, o2_production, o2_consumption, interior_tendencies)
     .
     .
     .
-         o2_ind            => marbl_tracer_indices%o2_ind,          &
-         .
-         .
-         .
-    )
-    .
-    .
-    .
-    o2_consumption = (O2_loc - parm_o2_min) / parm_o2_min_delta
-    o2_consumption = min(max(o2_consumption, c0), c1)
-    o2_consumption = o2_consumption * ( (POC_remin * (c1 - POCremin_refract) + DOC_remin &
-         + DOCr_remin - (sed_denitrif * denitrif_C_N) - other_remin + sum(zoo_loss_dic(:)) &
-         + sum(zoo_graze_dic(:)) + sum(auto_loss_dic(:)) + sum(auto_graze_dic(:)) ) &
-         / parm_Remin_D_C_O2 + (c2 * nitrif))
+    do k=1, km
+      .
+      .
+      .
+      o2_consumption(k) = (O2_loc(k) - parm_o2_min) / parm_o2_min_delta
+      o2_consumption(k) = min(max(o2_consumption(k), c0), c1)
+      o2_consumption(k) = o2_consumption(k) * ((POC_remin(k) * (c1 - POCremin_refract) + DOC_remin(k) + DOCr_remin(k) &
+                                                - (sed_denitrif(k) * denitrif_C_N) - other_remin(k) &
+                                                + sum(zoo_loss_dic(:,k)) + sum(zoo_graze_dic(:,k))  &
+                                                + sum(auto_loss_dic(:,k)) + sum(auto_graze_dic(:,k))) &
+                                               / parm_Remin_D_C_O2 + (c2 * nitrif(k)))
+      o2_consumption(k) = o2_consumption_scalef(k) * o2_consumption(k)
 
-    dtracers(o2_ind) = o2_production - o2_consumption
+      interior_tendencies(o2_ind,k) = o2_production(k) - o2_consumption(k)
 
-.. note::
-  The ``k`` loop in the example may be removed in favor of doing per-process computations on an entire column at once.
+    end do
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 6. Add any necessary diagnostics
@@ -280,6 +313,7 @@ Otherwise, it is assumed that the GCM will provide tracer diagnostics itself.
 MARBL does compute the vertical integral of the conservative terms in the source-sink computation of many tracers.
 If your tracer affects these integrals, you should update the appropriate subroutine in ``marbl_diagnostics_mod.F90``:
 
+.. block comes from marbl_diagnostics_mod
 .. code-block:: fortran
 
   private :: store_diagnostics_carbon_fluxes
@@ -299,6 +333,7 @@ On the ``development`` branch, make changes to ``defaults/settings_latest.yaml``
 Release branches may only offer specific versions of this file, such as ``defaults/settings_cesm2.1.yaml``.
 The block of code defining the tracers looks like this:
 
+.. block comes from settings_latest.yaml
 .. code-block:: yaml
 
   # ABOUT THIS FILE

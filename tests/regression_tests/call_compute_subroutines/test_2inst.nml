@@ -1,0 +1,5 @@
+&marbl_driver_nml
+testname="call_compute_subroutines"
+num_inst=2
+hist_file="history_2inst.nc"
+/

@@ -84,6 +84,7 @@ contains
     use marbl_settings_mod, only : lp_remin_scalef
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : particulate_flux_ref_depth
+    use marbl_settings_mod, only : lecovars_full_depth_tavg
     use marbl_ciso_diagnostics_mod, only : marbl_ciso_diagnostics_init
 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
@@ -835,6 +836,8 @@ contains
         allocate(ind%Fe_lim_Cweight_avg_100m(autotroph_cnt))
         allocate(ind%SiO3_lim_surf(autotroph_cnt))
         allocate(ind%SiO3_lim_Cweight_avg_100m(autotroph_cnt))
+        allocate(ind%C_lim_surf(autotroph_cnt))
+        allocate(ind%C_lim_Cweight_avg_100m(autotroph_cnt))
         allocate(ind%light_lim_surf(autotroph_cnt))
         allocate(ind%light_lim_Cweight_avg_100m(autotroph_cnt))
         allocate(ind%photoC_zint(autotroph_cnt))
@@ -959,6 +962,32 @@ contains
         else
           ind%SiO3_lim_surf(n) = -1
           ind%SiO3_lim_Cweight_avg_100m(n) = -1
+        end if
+
+        if (autotroph_settings(n)%is_carbon_limited) then
+          lname = trim(autotroph_settings(n)%lname) // ' C Limitation, Surface'
+          sname = trim(autotroph_settings(n)%sname) // '_C_lim_surf'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+               ind%C_lim_surf(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' C Limitation, carbon biomass weighted average over 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_C_lim_Cweight_avg_100m'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+               ind%C_lim_Cweight_avg_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
         end if
 
         lname = trim(autotroph_settings(n)%lname) // ' Light Limitation, Surface'
@@ -1720,7 +1749,7 @@ contains
       sname = 'PAR_avg'
       units = 'W/m^2'
       vgrid = 'layer_avg'
-      truncate = .true.
+      truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%PAR_avg, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -1732,7 +1761,7 @@ contains
       sname = 'graze_auto_TOT'
       units = 'mmol/m^3/s'
       vgrid = 'layer_avg'
-      truncate = .true.
+      truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%auto_graze_TOT, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -1744,7 +1773,7 @@ contains
       sname = 'photoC_TOT'
       units = 'mmol/m^3/s'
       vgrid = 'layer_avg'
-      truncate = .true.
+      truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%photoC_TOT, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -1756,7 +1785,7 @@ contains
       sname = 'photoC_NO3_TOT'
       units = 'mmol/m^3/s'
       vgrid = 'layer_avg'
-      truncate = .true.
+      truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%photoC_NO3_TOT, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -2532,7 +2561,7 @@ contains
           sname = trim(autotroph_settings(n)%sname) // '_Qp'
           units = '1'
           vgrid = 'layer_avg'
-          truncate = .true.
+          truncate = .not. lecovars_full_depth_tavg
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                ind%Qp(n), marbl_status_log)
           if (marbl_status_log%labort_marbl) then
@@ -2547,7 +2576,7 @@ contains
         sname = 'photoC_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%photoC(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2559,7 +2588,7 @@ contains
         sname = 'photoC_NO3_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%photoC_NO3(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2571,7 +2600,7 @@ contains
         sname = 'photoFe_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%photoFe(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2583,7 +2612,7 @@ contains
         sname = 'photoNO3_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%photoNO3(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2595,7 +2624,7 @@ contains
         sname = 'photoNH4_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%photoNH4(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2607,7 +2636,7 @@ contains
         sname = 'DOP_' // trim(autotroph_settings(n)%sname) // '_uptake'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%DOP_uptake(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2619,7 +2648,7 @@ contains
         sname = 'PO4_' // trim(autotroph_settings(n)%sname) // '_uptake'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%PO4_uptake(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2631,7 +2660,7 @@ contains
         sname = 'graze_' // trim(autotroph_settings(n)%sname)
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%auto_graze(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2643,7 +2672,7 @@ contains
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%auto_graze_poc(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2655,7 +2684,7 @@ contains
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%auto_graze_doc(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2667,7 +2696,7 @@ contains
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zootot'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%auto_graze_zootot(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2680,7 +2709,7 @@ contains
             sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_' // trim(zooplankton_settings(m)%sname)
             units = 'mmol/m^3/s'
             vgrid = 'layer_avg'
-            truncate = .true.
+            truncate = .not. lecovars_full_depth_tavg
             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                  ind%auto_graze_zoo(n,m), marbl_status_log)
             if (marbl_status_log%labort_marbl) then
@@ -2693,7 +2722,7 @@ contains
         sname = trim(autotroph_settings(n)%sname) // '_loss'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%auto_loss(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2705,7 +2734,7 @@ contains
         sname = trim(autotroph_settings(n)%sname) // '_loss_poc'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%auto_loss_poc(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2717,7 +2746,7 @@ contains
         sname = trim(autotroph_settings(n)%sname) // '_loss_doc'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%auto_loss_doc(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2729,7 +2758,7 @@ contains
         sname = trim(autotroph_settings(n)%sname) // '_agg'
         units = 'mmol/m^3/s'
         vgrid = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%auto_agg(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2742,7 +2771,7 @@ contains
           sname = trim(autotroph_settings(n)%sname) // '_bSi_form'
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
-          truncate = .true.
+          truncate = .not. lecovars_full_depth_tavg
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                ind%bSi_form(n), marbl_status_log)
           if (marbl_status_log%labort_marbl) then
@@ -2758,7 +2787,7 @@ contains
           sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form'
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
-          truncate = .true.
+          truncate = .not. lecovars_full_depth_tavg
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                ind%CaCO3_form(n), marbl_status_log)
           if (marbl_status_log%labort_marbl) then
@@ -2774,7 +2803,7 @@ contains
           sname = trim(autotroph_settings(n)%sname) // '_Nfix'
           units = 'mmol/m^3/s'
           vgrid = 'layer_avg'
-          truncate = .true.
+          truncate = .not. lecovars_full_depth_tavg
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
                ind%Nfix(n), marbl_status_log)
           if (marbl_status_log%labort_marbl) then
@@ -2791,7 +2820,7 @@ contains
       sname    = 'bSi_form'
       units    = 'mmol/m^3/s'
       vgrid    = 'layer_avg'
-      truncate = .true.
+      truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%tot_bSi_form, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -2803,7 +2832,7 @@ contains
       sname    = 'CaCO3_form'
       units    = 'mmol/m^3/s'
       vgrid    = 'layer_avg'
-      truncate = .true.
+      truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%tot_CaCO3_form, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -2815,7 +2844,7 @@ contains
       sname    = 'Nfix'
       units    = 'mmol/m^3/s'
       vgrid    = 'layer_avg'
-      truncate = .true.
+      truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
            ind%tot_Nfix, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -2841,7 +2870,7 @@ contains
         sname    = trim(zooplankton_settings(n)%sname) // '_loss'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%zoo_loss(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2865,7 +2894,7 @@ contains
         sname    = trim(zooplankton_settings(n)%sname) // '_loss_poc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%zoo_loss_poc(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2877,7 +2906,7 @@ contains
         sname    = trim(zooplankton_settings(n)%sname) // '_loss_doc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%zoo_loss_doc(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2889,7 +2918,7 @@ contains
         sname    = 'graze_' // trim(zooplankton_settings(n)%sname)
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%zoo_graze(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2901,7 +2930,7 @@ contains
         sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%zoo_graze_poc(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2913,7 +2942,7 @@ contains
         sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%zoo_graze_doc(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2925,7 +2954,7 @@ contains
         sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zootot'
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%zoo_graze_zootot(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -2938,7 +2967,7 @@ contains
             sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_' // trim(zooplankton_settings(m)%sname)
             units    = 'mmol/m^3/s'
             vgrid    = 'layer_avg'
-            truncate = .true.
+            truncate = .not. lecovars_full_depth_tavg
             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
                  ind%zoo_graze_zoo(n,m), marbl_status_log)
             if (marbl_status_log%labort_marbl) then
@@ -2951,7 +2980,7 @@ contains
         sname    = 'x_graze_' // trim(zooplankton_settings(n)%sname)
         units    = 'mmol/m^3/s'
         vgrid    = 'layer_avg'
-        truncate = .true.
+        truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%x_graze_zoo(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
@@ -3545,6 +3574,13 @@ contains
           call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
                near_surface_integral=diags(ind%SiO3_lim_Cweight_avg_100m(n))%field_2d(1))
        endif
+
+       if (autotroph_settings(n)%is_carbon_limited) then
+          diags(ind%C_lim_surf(n))%field_2d(1) = autotroph_derived_terms%VCO2(n,1)
+          limterm = autotroph_derived_terms%VCO2(n,:) * autotrophC_weight(:)
+          call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
+               near_surface_integral=diags(ind%C_lim_Cweight_avg_100m(n))%field_2d(1))
+       end if
 
        diags(ind%light_lim_surf(n))%field_2d(1) = autotroph_derived_terms%light_lim(n,1)
        limterm = autotroph_derived_terms%light_lim(n,:) * autotrophC_weight(:)

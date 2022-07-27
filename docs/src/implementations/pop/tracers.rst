@@ -8,6 +8,7 @@ POP will read the initial state for each tracers and store the data in a global 
 To know what tracer to read into each ``n_tracers`` index, POP copies the information from ``marbl_instace%tracer_metadata`` to a local type during initialization.
 The data type is defined as
 
+.. block comes from prognostic
 .. code-block:: fortran
 
    type :: tracer_field
@@ -22,6 +23,7 @@ The data type is defined as
 
 An array of the above type is then populated; note that MARBL expects the GCM to apply any necessary scale factor so the POP datatype is set to 1.
 
+.. block comes from ecosys_driver
 .. code-block:: fortran
 
     ! Initialize tracer_d_module input argument (needed before reading
@@ -48,16 +50,17 @@ Otherwise they are read from an initial condition.
 
 POP has a specific data type to manage the metadata of a tracer it is reading from a file.
 
+.. block comes from passive_tracer_tools
 .. code-block:: fortran
 
    !-----------------------------------------------------------------------
    !  derived type for reading tracers from a file
    !-----------------------------------------------------------------------
 
-   type, public :: tracer_read
-      character(char_len) :: mod_varname, filename, file_varname, file_fmt
-      real(r8) :: scale_factor, default_val
-   end type
+      type, public :: tracer_read
+         character(char_len) :: mod_varname, filename, file_varname, file_fmt
+         real(r8) :: scale_factor, default_val
+      end type
 
 Metadata such as the tracer name and the name of the tracer as it appears in the file is copied from ``tracer_d_module`` into ``tracer_inputs`` (an array of type ``tracer_read``).
 The rest of ``tracer_inputs`` (file name, file format, etc) is also set and then each tracer state is read into the correct index of the tracer array  by looping over ``tracer_inputs``.

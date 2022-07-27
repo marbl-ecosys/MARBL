@@ -20,11 +20,17 @@ MARBL will need the following from the GCM:
 Computations across columns
 ---------------------------
 
-If running with ``ladjust_bury_coeff = .true.`` then MARBL will ask the GCM to provide results from the two functions mentioned below.
-Note that the typical runcase sets ``ladjust_bury_coeff = .false.``, so for first-time implementations it is okay to skip this section.
+Currently, the only time MARBL expects a GCM to set ``lgcm_has_global_ops = .true.`` in ``init()`` is when running with
+``ladjust_bury_coeff = .true.``.
+In that case, MARBL will ask the GCM to provide results from the following two functions:
 
 #. :ref:`Global sums <global_sums>` of data MARBL computes column-by-column
-#. :ref:`Running means <running_means>` of fields (eventually MARBL will `compute these internally <https://github.com/marbl-ecosys/MARBL/issues/77>`_ and use saved state to maintain the mean)
+#. :ref:`Running means <running_means>` of fields (eventually MARBL will
+   `compute these internally <https://github.com/marbl-ecosys/MARBL/issues/77>`_
+   and use saved state to maintain the mean)
+
+Note that most typical experiments can be run with ``ladjust_bury_coeff = .false.``,
+so for first-time implementations it is okay to skip this section.
 
 
 .. toctree::

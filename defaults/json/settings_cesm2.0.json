@@ -164,6 +164,25 @@
                "subcategory": "10. autotrophs",
                "units": "non-numeric"
             },
+            "is_carbon_limited": {
+               "datatype": "logical",
+               "default_value": ".false.",
+               "longname": "Flag set to true if autotroph is carbon limited",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric"
+            },
+            "kCO2": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"diat\"": 0,
+                  "((autotroph_sname)) == \"diaz\"": 0,
+                  "((autotroph_sname)) == \"sp\"": 0,
+                  "default": "1e34"
+               },
+               "longname": "CO2 uptake half-sat constant",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
             "kDOP": {
                "datatype": "real",
                "default_value": {
@@ -329,6 +348,23 @@
                "longname": "Short name of the autotroph",
                "subcategory": "10. autotrophs",
                "units": "non-numeric"
+            },
+            "temp_func_form_opt": {
+               "datatype": "string",
+               "default_value": {
+                  "((autotroph_sname)) == \"diat\"": "q_10",
+                  "((autotroph_sname)) == \"diaz\"": "q_10",
+                  "((autotroph_sname)) == \"sp\"": "q_10",
+                  "default": "UNSET"
+               },
+               "longname": "Option for the temperature scaling functional form",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric",
+               "valid_values": [
+                  "q_10",
+                  "arrhenius",
+                  "power"
+               ]
             },
             "temp_thres": {
                "datatype": "real",
@@ -567,6 +603,21 @@
                "longname": "Short name of the zooplankton",
                "subcategory": "11. zooplankton",
                "units": "non-numeric"
+            },
+            "temp_func_form_opt": {
+               "datatype": "string",
+               "default_value": {
+                  "((zooplankton_sname)) == \"zoo\"": "q_10",
+                  "default": "UNSET"
+               },
+               "longname": "Option for the temperature scaling functional form",
+               "subcategory": "11. zooplankton",
+               "units": "non-numeric",
+               "valid_values": [
+                  "q_10",
+                  "arrhenius",
+                  "power"
+               ]
             },
             "z_mort2_0_per_day": {
                "datatype": "real",
@@ -847,6 +898,13 @@
          "subcategory": "4. general parameters (bury coeffs)",
          "units": "unitless"
       },
+      "bftt_dz_sum_thres": {
+         "datatype": "real",
+         "default_value": 1e-14,
+         "longname": "MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold",
+         "subcategory": "4. general parameters",
+         "units": "unitless"
+      },
       "bury_coeff_rmean_timescale_years": {
          "datatype": "real",
          "default_value": 10,
@@ -885,13 +943,6 @@
          "longname": "Option for which biological fractionation calculation to use",
          "subcategory": "4. general parameters",
          "units": "non-numeric"
-      },
-      "ciso_lecovars_full_depth_tavg": {
-         "datatype": "logical",
-         "default_value": ".false.",
-         "longname": "Control whether carbon isotope variables are written full depth",
-         "subcategory": "2. config flags",
-         "units": "unitless"
       },
       "ciso_lsource_sink": {
          "datatype": "logical",
@@ -967,7 +1018,7 @@
       "lecovars_full_depth_tavg": {
          "datatype": "logical",
          "default_value": ".false.",
-         "longname": "Control whether base ecosystem variables are written full depth",
+         "longname": "If .false., MARBL will recommend truncating the column for some diagnostics",
          "subcategory": "2. config flags",
          "units": "unitless"
       },
@@ -1258,18 +1309,6 @@
          "subcategory": "4. general parameters",
          "units": "m"
       },
-      "temp_func_form_opt": {
-         "_append_to_config_keywords": true,
-         "datatype": "string",
-         "default_value": "q_10",
-         "longname": "Option for the temperature scaling functional form",
-         "subcategory": "4. general parameters",
-         "units": "non-numeric",
-         "valid_values": [
-            "q_10",
-            "arrhenius"
-         ]
-      },
       "zoo_mort2_exp": {
          "datatype": "real",
          "default_value": 1.5,
@@ -1279,16 +1318,6 @@
       }
    },
    "general_parms2": {
-      "Tref": {
-         "datatype": "real",
-         "default_value": {
-            "default": 30.0,
-            "temp_func_form_opt == \"arrhenius\"": 25.0
-         },
-         "longname": "reference temperature (C) used for the temperature scaling functional form",
-         "subcategory": "4. general parameters",
-         "units": "degC"
-      },
       "init_bury_coeff_opt": {
          "datatype": "string",
          "default_value": {

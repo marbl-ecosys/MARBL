@@ -112,7 +112,7 @@
             "alphaPI_per_day": {
                "datatype": "real",
                "default_value": {
-                  "((autotroph_sname)) == \"diat\"": 0.28,
+                  "((autotroph_sname)) == \"diat\"": 0.39,
                   "((autotroph_sname)) == \"diaz\"": 0.39,
                   "((autotroph_sname)) == \"sp\"": 0.39,
                   "default": "1e34"
@@ -133,9 +133,9 @@
             "gQfe_0": {
                "datatype": "real",
                "default_value": {
-                  "((autotroph_sname)) == \"diat\"": "30e-6",
-                  "((autotroph_sname)) == \"diaz\"": "60e-6",
-                  "((autotroph_sname)) == \"sp\"": "30e-6",
+                  "((autotroph_sname)) == \"diat\"": "35e-6",
+                  "((autotroph_sname)) == \"diaz\"": "70e-6",
+                  "((autotroph_sname)) == \"sp\"": "35e-6",
                   "default": "1e34"
                },
                "longname": "Initial Fe/C ratio for growth",
@@ -145,9 +145,9 @@
             "gQfe_min": {
                "datatype": "real",
                "default_value": {
-                  "((autotroph_sname)) == \"diat\"": 2.5e-06,
-                  "((autotroph_sname)) == \"diaz\"": 2.5e-06,
-                  "((autotroph_sname)) == \"sp\"": 2.5e-06,
+                  "((autotroph_sname)) == \"diat\"": 2.7e-06,
+                  "((autotroph_sname)) == \"diaz\"": 5.4e-06,
+                  "((autotroph_sname)) == \"sp\"": 2.7e-06,
                   "default": "1e34"
                },
                "longname": "Minimum Fe/C ratio for growth",
@@ -164,6 +164,25 @@
                "subcategory": "10. autotrophs",
                "units": "non-numeric"
             },
+            "is_carbon_limited": {
+               "datatype": "logical",
+               "default_value": ".false.",
+               "longname": "Flag set to true if autotroph is carbon limited",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric"
+            },
+            "kCO2": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"diat\"": 0,
+                  "((autotroph_sname)) == \"diaz\"": 0,
+                  "((autotroph_sname)) == \"sp\"": 0,
+                  "default": "1e34"
+               },
+               "longname": "CO2 uptake half-sat constant",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
             "kDOP": {
                "datatype": "real",
                "default_value": {
@@ -179,7 +198,7 @@
             "kFe": {
                "datatype": "real",
                "default_value": {
-                  "((autotroph_sname)) == \"diat\"": 7e-05,
+                  "((autotroph_sname)) == \"diat\"": 5.5e-05,
                   "((autotroph_sname)) == \"diaz\"": 4.5e-05,
                   "((autotroph_sname)) == \"sp\"": 3e-05,
                   "default": "1e34"
@@ -330,6 +349,23 @@
                "subcategory": "10. autotrophs",
                "units": "non-numeric"
             },
+            "temp_func_form_opt": {
+               "datatype": "string",
+               "default_value": {
+                  "((autotroph_sname)) == \"diat\"": "q_10",
+                  "((autotroph_sname)) == \"diaz\"": "q_10",
+                  "((autotroph_sname)) == \"sp\"": "q_10",
+                  "default": "UNSET"
+               },
+               "longname": "Option for the temperature scaling functional form",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric",
+               "valid_values": [
+                  "q_10",
+                  "arrhenius",
+                  "power"
+               ]
+            },
             "temp_thres": {
                "datatype": "real",
                "default_value": {
@@ -415,7 +451,7 @@
             "graze_poc": {
                "datatype": "real",
                "default_value": {
-                  "((grazer_sname)) == \"diat_zoo\"": 0.39,
+                  "((grazer_sname)) == \"diat_zoo\"": 0.38,
                   "((grazer_sname)) == \"diaz_zoo\"": 0.1,
                   "((grazer_sname)) == \"sp_zoo\"": 0,
                   "default": "1e34"
@@ -483,7 +519,7 @@
             "z_umax_0_per_day": {
                "datatype": "real",
                "default_value": {
-                  "((grazer_sname)) == \"diat_zoo\"": 3.15,
+                  "((grazer_sname)) == \"diat_zoo\"": 3.125,
                   "((grazer_sname)) == \"diaz_zoo\"": 3.3,
                   "((grazer_sname)) == \"sp_zoo\"": 3.3,
                   "default": "1e34"
@@ -567,6 +603,21 @@
                "longname": "Short name of the zooplankton",
                "subcategory": "11. zooplankton",
                "units": "non-numeric"
+            },
+            "temp_func_form_opt": {
+               "datatype": "string",
+               "default_value": {
+                  "((zooplankton_sname)) == \"zoo\"": "q_10",
+                  "default": "UNSET"
+               },
+               "longname": "Option for the temperature scaling functional form",
+               "subcategory": "11. zooplankton",
+               "units": "non-numeric",
+               "valid_values": [
+                  "q_10",
+                  "arrhenius",
+                  "power"
+               ]
             },
             "z_mort2_0_per_day": {
                "datatype": "real",
@@ -847,6 +898,13 @@
          "subcategory": "4. general parameters (bury coeffs)",
          "units": "unitless"
       },
+      "bftt_dz_sum_thres": {
+         "datatype": "real",
+         "default_value": 1e-14,
+         "longname": "MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold",
+         "subcategory": "4. general parameters",
+         "units": "unitless"
+      },
       "bury_coeff_rmean_timescale_years": {
          "datatype": "real",
          "default_value": 10,
@@ -863,7 +921,7 @@
       },
       "caco3_bury_thres_omega_calc": {
          "datatype": "real",
-         "default_value": 0.89,
+         "default_value": 1.0,
          "longname": "omega calcite threshold for CaCO3 burial when opt = 'omega_calc'",
          "subcategory": "4. general parameters",
          "units": 1
@@ -885,13 +943,6 @@
          "longname": "Option for which biological fractionation calculation to use",
          "subcategory": "4. general parameters",
          "units": "non-numeric"
-      },
-      "ciso_lecovars_full_depth_tavg": {
-         "datatype": "logical",
-         "default_value": ".false.",
-         "longname": "Control whether carbon isotope variables are written full depth",
-         "subcategory": "2. config flags",
-         "units": "unitless"
       },
       "ciso_lsource_sink": {
          "datatype": "logical",
@@ -923,7 +974,7 @@
       },
       "gQ_Si_kSi_thres": {
          "datatype": "real",
-         "default_value": 6.0,
+         "default_value": 5.0,
          "longname": "Si:kSi ratio threshold in uptake ratio computations",
          "subcategory": "4. general parameters",
          "units": 1
@@ -937,7 +988,7 @@
       },
       "gQsi_max": {
          "datatype": "real",
-         "default_value": 0.822,
+         "default_value": 0.685,
          "longname": "max Si/C ratio for growth",
          "subcategory": "4. general parameters",
          "units": 1
@@ -967,7 +1018,7 @@
       "lecovars_full_depth_tavg": {
          "datatype": "logical",
          "default_value": ".false.",
-         "longname": "Control whether base ecosystem variables are written full depth",
+         "longname": "If .false., MARBL will recommend truncating the column for some diagnostics",
          "subcategory": "2. config flags",
          "units": "unitless"
       },
@@ -1032,7 +1083,7 @@
       },
       "o2_sf_val_lo_o2": {
          "datatype": "real",
-         "default_value": 2.6,
+         "default_value": 3.0,
          "longname": "o2_scalefactor constant for O2 less than o2_sf_o2_range_lo",
          "subcategory": "4. general parameters",
          "units": 1
@@ -1046,14 +1097,14 @@
       },
       "parm_CaCO3_gamma": {
          "datatype": "real",
-         "default_value": 0.02,
+         "default_value": 0.1,
          "longname": "CaCO3 gamma (fraction of production -> hard subclass)",
          "subcategory": "4. general parameters",
          "units": 1
       },
       "parm_FeLig_scavenge_rate0": {
          "datatype": "real",
-         "default_value": 1.2,
+         "default_value": 1.3,
          "longname": "Scavenging base rate for bound iron",
          "subcategory": "4. general parameters (scavenging)",
          "units": "unitless"
@@ -1074,7 +1125,7 @@
       },
       "parm_Fe_scavenge_rate0": {
          "datatype": "real",
-         "default_value": 22.0,
+         "default_value": 24.0,
          "longname": "Scavenging base rate for Fe",
          "subcategory": "4. general parameters (scavenging)",
          "units": "unitless"
@@ -1109,7 +1160,7 @@
       },
       "parm_SiO2_gamma": {
          "datatype": "real",
-         "default_value": 0.0,
+         "default_value": 0.1,
          "longname": "SiO2 gamma (fraction of production -> hard subclass)",
          "subcategory": "4. general parameters",
          "units": 1
@@ -1126,21 +1177,21 @@
       },
       "parm_hPOC_CaCO3_ratio": {
          "datatype": "real",
-         "default_value": 0.01,
+         "default_value": 0.05,
          "longname": "hPOC to CaCO3 ratio",
          "subcategory": "4. general parameters",
          "units": 1
       },
       "parm_hPOC_SiO2_ratio": {
          "datatype": "real",
-         "default_value": 0.01,
+         "default_value": 0.05,
          "longname": "hPOC to SiO2 ratio",
          "subcategory": "4. general parameters",
          "units": 1
       },
       "parm_hPOC_dust_ratio": {
          "datatype": "real",
-         "default_value": 0.01,
+         "default_value": 0.05,
          "longname": "hPOC to dust ratio",
          "subcategory": "4. general parameters",
          "units": 1
@@ -1149,7 +1200,7 @@
          "datatype": "real",
          "default_value": {
             "GRID == \"CESM_x3\"": 5.0,
-            "default": 2.54
+            "default": 1.1
          },
          "longname": "Initial scale factor for burial of POC, PON",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -1159,7 +1210,7 @@
          "datatype": "real",
          "default_value": {
             "GRID == \"CESM_x3\"": 5.0,
-            "default": 0.36
+            "default": 1.1
          },
          "longname": "Initial scale factor for burial of POP",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -1169,7 +1220,7 @@
          "datatype": "real",
          "default_value": {
             "GRID == \"CESM_x3\"": 1.1,
-            "default": 1.53
+            "default": 1.0
          },
          "longname": "Initial scale factor for burial of bSi",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -1222,9 +1273,9 @@
             ],
             "default": [
                1,
-               3.6,
-               4.7,
-               4.8
+               3.2,
+               4.8,
+               5.3
             ]
          },
          "longname": "Prescribed scalelen values",
@@ -1261,18 +1312,6 @@
          "subcategory": "4. general parameters",
          "units": "m"
       },
-      "temp_func_form_opt": {
-         "_append_to_config_keywords": true,
-         "datatype": "string",
-         "default_value": "q_10",
-         "longname": "Option for the temperature scaling functional form",
-         "subcategory": "4. general parameters",
-         "units": "non-numeric",
-         "valid_values": [
-            "q_10",
-            "arrhenius"
-         ]
-      },
       "zoo_mort2_exp": {
          "datatype": "real",
          "default_value": 1.5,
@@ -1282,16 +1321,6 @@
       }
    },
    "general_parms2": {
-      "Tref": {
-         "datatype": "real",
-         "default_value": {
-            "default": 30.0,
-            "temp_func_form_opt == \"arrhenius\"": 25.0
-         },
-         "longname": "reference temperature (C) used for the temperature scaling functional form",
-         "subcategory": "4. general parameters",
-         "units": "degC"
-      },
       "init_bury_coeff_opt": {
          "datatype": "string",
          "default_value": {

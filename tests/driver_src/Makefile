@@ -64,6 +64,7 @@ endif
 
 COMP_NAME=NONE
 USEMPI=FALSE
+USE_NETCDF=FALSE
 
 ifeq ($(COMP_NAME),NONE)
   LIB_NAME = libmarbl.a
@@ -88,6 +89,27 @@ else
   LFLAG = -lmarbl-$(COMP_NAME)
 endif
 
+# Determine if building with netCDF
+ifneq ($(COMP_NAME),NONE)
+  INFO_FILE = $(EXE_SRC_DIR)/.netcdf_info.$(COMP_NAME)
+  ifeq ($(USE_NETCDF),TRUE)
+    NETCDF_INC=-D_NETCDF -I$(shell nc-config --includedir)
+    # hobart_intel version of nc-config does not have --libdir option
+    NETCDF_LNK=-L$(shell nc-config --prefix)/lib -lnetcdf -lnetcdff
+  endif
+
+  # Determine if existing build used netCDF
+  ifneq ($(wildcard $(INFO_FILE)),)
+    OLD_NETCDF = $(shell cat $(INFO_FILE))
+  else
+    OLD_NETCDF = FORCE_REBUILD
+  endif
+endif
+
+ifneq ($(OLD_NETCDF), $(USE_NETCDF))
+  REBUILD = TRUE
+endif
+
 LIBCPPDEFS=
 EXECPPDEFS=
 INCLUDES=-I$(INC_LOC)
@@ -107,10 +129,14 @@ endif
 
 COMP_ARGS = OBJ_DIR=$(OBJ_LOC) LIB_DIR=$(LIB_DIR) INC_DIR=$(INC_LOC) CPPDEFS="$(LIBCPPDEFS)"
 
-OBJS = marbl_mpi_mod.o       \
-       marbl_init_drv.o      \
-       marbl_get_put_drv.o   \
-       marbl_utils_drv.o     \
+OBJS = marbl_mpi_mod.o                      \
+       marbl_tools_mod.o                    \
+       marbl_netcdf_mod.o                   \
+       marbl_io_mod.o                       \
+       marbl_init_drv.o                     \
+       marbl_call_compute_subroutines_drv.o \
+       marbl_get_put_drv.o                  \
+       marbl_utils_drv.o                    \
        marbl.o
 
 MODS = marbl_mpi_mod.mod
@@ -125,11 +151,11 @@ all: gnu
 
 .PHONY: gnu
 gnu:
-	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-Wall -Wextra -Wno-compare-reals -Werror -O2 -ffree-form -cpp" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-Wall -Wextra -Wno-compare-reals -Werror -O2 -ffree-form -cpp -finit-real=snan -ffpe-trap=invalid" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
 
 .PHONY: intel
 intel:
-	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=intel$(MPISUF) FC=ifort FCFLAGS="-O2 -free -cpp -nogen-interface -fp-model source" INC="-module $(OBJ_ROOT)/intel$(MPISUF)" INC2="-module $(OBJ_ROOT)/intel$(MPISUF)/driver" 
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=intel$(MPISUF) FC=ifort FCFLAGS="-g -O2 -init=snan,arrays -free -cpp -nogen-interface -fp-model source" INC="-module $(OBJ_ROOT)/intel$(MPISUF)" INC2="-module $(OBJ_ROOT)/intel$(MPISUF)/driver"
 
 .PHONY: pgi
 pgi:
@@ -137,7 +163,7 @@ pgi:
 
 .PHONY: nag
 nag:
-	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-colour -O2 -free -kind=byte -wmismatch=mpi_bcast" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=nag$(MPISUF) FC=nagfor FCFLAGS="-colour -O2 -free -wmismatch=mpi_bcast" INC="-mdir $(OBJ_ROOT)/nag$(MPISUF) -I$(OBJ_ROOT)/nag$(MPISUF)" INC2="-mdir $(OBJ_ROOT)/nag$(MPISUF)/driver -I$(OBJ_ROOT)/nag$(MPISUF)/driver"
 
 .PHONY: cray
 cray:
@@ -147,22 +173,43 @@ cray:
 $(LIB_DIR)/%.a: $(LIB_SRC_DIR)/*.F90
 	make -f $(LIB_SRC_DIR)/Makefile FC=$(FC) FCFLAGS="$(FCFLAGS) $(INC)" USE_DEPS=TRUE $(COMP_ARGS) $@
 
+# Rebuild marbl_io_mod if marbl_netcdf_mod changes
+$(OBJ_DIR)/marbl_io_mod.o: $(OBJ_DIR)/marbl_netcdf_mod.o
+$(OBJ_DIR)/marbl_io_mod.mod: $(OBJ_DIR)/marbl_netcdf_mod.mod
+
+# Rebuild marbl_call_compute_subroutines_drv if marbl_io_mod changes
+$(OBJ_DIR)/marbl_call_compute_subroutines_drv.o: $(OBJ_DIR)/marbl_io_mod.o
+$(OBJ_DIR)/marbl_call_compute_subroutines_drv.mod: $(OBJ_DIR)/marbl_io_mod.mod
+
 # Driver object files
 $(OBJ_DIR)/%.o: $(EXE_SRC_DIR)/%.F90 $(LIB_DIR)/$(LIB_NAME)
-	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(INC2) $(INCLUDES) -c $< -o $@
+	$(FC) $(EXECPPDEFS) $(FCFLAGS) $(NETCDF_INC) $(INC2) $(INCLUDES) -c $< -o $@
+
+
+# Determine if output needs to be rebuilt with or without netcdf
+check:
+	$(if $(REBUILD), rm -f $(OBJ_DIR)/marbl_netcdf_mod.*)
 
 # Executable
-$(EXE): clean_exe                        \
+$(EXE): check clean_exe                        \
         $(LIB_DIR)/$(LIB_NAME)           \
         $(addprefix $(OBJ_DIR)/,$(OBJS))
-	$(FC) -o $(EXE) $(OBJ_DIR)/*.o $(LINKS)
+	$(FC) -o $(EXE) $(OBJ_DIR)/*.o $(LINKS) $(NETCDF_LNK)
+	$(shell echo $(USE_NETCDF) > $(INFO_FILE))
 
-# Clean up previous builds
+# Clean up previous builds of the executable
 .PHONY: clean_exe
 clean_exe:
 	rm -f $(EXESRL) $(EXEMPI)
+	find $(OBJ_ROOT)/*/driver -name marbl.o | xargs rm -f
+
+# Clean up previous builds of the driver
+.PHONY: clean_driver
+clean_driver: clean_exe
+	find $(OBJ_ROOT)/*/driver -name marbl_*.o | xargs rm -f
+	find $(OBJ_ROOT)/*/driver -name marbl_*.mod | xargs rm -f
 
 .PHONY: clean
-clean: clean_exe
-	rm -f $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl_*.{o,mod} $(OBJ_ROOT)/{gnu,intel,nag,pgi,cray}{,-mpi}/driver/marbl.{o,mod}
+clean: clean_driver
+	rm -f $(EXE_SRC_DIR)/.netcdf_info*
 	make -f $(LIB_SRC_DIR)/Makefile clean

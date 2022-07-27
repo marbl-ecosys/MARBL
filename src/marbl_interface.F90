@@ -52,6 +52,8 @@ module marbl_interface
   use marbl_interface_private_types, only : marbl_tracer_index_type
   use marbl_interface_private_types, only : marbl_internal_timers_type
   use marbl_interface_private_types, only : marbl_timer_indexing_type
+  use marbl_interface_private_types, only : co2calc_coeffs_type
+  use marbl_interface_private_types, only : co2calc_state_type
 
   implicit none
 
@@ -82,6 +84,7 @@ module marbl_interface
 
      ! public data related to computing interior tendencies
      real (r8), allocatable                             , public  :: tracers(:,:)                  ! input
+     real (r8), allocatable                             , public  :: bot_flux_to_tend(:)           ! input
      type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
@@ -120,10 +123,14 @@ module marbl_interface
      type(zooplankton_share_type),             private :: zooplankton_share
      type(marbl_particulate_share_type),       private :: particulate_share
      type(marbl_interior_tendency_share_type), private :: interior_tendency_share
+     type(co2calc_coeffs_type),                private :: interior_co2calc_coeffs
+     type(co2calc_state_type),                 private :: interior_co2calc_state
      type(dissolved_organic_matter_type),      private :: dissolved_organic_matter
      type(carbonate_type),                     private :: carbonate
      type(marbl_surface_flux_share_type),      private :: surface_flux_share
      type(marbl_surface_flux_internal_type),   private :: surface_flux_internal
+     type(co2calc_coeffs_type),                private :: surface_co2calc_coeffs
+     type(co2calc_state_type),                 private :: surface_co2calc_state
      logical,                                  private :: lallow_glo_ops
      type(marbl_internal_timers_type),         private :: timers
      type(marbl_timer_indexing_type),          private :: timer_ids
@@ -142,11 +149,11 @@ module marbl_interface
      procedure, public  :: shutdown
      generic            :: inquire_settings_metadata => inquire_settings_metadata_by_name, &
                                                         inquire_settings_metadata_by_id
-     generic            :: put_setting => put_real,            &
-                                          put_integer,         &
-                                          put_logical,         &
-                                          put_string,          & ! This routine checks to see if string is actually an array
-                                          put_input_file_line, & ! This line converts string "var = val" to proper put()
+     generic            :: put_setting => put_real,               &
+                                          put_integer,            &
+                                          put_logical,            &
+                                          put_string,             & ! This routine checks to see if string is actually an array
+                                          put_settings_file_line, & ! This line converts string "var = val" to proper put()
                                           put_all_string
      generic            :: get_setting => get_real,    &
                                           get_integer, &
@@ -159,7 +166,7 @@ module marbl_interface
      procedure, private :: put_integer
      procedure, private :: put_logical
      procedure, private :: put_string
-     procedure, private :: put_input_file_line
+     procedure, private :: put_settings_file_line
      procedure, private :: put_all_string
      procedure, private :: get_real
      procedure, private :: get_integer
@@ -288,6 +295,11 @@ contains
       call this%zooplankton_share%construct(num_levels)
       call this%interior_tendency_share%construct(num_levels)
     end if
+    call this%surface_co2calc_coeffs%construct(num_elements_surface_flux)
+    call this%surface_co2calc_state%construct(num_elements_surface_flux)
+    call this%interior_co2calc_coeffs%construct(num_levels)
+    call this%interior_co2calc_state%construct(num_levels)
+
 
     !-----------------------------------------------------------------------
     !  Set up tracers
@@ -295,8 +307,8 @@ contains
 
     call marbl_init_tracers(num_levels, num_elements_surface_flux, &
                             this%tracer_indices, this%tracers_at_surface, this%surface_fluxes, &
-                            this%tracers, this%interior_tendencies, this%tracer_metadata, &
-                            this%StatusLog)
+                            this%tracers, this%bot_flux_to_tend, this%interior_tendencies, &
+                            this%tracer_metadata, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_tracers", subname)
       return
@@ -485,7 +497,7 @@ contains
   !***********************************************************************
 
   subroutine put_all_string(this, varname, datatype, val)
-    ! This interface to put_setting() is called from put_input_file_line()
+    ! This interface to put_setting() is called from put_settings_file_line()
 
     use marbl_settings_mod, only : marbl_settings_string_to_var
 
@@ -541,7 +553,7 @@ contains
 
   !***********************************************************************
 
-  subroutine put_input_file_line(this, line, pgi_bugfix_var)
+  subroutine put_settings_file_line(this, line, pgi_bugfix_var)
 
     ! This subroutine takes a single line from MARBL's default input file format,
     ! determines the variable name and whether the value is a scalar or an array,
@@ -558,7 +570,7 @@ contains
     ! For some reason PGI doesn't like this particular interface to put_setting()
     ! --- Error from building stand-alone driver ---
     ! PGF90-S-0155-cannot access PRIVATE type bound procedure
-    ! put_input_file_line$tbp (/NO_BACKUP/codes/marbl/tests/driver_src/marbl.F90: 239)
+    ! put_settings_file_line$tbp (/NO_BACKUP/codes/marbl/tests/driver_src/marbl.F90: 239)
     !
     ! But adding another variable to the interface makes it okay
     logical, optional,            intent(in)    :: pgi_bugfix_var(0)
@@ -602,7 +614,7 @@ contains
     end do
     deallocate(value)
 
-  end subroutine put_input_file_line
+  end subroutine put_settings_file_line
 
   !***********************************************************************
 
@@ -660,17 +672,17 @@ contains
 
   !***********************************************************************
 
-  subroutine get_string(this, varname, val, linput_file_format)
+  subroutine get_string(this, varname, val, lsettings_file_format)
 
     class (marbl_interface_class), intent(inout) :: this
     character(len=*),              intent(in)    :: varname
     character(len=*),              intent(out)   :: val
-    logical, optional,             intent(in)    :: linput_file_format
+    logical, optional,             intent(in)    :: lsettings_file_format
 
     character(len=*), parameter :: subname = 'marbl_interface:get_string'
     character(len=char_len) :: log_message
 
-    logical :: linput_file_format_loc
+    logical :: lsettings_file_format_loc
     character(len=char_len) :: datatype
     real(r8)                :: rval
     integer                 :: ival
@@ -678,13 +690,13 @@ contains
     character(len=char_len) :: sval
 
     val = ''
-    if (present(linput_file_format)) then
-      linput_file_format_loc = linput_file_format
+    if (present(lsettings_file_format)) then
+      lsettings_file_format_loc = lsettings_file_format
     else
-      linput_file_format_loc = .false.
+      lsettings_file_format_loc = .false.
     end if
 
-    if (linput_file_format_loc) then
+    if (lsettings_file_format_loc) then
       ! Determine datatype
       call this%inquire_settings_metadata(varname, datatype=datatype)
       if (this%StatusLog%labort_marbl) then
@@ -712,7 +724,7 @@ contains
       end select
     else
       call this%settings%get(varname, this%StatusLog, sval=val)
-    end if ! linput_file_format_loc
+    end if ! lsettings_file_format_loc
 
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace('settings%get()', subname)
@@ -870,6 +882,7 @@ contains
 
     call marbl_interior_tendency_compute(                                           &
          domain                            = this%domain,                           &
+         bot_flux_to_tend                  = this%bot_flux_to_tend,                 &
          interior_tendency_forcings        = this%interior_tendency_forcings,       &
          tracers                           = this%tracers,                          &
          surface_flux_forcing_indices      = this%surface_flux_forcing_ind,         &
@@ -890,6 +903,8 @@ contains
          interior_tendency_share           = this%interior_tendency_share,          &
          marbl_particulate_share           = this%particulate_share,                &
          interior_tendency_diags           = this%interior_tendency_diags,          &
+         co2calc_coeffs                    = this%interior_co2calc_coeffs,          &
+         co2calc_state                     = this%interior_co2calc_state,           &
          interior_tendencies               = this%interior_tendencies,              &
          glo_avg_fields_interior_tendency  = this%glo_avg_fields_interior_tendency, &
          marbl_status_log                  = this%StatusLog)
@@ -936,6 +951,8 @@ contains
          surface_flux_internal    = this%surface_flux_internal,               &
          surface_flux_share       = this%surface_flux_share,                  &
          surface_flux_diags       = this%surface_flux_diags,                  &
+         co2calc_coeffs           = this%surface_co2calc_coeffs,              &
+         co2calc_state            = this%surface_co2calc_state,               &
          glo_avg_fields_surface_flux = this%glo_avg_fields_surface_flux,      &
          marbl_status_log         = this%StatusLog)
     if (this%StatusLog%labort_marbl) then
@@ -1027,9 +1044,10 @@ contains
       deallocate(this%tracers_at_surface)
       deallocate(this%surface_fluxes)
       deallocate(this%tracers)
+      deallocate(this%bot_flux_to_tend)
       deallocate(this%interior_tendencies)
       deallocate(this%tracer_metadata)
-      deallocate(tracer_restore_vars)
+      if (allocated(tracer_restore_vars)) deallocate(tracer_restore_vars)
     end if
     call this%tracer_indices%destruct()
     deallocate(this%tracer_indices)
@@ -1047,6 +1065,10 @@ contains
       call this%interior_tendency_share%destruct()
     end if
     call this%domain%destruct()
+    call this%surface_co2calc_coeffs%destruct()
+    call this%surface_co2calc_state%destruct()
+    call this%interior_co2calc_coeffs%destruct()
+    call this%interior_co2calc_state%destruct()
 
     call this%timers%shutdown(this%timer_ids, this%timer_summary, this%StatusLog)
     if (this%StatusLog%labort_marbl) then

@@ -1,0 +1,4 @@
+&marbl_driver_nml
+testname="request_forcings"
+num_PAR_subcols=6
+/

@@ -27,6 +27,8 @@ Contains
 
   subroutine test(marbl_instance, driver_status_log)
 
+    use marbl_io_mod, only : marbl_io_print_marbl_log
+
     type(marbl_interface_class), intent(inout) :: marbl_instance
     type(marbl_log_type),        intent(inout) :: driver_status_log
 
@@ -48,6 +50,7 @@ Contains
     call marbl_instance_loc%put_setting('ciso_on', .true.)
     if (marbl_instance_loc%StatusLog%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_loc%put_setting', subname)
+      call marbl_io_print_marbl_log(marbl_instance_loc%StatusLog, labort_on_error=.false.)
       return
     end if
 
@@ -60,6 +63,7 @@ Contains
                                  gcm_zt = zt)
     if (marbl_instance_loc%StatusLog%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_loc%init', subname)
+      call marbl_io_print_marbl_log(marbl_instance_loc%StatusLog, labort_on_error=.false.)
       return
     end if
 
@@ -74,6 +78,7 @@ Contains
     call marbl_instance_loc%shutdown()
     if (marbl_instance_loc%StatusLog%labort_marbl) then
       call driver_status_log%log_error_trace('marbl%shutdown', subname)
+      call marbl_io_print_marbl_log(marbl_instance_loc%StatusLog, labort_on_error=.false.)
       return
     end if
 
@@ -212,7 +217,7 @@ Contains
               return
             end if
           case ('string')
-            ! Check to see that variable was set to .true. correctly
+            ! Check to see that variable was set to '-1' correctly
             call marbl_instance%get_setting(sname, sval)
             if (trim(sval).ne.'-1') then
               write(log_message, "(4A)") trim(sname), ' = ', trim(sval), ', not -1'
