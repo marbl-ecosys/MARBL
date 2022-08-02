@@ -604,6 +604,16 @@
                "units": "eV"
             },
             "_type_name": "zooplankton_settings_type",
+            "basal_metabolic_rate_per_day": {
+               "datatype": "real",
+               "default_value": {
+                  "((zooplankton_sname)) == \"zoo\"": 0.0,
+                  "default": "1e34"
+               },
+               "longname": "Basal metabolic rate",
+               "subcategory": "11. zooplankton",
+               "units": "1/day / (mmol/m^3)"
+            },
             "lname": {
                "datatype": "string",
                "default_value": {
