@@ -1779,7 +1779,7 @@ contains
         C_loss_thres(:) = f_loss_thres(:) * zooplankton_settings(zoo_ind)%loss_thres
         Zprime(zoo_ind,:) = max(zooC(zoo_ind,:) - C_loss_thres, c0)
 
-        zoo_loss_basal(zoo_ind,:) = zooplankton_settings(zoo_ind)%basal_metabolic_rate * Zprime(zoo_ind,:) * Tfunc_zoo(zoo_ind,:)
+        zoo_loss_basal(zoo_ind,:) = zooplankton_settings(zoo_ind)%basal_respiration_rate * Zprime(zoo_ind,:) * Tfunc_zoo(zoo_ind,:)
 
         zoo_loss_bulk(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort_0 * Zprime(zoo_ind,:) + &
                               zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp) * Tfunc_zoo(zoo_ind,:)

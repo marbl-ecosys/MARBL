@@ -1613,11 +1613,11 @@ contains
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-      write(sname, "(2A)") trim(prefix), 'basal_metabolic_rate_per_day'
-      lname    = 'Basal metabolic rate'
-      units    = '1/day/(mmol/m^3)'
+      write(sname, "(2A)") trim(prefix), 'basal_respiration_rate_per_day'
+      lname    = 'Basal respiration rate'
+      units    = '1/day'
       datatype = 'real'
-      rptr     => zooplankton_settings(n)%basal_metabolic_rate_per_day
+      rptr     => zooplankton_settings(n)%basal_respiration_rate_per_day
       call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1946,11 +1946,11 @@ contains
        call print_single_derived_parm(sname_in, sname_out, &
             zooplankton_settings(n)%z_mort2_0, subname, marbl_status_log)
 
-       zooplankton_settings(n)%basal_metabolic_rate = dps * zooplankton_settings(n)%basal_metabolic_rate_per_day
-       write(sname_in,  "(A,I0,A)") 'zooplankton_settings(', n, ')%basal_metabolic_rate_per_day'
-       write(sname_out, "(A,I0,A)") 'zooplankton_settings(', n, ')%basal_metabolic_rate'
+       zooplankton_settings(n)%basal_respiration_rate = dps * zooplankton_settings(n)%basal_respiration_rate_per_day
+       write(sname_in,  "(A,I0,A)") 'zooplankton_settings(', n, ')%basal_respiration_rate_per_day'
+       write(sname_out, "(A,I0,A)") 'zooplankton_settings(', n, ')%basal_respiration_rate'
        call print_single_derived_parm(sname_in, sname_out, &
-            zooplankton_settings(n)%basal_metabolic_rate, subname, marbl_status_log)
+            zooplankton_settings(n)%basal_respiration_rate, subname, marbl_status_log)
     end do
 
     call marbl_status_log%log_noerror('', subname)
