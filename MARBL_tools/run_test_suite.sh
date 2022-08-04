@@ -125,6 +125,12 @@ if [ "${STATUS}" == "PASS" ]; then
   (set -x ; ./init.py)
   STATUS=$(check_return $?)
   print_status "init.py" >> ${RESULTS_CACHE}
+  # Initialize MARBL with settings from tests/input_files/settings/
+  for settingsfile in `find ../../input_files/settings -type f`; do
+    (set -x ; ./init.py -s $settingsfile)
+    STATUS=$(check_return $?)
+    print_status "init.py ($(basename ${settingsfile}))" >> ${RESULTS_CACHE}
+  done
   # Initialize MARBL with settings generated from every JSON file
   for shortname in cesm2.0 cesm2.1 cesm2.1+cocco latest latest+cocco; do
     if [ -f ../../../MARBL_tools/marbl_${shortname}.settings ]; then

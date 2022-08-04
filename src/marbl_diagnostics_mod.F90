@@ -3935,15 +3935,15 @@ contains
          )
 
     do n = 1, zooplankton_cnt
-       diags(ind%zoo_loss(n))%field_3d(:, 1)      = zooplankton_derived_terms%zoo_loss(n,:)
-       diags(ind%zoo_loss_basal(n))%field_3d(:, 1)      = zooplankton_derived_terms%zoo_loss_basal(n,:)
-       diags(ind%zoo_loss_poc(n))%field_3d(:, 1)  = zooplankton_derived_terms%zoo_loss_poc(n,:)
-       diags(ind%zoo_loss_doc(n))%field_3d(:, 1)  = zooplankton_derived_terms%zoo_loss_doc(n,:)
-       diags(ind%zoo_graze(n))%field_3d(:, 1)     = zooplankton_derived_terms%zoo_graze(n,:)
-       diags(ind%zoo_graze_poc(n))%field_3d(:, 1) = zooplankton_derived_terms%zoo_graze_poc(n,:)
-       diags(ind%zoo_graze_doc(n))%field_3d(:, 1) = zooplankton_derived_terms%zoo_graze_doc(n,:)
+       diags(ind%zoo_loss(n))%field_3d(:, 1)         = zooplankton_derived_terms%zoo_loss(n,:)
+       diags(ind%zoo_loss_basal(n))%field_3d(:, 1)   = zooplankton_derived_terms%zoo_loss_basal(n,:)
+       diags(ind%zoo_loss_poc(n))%field_3d(:, 1)     = zooplankton_derived_terms%zoo_loss_poc(n,:)
+       diags(ind%zoo_loss_doc(n))%field_3d(:, 1)     = zooplankton_derived_terms%zoo_loss_doc(n,:)
+       diags(ind%zoo_graze(n))%field_3d(:, 1)        = zooplankton_derived_terms%zoo_graze(n,:)
+       diags(ind%zoo_graze_poc(n))%field_3d(:, 1)    = zooplankton_derived_terms%zoo_graze_poc(n,:)
+       diags(ind%zoo_graze_doc(n))%field_3d(:, 1)    = zooplankton_derived_terms%zoo_graze_doc(n,:)
        diags(ind%zoo_graze_zootot(n))%field_3d(:, 1) = zooplankton_derived_terms%zoo_graze_zootot(n,:)
-       diags(ind%x_graze_zoo(n))%field_3d(:, 1)   = zooplankton_derived_terms%x_graze_zoo(n,:)
+       diags(ind%x_graze_zoo(n))%field_3d(:, 1)      = zooplankton_derived_terms%x_graze_zoo(n,:)
 
        do m = 1, zooplankton_cnt
            diags(ind%zoo_graze_zoo(n,m))%field_3d(:, 1) = zooplankton_derived_terms%zoo_graze_zoo(n,m,:)
