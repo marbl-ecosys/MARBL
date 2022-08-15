@@ -69,11 +69,16 @@ cd ${MARBL_ROOT}/defaults/json
 STATUS=$(check_return $?)
 print_status "JSON is unchanged" >> ${RESULTS_CACHE}
 
-# Generate a settings file (python)
+# Generate settings files from every JSON file (python)
 cd ${MARBL_ROOT}/MARBL_tools
 (set -x ; ./MARBL_generate_settings_file.py)
 STATUS=$(check_return $?)
 print_status "MARBL_generate_settings_file.py" >> ${RESULTS_CACHE}
+for shortname in cesm2.0 cesm2.1 cesm2.1+cocco latest latest+cocco; do
+  (set -x ; ./MARBL_generate_settings_file.py -f ../defaults/json/settings_${shortname}.json -o marbl_${shortname}.settings)
+  STATUS=$(check_return $?)
+  print_status "MARBL_generate_settings_file.py (${shortname})" >> ${RESULTS_CACHE}
+done
 
 # Test MARBL_generate_diagnostics_file.py
 cd ${MARBL_ROOT}/MARBL_tools
@@ -120,6 +125,20 @@ if [ "${STATUS}" == "PASS" ]; then
   (set -x ; ./init.py)
   STATUS=$(check_return $?)
   print_status "init.py" >> ${RESULTS_CACHE}
+  # Initialize MARBL with settings from tests/input_files/settings/
+  for settingsfile in `find ../../input_files/settings -type f`; do
+    (set -x ; ./init.py -s $settingsfile)
+    STATUS=$(check_return $?)
+    print_status "init.py ($(basename ${settingsfile}))" >> ${RESULTS_CACHE}
+  done
+  # Initialize MARBL with settings generated from every JSON file
+  for shortname in cesm2.0 cesm2.1 cesm2.1+cocco latest latest+cocco; do
+    if [ -f ../../../MARBL_tools/marbl_${shortname}.settings ]; then
+      (set -x ; ./init.py -s ../../../MARBL_tools/marbl_${shortname}.settings)
+      STATUS=$(check_return $?)
+      print_status "init.py (${shortname})" >> ${RESULTS_CACHE}
+    fi
+  done
 
   # Initialize MARBL, clean up memory, initialize again
   cd ${MARBL_ROOT}/tests/regression_tests/init-twice

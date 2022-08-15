@@ -1767,7 +1767,9 @@ contains
 
     associate(                                               &
          Zprime   => zooplankton_derived_terms%Zprime(:,:),  & !(zooplankton_cnt)
-         zoo_loss => zooplankton_derived_terms%zoo_loss(:,:) & !(zooplankton_cnt) output
+         zoo_loss => zooplankton_derived_terms%zoo_loss(:,:), & !(zooplankton_cnt) output
+         zoo_loss_bulk => zooplankton_derived_terms%zoo_loss_bulk(:,:), & !(zooplankton_cnt) output
+         zoo_loss_basal => zooplankton_derived_terms%zoo_loss_basal(:,:) & !(zooplankton_cnt) output
          )
 
       !  calculate the loss threshold interpolation factor
@@ -1777,8 +1779,13 @@ contains
         C_loss_thres(:) = f_loss_thres(:) * zooplankton_settings(zoo_ind)%loss_thres
         Zprime(zoo_ind,:) = max(zooC(zoo_ind,:) - C_loss_thres, c0)
 
-        zoo_loss(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp &
-                               + zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind,:)) * Tfunc_zoo(zoo_ind,:)
+        zoo_loss_basal(zoo_ind,:) = zooplankton_settings(zoo_ind)%basal_respiration_rate * Zprime(zoo_ind,:) * Tfunc_zoo(zoo_ind,:)
+
+        zoo_loss_bulk(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort_0 * Zprime(zoo_ind,:) + &
+                              zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp) * Tfunc_zoo(zoo_ind,:)
+
+        zoo_loss(zoo_ind,:) = zoo_loss_basal(zoo_ind,:) + zoo_loss_bulk(zoo_ind,:)
+
       end do
 
     end associate
@@ -2022,7 +2029,8 @@ contains
          zoo_graze_poc   => zooplankton_derived_terms%zoo_graze_poc(:,:), & ! input
          zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,:), & ! input
          zoo_graze_zootot   => zooplankton_derived_terms%zoo_graze_zootot(:,:), & ! input
-         zoo_loss        => zooplankton_derived_terms%zoo_loss(:,:),      & ! input
+         zoo_loss_bulk   => zooplankton_derived_terms%zoo_loss_bulk(:,:), & ! input
+         zoo_loss_basal  => zooplankton_derived_terms%zoo_loss_basal(:,:), & ! input
          f_zoo_detr      => zooplankton_derived_terms%f_zoo_detr(:,:),    & ! input
 
          auto_graze_dic  => autotroph_derived_terms%auto_graze_dic(:,:),  & ! output
@@ -2052,11 +2060,16 @@ contains
 
         !-----------------------------------------------------------------------
         ! compute zooplankton loss routing
+        !   - zooplankton linear and quadratic losses get routed to DOC, DIC, and POC
+        !   - basal respiration losses only contribute to DIC
         !-----------------------------------------------------------------------
+
         do zoo_ind = 1, zooplankton_cnt
-          zoo_loss_poc(zoo_ind,k) = f_zoo_detr(zoo_ind,k) * zoo_loss(zoo_ind,k)
-          zoo_loss_doc(zoo_ind,k) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss(zoo_ind,k)
-          zoo_loss_dic(zoo_ind,k) = parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss(zoo_ind,k)
+          zoo_loss_poc(zoo_ind,k) = f_zoo_detr(zoo_ind,k) * zoo_loss_bulk(zoo_ind,k)
+          zoo_loss_doc(zoo_ind,k) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss_bulk(zoo_ind,k)
+          zoo_loss_dic(zoo_ind,k) = (parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss_bulk(zoo_ind,k)) + &
+                                    zoo_loss_basal(zoo_ind,k)
+
         end do
 
         !-----------------------------------------------------------------------
@@ -3513,7 +3526,7 @@ contains
          zoo_graze_zootot   => zooplankton_derived_terms%zoo_graze_zootot(:,:), & ! grazing of zooplankton routed to total zoo (mmol C/m^3/sec)
          zoo_graze_dic   => zooplankton_derived_terms%zoo_graze_dic(:,:), & ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
          zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,:), & ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
-         zoo_loss        => zooplankton_derived_terms%zoo_loss(:,:),      & ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+         zoo_loss        => zooplankton_derived_terms%zoo_loss(:,:),      & ! total zooplankton loss (basal and bulk) (mmol C/m^3/sec)
          zoo_loss_dic    => zooplankton_derived_terms%zoo_loss_dic(:,:),  & ! zoo_loss routed to dic (mmol C/m^3/sec)
          zoo_loss_doc    => zooplankton_derived_terms%zoo_loss_doc(:,:),  & ! zoo_loss routed to doc (mmol C/m^3/sec)
 

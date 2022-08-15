@@ -1043,6 +1043,14 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((zooplankton_sname)) == "zoo" : 0.4
+         basal_respiration_rate_per_day :
+            longname : Basal respiration rate
+            subcategory : 11. zooplankton
+            units : 1/day
+            datatype : real
+            default_value :
+               default : 1e34
+               ((zooplankton_sname)) == "zoo" : 0.0
          loss_thres :
             longname : Zoo concentration where losses go to zero
             subcategory : 11. zooplankton
