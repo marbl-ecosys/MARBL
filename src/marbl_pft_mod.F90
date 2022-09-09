@@ -29,7 +29,11 @@ module marbl_pft_mod
 
     real(r8)                :: kFe, kCO2, kPO4, kDOP, kNO3, kNH4, kSiO3 ! nutrient uptake half-sat constants
     real(r8)                :: Qp_fixed                           ! P/C ratio for fixed P/C ratios
-    real(r8)                :: gQfe_0, gQfe_min                   ! initial and minimum Fe/C ratio for growth
+    real(r8)                :: Qn_fixed                           ! N/C ratio for fixed N/C ratios
+    real(r8)                :: gQfe_max, gQfe_min                 ! initial and minimum Fe/C ratio for growth
+    real(r8)                :: gQp_max, gQp_min                   ! initial and minimum P/C ratio for growth
+    real(r8)                :: gQn_max, gQn_min                   ! initial and minimum N/C ratio for growth
+    real(r8)                :: POpt, NOpt, FeOpt, SiOpt           ! PO4, N, Fe, SiO3 threshold in uptake ratio computations
     real(r8)                :: alphaPI_per_day                    ! init slope of P_I curve (GD98) (mmol C m^2/(mg Chl W day))
     real(r8)                :: alphaPI                            ! init slope of P_I curve (GD98) (mmol C m^2/(mg Chl W sec))
                                                                   !    (derived from alphaPI_per_day)
@@ -95,6 +99,7 @@ module marbl_pft_mod
 
   ! Public parameters
   real(r8), public, parameter :: Qp_zoo = c1 / 117.0_r8 ! P/C ratio (mmol/mmol) zoo
+  real(r8), public, parameter :: Qn_zoo = 16.0 / 117.0_r8 ! N/C ratio (mmol/mmol) zoo
 
   ! grazing functions
   integer(int_kind), public, parameter :: grz_fnc_michaelis_menten = 1
@@ -130,9 +135,18 @@ contains
         self%kNO3            = 0.25_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kNH4            = 0.01_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kSiO3           = 0.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
-        self%Qp_fixed        =  Qp_zoo           ! only used for lvariable_PtoC=.false.
-        self%gQfe_0          = 30.0e-6_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%Qp_fixed        = Qp_zoo            ! only used for lvariable_PtoC=.false.
+        self%Qn_fixed        = Qn_zoo            ! only used for lvariable_NtoC=.false.
+        self%SiOpt           = 0.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQfe_max        = 30.0e-6_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%gQfe_min        = 2.5e-6_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%FeOpt           = 1.8e-3_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQp_max         = 0.01111111_r8     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQp_min         = 0.00757576_r8     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%POpt            = 0.6_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQn_max         = 0.166667_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQn_min         = 0.111111_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%NOpt            = 0.4_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%alphaPI_per_day = 0.39_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%PCref_per_day   = 5.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%thetaN_max      = 2.5_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -163,8 +177,17 @@ contains
         self%kNH4            = 0.05_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kSiO3           = 0.7_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%Qp_fixed        =  Qp_zoo           ! only used for lvariable_PtoC=.false.
-        self%gQfe_0          = 30.0e-6_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%Qn_fixed        =  Qn_zoo           ! only used for lvariable_NtoC=.false.
+        self%SiOpt           = 10.0_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQfe_max        = 30.0e-6_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%gQfe_min        = 2.5e-6_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%FeOpt           = 1.8e-3_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQp_max         = 0.01111111_r8     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQp_min         = 0.00833333_r8     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%POpt            = 0.7_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQn_max         = 0.166667_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQn_min         = 0.111111_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%NOpt            = 0.4_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%alphaPI_per_day = 0.28_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%PCref_per_day   = 5.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%thetaN_max      = 4.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -194,8 +217,17 @@ contains
         self%kNH4            = 0.2_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kSiO3           = 0.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%Qp_fixed        = 0.32_r8 * Qp_zoo  ! only used for lvariable_PtoC=.false.
-        self%gQfe_0          = 60.0e-6_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%Qn_fixed        = Qn_zoo            ! only used for lvariable_ntoC=.false.
+        self%SiOpt           = 0.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQfe_max        = 60.0e-6_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%gQfe_min        = 2.5e-6_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%FeOpt           = 2.0e-3_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQp_max         = 0.00833333_r8     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQp_min         = 0.00370370_r8     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%POpt            = 0.8_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQn_max         = 0.166667_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%gQn_min         = 0.142857_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
+        self%NOpt            = 0.4_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%alphaPI_per_day = 0.39_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%PCref_per_day   = 2.5_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%thetaN_max      = 2.5_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -225,8 +257,17 @@ contains
         self%kNH4            = UnsetValue
         self%kSiO3           = UnsetValue
         self%Qp_fixed        = UnsetValue
-        self%gQfe_0          = UnsetValue
+        self%Qn_fixed        = UnsetValue
+        self%SiOpt           = UnsetValue
+        self%gQfe_max        = UnsetValue
         self%gQfe_min        = UnsetValue
+        self%FeOpt           = UnsetValue
+        self%gQp_max         = UnsetValue
+        self%gQp_min         = UnsetValue
+        self%POpt            = UnsetValue
+        self%gQn_max         = UnsetValue
+        self%gQn_min         = UnsetValue
+        self%NOpt            = UnsetValue        
         self%alphaPI_per_day = UnsetValue
         self%PCref_per_day   = UnsetValue
         self%thetaN_max      = UnsetValue

@@ -136,6 +136,7 @@ contains
 
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lvariable_PtoC
+    use marbl_settings_mod, only : lvariable_NtoC
     use marbl_settings_mod, only : autotroph_settings
     use marbl_settings_mod, only : zooplankton_settings
     use marbl_settings_mod, only : tracer_restore_vars
@@ -159,7 +160,7 @@ contains
 
     ! Construct tracer indices
     allocate(tracer_indices)
-    call tracer_indices%construct(ciso_on, lvariable_PtoC, autotroph_settings, zooplankton_settings, &
+    call tracer_indices%construct(ciso_on, lvariable_PtoC, lvariable_NtoC, autotroph_settings, zooplankton_settings, &
                                   marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
@@ -257,6 +258,11 @@ contains
        n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
        marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
 
+       n = marbl_tracer_indices%auto_inds(auto_ind)%N_ind
+       if (n > 0) then
+          marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
+       endif
+
        n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
        if (n > 0) then
           marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
@@ -317,6 +323,7 @@ contains
     use marbl_settings_mod, only : ladjust_bury_coeff
     use marbl_settings_mod, only : parm_init_POC_bury_coeff
     use marbl_settings_mod, only : parm_init_POP_bury_coeff
+!    use marbl_settings_mod, only : parm_init_PON_bury_coeff
     use marbl_settings_mod, only : parm_init_bSi_bury_coeff
     use marbl_interface_private_types, only : marbl_particulate_share_type
 
@@ -337,6 +344,7 @@ contains
        if (init_bury_coeff_opt == 'settings_file') then
           marbl_particulate_share%POC_bury_coeff = parm_init_POC_bury_coeff
           marbl_particulate_share%POP_bury_coeff = parm_init_POP_bury_coeff
+!          marbl_particulate_share%PON_bury_coeff = parm_init_PON_bury_coeff
           marbl_particulate_share%bSi_bury_coeff = parm_init_bSi_bury_coeff
        else
           call marbl_status_log%log_error("ladjust_bury_coeff=.false., init_bury_coeff_opt='GCM' not implemented", subname)
@@ -605,6 +613,15 @@ contains
           marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
           marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
        endif
+
+       n = marbl_tracer_indices%auto_inds(auto_ind)%N_ind
+       if (n.gt.0) then
+          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'N'
+          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Nitrogen'
+          marbl_tracer_metadata(n)%units      = 'mmol/m^3'
+          marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
+          marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
+       endif       
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
        marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Fe'

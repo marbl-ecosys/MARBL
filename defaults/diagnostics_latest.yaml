@@ -696,6 +696,12 @@ DONr_remin :
    vertical_grid : layer_avg
    frequency : low
    operator : average
+DON_loss_N_bal:
+   longname : DON loss, due to N budget balancing
+   units: mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency: never
+   operator: average
 DOP_prod :
    longname : DOP Production
    units : mmol/m^3/s
@@ -784,6 +790,12 @@ POC_FLUX_((particulate_flux_ref_depth_str)) :
    operator : average
 POP_FLUX_((particulate_flux_ref_depth_str)) :
    longname : POP Flux at ((particulate_flux_ref_depth_str))
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+PON_FLUX_((particulate_flux_ref_depth_str)) : 
+   longname : PON Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
@@ -935,6 +947,18 @@ POP_REMIN_PO4 :
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
+   operator : average
+PON_FLUX_IN : 
+   longname : PON Flux into Cell
+   units : mmol/m^3 cm/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+PON_PROD : 
+   longname : PON Production
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
    operator : average
 PON_REMIN_DONr :
    longname : PON Remineralization routed to DONr
@@ -1572,6 +1596,18 @@ graze_((autotroph_sname))_zoo_zint_100m :
                  #       thought is that we don't need these diagnostics with
                  #       fixed P:C so I'd like to update the fortran as well
       lvariable_PtoC : .true.
+   longname : ((autotroph_lname))
+   units : 1
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : medium
+   operator : average
+((autotroph_sname))_Qn :
+   dependencies: # NOTE: POP treats this as a dependency, though MARBL defines
+                 #       these diagnostics independent of lvariable_NtoC; my
+                 #       thought is that we don't need these diagnostics with
+                 #       fixed N:C so I'd like to update the fortran as well
+      lvariable_NtoC : .true.
    longname : ((autotroph_lname))
    units : 1
    vertical_grid : layer_avg

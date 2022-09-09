@@ -55,6 +55,7 @@ contains
        autotroph_derived_terms,                    &
        temperature,                                &
        marbl_tracer_indices,                       &
+       denitrif_C_N,                               &       
        interior_tendencies,                        &
        marbl_interior_diags,                       &
        marbl_status_log)
@@ -81,6 +82,7 @@ contains
     type(autotroph_derived_terms_type),       intent(in)    :: autotroph_derived_terms
     real (r8),                                intent(in)    :: temperature(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
+    real (r8),                                intent(in)    :: denitrif_C_N(:)    
     real (r8),                                intent(inout) :: interior_tendencies(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
     type(marbl_diagnostics_type),             intent(inout) :: marbl_interior_diags
     type(marbl_log_type),                     intent(inout) :: marbl_status_log
@@ -558,10 +560,10 @@ contains
        !-----------------------------------------------------------------------
 
        call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,:), &
-            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3)
+            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3, denitrif_C_N(:))
 
        call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,:), &
-            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3)
+            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3, denitrif_C_N(:))
 
        !-----------------------------------------------------------------------
        ! Update interior_tendencies for the 7 carbon pools for each Carbon isotope
@@ -1059,7 +1061,7 @@ contains
   !***********************************************************************
 
   subroutine compute_particulate_terms(k, domain, bot_flux_to_tend, tracer_local, marbl_tracer_indices, &
-             interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
+             interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso, denitrif_C_N)
 
     !----------------------------------------------------------------------------------------
     !  Compute outgoing fluxes and remineralization terms for Carbon isotopes.
@@ -1071,7 +1073,7 @@ contains
     !----------------------------------------------------------------------------------------
 
     use marbl_constants_mod, only : spd
-    use marbl_settings_mod , only : denitrif_C_N
+!    use marbl_settings_mod , only : denitrif_C_N
     use marbl_settings_mod , only : parm_sed_denitrif_coeff
     use marbl_settings_mod , only : caco3_bury_thres_iopt
     use marbl_settings_mod , only : caco3_bury_thres_iopt_fixed_depth
@@ -1088,6 +1090,7 @@ contains
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
     type(column_sinking_particle_type),       intent(inout) :: POC_ciso          ! base units = nmol particulate organic Carbon isotope
     type(column_sinking_particle_type),       intent(inout) :: P_CaCO3_ciso      ! base units = nmol CaCO3 Carbon isotope
+    real(r8),                                 intent(in)    :: denitrif_C_N(:)
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -1258,12 +1261,12 @@ contains
           other_remin(1:k) = min(bot_flux_to_tend(1:k) * &
                                  min(0.1_r8 + flux_alt,0.5_r8) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)), &
                                  bot_flux_to_tend(1:k) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)) - &
-                                 sed_denitrif(1:k) * denitrif_C_N)
+                                 sed_denitrif(1:k) * denitrif_C_N(1:k))
 
           ! if bottom water O2 is depleted, assume all remin is denitrif + other
           where (O2_loc_col(1:k) < c1)
              other_remin(1:k) = bot_flux_to_tend(1:k) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)) - &
-                                sed_denitrif(1:k) * denitrif_C_N
+                                sed_denitrif(1:k) * denitrif_C_N(1:k)
           endwhere
        endif
 
