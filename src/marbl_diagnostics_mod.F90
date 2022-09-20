@@ -1309,6 +1309,7 @@ contains
       if (.not.ind%lconstructed()) then
         allocate(ind%zoo_loss_zint(zooplankton_cnt))
         allocate(ind%zoo_loss_zint_100m(zooplankton_cnt))
+        allocate(ind%zoo_loss_zint_150m(zooplankton_cnt))
         allocate(ind%zoo_loss_poc_zint(zooplankton_cnt))
         allocate(ind%zoo_loss_poc_zint_100m(zooplankton_cnt))
         allocate(ind%zoo_loss_doc_zint(zooplankton_cnt))
@@ -1344,6 +1345,18 @@ contains
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
              ind%zoo_loss_zint_100m(n), marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral, 0-150m'
+        sname = trim(zooplankton_settings(n)%sname) // '_loss_zint_150m'
+        units = 'mmol/m^3 cm/s'
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%zoo_loss_zint_150m(n), marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
@@ -3928,6 +3941,10 @@ contains
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_loss(n))%field_3d(:, 1), &
             delta_z, kmt, full_depth_integral=diags(ind%zoo_loss_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%zoo_loss_zint_100m(n))%field_2d(1))
+
+       call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_loss(n))%field_3d(:, 1), &
+            delta_z, kmt, near_surface_integral=diags(ind%zoo_loss_zint_150m(n))%field_2d(1), &
+            shallow_depth=150.0e2_r8)
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_loss_poc(n))%field_3d(:, 1), &
             delta_z, kmt, full_depth_integral=diags(ind%zoo_loss_poc_zint(n))%field_2d(1), &

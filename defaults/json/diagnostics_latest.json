@@ -329,6 +329,13 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "((zooplankton_sname))_loss_zint_150m": {
+      "frequency": "high",
+      "longname": "((zooplankton_lname)) Loss Vertical Integral, 0-150m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "AOU": {
       "frequency": "medium",
       "longname": "Apparent O2 Utilization",
@@ -2244,9 +2251,15 @@
       "vertical_grid": "layer_avg"
    },
    "pocToFloor": {
-      "frequency": "medium",
+      "frequency": [
+         "medium",
+         "high"
+      ],
       "longname": "POC Flux Hitting Sea Floor",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },

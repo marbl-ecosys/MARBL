@@ -464,8 +464,12 @@ pocToFloor :
    longname : POC Flux Hitting Sea Floor
    units : nmol/cm^2/s
    vertical_grid : none
-   frequency : medium
-   operator : average
+   frequency :
+      - medium
+      - high
+   operator :
+      - average
+      - average
 pocToSed :
    longname : POC Flux to Sediments
    units : nmol/cm^2/s
@@ -1858,6 +1862,12 @@ CISO_mui_to_co2star_((autotroph_sname)) :
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
+   operator : average
+((zooplankton_sname))_loss_zint_150m :
+   longname : ((zooplankton_lname)) Loss Vertical Integral, 0-150m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : high
    operator : average
 ((zooplankton_sname))_loss_poc_zint :
    longname : ((zooplankton_lname)) Loss to POC Vertical Integral
