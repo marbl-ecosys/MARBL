@@ -270,8 +270,8 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(message)s', level=logging.INFO)
     LOGGER = logging.getLogger(__name__)
 
-    args = _parse_args() # pylint: disable=invalid-name
-    ds_base_in, ds_new_in = _open_files(args.baseline, args.new_file) # pylint: disable=invalid-name
+    args = _parse_args()
+    ds_base_in, ds_new_in = _open_files(args.baseline, args.new_file)
     if args.strict == 'loose':
         if ds_comparison_loose(ds_base_in, ds_new_in, args.rtol, args.atol, args.thres):
             LOGGER.error("Differences found between files!")
