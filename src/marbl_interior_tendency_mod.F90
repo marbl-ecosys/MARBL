@@ -43,6 +43,7 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : max_grazer_prey_cnt
   use marbl_settings_mod, only : lsource_sink
+  use marbl_settings_mod, only : lcheck_forcing
   use marbl_settings_mod, only : ladjust_bury_coeff
   use marbl_settings_mod, only : autotroph_settings
   use marbl_settings_mod, only : zooplankton_settings
@@ -231,7 +232,8 @@ contains
     endif
 
     ! Verify forcing is consistent
-    call check_forcing(interior_tendency_forcings, interior_tendency_forcing_indices, marbl_status_log)
+    if (lcheck_forcing) &
+      call check_forcing(interior_tendency_forcings, interior_tendency_forcing_indices, marbl_status_log)
 
    associate(                                                      &
          km                  => domain%km,                          &
