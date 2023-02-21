@@ -561,6 +561,13 @@ contains
         new_output(n)%forcing_field_0d(:) = this%outputs_for_GCM(n)%forcing_field_0d(:)
         deallocate(this%outputs_for_GCM(n)%forcing_field_0d)
       end if
+      if (allocated(this%outputs_for_GCM(n)%forcing_field_1d)) then
+        dim1_loc = size(this%outputs_for_GCM(n)%forcing_field_1d, dim=1)
+        dim2_loc = size(this%outputs_for_GCM(n)%forcing_field_1d, dim=2)
+        allocate(new_output(n)%forcing_field_1d(dim1_loc, dim2_loc))
+        new_output(n)%forcing_field_1d(:,:) = this%outputs_for_GCM(n)%forcing_field_1d(:,:)
+        deallocate(this%outputs_for_GCM(n)%forcing_field_1d)
+      end if
     end do
 
     ! 3) newest surface flux output (field_name) is Nth element of new_output
