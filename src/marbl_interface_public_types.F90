@@ -11,9 +11,9 @@ module marbl_interface_public_types
 
   !****************************************************************************
 
-  ! NOTE: when adding a new surface flux output field (a field that the GCM
-  !       may need to pass to flux coupler), remember to add a new index for it
-  !       as well.
+  ! NOTE: when adding a new surface flux or interior tendency output field
+  !       (a field that the GCM may need to pass to flux coupler), remember
+  !       to add a new index for it as well.
   type, public :: marbl_surface_flux_output_indexing_type
     integer(int_kind) :: flux_o2_id = 0
     integer(int_kind) :: flux_co2_id = 0
@@ -21,7 +21,12 @@ module marbl_interface_public_types
     integer(int_kind) :: total_surfChl_id = 0
   end type marbl_surface_flux_output_indexing_type
 
+  type, public :: marbl_interior_tendency_output_indexing_type
+    integer(int_kind) :: total_Chl_id = 0
+  end type marbl_interior_tendency_output_indexing_type
+
   type(marbl_surface_flux_output_indexing_type), public :: sfo_ind
+  type(marbl_interior_tendency_output_indexing_type), public :: ito_ind
 
   !*****************************************************************************
 
@@ -474,6 +479,11 @@ contains
         this%short_name = "total_surfChl"
         this%units      = "mg/m^3"
         sfo_ind%total_surfChl_id = id
+      case("total_Chl")
+        this%long_name  = "Total Chlorophyll Concentration"
+        this%short_name = "total_Chl"
+        this%units      = "mg/m^3"
+        ito_ind%total_Chl_id = id
       case DEFAULT
         write(log_message, "(2A)") trim(field_name), " is not a valid output field name for the GCM"
         call marbl_status_log%log_error(log_message, subname)

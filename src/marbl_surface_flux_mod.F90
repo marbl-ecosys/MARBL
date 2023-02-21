@@ -176,7 +176,7 @@ contains
     surface_fluxes(:, :) = c0
 
     !-----------------------------------------------------------------------
-    !  Compute total chlorophyll
+    !  Compute surface chlorophyll
     !-----------------------------------------------------------------------
 
     if (sfo_ind%total_surfChl_id.ne.0) then
