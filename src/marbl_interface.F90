@@ -26,7 +26,7 @@ module marbl_interface
 
   use marbl_interface_public_types, only : marbl_domain_type
   use marbl_interface_public_types, only : marbl_tracer_metadata_type
-  use marbl_interface_public_types, only : marbl_surface_flux_output_type
+  use marbl_interface_public_types, only : marbl_output_for_GCM_type
   use marbl_interface_public_types, only : marbl_diagnostics_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
   use marbl_interface_public_types, only : marbl_saved_state_type
@@ -95,7 +95,7 @@ module marbl_interface
      type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)    ! input
      type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind    ! FIXME #311: should be private
      real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)         ! output
-     type(marbl_surface_flux_output_type)           , public               :: surface_flux_output         ! output
+     type(marbl_output_for_GCM_type)                , public               :: surface_flux_output         ! output
      type(marbl_diagnostics_type)                   , public               :: surface_flux_diags          ! output
 
      ! public data - global averages

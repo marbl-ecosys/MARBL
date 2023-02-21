@@ -29,7 +29,7 @@ module marbl_surface_flux_mod
   use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
 
   use marbl_interface_public_types, only : marbl_saved_state_type
-  use marbl_interface_public_types, only : marbl_surface_flux_output_type
+  use marbl_interface_public_types, only : marbl_output_for_GCM_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
 
   use marbl_diagnostics_mod , only : marbl_diagnostics_surface_flux_compute
@@ -98,7 +98,7 @@ contains
     type(marbl_saved_state_type)              , intent(inout) :: saved_state
     type(marbl_surface_flux_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_flux_internal_type)    , intent(inout) :: surface_flux_internal
-    type(marbl_surface_flux_output_type)      , intent(inout) :: surface_flux_output
+    type(marbl_output_for_GCM_type)           , intent(inout) :: surface_flux_output
     type(marbl_surface_flux_share_type)       , intent(inout) :: surface_flux_share
     type(marbl_diagnostics_type)              , intent(inout) :: surface_flux_diags
     type(co2calc_coeffs_type)                 , intent(inout) :: co2calc_coeffs
@@ -159,7 +159,7 @@ contains
 
          po4_ind           => marbl_tracer_indices%po4_ind,                                     &
          no3_ind           => marbl_tracer_indices%no3_ind,                                     &
-         sio3_ind          => marbl_tracer_indices%sio3_ind,                                     &
+         sio3_ind          => marbl_tracer_indices%sio3_ind,                                    &
          nh4_ind           => marbl_tracer_indices%nh4_ind,                                     &
          fe_ind            => marbl_tracer_indices%fe_ind,                                      &
          o2_ind            => marbl_tracer_indices%o2_ind,                                      &
@@ -179,13 +179,13 @@ contains
     !  Compute total chlorophyll
     !-----------------------------------------------------------------------
 
-    if (sfo_ind%totalChl_id.ne.0) then
+    if (sfo_ind%total_surfChl_id.ne.0) then
       totalChl_loc = c0
       do auto_ind = 1,autotroph_cnt
         totalChl_loc = totalChl_loc +                                         &
           max(c0, tracers_at_surface(:,marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind))
       end do
-      surface_flux_output%sfo(sfo_ind%totalChl_id)%forcing_field = totalChl_loc
+      surface_flux_output%outputs_for_GCM(sfo_ind%total_surfChl_id)%forcing_field_0d(:) = totalChl_loc
     end if
 
     !-----------------------------------------------------------------------
@@ -219,7 +219,7 @@ contains
           flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - tracers_at_surface(:, o2_ind))
           surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
           if (sfo_ind%flux_o2_id.ne.0) then
-            surface_flux_output%sfo(sfo_ind%flux_o2_id)%forcing_field = flux_o2_loc
+            surface_flux_output%outputs_for_GCM(sfo_ind%flux_o2_id)%forcing_field_0d(:) = flux_o2_loc
           end if
        else
           schmidt_o2(:) = c0
@@ -285,7 +285,7 @@ contains
 
           flux_co2(:) = pv_co2(:) * dco2star(:)
           if (sfo_ind%flux_co2_id.ne.0) then
-            surface_flux_output%sfo(sfo_ind%flux_co2_id)%forcing_field = flux_co2
+            surface_flux_output%outputs_for_GCM(sfo_ind%flux_co2_id)%forcing_field_0d(:) = flux_co2
           end if
 
           !-------------------------------------------------------------------
@@ -377,7 +377,7 @@ contains
            nhx_surface_emis = nhx_surface_emis)
 
       if (sfo_ind%flux_nhx_id.ne.0) then
-         surface_flux_output%sfo(sfo_ind%flux_nhx_id)%forcing_field = nhx_surface_emis
+         surface_flux_output%outputs_for_GCM(sfo_ind%flux_nhx_id)%forcing_field_0d(:) = nhx_surface_emis
       end if
 
       surface_fluxes(:, nh4_ind) = surface_fluxes(:, nh4_ind) - nhx_surface_emis(:)
