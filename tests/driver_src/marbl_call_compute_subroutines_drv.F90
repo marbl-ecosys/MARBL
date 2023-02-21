@@ -36,7 +36,9 @@ Contains
     character(len=*), parameter :: infile = '../../input_files/initial_conditions/call_compute_subroutines.20190718.nc'
     character(len=char_len) :: log_message
     real(r8),                  allocatable, dimension(:,:)   :: surface_fluxes              ! num_cols x num_tracers
+    real(r8),                  allocatable, dimension(:,:)   :: surface_flux_output         ! num_cols x num_vars
     real(r8),                  allocatable, dimension(:,:,:) :: interior_tendencies         ! num_tracers x num_levels x num_cols
+    real(r8),                  allocatable, dimension(:,:,:) :: interior_tendency_output    ! num_levels x num_cols x num_vars
     type(forcing_fields_type), allocatable, dimension(:)     :: bot_flux_to_tend            ! num_levels
     real(r8),                  allocatable, dimension(:,:,:) :: tracer_initial_vals         ! num_tracers x num_levels x num_cols
     type(forcing_fields_type), allocatable, dimension(:)     :: surface_flux_forcings       ! num_forcings
@@ -44,6 +46,7 @@ Contains
     integer,                   allocatable, dimension(:)     :: active_level_cnt, col_start, col_cnt
 
     integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols
+    integer :: sfo_cnt, ito_cnt, flux_co2_id, total_surfChl_id, total_Chl_id, output_id
     type(grid_data_type) :: grid_data
 
     ! 1. Open necessary netCDF files
@@ -66,6 +69,7 @@ Contains
       call driver_status_log%log_error_trace('set_domain', subname)
       return
     end if
+    num_cols = sum(col_cnt)
 
     ! --------------------------------------------------------------------------
 
@@ -81,10 +85,44 @@ Contains
 
     ! --------------------------------------------------------------------------
 
-    ! 4. Initialize diagnostic buffers, define diagnostic fields in output netCDF file, and
+    ! 4. Set up memory for fields MARBL returns to GCM
+    !    Also, request flux_co2, total_surf_Chl, and total_Chl
+    !    (a) Fields returned from surface_flux_compute()
+    sfo_cnt = 0
+    ito_cnt = 0
+
+    sfo_cnt = sfo_cnt+1
+    do n=1, size(marbl_instances)
+      call marbl_instances(n)%surface_flux_output%add_output(num_elements=col_cnt(n), &
+                                                             field_name="flux_co2",   &
+                                                             output_id=flux_co2_id,   &
+                                                             marbl_status_log=marbl_instances(n)%StatusLog)
+    end do
+
+    sfo_cnt = sfo_cnt+1
+    do n=1, size(marbl_instances)
+      call marbl_instances(n)%surface_flux_output%add_output(num_elements=col_cnt(n),       &
+                                                             field_name="total_surfChl",    &
+                                                             output_id=total_surfChl_id,    &
+                                                             marbl_status_log=marbl_instances(n)%StatusLog)
+    end do
+
+    ito_cnt = ito_cnt+1
+    do n=1, size(marbl_instances)
+      call marbl_instances(n)%interior_tendency_output%add_output(num_elements=1,                &
+                                                                  field_name="total_Chl",        &
+                                                                  output_id=total_Chl_id,        &
+                                                                  marbl_status_log=marbl_instances(n)%StatusLog, &
+                                                                  num_levels=num_levels)
+    end do
+
+    allocate(surface_flux_output(num_cols, sfo_cnt))
+    allocate(interior_tendency_output(num_levels, num_cols, ito_cnt))
+
+
+    ! 5. Initialize diagnostic buffers, define diagnostic fields in output netCDF file, and
     !    read initial conditions / forcing data
     !    (a) Set constants
-    num_cols = sum(col_cnt)
     num_tracers = size(marbl_instances(1)%tracer_metadata)
 
     !    (b) Initialize diagnostic buffers
@@ -156,7 +194,7 @@ Contains
     ! --------------------------------------------------------------------------
 
     do n=1, size(marbl_instances)
-      ! 5. Call surface_flux_compute() (all columns simultaneously)
+      ! 6. Call surface_flux_compute() (all columns simultaneously)
       !    (a) call set_global_scalars() for consistent setting of time-varying scalars
       !        [surface_flux computation doesn't currently have any time-varying scalars]
       call marbl_instances(n)%set_global_scalars('surface_flux')
@@ -193,10 +231,14 @@ Contains
       !        Note: passing col_start and col_cnt => surface flux diagnostic buffer
       call marbl_io_copy_into_diag_buffer(col_start(n), col_cnt(n), marbl_instances(n))
       surface_fluxes((col_start(n)+1):(col_start(n)+col_cnt(n)),:) = marbl_instances(n)%surface_fluxes(:,:)
+      do output_id = 1, size(marbl_instances(n)%surface_flux_output%outputs_for_GCM)
+        surface_flux_output((col_start(n)+1):(col_start(n)+col_cnt(n)),output_id) = &
+                  marbl_instances(n)%surface_flux_output%outputs_for_GCM(output_id)%forcing_field_0d(:)
+      end do
 
       ! ------------------------------------------------------------------------
 
-      ! 6. Call interior_tendency_compute() (one column at a time)
+      ! 7. Call interior_tendency_compute() (one column at a time)
       do col_id_loc = 1, col_cnt(n)
         col_id = col_start(n)+col_id_loc
 
@@ -249,14 +291,19 @@ Contains
         !        Note: passing just col_id => interior tendency diagnostic buffer
         call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
         interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
+        do output_id = 1, size(marbl_instances(n)%interior_tendency_output%outputs_for_GCM)
+          interior_tendency_output(:,col_id,output_id) = &
+                  marbl_instances(n)%interior_tendency_output%outputs_for_GCM(output_id)%forcing_field_1d(1,:)
+        end do
       end do ! column
     end do ! instance
 
     ! --------------------------------------------------------------------------
 
-    ! 7. Output netCDF
-    call marbl_io_write_history(marbl_instances(1), surface_fluxes, interior_tendencies, &
-                               tracer_initial_vals, active_level_cnt, driver_status_log)
+    ! 8. Output netCDF
+    call marbl_io_write_history(marbl_instances(1), surface_fluxes, interior_tendencies,  &
+                                surface_flux_output, interior_tendency_output,            &
+                                tracer_initial_vals, active_level_cnt, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_write_history', subname)
       return
@@ -264,7 +311,7 @@ Contains
 
     ! --------------------------------------------------------------------------
 
-    ! 8. Close all netCDF files
+    ! 9. Close all netCDF files
     call marbl_io_close_files(driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_close_files', subname)
@@ -273,7 +320,7 @@ Contains
 
     ! --------------------------------------------------------------------------
 
-    ! 9. Deallocate local variables as well as those in marbl_io_mod
+    ! 10. Deallocate local variables as well as those in marbl_io_mod
     call marbl_io_destruct_diag_buffers()
     deallocate(surface_fluxes)
     deallocate(interior_tendencies)
@@ -303,7 +350,7 @@ Contains
 
     ! --------------------------------------------------------------------------
 
-    ! 10. Shutdown MARBL
+    ! 11. Shutdown MARBL
     do n=1, size(marbl_instances)
       call marbl_instances(n)%shutdown()
     end do
