@@ -642,7 +642,7 @@ contains
     long_name = "Total Chlorophyll Concentration"
     units = "mg/m^3"
     call marbl_netcdf_def_var(ncid_out, varname, 'double', (/dimid_num_levels, dimid_num_cols/), &
-                              long_name, units, driver_status_log)
+                              long_name, units, driver_status_log, ldef_fillval=.true.)
     if (driver_status_log%labort_marbl) then
       write(log_message, "(3A)") 'marbl_netcdf_def_var(', varname, ')'
       call driver_status_log%log_error_trace(log_message, subname)

@@ -48,7 +48,7 @@ Contains
     integer,                   allocatable, dimension(:)     :: active_level_cnt, col_start, col_cnt
 
     integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols
-    integer :: sfo_cnt, flux_co2_id, total_surfChl_id, total_Chl_id, output_id
+    integer :: sfo_cnt, flux_co2_id, total_surfChl_id, output_id
     type(grid_data_type) :: grid_data
 
     ! 1. Open necessary netCDF files
