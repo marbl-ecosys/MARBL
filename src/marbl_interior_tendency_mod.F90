@@ -32,7 +32,6 @@ module marbl_interior_tendency_mod
   use marbl_interface_private_types, only : co2calc_coeffs_type
   use marbl_interface_private_types, only : co2calc_state_type
 
-  use marbl_interface_public_types, only : ito_ind
   use marbl_interface_public_types, only : marbl_domain_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
   use marbl_interface_public_types, only : marbl_saved_state_type
@@ -113,7 +112,6 @@ contains
        zooplankton_share,                     &
        saved_state,                           &
        marbl_timers,                          &
-       interior_tendency_output,              &
        interior_tendency_share,               &
        marbl_particulate_share,               &
        interior_tendency_diags,               &
@@ -158,7 +156,6 @@ contains
     type(zooplankton_share_type),                            intent(inout) :: zooplankton_share
     type(marbl_saved_state_type),                            intent(inout) :: saved_state
     type(marbl_internal_timers_type),                        intent(inout) :: marbl_timers
-    type(marbl_output_for_GCM_type),                         intent(inout) :: interior_tendency_output
     type(marbl_interior_tendency_share_type),                intent(inout) :: interior_tendency_share
     type(marbl_particulate_share_type),                      intent(inout) :: marbl_particulate_share
     type(marbl_diagnostics_type),                            intent(inout) :: interior_tendency_diags
@@ -329,10 +326,6 @@ contains
     !-----------------------------------------------------------------------
     !  Store total chlorophyll if requested by GCM
     !-----------------------------------------------------------------------
-
-    if (ito_ind%total_Chl_id.ne.0) then
-      interior_tendency_output%outputs_for_GCM(ito_ind%total_Chl_id)%forcing_field_1d(1,:) = totalChl_local(:)
-    end if
 
     call set_surface_particulate_terms(surface_flux_forcing_indices, POC, POP, P_CaCO3, &
          P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)

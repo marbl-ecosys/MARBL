@@ -88,7 +88,6 @@ module marbl_interface
      type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
-     type(marbl_output_for_GCM_type)                    , public  :: interior_tendency_output      ! output
      type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
 
      ! public data related to computing surface fluxes
@@ -161,6 +160,7 @@ module marbl_interface
                                           get_logical, &
                                           get_string
      procedure, public  :: get_settings_var_cnt
+     procedure, public  :: get_output_for_GCM
      procedure, private :: inquire_settings_metadata_by_name
      procedure, private :: inquire_settings_metadata_by_id
      procedure, private :: put_real
@@ -746,6 +746,36 @@ contains
 
   !***********************************************************************
 
+  function get_output_for_GCM(this, tracers, field_ind) result(array_out)
+
+    use marbl_constants_mod, only : c0
+    use marbl_settings_mod,  only : output_for_GCM_iopt_total_Chl_3d
+
+    class (marbl_interface_class), intent(inout) :: this
+    real (r8),                     intent(in)    :: tracers(:,:)
+    integer,                       intent(in)    :: field_ind
+    real (r8), dimension(size(tracers, dim=2))   :: array_out
+
+    character(len=*), parameter :: subname = 'marbl_interface:get_output_for_GCM'
+    character(len=char_len)     :: log_message
+    integer                     :: auto_ind, tr_ind
+
+    select case(field_ind)
+      case (output_for_GCM_iopt_total_Chl_3d)
+        array_out(:) = c0
+        do auto_ind=1,size(this%tracer_indices%auto_inds)
+          tr_ind = this%tracer_indices%auto_inds(auto_ind)%Chl_ind
+          array_out(:) = array_out(:) + max(c0, tracers(tr_ind,:))
+        end do
+      case DEFAULT
+        write(log_message, "(I0,A)") field_ind, " is not a recognized value for field_ind"
+        call this%StatusLog%log_error(log_message, subname)
+    end select
+
+  end function get_output_for_GCM
+
+  !***********************************************************************
+
   subroutine inquire_settings_metadata_by_name(this, varname, id, lname, units, datatype)
 
     class (marbl_interface_class), intent(inout) :: this
@@ -901,7 +931,6 @@ contains
          zooplankton_share                 = this%zooplankton_share,                &
          saved_state                       = this%interior_tendency_saved_state,    &
          marbl_timers                      = this%timers,                           &
-         interior_tendency_output          = this%interior_tendency_output,         &
          interior_tendency_share           = this%interior_tendency_share,          &
          marbl_particulate_share           = this%particulate_share,                &
          interior_tendency_diags           = this%interior_tendency_diags,          &
