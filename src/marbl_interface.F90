@@ -746,15 +746,14 @@ contains
 
   !***********************************************************************
 
-  function get_output_for_GCM(this, tracers, field_ind) result(array_out)
+  function get_output_for_GCM(this, field_ind) result(array_out)
 
     use marbl_constants_mod, only : c0
     use marbl_settings_mod,  only : output_for_GCM_iopt_total_Chl_3d
 
     class (marbl_interface_class), intent(inout) :: this
-    real (r8),                     intent(in)    :: tracers(:,:)
     integer,                       intent(in)    :: field_ind
-    real (r8), dimension(size(tracers, dim=2))   :: array_out
+    real (r8), dimension(this%domain%km)         :: array_out
 
     character(len=*), parameter :: subname = 'marbl_interface:get_output_for_GCM'
     character(len=char_len)     :: log_message
@@ -765,7 +764,7 @@ contains
         array_out(:) = c0
         do auto_ind=1,size(this%tracer_indices%auto_inds)
           tr_ind = this%tracer_indices%auto_inds(auto_ind)%Chl_ind
-          array_out(:) = array_out(:) + max(c0, tracers(tr_ind,:))
+          array_out(:) = array_out(:) + max(c0, this%tracers(tr_ind,:))
         end do
       case DEFAULT
         write(log_message, "(I0,A)") field_ind, " is not a recognized value for field_ind"

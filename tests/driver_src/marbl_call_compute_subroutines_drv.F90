@@ -283,8 +283,7 @@ Contains
         !        Note: passing just col_id => interior tendency diagnostic buffer
         call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
         interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
-        total_Chl(:,col_id) = marbl_instances(n)%get_output_for_GCM(marbl_instances(n)%tracers,       &
-                                                                    output_for_GCM_iopt_total_Chl_3d)
+        total_Chl(:,col_id) = marbl_instances(n)%get_output_for_GCM(output_for_GCM_iopt_total_Chl_3d)
       end do ! column
     end do ! instance
 
