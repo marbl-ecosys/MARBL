@@ -35,7 +35,6 @@ module marbl_interior_tendency_mod
   use marbl_interface_public_types, only : marbl_domain_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
   use marbl_interface_public_types, only : marbl_saved_state_type
-  use marbl_interface_public_types, only : marbl_output_for_GCM_type
   use marbl_interface_public_types, only : marbl_running_mean_0d_type
 
   use marbl_logging, only : marbl_log_type
@@ -322,10 +321,6 @@ contains
 
     call setup_local_tracers(kmt, marbl_tracer_indices, tracers(:,:), autotroph_local, &
          tracer_local(:,:), zooplankton_local, totalChl_local)
-
-    !-----------------------------------------------------------------------
-    !  Store total chlorophyll if requested by GCM
-    !-----------------------------------------------------------------------
 
     call set_surface_particulate_terms(surface_flux_forcing_indices, POC, POP, P_CaCO3, &
          P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
@@ -3836,7 +3831,6 @@ contains
         write(log_message, "(A, E11.3, A)") "Total column fractions sum to ", col_frac_sum, &
                                             ", which is not close to 1"
         call marbl_status_log%log_warning(log_message, subname)
-        return
       end if
     end if
 

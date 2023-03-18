@@ -498,10 +498,10 @@ contains
   subroutine marbl_output_add(this, num_elements, field_name, output_id,            &
                               marbl_status_log, num_levels)
 
-  ! MARBL uses pointers to create an extensible allocatable array. The surface
-  ! forcing output fields (part of the intent(out) of this routine) are stored
-  ! in this%outputs_for_GCM(:). To allow the size of this%outputs_for_GCM to
-  ! grow, the process for adding a new field is:
+  ! MARBL uses pointers to create an extensible allocatable array. The output
+  ! fields (part of the intent(out) of this routine) are stored in
+  ! this%outputs_for_GCM(:). To allow the size of this%outputs_for_GCM to grow,
+  ! the process for adding a new field is:
   !
   ! 1) allocate new_output to be size N (one element larger than this%outputs_for_GCM)
   ! 2) copy this%outputs_for_GCM into first N-1 elements of new_output
