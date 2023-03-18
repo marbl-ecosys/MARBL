@@ -746,14 +746,14 @@ contains
 
   !***********************************************************************
 
-  function get_output_for_GCM(this, field_ind) result(array_out)
+  subroutine get_output_for_GCM(this, field_ind, array_out)
 
     use marbl_constants_mod, only : c0
     use marbl_settings_mod,  only : output_for_GCM_iopt_total_Chl_3d
 
-    class (marbl_interface_class), intent(inout) :: this
-    integer,                       intent(in)    :: field_ind
-    real (r8), dimension(this%domain%km)         :: array_out
+    class (marbl_interface_class),        intent(inout) :: this
+    integer,                              intent(in)    :: field_ind
+    real (r8), dimension(this%domain%km), intent(out)   :: array_out
 
     character(len=*), parameter :: subname = 'marbl_interface:get_output_for_GCM'
     character(len=char_len)     :: log_message
@@ -771,7 +771,7 @@ contains
         call this%StatusLog%log_error(log_message, subname)
     end select
 
-  end function get_output_for_GCM
+  end subroutine get_output_for_GCM
 
   !***********************************************************************
 
