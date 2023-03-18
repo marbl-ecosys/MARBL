@@ -281,7 +281,7 @@ contains
             call marbl_status_log%log_error(log_message, subname)
         end select
       case (2)
-        if (trim(vgrid).eq.'none') then
+        if (trim(vgrid) .eq. 'none') then
           allocate(this%field_2d(num_elements))
         else
           write(log_message,"(2A)") trim(vgrid),                              &
@@ -483,7 +483,7 @@ contains
     write(log_message, "(3A)") "Adding ", trim(field_name), " to outputs needed by the GCM"
     call marbl_status_log%log_noerror(log_message, subname)
 
-    if (num_levels < 0) then
+    if (num_levels .eq. 0) then
       allocate(this%forcing_field_0d(num_elements))
       this%forcing_field_0d = c0
     else
@@ -525,11 +525,11 @@ contains
     integer :: n, old_size, dim1_loc, dim2_loc, num_levels_loc
 
     ! Is this a 3D field?
-    ! num_levels_loc = -1 => 2D field
+    ! num_levels_loc = 0 => 2D field
     if (present(num_levels)) then
       num_levels_loc = num_levels
     else
-      num_levels_loc = -1
+      num_levels_loc = 0
     end if
     if (associated(this%outputs_for_GCM)) then
       old_size = size(this%outputs_for_GCM)
