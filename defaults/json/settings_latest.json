@@ -1008,6 +1008,13 @@
          "subcategory": "2. config flags",
          "units": "unitless"
       },
+      "lcheck_forcing": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "longname": "Control whether consistency checks are performed on forcing input (useful for debugging)",
+         "subcategory": "2. config flags",
+         "units": "unitless"
+      },
       "lcompute_nhx_surface_emis": {
          "datatype": "logical",
          "default_value": ".true.",

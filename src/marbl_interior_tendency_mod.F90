@@ -43,6 +43,7 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : max_grazer_prey_cnt
   use marbl_settings_mod, only : lsource_sink
+  use marbl_settings_mod, only : lcheck_forcing
   use marbl_settings_mod, only : ladjust_bury_coeff
   use marbl_settings_mod, only : autotroph_settings
   use marbl_settings_mod, only : zooplankton_settings
@@ -210,6 +211,7 @@ contains
     ! computations.
 
     interior_tendencies(:, :) = c0
+
     if (abs(c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:))) > bftt_dz_sum_thres) then
       write(log_message, "(A, E11.3, A)") "1 - sum(bot_flux_to_tend * dz) = ", &
                                           c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:)), &
@@ -230,7 +232,11 @@ contains
        return
     endif
 
-    associate(                                                      &
+    ! Verify forcing is consistent
+    if (lcheck_forcing) &
+      call check_forcing(interior_tendency_forcings, interior_tendency_forcing_indices, marbl_status_log)
+
+   associate(                                                      &
          km                  => domain%km,                          &
          kmt                 => domain%kmt,                         &
          num_PAR_subcols     => domain%num_PAR_subcols,             &
@@ -3801,5 +3807,33 @@ contains
   end subroutine update_particulate_terms_from_prior_level
 
   !***********************************************************************
+
+  subroutine check_forcing(forcings, forcing_indices, marbl_status_log)
+
+    type(marbl_forcing_fields_type),                     intent(in)    :: forcings(:)
+    type(marbl_interior_tendency_forcing_indexing_type), intent(in)    :: forcing_indices
+    type(marbl_log_type),                                intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:check_forcing'
+    character(len=char_len)     :: log_message
+    real(r8)                    :: col_frac_sum
+    integer                     :: m
+
+    ! If provided, total column fraction must sum to 1 (or close enough)
+    if (forcing_indices%PAR_col_frac_id > 0) then
+      col_frac_sum = sum(forcings(forcing_indices%PAR_col_frac_id)%field_1d(1,:))
+      if (abs(1._r8 - col_frac_sum) > 1e-6_r8) then
+        do m=1,size(forcings(forcing_indices%PAR_col_frac_id)%field_1d(:,:), 2)
+          write(log_message, "(A, I0, A, E11.3)") "PAR_col_frac(", m, ") = ", &
+                                                  forcings(forcing_indices%PAR_col_frac_id)%field_1d(1,m)
+          call marbl_status_log%log_warning(log_message, subname)
+        end do
+        write(log_message, "(A, E11.3, A)") "Total column fractions sum to ", col_frac_sum, &
+                                            ", which is not close to 1"
+        call marbl_status_log%log_warning(log_message, subname)
+      end if
+    end if
+
+  end subroutine check_forcing
 
 end module marbl_interior_tendency_mod

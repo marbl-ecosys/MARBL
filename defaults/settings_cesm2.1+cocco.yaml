@@ -234,6 +234,12 @@ general_parms :
       units : unitless
       datatype : logical
       default_value : .true.
+   lcheck_forcing :
+      longname : Control whether consistency checks are performed on forcing input (useful for debugging)
+      subcategory : 2. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
    lecovars_full_depth_tavg :
       longname : If .false., MARBL will recommend truncating the column for some diagnostics
       subcategory : 2. config flags

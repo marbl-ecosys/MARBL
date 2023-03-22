@@ -11,16 +11,17 @@ module marbl_interface_public_types
 
   !****************************************************************************
 
-  ! NOTE: when adding a new surface flux output field (a field that the GCM
-  !       may need to pass to flux coupler), remember to add a new index for it
-  !       as well.
+  ! NOTE: when adding a new surface flux or interior tendency output field
+  !       (a field that the GCM may need to pass to flux coupler), remember
+  !       to add a new index for it as well.
+  !     * There are no interior tendency outputs at this time, so the type
+  !       and ito_ind will need to be created when the first is added
   type, public :: marbl_surface_flux_output_indexing_type
     integer(int_kind) :: flux_o2_id = 0
     integer(int_kind) :: flux_co2_id = 0
     integer(int_kind) :: flux_nhx_id = 0
-    integer(int_kind) :: totalChl_id = 0
+    integer(int_kind) :: total_surfChl_id = 0
   end type marbl_surface_flux_output_indexing_type
-
   type(marbl_surface_flux_output_indexing_type), public :: sfo_ind
 
   !*****************************************************************************
@@ -118,29 +119,30 @@ module marbl_interface_public_types
 
   !*****************************************************************************
 
-  type, public :: marbl_single_sfo_type
-     ! marbl_single_sfo :
-     ! a private type, this contains both the metadata
-     ! and the actual data for a single field computed
-     ! in surface_flux_compute() that needs to be passed
-     ! to the GCM / flux coupler. Data must be accessed
-     ! via the marbl_surface_flux_output_type data structure.
-     character (len=char_len)            :: long_name
-     character (len=char_len)            :: short_name
-     character (len=char_len)            :: units
-     real(r8), allocatable, dimension(:) :: forcing_field
+  type, public :: marbl_single_output_type
+     ! marbl_single_output :
+     ! a private type, this contains both the metadata and
+     ! the actual data for a single field computed in either
+     ! surface_flux_compute() or interior_tendency_compute()
+     ! that needs to be passed to the GCM / flux coupler.
+     ! Data must be accessed via the marbl_output_for_GCM_type
+     ! data structure.
+     character (len=char_len)              :: long_name
+     character (len=char_len)              :: short_name
+     character (len=char_len)              :: units
+     real(r8), allocatable, dimension(:)   :: forcing_field_0d
+     real(r8), allocatable, dimension(:,:) :: forcing_field_1d
    contains
-     procedure :: construct  => marbl_single_sfo_constructor
-  end type marbl_single_sfo_type
+     procedure :: construct  => marbl_single_output_constructor
+  end type marbl_single_output_type
   !*****************************************************************************
 
-  type, public :: marbl_surface_flux_output_type
-     integer :: sfo_cnt
-     integer :: num_elements
-     type(marbl_single_sfo_type), dimension(:), pointer :: sfo => NULL()
+  type, public :: marbl_output_for_GCM_type
+     integer :: output_cnt
+     type(marbl_single_output_type), dimension(:), pointer :: outputs_for_GCM => NULL()
    contains
-     procedure, public :: add_sfo => marbl_sfo_add
-  end type marbl_surface_flux_output_type
+     procedure, public :: add_output => marbl_output_add
+  end type marbl_output_for_GCM_type
 
   !*****************************************************************************
 
@@ -279,7 +281,7 @@ contains
             call marbl_status_log%log_error(log_message, subname)
         end select
       case (2)
-        if (trim(vgrid).eq.'none') then
+        if (trim(vgrid) .eq. 'none') then
           allocate(this%field_2d(num_elements))
         else
           write(log_message,"(2A)") trim(vgrid),                              &
@@ -439,16 +441,17 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_single_sfo_constructor(this, num_elements, field_name, id, &
-                                          marbl_status_log)
+  subroutine marbl_single_output_constructor(this, num_elements, num_levels, field_name, id, &
+                                             marbl_status_log)
 
-    class(marbl_single_sfo_type), intent(out)   :: this
-    character(len=*),             intent(in)    :: field_name
-    integer(int_kind),            intent(in)    :: num_elements
-    integer(int_kind),            intent(in)    :: id
-    type(marbl_log_type),         intent(inout) :: marbl_status_log
+    class(marbl_single_output_type), intent(out)   :: this
+    character(len=*),                intent(in)    :: field_name
+    integer(int_kind),               intent(in)    :: num_elements
+    integer(int_kind),               intent(in)    :: num_levels
+    integer(int_kind),               intent(in)    :: id
+    type(marbl_log_type),            intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_sfo_constructor'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_output_constructor'
     character(len=char_len)     :: log_message
 
     select case (trim(field_name))
@@ -467,92 +470,115 @@ contains
         this%short_name = "flux_nhx"
         this%units      = "nmol/cm^2/s"
         sfo_ind%flux_nhx_id = id
-      case("totalChl")
+      case("total_surfChl")
         this%long_name  = "Total Chlorophyll Concentration"
-        this%short_name = "totalChl"
+        this%short_name = "total_surfChl"
         this%units      = "mg/m^3"
-        sfo_ind%totalChl_id = id
+        sfo_ind%total_surfChl_id = id
       case DEFAULT
-        write(log_message, "(2A)") trim(field_name), " is not a valid surface flux output field name"
+        write(log_message, "(2A)") trim(field_name), " is not a valid output field name for the GCM"
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
-    write(log_message, "(3A)") "Adding ", trim(field_name), " to surface flux outputs"
+    write(log_message, "(3A)") "Adding ", trim(field_name), " to outputs needed by the GCM"
     call marbl_status_log%log_noerror(log_message, subname)
 
-    allocate(this%forcing_field(num_elements))
-    this%forcing_field = c0
+    if (num_levels .eq. 0) then
+      allocate(this%forcing_field_0d(num_elements))
+      this%forcing_field_0d = c0
+    else
+      allocate(this%forcing_field_1d(num_elements, num_levels))
+      this%forcing_field_1d = c0
+    end if
 
-  end subroutine marbl_single_sfo_constructor
+  end subroutine marbl_single_output_constructor
 
   !*****************************************************************************
 
-  subroutine marbl_sfo_add(this, num_elements, field_name, sfo_id,            &
-                           marbl_status_log)
+  subroutine marbl_output_add(this, num_elements, field_name, output_id,            &
+                              marbl_status_log, num_levels)
 
-  ! MARBL uses pointers to create an extensible allocatable array. The surface
-  ! forcing output fields (part of the intent(out) of this routine) are stored
-  ! in this%sfo(:). To allow the size of this%sfo to grow, the process for
-  ! adding a new field is:
+  ! MARBL uses pointers to create an extensible allocatable array. The output
+  ! fields (part of the intent(out) of this routine) are stored in
+  ! this%outputs_for_GCM(:). To allow the size of this%outputs_for_GCM to grow,
+  ! the process for adding a new field is:
   !
-  ! 1) allocate new_sfo to be size N (one element larger than this%sfo)
-  ! 2) copy this%sfo into first N-1 elements of new_sfo
-  ! 3) newest surface flux output (field_name) is Nth element of new_sfo
-  ! 4) deallocate / nullify this%sfo
-  ! 5) point this%sfo => new_sfo
+  ! 1) allocate new_output to be size N (one element larger than this%outputs_for_GCM)
+  ! 2) copy this%outputs_for_GCM into first N-1 elements of new_output
+  ! 3) newest surface flux output (field_name) is Nth element of new_output
+  ! 4) deallocate / nullify this%outputs_for_GCM
+  ! 5) point this%outputs_for_GCM => new_output
   !
   ! If the number of possible surface flux output fields grows, this workflow
   ! may need to be replaced with something that is not O(N^2).
 
-    class(marbl_surface_flux_output_type), intent(inout) :: this
+    class(marbl_output_for_GCM_type), intent(inout) :: this
     character(len=*),     intent(in)    :: field_name
     integer(int_kind),    intent(in)    :: num_elements
+    integer(int_kind),    intent(out)   :: output_id
     type(marbl_log_type), intent(inout) :: marbl_status_log
-    integer(int_kind),    intent(out)   :: sfo_id
+    integer(int_kind),    optional, intent(in) :: num_levels
 
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_sfo_add'
+    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_output_add'
 
-    type(marbl_single_sfo_type), dimension(:), pointer :: new_sfo
-    integer :: n, old_size
+    type(marbl_single_output_type), dimension(:), pointer :: new_output
+    integer :: n, old_size, dim1_loc, dim2_loc, num_levels_loc
 
-    if (associated(this%sfo)) then
-      old_size = size(this%sfo)
+    ! Is this a 3D field?
+    ! num_levels_loc = 0 => 2D field
+    if (present(num_levels)) then
+      num_levels_loc = num_levels
+    else
+      num_levels_loc = 0
+    end if
+    if (associated(this%outputs_for_GCM)) then
+      old_size = size(this%outputs_for_GCM)
     else
       old_size = 0
     end if
-    sfo_id = old_size+1
+    output_id = old_size+1
 
-    ! 1) allocate new_sfo to be size N (one element larger than this%sfo)
-    allocate(new_sfo(sfo_id))
+    ! 1) allocate new_output to be size N (one element larger than this%outputs_for_GCM)
+    allocate(new_output(output_id))
 
-    ! 2) copy this%sfo into first N-1 elements of new_sfo
+    ! 2) copy this%outputs_for_GCM into first N-1 elements of new_output
     do n=1,old_size
-      new_sfo(n)%long_name  = this%sfo(n)%long_name
-      new_sfo(n)%short_name = this%sfo(n)%short_name
-      new_sfo(n)%units      = this%sfo(n)%units
-      allocate(new_sfo(n)%forcing_field(num_elements))
-      new_sfo(n)%forcing_field = this%sfo(n)%forcing_field
-      deallocate(this%sfo(n)%forcing_field)
+      new_output(n)%long_name  = this%outputs_for_GCM(n)%long_name
+      new_output(n)%short_name = this%outputs_for_GCM(n)%short_name
+      new_output(n)%units      = this%outputs_for_GCM(n)%units
+      if (allocated(this%outputs_for_GCM(n)%forcing_field_0d)) then
+        dim1_loc = size(this%outputs_for_GCM(n)%forcing_field_0d)
+        allocate(new_output(n)%forcing_field_0d(dim1_loc))
+        new_output(n)%forcing_field_0d(:) = this%outputs_for_GCM(n)%forcing_field_0d(:)
+        deallocate(this%outputs_for_GCM(n)%forcing_field_0d)
+      end if
+      if (allocated(this%outputs_for_GCM(n)%forcing_field_1d)) then
+        dim1_loc = size(this%outputs_for_GCM(n)%forcing_field_1d, dim=1)
+        dim2_loc = size(this%outputs_for_GCM(n)%forcing_field_1d, dim=2)
+        allocate(new_output(n)%forcing_field_1d(dim1_loc, dim2_loc))
+        new_output(n)%forcing_field_1d(:,:) = this%outputs_for_GCM(n)%forcing_field_1d(:,:)
+        deallocate(this%outputs_for_GCM(n)%forcing_field_1d)
+      end if
     end do
 
-    ! 3) newest surface flux output (field_name) is Nth element of new_sfo
-    call new_sfo(sfo_id)%construct(num_elements, field_name, sfo_id,          &
-                                   marbl_status_log)
+    ! 3) newest surface flux output (field_name) is Nth element of new_output
+    call new_output(output_id)%construct(num_elements, num_levels_loc, field_name,  &
+                                      output_id, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('new_sfo%construct()', subname)
+      call marbl_status_log%log_error_trace('new_output%construct()', subname)
       return
     end if
 
-    ! 4) deallocate / nullify this%sfo
+    ! 4) deallocate / nullify this%outputs_for_GCM
     if (old_size .gt. 0) then
-      deallocate(this%sfo)
-      nullify(this%sfo)
+      deallocate(this%outputs_for_GCM)
+      nullify(this%outputs_for_GCM)
     end if
 
-    ! 5) point this%sfo => new_sfo
-    this%sfo=>new_sfo
+    ! 5) point this%outputs_for_GCM => new_output
+    this%outputs_for_GCM=>new_output
 
-  end subroutine marbl_sfo_add
+  end subroutine marbl_output_add
 
   !*****************************************************************************
 
