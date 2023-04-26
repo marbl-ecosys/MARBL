@@ -996,7 +996,7 @@
       },
       "caco3_bury_thres_omega_calc": {
          "datatype": "real",
-         "default_value": 0.89,
+         "default_value": 1.0,
          "longname": "omega calcite threshold for CaCO3 burial when opt = 'omega_calc'",
          "subcategory": "4. general parameters",
          "units": 1
@@ -1228,7 +1228,7 @@
       },
       "parm_SiO2_diss": {
          "datatype": "real",
-         "default_value": "700e2",
+         "default_value": "650e2",
          "longname": "Base SiO2 dissolution length scale",
          "subcategory": "4. general parameters (dissolution)",
          "units": "cm"
@@ -1275,7 +1275,7 @@
          "datatype": "real",
          "default_value": {
             "GRID == \"CESM_x3\"": 5.0,
-            "default": 2.54
+            "default": 1.1
          },
          "longname": "Initial scale factor for burial of POC, PON",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -1285,7 +1285,7 @@
          "datatype": "real",
          "default_value": {
             "GRID == \"CESM_x3\"": 5.0,
-            "default": 0.36
+            "default": 1.1
          },
          "longname": "Initial scale factor for burial of POP",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -1295,7 +1295,7 @@
          "datatype": "real",
          "default_value": {
             "GRID == \"CESM_x3\"": 1.1,
-            "default": 1.53
+            "default": 1.0
          },
          "longname": "Initial scale factor for burial of bSi",
          "subcategory": "4. general parameters (bury coeffs)",
@@ -1348,8 +1348,8 @@
             ],
             "default": [
                1,
-               3.6,
-               5.0,
+               3.2,
+               4.8,
                5.3
             ]
          },
@@ -1364,7 +1364,7 @@
             "100.0e2",
             "250.0e2",
             "500.0e2",
-            "2000.0e2"
+            "1000.0e2"
          ],
          "longname": "Depths of prescribed scalelen values",
          "subcategory": "5. Scale lengths",

@@ -373,7 +373,7 @@ general_parms :
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
-         default : 2.54
+         default : 1.1
          GRID == "CESM_x3" : 5.0
    parm_init_POP_bury_coeff :
       longname : Initial scale factor for burial of POP
@@ -381,7 +381,7 @@ general_parms :
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
-         default : 0.36
+         default : 1.1
          GRID == "CESM_x3" : 5.0
    parm_init_bSi_bury_coeff :
       longname : Initial scale factor for burial of bSi
@@ -389,7 +389,7 @@ general_parms :
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
-         default : 1.53
+         default : 1.0
          GRID == "CESM_x3" : 1.1
    parm_Fe_scavenge_rate0 :
       longname : Scavenging base rate for Fe
@@ -440,7 +440,7 @@ general_parms :
       subcategory : 4. general parameters (dissolution)
       units : cm
       datatype : real
-      default_value : 700e2
+      default_value : 650e2
    parm_SiO2_gamma :
       longname : SiO2 gamma (fraction of production -> hard subclass)
       subcategory : 4. general parameters
@@ -519,7 +519,7 @@ general_parms :
          - 100.0e2
          - 250.0e2
          - 500.0e2
-         - 2000.0e2
+         - 1000.0e2
    parm_scalelen_vals :
       longname : Prescribed scalelen values
       subcategory : 5. Scale lengths
@@ -529,8 +529,8 @@ general_parms :
       default_value :
          default :
             - 1
-            - 3.6
-            - 5.0
+            - 3.2
+            - 4.8
             - 5.3
          GRID == "CESM_x3" :
             - 1
@@ -557,7 +557,7 @@ general_parms :
       subcategory : 4. general parameters
       units : 1
       datatype : real
-      default_value : 0.89
+      default_value : 1.0
    PON_bury_coeff :
       longname : Scale factor for burial of PON
       subcategory : 4. general parameters (bury coeffs)
