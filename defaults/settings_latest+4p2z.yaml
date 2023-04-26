@@ -1085,6 +1085,7 @@ PFT_derived_types :
                ((grazer_sname)) == "cocco_microzoo" : grz_cocco_microzoo
                ((grazer_sname)) == "cocco_mesozoo" : grz_cocco_mesozoo
                ((grazer_sname)) == "microzoo_mesozoo" : grz_microzoo_mesozoo
+               ((grazer_sname)) == "null" : "null"
          lname :
             longname : Long name of the grazing relationship
             subcategory : 12. grazing
@@ -1099,6 +1100,7 @@ PFT_derived_types :
                ((grazer_sname)) == "cocco_microzoo" : Grazing of cocco by microzoo
                ((grazer_sname)) == "cocco_mesozoo" : Grazing of cocco by mesozoo
                ((grazer_sname)) == "microzoo_mesozoo" : Grazing of microzoo by mesozoo
+               ((grazer_sname)) == "null" : "null"
          auto_ind_cnt :
             longname : Number of autotrophs being grazed
             subcategory : 12. grazing
@@ -1106,6 +1108,7 @@ PFT_derived_types :
             datatype : integer
             default_value :
                default : 4
+               ((grazer_sname)) == "null" : 0
          zoo_ind_cnt :
             longname : Number of zooplankton being grazed
             subcategory : 12. grazing
@@ -1113,6 +1116,7 @@ PFT_derived_types :
             datatype : integer
             default_value :
                default : 1
+               ((grazer_sname)) == "null" : 0
          grazing_function :
             longname : Functional form of grazing parameterization
             subcategory : 12. grazing
@@ -1136,6 +1140,7 @@ PFT_derived_types :
                ((grazer_sname)) == "cocco_microzoo" : 1.7
                ((grazer_sname)) == "cocco_mesozoo" : 0.015
                ((grazer_sname)) == "microzoo_mesozoo" : 0.2
+               ((grazer_sname)) == "null" : 0
          z_grz :
             longname : Grazing coefficient
             subcategory : 12. grazing
@@ -1150,6 +1155,7 @@ PFT_derived_types :
                ((grazer_sname)) == "cocco_microzoo" : 1.5
                ((grazer_sname)) == "cocco_mesozoo" : 1.4
                ((grazer_sname)) == "microzoo_mesozoo" : 1.3
+               ((grazer_sname)) == "null" : 0
          graze_zoo :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -1164,6 +1170,7 @@ PFT_derived_types :
                ((grazer_sname)) == "cocco_microzoo" : 0.25
                ((grazer_sname)) == "cocco_mesozoo" : 0.25
                ((grazer_sname)) == "microzoo_mesozoo" : 0.25
+               ((grazer_sname)) == "null" : 0
          graze_poc :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -1178,6 +1185,7 @@ PFT_derived_types :
                ((grazer_sname)) == "cocco_microzoo" : 0.18
                ((grazer_sname)) == "cocco_mesozoo" : 0.18
                ((grazer_sname)) == "microzoo_mesozoo" : 0.28
+               ((grazer_sname)) == "null" : 0
          graze_doc :
             longname : Routing of grazed term, remainder goes to dic
             subcategory : 12. grazing
@@ -1192,6 +1200,7 @@ PFT_derived_types :
                ((grazer_sname)) == "cocco_microzoo" : 0.09
                ((grazer_sname)) == "cocco_mesozoo" : 0.09
                ((grazer_sname)) == "microzoo_mesozoo" : 0.09
+               ((grazer_sname)) == "null" : 0
          f_zoo_detr :
             longname : Fraction of zoo losses to detrital
             subcategory : 12. grazing
@@ -1206,6 +1215,7 @@ PFT_derived_types :
                ((grazer_sname)) == "cocco_microzoo" : 0.27
                ((grazer_sname)) == "cocco_mesozoo" : 0.27
                ((grazer_sname)) == "microzoo_mesozoo" : 0.27
+               ((grazer_sname)) == "null" : 0
          auto_ind :
             _array_shape : autotroph_cnt
             _array_len_to_print : auto_ind_cnt

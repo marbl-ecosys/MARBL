@@ -449,6 +449,7 @@
             "auto_ind_cnt": {
                "datatype": "integer",
                "default_value": {
+                  "((grazer_sname)) == \"null\"": 0,
                   "default": 4
                },
                "longname": "Number of autotrophs being grazed",
@@ -464,6 +465,7 @@
                   "((grazer_sname)) == \"diaz_mesozoo\"": 0.12,
                   "((grazer_sname)) == \"diaz_microzoo\"": 0.17,
                   "((grazer_sname)) == \"microzoo_mesozoo\"": 0.27,
+                  "((grazer_sname)) == \"null\"": 0,
                   "((grazer_sname)) == \"sp_microzoo\"": 0.17,
                   "default": "1e34"
                },
@@ -480,6 +482,7 @@
                   "((grazer_sname)) == \"diaz_mesozoo\"": 0.09,
                   "((grazer_sname)) == \"diaz_microzoo\"": 0.057,
                   "((grazer_sname)) == \"microzoo_mesozoo\"": 0.09,
+                  "((grazer_sname)) == \"null\"": 0,
                   "((grazer_sname)) == \"sp_microzoo\"": 0.057,
                   "default": "1e34"
                },
@@ -496,6 +499,7 @@
                   "((grazer_sname)) == \"diaz_mesozoo\"": 0.18,
                   "((grazer_sname)) == \"diaz_microzoo\"": 0.01,
                   "((grazer_sname)) == \"microzoo_mesozoo\"": 0.28,
+                  "((grazer_sname)) == \"null\"": 0,
                   "((grazer_sname)) == \"sp_microzoo\"": 0.01,
                   "default": "1e34"
                },
@@ -512,6 +516,7 @@
                   "((grazer_sname)) == \"diaz_mesozoo\"": 0.25,
                   "((grazer_sname)) == \"diaz_microzoo\"": 0.35,
                   "((grazer_sname)) == \"microzoo_mesozoo\"": 0.25,
+                  "((grazer_sname)) == \"null\"": 0,
                   "((grazer_sname)) == \"sp_microzoo\"": 0.35,
                   "default": "1e34"
                },
@@ -539,6 +544,7 @@
                   "((grazer_sname)) == \"diaz_mesozoo\"": "Grazing of diaz by mesozoo",
                   "((grazer_sname)) == \"diaz_microzoo\"": "Grazing of diaz by microzoo",
                   "((grazer_sname)) == \"microzoo_mesozoo\"": "Grazing of microzoo by mesozoo",
+                  "((grazer_sname)) == \"null\"": "null",
                   "((grazer_sname)) == \"sp_microzoo\"": "Grazing of sp by microzoo",
                   "default": "UNSET"
                },
@@ -555,6 +561,7 @@
                   "((grazer_sname)) == \"diaz_mesozoo\"": "grz_diaz_mesozoo",
                   "((grazer_sname)) == \"diaz_microzoo\"": "grz_diaz_microzoo",
                   "((grazer_sname)) == \"microzoo_mesozoo\"": "grz_microzoo_mesozoo",
+                  "((grazer_sname)) == \"null\"": "null",
                   "((grazer_sname)) == \"sp_microzoo\"": "grz_sp_microzoo",
                   "default": "UNSET"
                },
@@ -571,6 +578,7 @@
                   "((grazer_sname)) == \"diaz_mesozoo\"": 1.2,
                   "((grazer_sname)) == \"diaz_microzoo\"": 1.2,
                   "((grazer_sname)) == \"microzoo_mesozoo\"": 1.3,
+                  "((grazer_sname)) == \"null\"": 0,
                   "((grazer_sname)) == \"sp_microzoo\"": 1.4,
                   "default": "1e34"
                },
@@ -587,6 +595,7 @@
                   "((grazer_sname)) == \"diaz_mesozoo\"": 0.5,
                   "((grazer_sname)) == \"diaz_microzoo\"": 1,
                   "((grazer_sname)) == \"microzoo_mesozoo\"": 0.2,
+                  "((grazer_sname)) == \"null\"": 0,
                   "((grazer_sname)) == \"sp_microzoo\"": 4.1,
                   "default": "1e34"
                },
@@ -610,6 +619,7 @@
             "zoo_ind_cnt": {
                "datatype": "integer",
                "default_value": {
+                  "((grazer_sname)) == \"null\"": 0,
                   "default": 1
                },
                "longname": "Number of zooplankton being grazed",
