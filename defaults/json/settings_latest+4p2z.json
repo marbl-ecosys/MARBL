@@ -449,8 +449,9 @@
             "auto_ind_cnt": {
                "datatype": "integer",
                "default_value": {
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": 0,
                   "((grazer_sname)) == \"null\"": 0,
-                  "default": 4
+                  "default": 1
                },
                "longname": "Number of autotrophs being grazed",
                "subcategory": "12. grazing",
@@ -462,7 +463,7 @@
                   "((grazer_sname)) == \"cocco_mesozoo\"": 0.27,
                   "((grazer_sname)) == \"cocco_microzoo\"": 0.27,
                   "((grazer_sname)) == \"diat_mesozoo\"": 0.4,
-                  "((grazer_sname)) == \"diaz_mesozoo\"": 0.12,
+                  "((grazer_sname)) == \"diaz_mesozoo\"": 0.4,
                   "((grazer_sname)) == \"diaz_microzoo\"": 0.17,
                   "((grazer_sname)) == \"microzoo_mesozoo\"": 0.27,
                   "((grazer_sname)) == \"null\"": 0,
@@ -619,8 +620,8 @@
             "zoo_ind_cnt": {
                "datatype": "integer",
                "default_value": {
-                  "((grazer_sname)) == \"null\"": 0,
-                  "default": 1
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": 1,
+                  "default": 0
                },
                "longname": "Number of zooplankton being grazed",
                "subcategory": "12. grazing",
@@ -669,7 +670,7 @@
             "sname": {
                "datatype": "string",
                "default_value": {
-                  "((zooplankton_sname)) == \"mesozoo\"": "microzoo",
+                  "((zooplankton_sname)) == \"mesozoo\"": "mesozoo",
                   "((zooplankton_sname)) == \"microzoo\"": "microzoo",
                   "default": "UNSET"
                },
@@ -924,9 +925,10 @@
                "sp_microzoo",
                "diat_mesozoo",
                "diaz_microzoo",
-               "diaz_mesozoo",
-               "cocco_microzoo",
                "cocco_mesozoo",
+               "cocco_microzoo",
+               "diaz_mesozoo",
+               "null",
                "microzoo_mesozoo"
             ],
             "zooplankton_settings": [
