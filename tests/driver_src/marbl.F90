@@ -407,6 +407,8 @@ Program marbl
     case ('call_compute_subroutines')
       lprint_marbl_log = .false.
       call marbl_call_compute_subroutines_test(marbl_instances, hist_file, driver_status_log)
+      if (driver_status_log%labort_MARBL) &
+        call marbl_io_print_marbl_log(driver_status_log)
 
     !    UNIT TESTS
     ! -- get_put test -- !
