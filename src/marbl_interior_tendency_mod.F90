@@ -43,6 +43,7 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : max_grazer_prey_cnt
   use marbl_settings_mod, only : lsource_sink
+  use marbl_settings_mod, only : lcheck_forcing
   use marbl_settings_mod, only : ladjust_bury_coeff
   use marbl_settings_mod, only : autotroph_settings
   use marbl_settings_mod, only : zooplankton_settings
@@ -76,6 +77,7 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : del_ph
   use marbl_settings_mod, only : phhi_3d_init
   use marbl_settings_mod, only : phlo_3d_init
+  use marbl_settings_mod, only : bftt_dz_sum_thres
 
   use marbl_pft_mod, only : Qp_zoo
 
@@ -91,6 +93,7 @@ contains
 
   subroutine marbl_interior_tendency_compute( &
        domain,                                &
+       bot_flux_to_tend,                      &
        interior_tendency_forcings,            &
        tracers,                               &
        surface_flux_forcing_indices,          &
@@ -134,6 +137,7 @@ contains
 
 
     type(marbl_domain_type),                                 intent(in)    :: domain
+    real(r8),                                                intent(in)    :: bot_flux_to_tend(:)  ! (km)
     type(marbl_forcing_fields_type),                         intent(in)    :: interior_tendency_forcings(:)
     real(r8),                                                intent(in)    :: tracers(:,:)         ! (tracer_cnt, km) tracer values
     type(marbl_surface_flux_forcing_indexing_type),          intent(in)    :: surface_flux_forcing_indices
@@ -164,6 +168,7 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:marbl_interior_tendency_compute'
+    character(len=char_len)     :: log_message
 
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
     real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
@@ -207,6 +212,19 @@ contains
 
     interior_tendencies(:, :) = c0
 
+    if (abs(c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:))) > bftt_dz_sum_thres) then
+      write(log_message, "(A, E11.3, A)") "1 - sum(bot_flux_to_tend * dz) = ", &
+                                          c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:)), &
+                                          ", which is too far from 0 for conservation"
+      call marbl_status_log%log_error(log_message, subname)
+      do k=1,domain%km
+        write(log_message, *) k, domain%delta_z(k), bot_flux_to_tend(k), domain%zw(k), &
+                              c1 - sum(domain%delta_z(1:k) * bot_flux_to_tend(1:k))
+        call marbl_status_log%log_error(log_message, subname)
+      end do
+      return
+    end if
+
     if (.not. lsource_sink) then
        !-----------------------------------------------------------------------
        !  exit immediately if computations are not to be performed
@@ -214,7 +232,11 @@ contains
        return
     endif
 
-    associate(                                                      &
+    ! Verify forcing is consistent
+    if (lcheck_forcing) &
+      call check_forcing(interior_tendency_forcings, interior_tendency_forcing_indices, marbl_status_log)
+
+   associate(                                                      &
          km                  => domain%km,                          &
          kmt                 => domain%kmt,                         &
          num_PAR_subcols     => domain%num_PAR_subcols,             &
@@ -373,13 +395,13 @@ contains
 
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
-       call compute_particulate_terms(k, domain,                   &
+       call compute_particulate_terms(k, domain, bot_flux_to_tend, &
             marbl_particulate_share, p_remin_scalef(k),            &
             POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                    &
-            P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),   &
+            P_SiO2, dust, P_iron, PON_remin(:), PON_sed_loss(k),   &
             QA_dust_def(k),                                        &
-            tracer_local(:, k), carbonate, sed_denitrif(k),        &
-            other_remin(k), fesedflux(k), marbl_tracer_indices,    &
+            tracer_local(:, :), carbonate, sed_denitrif(:),        &
+            other_remin(:), fesedflux(k), marbl_tracer_indices,    &
             glo_avg_fields_interior_tendency, marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
@@ -465,6 +487,7 @@ contains
     ! call marbl_ciso_interior_tendency_compute()
     call marbl_ciso_interior_tendency_compute(                  &
          marbl_domain            = domain,                      &
+         bot_flux_to_tend        = bot_flux_to_tend(:),         &
          interior_tendency_share = interior_tendency_share,     &
          zooplankton_share = zooplankton_share,                 &
          marbl_particulate_share = marbl_particulate_share,     &
@@ -1751,7 +1774,9 @@ contains
 
     associate(                                               &
          Zprime   => zooplankton_derived_terms%Zprime(:,:),  & !(zooplankton_cnt)
-         zoo_loss => zooplankton_derived_terms%zoo_loss(:,:) & !(zooplankton_cnt) output
+         zoo_loss => zooplankton_derived_terms%zoo_loss(:,:), & !(zooplankton_cnt) output
+         zoo_loss_bulk => zooplankton_derived_terms%zoo_loss_bulk(:,:), & !(zooplankton_cnt) output
+         zoo_loss_basal => zooplankton_derived_terms%zoo_loss_basal(:,:) & !(zooplankton_cnt) output
          )
 
       !  calculate the loss threshold interpolation factor
@@ -1761,8 +1786,13 @@ contains
         C_loss_thres(:) = f_loss_thres(:) * zooplankton_settings(zoo_ind)%loss_thres
         Zprime(zoo_ind,:) = max(zooC(zoo_ind,:) - C_loss_thres, c0)
 
-        zoo_loss(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp &
-                               + zooplankton_settings(zoo_ind)%z_mort_0  * Zprime(zoo_ind,:)) * Tfunc_zoo(zoo_ind,:)
+        zoo_loss_basal(zoo_ind,:) = zooplankton_settings(zoo_ind)%basal_respiration_rate * Zprime(zoo_ind,:) * Tfunc_zoo(zoo_ind,:)
+
+        zoo_loss_bulk(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort_0 * Zprime(zoo_ind,:) + &
+                              zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp) * Tfunc_zoo(zoo_ind,:)
+
+        zoo_loss(zoo_ind,:) = zoo_loss_basal(zoo_ind,:) + zoo_loss_bulk(zoo_ind,:)
+
       end do
 
     end associate
@@ -2006,7 +2036,8 @@ contains
          zoo_graze_poc   => zooplankton_derived_terms%zoo_graze_poc(:,:), & ! input
          zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,:), & ! input
          zoo_graze_zootot   => zooplankton_derived_terms%zoo_graze_zootot(:,:), & ! input
-         zoo_loss        => zooplankton_derived_terms%zoo_loss(:,:),      & ! input
+         zoo_loss_bulk   => zooplankton_derived_terms%zoo_loss_bulk(:,:), & ! input
+         zoo_loss_basal  => zooplankton_derived_terms%zoo_loss_basal(:,:), & ! input
          f_zoo_detr      => zooplankton_derived_terms%f_zoo_detr(:,:),    & ! input
 
          auto_graze_dic  => autotroph_derived_terms%auto_graze_dic(:,:),  & ! output
@@ -2036,11 +2067,16 @@ contains
 
         !-----------------------------------------------------------------------
         ! compute zooplankton loss routing
+        !   - zooplankton linear and quadratic losses get routed to DOC, DIC, and POC
+        !   - basal respiration losses only contribute to DIC
         !-----------------------------------------------------------------------
+
         do zoo_ind = 1, zooplankton_cnt
-          zoo_loss_poc(zoo_ind,k) = f_zoo_detr(zoo_ind,k) * zoo_loss(zoo_ind,k)
-          zoo_loss_doc(zoo_ind,k) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss(zoo_ind,k)
-          zoo_loss_dic(zoo_ind,k) = parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss(zoo_ind,k)
+          zoo_loss_poc(zoo_ind,k) = f_zoo_detr(zoo_ind,k) * zoo_loss_bulk(zoo_ind,k)
+          zoo_loss_doc(zoo_ind,k) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss_bulk(zoo_ind,k)
+          zoo_loss_dic(zoo_ind,k) = (parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss_bulk(zoo_ind,k)) + &
+                                    zoo_loss_basal(zoo_ind,k)
+
         end do
 
         !-----------------------------------------------------------------------
@@ -2560,7 +2596,7 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_particulate_terms(k, domain,                        &
+   subroutine compute_particulate_terms(k, domain, bot_flux_to_tend,      &
               marbl_particulate_share, p_remin_scalef,                    &
               POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                         &
               P_SiO2, dust, P_iron, PON_remin, PON_sed_loss, QA_dust_def, &
@@ -2637,14 +2673,16 @@ contains
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff
      use marbl_glo_avg_mod, only : glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff
      use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_particulate
+     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_set_used_particle_terms_to_zero
 
      integer (int_kind)                , intent(in)    :: k                   ! vertical model level
      type(marbl_domain_type)           , intent(in)    :: domain
+     real (r8), dimension(:)           , intent(in)    :: bot_flux_to_tend    ! Array of weights for converting bottom flux to tendency (km)
      real (r8)                         , intent(in)    :: p_remin_scalef      ! Particulate Remin Scale Factor
-     real (r8), dimension(:)           , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
+     real (r8), dimension(:,:)         , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
      type(carbonate_type)              , intent(in)    :: carbonate
      real(r8)                          , intent(in)    :: fesedflux           ! sedimentary Fe input
-     real(r8)                          , intent(out)   :: PON_remin           ! remin of PON
+     real(r8)                          , intent(inout) :: PON_remin(domain%km)! remin of PON
      real(r8)                          , intent(out)   :: PON_sed_loss        ! loss of PON to sediments
      type(column_sinking_particle_type), intent(inout) :: POC                 ! base units = nmol C
      type(column_sinking_particle_type), intent(inout) :: POP                 ! base units = nmol P
@@ -2654,8 +2692,8 @@ contains
      type(column_sinking_particle_type), intent(inout) :: dust                ! base units = g
      type(column_sinking_particle_type), intent(inout) :: P_iron              ! base units = nmol Fe
      real (r8)                         , intent(inout) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux
-     real (r8)                         , intent(out)   :: sed_denitrif        ! sedimentary denitrification (umolN/cm^2/s)
-     real (r8)                         , intent(out)   :: other_remin         ! sedimentary remin not due to oxic or denitrification
+     real (r8), dimension(:)           , intent(inout) :: sed_denitrif        ! sedimentary denitrification (umolN/cm^2/s)
+     real (r8), dimension(:)           , intent(inout) :: other_remin         ! sedimentary remin not due to oxic or denitrification
      type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
      type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
      real (r8)                         , intent(inout) :: glo_avg_fields_interior_tendency(:)
@@ -2703,8 +2741,9 @@ contains
           column_kmt               => domain%kmt,                                       &
           delta_z                  => domain%delta_z,                                   &
           zw                       => domain%zw,                                        &
-          O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind),        &
-          NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind),       &
+          O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind,k),      &
+          O2_loc_col               => tracer_local(marbl_tracer_indices%o2_ind,:),      &
+          NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind,k),     &
           POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff,           & ! IN/OUT
           POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff,           & ! IN/OUT
           bSi_bury_coeff           => marbl_particulate_share%bSi_bury_coeff            & ! IN/OUT
@@ -2713,8 +2752,8 @@ contains
      !-----------------------------------------------------------------------
      !  initialize local copy of percent sed
      !-----------------------------------------------------------------------
-     sed_denitrif = c0
-     other_remin = c0
+     sed_denitrif(k) = c0
+     other_remin(k) = c0
 
      !-----------------------------------------------------------------------
      !  compute scalelength and decay factors
@@ -2906,7 +2945,7 @@ contains
              ((POC%sflux_in(k) - POC%sflux_out(k)) + &
              (POC%hflux_in(k) - POC%hflux_out(k))) * dzr_loc
 
-        PON_remin = Q * POC%remin(k)
+        PON_remin(k) = Q * POC%remin(k)
 
         dust%remin(k) = &
              ((dust%sflux_in(k) - dust%sflux_out(k)) + &
@@ -2973,12 +3012,17 @@ contains
 
         POP%hflux_out(k) = POP%hflux_in(k)
 
-     else
+     else ! k > column_kmt
 
-        dzr_loc = c0 ! avoid 'dzr_loc' may be used uninitialized warning from gfortran
-        POC%remin(k) = c0
-        POC%sflux_out(k) = c0
-        POC%hflux_out(k) = c0
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3_ALT_CO2)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_SiO2)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, dust)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POC)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_iron)
+        call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POP)
+        PON_remin(k) = c0
+        dzr_loc = c0
 
      endif
 
@@ -3099,22 +3143,23 @@ contains
               endif
            endif
 
-           sed_denitrif = dzr_loc * parm_sed_denitrif_coeff * POC%to_floor &
+           sed_denitrif(1:k) = bot_flux_to_tend(1:k) * parm_sed_denitrif_coeff * POC%to_floor &
                 * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
            flux_alt = POC%to_floor*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
-           other_remin = dzr_loc &
-                * min(min(0.1_r8 + flux_alt, 0.5_r8) * (POC%to_floor - POC%sed_loss(k)), &
-                (POC%to_floor - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N)))
+           other_remin(1:k) = min(bot_flux_to_tend(1:k) * &
+                                  min(0.1_r8 + flux_alt, 0.5_r8) * (POC%to_floor - POC%sed_loss(k)), &
+                                      bot_flux_to_tend(1:k) * (POC%to_floor - POC%sed_loss(k)) - &
+                                      (sed_denitrif(1:k)*denitrif_C_N))
 
            !----------------------------------------------------------------------------------
            !              if bottom water O2 is depleted, assume all remin is denitrif + other
            !----------------------------------------------------------------------------------
 
-           if (O2_loc < c1) then
-              other_remin = dzr_loc * &
-                   (POC%to_floor - POC%sed_loss(k) - (sed_denitrif*dz_loc*denitrif_C_N))
-           endif
+           where (O2_loc_col(1:k) < c1)
+              other_remin(1:k) = bot_flux_to_tend(1:k) * (POC%to_floor - POC%sed_loss(k)) - &
+                                 sed_denitrif(1:k)*denitrif_C_N
+           endwhere
 
         else
 
@@ -3182,31 +3227,31 @@ contains
         !----------------------------------------------------------------------------------
 
         if (P_CaCO3%to_floor > c0) then
-           P_CaCO3%remin(k) = P_CaCO3%remin(k) &
-                + ((P_CaCO3%to_floor - P_CaCO3%sed_loss(k)) * dzr_loc)
+           P_CaCO3%remin(1:k) = P_CaCO3%remin(1:k) &
+                + ((P_CaCO3%to_floor - P_CaCO3%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         if (P_CaCO3_ALT_CO2%to_floor > c0) then
-           P_CaCO3_ALT_CO2%remin(k) = P_CaCO3_ALT_CO2%remin(k) &
-                + ((P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) * dzr_loc)
+           P_CaCO3_ALT_CO2%remin(1:k) = P_CaCO3_ALT_CO2%remin(1:k) &
+                + ((P_CaCO3_ALT_CO2%to_floor - P_CaCO3_ALT_CO2%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         if (P_SiO2%to_floor > c0) then
-           P_SiO2%remin(k) = P_SiO2%remin(k) &
-                + ((P_SiO2%to_floor - P_SiO2%sed_loss(k)) * dzr_loc)
+           P_SiO2%remin(1:k) = P_SiO2%remin(1:k) &
+                + ((P_SiO2%to_floor - P_SiO2%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         if (POC%to_floor > c0) then
-           POC%remin(k) = POC%remin(k) &
-                + ((POC%to_floor - POC%sed_loss(k)) * dzr_loc)
+           POC%remin(1:k) = POC%remin(1:k) &
+                + ((POC%to_floor - POC%sed_loss(k)) * bot_flux_to_tend(1:k))
 
-           PON_remin = PON_remin &
-                + ((Q * POC%to_floor - PON_sed_loss) * dzr_loc)
+           PON_remin(1:k) = PON_remin(1:k) &
+                + ((Q * POC%to_floor - PON_sed_loss) * bot_flux_to_tend(1:k))
         endif
 
         if (POP%to_floor > c0) then
-           POP%remin(k) = POP%remin(k) &
-                + ((POP%to_floor - POP%sed_loss(k)) * dzr_loc)
+           POP%remin(1:k) = POP%remin(1:k) &
+                + ((POP%to_floor - POP%sed_loss(k)) * bot_flux_to_tend(1:k))
         endif
 
         !-----------------------------------------------------------------------
@@ -3488,7 +3533,7 @@ contains
          zoo_graze_zootot   => zooplankton_derived_terms%zoo_graze_zootot(:,:), & ! grazing of zooplankton routed to total zoo (mmol C/m^3/sec)
          zoo_graze_dic   => zooplankton_derived_terms%zoo_graze_dic(:,:), & ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
          zoo_graze_doc   => zooplankton_derived_terms%zoo_graze_doc(:,:), & ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
-         zoo_loss        => zooplankton_derived_terms%zoo_loss(:,:),      & ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+         zoo_loss        => zooplankton_derived_terms%zoo_loss(:,:),      & ! total zooplankton loss (basal and bulk) (mmol C/m^3/sec)
          zoo_loss_dic    => zooplankton_derived_terms%zoo_loss_dic(:,:),  & ! zoo_loss routed to dic (mmol C/m^3/sec)
          zoo_loss_doc    => zooplankton_derived_terms%zoo_loss_doc(:,:),  & ! zoo_loss routed to doc (mmol C/m^3/sec)
 
@@ -3763,5 +3808,33 @@ contains
   end subroutine update_particulate_terms_from_prior_level
 
   !***********************************************************************
+
+  subroutine check_forcing(forcings, forcing_indices, marbl_status_log)
+
+    type(marbl_forcing_fields_type),                     intent(in)    :: forcings(:)
+    type(marbl_interior_tendency_forcing_indexing_type), intent(in)    :: forcing_indices
+    type(marbl_log_type),                                intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_interior_tendency_mod:check_forcing'
+    character(len=char_len)     :: log_message
+    real(r8)                    :: col_frac_sum
+    integer                     :: m
+
+    ! If provided, total column fraction must sum to 1 (or close enough)
+    if (forcing_indices%PAR_col_frac_id > 0) then
+      col_frac_sum = sum(forcings(forcing_indices%PAR_col_frac_id)%field_1d(1,:))
+      if (abs(1._r8 - col_frac_sum) > 1e-6_r8) then
+        do m=1,size(forcings(forcing_indices%PAR_col_frac_id)%field_1d(:,:), 2)
+          write(log_message, "(A, I0, A, E11.3)") "PAR_col_frac(", m, ") = ", &
+                                                  forcings(forcing_indices%PAR_col_frac_id)%field_1d(1,m)
+          call marbl_status_log%log_warning(log_message, subname)
+        end do
+        write(log_message, "(A, E11.3, A)") "Total column fractions sum to ", col_frac_sum, &
+                                            ", which is not close to 1"
+        call marbl_status_log%log_warning(log_message, subname)
+      end if
+    end if
+
+  end subroutine check_forcing
 
 end module marbl_interior_tendency_mod

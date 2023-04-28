@@ -213,6 +213,7 @@ module marbl_settings_mod
   logical(log_kind), target :: ciso_on                        ! control whether ciso tracer module is active
   logical(log_kind), target :: lsource_sink                   ! control which portion of code is executed, useful for debugging
   logical(log_kind), target :: ciso_lsource_sink              ! control which portion of carbon isotope code is executed, useful for debugging
+  logical(log_kind), target :: lcheck_forcing                 ! control whether consistency checks are performed on forcing input
   logical(log_kind), target :: lecovars_full_depth_tavg       ! If .false., MARBL will recommend truncating the column for some diagnostics
   logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
@@ -233,6 +234,7 @@ module marbl_settings_mod
        particulate_flux_ref_depth    ! reference depth for particulate flux diagnostics (m)
 
   real(r8), target :: &
+       bftt_dz_sum_thres,          & ! MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold
        Jint_Ctot_thres_molpm2pyr,  & ! MARBL will abort if abs(Jint_Ctot) exceeds this threshold
        Jint_Ctot_thres,            & ! MARBL will abort if abs(Jint_Ctot) exceeds this threshold (derived from Jint_Ctot_thres_molpm2pyr)
        Jint_Ntot_thres,            & ! MARBL will abort if abs(Jint_Ntot) exceeds this threshold (derived from Jint_Ctot_thres)
@@ -337,6 +339,7 @@ module marbl_settings_mod
   integer (int_kind), parameter :: temp_func_form_iopt_q10           = 1
   integer (int_kind), parameter :: temp_func_form_iopt_arrhenius     = 2
   integer (int_kind), parameter :: temp_func_form_iopt_power         = 3
+  integer (int_kind), parameter :: output_for_GCM_iopt_total_Chl_3d  = 1
 
   !*****************************************************************************
 
@@ -372,6 +375,7 @@ contains
     ciso_on                       = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lsource_sink                  = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_lsource_sink             = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    lcheck_forcing                = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lecovars_full_depth_tavg      = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lflux_gas_o2                  = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lflux_gas_co2                 = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -382,6 +386,7 @@ contains
     lo2_consumption_scalef        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    bftt_dz_sum_thres             = 1.0e-14_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     gQsi_0                        = 0.137_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     gQsi_max                      = 0.822_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -613,6 +618,15 @@ contains
                       marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
+    sname     = 'lcheck_forcing'
+    lname     = 'Control whether consistency checks are performed on forcing input (useful for debugging)'
+    units     = 'unitless'
+    datatype  = 'logical'
+    lptr      => lcheck_forcing
+    call this%add_var(sname, lname, units, datatype, category,       &
+                      marbl_status_log, lptr=lptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
     sname     = 'lflux_gas_o2'
     lname     = 'Run O2 gas flux portion of the code'
     units     = 'unitless'
@@ -700,6 +714,15 @@ contains
     iptr      => particulate_flux_ref_depth
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, iptr=iptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    sname     = 'bftt_dz_sum_thres'
+    lname     = 'MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold'
+    units     = 'unitless'
+    datatype  = 'real'
+    rptr      => bftt_dz_sum_thres
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'Jint_Ctot_thres_molpm2pyr'
@@ -1602,6 +1625,16 @@ contains
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
+      write(sname, "(2A)") trim(prefix), 'basal_respiration_rate_per_day'
+      lname    = 'Basal respiration rate'
+      units    = '1/day'
+      datatype = 'real'
+      rptr     => zooplankton_settings(n)%basal_respiration_rate_per_day
+      call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, rptr=rptr,                 &
+                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
       write(sname, "(2A)") trim(prefix), 'Ea'
       lname    = 'Activation energy for Arrhenius equation'
       units    = 'eV'
@@ -1924,6 +1957,12 @@ contains
        write(sname_out, "(A,I0,A)") 'zooplankton_settings(', n, ')%z_mort2_0'
        call print_single_derived_parm(sname_in, sname_out, &
             zooplankton_settings(n)%z_mort2_0, subname, marbl_status_log)
+
+       zooplankton_settings(n)%basal_respiration_rate = dps * zooplankton_settings(n)%basal_respiration_rate_per_day
+       write(sname_in,  "(A,I0,A)") 'zooplankton_settings(', n, ')%basal_respiration_rate_per_day'
+       write(sname_out, "(A,I0,A)") 'zooplankton_settings(', n, ')%basal_respiration_rate'
+       call print_single_derived_parm(sname_in, sname_out, &
+            zooplankton_settings(n)%basal_respiration_rate, subname, marbl_status_log)
     end do
 
     call marbl_status_log%log_noerror('', subname)

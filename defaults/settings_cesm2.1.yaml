@@ -232,6 +232,12 @@ general_parms :
       units : unitless
       datatype : logical
       default_value : .true.
+   lcheck_forcing :
+      longname : Control whether consistency checks are performed on forcing input (useful for debugging)
+      subcategory : 2. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
    lecovars_full_depth_tavg :
       longname : If .false., MARBL will recommend truncating the column for some diagnostics
       subcategory : 2. config flags
@@ -283,6 +289,12 @@ general_parms :
       units : unitless
       datatype : logical
       default_value : .false.
+   bftt_dz_sum_thres:
+      longname : MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold
+      subcategory : 4. general parameters
+      units : unitless
+      datatype : real
+      default_value : 1.0e-14
    Jint_Ctot_thres_molpm2pyr :
       longname : MARBL will abort if abs(Jint_Ctot) exceeds this threshold
       subcategory : 4. general parameters
@@ -1008,6 +1020,14 @@ PFT_derived_types :
             default_value :
                default : 1e34
                ((zooplankton_sname)) == "zoo" : 0.4
+         basal_respiration_rate_per_day :
+            longname : Basal respiration rate
+            subcategory : 11. zooplankton
+            units : 1/day
+            datatype : real
+            default_value :
+               default : 1e34
+               ((zooplankton_sname)) == "zoo" : 0.0
          loss_thres :
             longname : Zoo concentration where losses go to zero
             subcategory : 11. zooplankton

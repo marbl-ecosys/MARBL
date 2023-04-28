@@ -1869,6 +1869,18 @@ CISO_mui_to_co2star_((autotroph_sname)) :
    vertical_grid : none
    frequency : high
    operator : average
+((zooplankton_sname))_loss_basal_zint :
+   longname : ((zooplankton_lname)) Basal Respiration Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+((zooplankton_sname))_loss_basal_zint_100m :
+   longname : ((zooplankton_lname)) Basal Respiration Vertical Integral, 0-100m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
 ((zooplankton_sname))_loss_poc_zint :
    longname : ((zooplankton_lname)) Loss to POC Vertical Integral
    units : mmol/m^3 cm/s
@@ -1955,6 +1967,13 @@ x_graze_((zooplankton_sname))_zint_100m :
    operator : average
 ((zooplankton_sname))_loss :
    longname : ((zooplankton_lname)) Loss
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   truncate : true
+   frequency : never
+   operator : average
+((zooplankton_sname))_loss_basal :
+   longname : ((zooplankton_lname)) Basal Respiration
    units : mmol/m^3/s
    vertical_grid : layer_avg
    truncate : true

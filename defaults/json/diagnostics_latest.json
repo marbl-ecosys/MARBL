@@ -271,6 +271,28 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "((zooplankton_sname))_loss_basal": {
+      "frequency": "never",
+      "longname": "((zooplankton_lname)) Basal Respiration",
+      "operator": "average",
+      "truncate": true,
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "((zooplankton_sname))_loss_basal_zint": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Basal Respiration Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "((zooplankton_sname))_loss_basal_zint_100m": {
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Basal Respiration Vertical Integral, 0-100m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "((zooplankton_sname))_loss_doc": {
       "frequency": "never",
       "longname": "((zooplankton_lname)) Loss to DOC",

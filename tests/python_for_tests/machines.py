@@ -7,7 +7,8 @@ from os import system as sh_command
 supported_machines = ['local',
                       'cheyenne',
                       'hobart',
-                      'edison']
+                      'edison',
+                      'greenplanet']
 
 # -----------------------------------------------
 
@@ -44,6 +45,14 @@ def load_module(mach, compiler, module_name):
     module('purge')
     module(['load', 'craype/2.5.12'])
     module(['load', module_name])
+
+  if mach == 'greenplanet':
+    sys.path.insert(0, os.path.join(os.sep, 'usr', 'share', 'lmod', 'lmod', 'init'))
+    from env_modules_python import module
+    module('purge')
+    module('load', module_name)
+    module('load', 'netcdf/4.7.0')
+    module('load', 'openmpi/3.1.6')
 
 # -----------------------------------------------
 
@@ -85,6 +94,11 @@ def machine_specific(mach, supported_compilers, module_names):
     supported_compilers.append('cray')
     module_names['cray'] = 'PrgEnv-cray'
     return
+
+  if mach == 'greenplanet':
+    # UCI machine
+    supported_compilers.append('intel')
+    module_names['intel'] = 'intel/2018.3'
 
   if mach == 'local':
     # Not a specific machine, but a flag to specify

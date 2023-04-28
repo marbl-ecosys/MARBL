@@ -26,7 +26,7 @@ module marbl_interface
 
   use marbl_interface_public_types, only : marbl_domain_type
   use marbl_interface_public_types, only : marbl_tracer_metadata_type
-  use marbl_interface_public_types, only : marbl_surface_flux_output_type
+  use marbl_interface_public_types, only : marbl_output_for_GCM_type
   use marbl_interface_public_types, only : marbl_diagnostics_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
   use marbl_interface_public_types, only : marbl_saved_state_type
@@ -84,6 +84,7 @@ module marbl_interface
 
      ! public data related to computing interior tendencies
      real (r8), allocatable                             , public  :: tracers(:,:)                  ! input
+     real (r8), allocatable                             , public  :: bot_flux_to_tend(:)           ! input
      type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
@@ -94,7 +95,7 @@ module marbl_interface
      type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)    ! input
      type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind    ! FIXME #311: should be private
      real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)         ! output
-     type(marbl_surface_flux_output_type)           , public               :: surface_flux_output         ! output
+     type(marbl_output_for_GCM_type)                , public               :: surface_flux_output         ! output
      type(marbl_diagnostics_type)                   , public               :: surface_flux_diags          ! output
 
      ! public data - global averages
@@ -159,6 +160,7 @@ module marbl_interface
                                           get_logical, &
                                           get_string
      procedure, public  :: get_settings_var_cnt
+     procedure, public  :: get_output_for_GCM
      procedure, private :: inquire_settings_metadata_by_name
      procedure, private :: inquire_settings_metadata_by_id
      procedure, private :: put_real
@@ -306,8 +308,8 @@ contains
 
     call marbl_init_tracers(num_levels, num_elements_surface_flux, &
                             this%tracer_indices, this%tracers_at_surface, this%surface_fluxes, &
-                            this%tracers, this%interior_tendencies, this%tracer_metadata, &
-                            this%StatusLog)
+                            this%tracers, this%bot_flux_to_tend, this%interior_tendencies, &
+                            this%tracer_metadata, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_tracers", subname)
       return
@@ -744,6 +746,35 @@ contains
 
   !***********************************************************************
 
+  subroutine get_output_for_GCM(this, field_ind, array_out)
+
+    use marbl_constants_mod, only : c0
+    use marbl_settings_mod,  only : output_for_GCM_iopt_total_Chl_3d
+
+    class (marbl_interface_class),        intent(inout) :: this
+    integer,                              intent(in)    :: field_ind
+    real (r8), dimension(this%domain%km), intent(out)   :: array_out
+
+    character(len=*), parameter :: subname = 'marbl_interface:get_output_for_GCM'
+    character(len=char_len)     :: log_message
+    integer                     :: auto_ind, tr_ind
+
+    select case(field_ind)
+      case (output_for_GCM_iopt_total_Chl_3d)
+        array_out(:) = c0
+        do auto_ind=1,size(this%tracer_indices%auto_inds)
+          tr_ind = this%tracer_indices%auto_inds(auto_ind)%Chl_ind
+          array_out(:) = array_out(:) + max(c0, this%tracers(tr_ind,:))
+        end do
+      case DEFAULT
+        write(log_message, "(I0,A)") field_ind, " is not a recognized value for field_ind"
+        call this%StatusLog%log_error(log_message, subname)
+    end select
+
+  end subroutine get_output_for_GCM
+
+  !***********************************************************************
+
   subroutine inquire_settings_metadata_by_name(this, varname, id, lname, units, datatype)
 
     class (marbl_interface_class), intent(inout) :: this
@@ -881,6 +912,7 @@ contains
 
     call marbl_interior_tendency_compute(                                           &
          domain                            = this%domain,                           &
+         bot_flux_to_tend                  = this%bot_flux_to_tend,                 &
          interior_tendency_forcings        = this%interior_tendency_forcings,       &
          tracers                           = this%tracers,                          &
          surface_flux_forcing_indices      = this%surface_flux_forcing_ind,         &
@@ -1042,6 +1074,7 @@ contains
       deallocate(this%tracers_at_surface)
       deallocate(this%surface_fluxes)
       deallocate(this%tracers)
+      deallocate(this%bot_flux_to_tend)
       deallocate(this%interior_tendencies)
       deallocate(this%tracer_metadata)
       if (allocated(tracer_restore_vars)) deallocate(tracer_restore_vars)

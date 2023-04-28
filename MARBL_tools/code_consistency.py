@@ -9,7 +9,7 @@ import sys
 import logging
 from collections import deque # Faster pop / append than standard lists
 from collections import OrderedDict
-UNIBLOCK = u"\u2588"
+UNIBLOCK = u"\u2588" # pylint: disable=redundant-u-string-prefix
 
 ##############
 
@@ -218,8 +218,8 @@ if __name__ == "__main__":
     else:
         MARBL_ROOT = os.path.join(SCRIPT_DIR, '..')
 
-    fortran_files = [] # pylint: disable=C0103
-    python_files = []  # pylint: disable=C0103
+    fortran_files = []
+    python_files = []
     for root, dirs, files in os.walk(MARBL_ROOT):
         for thisfile in files:
             if thisfile.endswith(".F90"):
@@ -231,12 +231,12 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(message)s', level=logging.DEBUG)
     LOGGER = logging.getLogger(__name__)
 
-    Tests = ConsistencyTestClass() # pylint: disable=C0103
+    Tests = ConsistencyTestClass()
 
     # Fortran error checks
     LOGGER.info("Check Fortran files for coding standard violations:")
     for thisfile in fortran_files:
-        with open(thisfile, "r") as fortran_file:
+        with open(thisfile, "r", encoding="utf-8") as fortran_file:
             line_cnt = 0
             for thisline in fortran_file.readlines():
                 line_without_cr = thisline.rstrip("\n")
@@ -256,7 +256,7 @@ if __name__ == "__main__":
     # Python error checks
     LOGGER.info("\nCheck python files for coding standard violations:")
     for thisfile in python_files:
-        with open(thisfile, "r") as python_file:
+        with open(thisfile, "r", encoding="utf-8") as python_file:
             line_cnt = 0
             for thisline in python_file.readlines():
                 line_without_cr = thisline.rstrip("\n")

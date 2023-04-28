@@ -604,6 +604,16 @@
                "units": "eV"
             },
             "_type_name": "zooplankton_settings_type",
+            "basal_respiration_rate_per_day": {
+               "datatype": "real",
+               "default_value": {
+                  "((zooplankton_sname)) == \"zoo\"": 0.0,
+                  "default": "1e34"
+               },
+               "longname": "Basal respiration rate",
+               "subcategory": "11. zooplankton",
+               "units": "1/day"
+            },
             "lname": {
                "datatype": "string",
                "default_value": {
@@ -928,6 +938,13 @@
          "default_value": 1.0,
          "longname": "maximum bury fraction for bSi",
          "subcategory": "4. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
+      "bftt_dz_sum_thres": {
+         "datatype": "real",
+         "default_value": 1e-14,
+         "longname": "MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold",
+         "subcategory": "4. general parameters",
          "units": "unitless"
       },
       "bury_coeff_rmean_timescale_years": {
