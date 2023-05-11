@@ -1,10 +1,10 @@
 {
    "PFT_counts": {
       "autotroph_cnt": {
-         "cannot change": "PFT_defaults == 'CESM2+4p2z'",
+         "cannot change": "PFT_defaults == '4p2z'",
          "datatype": "integer",
          "default_value": {
-            "PFT_defaults == \"CESM2+4p2z\"": 4,
+            "PFT_defaults == \"4p2z\"": 4,
             "default": 1
          },
          "longname": "Number of autotroph classes",
@@ -15,7 +15,7 @@
       "max_grazer_prey_cnt": {
          "datatype": "integer",
          "default_value": {
-            "PFT_defaults == \"CESM2+4p2z\"": 4,
+            "PFT_defaults == \"4p2z\"": 4,
             "default": 1
          },
          "longname": "Number of grazer prey classes",
@@ -25,7 +25,7 @@
       "zooplankton_cnt": {
          "datatype": "integer",
          "default_value": {
-            "PFT_defaults == \"CESM2+4p2z\"": 2,
+            "PFT_defaults == \"4p2z\"": 2,
             "default": 1
          },
          "longname": "Number of zooplankton classes",
@@ -925,7 +925,7 @@
          "units": "mol m-2 yr-1"
       },
       "PFT_defaults": {
-         "_CESM2+4p2z_PFT_keys": {
+         "_4p2z_PFT_keys": {
             "autotroph_settings": [
                "sp",
                "diat",
@@ -949,12 +949,12 @@
          },
          "_append_to_config_keywords": true,
          "datatype": "string",
-         "default_value": "CESM2+4p2z",
+         "default_value": "4p2z",
          "longname": "Define how PFTs are initialized",
          "subcategory": "1. config PFTs",
          "units": "unitless",
          "valid_values": [
-            "CESM2+4p2z",
+            "4p2z",
             "user-specified"
          ]
       },

@@ -447,7 +447,7 @@ contains
     character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_set_defaults_PFT_counts'
     character(len=char_len)     :: log_message
 
-    if ((trim(PFT_defaults) .eq. 'CESM2+cocco') .or. (trim(PFT_defaults) .eq. 'CESM2+4p2z')) then
+    if ((trim(PFT_defaults) .eq. 'CESM2+cocco') .or. (trim(PFT_defaults) .eq. '4p2z')) then
       write(log_message, '(3A)') 'PFT_defaults = "', trim(PFT_defaults), &
                                  '" in input file, but being treated as "user-specified"'
       call marbl_status_log%log_noerror(log_message, subname)
