@@ -237,19 +237,19 @@ class MARBL_settings_class(object):
         # Is the derived type an array? If so, treat each entry separately
         if ("_array_shape" in this_var.keys()):
             for n, elem_index in enumerate(_get_array_info(this_var["_array_shape"], self.settings_dict, self.tracers_dict)):
-                if n < len(PFT_keys):
-                    PFT_keys.append('null')
                 # Append "(index)" to variable name
                 base_name = "%s%s%%" % (variable_name, elem_index)
 
                 if append_to_keys:
+                    if n < len(PFT_keys):
+                        PFT_keys.append('null')
                     # Add key for specific PFT
                     if variable_name == 'zooplankton_settings':
-                      self._config_keyword.append('((zooplankton_sname)) == "%s"' % PFT_keys[n])
+                        self._config_keyword.append('((zooplankton_sname)) == "%s"' % PFT_keys[n])
                     elif variable_name == 'autotroph_settings':
-                      self._config_keyword.append('((autotroph_sname)) == "%s"' % PFT_keys[n])
+                        self._config_keyword.append('((autotroph_sname)) == "%s"' % PFT_keys[n])
                     elif variable_name == 'grazing_relationship_settings':
-                      self._config_keyword.append('((grazer_sname)) == "%s"' % PFT_keys[n])
+                        self._config_keyword.append('((grazer_sname)) == "%s"' % PFT_keys[n])
 
                 for key in _sort_with_specific_suffix_first(this_var["datatype"].keys(),'_cnt'):
                     if key[0] != '_':
