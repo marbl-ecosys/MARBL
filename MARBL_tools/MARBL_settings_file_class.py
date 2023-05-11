@@ -227,7 +227,7 @@ class MARBL_settings_class(object):
         # Process derived type!
         # Check to see if PFT_defaults leads to specific PFT declarations
         if (category_name == "PFT_derived_types"):
-            for valid_PFT_default in ["CESM2", "CESM2+cocco"]:
+            for valid_PFT_default in ["CESM2", "CESM2+cocco", "4p2z"]:
                 append_to_keys = 'PFT_defaults == "{}"'.format(valid_PFT_default) in self._config_keyword
                 if append_to_keys:
                     settings_key = '_{}_PFT_keys'.format(valid_PFT_default)
@@ -241,13 +241,15 @@ class MARBL_settings_class(object):
                 base_name = "%s%s%%" % (variable_name, elem_index)
 
                 if append_to_keys:
+                    if n < len(PFT_keys):
+                        PFT_keys.append('null')
                     # Add key for specific PFT
                     if variable_name == 'zooplankton_settings':
-                      self._config_keyword.append('((zooplankton_sname)) == "%s"' % PFT_keys[n])
+                        self._config_keyword.append('((zooplankton_sname)) == "%s"' % PFT_keys[n])
                     elif variable_name == 'autotroph_settings':
-                      self._config_keyword.append('((autotroph_sname)) == "%s"' % PFT_keys[n])
+                        self._config_keyword.append('((autotroph_sname)) == "%s"' % PFT_keys[n])
                     elif variable_name == 'grazing_relationship_settings':
-                      self._config_keyword.append('((grazer_sname)) == "%s"' % PFT_keys[n])
+                        self._config_keyword.append('((grazer_sname)) == "%s"' % PFT_keys[n])
 
                 for key in _sort_with_specific_suffix_first(this_var["datatype"].keys(),'_cnt'):
                     if key[0] != '_':

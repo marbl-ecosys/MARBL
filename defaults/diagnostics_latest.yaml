@@ -464,8 +464,12 @@ pocToFloor :
    longname : POC Flux Hitting Sea Floor
    units : nmol/cm^2/s
    vertical_grid : none
-   frequency : never
-   operator : average
+   frequency :
+      - medium
+      - high
+   operator :
+      - average
+      - average
 pocToSed :
    longname : POC Flux to Sediments
    units : nmol/cm^2/s
@@ -1490,14 +1494,14 @@ graze_((autotroph_sname))_doc_zint_100m :
    vertical_grid : none
    frequency : medium
    operator : average
-graze_((autotroph_sname))_zoo_zint :
-   longname : ((autotroph_lname)) Grazing to ZOO Vertical Integral
+graze_((autotroph_sname))_((zooplankton_sname))_zint :
+   longname : ((autotroph_lname)) Grazing to ((zooplankton_lname)) Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never
    operator : average
-graze_((autotroph_sname))_zoo_zint_100m :
-   longname : ((autotroph_lname)) Grazing to ZOO Vertical Integral, 0-100m
+graze_((autotroph_sname))_((zooplankton_sname))_zint_100m :
+   longname : ((autotroph_lname)) Grazing to ((zooplankton_lname)) Vertical Integral, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
@@ -1859,6 +1863,12 @@ CISO_mui_to_co2star_((autotroph_sname)) :
    vertical_grid : none
    frequency : medium
    operator : average
+((zooplankton_sname))_loss_zint_150m :
+   longname : ((zooplankton_lname)) Loss Vertical Integral, 0-150m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : high
+   operator : average
 ((zooplankton_sname))_loss_basal_zint :
    longname : ((zooplankton_lname)) Basal Respiration Vertical Integral
    units : mmol/m^3 cm/s
@@ -1931,14 +1941,14 @@ graze_((zooplankton_sname))_doc_zint_100m :
    vertical_grid : none
    frequency : never
    operator : average
-graze_((zooplankton_sname))_zoo_zint :
-   longname : ((zooplankton_lname)) Grazing to ZOO Vertical Integral
+graze_((zooplankton_sname))_((zooplankton_sname))_zint :
+   longname : ((zooplankton_lname)) Grazing to ((zooplankton_lname)) Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never
    operator : average
-graze_((zooplankton_sname))_zoo_zint_100m :
-   longname : ((zooplankton_lname)) Grazing to ZOO Vertical Integral, 0-100m
+graze_((zooplankton_sname))_((zooplankton_sname))_zint_100m :
+   longname : ((zooplankton_lname)) Grazing to ((zooplankton_lname)) Vertical Integral, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never

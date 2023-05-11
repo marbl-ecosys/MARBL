@@ -1475,7 +1475,8 @@ contains
           picpoc = max(0.0_r8, -0.0136_r8 * CO2(:) + picpoc(:) + 0.21_r8)
 
           !P-limitation effect (CaCO2/organicC ratio increases when P limitation term is low)
-          picpoc = max(0.0_r8, -0.48_r8 * Plim(auto_ind,:) + picpoc(:) + 0.48_r8)
+          ! max out picpoc at one to prevent crashing due to "ballast exceeds POC" error
+          picpoc = min(1., max(0.0_r8, -0.48_r8 * Plim(auto_ind,:) + picpoc(:) + 0.48_r8))
 
           !multiply cocco growth rate by picpoc to get CaCO3 formation
           CaCO3_form(auto_ind,:) = picpoc(:) * photoC(auto_ind,:)
