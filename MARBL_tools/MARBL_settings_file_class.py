@@ -13,7 +13,12 @@ class MARBL_settings_class(object):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, default_settings_file, saved_state_vars_source="settings_file", grid=None, input_file=None):
+    def __init__(self,
+                 default_settings_file,
+                 saved_state_vars_source="settings_file",
+                 grid=None,
+                 restore_for_CESM="TRUE",
+                 input_file=None):
         """ Class constructor: set up a dictionary of config keywords for when multiple
             default values are provided, read the JSON file, and then populate
             self.settings_dict and self.tracers_dict.
@@ -25,6 +30,7 @@ class MARBL_settings_class(object):
         self._config_keyword = []
         if grid != None:
             self._config_keyword.append('GRID == "%s"' % grid)
+        self._config_keyword.append('USE_CESM_RESTORE == "%s"' % restore_for_CESM)
         self._config_keyword.append('SAVED_STATE_VARS_SOURCE == "%s"' % saved_state_vars_source)
 
         # 2. Read settings JSON file

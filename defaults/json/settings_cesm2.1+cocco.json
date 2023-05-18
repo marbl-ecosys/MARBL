@@ -1395,14 +1395,7 @@
                "ALK",
                "ALK_ALT_CO2"
             ],
-            "GRID == \"CESM_x1\"": [
-               "PO4",
-               "NO3",
-               "SiO3",
-               "ALK",
-               "ALK_ALT_CO2"
-            ],
-            "GRID == \"CESM_x3\"": [
+            "USE_CESM_RESTORE == \"TRUE\"": [
                "PO4",
                "NO3",
                "SiO3",

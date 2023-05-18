@@ -24,11 +24,13 @@ optional arguments:
   -f DEFAULT_SETTINGS_FILE, --default_settings_file DEFAULT_SETTINGS_FILE
                         Location of JSON-formatted MARBL configuration file
                         (default: $MARBLROOT/defaults/json/settings_latest.json)
-  -s {GCM,settings_file}, --saved_state_vars_source {GCM,settings_file}
+  -s {settings_file,GCM}, --saved_state_vars_source {settings_file,GCM}
                         Source of initial value for saved state vars that can
                         come from GCM or settings file (default:
                         settings_file)
   -g GRID, --grid GRID  Some default values are grid-dependent (default: None)
+  -r, --no_restoring    Do not add tracer restoring to namelist (default:
+                        True)
   -i SETTINGS_FILE_IN, --settings_file_in SETTINGS_FILE_IN
                         A file that overrides values in JSON (default: None)
   -o SETTINGS_FILE_OUT, --settings_file_out SETTINGS_FILE_OUT
@@ -77,6 +79,10 @@ def _parse_args(marbl_root):
     parser.add_argument('-g', '--grid', action='store', dest='grid',
                         help='Some default values are grid-dependent')
 
+    # Command line argument to specify whether use CESM tracer restoring (default is True)
+    parser.add_argument('-r', '--no_restoring', action='store_false', dest='restore_for_CESM',
+                        default=True, help='Do not add tracer restoring to namelist')
+
     # Command line argument to specify a settings file which would override the JSON
     parser.add_argument('-i', '--settings_file_in', action='store', dest='settings_file_in', default=None,
                         help='A file that overrides values in JSON')
@@ -97,13 +103,22 @@ if __name__ == "__main__":
 
     # Parse command-line arguments (marbl_root is used to set default for JSON file location)
     args = _parse_args(marbl_root)
+    if args.restore_for_CESM:
+        restore_for_CESM_str = "TRUE"
+    else:
+        restore_for_CESM_str = "FALSE"
 
     # Set up logging
     import logging
     logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
 
     from MARBL_tools import MARBL_settings_class
-    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in)
+
+    DefaultSettings = MARBL_settings_class(args.default_settings_file,
+                                           args.saved_state_vars_source,
+                                           args.grid,
+                                           restore_for_CESM_str,
+                                           args.settings_file_in)
 
     # Write the settings file
     generate_settings_file(DefaultSettings, args.settings_file_out)
