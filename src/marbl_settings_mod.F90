@@ -2130,7 +2130,7 @@ contains
       this%mol_prefix = 1.e9_r8 ! mol -> nmol
     elseif (trim(unit_system_loc) == 'mks') then
       ! Use m, kg, and s for length, mass, and time
-      this%g2mass     = 0.001_r8 ! g -> kg 
+      this%g2mass     = 0.001_r8 ! g -> kg
       this%mass2g     = 1.e3_r8  ! kg -> g
       this%cm2len     = 0.01_r8  ! cm -> m
       this%mol_prefix = 1.e3_r8  ! mol -> mmol

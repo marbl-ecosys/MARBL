@@ -391,7 +391,6 @@ contains
 
     !-----------------------------------------------------------------------
     !  Add phosphate and silicate from dust after Krishnamurthy et al. (2010)
-    !  factors convert from g/cm2/s to nmol/cm2/s
     !  factors convert from M/L2/s to CU*L/s
     !  ( P frac in dust by weight) * ( P solubility) / ( P molecular weight) * (unit system conversion)
     !  (Si frac in dust by weight) * (Si solubility) / (Si molecular weight) * (unit system conversion)
