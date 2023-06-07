@@ -72,6 +72,7 @@ Program marbl
   ! Variables for processing commandline arguments
   character(len=char_len) :: progname, argstr
   character(len=char_len) :: namelist_file, settings_file
+  character(len=3)        :: unit_system
   integer        :: argcnt
   logical        :: labort_after_argparse, lshow_usage, lfound_file
 
@@ -84,13 +85,12 @@ Program marbl
 
   ! Namelist vars
   character(len=char_len) :: testname, hist_file, log_out_file
-  character(len=3)        :: unit_system
   integer                 :: num_inst, num_PAR_subcols
 
   ! Processing input file for put calls
   integer  :: ioerr
 
-  namelist /marbl_driver_nml/testname, hist_file, log_out_file, unit_system, num_inst, num_PAR_subcols
+  namelist /marbl_driver_nml/testname, hist_file, log_out_file, num_inst, num_PAR_subcols
 
   !****************************************************************************
 
@@ -107,6 +107,7 @@ Program marbl
   lhas_settings_file = .false.
   settings_file = ''
   namelist_file = ''
+  unit_system   = 'cgs'
 
   !     (b) get program name and argument count
   call get_command_argument(0, progname)
@@ -166,7 +167,7 @@ Program marbl
           labort_after_argparse = .true.
           lshow_usage = .true.
           if (my_task .eq. 0) &
-            write(*, "(A)") "ERROR: -i argument requires input file as well"
+            write(*, "(A)") "ERROR: -s argument requires settings file as well"
           exit
         end if
 
@@ -179,6 +180,28 @@ Program marbl
           labort_after_argparse = .true.
           if (my_task .eq. 0) &
             write(*, "(2A)") "ERROR: Input file not found: ", trim(settings_file)
+          exit
+        end if
+
+      case ('-u', '--unit_system')
+        ! Error checking: is this the last commandline argument (i.e. no unit system was specified?)
+        if (n .eq. argcnt) then
+          labort_after_argparse = .true.
+          lshow_usage = .true.
+          if (my_task .eq. 0) &
+            write(*, "(A)") "ERROR: -u argument requires unit system as well"
+          exit
+        end if
+
+        n = n+1
+        call get_command_argument(n, unit_system)
+
+        ! Error checking: only valid values are 'cgs' and 'mks'
+        if ((unit_system .ne. "cgs") .and. (unit_system .ne. "mks")) then
+          labort_after_argparse = .true.
+          lshow_usage = .true.
+          if (my_task .eq. 0) &
+            write(*, "(3A)") "ERROR: '", trim(unit_system), "' is not a valid unit system"
           exit
         end if
 
@@ -217,9 +240,11 @@ Program marbl
       write(*,"(A)") "required argument:"
       write(*,"(A)") "  -n NAMELIST_FILE, --namelist_file NAMELIST_FILE"
       write(*,"(A)") "                        File containing &marbl_driver_nml"
-      write(*,"(A)") "optional argument:"
-      write(*,"(A)") "  -s settings_file, --settings_file SETTINGS_FILE"
+      write(*,"(A)") "optional arguments:"
+      write(*,"(A)") "  -s SETTINGS_FILE, --settings_file SETTINGS_FILE"
       write(*,"(A)") "                        File containing MARBL input file"
+      write(*,"(A)") "  -u UNIT_SYSTEM, --unit_system UNIT_SYSTEM"
+      write(*,"(A)") "                        Unit system to use (valid values: 'mks', 'cgs')"
     end if
   end if
 
@@ -238,7 +263,6 @@ Program marbl
   testname       = ''
   log_out_file   = 'marbl.out' ! only written if ldriver_log_to_file = .true.
   hist_file      = 'history.nc'
-  unit_system    = 'cgs'
 
   ! (2a) Read driver namelist to know what test to run
   if (my_task .eq. 0) open(98, file=trim(namelist_file), status="old", iostat=ioerr)
