@@ -19,6 +19,20 @@ module marbl_interface_private_types
 
   !****************************************************************************
 
+  ! derived type for tracking unit system
+
+  type, public :: unit_system_type
+    character(len=3) :: unit_system  ! Name of unit system ('cgs' or 'mks')
+    real(r8)         :: mass2g       ! g / M (converts from model mass M -> grams)
+    real(r8)         :: g2mass       ! M / g (converts from grams -> model mass M)
+    real(r8)         :: cm2len       ! cm / L (converts from model length L -> cm)
+    real(r8)         :: mol_prefix   ! convert mol -> nmol, mmol, etc (get correct metric prefix)
+  contains
+    procedure :: set => set_unit_system
+  end type unit_system_type
+
+  !****************************************************************************
+
   ! derived type for PAR computation
   type, public :: marbl_PAR_type
      real(r8), allocatable :: col_frac(:)    ! column fraction occupied by each sub-column, dimension is (PAR_nsubcols)
@@ -812,6 +826,49 @@ module marbl_interface_private_types
   public :: marbl_timer_indexing_type
 
 contains
+
+  !***********************************************************************
+
+  subroutine set_unit_system(this, marbl_status_log, unit_system)
+    class(unit_system_type),    intent(inout) :: this
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
+    character(len=*), optional, intent(in)    :: unit_system
+
+    character(len=*), parameter :: subname = 'marbl_interface_private_types:set_unit_system'
+    character(len=char_len) :: log_message
+    character(len=3)        :: unit_system_loc
+
+    if (present(unit_system)) then
+      unit_system_loc = unit_system
+    else
+      unit_system_loc = 'cgs'
+    end if
+
+    ! If requested unit system is same as current unit system, just return
+    if (trim(unit_system_loc) == trim(this%unit_system)) return
+
+    if (trim(unit_system_loc) == 'cgs') then
+      ! Use cm, g, and s for length, mass, and time
+      this%g2mass     = 1._r8   ! g -> g
+      this%mass2g     = 1._r8   ! g -> g
+      this%cm2len     = 1._r8   ! cm -> cm
+      this%mol_prefix = 1.e9_r8 ! mol -> nmol
+    elseif (trim(unit_system_loc) == 'mks') then
+      ! Use m, kg, and s for length, mass, and time
+      this%g2mass     = 0.001_r8 ! g -> kg 
+      this%mass2g     = 1.e3_r8  ! kg -> g
+      this%cm2len     = 0.01_r8  ! cm -> m
+      this%mol_prefix = 1.e3_r8  ! mol -> mmol
+    else
+      write(log_message, '(3A)') 'Can not update unit system to "', trim(unit_system_loc), '"'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    endif
+
+    ! Update unit_system module variable
+    this%unit_system = trim(unit_system_loc)
+
+  end subroutine set_unit_system
 
   !***********************************************************************
 

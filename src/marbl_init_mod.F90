@@ -8,6 +8,7 @@ module marbl_init_mod
   use marbl_interface_public_types, only : marbl_forcing_fields_type
 
   use marbl_interface_private_types, only : marbl_tracer_index_type
+  use marbl_interface_private_types, only : unit_system_type
 
   use marbl_logging, only : marbl_log_type
 
@@ -53,7 +54,7 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_parameters_pre_tracers(marbl_settings, marbl_status_log)
+  subroutine marbl_init_parameters_pre_tracers(marbl_settings, unit_system, marbl_status_log)
 
     use marbl_settings_mod, only : marbl_settings_type
     use marbl_settings_mod, only : marbl_settings_set_defaults_general_parms
@@ -64,6 +65,7 @@ contains
     use marbl_settings_mod, only : marbl_settings_define_PFT_derived_types
 
     type(marbl_settings_type),  intent(inout) :: marbl_settings
+    type(unit_system_type),     intent(in)    :: unit_system
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     ! local variables
@@ -73,7 +75,7 @@ contains
     ! set default values for basic settings
     !---------------------------------------------------------------------------
 
-    call marbl_settings_set_defaults_general_parms()
+    call marbl_settings_set_defaults_general_parms(unit_system)
 
     !---------------------------------------------------------------------------
     ! Add general settings to list of allowable put / get vars

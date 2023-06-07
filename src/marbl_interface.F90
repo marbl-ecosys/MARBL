@@ -33,6 +33,7 @@ module marbl_interface
   use marbl_interface_public_types, only : marbl_timers_type
   use marbl_interface_public_types, only : marbl_running_mean_0d_type
 
+  use marbl_interface_private_types, only : unit_system_type
   use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
   use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
@@ -76,11 +77,12 @@ module marbl_interface
      type(marbl_tracer_index_type)     , pointer    , public  :: tracer_indices => NULL()
      type(marbl_log_type)                           , public  :: StatusLog
 
-     type(marbl_saved_state_type)              , public               :: surface_flux_saved_state             ! input/output
-     type(marbl_saved_state_type)              , public               :: interior_tendency_saved_state        ! input/output
-     type(marbl_surface_flux_saved_state_indexing_type), public       :: surf_state_ind
+     type(unit_system_type)                                 , public  :: unit_system
+     type(marbl_saved_state_type)                           , public  :: surface_flux_saved_state             ! input/output
+     type(marbl_saved_state_type)                           , public  :: interior_tendency_saved_state        ! input/output
+     type(marbl_surface_flux_saved_state_indexing_type)     , public  :: surf_state_ind
      type(marbl_interior_tendency_saved_state_indexing_type), public  :: interior_state_ind
-     type(marbl_timers_type)                   , public               :: timer_summary
+     type(marbl_timers_type)                                , public  :: timer_summary
 
      ! public data related to computing interior tendencies
      real (r8), allocatable                             , public  :: tracers(:,:)                  ! input
@@ -206,7 +208,6 @@ contains
     use marbl_init_mod, only : marbl_init_parameters_post_tracers
     use marbl_init_mod, only : marbl_init_bury_coeff
     use marbl_init_mod, only : marbl_init_forcing_fields
-    use marbl_settings_mod, only : marbl_settings_set_unit_system
     use marbl_settings_mod, only : marbl_settings_set_all_derived
     use marbl_settings_mod, only : marbl_settings_consistency_check
     use marbl_settings_mod, only : autotroph_cnt
@@ -258,13 +259,13 @@ contains
     ! Initialize parameters that do not depend on tracer count or PFT categories
     !---------------------------------------------------------------------------
 
-    if (present(unit_system)) call marbl_settings_set_unit_system(unit_system, this%StatusLog)
+    call this%unit_system%set(this%StatusLog, unit_system)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace("marbl_settings_set_unit_system", subname)
+      call this%StatusLog%log_error_trace("unit_system%set", subname)
       return
     end if
 
-    call marbl_init_parameters_pre_tracers(this%settings, this%StatusLog)
+    call marbl_init_parameters_pre_tracers(this%settings, this%unit_system, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_parameters_pre_tracers", subname)
       return
@@ -983,6 +984,7 @@ contains
          surface_flux_forcings    = this%surface_flux_forcings,               &
          tracers_at_surface       = this%tracers_at_surface,                  &
          surface_fluxes           = this%surface_fluxes,                      &
+         unit_system              = this%unit_system,                         &
          marbl_tracer_indices     = this%tracer_indices,                      &
          saved_state              = this%surface_flux_saved_state,            &
          saved_state_ind          = this%surf_state_ind,                      &

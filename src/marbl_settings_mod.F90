@@ -26,6 +26,8 @@ module marbl_settings_mod
   use marbl_constants_mod, only : dps
   use marbl_constants_mod, only : molw_Fe
 
+  use marbl_interface_private_types, only : unit_system_type
+
   use marbl_pft_mod, only : autotroph_settings_type
   use marbl_pft_mod, only : zooplankton_settings_type
   use marbl_pft_mod, only : grazing_relationship_settings_type
@@ -92,6 +94,7 @@ module marbl_settings_mod
   !  BGC parameters that are currently hard-coded
   !---------------------------------------------------------------------
 
+  ! TODO: fortran parameters that include cm and / or g in units need to be un-parameterized so they can change with unit system
   ! Redfield Ratios, dissolved & particulate
   real(r8), parameter :: &
        Q_10      =   1.7_r8,                                 & ! factor for temperature dependence (non-dim)
@@ -194,12 +197,6 @@ module marbl_settings_mod
   real (r8), parameter :: phlo_3d_init = 6.0_r8   ! low bound for subsurface ph for no prev soln
   real (r8), parameter :: phhi_3d_init = 9.0_r8   ! high bound for subsurface ph for no prev soln
   real (r8), parameter :: del_ph = 0.20_r8        ! delta-ph for prev soln
-
-  ! Unit system and parameters that are not user-settable but differ based on unit system
-  character(len=3) :: unit_system        = 'cgs'    ! Currently support cgs and mks
-  real(r8)         :: cm2len             = 1._r8    ! Unit conversion from cm to model length units
-  real(r8)         :: g2mass             = 1._r8    ! Unit conversion from g to model mass units
-
 
   !---------------------------------------------------------------------------------------------
   !  Variables defined in marbl_settings_define_general_parms, marbl_settings_define_PFT_counts,
@@ -375,41 +372,9 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_settings_set_unit_system(unit_system_new, marbl_status_log)
-    ! By default, unit_system is cgs; if unit_system is passed to MARBL_instances%init()
-    ! then we update it here
+  subroutine marbl_settings_set_defaults_general_parms(unit_system)
 
-    character(len=*),     intent(in)    :: unit_system_new
-    type(marbl_log_type), intent(inout) :: marbl_status_log
-
-    character(len=*), parameter :: subname = 'marbl_settings_mod:set_unit_system'
-    character(len=char_len)     :: log_message
-
-    ! If requested unit system is same as current unit system, just return
-    if (trim(unit_system_new) == trim(unit_system)) return
-
-    if (trim(unit_system_new) == 'cgs') then
-      ! Use cm, g, and s for length, mass, and time
-      cm2len   = 1._r8
-      g2mass   = 1._r8
-    elseif (trim(unit_system_new) == 'mks') then
-      ! Use m, kg, and s for length, mass, and time
-      cm2len   = 0.01_r8
-      g2mass   = 0.001_r8
-    else
-      write(log_message, '(3A)') 'Can not update unit system to "', trim(unit_system_new), '"'
-      call marbl_status_log%log_error(log_message, subname)
-      return
-    endif
-
-    ! Update unit_system module variable
-    unit_system = unit_system_new
-
-  end subroutine marbl_settings_set_unit_system
-
-  !*****************************************************************************
-
-  subroutine marbl_settings_set_defaults_general_parms()
+    type(unit_system_type), intent(in) :: unit_system
 
     PFT_defaults                  = 'CESM2'         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_on                       = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -476,11 +441,11 @@ contains
     f_graze_CaCO3_remin           = 0.33_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
 
     ! Variables that change depending on unit system
-    parm_POC_diss          = parm_POC_diss * cm2len
-    parm_SiO2_diss         = parm_SiO2_diss * cm2len
-    parm_CaCO3_diss        = parm_CaCO3_diss * cm2len
-    parm_scalelen_z(:)     = parm_scalelen_z(:) * cm2len
-    caco3_bury_thres_depth = caco3_bury_thres_depth * cm2len
+    parm_POC_diss          = parm_POC_diss * unit_system%cm2len
+    parm_SiO2_diss         = parm_SiO2_diss * unit_system%cm2len
+    parm_CaCO3_diss        = parm_CaCO3_diss * unit_system%cm2len
+    parm_scalelen_z(:)     = parm_scalelen_z(:) * unit_system%cm2len
+    caco3_bury_thres_depth = caco3_bury_thres_depth * unit_system%cm2len
 
   end subroutine marbl_settings_set_defaults_general_parms
 

@@ -60,6 +60,8 @@ module marbl_constants_mod
       epsC      =   1.0e-8_r8,         & ! small C concentration (mmol C/m^3)
       epsTinv   =   3.17e-8_r8,        & ! small inverse time scale (1/year) (1/sec)
       molw_Fe   =  55.845_r8,          & ! molecular weight of iron (gFe / mol Fe)
+      molw_P    =  30.974_r8,          & ! molecular weight of phosphorus (gP / mol P)
+      molw_Si   =  28.085_r8,          & ! molecular weight of silicon (gSi / mol Si)
       R13C_std  =   1.0_r8,            & ! actual 13C/12C PDB standard ratio (Craig, 1957) = 1123.72e-5_r8
       R14C_std =    1.0_r8               ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
 
