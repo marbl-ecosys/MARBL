@@ -8,12 +8,12 @@ module marbl_init_mod
   use marbl_interface_public_types, only : marbl_forcing_fields_type
 
   use marbl_interface_private_types, only : marbl_tracer_index_type
-  use marbl_interface_private_types, only : unit_system_type
 
   use marbl_logging, only : marbl_log_type
 
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : zooplankton_cnt
+  use marbl_settings_mod, only : unit_system_type
 
   implicit none
   private

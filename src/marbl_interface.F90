@@ -19,6 +19,7 @@ module marbl_interface
 
   use marbl_kinds_mod, only : r8, log_kind, int_kind, log_kind, char_len
 
+  use marbl_settings_mod, only : unit_system_type
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : marbl_settings_type
 
@@ -33,7 +34,6 @@ module marbl_interface
   use marbl_interface_public_types, only : marbl_timers_type
   use marbl_interface_public_types, only : marbl_running_mean_0d_type
 
-  use marbl_interface_private_types, only : unit_system_type
   use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
   use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
   use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
@@ -77,7 +77,6 @@ module marbl_interface
      type(marbl_tracer_index_type)     , pointer    , public  :: tracer_indices => NULL()
      type(marbl_log_type)                           , public  :: StatusLog
 
-     type(unit_system_type)                                 , public  :: unit_system
      type(marbl_saved_state_type)                           , public  :: surface_flux_saved_state             ! input/output
      type(marbl_saved_state_type)                           , public  :: interior_tendency_saved_state        ! input/output
      type(marbl_surface_flux_saved_state_indexing_type)     , public  :: surf_state_ind
@@ -117,6 +116,7 @@ module marbl_interface
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
+     type(unit_system_type),                   private  :: unit_system
      type(marbl_PAR_type),                     private :: PAR
      type(autotroph_derived_terms_type),       private :: autotroph_derived_terms
      type(autotroph_local_type),               private :: autotroph_local

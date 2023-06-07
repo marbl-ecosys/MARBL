@@ -24,12 +24,12 @@ module marbl_surface_flux_mod
   use marbl_settings_mod, only : del_ph
   use marbl_settings_mod, only : phhi_surf_init
   use marbl_settings_mod, only : phlo_surf_init
+  use marbl_settings_mod, only : unit_system_type
 
   use marbl_interface_private_types, only : marbl_surface_flux_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
   use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
-  use marbl_interface_private_types, only : unit_system_type
 
   use marbl_interface_public_types, only : marbl_saved_state_type
   use marbl_interface_public_types, only : marbl_output_for_GCM_type
