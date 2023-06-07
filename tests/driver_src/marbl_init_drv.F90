@@ -55,7 +55,8 @@ Contains
                              gcm_num_elements_surface_flux = 1,         &
                              gcm_delta_z = delta_z,                     &
                              gcm_zw = zw,                               &
-                             gcm_zt = zt)
+                             gcm_zt = zt,                               &
+                             unit_system = 'mks')
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%init', subname)
       return

@@ -197,6 +197,7 @@ contains
        gcm_delta_z,                       &
        gcm_zw,                            &
        gcm_zt,                            &
+       unit_system,                       &
        lgcm_has_global_ops)
 
     use marbl_init_mod, only : marbl_init_log_and_timers
@@ -205,6 +206,7 @@ contains
     use marbl_init_mod, only : marbl_init_parameters_post_tracers
     use marbl_init_mod, only : marbl_init_bury_coeff
     use marbl_init_mod, only : marbl_init_forcing_fields
+    use marbl_settings_mod, only : marbl_settings_set_unit_system
     use marbl_settings_mod, only : marbl_settings_set_all_derived
     use marbl_settings_mod, only : marbl_settings_consistency_check
     use marbl_settings_mod, only : autotroph_cnt
@@ -219,6 +221,7 @@ contains
     real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
+    character(len=*),  optional,  intent(in)    :: unit_system
     logical,           optional,  intent(in)    :: lgcm_has_global_ops
 
     character(len=*), parameter :: subname = 'marbl_interface:init'
@@ -254,6 +257,12 @@ contains
     !---------------------------------------------------------------------------
     ! Initialize parameters that do not depend on tracer count or PFT categories
     !---------------------------------------------------------------------------
+
+    if (present(unit_system)) call marbl_settings_set_unit_system(unit_system, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("marbl_settings_set_unit_system", subname)
+      return
+    end if
 
     call marbl_init_parameters_pre_tracers(this%settings, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
