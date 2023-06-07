@@ -13,7 +13,7 @@ class MARBL_settings_class(object):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, default_settings_file, saved_state_vars_source="settings_file", grid=None, input_file=None):
+    def __init__(self, default_settings_file, saved_state_vars_source="settings_file", grid=None, input_file=None, unit_system='cgs'):
         """ Class constructor: set up a dictionary of config keywords for when multiple
             default values are provided, read the JSON file, and then populate
             self.settings_dict and self.tracers_dict.
@@ -47,7 +47,7 @@ class MARBL_settings_class(object):
         self.tracers_dict = None
         for cat_name in self.get_category_names():
             for var_name in self.get_variable_names(cat_name):
-                self._process_variable_value(cat_name, var_name)
+                self._process_variable_value(cat_name, var_name, unit_system)
             # 5b. Need tracer count after determining PFT_derived_types, which means
             #     determining which tracers are active
             if cat_name == "PFT_derived_types":
@@ -60,6 +60,11 @@ class MARBL_settings_class(object):
             for varname in self._input_dict.keys():
                 message = message + "\n     * Variable %s not found in JSON file" % varname
                 message = message + "\n       (this was a case-insensitive lookup)"
+            logger.error(message)
+            MARBL_tools.abort(1)
+
+        if unit_system not in ['cgs', 'mks']:
+            message = "'%s' is not a valid unit system" % unit_system
             logger.error(message)
             MARBL_tools.abort(1)
 
@@ -211,7 +216,7 @@ class MARBL_settings_class(object):
 
     ################################################################################
 
-    def _process_variable_value(self, category_name, variable_name):
+    def _process_variable_value(self, category_name, variable_name, unit_system):
         """ For a given variable in a given category, call _update_settings_dict()
             * If variable is a derived type, _update_settings_dict() needs to be called element by element
 
@@ -221,7 +226,7 @@ class MARBL_settings_class(object):
 
         if not isinstance(this_var["datatype"], dict):
             this_var['_list_of_settings_names'] = []
-            self._update_settings_dict(this_var, variable_name)
+            self._update_settings_dict(this_var, variable_name, unit_system)
             return
 
         # Process derived type!
@@ -259,7 +264,7 @@ class MARBL_settings_class(object):
                             this_component['_list_of_settings_names']
                         except:
                             this_component['_list_of_settings_names'] = []
-                        self._update_settings_dict(this_component, base_name+key, base_name)
+                        self._update_settings_dict(this_component, base_name+key, unit_system, base_name)
 
                 if append_to_keys:
                     # Remove PFT-specific key
@@ -267,7 +272,7 @@ class MARBL_settings_class(object):
 
     ################################################################################
 
-    def _update_settings_dict(self, this_var, var_name, base_name=''):
+    def _update_settings_dict(self, this_var, var_name, unit_system, base_name=''):
         """ For a given variable in a given category, add to the self.settings_dict dictionary
             * For derived types, user passes in component as well as base_name ("variable_name%")
             * For arrays, multiple entries will be added to self.settings_dict
@@ -290,34 +295,41 @@ class MARBL_settings_class(object):
             # For each element, get value from either input file or JSON
             for n, elem_index in enumerate(_get_array_info(array_len, self.settings_dict, self.tracers_dict, base_name)):
                 full_name = var_name + elem_index
-                var_value = _get_var_value(full_name, this_var, self._config_keyword, self._input_dict)
+                this_var['_list_of_settings_names'].append(full_name)
                 self.settings_dict[full_name] = dict()
                 self.settings_dict[full_name]['attrs'] = dict()
+                for key in settings_dict_attrs:
+                    if key == "units":
+                        self.settings_dict[full_name]['attrs'][key] = _get_correct_units(this_var[key], unit_system)
+                    else:
+                        self.settings_dict[full_name]['attrs'][key] = this_var[key]
+                var_value = _get_var_value(full_name, this_var, self._config_keyword, self._input_dict, this_var["units"], unit_system)
+                self.settings_dict[full_name]['attrs'][key] = _get_correct_units(this_var[key], unit_system)
                 if isinstance(var_value, list):
                     if this_var["datatype"] == "string" and n>=len(var_value):
                         self.settings_dict[full_name]['value'] = '""'
                     else:
-                        self.settings_dict[full_name]['value'] = _translate_JSON_value(var_value[n], this_var["datatype"])
+                        self.settings_dict[full_name]['value'] = _translate_JSON_value(var_value[n], this_var["datatype"], this_var["units"], unit_system)
                 else:
                     self.settings_dict[full_name]['value'] = var_value
-                this_var['_list_of_settings_names'].append(full_name)
-                for key in settings_dict_attrs:
-                    self.settings_dict[full_name]['attrs'][key] = this_var[key]
 
         else:
+            this_var['_list_of_settings_names'].append(var_name)
             # get value from either input file or JSON
             self.settings_dict[var_name] = dict()
             self.settings_dict[var_name]['attrs'] = dict()
-            self.settings_dict[var_name]['value'] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict)
             for key in settings_dict_attrs:
-                self.settings_dict[var_name]['attrs'][key] = this_var[key]
-            this_var['_list_of_settings_names'].append(var_name)
+                if key == "units":
+                    self.settings_dict[var_name]['attrs'][key] = _get_correct_units(this_var[key], unit_system)
+                else:
+                    self.settings_dict[var_name]['attrs'][key] = this_var[key]
+            self.settings_dict[var_name]['value'] = _get_var_value(var_name, this_var, self._config_keyword, self._input_dict, this_var["units"], unit_system)
 
 ################################################################################
 #                            PRIVATE MODULE METHODS                            #
 ################################################################################
 
-def _get_var_value(varname, var_dict, provided_keys, input_dict):
+def _get_var_value(varname, var_dict, provided_keys, input_dict, units, unit_system):
     """ Return the correct default value for a variable in the MARBL JSON parameter
         file INPUTS:
             * dictionary containing variable information (req: longname, datatype
@@ -366,7 +378,7 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
             def_value = var_dict["default_value"]
 
     # call translate value from JSON file to format F90 expects
-    value = _translate_JSON_value(def_value, var_dict["datatype"])
+    value = _translate_JSON_value(def_value, var_dict["datatype"], units, unit_system)
 
     # Append to config keywords if JSON wants it
     if "_append_to_config_keywords" in var_dict.keys():
@@ -383,7 +395,7 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict):
 
 ################################################################################
 
-def _translate_JSON_value(value, datatype):
+def _translate_JSON_value(value, datatype, units, unit_system):
     """ The value provided in the JSON file needs to be adjusted depending on the datatype
         of the variable. Strings need to be wrapped in "", and numbers written in
         scientific notation need to be formatted consistently.
@@ -401,13 +413,30 @@ def _translate_JSON_value(value, datatype):
             return _get_F90_logical(value)
         # if variable is a real but value is unicode evaluate it
         if datatype == "real" and isinstance(value, type(u'')):
-            return "%24.16e" % eval(value)
+            return "%24.16e" % (eval(value)*_get_scale_factor(units, unit_system))
         # if variable is an integer but value is unicode convert it
         if datatype == "integer" and isinstance(value, type(u'')):
             return int(value)
 
     # Otherwise return value unchanged
     return value
+
+################################################################################
+
+def _get_scale_factor(units, unit_system):
+    scale_factor = 1
+    if unit_system == "mks":
+        if units == "cm":
+            scale_factor = 0.01
+    return scale_factor
+
+################################################################################
+
+def _get_correct_units(units, unit_system):
+    if unit_system == "mks":
+        if units == "cm":
+            return "m"
+    return units
 
 ################################################################################
 
