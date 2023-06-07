@@ -84,12 +84,13 @@ Program marbl
 
   ! Namelist vars
   character(len=char_len) :: testname, hist_file, log_out_file
+  character(len=3)        :: unit_system
   integer                 :: num_inst, num_PAR_subcols
 
   ! Processing input file for put calls
   integer  :: ioerr
 
-  namelist /marbl_driver_nml/testname, hist_file, log_out_file, num_inst, num_PAR_subcols
+  namelist /marbl_driver_nml/testname, hist_file, log_out_file, unit_system, num_inst, num_PAR_subcols
 
   !****************************************************************************
 
@@ -237,6 +238,7 @@ Program marbl
   testname       = ''
   log_out_file   = 'marbl.out' ! only written if ldriver_log_to_file = .true.
   hist_file      = 'history.nc'
+  unit_system    = 'cgs'
 
   ! (2a) Read driver namelist to know what test to run
   if (my_task .eq. 0) open(98, file=trim(namelist_file), status="old", iostat=ioerr)
@@ -278,17 +280,17 @@ Program marbl
     ! -- init regression test -- !
     case ('init')
       call verify_single_instance(num_inst, trim(testname))
-      call marbl_init_test(marbl_instances(1))
+      call marbl_init_test(marbl_instances(1), unit_system)
 
     ! -- init-twice test -- !
     case ('init-twice')
       call verify_single_instance(num_inst, trim(testname))
       call marbl_instances(1)%put_setting('ciso_on = .false.')
-      call marbl_init_test(marbl_instances(1))
+      call marbl_init_test(marbl_instances(1), unit_system)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         call marbl_tools_summarize_timers(marbl_instances, driver_status_log, header_text = 'Without the CISO Tracers')
         call marbl_instances(1)%put_setting('ciso_on = .true.')
-        call marbl_init_test(marbl_instances(1))
+        call marbl_init_test(marbl_instances(1), unit_system)
         if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
           call marbl_tools_summarize_timers(marbl_instances, driver_status_log, header_text = 'With the CISO Tracers')
           lsummarize_timers = .false.
@@ -300,7 +302,7 @@ Program marbl
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       ldriver_log_to_file = .true.
-      call marbl_init_test(marbl_instances(1), lshutdown=.false.)
+      call marbl_init_test(marbl_instances(1), unit_system, lshutdown=.false.)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         do n=1,marbl_instances(1)%get_settings_var_cnt()
           call marbl_instances(1)%inquire_settings_metadata(n, sname=varname)
@@ -316,7 +318,7 @@ Program marbl
     case ('request_diags')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instances(1), lshutdown = .false.)
+      call marbl_init_test(marbl_instances(1), unit_system, lshutdown = .false.)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         ! Log surface flux diagnostics passed back to driver
         associate(diags => marbl_instances(1)%surface_flux_diags%diags)
@@ -343,7 +345,7 @@ Program marbl
     case ('request_tracers')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instances(1), lshutdown = .false.)
+      call marbl_init_test(marbl_instances(1), unit_system, lshutdown = .false.)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         ! Log tracers requested for initialization
         call driver_status_log%log_header('Requested tracers', subname)
@@ -359,7 +361,7 @@ Program marbl
     case ('request_forcings')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instances(1), lshutdown=.false., num_PAR_subcols=num_PAR_subcols)
+      call marbl_init_test(marbl_instances(1), unit_system, lshutdown=.false., num_PAR_subcols=num_PAR_subcols)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         ! Log requested surface forcing fields
         call driver_status_log%log_header('Requested surface forcing fields', subname)
@@ -384,7 +386,7 @@ Program marbl
     case ('request_restoring')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instances(1), lshutdown = .false.)
+      call marbl_init_test(marbl_instances(1), unit_system, lshutdown = .false.)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         ! Log tracers requested for restoring
         call driver_status_log%log_header('Requested tracers to restore', subname)
@@ -406,7 +408,7 @@ Program marbl
 
     case ('call_compute_subroutines')
       lprint_marbl_log = .false.
-      call marbl_call_compute_subroutines_test(marbl_instances, hist_file, driver_status_log)
+      call marbl_call_compute_subroutines_test(marbl_instances, hist_file, unit_system, driver_status_log)
       if (driver_status_log%labort_MARBL) &
         call marbl_io_print_marbl_log(driver_status_log)
 

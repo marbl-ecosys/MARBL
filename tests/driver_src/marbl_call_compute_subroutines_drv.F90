@@ -16,7 +16,7 @@ Contains
 
   !****************************************************************************
 
-  subroutine test(marbl_instances, hist_file, driver_status_log)
+  subroutine test(marbl_instances, hist_file, unit_system, driver_status_log)
 
     use marbl_settings_mod, only : output_for_GCM_iopt_total_Chl_3d
 
@@ -32,6 +32,7 @@ Contains
 
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
     character(len=*),                          intent(in)    :: hist_file
+    character(len=3),                          intent(in)    :: unit_system
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:test'
@@ -82,7 +83,8 @@ Contains
                                    gcm_num_elements_surface_flux = col_cnt(n), &
                                    gcm_delta_z = grid_data%delta_z,            &
                                    gcm_zw = grid_data%zw,                      &
-                                   gcm_zt = grid_data%zt)
+                                   gcm_zt = grid_data%zt,                      &
+                                   unit_system = unit_system)
     end do
 
     ! --------------------------------------------------------------------------
