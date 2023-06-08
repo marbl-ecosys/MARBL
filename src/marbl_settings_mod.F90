@@ -50,7 +50,8 @@ module marbl_settings_mod
     character(len=3) :: unit_system  ! Name of unit system ('cgs' or 'mks')
     real(r8)         :: mass2g       ! g / M (converts from model mass M -> grams)
     real(r8)         :: g2mass       ! M / g (converts from grams -> model mass M)
-    real(r8)         :: cm2len       ! cm / L (converts from model length L -> cm)
+    real(r8)         :: cm2len       ! L / cm (converts from cm -> model length L)
+    real(r8)         :: len2m        ! m / L (converts from model length L -> m)
     real(r8)         :: mol_prefix   ! convert mol -> nmol, mmol, etc (get correct metric prefix)
   contains
     procedure :: set => set_unit_system
@@ -2127,12 +2128,14 @@ contains
       this%g2mass     = 1._r8   ! g -> g
       this%mass2g     = 1._r8   ! g -> g
       this%cm2len     = 1._r8   ! cm -> cm
+      this%len2m      = 0.01_r8  ! cm -> m
       this%mol_prefix = 1.e9_r8 ! mol -> nmol
     elseif (trim(unit_system_loc) == 'mks') then
       ! Use m, kg, and s for length, mass, and time
       this%g2mass     = 0.001_r8 ! g -> kg
       this%mass2g     = 1.e3_r8  ! kg -> g
       this%cm2len     = 0.01_r8  ! cm -> m
+      this%len2m      = 1._r8    ! m -> m
       this%mol_prefix = 1.e3_r8  ! mol -> mmol
     else
       write(log_message, '(3A)') 'Can not update unit system to "', trim(unit_system_loc), '"'

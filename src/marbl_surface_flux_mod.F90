@@ -429,6 +429,7 @@ contains
          marbl_tracer_indices     = marbl_tracer_indices,     &
          saved_state              = saved_state,              &
          saved_state_ind          = saved_state_ind,          &
+         unit_system              = unit_system,              &
          surface_flux_diags       = surface_flux_diags)
 
     !-----------------------------------------------------------------------

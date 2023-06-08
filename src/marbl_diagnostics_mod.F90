@@ -7,6 +7,7 @@ module marbl_diagnostics_mod
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : char_len
 
+  use marbl_settings_mod, only : unit_system_type
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : autotroph_settings
@@ -86,7 +87,6 @@ contains
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : particulate_flux_ref_depth
     use marbl_settings_mod, only : lecovars_full_depth_tavg
-    use marbl_settings_mod, only : unit_system_type
     use marbl_ciso_diagnostics_mod, only : marbl_ciso_diagnostics_init
 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
@@ -406,7 +406,7 @@ contains
 
       lname    = 'Atmospheric Iron Flux'
       sname    = 'IRON_FLUX'
-      units    = conc_flux_units
+      units    = 'mmol/m^2/s' ! output in mks regardless of unit system!
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -3276,6 +3276,7 @@ contains
        marbl_tracer_indices,                        &
        saved_state,                                 &
        saved_state_ind,                             &
+       unit_system,                                 &
        surface_flux_diags)
 
     ! !DESCRIPTION:
@@ -3285,7 +3286,6 @@ contains
     use marbl_interface_private_types , only : marbl_surface_flux_saved_state_indexing_type
     use marbl_settings_mod   , only : lflux_gas_o2
     use marbl_settings_mod   , only : lflux_gas_co2
-    use marbl_constants_mod  , only : mpercm
 
     type(marbl_surface_flux_forcing_indexing_type), intent(in) :: surface_flux_forcing_ind
     type(marbl_forcing_fields_type)           , intent(in)    :: surface_flux_forcings(:)
@@ -3293,6 +3293,7 @@ contains
     type(marbl_saved_state_type)              , intent(in)    :: saved_state
     type(marbl_surface_flux_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_flux_internal_type)    , intent(in)    :: surface_flux_internal
+    type(unit_system_type)                    , intent(in)    :: unit_system
     type(marbl_diagnostics_type)              , intent(inout) :: surface_flux_diags
 
     associate(                                                                                  &
@@ -3408,9 +3409,9 @@ contains
     !-----------------------------------------------------------------------
 
     diags(ind_diag%DUST_FLUX)%field_2d(:) = DUST_FLUX_IN(:)
-    ! multiply IRON flux by mpercm (.01) to convert from model units (cm/s)(mmol/m^3) to mmol/s/m^2
+    ! multiply IRON flux by len2m to either convert nmol/cm^2/s to mmol/m^2/s or maintain mks units
     if (ind_diag%IRON_FLUX.ne.0) then
-       diags(ind_diag%IRON_FLUX)%field_2d(:) = iron_flux_in(:) * mpercm
+       diags(ind_diag%IRON_FLUX)%field_2d(:) = iron_flux_in(:) * unit_system%len2m
     endif
 
     end associate
