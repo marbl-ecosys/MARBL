@@ -32,7 +32,7 @@ Contains
 
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
     character(len=*),                          intent(in)    :: hist_file
-    character(len=3),                          intent(in)    :: unit_system
+    character(len=*),                          intent(in)    :: unit_system
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:test'
@@ -167,7 +167,7 @@ Contains
       end if
 
       !      (ii) Read surface flux forcing fields
-      call marbl_io_read_forcing_field(n, marbl_instances(1)%surface_flux_forcings, &
+      call marbl_io_read_forcing_field(n, unit_system, marbl_instances(1)%surface_flux_forcings, &
                                        surface_flux_forcings, driver_status_log)
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('read_forcing_field(surface)', subname)
@@ -175,7 +175,7 @@ Contains
       end if
 
       !      (iii) Read interior tendency forcing fields
-      call marbl_io_read_forcing_field(n, marbl_instances(1)%interior_tendency_forcings, &
+      call marbl_io_read_forcing_field(n, unit_system, marbl_instances(1)%interior_tendency_forcings, &
                                        interior_tendency_forcings, driver_status_log, active_level_cnt(n))
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('read_forcing_field(interior)', subname)

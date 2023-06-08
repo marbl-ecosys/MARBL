@@ -414,11 +414,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_forcing_field(col_id, forcing_fields, forcing_fields_out, driver_status_log, active_level_cnt)
+  subroutine marbl_io_read_forcing_field(col_id, unit_system, forcing_fields, forcing_fields_out, &
+                                         driver_status_log, active_level_cnt)
 
     use marbl_interface_public_types, only : marbl_forcing_fields_type
 
     integer,                                       intent(in)    :: col_id
+    character(len=*),                              intent(in)    :: unit_system
     type(marbl_forcing_fields_type), dimension(:), intent(in)    :: forcing_fields
     type(forcing_fields_type),       dimension(:), intent(inout) :: forcing_fields_out
     type(marbl_log_type),                          intent(inout) :: driver_status_log
@@ -431,7 +433,7 @@ contains
 
     do n=1, size(forcing_fields)
       ! Convert netcdf varname from forcing field name (also get rank and unit conversion factor)
-      call get_forcing_varname_rank_and_conv_factor(forcing_fields(n)%metadata%varname, varname, &
+      call get_forcing_varname_rank_and_conv_factor(forcing_fields(n)%metadata%varname, unit_system, varname, &
                                                     rank, conv_factor, driver_status_log)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") "get_forcing_varname_rank_and_conv_factor(", &
@@ -1034,9 +1036,10 @@ contains
 
   !*****************************************************************************
 
-  subroutine get_forcing_varname_rank_and_conv_factor(forcing_name, varname, rank, conv_factor, driver_status_log)
+  subroutine get_forcing_varname_rank_and_conv_factor(forcing_name, unit_system, varname, rank, conv_factor, driver_status_log)
 
     character(len=*),        intent(in)    :: forcing_name
+    character(len=*),        intent(in)    :: unit_system
     character(len=char_len), intent(out)   :: varname
     integer,                 intent(out)   :: rank
     real(r8),                intent(out)   :: conv_factor
@@ -1050,8 +1053,9 @@ contains
       case('u10_sqr')
         varname = 'u10_sqr'
         rank = 0
-        ! convert from m^2 / s^2 -> cm^2 / s^2
-        conv_factor = 10000._r8
+        if (trim(unit_system) == 'cgs') &
+          ! convert from m^2 / s^2 -> cm^2 / s^2
+          conv_factor = 10000._r8
       case('sss')
         varname = 'SSS'
         rank = 0
@@ -1064,23 +1068,27 @@ contains
       case('Dust Flux')
         varname = 'dust_flux'
         rank = 0
-        ! convert from kg/m^2/s -> g/cm^2/s
-        conv_factor = 0.1_r8
+        if (trim(unit_system) == 'cgs') &
+          ! convert from kg/m^2/s -> g/cm^2/s
+          conv_factor = 0.1_r8
       case('Iron Flux')
         varname = 'iron_flux'
         rank = 0
-        ! convert from mmol/m^2/s -> nmol/cm^2/s
-        conv_factor = 100._r8
+        if (trim(unit_system) == 'cgs') &
+          ! convert from mmol/m^2/s -> nmol/cm^2/s
+          conv_factor = 100._r8
       case('NOx Flux')
         varname = 'nox_flux'
         rank = 0
-        ! convert from mmol/m^2/s -> nmol/cm^2/s
-        conv_factor = 100._r8
+        if (trim(unit_system) == 'cgs') &
+          ! convert from mmol/m^2/s -> nmol/cm^2/s
+          conv_factor = 100._r8
       case('NHy Flux')
         varname = 'nhy_flux'
         rank = 0
-        ! convert from mmol/m^2/s -> nmol/cm^2/s
-        conv_factor = 100._r8
+        if (trim(unit_system) == 'cgs') &
+          ! convert from mmol/m^2/s -> nmol/cm^2/s
+          conv_factor = 100._r8
       case('Atmospheric Pressure')
         varname = 'atm_pressure'
         rank = 0
