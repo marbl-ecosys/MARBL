@@ -945,8 +945,7 @@ contains
     write(varname, "(2A)") "STF_", trim(metadata%short_name)
     if (present(long_name)) &
       write(long_name, "(2A)") "Surface flux of ", trim(metadata%long_name)
-    if (present(units)) &
-      write(units, "(2A)") trim(metadata%units), ' cm/s'
+    if (present(units)) units = trim(metadata%flux_units)
 
   end subroutine get_surface_flux_desc_from_metadata
 
@@ -962,8 +961,7 @@ contains
     write(varname, "(2A)") "J_", trim(metadata%short_name)
     if (present(long_name)) &
       write(long_name, "(2A)") trim(metadata%long_name), " Tendency"
-    if (present(units)) &
-      write(units, "(2A)") trim(metadata%units), '/s'
+    if (present(units)) units = trim(metadata%tend_units)
 
   end subroutine get_interior_tendency_desc_from_metadata
 
