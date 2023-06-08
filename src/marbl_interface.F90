@@ -351,6 +351,7 @@ contains
          marbl_domain                  = this%domain,                         &
          marbl_tracer_metadata         = this%tracer_metadata,                &
          marbl_tracer_indices          = this%tracer_indices,                 &
+         unit_system                   = this%unit_system,                    &
          marbl_interior_tendency_diags = this%interior_tendency_diags,        &
          marbl_surface_flux_diags      = this%surface_flux_diags,             &
          marbl_status_log              = this%StatusLog)

@@ -76,6 +76,7 @@ contains
        marbl_domain,                  &
        marbl_tracer_metadata,         &
        marbl_tracer_indices,          &
+       unit_system,                   &
        marbl_interior_tendency_diags, &
        marbl_surface_flux_diags,      &
        marbl_status_log)
@@ -85,11 +86,13 @@ contains
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : particulate_flux_ref_depth
     use marbl_settings_mod, only : lecovars_full_depth_tavg
+    use marbl_settings_mod, only : unit_system_type
     use marbl_ciso_diagnostics_mod, only : marbl_ciso_diagnostics_init
 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
     type(marbl_tracer_metadata_type)  , intent(in)    :: marbl_tracer_metadata(:) ! descriptors for each tracer
     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
+    type(unit_system_type)            , intent(in)    :: unit_system
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_interior_tendency_diags
     type(marbl_diagnostics_type)      , intent(inout) :: marbl_surface_flux_diags
     type(marbl_log_type)              , intent(inout) :: marbl_status_log
@@ -100,10 +103,30 @@ contains
     integer :: n, m
     logical :: truncate
     character(len=char_len) :: lname, sname, units, vgrid
+    character(len=char_len) :: conc_units, conc_tend_units, conc_flux_units, len_units, mass_units, vel_units
     character(len=char_len) :: particulate_flux_ref_depth_str
 
     character(len=*), parameter :: subname = 'marbl_diagnostics_mod:marbl_diagnostics_init'
     !-----------------------------------------------------------------------
+
+    !-----------------------------------------------------------------
+    ! Units for some diagnostics depend on unit system
+    !-----------------------------------------------------------------
+
+    select case (trim(unit_system%unit_system))
+      case ('cgs')
+          conc_units = 'nmol/cm^3'
+          conc_flux_units = 'nmol/cm^2/s'
+          len_units = 'cm'
+          mass_units = 'g'
+      case ('mks')
+          conc_units = 'mmol/m^3'
+          conc_flux_units = 'mmol/m^2/s'
+          len_units = 'm'
+          mass_units = 'kg'
+    end select
+    write(conc_tend_units, "(2A)") trim(conc_units), '/s'
+    write(vel_units, "(2A)") trim(len_units), '/s'
 
     !-----------------------------------------------------------------
     ! Surface forcing diagnostics
@@ -131,7 +154,7 @@ contains
 
       lname    = 'XKW for ecosys fluxes'
       sname    = 'ECOSYS_XKW'
-      units    = 'cm/s'
+      units    = vel_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -155,7 +178,7 @@ contains
 
       lname    = 'PV_O2'
       sname    = 'PV_O2'
-      units    = 'cm/s'
+      units    = vel_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -179,7 +202,7 @@ contains
 
       lname    = 'O2 Saturation'
       sname    = 'O2SAT'
-      units    = 'mmol/m^3'      ! = nmol/cm^3
+      units    = conc_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -191,7 +214,7 @@ contains
 
       lname    = 'CO2 Star'
       sname    = 'CO2STAR'
-      units    = 'mmol/m^3'
+      units    = conc_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -203,7 +226,7 @@ contains
 
       lname    = 'D CO2 Star'
       sname    = 'DCO2STAR'
-      units    = 'mmol/m^3'
+      units    = conc_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -239,7 +262,7 @@ contains
 
       lname    = 'CO2 Piston Velocity'
       sname    = 'PV_CO2'
-      units    = 'cm/s'
+      units    = vel_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -263,7 +286,7 @@ contains
 
       lname    = 'DIC Surface Gas Flux'
       sname    = 'FG_CO2'
-      units    = 'mmol/m^3 cm/s'
+      units    = conc_flux_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -299,7 +322,7 @@ contains
 
       lname    = 'CO2 Star, Alternative CO2'
       sname    = 'CO2STAR_ALT_CO2'
-      units    = 'mmol/m^3'
+      units    = conc_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -311,7 +334,7 @@ contains
 
       lname    = 'D CO2 Star, Alternative CO2'
       sname    = 'DCO2STAR_ALT_CO2'
-      units    = 'mmol/m^3'
+      units    = conc_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -347,7 +370,7 @@ contains
 
       lname    = 'DIC Surface Gas Flux, Alternative CO2'
       sname    = 'FG_ALT_CO2'
-      units    = 'mmol/m^3 cm/s'
+      units    = conc_flux_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -383,7 +406,7 @@ contains
 
       lname    = 'Atmospheric Iron Flux'
       sname    = 'IRON_FLUX'
-      units    = 'mmol/m^2/s'
+      units    = conc_flux_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -395,7 +418,7 @@ contains
 
       lname    = 'Dust Flux'
       sname    = 'DUST_FLUX'
-      units    = 'g/cm^2/s'
+      write(units, "(4A)") trim(mass_units), '/', trim(len_units), '^2/s'
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -407,7 +430,7 @@ contains
 
       lname    = 'Flux of NOx from Atmosphere'
       sname    = 'NOx_FLUX'
-      units    = 'nmol/cm^2/s'
+      units    = conc_flux_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -419,7 +442,7 @@ contains
 
       lname    = 'Flux of NHy from Atmosphere'
       sname    = 'NHy_FLUX'
-      units    = 'nmol/cm^2/s'
+      units    = conc_flux_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -431,7 +454,7 @@ contains
 
       lname    = 'Emission of NHx to Atmosphere'
       sname    = 'NHx_SURFACE_EMIS'
-      units    = 'nmol/cm^2/s'
+      units    = conc_flux_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -455,7 +478,7 @@ contains
       ! General 2D diags
       lname = 'Calcite Saturation Depth'
       sname = 'zsatcalc'
-      units = 'cm'
+      units = len_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -467,7 +490,7 @@ contains
 
       lname = 'Aragonite Saturation Depth'
       sname = 'zsatarag'
-      units = 'cm'
+      units = len_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -479,7 +502,7 @@ contains
 
       lname = 'Vertical Minimum of O2'
       sname = 'O2_ZMIN'
-      units = 'mmol/m^3'
+      units = conc_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -491,7 +514,7 @@ contains
 
       lname = 'Depth of Vertical Minimum of O2'
       sname = 'O2_ZMIN_DEPTH'
-      units = 'cm'
+      units = len_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -503,7 +526,7 @@ contains
 
       lname = 'Total C Fixation Vertical Integral'
       sname = 'photoC_TOT_zint'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -515,7 +538,7 @@ contains
 
       lname = 'Total C Fixation Vertical Integral, 0-100m'
       sname = 'photoC_TOT_zint_100m'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -527,7 +550,7 @@ contains
 
       lname = 'Total C Fixation from NO3 Vertical Integral'
       sname = 'photoC_NO3_TOT_zint'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -539,7 +562,7 @@ contains
 
       lname = 'Total C Fixation from NO3 Vertical Integral, 0-100m'
       sname = 'photoC_NO3_TOT_zint_100m'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -551,7 +574,7 @@ contains
 
       lname = 'Vertical Integral of DOC Production'
       sname = 'DOC_prod_zint'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -563,7 +586,7 @@ contains
 
       lname = 'Vertical Integral of DOC Production, 0-100m'
       sname = 'DOC_prod_zint_100m'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -575,7 +598,7 @@ contains
 
       lname = 'Vertical Integral of DOC Remineralization'
       sname = 'DOC_remin_zint'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -587,7 +610,7 @@ contains
 
       lname = 'Vertical Integral of DOC Remineralization, 0-100m'
       sname = 'DOC_remin_zint_100m'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -599,7 +622,7 @@ contains
 
       lname = 'Vertical Integral of DOCr Remineralization'
       sname = 'DOCr_remin_zint'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -611,7 +634,7 @@ contains
 
       lname = 'Vertical Integral of DOCr Remineralization, 0-100m'
       sname = 'DOCr_remin_zint_100m'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -623,7 +646,7 @@ contains
 
       lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ctot'
       sname = 'Jint_Ctot'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -635,7 +658,7 @@ contains
 
       lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ntot'
       sname = 'Jint_Ntot'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -647,7 +670,7 @@ contains
 
       lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ptot'
       sname = 'Jint_Ptot'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -659,7 +682,7 @@ contains
 
       lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Sitot'
       sname = 'Jint_Sitot'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -671,7 +694,7 @@ contains
 
       lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Fetot'
       sname = 'Jint_Fetot'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -684,7 +707,7 @@ contains
       ! Particulate 2D diags
       lname = 'CaCO3 Flux Hitting Sea Floor'
       sname = 'calcToFloor'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -696,7 +719,7 @@ contains
 
       lname = 'CaCO3 Flux to Sediments'
       sname = 'calcToSed'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -708,7 +731,7 @@ contains
 
       lname = 'CaCO3 Flux to Sediments, Alternative CO2'
       sname = 'calcToSed_ALT_CO2'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -720,7 +743,7 @@ contains
 
       lname = 'POC Flux Hitting Sea Floor'
       sname = 'pocToFloor'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -732,7 +755,7 @@ contains
 
       lname = 'POC Flux to Sediments'
       sname = 'pocToSed'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -744,7 +767,7 @@ contains
 
       lname = 'nitrogen burial Flux to Sediments'
       sname = 'ponToSed'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -756,7 +779,7 @@ contains
 
       lname = 'nitrogen loss in Sediments'
       sname = 'SedDenitrif'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -768,7 +791,7 @@ contains
 
       lname = 'non-oxic,non-dentr remin in Sediments'
       sname = 'OtherRemin'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -780,7 +803,7 @@ contains
 
       lname = 'phosphorus Flux to Sediments'
       sname = 'popToSed'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -792,7 +815,7 @@ contains
 
       lname = 'biogenic Si Flux to Sediments'
       sname = 'bsiToSed'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -804,7 +827,7 @@ contains
 
       lname = 'dust Flux to Sediments'
       sname = 'dustToSed'
-      units = 'g/cm^2/s'
+      write(units, "(4A)") trim(mass_units), '/', trim(len_units), '^2/s'
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -816,7 +839,7 @@ contains
 
       lname = 'pFe Flux to Sediments'
       sname = 'pfeToSed'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1016,7 +1039,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' C Fixation Vertical Integral'
         sname = 'photoC_' // trim(autotroph_settings(n)%sname) // '_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1028,7 +1051,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' C Fixation Vertical Integral, 0-100m'
         sname = 'photoC_' // trim(autotroph_settings(n)%sname) // '_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1040,7 +1063,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' C Fixation from NO3 Vertical Integral'
         sname = 'photoC_NO3_' // trim(autotroph_settings(n)%sname) // '_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1053,7 +1076,7 @@ contains
         if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
           lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation Vertical Integral'
           sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form_zint'
-          units = 'mmol/m^3 cm/s'
+          units = conc_flux_units
           vgrid = 'none'
           truncate = .false.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
@@ -1069,7 +1092,7 @@ contains
         if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
           lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation Vertical Integral, 0-100m'
           sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form_zint_100m'
-          units = 'mmol/m^3 cm/s'
+          units = conc_flux_units
           vgrid = 'none'
           truncate = .false.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
@@ -1084,7 +1107,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Grazing Vertical Integral'
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1096,7 +1119,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Grazing Vertical Integral, 0-100m'
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1108,7 +1131,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC Vertical Integral'
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1120,7 +1143,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1132,7 +1155,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC Vertical Integral'
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1144,7 +1167,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1159,7 +1182,7 @@ contains
                   trim(zooplankton_settings(m)%lname) // ' Vertical Integral'
           sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_' // &
                   trim(zooplankton_settings(m)%sname) // '_zint'
-          units = 'mmol/m^3 cm/s'
+          units = conc_flux_units
           vgrid = 'none'
           truncate = .false.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1173,7 +1196,7 @@ contains
                   trim(zooplankton_settings(m)%lname) // ' Vertical Integral, 0-100m'
           sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_' // &
                   trim(zooplankton_settings(m)%sname) // '_zint_100m'
-          units = 'mmol/m^3 cm/s'
+          units = conc_flux_units
           vgrid = 'none'
           truncate = .false.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1186,7 +1209,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Loss Vertical Integral'
         sname = trim(autotroph_settings(n)%sname) // '_loss_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1198,7 +1221,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Loss Vertical Integral, 0-100m'
         sname = trim(autotroph_settings(n)%sname) // '_loss_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1210,7 +1233,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Loss to POC Vertical Integral'
         sname = trim(autotroph_settings(n)%sname) // '_loss_poc_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1222,7 +1245,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
         sname = trim(autotroph_settings(n)%sname) // '_loss_poc_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1234,7 +1257,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC Vertical Integral'
         sname = trim(autotroph_settings(n)%sname) // '_loss_doc_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1246,7 +1269,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
         sname = trim(autotroph_settings(n)%sname) // '_loss_doc_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1258,7 +1281,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Aggregation Vertical Integral'
         sname = trim(autotroph_settings(n)%sname) // '_agg_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1270,7 +1293,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Aggregation Vertical Integral, 0-100m'
         sname = trim(autotroph_settings(n)%sname) // '_agg_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1283,7 +1306,7 @@ contains
 
       lname = 'Total CaCO3 Formation Vertical Integral'
       sname = 'CaCO3_form_zint'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1295,7 +1318,7 @@ contains
 
       lname = 'Total CaCO3 Formation Vertical Integral, 0-100m'
       sname = 'CaCO3_form_zint_100m'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1330,7 +1353,7 @@ contains
       do n = 1,zooplankton_cnt
         lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral'
         sname = trim(zooplankton_settings(n)%sname) // '_loss_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1342,7 +1365,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral, 0-100m'
         sname = trim(zooplankton_settings(n)%sname) // '_loss_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1354,7 +1377,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral, 0-150m'
         sname = trim(zooplankton_settings(n)%sname) // '_loss_zint_150m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1366,7 +1389,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Basal Respiration Vertical Integral'
         sname = trim(zooplankton_settings(n)%sname) // '_loss_basal_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1378,7 +1401,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Basal Respiration Vertical Integral, 0-100m'
         sname = trim(zooplankton_settings(n)%sname) // '_loss_basal_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1390,7 +1413,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Loss to POC Vertical Integral'
         sname = trim(zooplankton_settings(n)%sname) // '_loss_poc_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1402,7 +1425,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
         sname = trim(zooplankton_settings(n)%sname) // '_loss_poc_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1414,7 +1437,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Loss to DOC Vertical Integral'
         sname = trim(zooplankton_settings(n)%sname) // '_loss_doc_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1426,7 +1449,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
         sname = trim(zooplankton_settings(n)%sname) // '_loss_doc_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1438,7 +1461,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Grazing Vertical Integral'
         sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1450,7 +1473,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Grazing Vertical Integral, 0-100m'
         sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1462,7 +1485,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Grazing to POC Vertical Integral'
         sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1474,7 +1497,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
         sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1486,7 +1509,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Grazing to DOC Vertical Integral'
         sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1498,7 +1521,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
         sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1513,7 +1536,7 @@ contains
                   trim(zooplankton_settings(m)%lname) // ' Vertical Integral'
           sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_' // &
                   trim(zooplankton_settings(m)%sname) // '_zint'
-          units = 'mmol/m^3 cm/s'
+          units = conc_flux_units
           vgrid = 'none'
           truncate = .false.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1527,7 +1550,7 @@ contains
                   trim(zooplankton_settings(m)%lname) // ' Vertical Integral, 0-100m'
           sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_' // &
                   trim(zooplankton_settings(m)%sname) // '_zint_100m'
-          units = 'mmol/m^3 cm/s'
+          units = conc_flux_units
           vgrid = 'none'
           truncate = .false.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1540,7 +1563,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Grazing Gain Vertical Integral'
         sname = 'x_graze_' // trim(zooplankton_settings(n)%sname) // '_zint'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1552,7 +1575,7 @@ contains
 
         lname = trim(zooplankton_settings(n)%lname) // ' Grazing Gain Vertical Integral, 0-100m'
         sname = 'x_graze_' // trim(zooplankton_settings(n)%sname) // '_zint_100m'
-        units = 'mmol/m^3 cm/s'
+        units = conc_flux_units
         vgrid = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -1578,7 +1601,7 @@ contains
 
       lname = 'Carbonate Ion Concentration'
       sname = 'CO3'
-      units = 'mmol/m^3'
+      units = conc_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1590,7 +1613,7 @@ contains
 
       lname = 'Bicarbonate Ion Concentration'
       sname = 'HCO3'
-      units = 'mmol/m^3'
+      units = conc_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1602,7 +1625,7 @@ contains
 
       lname = 'Carbonic Acid Concentration'
       sname = 'H2CO3'
-      units = 'mmol/m^3'
+      units = conc_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1626,7 +1649,7 @@ contains
 
       lname = 'Carbonate Ion Concentration, Alternative CO2'
       sname = 'CO3_ALT_CO2'
-      units = 'mmol/m^3'
+      units = conc_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1638,7 +1661,7 @@ contains
 
       lname = 'Bicarbonate Ion Concentration, Alternative CO2'
       sname = 'HCO3_ALT_CO2'
-      units = 'mmol/m^3'
+      units = conc_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1650,7 +1673,7 @@ contains
 
       lname = 'Carbonic Acid Concentration, Alternative CO2'
       sname = 'H2CO3_ALT_CO2'
-      units = 'mmol/m^3'
+      units = conc_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1674,7 +1697,7 @@ contains
 
       lname = 'CO3 concentration at calcite saturation'
       sname = 'co3_sat_calc'
-      units = 'mmol/m^3'
+      units = conc_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1686,7 +1709,7 @@ contains
 
       lname = 'CO3 concentration at aragonite saturation'
       sname = 'co3_sat_arag'
-      units = 'mmol/m^3'
+      units = conc_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1698,7 +1721,8 @@ contains
 
       lname = 'Nitrification'
       sname = 'NITRIF'
-      units = 'mmol/m^3/s'
+      write(units, "(2A)") trim(conc_units), '/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1710,7 +1734,7 @@ contains
 
       lname = 'Denitrification'
       sname = 'DENITRIF'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1722,7 +1746,7 @@ contains
 
       lname = 'O2 Production'
       sname = 'O2_PRODUCTION'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1748,7 +1772,7 @@ contains
 
       lname = 'O2 Consumption'
       sname = 'O2_CONSUMPTION'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1760,7 +1784,7 @@ contains
 
       lname = 'Apparent O2 Utilization'
       sname = 'AOU'
-      units = 'mmol/m^3'
+      units = conc_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1784,7 +1808,7 @@ contains
 
       lname = 'Total Autotroph Grazing'
       sname = 'graze_auto_TOT'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1796,7 +1820,7 @@ contains
 
       lname = 'Total C Fixation'
       sname = 'photoC_TOT'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1808,7 +1832,7 @@ contains
 
       lname = 'Total C Fixation from NO3'
       sname = 'photoC_NO3_TOT'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1820,7 +1844,7 @@ contains
 
       lname = 'DOC Production'
       sname = 'DOC_prod'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1832,7 +1856,7 @@ contains
 
       lname = 'DOC Remineralization'
       sname = 'DOC_remin'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1844,7 +1868,7 @@ contains
 
       lname = 'DOCr Remineralization'
       sname = 'DOCr_remin'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1856,7 +1880,7 @@ contains
 
       lname = 'DON Production'
       sname = 'DON_prod'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1868,7 +1892,7 @@ contains
 
       lname = 'DON Remineralization'
       sname = 'DON_remin'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1880,7 +1904,7 @@ contains
 
       lname = 'DONr Remineralization'
       sname = 'DONr_remin'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1892,7 +1916,7 @@ contains
 
       lname = 'DOP Production'
       sname = 'DOP_prod'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1916,7 +1940,7 @@ contains
 
       lname = 'DOPr Remineralization'
       sname = 'DOPr_remin'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1928,7 +1952,7 @@ contains
 
       lname = 'DOP loss, due to P budget balancing'
       sname = 'DOP_loss_P_bal'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1940,7 +1964,7 @@ contains
 
       lname = 'Iron Scavenging'
       sname = 'Fe_scavenge'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1964,7 +1988,7 @@ contains
 
       lname = 'Production of Fe-binding Ligand'
       sname = 'Lig_prod'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1976,7 +2000,7 @@ contains
 
       lname = 'Loss of Fe-binding Ligand'
       sname = 'Lig_loss'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -1988,7 +2012,7 @@ contains
 
       lname = 'Loss of Fe-binding Ligand from Scavenging'
       sname = 'Lig_scavenge'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2000,7 +2024,7 @@ contains
 
       lname = 'Fe not bound to Ligand'
       sname = 'Fefree'
-      units = 'mmol/m^3'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2012,7 +2036,7 @@ contains
 
       lname = 'Loss of Fe-binding Ligand from UV radiation'
       sname = 'Lig_photochem'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2024,7 +2048,7 @@ contains
 
       lname = 'Loss of Fe-binding Ligand from Bacterial Degradation'
       sname = 'Lig_deg'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2036,7 +2060,7 @@ contains
 
       lname = 'Iron Sediment Flux'
       sname = 'FESEDFLUX'
-      units = 'nmol/cm^2/s'
+      units = conc_flux_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2052,7 +2076,7 @@ contains
 
       lname = 'POC Flux at ' // trim(particulate_flux_ref_depth_str)
       sname = 'POC_FLUX_' // trim(particulate_flux_ref_depth_str)
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2064,7 +2088,7 @@ contains
 
       lname = 'POP Flux at ' // trim(particulate_flux_ref_depth_str)
       sname = 'POP_FLUX_' // trim(particulate_flux_ref_depth_str)
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2076,7 +2100,7 @@ contains
 
       lname = 'CaCO3 Flux at ' // trim(particulate_flux_ref_depth_str)
       sname = 'CaCO3_FLUX_' // trim(particulate_flux_ref_depth_str)
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2088,7 +2112,7 @@ contains
 
       lname = 'SiO2 Flux at ' // trim(particulate_flux_ref_depth_str)
       sname = 'SiO2_FLUX_' // trim(particulate_flux_ref_depth_str)
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2100,7 +2124,7 @@ contains
 
       lname = 'P_iron Flux at ' // trim(particulate_flux_ref_depth_str)
       sname = 'P_iron_FLUX_' // trim(particulate_flux_ref_depth_str)
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2112,7 +2136,7 @@ contains
 
       lname = 'Vertical Integral of POC Production'
       sname = 'POC_PROD_zint'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2124,7 +2148,7 @@ contains
 
       lname = 'Vertical Integral of POC Production, 0-100m'
       sname = 'POC_PROD_zint_100m'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2136,7 +2160,7 @@ contains
 
       lname = 'Vertical Integral of POC Remineralization routed to DOCr'
       sname = 'POC_REMIN_DOCr_zint'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2148,7 +2172,7 @@ contains
 
       lname = 'Vertical Integral of POC Remineralization routed to DOCr, 0-100m'
       sname = 'POC_REMIN_DOCr_zint_100m'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2172,7 +2196,7 @@ contains
 
       lname = 'Vertical Integral of POC Remineralization routed to DIC, 0-100m'
       sname = 'POC_REMIN_DIC_zint_100m'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2184,7 +2208,7 @@ contains
 
       lname = 'Vertical Integral of CaCO3 Production'
       sname = 'CaCO3_PROD_zint'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2196,7 +2220,7 @@ contains
 
       lname = 'Vertical Integral of CaCO3 Production, 0-100m'
       sname = 'CaCO3_PROD_zint_100m'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2208,7 +2232,7 @@ contains
 
       lname = 'Vertical Integral of CaCO3 Remineralization'
       sname = 'CaCO3_REMIN_zint'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2220,7 +2244,7 @@ contains
 
       lname = 'Vertical Integral of CaCO3 Remineralization, 0-100m'
       sname = 'CaCO3_REMIN_zint_100m'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2247,7 +2271,7 @@ contains
 
       lname = 'POC Flux into Cell'
       sname = 'POC_FLUX_IN'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2259,7 +2283,7 @@ contains
 
       lname = 'POC sFlux into Cell'
       sname = 'POC_sFLUX_IN'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2271,7 +2295,7 @@ contains
 
       lname = 'POC hFlux into Cell'
       sname = 'POC_hFLUX_IN'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2283,7 +2307,7 @@ contains
 
       lname = 'POC Production'
       sname = 'POC_PROD'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2295,7 +2319,7 @@ contains
 
       lname = 'POC Remineralization routed to DOCr'
       sname = 'POC_REMIN_DOCr'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2307,7 +2331,7 @@ contains
 
       lname = 'POC Remineralization routed to DIC'
       sname = 'POC_REMIN_DIC'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2319,7 +2343,7 @@ contains
 
       lname = 'POP Flux into Cell'
       sname = 'POP_FLUX_IN'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2331,7 +2355,7 @@ contains
 
       lname = 'POP Production'
       sname = 'POP_PROD'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2343,7 +2367,7 @@ contains
 
       lname = 'POP Remineralization routed to DOPr'
       sname = 'POP_REMIN_DOPr'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2355,7 +2379,7 @@ contains
 
       lname = 'POP Remineralization routed to PO4'
       sname = 'POP_REMIN_PO4'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2367,7 +2391,7 @@ contains
 
       lname = 'PON Remineralization routed to DONr'
       sname = 'PON_REMIN_DONr'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2379,7 +2403,7 @@ contains
 
       lname = 'PON Remineralization routed to NH4'
       sname = 'PON_REMIN_NH4'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2391,7 +2415,7 @@ contains
 
       lname = 'CaCO3 Flux into Cell'
       sname = 'CaCO3_FLUX_IN'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2403,7 +2427,7 @@ contains
 
       lname = 'CaCO3 Production'
       sname = 'CaCO3_PROD'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2415,7 +2439,7 @@ contains
 
       lname = 'CaCO3 Remineralization'
       sname = 'CaCO3_REMIN'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2427,7 +2451,7 @@ contains
 
       lname = 'CaCO3 Flux into Cell, Alternative CO2'
       sname = 'CaCO3_ALT_CO2_FLUX_IN'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2439,7 +2463,7 @@ contains
 
       lname = 'CaCO3 Production, Alternative CO2'
       sname = 'CaCO3_ALT_CO2_PROD'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2451,7 +2475,7 @@ contains
 
       lname = 'CaCO3 Remineralization, Alternative CO2'
       sname = 'CaCO3_ALT_CO2_REMIN'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2463,7 +2487,7 @@ contains
 
       lname = 'SiO2 Flux into Cell'
       sname = 'SiO2_FLUX_IN'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2475,7 +2499,7 @@ contains
 
       lname = 'SiO2 Production'
       sname = 'SiO2_PROD'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2487,7 +2511,7 @@ contains
 
       lname = 'SiO2 Remineralization'
       sname = 'SiO2_REMIN'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2499,7 +2523,7 @@ contains
 
       lname = 'Dust Flux into Cell'
       sname = 'dust_FLUX_IN'
-      units = 'g/cm^2/s'
+      write(units, "(4A)") trim(mass_units), '/', trim(len_units), '^2/s'
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2511,7 +2535,7 @@ contains
 
       lname = 'Dust Remineralization'
       sname = 'dust_REMIN'
-      units = 'g/cm^3/s'
+      write(units, "(4A)") trim(mass_units), '/', trim(len_units), '^3/s'
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2523,7 +2547,7 @@ contains
 
       lname = 'P_iron Flux into Cell'
       sname = 'P_iron_FLUX_IN'
-      units = 'mmol/m^3 cm/s'
+      units = conc_flux_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2535,7 +2559,7 @@ contains
 
       lname = 'P_iron Production'
       sname = 'P_iron_PROD'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2547,7 +2571,7 @@ contains
 
       lname = 'P_iron Remineralization'
       sname = 'P_iron_REMIN'
-      units = 'mmol/m^3/s'
+      units = conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2599,7 +2623,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' C Fixation'
         sname = 'photoC_' // trim(autotroph_settings(n)%sname)
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2611,7 +2635,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' C Fixation from NO3'
         sname = 'photoC_NO3_' // trim(autotroph_settings(n)%sname)
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2623,7 +2647,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Fe Uptake'
         sname = 'photoFe_' // trim(autotroph_settings(n)%sname)
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2635,7 +2659,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' NO3 Uptake'
         sname = 'photoNO3_' // trim(autotroph_settings(n)%sname)
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2647,7 +2671,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' NH4 Uptake'
         sname = 'photoNH4_' // trim(autotroph_settings(n)%sname)
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2659,7 +2683,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' DOP Uptake'
         sname = 'DOP_' // trim(autotroph_settings(n)%sname) // '_uptake'
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2671,7 +2695,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' PO4 Uptake'
         sname = 'PO4_' // trim(autotroph_settings(n)%sname) // '_uptake'
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2683,7 +2707,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Grazing'
         sname = 'graze_' // trim(autotroph_settings(n)%sname)
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2695,7 +2719,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC'
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc'
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2707,7 +2731,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC'
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc'
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2719,7 +2743,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Grazing to ZOO TOT'
         sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zootot'
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2732,7 +2756,7 @@ contains
         do m=1, zooplankton_cnt
             lname = trim(autotroph_settings(n)%lname) // ' Grazing to ' // trim(zooplankton_settings(m)%lname)
             sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_' // trim(zooplankton_settings(m)%sname)
-            units = 'mmol/m^3/s'
+            units = conc_tend_units
             vgrid = 'layer_avg'
             truncate = .not. lecovars_full_depth_tavg
             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2745,7 +2769,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Loss'
         sname = trim(autotroph_settings(n)%sname) // '_loss'
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2757,7 +2781,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Loss to POC'
         sname = trim(autotroph_settings(n)%sname) // '_loss_poc'
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2769,7 +2793,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC'
         sname = trim(autotroph_settings(n)%sname) // '_loss_doc'
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2781,7 +2805,7 @@ contains
 
         lname = trim(autotroph_settings(n)%lname) // ' Aggregation'
         sname = trim(autotroph_settings(n)%sname) // '_agg'
-        units = 'mmol/m^3/s'
+        units = conc_tend_units
         vgrid = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2794,7 +2818,7 @@ contains
         if (autotroph_settings(n)%silicifier) then
           lname = trim(autotroph_settings(n)%lname) // ' Si Uptake'
           sname = trim(autotroph_settings(n)%sname) // '_bSi_form'
-          units = 'mmol/m^3/s'
+          units = conc_tend_units
           vgrid = 'layer_avg'
           truncate = .not. lecovars_full_depth_tavg
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
@@ -2810,7 +2834,7 @@ contains
         if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
           lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation'
           sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form'
-          units = 'mmol/m^3/s'
+          units = conc_tend_units
           vgrid = 'layer_avg'
           truncate = .not. lecovars_full_depth_tavg
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
@@ -2826,7 +2850,7 @@ contains
         if (autotroph_settings(n)%Nfixer) then
           lname = trim(autotroph_settings(n)%lname) // ' N Fixation'
           sname = trim(autotroph_settings(n)%sname) // '_Nfix'
-          units = 'mmol/m^3/s'
+          units = conc_tend_units
           vgrid = 'layer_avg'
           truncate = .not. lecovars_full_depth_tavg
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
@@ -2843,7 +2867,7 @@ contains
 
       lname    = 'Total Si Uptake'
       sname    = 'bSi_form'
-      units    = 'mmol/m^3/s'
+      units    = conc_tend_units
       vgrid    = 'layer_avg'
       truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2855,7 +2879,7 @@ contains
 
       lname    = 'Total CaCO3 Formation'
       sname    = 'CaCO3_form'
-      units    = 'mmol/m^3/s'
+      units    = conc_tend_units
       vgrid    = 'layer_avg'
       truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2867,7 +2891,7 @@ contains
 
       lname    = 'Total N Fixation'
       sname    = 'Nfix'
-      units    = 'mmol/m^3/s'
+      units    = conc_tend_units
       vgrid    = 'layer_avg'
       truncate = .not. lecovars_full_depth_tavg
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2893,7 +2917,7 @@ contains
       do n = 1,zooplankton_cnt
         lname    = trim(zooplankton_settings(n)%lname) // ' Loss'
         sname    = trim(zooplankton_settings(n)%sname) // '_loss'
-        units    = 'mmol/m^3/s'
+        units    = conc_tend_units
         vgrid    = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2905,7 +2929,7 @@ contains
 
         lname    = trim(zooplankton_settings(n)%lname) // ' Basal Respiration'
         sname    = trim(zooplankton_settings(n)%sname) // '_loss_basal'
-        units    = 'mmol/m^3/s'
+        units    = conc_tend_units
         vgrid    = 'layer_avg'
         truncate = .true.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2917,7 +2941,7 @@ contains
 
         lname    = trim(zooplankton_settings(n)%lname) // ' Loss to POC'
         sname    = trim(zooplankton_settings(n)%sname) // '_loss_poc'
-        units    = 'mmol/m^3/s'
+        units    = conc_tend_units
         vgrid    = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2929,7 +2953,7 @@ contains
 
         lname    = trim(zooplankton_settings(n)%lname) // ' Loss to DOC'
         sname    = trim(zooplankton_settings(n)%sname) // '_loss_doc'
-        units    = 'mmol/m^3/s'
+        units    = conc_tend_units
         vgrid    = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2941,7 +2965,7 @@ contains
 
         lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss'
         sname    = 'graze_' // trim(zooplankton_settings(n)%sname)
-        units    = 'mmol/m^3/s'
+        units    = conc_tend_units
         vgrid    = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2953,7 +2977,7 @@ contains
 
         lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to POC'
         sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc'
-        units    = 'mmol/m^3/s'
+        units    = conc_tend_units
         vgrid    = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2965,7 +2989,7 @@ contains
 
         lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to DOC'
         sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc'
-        units    = 'mmol/m^3/s'
+        units    = conc_tend_units
         vgrid    = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2977,7 +3001,7 @@ contains
 
         lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to ZOO TOT'
         sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zootot'
-        units    = 'mmol/m^3/s'
+        units    = conc_tend_units
         vgrid    = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -2990,7 +3014,7 @@ contains
         do m=1, zooplankton_cnt
             lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to ' // trim(zooplankton_settings(m)%lname)
             sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_' // trim(zooplankton_settings(m)%sname)
-            units    = 'mmol/m^3/s'
+            units    = conc_tend_units
             vgrid    = 'layer_avg'
             truncate = .not. lecovars_full_depth_tavg
             call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
@@ -3003,7 +3027,7 @@ contains
 
         lname    = trim(zooplankton_settings(n)%lname) // ' grazing gain'
         sname    = 'x_graze_' // trim(zooplankton_settings(n)%sname)
-        units    = 'mmol/m^3/s'
+        units    = conc_tend_units
         vgrid    = 'layer_avg'
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
