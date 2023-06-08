@@ -316,7 +316,7 @@ contains
     !  Set up tracers
     !-----------------------------------------------------------------------
 
-    call marbl_init_tracers(num_levels, num_elements_surface_flux, &
+    call marbl_init_tracers(num_levels, num_elements_surface_flux, this%unit_system, &
                             this%tracer_indices, this%tracers_at_surface, this%surface_fluxes, &
                             this%tracers, this%bot_flux_to_tend, this%interior_tendencies, &
                             this%tracer_metadata, this%StatusLog)
