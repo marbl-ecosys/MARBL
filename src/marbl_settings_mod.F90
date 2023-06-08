@@ -47,12 +47,17 @@ module marbl_settings_mod
   !---------------------------------------------------------------------------
 
   type, public :: unit_system_type
-    character(len=3) :: unit_system  ! Name of unit system ('cgs' or 'mks')
-    real(r8)         :: mass2g       ! g / M (converts from model mass M -> grams)
-    real(r8)         :: g2mass       ! M / g (converts from grams -> model mass M)
-    real(r8)         :: cm2len       ! L / cm (converts from cm -> model length L)
-    real(r8)         :: len2m        ! m / L (converts from model length L -> m)
-    real(r8)         :: mol_prefix   ! convert mol -> nmol, mmol, etc (get correct metric prefix)
+    character(len=3)  :: unit_system     ! Name of unit system ('cgs' or 'mks')
+    character(len=2)  :: L               ! Standard unit of length ('cm' or 'm')
+    character(len=2)  :: M               ! Standard unit of mass ('g' or 'kg')
+    character(len=12) :: conc_units      ! Standard unit of concentration
+    character(len=12) :: conc_flux_units ! Standard unit of concentration flux
+    character(len=12) :: conc_tend_units ! Standard unit of concentration tendency
+    real(r8)          :: mass2g          ! g / M (converts from model mass M -> grams)
+    real(r8)          :: g2mass          ! M / g (converts from grams -> model mass M)
+    real(r8)          :: cm2len          ! L / cm (converts from cm -> model length L)
+    real(r8)          :: len2m           ! m / L (converts from model length L -> m)
+    real(r8)          :: mol_prefix      ! convert mol -> nmol, mmol, etc (get correct metric prefix)
   contains
     procedure :: set => set_unit_system
   end type unit_system_type
@@ -2125,6 +2130,15 @@ contains
 
     if (trim(unit_system_loc) == 'cgs') then
       ! Use cm, g, and s for length, mass, and time
+
+      ! set unit metadata
+      this%L               = 'cm'
+      this%M               = 'g'
+      this%conc_units      = 'nmol/cm^3'
+      this%conc_flux_units = 'nmol/cm^2/s'
+      this%conc_tend_units = 'nmol/cm^3/s'
+
+      ! set conversion factors
       this%g2mass     = 1._r8   ! g -> g
       this%mass2g     = 1._r8   ! g -> g
       this%cm2len     = 1._r8   ! cm -> cm
@@ -2132,6 +2146,15 @@ contains
       this%mol_prefix = 1.e9_r8 ! mol -> nmol
     elseif (trim(unit_system_loc) == 'mks') then
       ! Use m, kg, and s for length, mass, and time
+
+      ! set unit metadata
+      this%L               = 'm'
+      this%M               = 'kg'
+      this%conc_units      = 'mmol/m^3'
+      this%conc_flux_units = 'mmol/m^2/s'
+      this%conc_tend_units = 'mmol/m^3/s'
+
+      ! set conversion factors
       this%g2mass     = 0.001_r8 ! g -> kg
       this%mass2g     = 1.e3_r8  ! kg -> g
       this%cm2len     = 0.01_r8  ! cm -> m

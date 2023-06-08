@@ -387,6 +387,7 @@ contains
 
     call marbl_init_forcing_fields(this%domain, &
                                    this%tracer_metadata, &
+                                   this%unit_system, &
                                    this%surface_flux_forcing_ind, &
                                    this%surface_flux_forcings, &
                                    this%interior_tendency_forcing_ind, &

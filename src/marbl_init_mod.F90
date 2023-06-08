@@ -352,6 +352,7 @@ contains
 
   subroutine marbl_init_forcing_fields(domain, &
                                        tracer_metadata, &
+                                       unit_system, &
                                        surface_flux_forcing_ind, &
                                        surface_flux_forcings, &
                                        interior_tendency_forcing_ind, &
@@ -369,6 +370,7 @@ contains
 
     type(marbl_domain_type),                             intent(in)    :: domain
     type(marbl_tracer_metadata_type),                    intent(in)    :: tracer_metadata(:)
+    type(unit_system_type),                              intent(in)    :: unit_system
     type(marbl_surface_flux_forcing_indexing_type),      intent(out)   :: surface_flux_forcing_ind
     type(marbl_forcing_fields_type), allocatable,        intent(out)   :: surface_flux_forcings(:)
     type(marbl_interior_tendency_forcing_indexing_type), intent(out)   :: interior_tendency_forcing_ind
@@ -409,6 +411,7 @@ contains
       call marbl_init_surface_flux_forcing_fields(                   &
            num_elements                 = num_elements_surface_flux, &
            surface_flux_forcing_indices = surface_flux_forcing_ind,  &
+           unit_system                  = unit_system,               &
            surface_flux_forcings        = surface_flux_forcings,     &
            marbl_status_log             = marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -424,6 +427,7 @@ contains
            tracer_metadata                   = tracer_metadata,                       &
            num_PAR_subcols                   = num_PAR_subcols,                       &
            num_levels                        = num_levels,                            &
+           unit_system                       = unit_system,                           &
            interior_tendency_forcings        = interior_tendency_forcings,            &
            marbl_status_log                  = marbl_status_log)
       if (marbl_status_log%labort_marbl) then
@@ -639,7 +643,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_init_surface_flux_forcing_fields(num_elements, surface_flux_forcing_indices, &
-                                        surface_flux_forcings, marbl_status_log)
+                                        unit_system, surface_flux_forcings, marbl_status_log)
 
     !  Initialize the surface forcing_fields datatype with information from the
     !  namelist read
@@ -649,6 +653,7 @@ contains
 
     integer,                                        intent(in)    :: num_elements
     type(marbl_surface_flux_forcing_indexing_type), intent(in)    :: surface_flux_forcing_indices
+    type(unit_system_type),                         intent(in)    :: unit_system
     type(marbl_forcing_fields_type),                intent(out)   :: surface_flux_forcings(:)
     type(marbl_log_type),                           intent(inout) :: marbl_status_log
 
@@ -672,7 +677,7 @@ contains
         if (id .eq. ind%u10_sqr_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'u10_sqr'
-          surface_flux_forcings(id)%metadata%field_units   = 'cm^2/s^2'
+          write(surface_flux_forcings(id)%metadata%field_units, '(2A)')   trim(unit_system%L), '^2/s^2'
         end if
 
         ! Sea-surface salinity
@@ -700,49 +705,49 @@ contains
         if (id .eq. ind%dust_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'Dust Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'g/cm^2/s'
+          write(surface_flux_forcings(id)%metadata%field_units, '(4A)') trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
         end if
 
         ! Iron Flux
         if (id .eq. ind%iron_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'Iron Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! NOx Flux
         if (id .eq. ind%nox_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'NOx Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! NHy Flux
         if (id .eq. ind%nhy_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'NHy Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! external C Flux
         if (id .eq. ind%ext_C_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'external C Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! external P Flux
         if (id .eq. ind%ext_P_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'external P Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! external Si Flux
         if (id .eq. ind%ext_Si_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'external Si Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! atm pressure
@@ -808,6 +813,7 @@ contains
        tracer_metadata, &
        num_PAR_subcols, &
        num_levels, &
+       unit_system, &
        interior_tendency_forcings, &
        marbl_status_log)
 
@@ -821,6 +827,7 @@ contains
     type(marbl_tracer_metadata_type),           intent(in)    :: tracer_metadata(:)
     integer,                                    intent(in)    :: num_PAR_subcols
     integer,                                    intent(in)    :: num_levels
+    type(unit_system_type),                     intent(in)    :: unit_system
     type(marbl_forcing_fields_type),            intent(out)   :: interior_tendency_forcings(:)
     type(marbl_log_type),                       intent(inout) :: marbl_status_log
 
@@ -848,7 +855,7 @@ contains
         if (id .eq. ind%dustflux_id) then
           found = .true.
           interior_tendency_forcings(id)%metadata%varname     = 'Dust Flux'
-          interior_tendency_forcings(id)%metadata%field_units = 'g/cm^2/s'
+          write(interior_tendency_forcings(id)%metadata%field_units, '(4A)') trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
           call interior_tendency_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
         end if
 
@@ -896,7 +903,7 @@ contains
         if (id .eq. ind%fesedflux_id) then
           found = .true.
           interior_tendency_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
-          interior_tendency_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
+          interior_tendency_forcings(id)%metadata%field_units = trim(unit_system%conc_flux_units)
           call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
