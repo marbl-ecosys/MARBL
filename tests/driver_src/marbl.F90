@@ -374,8 +374,9 @@ Program marbl
         ! Log tracers requested for initialization
         call driver_status_log%log_header('Requested tracers', subname)
         do n=1, size(marbl_instances(1)%tracer_metadata)
-          write(log_message, "(I0, 2A)") n, '. ',                               &
-            trim(marbl_instances(1)%tracer_metadata(n)%short_name)
+          write(log_message, "(I0, 5A)") n, '. ',                                &
+            trim(marbl_instances(1)%tracer_metadata(n)%short_name), ' (units: ', &
+            trim(marbl_instances(1)%tracer_metadata(n)%units), ')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
         call marbl_instances(1)%shutdown()
