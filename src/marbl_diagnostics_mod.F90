@@ -1914,7 +1914,7 @@ contains
 
       lname = 'DOP Remineralization'
       sname = 'DOP_remin'
-      units = 'mmol/m^3/s'
+      units = unit_system%conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
@@ -2170,7 +2170,7 @@ contains
 
       lname = 'Vertical Integral of POC Remineralization routed to DIC'
       sname = 'POC_REMIN_DIC_zint'
-      units = 'mmol/m^3 cm/s'
+      units = unit_system%conc_flux_units
       vgrid = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
