@@ -56,6 +56,7 @@ module marbl_settings_mod
     real(r8)          :: mass2g          ! g / M (converts from model mass M -> grams)
     real(r8)          :: g2mass          ! M / g (converts from grams -> model mass M)
     real(r8)          :: cm2len          ! L / cm (converts from cm -> model length L)
+    real(r8)          :: m2len           ! L / m (converts from m -> model length L)
     real(r8)          :: len2m           ! m / L (converts from model length L -> m)
     real(r8)          :: mol_prefix      ! convert mol -> nmol, mmol, etc (get correct metric prefix)
   contains
@@ -116,7 +117,6 @@ module marbl_settings_mod
   ! Redfield Ratios, dissolved & particulate
   real(r8), parameter :: &
        Q_10      =   1.7_r8,                                 & ! factor for temperature dependence (non-dim)
-       xkw_coeff =   6.97e-9_r8,                             & ! in s/cm, from a = 0.251 cm/hr s^2/m^2 in Wannikhof 2014
        parm_Red_D_C_P  = 117.0_r8,                           & ! carbon:phosphorus
        parm_Red_D_N_P  =  16.0_r8,                           & ! nitrogen:phosphorus
        parm_Red_D_O2_P = 170.0_r8,                           & ! oxygen:phosphorus
@@ -215,6 +215,13 @@ module marbl_settings_mod
   real (r8), parameter :: phlo_3d_init = 6.0_r8   ! low bound for subsurface ph for no prev soln
   real (r8), parameter :: phhi_3d_init = 9.0_r8   ! high bound for subsurface ph for no prev soln
   real (r8), parameter :: del_ph = 0.20_r8        ! delta-ph for prev soln
+
+  !---------------------------------------------------------------------
+  !  BGC parameters that are currently hard-coded but can not be
+  !  fortran parameters because they depend on unit system
+  !---------------------------------------------------------------------
+
+  real(r8) :: xkw_coeff   ! 0.251 cm/hr s^2/m^2 in Wannikhof 2014, will be converted to s/cm or s/m in init
 
   !---------------------------------------------------------------------------------------------
   !  Variables defined in marbl_settings_define_general_parms, marbl_settings_define_PFT_counts,
@@ -2131,6 +2138,9 @@ contains
     if (trim(unit_system_loc) == 'cgs') then
       ! Use cm, g, and s for length, mass, and time
 
+      ! Set module variables that used to be fortran parameters
+      xkw_coeff =   6.97e-9_r8 ! 0.251 cm/hr s^2/m^2 in s / cm
+
       ! set unit metadata
       this%L               = 'cm'
       this%M               = 'g'
@@ -2142,10 +2152,14 @@ contains
       this%g2mass     = 1._r8   ! g -> g
       this%mass2g     = 1._r8   ! g -> g
       this%cm2len     = 1._r8   ! cm -> cm
-      this%len2m      = 0.01_r8  ! cm -> m
+      this%m2len      = 1.e2_r8 ! cm -> cm
+      this%len2m      = 0.01_r8 ! cm -> m
       this%mol_prefix = 1.e9_r8 ! mol -> nmol
     elseif (trim(unit_system_loc) == 'mks') then
       ! Use m, kg, and s for length, mass, and time
+
+      ! Set module variables that used to be fortran parameters
+      xkw_coeff =   6.97e-7_r8 ! 0.251 cm/hr s^2/m^2 in s / cm
 
       ! set unit metadata
       this%L               = 'm'
@@ -2158,6 +2172,7 @@ contains
       this%g2mass     = 0.001_r8 ! g -> kg
       this%mass2g     = 1.e3_r8  ! kg -> g
       this%cm2len     = 0.01_r8  ! cm -> m
+      this%m2len      = 1._r8    ! m -> m
       this%len2m      = 1._r8    ! m -> m
       this%mol_prefix = 1.e3_r8  ! mol -> mmol
     else

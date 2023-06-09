@@ -374,6 +374,7 @@ contains
            u10_sqr          = u10_sqr,                       &
            atmpres          = ap_used,                       &
            ifrac            = ifrac,                         &
+           unit_system      = unit_system,                   &
            nhx_surface_emis = nhx_surface_emis)
 
       if (sfo_ind%flux_nhx_id.ne.0) then

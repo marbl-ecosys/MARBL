@@ -11,6 +11,7 @@ module marbl_nhx_surface_emis_mod
 
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : r8
+  use marbl_settings_mod, only : unit_system_type
 
   implicit none
   private
@@ -36,21 +37,22 @@ contains
        u10_sqr,                              &
        atmpres,                              &
        ifrac,                                &
+       unit_system,                          &
        nhx_surface_emis)
 
     use marbl_constants_mod, only : c0
     use marbl_constants_mod, only : c1
-    use marbl_constants_mod, only : mpercm
 
-    integer(int_kind)  , intent(in)  :: num_elements
-    real (r8)          , intent(in)  :: nh4(num_elements)
-    real (r8)          , intent(in)  :: ph(num_elements)
-    real (r8)          , intent(in)  :: sst(num_elements)
-    real (r8)          , intent(in)  :: sss(num_elements)
-    real (r8)          , intent(in)  :: u10_sqr(num_elements) ! (cm/s)^2
-    real (r8)          , intent(in)  :: atmpres(num_elements) ! (atm)
-    real (r8)          , intent(in)  :: ifrac(num_elements)
-    real (r8)          , intent(out) :: nhx_surface_emis(num_elements)
+    integer(int_kind),      intent(in)  :: num_elements
+    real(r8),               intent(in)  :: nh4(num_elements)
+    real(r8),               intent(in)  :: ph(num_elements)
+    real(r8),               intent(in)  :: sst(num_elements)
+    real(r8),               intent(in)  :: sss(num_elements)
+    real(r8),               intent(in)  :: u10_sqr(num_elements) ! (cm/s)^2
+    real(r8),               intent(in)  :: atmpres(num_elements) ! (atm)
+    real(r8),               intent(in)  :: ifrac(num_elements)
+    type(unit_system_type), intent(in)  :: unit_system
+    real(r8),               intent(out) :: nhx_surface_emis(num_elements)
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -62,11 +64,11 @@ contains
     real (r8) :: Hstar_nhx(num_elements)
     real (r8) :: K(num_elements)
 
-    u10_rms_mps(:) = mpercm * sqrt(u10_sqr(:))
+    u10_rms_mps(:) = unit_system%len2m * sqrt(u10_sqr(:))
 
-    call marbl_comp_kw_nh3(num_elements, sst, u10_rms_mps, kw_nh3)
+    call marbl_comp_kw_nh3(num_elements, sst, u10_rms_mps, unit_system, kw_nh3)
 
-    call marbl_comp_kg_nh3(num_elements, sst, u10_rms_mps, atmpres, kg_nh3)
+    call marbl_comp_kg_nh3(num_elements, sst, u10_rms_mps, atmpres, unit_system, kg_nh3)
 
     call marbl_comp_Hstar_nhx(num_elements, ph, sst, sss, Hstar_nhx)
 
@@ -81,15 +83,17 @@ contains
        num_elements,            &
        sst,                     &
        u10_rms_mps,             &
+       unit_system,             &
        kw_nh3)
 
     use marbl_schmidt_number_mod, only : schmidt_nh3_surf
     use marbl_constants_mod     , only : hrps
 
-    integer(int_kind)  , intent(in)  :: num_elements
-    real (r8)          , intent(in)  :: sst(num_elements)
-    real (r8)          , intent(in)  :: u10_rms_mps(num_elements)
-    real (r8)          , intent(out) :: kw_nh3(num_elements)
+    integer(int_kind),      intent(in)  :: num_elements
+    real(r8),               intent(in)  :: sst(num_elements)
+    real(r8),               intent(in)  :: u10_rms_mps(num_elements)
+    type(unit_system_type), intent(in)  :: unit_system
+    real(r8),               intent(out) :: kw_nh3(num_elements) ! (L/s)
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -103,10 +107,11 @@ contains
 
     !-----------------------------------------------------------------------
     ! Nightingale et al. 2000, GRL
-    ! convert from Nightingale result units of cm/h to cm/s
+    ! convert from Nightingale result units of cm/h to L/s
     !-----------------------------------------------------------------------
 
-    kw_nh3(:) = hrps * u10_rms_mps(:) * (0.061_r8 + 0.24_r8 * u10_rms_mps(:)) * sqrt(600.0_r8 / schmidt_nh3(:))
+    kw_nh3(:) = hrps * unit_system%cm2len &
+      * u10_rms_mps(:) * (0.061_r8 + 0.24_r8 * u10_rms_mps(:)) * sqrt(600.0_r8 / schmidt_nh3(:))
 
   end subroutine marbl_comp_kw_nh3
 
@@ -117,19 +122,20 @@ contains
        sst,                     &
        u10_rms_mps,             &
        atmpres,                 &
+       unit_system,             &
        kg_nh3)
 
     use marbl_schmidt_number_mod, only : schmidt_nh3_air
     use marbl_constants_mod     , only : c1
     use marbl_constants_mod     , only : c2
     use marbl_constants_mod     , only : vonkar
-    use marbl_constants_mod     , only : cmperm
 
-    integer(int_kind)  , intent(in)  :: num_elements
-    real (r8)          , intent(in)  :: sst(num_elements)
-    real (r8)          , intent(in)  :: u10_rms_mps(num_elements)
-    real (r8)          , intent(in)  :: atmpres(num_elements)
-    real (r8)          , intent(out) :: kg_nh3(num_elements) ! (cm/s)
+    integer(int_kind),      intent(in)  :: num_elements
+    real(r8),               intent(in)  :: sst(num_elements)
+    real(r8),               intent(in)  :: u10_rms_mps(num_elements)
+    real(r8),               intent(in)  :: atmpres(num_elements)
+    type(unit_system_type), intent(in)  :: unit_system
+    real(r8),               intent(out) :: kg_nh3(num_elements) ! (L/s)
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -157,7 +163,7 @@ contains
     ustar(:) = ustar_div_u10(:) * u10_rms_mps(:)
     kg_nh3(:) = 1.0e-3_r8 + ustar(:) &
          / (13.3_r8 * sqrt(schmidt_nh3(:)) + c1 / ustar_div_u10(:) - 5.0_r8 + log(schmidt_nh3(:)) / (c2 * vonkar))
-    kg_nh3(:) = cmperm * kg_nh3(:)
+    kg_nh3(:) = unit_system%m2len * kg_nh3(:)
 
   end subroutine marbl_comp_kg_nh3
 
