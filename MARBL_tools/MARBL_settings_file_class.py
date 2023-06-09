@@ -423,20 +423,32 @@ def _translate_JSON_value(value, datatype, units, unit_system):
 
 ################################################################################
 
+def _unit_conv_dict():
+    new_dict = dict()
+    new_dict['mks'] = dict()
+    new_dict['mks']['cm'] = dict()
+    new_dict['mks']['cm']['new_units'] = 'm'
+    new_dict['mks']['cm']['scale_factor'] = 0.01
+
+    new_dict['cgs'] = dict()
+    new_dict['cgs']['m'] = dict()
+    new_dict['cgs']['m']['new_units'] = 'cm'
+    new_dict['cgs']['m']['scale_factor'] = 100.
+    return new_dict
+
 def _get_scale_factor(units, unit_system):
-    scale_factor = 1
-    if unit_system == "mks":
-        if units == "cm":
-            scale_factor = 0.01
-    return scale_factor
+    try:
+        return _unit_conv_dict()[unit_system][units]['scale_factor']
+    except:
+        return 1.
 
 ################################################################################
 
 def _get_correct_units(units, unit_system):
-    if unit_system == "mks":
-        if units == "cm":
-            return "m"
-    return units
+    try:
+        return _unit_conv_dict()[unit_system][units]['new_units']
+    except:
+        return units
 
 ################################################################################
 

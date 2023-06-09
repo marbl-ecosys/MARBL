@@ -33,7 +33,8 @@ optional arguments:
                         A file that overrides values in JSON (default: None)
   -o SETTINGS_FILE_OUT, --settings_file_out SETTINGS_FILE_OUT
                         Name of file to be written (default: marbl.settings)
-
+  -u {cgs,mks}, --unit_system {cgs,mks}
+                        Unit system for parameter values (default: cgs)
 """
 
 #######################################
