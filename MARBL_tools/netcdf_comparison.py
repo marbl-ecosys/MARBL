@@ -5,7 +5,8 @@
         $ ./netcdf_comparison.py --baseline BASELINE_FILE --new-file NEW_FILE
                                  --strict {exact,loose} [-r RTOL] [-a ATOL] [-t THRES]
 
-    Use xarray and numpy to compare two netcdf files. For each variable, flag
+    Use xarray and numpy to compare two netcdf files.
+    For each variable, flag
     1. Variables that are present in one file but not the other
     2. Variables where the data type doesn't match across files
     3. Variables where the dimensions don't match across files
@@ -17,6 +18,8 @@
              more than ATOL are flagged
           -- For values larger than THRES variables with a relative difference
              of more than RTOL are flagged
+
+    There is some knowledge of unit equivalence between mks and cgs.
 """
 
 import logging
@@ -160,8 +163,45 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
     common_vars = list(set(ds_base.variables) & set(ds_new.variables))
     common_vars.sort()
 
+    unit_conversion = dict()
+    unit_conversion['cm/s'] = dict()
+    unit_conversion['cm/s']['m/s'] = 0.01 # cm/s -> m/s
+    unit_conversion['cm'] = dict()
+    unit_conversion['cm']['m'] = 0.01 # cm -> m
+    unit_conversion['nmol/cm^3'] = dict()
+    unit_conversion['nmol/cm^3']['mmol/m^3'] = 1 # nmol/cm^3 -> mmol/m^3
+    unit_conversion['nmol/cm^3/s'] = dict()
+    unit_conversion['nmol/cm^3/s']['mmol/m^3/s'] = 1 # nmol/cm^3/s -> mmol/m^3/s
+    unit_conversion['nmol/cm^2/s'] = dict()
+    unit_conversion['nmol/cm^2/s']['mmol/m^2/s'] = 0.01 # nmol/cm^2/s -> mmol/m^2/s
+    unit_conversion['g/cm^3/s'] = dict()
+    unit_conversion['g/cm^3/s']['kg/m^3/s'] = 1000 # g/cm^3/s -> kg/m^3/s
+    unit_conversion['g/cm^2/s'] = dict()
+    unit_conversion['g/cm^2/s']['kg/m^2/s'] = 10 # g/cm^2/s -> kg/m^2/s
+    unit_conversion['meq/m^3 cm/s'] = dict()
+    unit_conversion['meq/m^3 cm/s']['meq/m^2/s'] = 0.01 # meq/m^3 cm/s -> meq/m^2/s
+
     for var in common_vars:
         err_messages = []
+
+        # (0) Update units of new file to match baseline
+        conversion_factor = 1
+        if('units' in ds_base[var].attrs and ds_new[var].attrs):
+            old_units = ds_base[var].attrs['units']
+            new_units = ds_new[var].attrs['units']
+            if (old_units != new_units):
+                found=False
+                if new_units in unit_conversion:
+                    if old_units in unit_conversion[new_units]:
+                        conversion_factor = unit_conversion[new_units][old_units]
+                        found = True
+                if not found:
+                    if old_units in unit_conversion:
+                        if new_units in unit_conversion[old_units]:
+                            conversion_factor = 1 / unit_conversion[old_units][new_units]
+                            found = True
+                if not found:
+                    raise KeyError(f'Can not convert from {new_units} to {old_units}')
 
         # (1) Are NaNs in the same place?
         mask = ~np.isnan(ds_base[var].data)
@@ -178,7 +218,7 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
                              ds_base[var].data[mask], 0)
         new_data = np.where((ds_base[var].data[mask] != 0) &
                             (np.abs(ds_base[var].data[mask]) <= thres),
-                            ds_new[var].data[mask], 0)
+                            conversion_factor*ds_new[var].data[mask], 0)
         abs_err = np.abs(new_data - base_data)
         if np.any(abs_err > atol):
             err_messages.append("Max absolute error ({}) exceeds {}".format(np.max(abs_err),
@@ -189,7 +229,7 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
                              ds_base[var].data[mask],
                              0)
         new_data = np.where(np.abs(ds_base[var].data[mask]) > thres,
-                            ds_new[var].data[mask],
+                            conversion_factor*ds_new[var].data[mask],
                             0)
         rel_err = np.where(base_data != 0, np.abs(new_data - base_data), 0) / \
                   np.where(base_data != 0, np.abs(base_data), 1)
