@@ -932,6 +932,7 @@ contains
          saved_state_ind                   = this%interior_state_ind,               &
          marbl_tracer_indices              = this%tracer_indices,                   &
          marbl_timer_indices               = this%timer_ids,                        &
+         unit_system                       = this%unit_system,                      &
          PAR                               = this%PAR,                              &
          dissolved_organic_matter          = this%dissolved_organic_matter,         &
          carbonate                         = this%carbonate,                        &

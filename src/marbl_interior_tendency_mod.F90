@@ -78,6 +78,7 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : phhi_3d_init
   use marbl_settings_mod, only : phlo_3d_init
   use marbl_settings_mod, only : bftt_dz_sum_thres
+  use marbl_settings_mod, only : unit_system_type
 
   use marbl_pft_mod, only : Qp_zoo
 
@@ -101,6 +102,7 @@ contains
        saved_state_ind,                       &
        marbl_tracer_indices,                  &
        marbl_timer_indices,                   &
+       unit_system,                           &
        PAR,                                   &
        dissolved_organic_matter,              &
        carbonate,                             &
@@ -145,6 +147,7 @@ contains
     type(marbl_interior_tendency_saved_state_indexing_type), intent(in)    :: saved_state_ind
     type(marbl_tracer_index_type),                           intent(in)    :: marbl_tracer_indices
     type(marbl_timer_indexing_type),                         intent(in)    :: marbl_timer_indices
+    type(unit_system_type),                                  intent(in)    :: unit_system
     type(marbl_PAR_type),                                    intent(inout) :: PAR
     type(dissolved_organic_matter_type),                     intent(inout) :: dissolved_organic_matter
     type(carbonate_type),                                    intent(inout) :: carbonate
@@ -328,9 +331,9 @@ contains
     call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
                             marbl_status_log)
     call compute_carbonate_chemistry(domain, temperature, pressure,           &
-         salinity, tracer_local(:, :), marbl_tracer_indices, co2calc_coeffs,  &
-         co2calc_state, carbonate, ph_prev_col(:), ph_prev_alt_co2_col(:),    &
-         marbl_status_log)
+         salinity, tracer_local(:, :), marbl_tracer_indices, unit_system,     &
+         co2calc_coeffs, co2calc_state, carbonate, ph_prev_col(:),            &
+         ph_prev_alt_co2_col(:), marbl_status_log)
     call marbl_timers%stop(marbl_timer_indices%carbonate_chem_id,             &
                             marbl_status_log)
 
@@ -947,7 +950,7 @@ contains
   !***********************************************************************
 
   subroutine compute_carbonate_chemistry(domain, temperature, press_bar, &
-       salinity, tracer_local, marbl_tracer_indices, &
+       salinity, tracer_local, marbl_tracer_indices, unit_system, &
        co2calc_coeffs, co2calc_state, carbonate, ph_prev_col,   &
        ph_prev_alt_co2_col, marbl_status_log)
 
@@ -960,6 +963,7 @@ contains
     real (r8),                     intent(in)    :: salinity(:)
     real (r8),                     intent(in)    :: tracer_local(:,:)       ! local copies of model tracer concentrations
     type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
+    type(unit_system_type),        intent(in)    :: unit_system
     type(co2calc_coeffs_type),     intent(inout) :: co2calc_coeffs
     type(co2calc_state_type),      intent(inout) :: co2calc_state
     type(carbonate_type),          intent(inout) :: carbonate
@@ -1017,7 +1021,7 @@ contains
       end do
 
       call marbl_co2calc_interior(&
-           dkm, column_kmt, .true., co2calc_coeffs, co2calc_state, &
+           dkm, column_kmt, .true., unit_system, co2calc_coeffs, co2calc_state, &
            temperature, salinity, press_bar, dic_loc, alk_loc, po4_loc, sio3_loc,    &
            ph_lower_bound, ph_upper_bound, ph, h2co3, hco3, co3, marbl_status_log)
 
@@ -1042,7 +1046,7 @@ contains
       end do
 
       call marbl_co2calc_interior(&
-           dkm, column_kmt, .false., co2calc_coeffs, co2calc_state,     &
+           dkm, column_kmt, .false., unit_system, co2calc_coeffs, co2calc_state,     &
            temperature, salinity, press_bar, dic_alt_co2_loc, alk_alt_co2_loc, po4_loc,   &
            sio3_loc, ph_lower_bound, ph_upper_bound, ph_alt_co2, h2co3_alt_co2,           &
            hco3_alt_co2, co3_alt_co2, marbl_status_log)
@@ -1060,7 +1064,8 @@ contains
 
       call marbl_co2calc_co3_sat_vals(&
            dkm, column_kmt, temperature, salinity, &
-           press_bar, co3_sat_calcite, co3_sat_aragonite)
+           press_bar, unit_system, co3_sat_calcite, &
+           co3_sat_aragonite)
 
     end associate
 

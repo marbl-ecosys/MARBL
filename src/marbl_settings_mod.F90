@@ -55,6 +55,7 @@ module marbl_settings_mod
     character(len=12) :: conc_tend_units ! Standard unit of concentration tendency
     real(r8)          :: mass2g          ! g / M (converts from model mass M -> grams)
     real(r8)          :: g2mass          ! M / g (converts from grams -> model mass M)
+    real(r8)          :: mass2kg         ! kg / M (converts from model mass M -> kilograms)
     real(r8)          :: cm2len          ! L / cm (converts from cm -> model length L)
     real(r8)          :: m2len           ! L / m (converts from m -> model length L)
     real(r8)          :: len2m           ! m / L (converts from model length L -> m)
@@ -2118,6 +2119,9 @@ contains
   !***********************************************************************
 
   subroutine set_unit_system(this, marbl_status_log, unit_system)
+
+    use marbl_constants_mod, only : rho_sw
+
     class(unit_system_type),    intent(inout) :: this
     type(marbl_log_type),       intent(inout) :: marbl_status_log
     character(len=*), optional, intent(in)    :: unit_system
@@ -2140,6 +2144,7 @@ contains
 
       ! Set module variables that used to be fortran parameters
       xkw_coeff =   6.97e-9_r8 ! 0.251 cm/hr s^2/m^2 in s / cm
+      rho_sw    =   1.026_r8   ! g / cm^3
 
       ! set unit metadata
       this%L               = 'cm'
@@ -2151,8 +2156,9 @@ contains
       ! set conversion factors
       this%g2mass     = 1._r8   ! g -> g
       this%mass2g     = 1._r8   ! g -> g
+      this%mass2kg    = 1e-3_r8 ! g -> kg
       this%cm2len     = 1._r8   ! cm -> cm
-      this%m2len      = 1.e2_r8 ! cm -> cm
+      this%m2len      = 1.e2_r8 ! m -> cm
       this%len2m      = 0.01_r8 ! cm -> m
       this%mol_prefix = 1.e9_r8 ! mol -> nmol
     elseif (trim(unit_system_loc) == 'mks') then
@@ -2160,6 +2166,7 @@ contains
 
       ! Set module variables that used to be fortran parameters
       xkw_coeff =   6.97e-7_r8 ! 0.251 cm/hr s^2/m^2 in s / cm
+      rho_sw    =   1026.0_r8   ! kg / m^3
 
       ! set unit metadata
       this%L               = 'm'
@@ -2171,6 +2178,7 @@ contains
       ! set conversion factors
       this%g2mass     = 0.001_r8 ! g -> kg
       this%mass2g     = 1.e3_r8  ! kg -> g
+      this%mass2kg    = 1._r8    ! kg -> kg
       this%cm2len     = 0.01_r8  ! cm -> m
       this%m2len      = 1._r8    ! m -> m
       this%len2m      = 1._r8    ! m -> m

@@ -20,7 +20,7 @@ module marbl_constants_mod
   !  Mathematical constants
   !---------------------------------------------------------------------
 
-  real(kind=r8), parameter, public ::        &
+  real(kind=r8), parameter ::                &
       c0     =    0.0_r8                   , &
       c1     =    1.0_r8                   , &
       c2     =    2.0_r8                   , &
@@ -36,7 +36,7 @@ module marbl_constants_mod
   !  Unit Conversion
   !---------------------------------------------------------------------
 
-  real(kind=r8), parameter, public :: &
+  real(kind=r8), parameter ::   &
       sphr      = 3600.0_r8,    & ! number of seconds in an hour
       spd       = 86400.0_r8,   & ! number of seconds in a day
       dpy       = 365.0_r8,     & ! number of days in a year
@@ -52,11 +52,10 @@ module marbl_constants_mod
   !  Physical Constants
   !---------------------------------------------------------------------
 
-  real(kind=r8), parameter, public :: &
+  real(kind=r8), parameter ::          &
       vonkar    =   0.4_r8,            & ! von Karman constant
       T0_Kelvin = 273.15_r8,           & ! freezing T of fresh water (K)
       K_Boltz   =   8.617330350e-5_r8, & ! Boltzmann constant (eV/K)
-      rho_sw    =   1.026_r8,          & ! density of salt water (g/cm^3)
       epsC      =   1.0e-8_r8,         & ! small C concentration (mmol C/m^3)
       epsTinv   =   3.17e-8_r8,        & ! small inverse time scale (1/year) (1/sec)
       molw_Fe   =  55.845_r8,          & ! molecular weight of iron (gFe / mol Fe)
@@ -64,5 +63,13 @@ module marbl_constants_mod
       molw_Si   =  28.085_r8,          & ! molecular weight of silicon (gSi / mol Si)
       R13C_std  =   1.0_r8,            & ! actual 13C/12C PDB standard ratio (Craig, 1957) = 1123.72e-5_r8
       R14C_std =    1.0_r8               ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
+
+  !---------------------------------------------------------------------
+  ! Physical constants that need to be set after unit system
+  ! has been chosen
+  !---------------------------------------------------------------------
+
+  real(kind=r8) :: &
+      rho_sw       ! density of salt water (M/L^3)
 
 end module marbl_constants_mod

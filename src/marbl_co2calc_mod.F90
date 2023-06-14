@@ -14,6 +14,8 @@ module marbl_co2calc_mod
   use marbl_constants_mod, only : p001,c3, c10
   use marbl_constants_mod, only : c0, p5, c1, c2, c1000, T0_Kelvin, rho_sw
 
+  use marbl_settings_mod, only : unit_system_type
+
   use marbl_interface_private_types, only : co2calc_coeffs_type
   use marbl_interface_private_types, only : co2calc_state_type
 
@@ -67,6 +69,7 @@ contains
        temp,                        &
        salt,                        &
        atmpres,                     &
+       unit_system,                 &
        co2calc_coeffs,              &
        co2calc_state,               &
        co3,                         &
@@ -94,6 +97,7 @@ contains
     real(kind=r8)                 , intent(in)    :: temp(num_elements)     ! temperature (degC)
     real(kind=r8)                 , intent(in)    :: salt(num_elements)     ! salinity (PSU)
     real(kind=r8)                 , intent(in)    :: atmpres(num_elements)  ! atmospheric pressure (atmosphere)
+    type(unit_system_type)        , intent(in)    :: unit_system            ! Unit system and conversion factors (cgs or mks)
     real(kind=r8)                 , intent(inout) :: phlo(num_elements)     ! lower limit of ph range
     real(kind=r8)                 , intent(inout) :: phhi(num_elements)     ! upper limit of ph range
     real(kind=r8)                 , intent(out)   :: ph(num_elements)       ! computed ph values, for initial guess on next time step
@@ -129,9 +133,12 @@ contains
 
     !---------------------------------------------------------------------------
     !   set unit conversion factors
+    !   mass_to_vol: mol / kg -> mmol / m^3
+    !                => mmol / mol * kg / m^3
+    !   rho_sw is M / L^3 => rho_sw * 1e3 * kg/M * (L/m)^3
     !---------------------------------------------------------------------------
 
-    mass_to_vol = 1e6_r8 * rho_sw
+    mass_to_vol = rho_sw * (1e3 * unit_system%mass2kg * (unit_system%m2len)**3)
     vol_to_mass = c1 / mass_to_vol
 
     !---------------------------------------------------------------------------
@@ -146,9 +153,9 @@ contains
     !   compute htotal
     !---------------------------------------------------------------------------
 
-    call comp_htotal(num_elements, num_elements, dic_in, ta_in, pt_in, sit_in,      &
-                     temp, salt, co2calc_coeffs, co2calc_state, phlo, phhi, htotal, &
-                     marbl_status_log)
+    call comp_htotal(num_elements, num_elements, dic_in, ta_in, pt_in, sit_in,     &
+                     temp, salt, unit_system, co2calc_coeffs, co2calc_state, phlo, &
+                     phhi, htotal, marbl_status_log)
 
     if (present (marbl_status_log)) then
        if (marbl_status_log%labort_marbl) then
@@ -207,7 +214,7 @@ contains
   !***********************************************************************
 
   subroutine marbl_co2calc_interior(&
-       num_elements, num_active_elements, lcomp_co2calc_coeffs,   &
+       num_elements, num_active_elements, lcomp_co2calc_coeffs, unit_system, &
        co2calc_coeffs,  co2calc_state, temp, salt, press_bar, dic_in, ta_in, pt_in, &
        sit_in, phlo, phhi, ph, H2CO3, HCO3, CO3, marbl_status_log)
 
@@ -225,6 +232,7 @@ contains
     real(kind=r8)             , intent(in)    :: ta_in(num_elements)     ! total alkalinity (neq/cm^3)
     real(kind=r8)             , intent(in)    :: pt_in(num_elements)     ! inorganic phosphate (nmol/cm^3)
     real(kind=r8)             , intent(in)    :: sit_in(num_elements)    ! inorganic silicate (nmol/cm^3)
+    type(unit_system_type)    , intent(in)    :: unit_system             ! Unit system and conversion factors (cgs or mks)
     type(co2calc_coeffs_type) , intent(inout) :: co2calc_coeffs
     type(co2calc_state_type)  , intent(inout) :: co2calc_state
     real(kind=r8)             , intent(inout) :: phlo(num_elements)      ! lower limit of pH range
@@ -270,9 +278,12 @@ contains
 
     !---------------------------------------------------------------------------
     !   set unit conversion factors
+    !   mass_to_vol: mol / kg -> mmol / m^3
+    !                => mmol / mol * kg / m^3
+    !   rho_sw is M / L^3 => rho_sw * 1e3 * kg/M * (L/m)^3
     !---------------------------------------------------------------------------
 
-    mass_to_vol = 1e6_r8 * rho_sw
+    mass_to_vol = rho_sw * (1e3 * unit_system%mass2kg * (unit_system%m2len)**3)
     vol_to_mass = c1 / mass_to_vol
 
     !------------------------------------------------------------------------
@@ -287,9 +298,9 @@ contains
     !   compute htotal
     !------------------------------------------------------------------------
 
-    call comp_htotal(num_elements, num_active_elements, dic_in, ta_in, pt_in,        &
-              sit_in, temp, salt, co2calc_coeffs, co2calc_state, phlo, phhi, htotal, &
-              marbl_status_log)
+    call comp_htotal(num_elements, num_active_elements, dic_in, ta_in, pt_in,       &
+              sit_in, temp, salt, unit_system, co2calc_coeffs, co2calc_state, phlo, &
+              phhi, htotal, marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace("comp_htotal()", subname)
@@ -641,9 +652,9 @@ contains
 
   !*****************************************************************************
 
-  subroutine comp_htotal(num_elements, num_active_elements, dic_in, ta_in, pt_in,        &
-                  sit_in, temp, salt, co2calc_coeffs, co2calc_state, phlo, phhi, htotal, &
-                  marbl_status_log)
+  subroutine comp_htotal(num_elements, num_active_elements, dic_in, ta_in, pt_in,       &
+                  sit_in, temp, salt, unit_system, co2calc_coeffs, co2calc_state, phlo, &
+                  phhi, htotal, marbl_status_log)
 
     !---------------------------------------------------------------------------
     ! Calculate htotal (free concentration of H ion)
@@ -657,6 +668,7 @@ contains
     real(r8)                      , intent(in)    :: sit_in(num_elements)
     real(r8)                      , intent(in)    :: temp(num_elements)
     real(r8)                      , intent(in)    :: salt(num_elements)
+    type(unit_system_type)        , intent(in)    :: unit_system            ! Unit system and conversion factors (cgs or mks)
     type(co2calc_coeffs_type)     , intent(inout) :: co2calc_coeffs
     type(co2calc_state_type)      , intent(inout) :: co2calc_state
     real(kind=r8)                 , intent(inout) :: phlo(num_elements)   ! lower limit of pH range
@@ -697,9 +709,12 @@ contains
 
     !---------------------------------------------------------------------------
     !   set unit conversion factors
+    !   mass_to_vol: mol / kg -> mmol / m^3
+    !                => mmol / mol * kg / m^3
+    !   rho_sw is M / L^3 => rho_sw * 1e3 * kg/M * (L/m)^3
     !---------------------------------------------------------------------------
 
-    mass_to_vol = 1e6_r8 * rho_sw
+    mass_to_vol = rho_sw * (1e3 * unit_system%mass2kg * (unit_system%m2len)**3)
     vol_to_mass = c1 / mass_to_vol
 
     !---------------------------------------------------------------------------
@@ -1077,7 +1092,7 @@ contains
 
   subroutine marbl_co2calc_co3_sat_vals(&
        num_elements, num_active_elements, temp, salt, press_bar, &
-       co3_sat_calc, co3_sat_arag)
+       unit_system, co3_sat_calc, co3_sat_arag)
 
     !---------------------------------------------------------------------------
     ! Calculate co3 concentration at calcite and aragonite saturation
@@ -1089,6 +1104,7 @@ contains
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: temp         ! temperature (degC)
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: salt         ! salinity (psu)
     real(kind=r8)          , dimension(num_elements) , intent(in)  :: press_bar    ! pressure at level k (bars)
+    type(unit_system_type)                           , intent(in)  :: unit_system  ! Unit system and conversion factors (cgs or mks)
     real(kind=r8)          , dimension(num_elements) , intent(out) :: co3_sat_calc ! co3 concentration at calcite saturation
     real(kind=r8)          , dimension(num_elements) , intent(out) :: co3_sat_arag ! co3 concentration at aragonite saturation
 
@@ -1111,9 +1127,12 @@ contains
 
     !---------------------------------------------------------------------------
     !   set unit conversion factors
+    !   mass_to_vol: mol / kg -> mmol / m^3
+    !                => mmol / mol * kg / m^3
+    !   rho_sw is M / L^3 => rho_sw * 1e3 * kg/M * (L/m)^3
     !---------------------------------------------------------------------------
 
-    mass_to_vol = 1e6_r8 * rho_sw
+    mass_to_vol = rho_sw * (1e3 * unit_system%mass2kg * (unit_system%m2len)**3)
 
     salt_lim = max(salt(:),salt_min)
     tk       = T0_Kelvin + temp(:)

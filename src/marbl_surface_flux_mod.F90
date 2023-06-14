@@ -267,6 +267,7 @@ contains
                temp       = surface_flux_forcings(ind%sst_id)%field_0d,    &
                salt       = surface_flux_forcings(ind%sss_id)%field_0d,    &
                atmpres    = surface_flux_forcings(ind%atm_pressure_id)%field_0d, &
+               unit_system = unit_system,                                  &
                co2calc_coeffs = co2calc_coeffs,                            &
                co2calc_state = co2calc_state,                              &
                co3        = co3,                                           &
@@ -326,6 +327,7 @@ contains
                temp       = surface_flux_forcings(ind%sst_id)%field_0d,    &
                salt       = surface_flux_forcings(ind%sss_id)%field_0d,    &
                atmpres    = surface_flux_forcings(ind%atm_pressure_id)%field_0d, &
+               unit_system = unit_system,                                  &
                co2calc_coeffs = co2calc_coeffs,                            &
                co2calc_state = co2calc_state,                              &
                co3        = co3,                                           &
