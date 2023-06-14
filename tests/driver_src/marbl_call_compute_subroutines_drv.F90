@@ -66,7 +66,7 @@ Contains
     ! --------------------------------------------------------------------------
 
     ! 2. Initialize the test (reads grid info, distributes columns, etc)
-    call set_domain(size(marbl_instances), num_levels, active_level_cnt, num_PAR_subcols, &
+    call set_domain(size(marbl_instances), unit_system, num_levels, active_level_cnt, num_PAR_subcols, &
                     col_start, col_cnt, grid_data, driver_status_log)
     if (driver_status_log%labort_MARBL) then
       call driver_status_log%log_error_trace('set_domain', subname)
@@ -150,7 +150,7 @@ Contains
     end do
 
     !    (d) netCDF calls to create history file (dimensions are defined but data is not written)
-    call marbl_io_define_history(marbl_instances, col_cnt, driver_status_log)
+    call marbl_io_define_history(marbl_instances, col_cnt, unit_system, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_define_history', subname)
       return
@@ -350,13 +350,14 @@ Contains
 
   !*****************************************************************************
 
-  subroutine set_domain(num_insts, num_levels, active_level_cnt, num_PAR_subcols, &
-                           col_start, col_cnt, grid_data, driver_status_log)
+  subroutine set_domain(num_insts, unit_system, num_levels, active_level_cnt, num_PAR_subcols, &
+                        col_start, col_cnt, grid_data, driver_status_log)
 
     use marbl_tools_mod, only : marbl_tools_distribute_cols
     use marbl_io_mod, only : marbl_io_read_domain
 
     integer,                            intent(in)    :: num_insts
+    character(len=*),                   intent(in)    :: unit_system
     integer,                            intent(out)   :: num_levels
     integer, dimension(:), allocatable, intent(out)   :: active_level_cnt
     integer,                            intent(out)   :: num_PAR_subcols
@@ -369,7 +370,8 @@ Contains
     integer :: num_cols
 
     ! 1. Read domain info from netCDF file
-    call marbl_io_read_domain(grid_data, active_level_cnt, num_cols, num_levels, num_PAR_subcols, driver_status_log)
+    call marbl_io_read_domain(unit_system, grid_data, active_level_cnt, num_cols, &
+                              num_levels, num_PAR_subcols, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('read_domain', subname)
       return

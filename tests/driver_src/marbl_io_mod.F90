@@ -345,8 +345,10 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_domain(grid_data, active_level_cnt, num_cols, num_levels, num_PAR_subcols, driver_status_log)
+  subroutine marbl_io_read_domain(unit_system, grid_data, active_level_cnt, num_cols, &
+                                  num_levels, num_PAR_subcols, driver_status_log)
 
+    character(len=*),     intent(in)    :: unit_system
     type(grid_data_type), intent(inout) :: grid_data
     integer, allocatable, intent(inout) :: active_level_cnt(:)
     integer,              intent(out)   :: num_cols
@@ -385,24 +387,27 @@ contains
       call driver_status_log%log_error_trace('get_init_file_var_by_name(delta_z)', subname)
       return
     end if
-    ! convert from m -> cm
-    grid_data%delta_z = grid_data%delta_z * 100._r8
+    if (trim(unit_system) == 'cgs') &
+      ! convert from m -> cm
+      grid_data%delta_z = grid_data%delta_z * 100._r8
 
     call get_init_file_var_by_name('zt', grid_data%zt, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('get_init_file_var_by_name(zt)', subname)
       return
     end if
-    ! convert from m -> cm
-    grid_data%zt = grid_data%zt * 100._r8
+    if (trim(unit_system) == 'cgs') &
+      ! convert from m -> cm
+      grid_data%zt = grid_data%zt * 100._r8
 
     call get_init_file_var_by_name('zw', grid_data%zw, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('get_init_file_var_by_name(zw)', subname)
       return
     end if
-    ! convert from m -> cm
-    grid_data%zw = grid_data%zw * 100._r8
+    if (trim(unit_system) == 'cgs') &
+      ! convert from m -> cm
+      grid_data%zw = grid_data%zw * 100._r8
 
     call get_init_file_var_by_name('active_level_cnt', active_level_cnt, driver_status_log)
     if (driver_status_log%labort_marbl) then
@@ -520,13 +525,14 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_define_history(marbl_instances, col_cnt, driver_status_log)
+  subroutine marbl_io_define_history(marbl_instances, col_cnt, unit_system, driver_status_log)
 
     use marbl_netcdf_mod, only : marbl_netcdf_def_dim
     use marbl_netcdf_mod, only : marbl_netcdf_enddef
 
     type(marbl_interface_class), dimension(:), intent(in)    :: marbl_instances
     integer,                     dimension(:), intent(in)    :: col_cnt
+    character(len=*),                          intent(in)    :: unit_system
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_io_define_history'
@@ -560,15 +566,25 @@ contains
 
     ! netCDF variables
     ! 1) Domain variables
+    if (trim(unit_system) == 'cgs') then
+      units = 'cm'
+    else
+      units = 'm'
+    end if
     call marbl_netcdf_def_var(ncid_out, 'zt', 'double', (/dimid_num_levels/), &
-                              "cell center depth", "m", driver_status_log)
+                              "cell center depth", units, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_netcdf_def_var(zt)', subname)
       return
     end if
 
+    if (trim(unit_system) == 'cgs') then
+      units = 'cm'
+    else
+      units = 'm'
+    end if
     call marbl_netcdf_def_var(ncid_out, 'zw', 'double', (/dimid_num_levels/), &
-                              "cell interface depth", "m", driver_status_log)
+                              "cell interface depth", units, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_netcdf_def_var(zw)', subname)
       return
