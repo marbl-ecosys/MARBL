@@ -691,7 +691,7 @@ contains
         surface_flux_diag_buffer%diags(m)%field_2d((col_start+1):(col_start+col_cnt)) = &
             marbl_instance%surface_flux_diags%diags(m)%field_2d(:)
         surface_flux_diag_buffer%diags(m)%ref_depth_2d = &
-            marbl_instance%surface_flux_diags%diags(m)%ref_depth * 100._r8 ! m -> cm
+            marbl_instance%surface_flux_diags%diags(m)%ref_depth
       else
         surface_flux_diag_buffer%diags(m)%field_3d(:,(col_start+1):(col_start+col_cnt)) = &
             marbl_instance%surface_flux_diags%diags(m)%field_3d(:,:)
@@ -713,7 +713,7 @@ contains
         interior_tendency_diag_buffer%diags(m)%field_2d(col_id) = &
             marbl_instance%interior_tendency_diags%diags(m)%field_2d(1)
         interior_tendency_diag_buffer%diags(m)%ref_depth_2d = &
-            marbl_instance%interior_tendency_diags%diags(m)%ref_depth * 100._r8 ! m -> cm
+            marbl_instance%interior_tendency_diags%diags(m)%ref_depth
       else
         interior_tendency_diag_buffer%diags(m)%field_3d(:,col_id) = &
             marbl_instance%interior_tendency_diags%diags(m)%field_3d(:,1)
