@@ -378,7 +378,7 @@ contains
 
     call compute_dissolved_organic_matter (km, marbl_tracer_indices, num_PAR_subcols, &
          PAR, zooplankton_derived_terms, autotroph_derived_terms,   &
-         delta_z1, tracer_local(:, :), dissolved_organic_matter)
+         delta_z1, tracer_local(:, :), unit_system, dissolved_organic_matter)
 
     do k = 1, km
 
@@ -398,13 +398,12 @@ contains
 
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
-       call compute_particulate_terms(k, domain, bot_flux_to_tend, &
-            marbl_particulate_share, p_remin_scalef(k),            &
-            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                    &
-            P_SiO2, dust, P_iron, PON_remin(:), PON_sed_loss(k),   &
-            QA_dust_def(k),                                        &
-            tracer_local(:, :), carbonate, sed_denitrif(:),        &
-            other_remin(:), fesedflux(k), marbl_tracer_indices,    &
+       call compute_particulate_terms(k, domain, bot_flux_to_tend,    &
+            p_remin_scalef(k), tracer_local(:, :), carbonate,         &
+            fesedflux(k), unit_system, PON_remin(:), PON_sed_loss(k), &
+            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, &
+            QA_dust_def(k), sed_denitrif(:), other_remin(:),          &
+            marbl_particulate_share, marbl_tracer_indices,            &
             glo_avg_fields_interior_tendency, marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
@@ -2126,7 +2125,7 @@ contains
   subroutine compute_dissolved_organic_matter (km, marbl_tracer_indices, &
              PAR_nsubcols, PAR, &
              zooplankton_derived_terms, autotroph_derived_terms, &
-             dz1, tracer_local, dissolved_organic_matter)
+             dz1, tracer_local, unit_system, dissolved_organic_matter)
 
     use marbl_settings_mod, only : Q
     use marbl_settings_mod, only : DOC_reminR_light
@@ -2148,6 +2147,7 @@ contains
     type(autotroph_derived_terms_type),   intent(in)    :: autotroph_derived_terms
     real(r8),                             intent(in)    :: dz1
     real(r8),                             intent(in)    :: tracer_local(marbl_tracer_indices%total_cnt,km)
+    type(unit_system_type),               intent(in)    :: unit_system
     type(dissolved_organic_matter_type),  intent(inout) :: dissolved_organic_matter
 
     !-----------------------------------------------------------------------
@@ -2237,7 +2237,7 @@ contains
         if (k == 1) then
           do subcol_ind = 1, PAR_nsubcols
             if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR_in(subcol_ind) > 1.0_r8)) then
-              work = PAR_col_frac(subcol_ind) * (log(PAR_in(subcol_ind))*0.4373_r8) * (10.0e2_r8/dz1)
+              work = PAR_col_frac(subcol_ind) * (log(PAR_in(subcol_ind))*0.4373_r8) * (10._r8*unit_system%m2len/dz1)
               DOCr_reminR = DOCr_reminR + work * DOMr_reminR_photo
               DONr_reminR = DONr_reminR + work * DOMr_reminR_photo
               DOPr_reminR = DOPr_reminR + work * DOMr_reminR_photo
@@ -2602,12 +2602,11 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_particulate_terms(k, domain, bot_flux_to_tend,      &
-              marbl_particulate_share, p_remin_scalef,                    &
-              POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                         &
-              P_SiO2, dust, P_iron, PON_remin, PON_sed_loss, QA_dust_def, &
-              tracer_local, carbonate, sed_denitrif, other_remin,         &
-              fesedflux, marbl_tracer_indices,                            &
+   subroutine compute_particulate_terms(k, domain, bot_flux_to_tend,           &
+              p_remin_scalef, tracer_local, carbonate, fesedflux, unit_system, &
+              PON_remin, PON_sed_loss, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,     &
+              P_SiO2, dust, P_iron, QA_dust_def, sed_denitrif, other_remin,    &
+              marbl_particulate_share, marbl_tracer_indices,                   &
               glo_avg_fields_interior_tendency, marbl_status_log)
 
      !  Compute outgoing fluxes and remineralization terms. Assumes that
@@ -2658,7 +2657,6 @@ contains
 
      ! !USES:
 
-     use marbl_constants_mod, only : cmperm
      use marbl_settings_mod, only : parm_Fe_desorption_rate0
      use marbl_settings_mod, only : parm_sed_denitrif_coeff
      use marbl_settings_mod, only : particulate_flux_ref_depth
@@ -2688,6 +2686,7 @@ contains
      real (r8), dimension(:,:)         , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
      type(carbonate_type)              , intent(in)    :: carbonate
      real(r8)                          , intent(in)    :: fesedflux           ! sedimentary Fe input
+     type(unit_system_type)            , intent(in)    :: unit_system
      real(r8)                          , intent(inout) :: PON_remin(domain%km)! remin of PON
      real(r8)                          , intent(out)   :: PON_sed_loss        ! loss of PON to sediments
      type(column_sinking_particle_type), intent(inout) :: POC                 ! base units = nmol C
@@ -2708,7 +2707,7 @@ contains
      !-----------------------------------------------------------------------
      !  local variables
      !-----------------------------------------------------------------------
-     real (r8) :: poc_diss, & ! diss. length used (cm)
+     real (r8) :: poc_diss, & ! diss. length used (L)
           sio2_diss, & ! diss. length varies spatially with O2
           caco3_diss, &
           dust_diss
@@ -2735,8 +2734,6 @@ contains
           flux_alt,           & ! flux to floor in alternative units, to match particular parameterizations
           bury_frac,          & ! fraction of flux hitting floor that gets buried
           dz_loc, dzr_loc       ! dz, dzr at a particular i, j location
-
-     real (r8) :: particulate_flux_ref_depth_cm
 
      integer (int_kind) :: n     ! loop indices
 
@@ -2783,8 +2780,8 @@ contains
 
      if (p_remin_scalef /= c1) scalelength = scalelength / p_remin_scalef
 
-     DECAY_Hard     = exp(-delta_z(k) * p_remin_scalef / 4.0e6_r8)
-     DECAY_HardDust = exp(-delta_z(k) * p_remin_scalef / 1.2e8_r8)
+     DECAY_Hard     = exp(-delta_z(k) * unit_system%len2cm * p_remin_scalef / 4.0e6_r8)
+     DECAY_HardDust = exp(-delta_z(k) * unit_system%len2cm * p_remin_scalef / 1.2e8_r8)
 
      poc_error = .false.
      dz_loc = delta_z(k)
@@ -3043,10 +3040,9 @@ contains
      else
        ztop = c0
      end if
-     particulate_flux_ref_depth_cm = cmperm * particulate_flux_ref_depth
-     if (ztop .le. particulate_flux_ref_depth_cm .and. particulate_flux_ref_depth_cm .lt. zw(k)) then
+     if (ztop .le. particulate_flux_ref_depth .and. particulate_flux_ref_depth .lt. zw(k)) then
        if (k <= column_kmt) then
-         if (particulate_flux_ref_depth_cm .eq. ztop) then
+         if (particulate_flux_ref_depth .eq. ztop) then
            ! expressions are simplified if particulate_flux_ref_depth is exactly the top of the layer
            POC%flux_at_ref_depth     = POC%sflux_in(k)     + POC%hflux_in(k)
            POP%flux_at_ref_depth     = POP%sflux_in(k)     + POP%hflux_in(k)
@@ -3054,7 +3050,7 @@ contains
            P_SiO2%flux_at_ref_depth  = P_SiO2%sflux_in(k)  + P_SiO2%hflux_in(k)
            P_iron%flux_at_ref_depth  = P_iron%sflux_in(k)  + P_iron%hflux_in(k)
          else
-           wbot = (particulate_flux_ref_depth_cm - ztop) / delta_z(k)
+           wbot = (particulate_flux_ref_depth - ztop) / delta_z(k)
 
            flux_top = POC%sflux_in(k) + POC%hflux_in(k)
            flux_bot = POC%sflux_out(k) + POC%hflux_out(k)
@@ -3119,7 +3115,7 @@ contains
         POC%to_floor = POC%sflux_out(k) + POC%hflux_out(k)
 
         if (POC%to_floor > c0) then
-           flux_alt = POC%to_floor*mpercm*spd ! convert to mmol/m^2/day
+           flux_alt = POC%to_floor*unit_system%len2m*spd ! convert to mmol/m^2/day [nmol/cm^2 = cm*mmol/m^3 = mmol/m^2 * cm/m]
 
            ! first compute burial efficiency, then compute loss to sediments
            bury_frac = 0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2
@@ -3152,7 +3148,7 @@ contains
            sed_denitrif(1:k) = bot_flux_to_tend(1:k) * parm_sed_denitrif_coeff * POC%to_floor &
                 * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
-           flux_alt = POC%to_floor*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
+           flux_alt = POC%to_floor*(unit_system%len2cm * (mpercm**3))*spd*365.0_r8 ! convert to mmol/cm^2/year
            other_remin(1:k) = min(bot_flux_to_tend(1:k) * &
                                   min(0.1_r8 + flux_alt, 0.5_r8) * (POC%to_floor - POC%sed_loss(k)), &
                                       bot_flux_to_tend(1:k) * (POC%to_floor - POC%sed_loss(k)) - &
@@ -3182,7 +3178,7 @@ contains
         endif
 
         P_SiO2%to_floor = P_SiO2%sflux_out(k) + P_SiO2%hflux_out(k)
-        flux_alt = P_SiO2%to_floor*mpercm*spd ! convert to mmol/m^2/day
+        flux_alt = P_SiO2%to_floor*unit_system%len2m*spd ! convert to mmol/m^2/day [nmol/cm^2 = cm*mmol/m^3 = mmol/m^2 * cm/m]
         ! first compute burial efficiency, then compute loss to sediments
         if (flux_alt > c2) then
            bury_frac = 0.2_r8

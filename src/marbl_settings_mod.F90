@@ -57,6 +57,7 @@ module marbl_settings_mod
     real(r8)          :: g2mass          ! M / g (converts from grams -> model mass M)
     real(r8)          :: mass2kg         ! kg / M (converts from model mass M -> kilograms)
     real(r8)          :: cm2len          ! L / cm (converts from cm -> model length L)
+    real(r8)          :: len2cm          ! cm / L (converts from model length L -> cm)
     real(r8)          :: m2len           ! L / m (converts from m -> model length L)
     real(r8)          :: len2m           ! m / L (converts from model length L -> m)
     real(r8)          :: mol_prefix      ! convert mol -> nmol, mmol, etc (get correct metric prefix)
@@ -261,10 +262,8 @@ module marbl_settings_mod
 
   character(len=char_len), target :: init_bury_coeff_opt
 
-  integer(int_kind), target :: &
-       particulate_flux_ref_depth    ! reference depth for particulate flux diagnostics (m)
-
   real(r8), target :: &
+       particulate_flux_ref_depth, & ! reference depth for particulate flux diagnostics (L)
        bftt_dz_sum_thres,          & ! MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold
        Jint_Ctot_thres_molpm2pyr,  & ! MARBL will abort if abs(Jint_Ctot) exceeds this threshold
        Jint_Ctot_thres,            & ! MARBL will abort if abs(Jint_Ctot) exceeds this threshold (derived from Jint_Ctot_thres_molpm2pyr)
@@ -418,7 +417,7 @@ contains
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lo2_consumption_scalef        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    particulate_flux_ref_depth    = 100._r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     bftt_dz_sum_thres             = 1.0e-14_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     gQsi_0                        = 0.137_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -474,6 +473,7 @@ contains
     parm_CaCO3_diss        = parm_CaCO3_diss * unit_system%cm2len
     parm_scalelen_z(:)     = parm_scalelen_z(:) * unit_system%cm2len
     caco3_bury_thres_depth = caco3_bury_thres_depth * unit_system%cm2len
+    particulate_flux_ref_depth = particulate_flux_ref_depth * unit_system%m2len ! in m because it used to be integer used to define FLUX_100m
 
   end subroutine marbl_settings_set_defaults_general_parms
 
@@ -591,7 +591,6 @@ contains
 
     character(len=char_len)          :: sname, lname, units, datatype, category
     real(r8),                pointer :: rptr => NULL()
-    integer(int_kind),       pointer :: iptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
     logical                          :: labort_marbl_loc
@@ -749,10 +748,10 @@ contains
     sname     = 'particulate_flux_ref_depth'
     lname     = 'reference depth for particulate flux diagnostics'
     units     = 'm'
-    datatype  = 'integer'
-    iptr      => particulate_flux_ref_depth
+    datatype  = 'real'
+    rptr      => particulate_flux_ref_depth
     call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, iptr=iptr)
+                        marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'bftt_dz_sum_thres'
@@ -2160,13 +2159,14 @@ contains
       this%conc_tend_units = 'nmol/cm^3/s'
 
       ! set conversion factors
-      this%g2mass     = 1._r8   ! g -> g
-      this%mass2g     = 1._r8   ! g -> g
-      this%mass2kg    = 1e-3_r8 ! g -> kg
-      this%cm2len     = 1._r8   ! cm -> cm
-      this%m2len      = 1.e2_r8 ! m -> cm
-      this%len2m      = 0.01_r8 ! cm -> m
-      this%mol_prefix = 1.e9_r8 ! mol -> nmol
+      this%g2mass     = 1._r8    ! g -> g
+      this%mass2g     = 1._r8    ! g -> g
+      this%mass2kg    = 1.e-3_r8 ! g -> kg
+      this%cm2len     = 1._r8    ! cm -> cm
+      this%len2cm     = 1._r8    ! cm -> cm
+      this%m2len      = 1.e2_r8  ! m -> cm
+      this%len2m      = 0.01_r8  ! cm -> m
+      this%mol_prefix = 1.e9_r8  ! mol -> nmol
     elseif (trim(unit_system_loc) == 'mks') then
       ! Use m, kg, and s for length, mass, and time
 
@@ -2190,6 +2190,7 @@ contains
       this%mass2g     = 1.e3_r8  ! kg -> g
       this%mass2kg    = 1._r8    ! kg -> kg
       this%cm2len     = 0.01_r8  ! cm -> m
+      this%len2cm     = 1.e2_r8  ! cm -> m
       this%m2len      = 1._r8    ! m -> m
       this%len2m      = 1._r8    ! m -> m
       this%mol_prefix = 1.e3_r8  ! mol -> mmol

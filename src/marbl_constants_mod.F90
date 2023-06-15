@@ -45,7 +45,6 @@ module marbl_constants_mod
       dps       = c1 / spd,     & ! number of days in a second
       ypd       = c1 / dpy,     & ! number of years in a day
       yps       = c1 / spy,     & ! number of years in a second
-      cmperm    = 100.0_r8,     & ! cm per meter
       mpercm    = .01_r8          ! meters per cm
 
   !---------------------------------------------------------------------

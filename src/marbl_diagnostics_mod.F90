@@ -2058,7 +2058,7 @@ contains
 
       ! Particulate 2D diags
 
-      write(particulate_flux_ref_depth_str, "(I0,A)") particulate_flux_ref_depth, 'm'
+      write(particulate_flux_ref_depth_str, "(I0,A)") int(particulate_flux_ref_depth*unit_system%len2m), 'm'
 
       lname = 'POC Flux at ' // trim(particulate_flux_ref_depth_str)
       sname = 'POC_FLUX_' // trim(particulate_flux_ref_depth_str)

@@ -92,7 +92,7 @@ module marbl_interface_public_types
      character (len=char_len)                    :: vertical_grid ! 'none', 'layer_avg', 'layer_iface'
      logical   (log_kind)                        :: compute_now
      logical   (log_kind)                        :: ltruncated_vertical_extent
-     integer   (int_kind)                        :: ref_depth ! depth that diagnostic nominally resides at
+     real      (r8)                              :: ref_depth ! depth that diagnostic nominally resides at
      real      (r8), allocatable, dimension(:)   :: field_2d
      real      (r8), allocatable, dimension(:,:) :: field_3d
 
@@ -399,7 +399,7 @@ contains
     integer                 , intent(in)    :: num_elements
     integer                 , intent(in)    :: num_levels
     type(marbl_log_type)    , intent(inout) :: marbl_status_log
-    integer,       optional , intent(in)    :: ref_depth
+    real(r8),      optional , intent(in)    :: ref_depth
 
     character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_diag_init'
     character(len=char_len)     :: log_message
@@ -434,7 +434,7 @@ contains
       end if
       this%ref_depth = ref_depth
     else
-      this%ref_depth = 0
+      this%ref_depth = c0
     end if
 
   end subroutine marbl_single_diag_init
@@ -634,7 +634,7 @@ contains
     logical (int_kind)            , intent(in)    :: truncate
     integer (int_kind)            , intent(out)   :: id
     type(marbl_log_type)          , intent(inout) :: marbl_status_log
-    integer,             optional , intent(in)    :: ref_depth
+    real(r8),            optional , intent(in)    :: ref_depth
 
     character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_diagnostics_add'
     character(len=char_len)     :: log_message
