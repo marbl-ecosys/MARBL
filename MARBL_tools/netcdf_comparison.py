@@ -145,6 +145,36 @@ def _reduce_to_matching_variables(ds_base, ds_new):
 
 ##################
 
+def _get_conversion_factor(ds_base, ds_new, var):
+    unit_conversion = {key: {} for key in
+                       ['cm/s', 'cm','nmol/cm^3',  'nmol/cm^3/s', 'nmol/cm^2/s',
+                        'g/cm^3/s', 'g/cm^2/s', 'meq/m^3 cm/s']}
+    unit_conversion['cm/s']['m/s'] = 0.01 # cm/s -> m/s
+    unit_conversion['cm']['m'] = 0.01 # cm -> m
+    unit_conversion['nmol/cm^3']['mmol/m^3'] = 1 # nmol/cm^3 -> mmol/m^3
+    unit_conversion['nmol/cm^3/s']['mmol/m^3/s'] = 1 # nmol/cm^3/s -> mmol/m^3/s
+    unit_conversion['nmol/cm^2/s']['mmol/m^2/s'] = 0.01 # nmol/cm^2/s -> mmol/m^2/s
+    unit_conversion['g/cm^3/s']['kg/m^3/s'] = 1000 # g/cm^3/s -> kg/m^3/s
+    unit_conversion['g/cm^2/s']['kg/m^2/s'] = 10 # g/cm^2/s -> kg/m^2/s
+    unit_conversion['meq/m^3 cm/s']['meq/m^2/s'] = 0.01 # meq/m^3 cm/s -> meq/m^2/s
+
+    conversion_factor = 1
+    if('units' in ds_base[var].attrs and ds_new[var].attrs):
+        old_units = ds_base[var].attrs['units']
+        new_units = ds_new[var].attrs['units']
+        if old_units != new_units:
+            found=False
+            if new_units in unit_conversion and old_units in unit_conversion[new_units]:
+                conversion_factor = unit_conversion[new_units][old_units]
+                found = True
+            if not found:
+                if old_units in unit_conversion and new_units in unit_conversion[old_units]:
+                    conversion_factor = 1 / unit_conversion[old_units][new_units]
+                    found = True
+            if not found:
+                raise KeyError(f'Can not convert from {new_units} to {old_units}')
+    return conversion_factor
+
 def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
     """
         Assumes both datasets contain the same variables with the same dimensions
@@ -159,58 +189,25 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
     """
     import numpy as np
 
-    var_check_fail = False
+    error_checking = {'var_check_count': 0}
     common_vars = list(set(ds_base.variables) & set(ds_new.variables))
     common_vars.sort()
 
-    unit_conversion = dict()
-    unit_conversion['cm/s'] = dict()
-    unit_conversion['cm/s']['m/s'] = 0.01 # cm/s -> m/s
-    unit_conversion['cm'] = dict()
-    unit_conversion['cm']['m'] = 0.01 # cm -> m
-    unit_conversion['nmol/cm^3'] = dict()
-    unit_conversion['nmol/cm^3']['mmol/m^3'] = 1 # nmol/cm^3 -> mmol/m^3
-    unit_conversion['nmol/cm^3/s'] = dict()
-    unit_conversion['nmol/cm^3/s']['mmol/m^3/s'] = 1 # nmol/cm^3/s -> mmol/m^3/s
-    unit_conversion['nmol/cm^2/s'] = dict()
-    unit_conversion['nmol/cm^2/s']['mmol/m^2/s'] = 0.01 # nmol/cm^2/s -> mmol/m^2/s
-    unit_conversion['g/cm^3/s'] = dict()
-    unit_conversion['g/cm^3/s']['kg/m^3/s'] = 1000 # g/cm^3/s -> kg/m^3/s
-    unit_conversion['g/cm^2/s'] = dict()
-    unit_conversion['g/cm^2/s']['kg/m^2/s'] = 10 # g/cm^2/s -> kg/m^2/s
-    unit_conversion['meq/m^3 cm/s'] = dict()
-    unit_conversion['meq/m^3 cm/s']['meq/m^2/s'] = 0.01 # meq/m^3 cm/s -> meq/m^2/s
-
     for var in common_vars:
-        err_messages = []
+        error_checking['messages'] = []
 
         # (0) Update units of new file to match baseline
-        conversion_factor = 1
-        if('units' in ds_base[var].attrs and ds_new[var].attrs):
-            old_units = ds_base[var].attrs['units']
-            new_units = ds_new[var].attrs['units']
-            if (old_units != new_units):
-                found=False
-                if new_units in unit_conversion:
-                    if old_units in unit_conversion[new_units]:
-                        conversion_factor = unit_conversion[new_units][old_units]
-                        found = True
-                if not found:
-                    if old_units in unit_conversion:
-                        if new_units in unit_conversion[old_units]:
-                            conversion_factor = 1 / unit_conversion[old_units][new_units]
-                            found = True
-                if not found:
-                    raise KeyError(f'Can not convert from {new_units} to {old_units}')
+        conversion_factor = _get_conversion_factor(ds_base, ds_new, var)
 
         # (1) Are NaNs in the same place?
         mask = ~np.isnan(ds_base[var].data)
         if np.any(mask ^ ~np.isnan(ds_new[var].data)):
-            err_messages.append('NaNs are not in same place')
+            error_checking['messages'].append('NaNs are not in same place')
 
         # (2) compare everywhere that baseline is 0
         if np.any(np.where(ds_base[var].data[mask] == 0, ds_new[var].data[mask] != 0, False)):
-            err_messages.append('Baseline is 0 at some indices where new data is non-zero')
+            error_checking['messages'].append(
+                'Baseline is 0 at some indices where new data is non-zero')
 
         # (3i) Compare everywhere that 0 < |baseline| <= thres
         base_data = np.where((ds_base[var].data[mask] != 0) &
@@ -221,8 +218,8 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
                             conversion_factor*ds_new[var].data[mask], 0)
         abs_err = np.abs(new_data - base_data)
         if np.any(abs_err > atol):
-            err_messages.append("Max absolute error ({}) exceeds {}".format(np.max(abs_err),
-                                                                            atol))
+            error_checking['messages'].append("Max absolute error ({}) exceeds {}".format(
+                np.max(abs_err), atol))
 
         # (3ii) Compare everywhere that |baseline| is > thres
         base_data = np.where(np.abs(ds_base[var].data[mask]) > thres,
@@ -236,17 +233,17 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
         if np.any(rel_err > rtol):
             if rtol == 0:
                 abs_err = np.abs(new_data - base_data)
-                err_messages.append("Values are not the same everywhere\n{}".format(
+                error_checking['messages'].append("Values are not the same everywhere\n{}".format(
                     "    Max relative error: {}\n    Max absolute error: {}".format(
                         np.max(rel_err), np.max(abs_err))
                 ))
             else:
-                err_messages.append("Max relative error ({}) exceeds {}".format(
+                error_checking['messages'].append("Max relative error ({}) exceeds {}".format(
                     np.max(rel_err), rtol))
 
-        var_check_fail = _report_errs(var, err_messages) or var_check_fail
+        error_checking['var_check_count'] += _report_errs(var, error_checking['messages'])
 
-    return var_check_fail
+    return error_checking['var_check_count']>0
 
 ##################
 
