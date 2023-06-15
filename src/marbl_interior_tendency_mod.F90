@@ -325,8 +325,8 @@ contains
     call setup_local_tracers(kmt, marbl_tracer_indices, tracers(:,:), autotroph_local, &
          tracer_local(:,:), zooplankton_local, totalChl_local)
 
-    call set_surface_particulate_terms(surface_flux_forcing_indices, POC, POP, P_CaCO3, &
-         P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
+    call set_surface_particulate_terms(surface_flux_forcing_indices, unit_system, POC, POP, &
+         P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
 
     call marbl_timers%start(marbl_timer_indices%carbonate_chem_id,            &
                             marbl_status_log)
@@ -825,8 +825,8 @@ contains
 
   !***********************************************************************
 
-  subroutine set_surface_particulate_terms(surface_flux_forcing_indices, POC, POP, P_CaCO3, &
-       P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def, NET_DUST_IN)
+  subroutine set_surface_particulate_terms(surface_flux_forcing_indices, unit_system, POC, &
+       POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def, NET_DUST_IN)
 
     !  Set incoming fluxes (put into outgoing flux for first level usage).
     !  Set dissolution length, production fraction and mass terms.
@@ -847,6 +847,7 @@ contains
 
     real (r8)                          , intent(in)    :: net_dust_in     ! dust flux
     type(marbl_surface_flux_forcing_indexing_type), intent(in)   :: surface_flux_forcing_indices
+    type(unit_system_type)             , intent(in)    :: unit_system
     type(column_sinking_particle_type) , intent(inout) :: POC             ! base units = nmol C
     type(column_sinking_particle_type) , intent(inout) :: POP             ! base units = nmol P
     type(column_sinking_particle_type) , intent(inout) :: P_CaCO3         ! base units = nmol CaCO3
@@ -868,19 +869,19 @@ contains
     !  Value given here is at Tref of 30 degC, JKM
     !-----------------------------------------------------------------------
 
-    POC%diss      = parm_POC_diss   ! diss. length (cm), modified by TEMP
+    POC%diss      = parm_POC_diss   ! diss. length (L), modified by TEMP
     POC%gamma     = c0              ! not used
-    POC%mass      = 12.01_r8        ! molecular weight of C
+    POC%mass      = 12.01_r8        ! molecular weight of C (g/mol)
     POC%rho       = c0              ! not used
 
     POP%diss      = parm_POC_diss   ! not used
     POP%gamma     = c0              ! not used
-    POP%mass      = 30.974_r8       ! molecular weight of P
+    POP%mass      = 30.974_r8       ! molecular weight of P (g/mol)
     POP%rho       = c0              ! not used
 
-    P_CaCO3%diss  = parm_CaCO3_diss ! diss. length (cm)
+    P_CaCO3%diss  = parm_CaCO3_diss ! diss. length (L)
     P_CaCO3%gamma = parm_CacO3_gamma! prod frac -> hard subclass
-    P_CaCO3%mass  = 100.09_r8       ! molecular weight of CaCO
+    P_CaCO3%mass  = 100.09_r8       ! molecular weight of CaCO (g/mol)
     P_CaCO3%rho   = parm_hPOC_CaCO3_ratio * P_CaCO3%mass / POC%mass ! QA mass ratio for CaCO3
 
     P_CaCO3_ALT_CO2%diss  = P_CaCO3%diss
@@ -888,17 +889,17 @@ contains
     P_CaCO3_ALT_CO2%mass  = P_CaCO3%mass
     P_CaCO3_ALT_CO2%rho   = P_CaCO3%rho
 
-    P_SiO2%diss   = parm_SiO2_diss  ! diss. length (cm), modified by TEMP
+    P_SiO2%diss   = parm_SiO2_diss  ! diss. length (L), modified by TEMP
     P_SiO2%gamma  = parm_SiO2_gamma ! prod frac -> hard subclass
-    P_SiO2%mass   = 60.08_r8        ! molecular weight of SiO2
+    P_SiO2%mass   = 60.08_r8        ! molecular weight of SiO2 (g/mol)
     P_SiO2%rho    = parm_hPOC_SiO2_ratio * P_SiO2%mass / POC%mass ! QA mass ratio for SiO2
 
-    dust%diss     = 40000.0_r8      ! diss. length (cm)
+    dust%diss     = 400.0_r8 * unit_system%m2len  ! diss. length (L)
     dust%gamma    = 0.98_r8         ! prod frac -> hard subclass
     dust%mass     = 1.0e9_r8        ! base units are already grams
     dust%rho      = parm_hPOC_dust_ratio * dust%mass / POC%mass ! QA mass ratio for dust
 
-    P_iron%diss   = 60000.0_r8      ! diss. length (cm) - not used
+    P_iron%diss   = 600.0_r8 * unit_system%m2len  ! diss. length (L) - not used
     P_iron%gamma  = c0              ! prod frac -> hard subclass - not used
     P_iron%mass   = c0              ! not used
     P_iron%rho    = c0              ! not used

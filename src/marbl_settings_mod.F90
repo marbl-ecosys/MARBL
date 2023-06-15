@@ -176,10 +176,6 @@ module marbl_settings_mod
 
   ! loss term threshold parameters, chl:c ratios
   real(r8), parameter :: &
-      thres_z1_auto     =  80.0e2_r8, & ! autotroph threshold = C_loss_thres for z shallower than this (cm)
-      thres_z2_auto     = 120.0e2_r8, & ! autotroph threshold = 0 for z deeper than this (cm)
-      thres_z1_zoo      = 110.0e2_r8, & ! zooplankton threshold = C_loss_thres for z shallower than this (cm)
-      thres_z2_zoo      = 150.0e2_r8, & ! zooplankton threshold = 0 for z deeper than this (cm)
       CaCO3_temp_thres1 = 4.0_r8,     & ! upper temp threshold for CaCO3 prod
       CaCO3_temp_thres2 = -2.0_r8,    & ! lower temp threshold
       CaCO3_sp_thres    = 2.5_r8        ! bloom condition thres (mmolC/m3)
@@ -220,9 +216,15 @@ module marbl_settings_mod
   !---------------------------------------------------------------------
   !  BGC parameters that are currently hard-coded but can not be
   !  fortran parameters because they depend on unit system
+  !  Values are determined in set_unit_system()
   !---------------------------------------------------------------------
 
-  real(r8) :: xkw_coeff   ! 0.251 cm/hr s^2/m^2 in Wannikhof 2014, will be converted to s/cm or s/m in init
+  real(r8) :: xkw_coeff,     & ! correct value from Wannikhof 2014 is 0.251 cm/hr s^2/m^2  (s/L)
+              thres_z1_auto, & ! autotroph threshold = C_loss_thres for z shallower than this (L)
+              thres_z2_auto, & ! autotroph threshold = 0 for z deeper than this (L)
+              thres_z1_zoo,  & ! zooplankton threshold = C_loss_thres for z shallower than this (L)
+              thres_z2_zoo     ! zooplankton threshold = 0 for z deeper than this (L)
+
 
   !---------------------------------------------------------------------------------------------
   !  Variables defined in marbl_settings_define_general_parms, marbl_settings_define_PFT_counts,
@@ -2143,8 +2145,12 @@ contains
       ! Use cm, g, and s for length, mass, and time
 
       ! Set module variables that used to be fortran parameters
-      xkw_coeff =   6.97e-9_r8 ! 0.251 cm/hr s^2/m^2 in s / cm
-      rho_sw    =   1.026_r8   ! g / cm^3
+      xkw_coeff     = 6.97e-9_r8   ! 0.251 cm/hr s^2/m^2 in s / cm
+      thres_z1_auto =  80.0e2_r8   ! cm
+      thres_z2_auto = 120.0e2_r8   ! cm
+      thres_z1_zoo  = 110.0e2_r8   ! cm
+      thres_z2_zoo  = 150.0e2_r8   ! cm
+      rho_sw        =   1.026_r8   ! g / cm^3
 
       ! set unit metadata
       this%L               = 'cm'
@@ -2165,8 +2171,12 @@ contains
       ! Use m, kg, and s for length, mass, and time
 
       ! Set module variables that used to be fortran parameters
-      xkw_coeff =   6.97e-7_r8 ! 0.251 cm/hr s^2/m^2 in s / cm
-      rho_sw    =   1026.0_r8   ! kg / m^3
+      xkw_coeff     = 6.97e-7_r8   ! 0.251 cm/hr s^2/m^2 in s / m
+      thres_z1_auto =     80._r8   ! m
+      thres_z2_auto =    120._r8   ! m
+      thres_z1_zoo  =    110._r8   ! m
+      thres_z2_zoo  =    150._r8   ! m
+      rho_sw        =  1026.0_r8   ! kg / m^3
 
       ! set unit metadata
       this%L               = 'm'
