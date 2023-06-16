@@ -148,7 +148,8 @@ def _reduce_to_matching_variables(ds_base, ds_new):
 def _get_conversion_factor(ds_base, ds_new, var):
     unit_conversion = {key: {} for key in
                        ['cm/s', 'cm','nmol/cm^3',  'nmol/cm^3/s', 'nmol/cm^2/s',
-                        'g/cm^3/s', 'g/cm^2/s', 'meq/m^3 cm/s']}
+                        'g/cm^3/s', 'g/cm^2/s', 'meq/m^3', 'meq/m^3/s',
+                        'meq/m^3 cm/s']}
     unit_conversion['cm/s']['m/s'] = 0.01 # cm/s -> m/s
     unit_conversion['cm']['m'] = 0.01 # cm -> m
     unit_conversion['nmol/cm^3']['mmol/m^3'] = 1 # nmol/cm^3 -> mmol/m^3
@@ -156,6 +157,9 @@ def _get_conversion_factor(ds_base, ds_new, var):
     unit_conversion['nmol/cm^2/s']['mmol/m^2/s'] = 0.01 # nmol/cm^2/s -> mmol/m^2/s
     unit_conversion['g/cm^3/s']['kg/m^3/s'] = 1000 # g/cm^3/s -> kg/m^3/s
     unit_conversion['g/cm^2/s']['kg/m^2/s'] = 10 # g/cm^2/s -> kg/m^2/s
+    unit_conversion['meq/m^3']['neq/cm^3'] = 1 # meq/m^3 -> neq/cm^3
+    unit_conversion['meq/m^3/s']['neq/cm^3/s'] = 1 # meq/m^3/s -> neq/cm^3/s
+    unit_conversion['meq/m^3 cm/s']['neq/cm^2/s'] = 1 # meq/m^3 cm/s -> neq/cm^2/s
     unit_conversion['meq/m^3 cm/s']['meq/m^2/s'] = 0.01 # meq/m^3 cm/s -> meq/m^2/s
 
     conversion_factor = 1
