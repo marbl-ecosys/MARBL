@@ -479,9 +479,15 @@ contains
     marbl_tracer_metadata%long_name  = long_name
     if ((trim(short_name) == "ALK") .or. &
         (trim(short_name) == "ALK_ALT_CO2")) then
-       marbl_tracer_metadata%units      = 'meq/m^3'
-       marbl_tracer_metadata%tend_units = 'meq/m^3/s'
-       marbl_tracer_metadata%flux_units = 'meq/m^3 cm/s'
+       if (unit_system%unit_system == 'cgs') then
+        marbl_tracer_metadata%units      = 'neq/cm^3'
+        marbl_tracer_metadata%tend_units = 'neq/cm^3/s'
+        marbl_tracer_metadata%flux_units = 'neq/cm^2/s'
+     else
+          marbl_tracer_metadata%units      = 'meq/m^3'
+          marbl_tracer_metadata%tend_units = 'meq/m^3/s'
+          marbl_tracer_metadata%flux_units = 'meq/m^2/s'
+       endif
     else
        marbl_tracer_metadata%units      = unit_system%conc_units
        marbl_tracer_metadata%tend_units = unit_system%conc_tend_units
@@ -601,8 +607,11 @@ contains
        marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Chlorophyll'
        marbl_tracer_metadata(n)%units      = 'mg/m^3'
        marbl_tracer_metadata(n)%tend_units = 'mg/m^3/s'
-       marbl_tracer_metadata(n)%flux_units = 'mg/m^3 cm/s'
-
+       if (unit_system%unit_system == 'cgs') then
+          marbl_tracer_metadata(n)%flux_units = 'mg/m^3 cm/s'
+       else
+          marbl_tracer_metadata(n)%flux_units = 'mg/m^2/s'
+       endif
        n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
        marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'C'
        marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Carbon'

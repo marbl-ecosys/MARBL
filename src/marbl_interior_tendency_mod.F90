@@ -344,7 +344,7 @@ contains
     end if
 
     call compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_indices, &
-                     totalChl_local, PAR)
+                     totalChl_local, unit_system, PAR)
 
     call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
@@ -518,7 +518,7 @@ contains
   !***********************************************************************
 
   subroutine compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_ind, &
-                         totalChl_local, PAR)
+                         totalChl_local, unit_system, PAR)
 
     !-----------------------------------------------------------------------
     !  compute PAR related quantities
@@ -534,6 +534,7 @@ contains
     type(marbl_forcing_fields_type)           , intent(in)    :: interior_tendency_forcings(:)
     type(marbl_interior_tendency_forcing_indexing_type), intent(in) :: interior_tendency_forcing_ind
     real(r8)                                  , intent(in)    :: totalChl_local(:)
+    type(unit_system_type)                    , intent(in)    :: unit_system
     type(marbl_PAR_type)                      , intent(inout) :: PAR
 
     !-----------------------------------------------------------------------
@@ -598,9 +599,9 @@ contains
       WORK1(:) = max(totalChl_local(1:column_kmt), 0.02_r8)
       do k = 1, column_kmt
         if (WORK1(k) < 0.13224_r8) then
-          PAR%KPARdz(k) = 0.000919_r8*(WORK1(k)**0.3536_r8)
+          PAR%KPARdz(k) = (0.0919_r8*unit_system%len2m)*(WORK1(k)**0.3536_r8)
         else
-          PAR%KPARdz(k) = 0.001131_r8*(WORK1(k)**0.4562_r8)
+          PAR%KPARdz(k) = (0.1131_r8*unit_system%len2m)*(WORK1(k)**0.4562_r8)
         end if
         PAR%KPARdz(k) = PAR%KPARdz(k) * delta_z(k)
       end do

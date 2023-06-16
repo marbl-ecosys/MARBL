@@ -24,7 +24,7 @@ module marbl_interface_private_types
      real(r8), allocatable :: col_frac(:)    ! column fraction occupied by each sub-column, dimension is (PAR_nsubcols)
      real(r8), allocatable :: interface(:,:) ! PAR at layer interfaces, dimensions are (0:km,PAR_nsubcols)
      real(r8), allocatable :: avg(:,:)       ! PAR averaged over layer, dimensions are (km,PAR_nsubcols)
-     real(r8), allocatable :: KPARdz(:)      ! PAR absorption coefficient times dz (L), dimension is (km)
+     real(r8), allocatable :: KPARdz(:)      ! PAR absorption coefficient times dz (absorp coeff is 1/L => variable is unitless), dimension is (km)
    contains
      procedure, public :: construct => marbl_PAR_constructor
      procedure, public :: destruct => marbl_PAR_destructor
