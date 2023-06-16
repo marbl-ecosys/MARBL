@@ -383,7 +383,7 @@ contains
     do k = 1, km
 
        call compute_scavenging(k, km, marbl_tracer_indices, tracer_local(:,:), &
-            POC, P_CaCO3, P_SiO2, dust, Fefree(:), Fe_scavenge_rate(:), &
+            POC, P_CaCO3, P_SiO2, dust, unit_system, Fefree(:), Fe_scavenge_rate(:), &
             Fe_scavenge(:), Lig_scavenge(:), marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
@@ -2264,7 +2264,7 @@ contains
   !***********************************************************************
 
   subroutine compute_scavenging(k, km, marbl_tracer_indices, &
-       tracer_local, POC, P_CaCO3, P_SiO2, dust, &
+       tracer_local, POC, P_CaCO3, P_SiO2, dust, unit_system, &
        Fefree, Fe_scavenge_rate, Fe_scavenge, Lig_scavenge, &
        marbl_status_log)
 
@@ -2283,6 +2283,7 @@ contains
     type(column_sinking_particle_type), intent(in)    :: P_CaCO3
     type(column_sinking_particle_type), intent(in)    :: P_SiO2
     type(column_sinking_particle_type), intent(in)    :: dust
+    type(unit_system_type),             intent(in)    :: unit_system
     real(r8),                           intent(out)   :: Fefree(km)
     real(r8),                           intent(out)   :: Fe_scavenge_rate(km)
     real(r8),                           intent(out)   :: Fe_scavenge(km)
@@ -2459,6 +2460,7 @@ contains
                    + (P_SiO2%sflux_in(k)  + P_SiO2%hflux_in(k) ) * P_SiO2%mass &
                    + (dust%sflux_in(k)    + dust%hflux_in(k)   ) * dust_Fe_scavenge_scale
 
+      sinking_mass = sinking_mass * unit_system%len2cm  ! MNL MNL: very kludgy, I don't know why this unit conversion gets scavenging terms correct
       Fe_scavenge_rate(k) = parm_Fe_scavenge_rate0 * sinking_mass
       Lig_scavenge_rate   = parm_Lig_scavenge_rate0 * sinking_mass
       FeLig_scavenge_rate = parm_FeLig_scavenge_rate0 * sinking_mass
