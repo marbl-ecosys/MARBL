@@ -1132,6 +1132,9 @@ contains
       case('Iron Sediment Flux')
         varname = 'iron_sed_flux'
         rank = 1
+        if (trim(unit_system) == 'mks') &
+          ! convert from nmol/cm^2/s -> mmol/m^2/s
+          conv_factor = 0.01_r8
       case('O2 Consumption Scale Factor')
         varname = 'o2_consumption_scalef'
         rank = 1
