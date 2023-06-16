@@ -922,8 +922,8 @@ contains
     P_SiO2%hflux_in(ksurf) = c0
 
     if (surface_flux_forcing_indices%dust_flux_id.ne.0) then
-      dust%sflux_in(ksurf) = (c1 - dust%gamma) * net_dust_in
-      dust%hflux_in(ksurf) = dust%gamma * net_dust_in
+      dust%sflux_in(ksurf) = (c1 - dust%gamma) * net_dust_in * unit_system%conc_flux2dust_flux
+      dust%hflux_in(ksurf) = dust%gamma * net_dust_in * unit_system%conc_flux2dust_flux
     else
       dust%sflux_in(ksurf) = c0
       dust%hflux_in(ksurf) = c0
@@ -2956,6 +2956,7 @@ contains
         dust%remin(k) = &
              ((dust%sflux_in(k) - dust%sflux_out(k)) + &
              (dust%hflux_in(k) - dust%hflux_out(k))) * dzr_loc
+        dust%remin(k) = dust%remin(k) * unit_system%dust_flux2conc_flux ! undo unit conversion in marbl_interior_tendency_mod.F90
 
         !-----------------------------------------------------------------------
         !  Compute iron remineralization and flux out.
@@ -3269,7 +3270,7 @@ contains
            P_iron%sed_loss(k) = P_iron%to_floor
         endif
 
-        dust%to_floor = dust%sflux_out(k) + dust%hflux_out(k)
+        dust%to_floor = (dust%sflux_out(k) + dust%hflux_out(k)) * unit_system%dust_flux2conc_flux ! undo unit conversion in marbl_interior_tendency_mod.F90
         dust%sed_loss(k) = dust%to_floor
 
      endif

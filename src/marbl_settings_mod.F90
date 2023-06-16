@@ -61,6 +61,8 @@ module marbl_settings_mod
     real(r8)          :: m2len           ! L / m (converts from m -> model length L)
     real(r8)          :: len2m           ! m / L (converts from model length L -> m)
     real(r8)          :: mol_prefix      ! convert mol -> nmol, mmol, etc (get correct metric prefix)
+    real(r8)          :: dust_flux2conc_flux  ! several dust terms implicitly assume 1 g / cm^2 dust is converted to 1 nmol / cm^2
+    real(r8)          :: conc_flux2dust_flux  ! several dust terms implicitly assume 1 g / cm^2 dust is converted to 1 nmol / cm^2
   contains
     procedure :: set => set_unit_system
   end type unit_system_type
@@ -2167,6 +2169,8 @@ contains
       this%m2len      = 1.e2_r8  ! m -> cm
       this%len2m      = 0.01_r8  ! cm -> m
       this%mol_prefix = 1.e9_r8  ! mol -> nmol
+      this%dust_flux2conc_flux = 1._r8  ! g/cm^2 -> nmol / cm^2
+      this%conc_flux2dust_flux = 1._r8  ! nmol / cm^2 -> g/cm^2
     elseif (trim(unit_system_loc) == 'mks') then
       ! Use m, kg, and s for length, mass, and time
 
@@ -2194,6 +2198,8 @@ contains
       this%m2len      = 1._r8    ! m -> m
       this%len2m      = 1._r8    ! m -> m
       this%mol_prefix = 1.e3_r8  ! mol -> mmol
+      this%dust_flux2conc_flux = 1.e3_r8   ! kg/m^2 -> nmol / m^2
+      this%conc_flux2dust_flux = 1.e-3_r8  ! nmol / m^2 -> kg/m^2
     else
       write(log_message, '(3A)') 'Can not update unit system to "', trim(unit_system_loc), '"'
       call marbl_status_log%log_error(log_message, subname)

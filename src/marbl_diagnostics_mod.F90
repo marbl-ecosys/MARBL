@@ -3847,7 +3847,7 @@ contains
     diags(ind%SiO2_PROD)%field_3d(:, 1)           = P_SiO2%prod
     diags(ind%SiO2_REMIN)%field_3d(:, 1)          = P_SiO2%remin
 
-    diags(ind%dust_FLUX_IN)%field_3d(:, 1) = dust%sflux_in + dust%hflux_in
+    diags(ind%dust_FLUX_IN)%field_3d(:, 1) = (dust%sflux_in + dust%hflux_in) * unit_system%dust_flux2conc_flux ! undo unit conversion in marbl_interior_tendency_mod.F90
     diags(ind%dust_REMIN)%field_3d(:, 1)   = dust%remin
 
     diags(ind%P_iron_FLUX_at_ref_depth)%field_2d(1) = P_iron%flux_at_ref_depth
