@@ -2198,8 +2198,8 @@ contains
       this%m2len      = 1._r8    ! m -> m
       this%len2m      = 1._r8    ! m -> m
       this%mol_prefix = 1.e3_r8  ! mol -> mmol
-      this%dust_flux2conc_flux = 1.e3_r8   ! kg/m^2 -> nmol / m^2
-      this%conc_flux2dust_flux = 1.e-3_r8  ! nmol / m^2 -> kg/m^2
+      this%dust_flux2conc_flux = 1.e3_r8   ! kg/m^2 -> mmol / m^2
+      this%conc_flux2dust_flux = 1.e-3_r8  ! mmol / m^2 -> kg/m^2
     else
       write(log_message, '(3A)') 'Can not update unit system to "', trim(unit_system_loc), '"'
       call marbl_status_log%log_error(log_message, subname)
