@@ -464,6 +464,7 @@ contains
          Lig_prod, Lig_loss, Lig_scavenge, Fefree,          &
          Lig_photochem, Lig_deg,                            &
          interior_restore,                                  &
+         unit_system,                                       &
          interior_tendency_diags,                           &
          marbl_status_log)
     if (marbl_status_log%labort_marbl) then
@@ -498,6 +499,7 @@ contains
          autotroph_local         = autotroph_local,             &
          temperature             = temperature,                 &
          marbl_tracer_indices    = marbl_tracer_indices,        &
+         unit_system             = unit_system,                 &
          interior_tendencies     = interior_tendencies,         &
          marbl_interior_diags    = interior_tendency_diags,     &
          marbl_status_log        = marbl_status_log)

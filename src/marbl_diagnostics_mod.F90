@@ -3106,6 +3106,7 @@ contains
        Lig_prod, Lig_loss, Lig_scavenge, Fefree,      &
        Lig_photochem, Lig_deg,                        &
        interior_restore,                              &
+       unit_system,                                   &
        marbl_interior_tendency_diags,                 &
        marbl_status_log)
 
@@ -3142,6 +3143,7 @@ contains
     real (r8),                                           intent(in)    :: Lig_photochem(domain%km)
     real (r8),                                           intent(in)    :: Lig_deg(domain%km)
     real (r8),                                           intent(in)    :: interior_restore(:,:)       ! (tracer_cnt, km) local restoring terms for nutrients (mmol ./m^3/sec)
+    type (unit_system_type),                             intent(in)    :: unit_system
     type (marbl_diagnostics_type),                       intent(inout) :: marbl_interior_tendency_diags
     type (marbl_log_type),                               intent(inout) :: marbl_status_log
 
@@ -3171,20 +3173,22 @@ contains
       return
     end if
 
-    call store_diagnostics_autotrophs(domain, autotroph_local, autotroph_derived_terms, marbl_interior_tendency_diags)
+    call store_diagnostics_autotrophs(domain, autotroph_local, autotroph_derived_terms, &
+                                      unit_system, marbl_interior_tendency_diags)
 
-    call store_diagnostics_zooplankton(domain, zooplankton_derived_terms, marbl_interior_tendency_diags)
+    call store_diagnostics_zooplankton(domain, zooplankton_derived_terms, unit_system, marbl_interior_tendency_diags)
 
     call store_diagnostics_particulates(domain, &
          interior_tendency_forcing_ind, interior_tendency_forcings, &
-         marbl_particulate_share, &
-         PON_remin, PON_sed_loss, &
-         sed_denitrif, other_remin, marbl_interior_tendency_diags)
+         marbl_particulate_share, PON_remin, PON_sed_loss, &
+         sed_denitrif, other_remin, unit_system, &
+         marbl_interior_tendency_diags)
 
     associate( POC     => marbl_particulate_share%POC, &
                P_CaCO3 => marbl_particulate_share%P_CaCO3 )
     call store_diagnostics_carbon_fluxes(domain, POC, P_CaCO3, interior_tendencies, &
-         marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
+         marbl_tracer_indices, unit_system, marbl_interior_tendency_diags, &
+         marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_carbon_fluxes', subname)
       return
@@ -3203,8 +3207,8 @@ contains
     call store_diagnostics_PAR(domain, &
          PAR%col_frac(:), PAR%avg(:,:), marbl_interior_tendency_diags)
 
-    call store_diagnostics_dissolved_organic_matter(domain, &
-         dissolved_organic_matter, marbl_interior_tendency_diags)
+    call store_diagnostics_dissolved_organic_matter(domain, dissolved_organic_matter, &
+         unit_system, marbl_interior_tendency_diags)
 
     call store_diagnostics_iron_cycle( &
          fe_scavenge, fe_scavenge_rate, Lig_prod, Lig_loss, Lig_scavenge, &
@@ -3212,16 +3216,15 @@ contains
 
     call store_diagnostics_nitrogen_fluxes(domain, &
          PON_sed_loss, denitrif, sed_denitrif, autotroph_derived_terms, interior_tendencies, &
-         marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
+         marbl_tracer_indices, unit_system, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_nitrogen_fluxes', subname)
       return
     end if
 
     associate( POP => marbl_particulate_share%POP )
-    call store_diagnostics_phosphorus_fluxes(domain, POP, &
-         autotroph_derived_terms, interior_tendencies, &
-         marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
+    call store_diagnostics_phosphorus_fluxes(domain, POP, autotroph_derived_terms, interior_tendencies, &
+         marbl_tracer_indices, unit_system, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_phosphorus_fluxes', subname)
       return
@@ -3229,8 +3232,8 @@ contains
     end associate
 
     associate( P_SiO2 => marbl_particulate_share%P_SiO2 )
-    call store_diagnostics_silicon_fluxes(domain, P_SiO2, interior_tendencies,           &
-         marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
+    call store_diagnostics_silicon_fluxes(domain, P_SiO2, interior_tendencies, marbl_tracer_indices, &
+         unit_system, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_silicon_fluxes', subname)
       return
@@ -3241,7 +3244,8 @@ contains
                P_iron => marbl_particulate_share%P_iron )
     call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
          interior_tendency_forcings(interior_tendency_forcing_ind%fesedflux_id)%field_1d(1,:),  &
-         interior_tendencies, marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
+         interior_tendencies, marbl_tracer_indices, unit_system, &
+         marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_iron_fluxes', subname)
       return
@@ -3535,12 +3539,13 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_autotrophs(marbl_domain, &
-       autotroph_local, autotroph_derived_terms, marbl_interior_diags)
+  subroutine store_diagnostics_autotrophs(marbl_domain, autotroph_local, autotroph_derived_terms, &
+                                          unit_system, marbl_interior_diags)
 
     type(marbl_domain_type),            intent(in)    :: marbl_domain
     type(autotroph_local_type),         intent(in)    :: autotroph_local
     type(autotroph_derived_terms_type), intent(in)    :: autotroph_derived_terms
+    type(unit_system_type),             intent(in)    :: unit_system
     type(marbl_diagnostics_type),       intent(inout) :: marbl_interior_diags
 
     !-----------------------------------------------------------------------
@@ -3574,13 +3579,13 @@ contains
     do n = 1, autotroph_cnt
        ! compute biomass weighted average of limitation terms over 0..100m
        autotrophC_weight(:) = autotroph_local%C(n,:)
-       call marbl_diagnostics_share_compute_vertical_integrals(autotrophC_weight, delta_z, kmt, &
+       call marbl_diagnostics_share_compute_vertical_integrals(autotrophC_weight, delta_z, kmt, unit_system, &
             near_surface_integral=autotrophC_zint_100m)
 
        ! if biomass integral is zero, treat biomass as 1.0, in order to weight all layers equally wrt biomass
        if (autotrophC_zint_100m == c0) then
          autotrophC_weight(:) = c1
-         call marbl_diagnostics_share_compute_vertical_integrals(autotrophC_weight, delta_z, kmt, &
+         call marbl_diagnostics_share_compute_vertical_integrals(autotrophC_weight, delta_z, kmt, unit_system, &
               near_surface_integral=autotrophC_zint_100m)
        end if
 
@@ -3589,17 +3594,17 @@ contains
 
        diags(ind%N_lim_surf(n))%field_2d(1) = autotroph_derived_terms%VNtot(n,1)
        limterm = autotroph_derived_terms%VNtot(n,:) * autotrophC_weight(:)
-       call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
+       call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, unit_system, &
             near_surface_integral=diags(ind%N_lim_Cweight_avg_100m(n))%field_2d(1))
 
        diags(ind%P_lim_surf(n))%field_2d(1) = autotroph_derived_terms%VPtot(n,1)
        limterm = autotroph_derived_terms%VPtot(n,:) * autotrophC_weight(:)
-       call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
+       call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, unit_system, &
             near_surface_integral=diags(ind%P_lim_Cweight_avg_100m(n))%field_2d(1))
 
        diags(ind%Fe_lim_surf(n))%field_2d(1) = autotroph_derived_terms%VFe(n,1)
        limterm = autotroph_derived_terms%VFe(n,:) * autotrophC_weight(:)
-       call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
+       call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, unit_system, &
             near_surface_integral=diags(ind%Fe_lim_Cweight_avg_100m(n))%field_2d(1))
 
        if (ind%SiO3_lim_surf(n).ne.-1) then
@@ -3607,20 +3612,20 @@ contains
        endif
        if (ind%SiO3_lim_Cweight_avg_100m(n).ne.-1) then
           limterm = autotroph_derived_terms%VSiO3(n,:) * autotrophC_weight(:)
-          call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
+          call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, unit_system, &
                near_surface_integral=diags(ind%SiO3_lim_Cweight_avg_100m(n))%field_2d(1))
        endif
 
        if (autotroph_settings(n)%is_carbon_limited) then
           diags(ind%C_lim_surf(n))%field_2d(1) = autotroph_derived_terms%VCO2(n,1)
           limterm = autotroph_derived_terms%VCO2(n,:) * autotrophC_weight(:)
-          call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
+          call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, unit_system, &
                near_surface_integral=diags(ind%C_lim_Cweight_avg_100m(n))%field_2d(1))
        end if
 
        diags(ind%light_lim_surf(n))%field_2d(1) = autotroph_derived_terms%light_lim(n,1)
        limterm = autotroph_derived_terms%light_lim(n,:) * autotrophC_weight(:)
-       call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, &
+       call marbl_diagnostics_share_compute_vertical_integrals(limterm, delta_z, kmt, unit_system, &
             near_surface_integral=diags(ind%light_lim_Cweight_avg_100m(n))%field_2d(1))
 
        if (ind%Qp(n).ne.-1) then
@@ -3682,7 +3687,7 @@ contains
        ! per-autotroph vertical integrals and their sums
        if (ind%CaCO3_form_zint(n).ne.-1) then
           call marbl_diagnostics_share_compute_vertical_integrals(autotroph_derived_terms%CaCO3_form(n,:), &
-               delta_z, kmt, full_depth_integral=diags(ind%CaCO3_form_zint(n))%field_2d(1), &
+               delta_z, kmt, unit_system, full_depth_integral=diags(ind%CaCO3_form_zint(n))%field_2d(1), &
                near_surface_integral=diags(ind%CaCO3_form_zint_100m(n))%field_2d(1))
 
           diags(ind%tot_CaCO3_form_zint)%field_2d(1) = diags(ind%tot_CaCO3_form_zint)%field_2d(1) + &
@@ -3693,7 +3698,7 @@ contains
        end if
 
        call marbl_diagnostics_share_compute_vertical_integrals(autotroph_derived_terms%photoC(n,:), &
-            delta_z, kmt, full_depth_integral=diags(ind%photoC_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%photoC_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%photoC_zint_100m(n))%field_2d(1))
 
        diags(ind%photoC_TOT_zint)%field_2d(1) = diags(ind%photoC_TOT_zint)%field_2d(1) + &
@@ -3703,43 +3708,43 @@ contains
             diags(ind%photoC_zint_100m(n))%field_2d(1)
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%photoC_NO3(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%photoC_NO3_zint(n))%field_2d(1))
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%photoC_NO3_zint(n))%field_2d(1))
 
        diags(ind%photoC_NO3_TOT_zint)%field_2d(1) = diags(ind%photoC_NO3_TOT_zint)%field_2d(1) + &
             diags(ind%photoC_NO3_zint(n))%field_2d(1)
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%auto_graze(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%auto_graze_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%auto_graze_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%auto_graze_zint_100m(n))%field_2d(1))
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%auto_graze_poc(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%auto_graze_poc_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%auto_graze_poc_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%auto_graze_poc_zint_100m(n))%field_2d(1))
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%auto_graze_doc(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%auto_graze_doc_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%auto_graze_doc_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%auto_graze_doc_zint_100m(n))%field_2d(1))
 
        do m=1, zooplankton_cnt
           call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%auto_graze_zoo(n,m))%field_3d(:, 1), &
-               delta_z, kmt, full_depth_integral=diags(ind%auto_graze_zoo_zint(n,m))%field_2d(1), &
+               delta_z, kmt, unit_system, full_depth_integral=diags(ind%auto_graze_zoo_zint(n,m))%field_2d(1), &
                near_surface_integral=diags(ind%auto_graze_zoo_zint_100m(n,m))%field_2d(1))
        end do
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%auto_loss(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%auto_loss_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%auto_loss_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%auto_loss_zint_100m(n))%field_2d(1))
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%auto_loss_poc(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%auto_loss_poc_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%auto_loss_poc_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%auto_loss_poc_zint_100m(n))%field_2d(1))
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%auto_loss_doc(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%auto_loss_doc_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%auto_loss_doc_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%auto_loss_doc_zint_100m(n))%field_2d(1))
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%auto_agg(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%auto_agg_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%auto_agg_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%auto_agg_zint_100m(n))%field_2d(1))
     end do ! do n
 
@@ -3751,9 +3756,9 @@ contains
 
   subroutine store_diagnostics_particulates(marbl_domain, &
        interior_tendency_forcing_ind, interior_tendency_forcings, &
-       marbl_particulate_share, &
-       PON_remin, PON_sed_loss, &
-       sed_denitrif, other_remin, marbl_interior_tendency_diags)
+       marbl_particulate_share, PON_remin, PON_sed_loss, &
+       sed_denitrif, other_remin, unit_system, &
+       marbl_interior_tendency_diags)
 
     !-----------------------------------------------------------------------
     ! - Set tavg variables.
@@ -3774,6 +3779,7 @@ contains
     real(r8), dimension(:)             , intent(in)    :: PON_sed_loss ! km
     real(r8), dimension(:)             , intent(in)    :: sed_denitrif ! km
     real(r8), dimension(:)             , intent(in)    :: other_remin  ! km
+    type(unit_system_type)             , intent(in)    :: unit_system
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_interior_tendency_diags
 
     associate(                                                       &
@@ -3801,15 +3807,15 @@ contains
     diags(ind%POC_hFLUX_IN)%field_3d(:, 1)       = POC%hflux_in
     diags(ind%POC_PROD)%field_3d(:, 1)           = POC%prod
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%POC_PROD)%field_3d(:, 1), &
-         delta_z, kmt, full_depth_integral=diags(ind%POC_PROD_zint)%field_2d(1), &
+         delta_z, kmt, unit_system, full_depth_integral=diags(ind%POC_PROD_zint)%field_2d(1), &
          near_surface_integral=diags(ind%POC_PROD_zint_100m)%field_2d(1))
     diags(ind%POC_REMIN_DOCr)%field_3d(:, 1)     = POC%remin * POCremin_refract
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%POC_REMIN_DOCr)%field_3d(:, 1), &
-         delta_z, kmt, full_depth_integral=diags(ind%POC_REMIN_DOCr_zint)%field_2d(1), &
+         delta_z, kmt, unit_system, full_depth_integral=diags(ind%POC_REMIN_DOCr_zint)%field_2d(1), &
          near_surface_integral=diags(ind%POC_REMIN_DOCr_zint_100m)%field_2d(1))
     diags(ind%POC_REMIN_DIC)%field_3d(:, 1)      = POC%remin * (c1 - POCremin_refract)
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%POC_REMIN_DIC)%field_3d(:, 1), &
-         delta_z, kmt, full_depth_integral=diags(ind%POC_REMIN_DIC_zint)%field_2d(1), &
+         delta_z, kmt, unit_system, full_depth_integral=diags(ind%POC_REMIN_DIC_zint)%field_2d(1), &
          near_surface_integral=diags(ind%POC_REMIN_DIC_zint_100m)%field_2d(1))
 
     diags(ind%POP_FLUX_at_ref_depth)%field_2d(1) = POP%flux_at_ref_depth
@@ -3825,11 +3831,11 @@ contains
     diags(ind%CaCO3_FLUX_IN)%field_3d(:, 1)        = P_CaCO3%sflux_in + P_CaCO3%hflux_in
     diags(ind%CaCO3_PROD)%field_3d(:, 1)           = P_CaCO3%prod
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%CaCO3_PROD)%field_3d(:, 1), &
-         delta_z, kmt, full_depth_integral=diags(ind%CaCO3_PROD_zint)%field_2d(1), &
+         delta_z, kmt, unit_system, full_depth_integral=diags(ind%CaCO3_PROD_zint)%field_2d(1), &
          near_surface_integral=diags(ind%CaCO3_PROD_zint_100m)%field_2d(1))
     diags(ind%CaCO3_REMIN)%field_3d(:, 1)          = P_CaCO3%remin
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%CaCO3_REMIN)%field_3d(:, 1), &
-         delta_z, kmt, full_depth_integral=diags(ind%CaCO3_REMIN_zint)%field_2d(1), &
+         delta_z, kmt, unit_system, full_depth_integral=diags(ind%CaCO3_REMIN_zint)%field_2d(1), &
          near_surface_integral=diags(ind%CaCO3_REMIN_zint_100m)%field_2d(1))
 
     diags(ind%CaCO3_ALT_CO2_FLUX_IN)%field_3d(:, 1) = P_CaCO3_ALT_CO2%sflux_in + P_CaCO3_ALT_CO2%hflux_in
@@ -3952,11 +3958,11 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_zooplankton(marbl_domain, &
-       zooplankton_derived_terms, marbl_interior_diags)
+  subroutine store_diagnostics_zooplankton(marbl_domain, zooplankton_derived_terms, unit_system, marbl_interior_diags)
 
     type(marbl_domain_type),              intent(in)    :: marbl_domain
     type(zooplankton_derived_terms_type), intent(in)    :: zooplankton_derived_terms
+    type(unit_system_type),               intent(in)    :: unit_system
     type(marbl_diagnostics_type),         intent(inout) :: marbl_interior_diags
 
     !-----------------------------------------------------------------------
@@ -3990,45 +3996,45 @@ contains
        ! vertical integrals
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_loss(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%zoo_loss_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%zoo_loss_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%zoo_loss_zint_100m(n))%field_2d(1))
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_loss(n))%field_3d(:, 1), &
-            delta_z, kmt, near_surface_integral=diags(ind%zoo_loss_zint_150m(n))%field_2d(1), &
-            shallow_depth=150.0e2_r8)
+            delta_z, kmt, unit_system, near_surface_integral=diags(ind%zoo_loss_zint_150m(n))%field_2d(1), &
+            shallow_depth=150._r8*unit_system%m2len)
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_loss_basal(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%zoo_loss_basal_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%zoo_loss_basal_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%zoo_loss_basal_zint_100m(n))%field_2d(1))
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_loss_poc(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%zoo_loss_poc_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%zoo_loss_poc_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%zoo_loss_poc_zint_100m(n))%field_2d(1))
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_loss_doc(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%zoo_loss_doc_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%zoo_loss_doc_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%zoo_loss_doc_zint_100m(n))%field_2d(1))
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_graze(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%zoo_graze_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%zoo_graze_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%zoo_graze_zint_100m(n))%field_2d(1))
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_graze_poc(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%zoo_graze_poc_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%zoo_graze_poc_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%zoo_graze_poc_zint_100m(n))%field_2d(1))
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_graze_doc(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%zoo_graze_doc_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%zoo_graze_doc_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%zoo_graze_doc_zint_100m(n))%field_2d(1))
 
        do m=1, zooplankton_cnt
           call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_graze_zoo(n,m))%field_3d(:, 1), &
-               delta_z, kmt, full_depth_integral=diags(ind%zoo_graze_zoo_zint(n,m))%field_2d(1), &
+               delta_z, kmt, unit_system, full_depth_integral=diags(ind%zoo_graze_zoo_zint(n,m))%field_2d(1), &
                near_surface_integral=diags(ind%zoo_graze_zoo_zint_100m(n,m))%field_2d(1))
        end do
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%x_graze_zoo(n))%field_3d(:, 1), &
-            delta_z, kmt, full_depth_integral=diags(ind%x_graze_zoo_zint(n))%field_2d(1), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%x_graze_zoo_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%x_graze_zoo_zint_100m(n))%field_2d(1))
     end do
 
@@ -4039,10 +4045,11 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_dissolved_organic_matter(marbl_domain, &
-       dissolved_organic_matter, marbl_diags)
+       dissolved_organic_matter, unit_system, marbl_diags)
 
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(dissolved_organic_matter_type), intent(in)    :: dissolved_organic_matter
+    type(unit_system_type)             , intent(in)    :: unit_system
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
 
     associate(                                       &
@@ -4064,15 +4071,15 @@ contains
     diags(ind%DOP_loss_P_bal)%field_3d(:, 1)   = dissolved_organic_matter%DOP_loss_P_bal(:)
 
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%DOC_prod)%field_3d(:,1), &
-         delta_z, kmt, full_depth_integral=diags(ind%DOC_prod_zint)%field_2d(1), &
+         delta_z, kmt, unit_system, full_depth_integral=diags(ind%DOC_prod_zint)%field_2d(1), &
          near_surface_integral=diags(ind%DOC_prod_zint_100m)%field_2d(1))
 
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%DOC_remin)%field_3d(:,1), &
-         delta_z, kmt, full_depth_integral=diags(ind%DOC_remin_zint)%field_2d(1), &
+         delta_z, kmt, unit_system, full_depth_integral=diags(ind%DOC_remin_zint)%field_2d(1), &
          near_surface_integral=diags(ind%DOC_remin_zint_100m)%field_2d(1))
 
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%DOCr_remin)%field_3d(:,1), &
-         delta_z, kmt, full_depth_integral=diags(ind%DOCr_remin_zint)%field_2d(1), &
+         delta_z, kmt, unit_system, full_depth_integral=diags(ind%DOCr_remin_zint)%field_2d(1), &
          near_surface_integral=diags(ind%DOCr_remin_zint_100m)%field_2d(1))
 
     end associate
@@ -4116,7 +4123,7 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_carbon_fluxes(marbl_domain, POC, P_CaCO3, interior_tendencies, &
-             marbl_tracer_indices, marbl_diags, marbl_status_log)
+             marbl_tracer_indices, unit_system, marbl_diags, marbl_status_log)
 
     use marbl_settings_mod, only : Jint_Ctot_thres
 
@@ -4125,6 +4132,7 @@ contains
     type(column_sinking_particle_type) , intent(in)    :: P_CaCO3
     real(r8)                           , intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
+    type(unit_system_type)             , intent(in)    :: unit_system
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
     type(marbl_log_type)               , intent(inout) :: marbl_status_log
 
@@ -4162,7 +4170,7 @@ contains
        end if
     end do
 
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
+    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, unit_system, &
          full_depth_integral=diags(ind%Jint_Ctot)%field_2d(1),                  &
          integrated_terms = POC%sed_loss + P_CaCO3%sed_loss)
 
@@ -4180,9 +4188,9 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, &
-       PON_sed_loss, denitrif, sed_denitrif, autotroph_derived_terms, interior_tendencies, &
-       marbl_tracer_indices, marbl_diags, marbl_status_log)
+  subroutine store_diagnostics_nitrogen_fluxes(marbl_domain, PON_sed_loss,   &
+       denitrif, sed_denitrif, autotroph_derived_terms, interior_tendencies, &
+       marbl_tracer_indices, unit_system, marbl_diags, marbl_status_log)
 
     use marbl_settings_mod, only : Q
     use marbl_settings_mod, only : Jint_Ntot_thres
@@ -4194,6 +4202,7 @@ contains
     type(autotroph_derived_terms_type), intent(in)    :: autotroph_derived_terms
     real(r8),                           intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
+    type(unit_system_type),             intent(in)    :: unit_system
     type(marbl_diagnostics_type),       intent(inout) :: marbl_diags
     type(marbl_log_type),               intent(inout) :: marbl_status_log
 
@@ -4233,7 +4242,7 @@ contains
        end if
     end do
 
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
+    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, unit_system, &
          full_depth_integral=diags(ind%Jint_Ntot)%field_2d(1),                  &
          integrated_terms = PON_sed_loss)
 
@@ -4251,9 +4260,9 @@ contains
 
   !***********************************************************************
 
-  subroutine store_diagnostics_phosphorus_fluxes(marbl_domain, POP, &
-       autotroph_derived_terms, interior_tendencies, &
-       marbl_tracer_indices, marbl_diags, marbl_status_log)
+  subroutine store_diagnostics_phosphorus_fluxes(marbl_domain, POP,        &
+       autotroph_derived_terms, interior_tendencies, marbl_tracer_indices, &
+       unit_system, marbl_diags, marbl_status_log)
 
     use marbl_pft_mod, only : Qp_zoo
     use marbl_settings_mod, only : lvariable_PtoC
@@ -4264,6 +4273,7 @@ contains
     type(autotroph_derived_terms_type), intent(in)    :: autotroph_derived_terms
     real(r8),                           intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
+    type(unit_system_type),             intent(in)    :: unit_system
     type(marbl_diagnostics_type),       intent(inout) :: marbl_diags
     type(marbl_log_type),               intent(inout) :: marbl_status_log
 
@@ -4298,7 +4308,7 @@ contains
        end do
     endif
 
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
+    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, unit_system, &
          full_depth_integral=diags(ind%Jint_Ptot)%field_2d(1),                  &
          integrated_terms = POP%sed_loss)
 
@@ -4317,7 +4327,7 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_silicon_fluxes(marbl_domain, P_SiO2, interior_tendencies, &
-       marbl_tracer_indices, marbl_diags, marbl_status_log)
+       marbl_tracer_indices, unit_system, marbl_diags, marbl_status_log)
 
     use marbl_settings_mod, only : Jint_Sitot_thres
 
@@ -4325,6 +4335,7 @@ contains
     type(column_sinking_particle_type) , intent(in)    :: P_SiO2
     real(r8)                           , intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
+    type(unit_system_type)             , intent(in)    :: unit_system
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
     type(marbl_log_type)               , intent(inout) :: marbl_status_log
 
@@ -4354,7 +4365,7 @@ contains
        end if
     end do
 
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
+    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, unit_system, &
          full_depth_integral=diags(ind%Jint_Sitot)%field_2d(1),                 &
          integrated_terms = P_SiO2%sed_loss)
 
@@ -4373,7 +4384,8 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_iron_fluxes(marbl_domain, P_iron, dust, &
-             fesedflux, interior_tendencies, marbl_tracer_indices, marbl_diags, marbl_status_log)
+             fesedflux, interior_tendencies, marbl_tracer_indices, &
+             unit_system, marbl_diags, marbl_status_log)
 
     use marbl_settings_mod, only : Qfe_zoo
     use marbl_settings_mod, only : dust_to_Fe
@@ -4385,6 +4397,7 @@ contains
     real(r8)                           , intent(in)    :: fesedflux(:)          ! km
     real(r8)                           , intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
+    type(unit_system_type)             , intent(in)    :: unit_system
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
     type(marbl_log_type)               , intent(inout) :: marbl_status_log
 
@@ -4412,7 +4425,7 @@ contains
            Qfe_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1) - &
            dust%remin(:) * dust_to_Fe
 
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
+    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, unit_system, &
          full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),                 &
          integrated_terms = P_iron%sed_loss - fesedflux)
 

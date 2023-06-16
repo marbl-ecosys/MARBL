@@ -13,6 +13,7 @@ module marbl_ciso_interior_tendency_mod
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : autotroph_settings
   use marbl_settings_mod, only : ciso_on
+  use marbl_settings_mod, only : unit_system_type
 
   use marbl_logging, only : marbl_log_type
 
@@ -55,6 +56,7 @@ contains
        autotroph_derived_terms,                    &
        temperature,                                &
        marbl_tracer_indices,                       &
+       unit_system,                                &
        interior_tendencies,                        &
        marbl_interior_diags,                       &
        marbl_status_log)
@@ -81,6 +83,7 @@ contains
     type(autotroph_derived_terms_type),       intent(in)    :: autotroph_derived_terms
     real (r8),                                intent(in)    :: temperature(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
+    type(unit_system_type),                   intent(in)    :: unit_system
     real (r8),                                intent(inout) :: interior_tendencies(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
     type(marbl_diagnostics_type),             intent(inout) :: marbl_interior_diags
     type(marbl_log_type),                     intent(inout) :: marbl_status_log
@@ -711,6 +714,7 @@ contains
        P_Ca14CO3,           &
        interior_tendencies, &
        marbl_tracer_indices,&
+       unit_system,         &
        marbl_interior_diags,&
        marbl_status_log)
 

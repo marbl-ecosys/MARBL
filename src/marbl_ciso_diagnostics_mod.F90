@@ -10,6 +10,7 @@ module marbl_ciso_diagnostics_mod
 
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : autotroph_settings
+  use marbl_settings_mod, only : unit_system_type
 
   use marbl_interface_public_types, only : marbl_diagnostics_type
 
@@ -996,6 +997,7 @@ contains
        P_Ca14CO3,           &
        interior_tendencies, &
        marbl_tracer_indices,&
+       unit_system,         &
        marbl_diags,         &
        marbl_status_log)
 
@@ -1049,6 +1051,8 @@ contains
 
     type(marbl_tracer_index_type), intent(in) :: marbl_tracer_indices
 
+    type(unit_system_type), intent(in) :: unit_system
+
     type(marbl_diagnostics_type), intent(inout) :: marbl_diags
 
     type(marbl_log_type), intent(inout) :: marbl_status_log
@@ -1099,8 +1103,8 @@ contains
           work = work + interior_tendencies(n,:)
        end if
     end do
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
-         full_depth_integral=diags(ind%CISO_Jint_13Ctot)%field_2d(1),           &
+    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, unit_system, &
+         full_depth_integral=diags(ind%CISO_Jint_13Ctot)%field_2d(1),                        &
          integrated_terms = PO13C%sed_loss + P_Ca13CO3%sed_loss)
 
     if (abs(diags(ind%CISO_Jint_13Ctot)%field_2d(1)) .gt. CISO_Jint_13Ctot_thres) then
@@ -1121,8 +1125,8 @@ contains
           work = work + interior_tendencies(n,:)
        end if
     end do
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
-         full_depth_integral=diags(ind%CISO_Jint_14Ctot)%field_2d(1),           &
+    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, unit_system, &
+         full_depth_integral=diags(ind%CISO_Jint_14Ctot)%field_2d(1),                        &
          integrated_terms = PO14C%sed_loss + P_Ca14CO3%sed_loss)
 
     if (abs(diags(ind%CISO_Jint_14Ctot)%field_2d(1)) .gt. CISO_Jint_14Ctot_thres) then
@@ -1136,18 +1140,18 @@ contains
     ! Other vertical integrals
 
     do n = 1,autotroph_cnt
-       call marbl_diagnostics_share_compute_vertical_integrals(photo13C(n,:), delta_z, kmt, &
+       call marbl_diagnostics_share_compute_vertical_integrals(photo13C(n,:), delta_z, kmt, unit_system, &
             full_depth_integral=diags(ind%CISO_photo13C_zint(n))%field_2d(1))
 
-       call marbl_diagnostics_share_compute_vertical_integrals(photo14C(n,:), delta_z, kmt, &
+       call marbl_diagnostics_share_compute_vertical_integrals(photo14C(n,:), delta_z, kmt, unit_system, &
             full_depth_integral=diags(ind%CISO_photo14C_zint(n))%field_2d(1))
 
        if (ind%CISO_Ca13CO3_form_zint(n) .gt. 0) &
-         call marbl_diagnostics_share_compute_vertical_integrals(Ca13CO3_prod(n,:), delta_z, kmt, &
+         call marbl_diagnostics_share_compute_vertical_integrals(Ca13CO3_prod(n,:), delta_z, kmt, unit_system, &
               full_depth_integral=diags(ind%CISO_Ca13CO3_form_zint(n))%field_2d(1))
 
        if (ind%CISO_Ca14CO3_form_zint(n) .gt. 0) &
-         call marbl_diagnostics_share_compute_vertical_integrals(Ca14CO3_prod(n,:), delta_z, kmt, &
+         call marbl_diagnostics_share_compute_vertical_integrals(Ca14CO3_prod(n,:), delta_z, kmt, unit_system, &
               full_depth_integral=diags(ind%CISO_Ca14CO3_form_zint(n))%field_2d(1))
     end do
 
