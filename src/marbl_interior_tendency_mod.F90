@@ -190,7 +190,7 @@ contains
     real (r8) :: other_remin(domain%km)      ! organic C remin not due oxic or denitrif (nmolC/cm^3/sec)
     real (r8) :: Tfunc_auto(autotroph_cnt, domain%km)   ! Temperature scaling for autotrophs
     real (r8) :: Tfunc_zoo(zooplankton_cnt, domain%km)   ! Temperature scaling for zooplankton
-    real (r8) :: Fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient
+    real (r8) :: Fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient (1/s)
     real (r8) :: Fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
     real (r8) :: Lig_scavenge(domain%km)     ! loss of Fe-binding Ligand from scavenging (mmol Fe/m^3/sec)
     real (r8) :: QA_dust_def(domain%km)
@@ -383,7 +383,7 @@ contains
     do k = 1, km
 
        call compute_scavenging(k, km, marbl_tracer_indices, tracer_local(:,:), &
-            POC, P_CaCO3, P_SiO2, dust, unit_system, Fefree(:), Fe_scavenge_rate(:), &
+            POC, P_CaCO3, P_SiO2, dust, Fefree(:), Fe_scavenge_rate(:), &
             Fe_scavenge(:), Lig_scavenge(:), marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
@@ -420,7 +420,7 @@ contains
 
     call compute_Lig_terms(km, num_PAR_subcols, marbl_tracer_indices, &
          POC%remin(:), dissolved_organic_matter%DOC_prod(:), PAR, delta_z1, tracer_local, Lig_scavenge(:), &
-         autotroph_derived_terms%photoFe(:,:), Lig_prod(:), Lig_photochem(:), Lig_deg(:), Lig_loss(:))
+         autotroph_derived_terms%photoFe(:,:), unit_system, Lig_prod(:), Lig_photochem(:), Lig_deg(:), Lig_loss(:))
 
     call compute_nitrif(kmt, km, num_PAR_subcols, marbl_tracer_indices, PAR, tracer_local(:,:), nitrif(:))
 
@@ -899,7 +899,8 @@ contains
     dust%diss     = 400.0_r8 * unit_system%m2len  ! diss. length (L)
     dust%gamma    = 0.98_r8         ! prod frac -> hard subclass
     dust%mass     = 1.0e9_r8        ! base units are already grams
-    dust%rho      = parm_hPOC_dust_ratio * dust%mass / POC%mass ! QA mass ratio for dust
+    dust%rho      = parm_hPOC_dust_ratio * dust%mass / POC%mass ! QA mass ratio for dust (nmol/g)
+    dust%rho      = dust%rho * unit_system%nmol2mol_prefix * unit_system%mass2g ! convert from nmol/g -> mmol/kg in mks)
 
     P_iron%diss   = 600.0_r8 * unit_system%m2len  ! diss. length (L) - not used
     P_iron%gamma  = c0              ! prod frac -> hard subclass - not used
@@ -922,8 +923,8 @@ contains
     P_SiO2%hflux_in(ksurf) = c0
 
     if (surface_flux_forcing_indices%dust_flux_id.ne.0) then
-      dust%sflux_in(ksurf) = (c1 - dust%gamma) * net_dust_in * unit_system%conc_flux2dust_flux
-      dust%hflux_in(ksurf) = dust%gamma * net_dust_in * unit_system%conc_flux2dust_flux
+      dust%sflux_in(ksurf) = (c1 - dust%gamma) * net_dust_in
+      dust%hflux_in(ksurf) = dust%gamma * net_dust_in
     else
       dust%sflux_in(ksurf) = c0
       dust%hflux_in(ksurf) = c0
@@ -2264,7 +2265,7 @@ contains
   !***********************************************************************
 
   subroutine compute_scavenging(k, km, marbl_tracer_indices, &
-       tracer_local, POC, P_CaCO3, P_SiO2, dust, unit_system, &
+       tracer_local, POC, P_CaCO3, P_SiO2, dust, &
        Fefree, Fe_scavenge_rate, Fe_scavenge, Lig_scavenge, &
        marbl_status_log)
 
@@ -2283,9 +2284,8 @@ contains
     type(column_sinking_particle_type), intent(in)    :: P_CaCO3
     type(column_sinking_particle_type), intent(in)    :: P_SiO2
     type(column_sinking_particle_type), intent(in)    :: dust
-    type(unit_system_type),             intent(in)    :: unit_system
     real(r8),                           intent(out)   :: Fefree(km)
-    real(r8),                           intent(out)   :: Fe_scavenge_rate(km)
+    real(r8),                           intent(out)   :: Fe_scavenge_rate(km)   ! scavenging rate of iron (1/s)
     real(r8),                           intent(out)   :: Fe_scavenge(km)
     real(r8),                           intent(out)   :: Lig_scavenge(km)
     type(marbl_log_type),               intent(inout) :: marbl_status_log
@@ -2301,9 +2301,9 @@ contains
     real(kind=r8), parameter :: KFeLig1 = 10.0e13_r8 * 1.0e-6_r8
 
     real(r8) :: FeLig1               ! iron bound to ligand 1
-    real(r8) :: sinking_mass         ! sinking mass flux used in calculating scavenging
-    real(r8) :: Lig_scavenge_rate    ! scavenging rate of bound ligand (1/yr)
-    real(r8) :: FeLig_scavenge_rate  ! scavenging rate of bound iron (1/yr)
+    real(r8) :: sinking_mass         ! sinking mass flux used in calculating scavenging (concentration flux units * molecular weight)
+    real(r8) :: Lig_scavenge_rate    ! scavenging rate of bound ligand (1/s)
+    real(r8) :: FeLig_scavenge_rate  ! scavenging rate of bound iron (1/s)
 
     ! local vars specific to 2 ligand model
     real(kind=r8), parameter :: KFeLig2 = 10.0e11_r8 * 1.0e-6_r8
@@ -2452,21 +2452,21 @@ contains
       !  3) Scavenging linear function of sinking mass,
       !     1.6 ng/cm2/s = 500g/m2/yr, 1.44 450g/m2/yr,
       !
-      ! scavening of FeLig2 is not implemented
+      ! scavenging of FeLig2 is not implemented
       !-----------------------------------------------------------------------
 
+      ! sinking_mass: ng/cm^2/s in cgs, mg/m^2/s in mks
       sinking_mass = (POC%sflux_in(k)     + POC%hflux_in(k)    ) * (3.0_r8 * 12.01_r8) &
                    + (P_CaCO3%sflux_in(k) + P_CaCO3%hflux_in(k)) * P_CaCO3%mass &
                    + (P_SiO2%sflux_in(k)  + P_SiO2%hflux_in(k) ) * P_SiO2%mass &
                    + (dust%sflux_in(k)    + dust%hflux_in(k)   ) * dust_Fe_scavenge_scale
 
-      sinking_mass = sinking_mass * unit_system%len2cm  ! MNL MNL: very kludgy, I don't know why this unit conversion gets scavenging terms correct
       Fe_scavenge_rate(k) = parm_Fe_scavenge_rate0 * sinking_mass
       Lig_scavenge_rate   = parm_Lig_scavenge_rate0 * sinking_mass
       FeLig_scavenge_rate = parm_FeLig_scavenge_rate0 * sinking_mass
 
-      Lig_scavenge(k) = yps * FeLig1 * Lig_scavenge_rate
-      Fe_scavenge(k)  = yps * (Fefree(k) * Fe_scavenge_rate(k) + FeLig1 * FeLig_scavenge_rate)
+      Lig_scavenge(k) = FeLig1 * Lig_scavenge_rate
+      Fe_scavenge(k)  = Fefree(k) * Fe_scavenge_rate(k) + FeLig1 * FeLig_scavenge_rate
 
     end associate
 
@@ -2701,7 +2701,7 @@ contains
      type(column_sinking_particle_type), intent(inout) :: P_SiO2              ! base units = nmol SiO2
      type(column_sinking_particle_type), intent(inout) :: dust                ! base units = g
      type(column_sinking_particle_type), intent(inout) :: P_iron              ! base units = nmol Fe
-     real (r8)                         , intent(inout) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux
+     real (r8)                         , intent(inout) :: QA_dust_def         ! incoming deficit in the QA(dust) POC flux (molar prefix*mol/L^2/s)
      real (r8), dimension(:)           , intent(inout) :: sed_denitrif        ! sedimentary denitrification (umolN/cm^2/s)
      real (r8), dimension(:)           , intent(inout) :: other_remin         ! sedimentary remin not due to oxic or denitrification
      type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
@@ -2729,8 +2729,8 @@ contains
           decay_SiO2,         & ! scaling factor for dissolution of SiO2
           decay_CaCO3,        & ! scaling factor for dissolution of CaCO3
           decay_dust,         & ! scaling factor for dissolution of dust
-          POC_PROD_avail,     & ! POC production available for excess POC flux
-          new_QA_dust_def,    & ! outgoing deficit in the QA(dust) POC flux
+          POC_PROD_avail,     & ! POC production available for excess POC flux (nmol/cm^3/s = mmol/m^3/s)
+          new_QA_dust_def,    & ! outgoing deficit in the QA(dust) POC flux (molar prefix*mol/L^2/s)
           scalelength,        & ! used to scale dissolution length scales as function of depth
           o2_scalefactor,     & ! used to scale dissolution length scales as function of o2
           ztop,               & ! depth of top of layer
@@ -2958,7 +2958,6 @@ contains
         dust%remin(k) = &
              ((dust%sflux_in(k) - dust%sflux_out(k)) + &
              (dust%hflux_in(k) - dust%hflux_out(k))) * dzr_loc
-        dust%remin(k) = dust%remin(k) * unit_system%dust_flux2conc_flux ! undo unit conversion in marbl_interior_tendency_mod.F90
 
         !-----------------------------------------------------------------------
         !  Compute iron remineralization and flux out.
@@ -3272,7 +3271,7 @@ contains
            P_iron%sed_loss(k) = P_iron%to_floor
         endif
 
-        dust%to_floor = (dust%sflux_out(k) + dust%hflux_out(k)) * unit_system%dust_flux2conc_flux ! undo unit conversion in marbl_interior_tendency_mod.F90
+        dust%to_floor = (dust%sflux_out(k) + dust%hflux_out(k))
         dust%sed_loss(k) = dust%to_floor
 
      endif
@@ -3290,7 +3289,7 @@ contains
 
   subroutine compute_Lig_terms(km, PAR_nsubcols, marbl_tracer_indices, &
        POC_remin, DOC_prod, PAR, dz1, tracer_local, Lig_scavenge, &
-       photoFe, Lig_prod, Lig_photochem, Lig_deg, Lig_loss)
+       photoFe, unit_system, Lig_prod, Lig_photochem, Lig_deg, Lig_loss)
 
     use marbl_settings_mod, only : remin_to_Lig
     use marbl_settings_mod, only : parm_Lig_degrade_rate0
@@ -3305,6 +3304,7 @@ contains
     real(r8),                      intent(in)  :: tracer_local(marbl_tracer_indices%total_cnt, km)
     real(r8),                      intent(in)  :: Lig_scavenge(km)
     real(r8),                      intent(in)  :: photoFe(autotroph_cnt,km)
+    type(unit_system_type),        intent(in)  :: unit_system
     real(r8),                      intent(out) :: Lig_prod(km)
     real(r8),                      intent(out) :: Lig_photochem(km)
     real(r8),                      intent(out) :: Lig_deg(km)
@@ -3340,7 +3340,8 @@ contains
       rate_per_sec = c0
       do subcol_ind = 1, PAR_nsubcols
         if ((PAR_col_frac(subcol_ind) > c0) .and. (PAR%interface(0,subcol_ind) > 1.0_r8)) then
-          rate_per_sec_subcol = (log(PAR%interface(0,subcol_ind))*0.4373_r8)*(10.0e2_r8/dz1)*((12.0_r8/3.0_r8)*yps) ! 1/(3 months)
+          rate_per_sec_subcol = (log(PAR%interface(0,subcol_ind))*0.4373_r8) &
+                              * (10._r8*unit_system%m2len/dz1)*((12.0_r8/3.0_r8)*yps) ! 1/(3 months)
           rate_per_sec = rate_per_sec + PAR_col_frac(subcol_ind) * rate_per_sec_subcol
         endif
       end do

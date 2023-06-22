@@ -15,6 +15,7 @@ module marbl_diagnostics_mod
 
   use marbl_constants_mod, only : c0
   use marbl_constants_mod, only : c1
+  use marbl_constants_mod, only : spy
 
   use marbl_interface_private_types, only : carbonate_type
   use marbl_interface_private_types, only : dissolved_organic_matter_type
@@ -3847,7 +3848,7 @@ contains
     diags(ind%SiO2_PROD)%field_3d(:, 1)           = P_SiO2%prod
     diags(ind%SiO2_REMIN)%field_3d(:, 1)          = P_SiO2%remin
 
-    diags(ind%dust_FLUX_IN)%field_3d(:, 1) = (dust%sflux_in + dust%hflux_in) * unit_system%dust_flux2conc_flux ! undo unit conversion in marbl_interior_tendency_mod.F90
+    diags(ind%dust_FLUX_IN)%field_3d(:, 1) = (dust%sflux_in + dust%hflux_in)
     diags(ind%dust_REMIN)%field_3d(:, 1)   = dust%remin
 
     diags(ind%P_iron_FLUX_at_ref_depth)%field_2d(1) = P_iron%flux_at_ref_depth
@@ -4108,7 +4109,7 @@ contains
          )
 
     diags(ind%Fe_scavenge)%field_3d(:, 1)      = Fe_scavenge(:)
-    diags(ind%Fe_scavenge_rate)%field_3d(:, 1) = Fe_scavenge_rate(:)
+    diags(ind%Fe_scavenge_rate)%field_3d(:, 1) = Fe_scavenge_rate(:)*spy
     diags(ind%Lig_prod)%field_3d(:, 1)         = Lig_prod(:)
     diags(ind%Lig_loss)%field_3d(:, 1)         = Lig_loss(:)
     diags(ind%Lig_scavenge)%field_3d(:, 1)     = Lig_scavenge(:)
