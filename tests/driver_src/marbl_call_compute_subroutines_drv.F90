@@ -98,6 +98,7 @@ Contains
     do n=1, size(marbl_instances)
       call marbl_instances(n)%surface_flux_output%add_output(num_elements=col_cnt(n), &
                                                              field_name="flux_co2",   &
+                                                             unit_system=unit_system, &
                                                              output_id=flux_co2_id,   &
                                                              marbl_status_log=marbl_instances(n)%StatusLog)
     end do
@@ -106,6 +107,7 @@ Contains
     do n=1, size(marbl_instances)
       call marbl_instances(n)%surface_flux_output%add_output(num_elements=col_cnt(n),       &
                                                              field_name="total_surfChl",    &
+                                                             unit_system=unit_system, &
                                                              output_id=total_surfChl_id,    &
                                                              marbl_status_log=marbl_instances(n)%StatusLog)
     end do
