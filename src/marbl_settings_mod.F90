@@ -281,9 +281,12 @@ module marbl_settings_mod
        parm_init_POC_bury_coeff,   & ! initial scale factor for burial of POC, PON
        parm_init_POP_bury_coeff,   & ! initial scale factor for burial of POP
        parm_init_bSi_bury_coeff,   & ! initial scale factor burial of bSi
-       parm_Fe_scavenge_rate0,     & ! scavenging base rate for Fe
-       parm_Lig_scavenge_rate0,    & ! scavenging base rate for bound ligand
-       parm_FeLig_scavenge_rate0,  & ! scavenging base rate for bound iron
+       parm_Fe_scavenge_rate0,     & ! scavenging base rate for Fe (cm^2/ng s/yr)
+       parm_Lig_scavenge_rate0,    & ! scavenging base rate for bound ligand (cm^2/ng s/yr)
+       parm_FeLig_scavenge_rate0,  & ! scavenging base rate for bound iron (cm^2/ng s/yr)
+       parm_Fe_scavenge_rate0_per_sec,     & ! scavenging base rate for Fe (cm^2/ng)
+       parm_Lig_scavenge_rate0_per_sec,    & ! scavenging base rate for bound ligand (cm^2/ng)
+       parm_FeLig_scavenge_rate0_per_sec,  & ! scavenging base rate for bound iron (cm^2/ng)
        parm_Lig_degrade_rate0,     & ! Fe-binding ligand bacterial degradation base rate coefficient
        parm_Fe_desorption_rate0,   & ! desorption rate for scavenged Fe from particles
        parm_f_prod_sp_CaCO3,       & ! fraction of sp prod. as CaCO3 prod.
@@ -1893,17 +1896,17 @@ contains
     call print_single_derived_parm('parm_kappa_nitrif_per_day', 'parm_kappa_nitrif', &
          parm_kappa_nitrif, subname, marbl_status_log)
 
-    parm_Fe_scavenge_rate0 = yps * parm_Fe_scavenge_rate0
-    call print_single_derived_parm('parm_Fe_scavenge_rate0', 'parm_Fe_scavenge_rate0', &
-         parm_Fe_scavenge_rate0, subname, marbl_status_log)
+    parm_Fe_scavenge_rate0_per_sec = yps * parm_Fe_scavenge_rate0
+    call print_single_derived_parm('parm_Fe_scavenge_rate0', 'parm_Fe_scavenge_rate0_per_sec', &
+         parm_Fe_scavenge_rate0_per_sec, subname, marbl_status_log)
 
-    parm_Lig_scavenge_rate0 = yps * parm_Lig_scavenge_rate0
-    call print_single_derived_parm('parm_Lig_scavenge_rate0', 'parm_Lig_scavenge_rate0', &
-         parm_Lig_scavenge_rate0, subname, marbl_status_log)
+    parm_Lig_scavenge_rate0_per_sec = yps * parm_Lig_scavenge_rate0
+    call print_single_derived_parm('parm_Lig_scavenge_rate0', 'parm_Lig_scavenge_rate0_per_sec', &
+         parm_Lig_scavenge_rate0_per_sec, subname, marbl_status_log)
 
-    parm_FeLig_scavenge_rate0 = yps * parm_FeLig_scavenge_rate0
-    call print_single_derived_parm('parm_FeLig_scavenge_rate0', 'parm_FeLig_scavenge_rate0', &
-         parm_FeLig_scavenge_rate0, subname, marbl_status_log)
+    parm_FeLig_scavenge_rate0_per_sec = yps * parm_FeLig_scavenge_rate0
+    call print_single_derived_parm('parm_FeLig_scavenge_rate0', 'parm_FeLig_scavenge_rate0_per_sec', &
+         parm_FeLig_scavenge_rate0_per_sec, subname, marbl_status_log)
 
     Jint_Ctot_thres = 1.0e9_r8 * mpercm**2 * yps * Jint_Ctot_thres_molpm2pyr
     call print_single_derived_parm('Jint_Ctot_thres_molpm2pyr', 'Jint_Ctot_thres', &

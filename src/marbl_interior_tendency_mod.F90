@@ -2271,9 +2271,9 @@ contains
 
     use marbl_constants_mod, only : c3, c4
     use marbl_settings_mod , only : Lig_cnt
-    use marbl_settings_mod , only : parm_Fe_scavenge_rate0
-    use marbl_settings_mod , only : parm_Lig_scavenge_rate0
-    use marbl_settings_mod , only : parm_FeLig_scavenge_rate0
+    use marbl_settings_mod , only : parm_Fe_scavenge_rate0_per_sec
+    use marbl_settings_mod , only : parm_Lig_scavenge_rate0_per_sec
+    use marbl_settings_mod , only : parm_FeLig_scavenge_rate0_per_sec
     use marbl_settings_mod , only : dust_Fe_scavenge_scale
 
     integer,                            intent(in)    :: k
@@ -2461,9 +2461,9 @@ contains
                    + (P_SiO2%sflux_in(k)  + P_SiO2%hflux_in(k) ) * P_SiO2%mass &
                    + (dust%sflux_in(k)    + dust%hflux_in(k)   ) * dust_Fe_scavenge_scale
 
-      Fe_scavenge_rate(k) = parm_Fe_scavenge_rate0 * sinking_mass
-      Lig_scavenge_rate   = parm_Lig_scavenge_rate0 * sinking_mass
-      FeLig_scavenge_rate = parm_FeLig_scavenge_rate0 * sinking_mass
+      Fe_scavenge_rate(k) = parm_Fe_scavenge_rate0_per_sec * sinking_mass
+      Lig_scavenge_rate   = parm_Lig_scavenge_rate0_per_sec * sinking_mass
+      FeLig_scavenge_rate = parm_FeLig_scavenge_rate0_per_sec * sinking_mass
 
       Lig_scavenge(k) = FeLig1 * Lig_scavenge_rate
       Fe_scavenge(k)  = Fefree(k) * Fe_scavenge_rate(k) + FeLig1 * FeLig_scavenge_rate
