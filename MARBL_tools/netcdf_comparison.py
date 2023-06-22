@@ -186,7 +186,7 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
         Assumes both datasets contain the same variables with the same dimensions
         Checks:
         1. Are NaNs in the same place?
-        2. If baseline is 0 at a given point, then ds_new must be 0 as well
+        2. If baseline is 0 at a given point, then ds_new must be with atol of 0 as well
         3. Absolute vs relative error:
            i. If 0 < |baseline value| <= thres then want absolute difference < atol
            ii. If |baseline value| > thres, then want relative difference < rtol
@@ -211,9 +211,12 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
             error_checking['messages'].append('NaNs are not in same place')
 
         # (2) compare everywhere that baseline is 0
-        if np.any(np.where(ds_base[var].data[mask] == 0, ds_new[var].data[mask] != 0, False)):
+        if np.any(np.where(ds_base[var].data[mask] == 0,
+                           np.abs(ds_new[var].data[mask]) > atol,
+                           False)):
             error_checking['messages'].append(
-                'Baseline is 0 at some indices where new data is non-zero')
+                'Baseline is 0 at some indices where abs value ' +
+                'of new data is larger than {}'.format(atol))
 
         # (3i) Compare everywhere that 0 < |baseline| <= thres
         base_data = np.where((ds_base[var].data[mask] != 0) &
