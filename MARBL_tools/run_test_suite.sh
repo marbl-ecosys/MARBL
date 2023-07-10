@@ -159,7 +159,9 @@ if [ "${STATUS}" == "PASS" ]; then
   print_status "call_compute_subroutines.py" >> ${RESULTS_CACHE}
 
   if [ "${STATUS}" == "PASS" ]; then
+    cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
+    HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
     (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (cgs) vs baseline (cgs))" >> ${RESULTS_CACHE}
