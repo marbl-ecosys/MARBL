@@ -158,10 +158,23 @@ if [ "${STATUS}" == "PASS" ]; then
   STATUS=$(check_return $?)
   print_status "call_compute_subroutines.py" >> ${RESULTS_CACHE}
 
+  if [ "${STATUS}" == "PASS" ]; then
+    BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
+    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    STATUS=$(check_return $?)
+    print_status "netCDF Comparison (1 inst (cgs) vs baseline (cgs))" >> ${RESULTS_CACHE}
+  fi
+
+  # Same test, but use mks instead of cgs
+  cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
+  (set -x ; ./call_compute_subroutines.py --unit_system mks)
+  STATUS=$(check_return $?)
+  print_status "call_compute_subroutines.py" >> ${RESULTS_CACHE}
+
   # Same test, but with num_inst = 2 instead of 1
   if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
-    (set -x ; ./call_compute_subroutines.py -n test_2inst.nml)
+    (set -x ; ./call_compute_subroutines.py --unit_system mks -n test_2inst.nml)
     STATUS=$(check_return $?)
     print_status "call_compute_subroutines.py -n test_2inst.nml" >> ${RESULTS_CACHE}
   fi
@@ -169,7 +182,7 @@ if [ "${STATUS}" == "PASS" ]; then
   # Same test, but with num_inst = 5 instead of 1 or 2
   if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
-    (set -x ; ./call_compute_subroutines.py -n test_5inst.nml)
+    (set -x ; ./call_compute_subroutines.py --unit_system mks -n test_5inst.nml)
     STATUS=$(check_return $?)
     print_status "call_compute_subroutines.py -n test_5inst.nml" >> ${RESULTS_CACHE}
   fi
@@ -182,16 +195,16 @@ if [ "${STATUS}" == "PASS" ]; then
     # When we introduce a baseline comparison, we will use "--strict loose"
     (set -x ; ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_2inst.nc --strict exact)
     STATUS=$(check_return $?)
-    print_status "netCDF Comparison (2 inst vs 1 inst)" >> ${RESULTS_CACHE}
+    print_status "netCDF Comparison (2 inst vs 1 inst, mks)" >> ${RESULTS_CACHE}
 
     (set -x ; ./netcdf_comparison.py -b ${HIST_ROOT}/history_1inst.nc -n ${HIST_ROOT}/history_5inst.nc --strict exact)
     STATUS=$(check_return $?)
-    print_status "netCDF Comparison (5 inst vs 1 inst)" >> ${RESULTS_CACHE}
+    print_status "netCDF Comparison (5 inst vs 1 inst, mks)" >> ${RESULTS_CACHE}
 
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
-    print_status "netCDF Comparison (1 inst vs baseline)" >> ${RESULTS_CACHE}
+    print_status "netCDF Comparison (1 inst (mks) vs baseline (cgs))" >> ${RESULTS_CACHE}
   fi
 
   # Print all diagnostics MARBL can provide
