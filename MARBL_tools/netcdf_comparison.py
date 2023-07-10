@@ -237,13 +237,7 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
         new_data = np.where(np.abs(ds_base[var].data[mask]) > thres,
                             conversion_factor*ds_new[var].data[mask],
                             0)
-        # denominator for relative error is column max value
-        # note the assumption that column is first dimension
-        col_max = np.nanmax(np.abs(ds_base[var].data), axis=tuple(np.arange(1,len(ds_base[var].data.shape))))
-        rel_denom = (np.ones(ds_base[var].data.transpose().shape)*col_max).transpose()
-        rel_denom = rel_denom[mask]
-        rel_err = np.where(base_data != 0, np.abs(new_data - base_data), 0) / \
-                  np.where(rel_denom != 0, rel_denom, 1)
+        rel_err = _compute_rel_err(ds_base[var], base_data, new_data, mask)
         if np.any(rel_err > rtol):
             if rtol == 0:
                 abs_err = np.abs(new_data - base_data)
@@ -258,6 +252,20 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
         error_checking['var_check_count'] += _report_errs(var, error_checking['messages'])
 
     return error_checking['var_check_count']>0
+
+##################
+
+def _compute_rel_err(da_base, base_data, new_data, mask):
+    # denominator for relative error is column max value
+    # note the assumption that column is first dimension
+    import numpy as np
+
+    col_max = np.nanmax(np.abs(da_base.data),
+                        axis=tuple(np.arange(1,len(da_base.data.shape))))
+    rel_denom = (np.ones(da_base.data.transpose().shape)*col_max).transpose()
+    rel_denom = rel_denom[mask]
+    return np.where(base_data != 0, np.abs(new_data - base_data), 0) / \
+           np.where(rel_denom != 0, rel_denom, 1)
 
 ##################
 
