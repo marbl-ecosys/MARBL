@@ -156,11 +156,11 @@ module marbl_settings_mod
   ! fixed ratios
   real(r8), parameter :: r_Nfix_photo=1.25_r8    ! N fix relative to C fix (non-dim)
 
-  ! SET parmaeters and RATIOS for N/C, P/C, SiO3/C, Fe/C, etc...
+  ! SET parameters and RATIOS for N/C, P/C, SiO3/C, Fe/C, etc...
   real(r8), parameter :: &
       Q             = 16.0_r8 / 117.0_r8, & ! N/C ratio (mmol/mmol) of phyto & zoo
       Qfe_zoo       = 3.0e-6_r8,          & ! zooplankton Fe/C ratio
-      ! parameters in GalbraithMartiny Pquota Model^M
+      ! parameters in GalbraithMartiny Pquota Model
       PquotaSlope     = 7.0_r8,        &
       PquotaIntercept = 5.571_r8,      &
       PquotaMinNP     = 0.00854701_r8, &

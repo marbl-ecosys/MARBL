@@ -225,6 +225,7 @@ module marbl_interface_private_types
   !***********************************************************************
 
   type, public :: marbl_particulate_share_type
+     ! MNL TODO: update units for cgs / mks compatibility
      type(column_sinking_particle_type) :: POC              ! base units = nmol C
      type(column_sinking_particle_type) :: POP              ! base units = nmol P
      type(column_sinking_particle_type) :: P_CaCO3          ! base units = nmol CaCO3
