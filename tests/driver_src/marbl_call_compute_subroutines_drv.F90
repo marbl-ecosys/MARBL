@@ -44,6 +44,7 @@ Contains
     real(r8),                  allocatable, dimension(:,:)   :: total_Chl                   ! num_levels x num_cols
     type(forcing_fields_type), allocatable, dimension(:)     :: bot_flux_to_tend            ! num_levels
     real(r8),                  allocatable, dimension(:,:,:) :: tracer_initial_vals         ! num_tracers x num_levels x num_cols
+    real(r8),                  allocatable, dimension(:)     :: lat                         ! num_cols
     type(forcing_fields_type), allocatable, dimension(:)     :: surface_flux_forcings       ! num_forcings
     type(forcing_fields_type), allocatable, dimension(:)     :: interior_tendency_forcings  ! num_forcings
     integer,                   allocatable, dimension(:)     :: active_level_cnt, col_start, col_cnt
@@ -130,6 +131,7 @@ Contains
     allocate(interior_tendencies(num_tracers, num_levels, num_cols))
     allocate(bot_flux_to_tend(num_levels))
     allocate(tracer_initial_vals(num_tracers, num_levels, num_cols))
+    allocate(lat(num_cols))
     allocate(surface_flux_forcings(size(marbl_instances(1)%surface_flux_forcings)))
     allocate(interior_tendency_forcings(size(marbl_instances(1)%interior_tendency_forcings)))
     ! Allocate memory inside surface_flux_forcings
@@ -162,14 +164,14 @@ Contains
     do n=1, num_cols
       !      (i) Read tracer values over full column
       call marbl_io_read_tracers(n, marbl_instances(1)%tracer_metadata, tracer_initial_vals(:,:,n), &
-                        driver_status_log)
+                                 lat(n), driver_status_log)
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('read_tracers', subname)
         return
       end if
 
       !      (ii) Read surface flux forcing fields
-      call marbl_io_read_forcing_field(n, unit_system, marbl_instances(1)%surface_flux_forcings, &
+      call marbl_io_read_forcing_field(n, lat(n), unit_system, marbl_instances(1)%surface_flux_forcings, &
                                        surface_flux_forcings, driver_status_log)
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('read_forcing_field(surface)', subname)
@@ -177,7 +179,7 @@ Contains
       end if
 
       !      (iii) Read interior tendency forcing fields
-      call marbl_io_read_forcing_field(n, unit_system, marbl_instances(1)%interior_tendency_forcings, &
+      call marbl_io_read_forcing_field(n, lat(n), unit_system, marbl_instances(1)%interior_tendency_forcings, &
                                        interior_tendency_forcings, driver_status_log, active_level_cnt(n))
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('read_forcing_field(interior)', subname)

@@ -167,18 +167,33 @@ if [ "${STATUS}" == "PASS" ]; then
     print_status "netCDF Comparison (1 inst (cgs) vs baseline (cgs))" >> ${RESULTS_CACHE}
   fi
 
-  # Same test, but use mks instead of cgs
+  # same test, but turn on ciso tracers
+  cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
+  (set -x ; ./call_compute_subroutines.py -s ../../input_files/settings/marbl_with_ciso.settings)
+  STATUS=$(check_return $?)
+  print_status "call_compute_subroutines.py -s ../../input_files/settings/marbl_with_ciso.settings" >> ${RESULTS_CACHE}
+
+  if [ "${STATUS}" == "PASS" ]; then
+    cd ${MARBL_ROOT}/MARBL_tools
+    BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
+    HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
+    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_ciso.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    STATUS=$(check_return $?)
+    print_status "netCDF Comparison (1 inst (cgs, with ciso) vs baseline (cgs, with ciso))" >> ${RESULTS_CACHE}
+  fi
+
+  # Initialize MARBL, compute surface fluxes and interior tendencies, but use mks instead of cgs
   cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
   (set -x ; ./call_compute_subroutines.py --unit_system mks)
   STATUS=$(check_return $?)
-  print_status "call_compute_subroutines.py" >> ${RESULTS_CACHE}
+  print_status "call_compute_subroutines.py --unit_system mks" >> ${RESULTS_CACHE}
 
   # Same test, but with num_inst = 2 instead of 1
   if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
     (set -x ; ./call_compute_subroutines.py --unit_system mks -n test_2inst.nml)
     STATUS=$(check_return $?)
-    print_status "call_compute_subroutines.py -n test_2inst.nml" >> ${RESULTS_CACHE}
+    print_status "call_compute_subroutines.py --unit_system mks -n test_2inst.nml" >> ${RESULTS_CACHE}
   fi
 
   # Same test, but with num_inst = 5 instead of 1 or 2
@@ -186,7 +201,7 @@ if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
     (set -x ; ./call_compute_subroutines.py --unit_system mks -n test_5inst.nml)
     STATUS=$(check_return $?)
-    print_status "call_compute_subroutines.py -n test_5inst.nml" >> ${RESULTS_CACHE}
+    print_status "call_compute_subroutines.py --unit_system mks -n test_5inst.nml" >> ${RESULTS_CACHE}
   fi
 
   # Compare 1-inst, 2-inst and 5-inst output

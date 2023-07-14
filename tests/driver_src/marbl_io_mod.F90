@@ -419,12 +419,13 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_forcing_field(col_id, unit_system, forcing_fields, forcing_fields_out, &
+  subroutine marbl_io_read_forcing_field(col_id, lat, unit_system, forcing_fields, forcing_fields_out, &
                                          driver_status_log, active_level_cnt)
 
     use marbl_interface_public_types, only : marbl_forcing_fields_type
 
     integer,                                       intent(in)    :: col_id
+    real(r8),                                      intent(in)    :: lat  ! latitude in degrees
     character(len=*),                              intent(in)    :: unit_system
     type(marbl_forcing_fields_type), dimension(:), intent(in)    :: forcing_fields
     type(forcing_fields_type),       dimension(:), intent(inout) :: forcing_fields_out
@@ -445,6 +446,25 @@ contains
                                    trim(forcing_fields(n)%metadata%varname), ")"
         call driver_status_log%log_error_trace(log_message, subname)
         return
+      end if
+
+      if (trim(varname) == 'd13c') then
+        ! POP uses constant value by default
+        ! Units are permil
+        forcing_fields_out(n)%field_0d(col_id) = -6.61_r8
+        cycle
+      else if (trim(varname) == 'd14c') then
+        ! POP uses one of three values by default:
+        ! -2.3 above 30 N, -4.0 between 30 S and 30 N, -5.8 below 30 S
+        ! Units are permil
+        if (lat > 30._r8) then
+          forcing_fields_out(n)%field_0d(col_id) = -2.3_r8
+        else if (lat > 30._r8) then
+          forcing_fields_out(n)%field_0d(col_id) = -4.0_r8
+        else
+          forcing_fields_out(n)%field_0d(col_id) = -5.8_r8
+        end if
+        cycle
       end if
 
       ! Get netcdf varid
@@ -494,31 +514,101 @@ contains
 
   !****************************************************************************
 
-  subroutine marbl_io_read_tracers(col_start, tracer_metadata, tracers, driver_status_log)
+  subroutine marbl_io_read_tracers(col_id, tracer_metadata, tracers, lat, driver_status_log)
 
-    integer,                                          intent(in)    :: col_start
+    use marbl_constants_mod, only : c1
+
+    integer,                                          intent(in)    :: col_id
     type(marbl_tracer_metadata_type), dimension(:),   intent(in)    :: tracer_metadata
     real(kind=r8),                    dimension(:,:), intent(inout) :: tracers            ! (tracer_cnt, num_levels)
+    real(kind=r8),                                    intent(out)   :: lat
     type(marbl_log_type),                             intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_tracers'
-    character(len=char_len) :: log_message
+    character(len=char_len) :: log_message, tracer_name_file
+    real(kind=r8) :: scale_factor
     integer :: n, varid
 
+    ! Read latitude from IC file
+    call marbl_netcdf_inq_varid(ncid_in, 'lat', varid, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      write(log_message, "(A)") "marbl_netcdf_inq_varid(lat)"
+      call driver_status_log%log_error_trace(log_message, subname)
+      return
+    end if
+
+    call marbl_netcdf_get_var(ncid_in, varid, lat, driver_status_log, col_id=col_id)
+    if (driver_status_log%labort_marbl) then
+      write(log_message, "(A)") "marbl_netcdf_get_var(lat)"
+      call driver_status_log%log_error_trace(log_message, subname)
+      return
+    end if
+
+    ! Read each tracer from IC file
     do n = 1, size(tracer_metadata)
-      call marbl_netcdf_inq_varid(ncid_in, trim(tracer_metadata(n)%short_name), varid, driver_status_log)
+      ! Hard-code in mechanism for falling back to non-isotopic tracers when initializing CISO
+      ! TODO: maybe this should be a namelist option?
+      if (trim(tracer_metadata(n)%short_name) == 'DI13C') then
+        tracer_name_file = 'DIC'
+        scale_factor = 1.025_r8
+      else if (trim(tracer_metadata(n)%short_name) == 'DO13Ctot') then
+        tracer_name_file = 'DOC'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'DI14C') then
+        tracer_name_file = 'DIC'
+        scale_factor = 0.9225_r8
+      else if (trim(tracer_metadata(n)%short_name) == 'DO14Ctot') then
+        tracer_name_file = 'DOC'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'zootot13C') then
+        tracer_name_file = 'zooC'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'zootot14C') then
+        tracer_name_file = 'zooC'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'sp13C') then
+        tracer_name_file = 'spC'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'sp14C') then
+        tracer_name_file = 'spC'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'spCa13CO3') then
+        tracer_name_file = 'spCaCO3'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'spCa14CO3') then
+        tracer_name_file = 'spCaCO3'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'diat13C') then
+        tracer_name_file = 'diatC'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'diat14C') then
+        tracer_name_file = 'diatC'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'diaz13C') then
+        tracer_name_file = 'diazC'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'diaz14C') then
+        tracer_name_file = 'diazC'
+        scale_factor = c1
+      else
+        tracer_name_file = tracer_metadata(n)%short_name
+        scale_factor = c1
+      end if
+      call marbl_netcdf_inq_varid(ncid_in, trim(tracer_name_file), varid, driver_status_log)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(tracer_metadata(n)%short_name), ")"
         call driver_status_log%log_error_trace(log_message, subname)
         return
       end if
 
-      call marbl_netcdf_get_var(ncid_in, varid, tracers(n,:), driver_status_log, col_start=col_start)
+      call marbl_netcdf_get_var(ncid_in, varid, tracers(n,:), driver_status_log, col_start=col_id)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") "marbl_netcdf_get_var(", trim(tracer_metadata(n)%short_name), ")"
         call driver_status_log%log_error_trace(log_message, subname)
         return
       end if
+
+      tracers(n,:) = tracers(n,:) * scale_factor
     end do
 
   end subroutine marbl_io_read_tracers
@@ -1138,6 +1228,12 @@ contains
       case('O2 Consumption Scale Factor')
         varname = 'o2_consumption_scalef'
         rank = 1
+      case('d13c')
+        varname = 'd13c'
+        rank = 0
+      case('d14c')
+        varname = 'd14c'
+        rank = 0
       case DEFAULT
         rank = -1
         write(log_message, "(3A)") "Unrecognized forcing field '", trim(forcing_name), "'"
