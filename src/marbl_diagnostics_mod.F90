@@ -3030,7 +3030,8 @@ contains
       ! CISO diagnostics
       !-----------------------------------------------------------------
 
-      call marbl_ciso_diagnostics_init(marbl_interior_tendency_diags, marbl_surface_flux_diags, marbl_status_log)
+      call marbl_ciso_diagnostics_init(unit_system, marbl_interior_tendency_diags, &
+                                       marbl_surface_flux_diags, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
         call marbl_status_log%log_error_trace("marbl_ciso_diagnostics_init()", subname)
         return

@@ -182,7 +182,7 @@ module marbl_interface_private_types
   type, public :: marbl_surface_flux_internal_type
      real (r8), allocatable, dimension(:)   :: piston_velocity
      real (r8), allocatable, dimension(:)   :: flux_co2
-     real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (nmol/cm^2/s)
+     real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (conc flux units)
      real (r8), allocatable, dimension(:)   :: co2star
      real (r8), allocatable, dimension(:)   :: dco2star
      real (r8), allocatable, dimension(:)   :: pco2surf
@@ -194,9 +194,9 @@ module marbl_interface_private_types
      real (r8), allocatable, dimension(:)   :: dpco2_alt
      real (r8), allocatable, dimension(:)   :: schmidt_co2  ! Schmidt number
      real (r8), allocatable, dimension(:)   :: schmidt_o2   ! Schmidt number
-     real (r8), allocatable, dimension(:)   :: pv_o2        ! piston velocity (cm/s)
-     real (r8), allocatable, dimension(:)   :: pv_co2       ! piston velocity (cm/s)
-     real (r8), allocatable, dimension(:)   :: o2sat        ! used O2 saturation (mmol/m^3)
+     real (r8), allocatable, dimension(:)   :: pv_o2        ! piston velocity (L/s)
+     real (r8), allocatable, dimension(:)   :: pv_co2       ! piston velocity (L/s)
+     real (r8), allocatable, dimension(:)   :: o2sat        ! used O2 saturation conc units)
      real (r8), allocatable, dimension(:)   :: nhx_surface_emis
    contains
      procedure, public :: construct => marbl_surface_flux_internal_constructor

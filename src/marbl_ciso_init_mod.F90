@@ -14,14 +14,17 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_ciso_init_tracer_metadata(marbl_tracer_metadata,           &
+  subroutine marbl_ciso_init_tracer_metadata(unit_system,           &
+                                             marbl_tracer_metadata, &
                                              marbl_tracer_indices)
 
     !  Set tracer and forcing metadata
     use marbl_settings_mod, only : lecovars_full_depth_tavg
     use marbl_settings_mod, only : autotroph_cnt
     use marbl_settings_mod, only : autotroph_settings
+    use marbl_settings_mod, only : unit_system_type
 
+    type(unit_system_type),             intent(in)    :: unit_system
     type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
 
@@ -50,9 +53,9 @@ contains
     ! All CISO tracers share units, tend_units, flux_units, and
     ! tracer_module_name
     do n=ciso_ind_beg,ciso_ind_end
-      marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-      marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-      marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
+      marbl_tracer_metadata(n)%units      = unit_system%conc_units
+      marbl_tracer_metadata(n)%tend_units = unit_system%conc_tend_units
+      marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
       marbl_tracer_metadata(n)%tracer_module_name = 'ciso'
     end do
     marbl_tracer_metadata(di13c_ind)%short_name='DI13C'

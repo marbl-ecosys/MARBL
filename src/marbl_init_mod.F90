@@ -182,7 +182,7 @@ contains
 
     ! Set up tracer metadata
     call marbl_init_tracer_metadata(tracer_metadata, tracer_indices, unit_system)
-    call marbl_ciso_init_tracer_metadata(tracer_metadata, tracer_indices)
+    call marbl_ciso_init_tracer_metadata(unit_system, tracer_metadata, tracer_indices)
 
     ! Log what tracers are being used
     call marbl_status_log%log_header('MARBL Tracer indices', subname)
