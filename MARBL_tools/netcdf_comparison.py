@@ -260,10 +260,16 @@ def _compute_rel_err(da_base, base_data, new_data, mask):
     # note the assumption that column is first dimension
     import numpy as np
 
-    col_max = np.nanmax(np.abs(da_base.data),
-                        axis=tuple(np.arange(1,len(da_base.data.shape))))
-    rel_denom = (np.ones(da_base.data.transpose().shape)*col_max).transpose()
-    rel_denom = rel_denom[mask]
+    if 'num_levels' in da_base.dims:
+        # For variables with a depth dimension, we use a 3-point stencil in depth to find the
+        # maximum value of the baseline value to use in the denominator of the relative error.
+        # For the top (bottom) of the column, we use a 2-point stencil with the value
+        # below (above) the given level
+        rel_denom = da_base.rolling(num_levels=3, center=True, min_periods=2).max().data[mask]
+    else:
+        # For variables without a depth dimension, the denominator is the baseline value
+        rel_denom = da_base.data[mask]
+    rel_denom = np.where(np.isfinite(rel_denom), rel_denom, 0)
     return np.where(base_data != 0, np.abs(new_data - base_data), 0) / \
            np.where(rel_denom != 0, rel_denom, 1)
 
