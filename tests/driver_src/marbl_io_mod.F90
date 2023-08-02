@@ -548,7 +548,28 @@ contains
     do n = 1, size(tracer_metadata)
       ! Hard-code in mechanism for falling back to non-isotopic tracers when initializing CISO
       ! TODO: maybe this should be a namelist option?
-      if (trim(tracer_metadata(n)%short_name) == 'DI13C') then
+      if (trim(tracer_metadata(n)%short_name) == 'coccoChl') then
+        tracer_name_file = 'spChl'
+        scale_factor = 0.07_r8
+      else if (trim(tracer_metadata(n)%short_name) == 'coccoC') then
+        tracer_name_file = 'spC'
+        scale_factor = 0.07_r8
+      else if (trim(tracer_metadata(n)%short_name) == 'coccoP') then
+        tracer_name_file = 'spP'
+        scale_factor = 0.07_r8
+      else if (trim(tracer_metadata(n)%short_name) == 'coccoFe') then
+        tracer_name_file = 'spFe'
+        scale_factor = 0.07_r8
+      else if (trim(tracer_metadata(n)%short_name) == 'coccoCaCO3') then
+        tracer_name_file = 'spCaCO3'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'microzooC') then
+        tracer_name_file = 'zooC'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'mesozooC') then
+        tracer_name_file = 'zooC'
+        scale_factor = c1
+      else if (trim(tracer_metadata(n)%short_name) == 'DI13C') then
         tracer_name_file = 'DIC'
         scale_factor = 1.025_r8
       else if (trim(tracer_metadata(n)%short_name) == 'DO13Ctot') then
