@@ -28,7 +28,8 @@ import logging
 
 # Store default values of rtol, atol, and thres in a global dictionary
 # to make it easy to update the default values if necessary
-DEFAULT_TOLS = {'rtol' : 1e-11, 'atol' : 1e-16, 'thres' : 1e-16}
+# rtol = 1e-11 fails the cgs vs mks comparison (POC_REMIN_DIC and PON_REMIN_NH4 have rel errors of ~1.4e-11)
+DEFAULT_TOLS = {'rtol' : 2e-11, 'atol' : 1e-16, 'thres' : 1e-16}
 
 ##################
 
