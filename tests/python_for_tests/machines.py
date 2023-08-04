@@ -5,6 +5,7 @@ from os import system as sh_command
 
 # Supported machines for running MARBL tests
 supported_machines = ['local',
+                      'derecho',
                       'cheyenne',
                       'hobart',
                       'edison',
@@ -22,6 +23,18 @@ def load_module(mach, compiler, module_name):
   logger = logging.getLogger(__name__)
   logger.info("Building with %s on %s" % (compiler, mach))
   logger.info("Loading module %s..." % module_name)
+
+  if mach == 'derecho':
+    sys.path.insert(0, os.path.join(os.sep, 'glade', 'u', 'apps', 'derecho', '23.06', 'spack', 'opt', 'spack', 'lmod', '8.7.20', 'gcc', '7.5.0', 'pdxb', 'lmod', 'lmod', 'init'))
+    from env_modules_python import module
+    module('--force', 'purge')
+    module('load', 'ncarenv/23.06')
+    module('load', 'craype')
+    module('load', module_name)
+    module('load', 'netcdf/4.9.2')
+    module('load', 'ncarcompilers')
+    if compiler in ['gnu', 'cray']:
+        module('load', 'cray-libsci/23.02.1.1')
 
   if mach == 'cheyenne':
     sys.path.insert(0, os.path.join(os.sep, 'glade', 'u', 'apps', 'ch', 'opt', 'lmod', '7.2.1', 'lmod', 'lmod', 'init'))
@@ -68,6 +81,18 @@ def machine_specific(mach, supported_compilers, module_names):
     logger.info("%s is not a supported machine! Try one of the following:" % mach)
     logger.info(supported_machines)
     sys.exit(1)
+
+  if mach == 'derecho':
+    # NCAR machine
+    supported_compilers.append('intel')
+    supported_compilers.append('gnu')
+    supported_compilers.append('cray')
+    supported_compilers.append('nvhpc')
+    module_names['intel'] = 'intel/2023.0.0'
+    module_names['gnu'] = 'gcc/12.2.0'
+    module_names['cray'] = 'cce/15.0.1'
+    module_names['nvhpc'] = 'nvhpc/23.1'
+    return
 
   if mach == 'cheyenne':
     # NCAR machine
