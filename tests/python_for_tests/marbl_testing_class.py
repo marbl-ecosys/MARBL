@@ -86,7 +86,9 @@ class MARBL_testcase(object):
       from socket import gethostname
       self._hostname = gethostname()
       found = True
-      if 'cheyenne' in self._hostname:
+      if 'derecho' in self._hostname:
+        self._machine = 'derecho'
+      elif 'cheyenne' in self._hostname:
         self._machine = 'cheyenne'
       elif 'hobart' in self._hostname:
         self._machine = 'hobart'

@@ -157,6 +157,10 @@ gnu:
 intel:
 	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=intel$(MPISUF) FC=ifort FCFLAGS="-g -O2 -init=snan,arrays -free -cpp -nogen-interface -fp-model source" INC="-module $(OBJ_ROOT)/intel$(MPISUF)" INC2="-module $(OBJ_ROOT)/intel$(MPISUF)/driver"
 
+.PHONY:nvhpc
+nvhpc:
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=nvhpc$(MPISUF) FC=nvfortran FCFLAGS="-O2 -Mfree" INC="-module $(OBJ_ROOT)/nvhpc$(MPISUF)" INC2="-module $(OBJ_ROOT)/nvhpc$(MPISUF)/driver"
+
 .PHONY: pgi
 pgi:
 	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=pgi$(MPISUF) FC=pgf90 FCFLAGS="-O2 -Mfree" INC="-module $(OBJ_ROOT)/pgi$(MPISUF)" INC2="-module $(OBJ_ROOT)/pgi$(MPISUF)/driver"
