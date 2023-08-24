@@ -225,20 +225,20 @@ module marbl_interface_private_types
   !***********************************************************************
 
   type, public :: marbl_particulate_share_type
-     ! MNL TODO: update units for cgs / mks compatibility
-     type(column_sinking_particle_type) :: POC              ! base units = nmol C
-     type(column_sinking_particle_type) :: POP              ! base units = nmol P
-     type(column_sinking_particle_type) :: P_CaCO3          ! base units = nmol CaCO3
-     type(column_sinking_particle_type) :: P_CaCO3_ALT_CO2  ! base units = nmol CaCO3
-     type(column_sinking_particle_type) :: P_SiO2           ! base units = nmol SiO2
-     type(column_sinking_particle_type) :: dust             ! base units = g
-     type(column_sinking_particle_type) :: P_iron           ! base units = nmol Fe
+     ! units differ depending for cgs and mks
+     type(column_sinking_particle_type) :: POC              ! base units = nmol or mmol C
+     type(column_sinking_particle_type) :: POP              ! base units = nmol or mmol P
+     type(column_sinking_particle_type) :: P_CaCO3          ! base units = nmol or mmol CaCO3
+     type(column_sinking_particle_type) :: P_CaCO3_ALT_CO2  ! base units = nmol or mmol CaCO3
+     type(column_sinking_particle_type) :: P_SiO2           ! base units = nmol or mmol SiO2
+     type(column_sinking_particle_type) :: dust             ! base units = g or kg
+     type(column_sinking_particle_type) :: P_iron           ! base units = nmol or mmol Fe
 
      real(r8), allocatable :: decay_CaCO3_fields       (:) ! scaling factor for dissolution of CaCO3
      real(r8), allocatable :: decay_POC_E_fields       (:) ! scaling factor for dissolution of excess POC
      real(r8), allocatable :: decay_Hard_fields        (:) ! scaling factor for dissolution of Hard Ballast
-     real(r8), allocatable :: poc_diss_fields          (:) ! diss. length used (cm)
-     real(r8), allocatable :: caco3_diss_fields        (:) ! caco3 diss. length used (cm)
+     real(r8), allocatable :: poc_diss_fields          (:) ! diss. length used (L)
+     real(r8), allocatable :: caco3_diss_fields        (:) ! caco3 diss. length used (L)
      real(r8), allocatable :: POC_remin_fields         (:) ! POC remin from ecosys before it gets modified for k=KMT
      real(r8), allocatable :: POC_prod_avail_fields    (:) ! POC production available for excess POC flux
 

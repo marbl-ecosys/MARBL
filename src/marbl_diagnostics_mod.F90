@@ -1708,7 +1708,6 @@ contains
 
       lname = 'Nitrification'
       sname = 'NITRIF'
-      write(units, "(2A)") trim(unit_system%conc_units), '/s'
       units = unit_system%conc_tend_units
       vgrid = 'layer_avg'
       truncate = .false.
@@ -3136,7 +3135,7 @@ contains
     real (r8),                                           intent(in)    :: column_o2(:)
     real (r8),                                           intent(in)    :: o2_production(:)
     real (r8),                                           intent(in)    :: o2_consumption(:)
-    real (r8),                                           intent(in)    :: fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient
+    real (r8),                                           intent(in)    :: fe_scavenge_rate(domain%km) ! scavenging rate of iron as % of ambient
     real (r8),                                           intent(in)    :: fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
     real (r8),                                           intent(in)    :: Lig_prod(domain%km)
     real (r8),                                           intent(in)    :: Lig_loss(domain%km)

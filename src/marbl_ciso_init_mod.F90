@@ -14,9 +14,9 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_ciso_init_tracer_metadata(unit_system,           &
-                                             marbl_tracer_metadata, &
-                                             marbl_tracer_indices)
+  subroutine marbl_ciso_init_tracer_metadata(unit_system, &
+                                             marbl_tracer_indices, &
+                                             marbl_tracer_metadata)
 
     !  Set tracer and forcing metadata
     use marbl_settings_mod, only : lecovars_full_depth_tavg
@@ -24,9 +24,9 @@ contains
     use marbl_settings_mod, only : autotroph_settings
     use marbl_settings_mod, only : unit_system_type
 
-    type(unit_system_type),             intent(in)    :: unit_system
-    type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
-    type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
+    type(unit_system_type),           intent(in)    :: unit_system
+    type(marbl_tracer_index_type),    intent(in)    :: marbl_tracer_indices
+    type(marbl_tracer_metadata_type), intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
 
     !-----------------------------------------------------------------------
     !  local variables

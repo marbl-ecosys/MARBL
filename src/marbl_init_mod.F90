@@ -181,8 +181,8 @@ contains
       allocate(tracer_restore_vars(tracer_indices%total_cnt))
 
     ! Set up tracer metadata
-    call marbl_init_tracer_metadata(tracer_metadata, tracer_indices, unit_system)
-    call marbl_ciso_init_tracer_metadata(unit_system, tracer_metadata, tracer_indices)
+    call marbl_init_tracer_metadata(unit_system, tracer_indices, tracer_metadata)
+    call marbl_ciso_init_tracer_metadata(unit_system, tracer_indices, tracer_metadata)
 
     ! Log what tracers are being used
     call marbl_status_log%log_header('MARBL Tracer indices', subname)
@@ -211,15 +211,15 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_tracer_metadata(marbl_tracer_metadata, marbl_tracer_indices, unit_system)
+  subroutine marbl_init_tracer_metadata(unit_system, marbl_tracer_indices, marbl_tracer_metadata)
 
     !  Set tracer and forcing metadata
 
     use marbl_settings_mod, only : lecovars_full_depth_tavg
 
-    type (marbl_tracer_metadata_type), intent(out)   :: marbl_tracer_metadata(:)   ! descriptors for each tracer
-    type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
-    type(unit_system_type)           , intent(in)    :: unit_system
+    type(unit_system_type),            intent(in)  :: unit_system
+    type(marbl_tracer_index_type),     intent(in)  :: marbl_tracer_indices
+    type (marbl_tracer_metadata_type), intent(out) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -479,15 +479,9 @@ contains
     marbl_tracer_metadata%long_name  = long_name
     if ((trim(short_name) == "ALK") .or. &
         (trim(short_name) == "ALK_ALT_CO2")) then
-       if (unit_system%unit_system == 'cgs') then
-        marbl_tracer_metadata%units      = 'neq/cm^3'
-        marbl_tracer_metadata%tend_units = 'neq/cm^3/s'
-        marbl_tracer_metadata%flux_units = 'neq/cm^2/s'
-     else
-          marbl_tracer_metadata%units      = 'meq/m^3'
-          marbl_tracer_metadata%tend_units = 'meq/m^3/s'
-          marbl_tracer_metadata%flux_units = 'meq/m^2/s'
-       endif
+       marbl_tracer_metadata%units      = unit_system%alk_conc_units
+       marbl_tracer_metadata%tend_units = unit_system%alk_conc_tend_units
+       marbl_tracer_metadata%flux_units = unit_system%alk_conc_flux_units
     else
        marbl_tracer_metadata%units      = unit_system%conc_units
        marbl_tracer_metadata%tend_units = unit_system%conc_tend_units
@@ -693,7 +687,7 @@ contains
         if (id .eq. ind%u10_sqr_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'u10_sqr'
-          write(surface_flux_forcings(id)%metadata%field_units, '(2A)')   trim(unit_system%L), '^2/s^2'
+          write(surface_flux_forcings(id)%metadata%field_units, '(2A)') trim(unit_system%L), '^2/s^2'
         end if
 
         ! Sea-surface salinity

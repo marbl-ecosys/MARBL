@@ -132,13 +132,13 @@ contains
          )
 
     !---------------------------------------------------------------------------
-    !   set unit conversion factors
+    !   set unit conversion factors (literature assumes conc in mol/kg)
     !   mass_to_vol: mol / kg -> mmol / m^3
     !                => mmol / mol * kg / m^3
     !   rho_sw is M / L^3 => rho_sw * 1e3 * kg/M * (L/m)^3
     !---------------------------------------------------------------------------
 
-    mass_to_vol = rho_sw * (1e3 * unit_system%mass2kg * (unit_system%m2len)**3)
+    mass_to_vol = rho_sw * (1.e3_r8 * unit_system%mass2kg * (unit_system%m2len)**3)
     vol_to_mass = c1 / mass_to_vol
 
     !---------------------------------------------------------------------------
@@ -277,13 +277,13 @@ contains
          )
 
     !---------------------------------------------------------------------------
-    !   set unit conversion factors
+    !   set unit conversion factors (literature assumes conc in mol/kg)
     !   mass_to_vol: mol / kg -> mmol / m^3
     !                => mmol / mol * kg / m^3
     !   rho_sw is M / L^3 => rho_sw * 1e3 * kg/M * (L/m)^3
     !---------------------------------------------------------------------------
 
-    mass_to_vol = rho_sw * (1e3 * unit_system%mass2kg * (unit_system%m2len)**3)
+    mass_to_vol = rho_sw * (1.e3_r8 * unit_system%mass2kg * (unit_system%m2len)**3)
     vol_to_mass = c1 / mass_to_vol
 
     !------------------------------------------------------------------------
@@ -708,13 +708,13 @@ contains
           )
 
     !---------------------------------------------------------------------------
-    !   set unit conversion factors
+    !   set unit conversion factors (literature assumes conc in mol/kg)
     !   mass_to_vol: mol / kg -> mmol / m^3
     !                => mmol / mol * kg / m^3
     !   rho_sw is M / L^3 => rho_sw * 1e3 * kg/M * (L/m)^3
     !---------------------------------------------------------------------------
 
-    mass_to_vol = rho_sw * (1e3 * unit_system%mass2kg * (unit_system%m2len)**3)
+    mass_to_vol = rho_sw * (1.e3_r8 * unit_system%mass2kg * (unit_system%m2len)**3)
     vol_to_mass = c1 / mass_to_vol
 
     !---------------------------------------------------------------------------
@@ -1126,13 +1126,13 @@ contains
     !---------------------------------------------------------------------------
 
     !---------------------------------------------------------------------------
-    !   set unit conversion factors
+    !   set unit conversion factors (literature assumes conc in mol/kg)
     !   mass_to_vol: mol / kg -> mmol / m^3
     !                => mmol / mol * kg / m^3
     !   rho_sw is M / L^3 => rho_sw * 1e3 * kg/M * (L/m)^3
     !---------------------------------------------------------------------------
 
-    mass_to_vol = rho_sw * (1e3 * unit_system%mass2kg * (unit_system%m2len)**3)
+    mass_to_vol = rho_sw * (1.e3_r8 * unit_system%mass2kg * (unit_system%m2len)**3)
 
     salt_lim = max(salt(:),salt_min)
     tk       = T0_Kelvin + temp(:)

@@ -1077,6 +1077,7 @@ contains
     !----------------------------------------------------------------------------------------
 
     use marbl_constants_mod, only : spd
+    use marbl_constants_mod, only : spy
     use marbl_settings_mod , only : denitrif_C_N
     use marbl_settings_mod , only : parm_sed_denitrif_coeff
     use marbl_settings_mod , only : caco3_bury_thres_iopt
@@ -1261,7 +1262,7 @@ contains
           sed_denitrif(1:k) = bot_flux_to_tend(1:k) * parm_sed_denitrif_coeff * POC_ciso%to_floor * &
                               (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
-          flux_alt = POC_ciso%to_floor*(unit_system%len2cm * (mpercm**3))*spd*365.0_r8 ! convert to mmol/cm^2/year
+          flux_alt = POC_ciso%to_floor*(unit_system%conc_flux2mmol_m2s * (mpercm**2))*spy ! convert to mmol/cm^2/year
           other_remin(1:k) = min(bot_flux_to_tend(1:k) * &
                                  min(0.1_r8 + flux_alt,0.5_r8) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)), &
                                  bot_flux_to_tend(1:k) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)) - &

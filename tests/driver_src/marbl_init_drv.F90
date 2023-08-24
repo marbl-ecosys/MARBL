@@ -57,7 +57,7 @@ Contains
                              gcm_delta_z = delta_z,                     &
                              gcm_zw = zw,                               &
                              gcm_zt = zt,                               &
-                             unit_system = unit_system)
+                             unit_system_opt = unit_system)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%init', subname)
       return

@@ -13,6 +13,7 @@ module marbl_interior_tendency_mod
   use marbl_constants_mod, only : mpercm
   use marbl_constants_mod, only : spd
   use marbl_constants_mod, only : dps
+  use marbl_constants_mod, only : spy
   use marbl_constants_mod, only : yps
 
   use marbl_interface_private_types, only : marbl_PAR_type
@@ -190,7 +191,7 @@ contains
     real (r8) :: other_remin(domain%km)      ! organic C remin not due oxic or denitrif (nmolC/cm^3/sec)
     real (r8) :: Tfunc_auto(autotroph_cnt, domain%km)   ! Temperature scaling for autotrophs
     real (r8) :: Tfunc_zoo(zooplankton_cnt, domain%km)   ! Temperature scaling for zooplankton
-    real (r8) :: Fe_scavenge_rate(domain%km) ! annual scavenging rate of iron as % of ambient (1/s)
+    real (r8) :: Fe_scavenge_rate(domain%km) ! scavenging rate of iron as % of ambient (1/s)
     real (r8) :: Fe_scavenge(domain%km)      ! loss of dissolved iron, scavenging (mmol Fe/m^3/sec)
     real (r8) :: Lig_scavenge(domain%km)     ! loss of Fe-binding Ligand from scavenging (mmol Fe/m^3/sec)
     real (r8) :: QA_dust_def(domain%km)
@@ -398,13 +399,12 @@ contains
 
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
-       call compute_particulate_terms(k, domain, bot_flux_to_tend,    &
-            p_remin_scalef(k), tracer_local(:, :), carbonate,         &
-            fesedflux(k), unit_system, PON_remin(:), PON_sed_loss(k), &
-            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, &
-            QA_dust_def(k), sed_denitrif(:), other_remin(:),          &
-            marbl_particulate_share, marbl_tracer_indices,            &
-            glo_avg_fields_interior_tendency, marbl_status_log)
+       call compute_particulate_terms(k, domain, bot_flux_to_tend, p_remin_scalef(k),   &
+            tracer_local(:, :), carbonate, fesedflux(k), marbl_tracer_indices,          &
+            unit_system, PON_remin(:), POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2,      &
+            dust, P_iron, QA_dust_def(k), sed_denitrif(:), other_remin(:),              &
+            marbl_particulate_share, glo_avg_fields_interior_tendency, PON_sed_loss(k), &
+            marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
           call marbl_status_log%log_error_trace('compute_particulate_terms()', subname)
@@ -883,7 +883,7 @@ contains
 
     P_CaCO3%diss  = parm_CaCO3_diss ! diss. length (L)
     P_CaCO3%gamma = parm_CacO3_gamma! prod frac -> hard subclass
-    P_CaCO3%mass  = 100.09_r8       ! molecular weight of CaCO (g/mol)
+    P_CaCO3%mass  = 100.09_r8       ! molecular weight of CaCO3 (g/mol)
     P_CaCO3%rho   = parm_hPOC_CaCO3_ratio * P_CaCO3%mass / POC%mass ! QA mass ratio for CaCO3
 
     P_CaCO3_ALT_CO2%diss  = P_CaCO3%diss
@@ -2271,9 +2271,9 @@ contains
 
     use marbl_constants_mod, only : c3, c4
     use marbl_settings_mod , only : Lig_cnt
-    use marbl_settings_mod , only : parm_Fe_scavenge_rate0_per_sec
-    use marbl_settings_mod , only : parm_Lig_scavenge_rate0_per_sec
-    use marbl_settings_mod , only : parm_FeLig_scavenge_rate0_per_sec
+    use marbl_settings_mod , only : parm_Fe_scavenge_rate0_yps
+    use marbl_settings_mod , only : parm_Lig_scavenge_rate0_yps
+    use marbl_settings_mod , only : parm_FeLig_scavenge_rate0_yps
     use marbl_settings_mod , only : dust_Fe_scavenge_scale
 
     integer,                            intent(in)    :: k
@@ -2301,7 +2301,7 @@ contains
     real(kind=r8), parameter :: KFeLig1 = 10.0e13_r8 * 1.0e-6_r8
 
     real(r8) :: FeLig1               ! iron bound to ligand 1
-    real(r8) :: sinking_mass         ! sinking mass flux used in calculating scavenging (concentration flux units * molecular weight)
+    real(r8) :: sinking_mass         ! sinking mass flux used in calculating scavenging (conc flux units * molecular weight)
     real(r8) :: Lig_scavenge_rate    ! scavenging rate of bound ligand (1/s)
     real(r8) :: FeLig_scavenge_rate  ! scavenging rate of bound iron (1/s)
 
@@ -2461,9 +2461,9 @@ contains
                    + (P_SiO2%sflux_in(k)  + P_SiO2%hflux_in(k) ) * P_SiO2%mass &
                    + (dust%sflux_in(k)    + dust%hflux_in(k)   ) * dust_Fe_scavenge_scale
 
-      Fe_scavenge_rate(k) = parm_Fe_scavenge_rate0_per_sec * sinking_mass
-      Lig_scavenge_rate   = parm_Lig_scavenge_rate0_per_sec * sinking_mass
-      FeLig_scavenge_rate = parm_FeLig_scavenge_rate0_per_sec * sinking_mass
+      Fe_scavenge_rate(k) = parm_Fe_scavenge_rate0_yps * sinking_mass
+      Lig_scavenge_rate   = parm_Lig_scavenge_rate0_yps * sinking_mass
+      FeLig_scavenge_rate = parm_FeLig_scavenge_rate0_yps * sinking_mass
 
       Lig_scavenge(k) = FeLig1 * Lig_scavenge_rate
       Fe_scavenge(k)  = Fefree(k) * Fe_scavenge_rate(k) + FeLig1 * FeLig_scavenge_rate
@@ -2607,12 +2607,11 @@ contains
 
    !***********************************************************************
 
-   subroutine compute_particulate_terms(k, domain, bot_flux_to_tend,           &
-              p_remin_scalef, tracer_local, carbonate, fesedflux, unit_system, &
-              PON_remin, PON_sed_loss, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,     &
-              P_SiO2, dust, P_iron, QA_dust_def, sed_denitrif, other_remin,    &
-              marbl_particulate_share, marbl_tracer_indices,                   &
-              glo_avg_fields_interior_tendency, marbl_status_log)
+   subroutine compute_particulate_terms(k, domain, bot_flux_to_tend, p_remin_scalef, &
+              tracer_local, carbonate, fesedflux, marbl_tracer_indices, unit_system, &
+              PON_remin, POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, &
+              QA_dust_def, sed_denitrif, other_remin, marbl_particulate_share, &
+              glo_avg_fields_interior_tendency, PON_sed_loss, marbl_status_log)
 
      !  Compute outgoing fluxes and remineralization terms. Assumes that
      !  production terms have been set. Incoming fluxes are assumed to be the
@@ -2691,9 +2690,9 @@ contains
      real (r8), dimension(:,:)         , intent(in)    :: tracer_local        ! local copies of model tracer concentrations
      type(carbonate_type)              , intent(in)    :: carbonate
      real(r8)                          , intent(in)    :: fesedflux           ! sedimentary Fe input
+     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
      type(unit_system_type)            , intent(in)    :: unit_system
      real(r8)                          , intent(inout) :: PON_remin(domain%km)! remin of PON
-     real(r8)                          , intent(out)   :: PON_sed_loss        ! loss of PON to sediments
      type(column_sinking_particle_type), intent(inout) :: POC                 ! base units = nmol C
      type(column_sinking_particle_type), intent(inout) :: POP                 ! base units = nmol P
      type(column_sinking_particle_type), intent(inout) :: P_CaCO3             ! base units = nmol CaCO3
@@ -2705,8 +2704,8 @@ contains
      real (r8), dimension(:)           , intent(inout) :: sed_denitrif        ! sedimentary denitrification (umolN/cm^2/s)
      real (r8), dimension(:)           , intent(inout) :: other_remin         ! sedimentary remin not due to oxic or denitrification
      type(marbl_particulate_share_type), intent(inout) :: marbl_particulate_share
-     type(marbl_tracer_index_type)     , intent(in)    :: marbl_tracer_indices
      real (r8)                         , intent(inout) :: glo_avg_fields_interior_tendency(:)
+     real(r8)                          , intent(out)   :: PON_sed_loss        ! loss of PON to sediments
      type(marbl_log_type)              , intent(inout) :: marbl_status_log
 
      !-----------------------------------------------------------------------
@@ -3153,7 +3152,7 @@ contains
            sed_denitrif(1:k) = bot_flux_to_tend(1:k) * parm_sed_denitrif_coeff * POC%to_floor &
                 * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
-           flux_alt = POC%to_floor*(unit_system%len2cm * (mpercm**3))*spd*365.0_r8 ! convert to mmol/cm^2/year
+           flux_alt = POC%to_floor*(unit_system%conc_flux2mmol_m2s * (mpercm**2))*spy ! convert to mmol/cm^2/year
            other_remin(1:k) = min(bot_flux_to_tend(1:k) * &
                                   min(0.1_r8 + flux_alt, 0.5_r8) * (POC%to_floor - POC%sed_loss(k)), &
                                       bot_flux_to_tend(1:k) * (POC%to_floor - POC%sed_loss(k)) - &

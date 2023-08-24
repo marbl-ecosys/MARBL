@@ -48,7 +48,7 @@ contains
     real(r8),               intent(in)  :: ph(num_elements)
     real(r8),               intent(in)  :: sst(num_elements)
     real(r8),               intent(in)  :: sss(num_elements)
-    real(r8),               intent(in)  :: u10_sqr(num_elements) ! (cm/s)^2
+    real(r8),               intent(in)  :: u10_sqr(num_elements) ! (L/s)^2
     real(r8),               intent(in)  :: atmpres(num_elements) ! (atm)
     real(r8),               intent(in)  :: ifrac(num_elements)
     type(unit_system_type), intent(in)  :: unit_system

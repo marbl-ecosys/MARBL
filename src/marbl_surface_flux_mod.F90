@@ -120,7 +120,7 @@ contains
     real (r8)          :: phlo(num_elements)       ! lower bound for ph in solver
     real (r8)          :: phhi(num_elements)       ! upper bound for ph in solver
     real (r8)          :: xkw_ice(num_elements)    ! common portion of piston vel., (1-fice)*xkw (L/T)
-    real (r8)          :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (CU)
+    real (r8)          :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (conc units)
     real (r8)          :: totalChl_loc(num_elements)  ! local value of totalChl
     real (r8)          :: flux_o2_loc(num_elements)   ! local value of o2 flux
     !-----------------------------------------------------------------------
@@ -394,7 +394,7 @@ contains
 
     !-----------------------------------------------------------------------
     !  Add phosphate and silicate from dust after Krishnamurthy et al. (2010)
-    !  factors convert from M/L2/s to CU*L/s
+    !  factors convert from M/L2/s to conc units*L/s
     !  ( P frac in dust by weight) * ( P solubility) / ( P molecular weight) * (unit system conversion)
     !  (Si frac in dust by weight) * (Si solubility) / (Si molecular weight) * (unit system conversion)
     !-----------------------------------------------------------------------

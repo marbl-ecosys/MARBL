@@ -37,7 +37,7 @@ Contains
 
     character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:test'
     character(len=*), parameter :: infile = '../../input_files/initial_conditions/call_compute_subroutines.20190718.nc'
-    character(len=char_len) :: log_message
+    character(len=char_len) :: conc_flux_units, log_message
     real(r8),                  allocatable, dimension(:,:)   :: surface_fluxes              ! num_cols x num_tracers
     real(r8),                  allocatable, dimension(:,:)   :: surface_flux_output         ! num_cols x num_vars
     real(r8),                  allocatable, dimension(:,:,:) :: interior_tendencies         ! num_tracers x num_levels x num_cols
@@ -85,7 +85,7 @@ Contains
                                    gcm_delta_z = grid_data%delta_z,            &
                                    gcm_zw = grid_data%zw,                      &
                                    gcm_zt = grid_data%zt,                      &
-                                   unit_system = unit_system)
+                                   unit_system_opt = unit_system)
     end do
 
     ! --------------------------------------------------------------------------
@@ -97,19 +97,20 @@ Contains
 
     sfo_cnt = sfo_cnt+1
     do n=1, size(marbl_instances)
+      conc_flux_units = marbl_instances(n)%get_conc_flux_units()
       call marbl_instances(n)%surface_flux_output%add_output(num_elements=col_cnt(n), &
-                                                             field_name="flux_co2",   &
-                                                             unit_system=unit_system, &
-                                                             output_id=flux_co2_id,   &
+                                                             field_name="flux_co2", &
+                                                             conc_flux_units=conc_flux_units, &
+                                                             output_id=flux_co2_id, &
                                                              marbl_status_log=marbl_instances(n)%StatusLog)
     end do
 
     sfo_cnt = sfo_cnt+1
     do n=1, size(marbl_instances)
-      call marbl_instances(n)%surface_flux_output%add_output(num_elements=col_cnt(n),       &
-                                                             field_name="total_surfChl",    &
-                                                             unit_system=unit_system, &
-                                                             output_id=total_surfChl_id,    &
+      call marbl_instances(n)%surface_flux_output%add_output(num_elements=col_cnt(n), &
+                                                             field_name="total_surfChl", &
+                                                             conc_flux_units=conc_flux_units, &
+                                                             output_id=total_surfChl_id, &
                                                              marbl_status_log=marbl_instances(n)%StatusLog)
     end do
 

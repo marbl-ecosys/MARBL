@@ -793,7 +793,7 @@ contains
        ! TODO: generalize units for cgs or mks
        lname    = trim(autotroph_settings(n)%lname) // ' instanteous growth rate over [CO2*]'
        sname    = 'CISO_mui_to_co2star_' // trim(autotroph_settings(n)%sname)
-       units    = 'm^3/mmol/s'
+       write(units, '(3A)') '(', trim(unit_system%conc_units), ')^-1 s^-1'
        vgrid    = 'layer_avg'
        truncate = .false.
        call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &

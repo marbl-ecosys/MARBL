@@ -116,7 +116,7 @@ module marbl_interface
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
-     type(unit_system_type),                   private  :: unit_system
+     type(unit_system_type),                   private :: unit_system
      type(marbl_PAR_type),                     private :: PAR
      type(autotroph_derived_terms_type),       private :: autotroph_derived_terms
      type(autotroph_local_type),               private :: autotroph_local
@@ -163,6 +163,7 @@ module marbl_interface
                                           get_string
      procedure, public  :: get_settings_var_cnt
      procedure, public  :: get_output_for_GCM
+     procedure, public  :: get_conc_flux_units
      procedure, private :: inquire_settings_metadata_by_name
      procedure, private :: inquire_settings_metadata_by_id
      procedure, private :: put_real
@@ -199,7 +200,7 @@ contains
        gcm_delta_z,                       &
        gcm_zw,                            &
        gcm_zt,                            &
-       unit_system,                       &
+       unit_system_opt,                   &
        lgcm_has_global_ops)
 
     use marbl_init_mod, only : marbl_init_log_and_timers
@@ -222,11 +223,12 @@ contains
     real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
-    character(len=*),  optional,  intent(in)    :: unit_system
+    character(len=*),  optional,  intent(in)    :: unit_system_opt
     logical,           optional,  intent(in)    :: lgcm_has_global_ops
 
     character(len=*), parameter :: subname = 'marbl_interface:init'
     integer, parameter :: num_elements_interior_tendency = 1 ! FIXME #66: get this value from interface, let it vary
+    character(len=char_len) :: unit_system_opt_loc
 
     !--------------------------------------------------------------------
     ! initialize status log and timers
@@ -259,7 +261,12 @@ contains
     ! Initialize parameters that do not depend on tracer count or PFT categories
     !---------------------------------------------------------------------------
 
-    call this%unit_system%set(this%StatusLog, unit_system)
+    if (present(unit_system_opt)) then
+      unit_system_opt_loc = unit_system_opt
+    else
+      unit_system_opt_loc = 'cgs'
+    end if
+    call this%unit_system%set(unit_system_opt_loc, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("unit_system%set", subname)
       return
@@ -787,7 +794,18 @@ contains
 
   !***********************************************************************
 
-  subroutine inquire_settings_metadata_by_name(this, varname, id, lname, units, datatype)
+  function get_conc_flux_units(this)
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=char_len) :: get_conc_flux_units
+
+    get_conc_flux_units = this%unit_system%conc_flux_units
+
+  end function get_conc_flux_units
+
+  !***********************************************************************
+
+    subroutine inquire_settings_metadata_by_name(this, varname, id, lname, units, datatype)
 
     class (marbl_interface_class), intent(inout) :: this
     character(len=*),              intent(in)    :: varname

@@ -442,40 +442,34 @@ contains
   !*****************************************************************************
 
   subroutine marbl_single_output_constructor(this, num_elements, num_levels, field_name, id, &
-                                             unit_system, marbl_status_log)
+                                             conc_flux_units, marbl_status_log)
 
     class(marbl_single_output_type), intent(out)   :: this
     character(len=*),                intent(in)    :: field_name
     integer(int_kind),               intent(in)    :: num_elements
     integer(int_kind),               intent(in)    :: num_levels
     integer(int_kind),               intent(in)    :: id
-    character(len=*),                intent(in)    :: unit_system
+    character(len=*),                intent(in)    :: conc_flux_units
     type(marbl_log_type),            intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_output_constructor'
-    character(len=char_len)     :: conc_units, log_message
-
-    if (trim(unit_system) == 'mks') then
-      conc_units = 'mmol/m^2/s'
-    elseif (trim(unit_system) == 'cgs') then
-      conc_units = 'nmol/cm^2/s'
-    endif
+    character(len=char_len)     :: log_message
 
     select case (trim(field_name))
       case("flux_o2")
         this%long_name  = "Oxygen Flux"
         this%short_name = "flux_o2"
-        this%units      = conc_units
+        this%units      = conc_flux_units
         sfo_ind%flux_o2_id = id
       case("flux_co2")
         this%long_name  = "Carbon Dioxide Flux"
         this%short_name = "flux_co2"
-        this%units      = conc_units
+        this%units      = conc_flux_units
         sfo_ind%flux_co2_id = id
       case("flux_nhx")
         this%long_name  = "NHx Surface Emissions"
         this%short_name = "flux_nhx"
-        this%units      = conc_units
+        this%units      = conc_flux_units
         sfo_ind%flux_nhx_id = id
       case("total_surfChl")
         this%long_name  = "Total Chlorophyll Concentration"
@@ -502,7 +496,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_output_add(this, num_elements, field_name, unit_system, output_id, &
+  subroutine marbl_output_add(this, num_elements, field_name, conc_flux_units, output_id, &
                               marbl_status_log, num_levels)
 
   ! MARBL uses pointers to create an extensible allocatable array. The output
@@ -522,7 +516,7 @@ contains
     class(marbl_output_for_GCM_type), intent(inout) :: this
     character(len=*),     intent(in)    :: field_name
     integer(int_kind),    intent(in)    :: num_elements
-    character(len=*),     intent(in)    :: unit_system
+    character(len=*),     intent(in)    :: conc_flux_units
     integer(int_kind),    intent(out)   :: output_id
     type(marbl_log_type), intent(inout) :: marbl_status_log
     integer(int_kind),    optional, intent(in) :: num_levels
@@ -571,7 +565,7 @@ contains
 
     ! 3) newest surface flux output (field_name) is Nth element of new_output
     call new_output(output_id)%construct(num_elements, num_levels_loc, field_name,  &
-                                      output_id, unit_system, marbl_status_log)
+                                      output_id, conc_flux_units, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('new_output%construct()', subname)
       return
