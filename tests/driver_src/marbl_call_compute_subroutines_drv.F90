@@ -37,7 +37,7 @@ Contains
 
     character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:test'
     character(len=*), parameter :: infile = '../../input_files/initial_conditions/call_compute_subroutines.20190718.nc'
-    character(len=char_len) :: conc_flux_units, log_message
+    character(len=char_len) :: log_message
     real(r8),                  allocatable, dimension(:,:)   :: surface_fluxes              ! num_cols x num_tracers
     real(r8),                  allocatable, dimension(:,:)   :: surface_flux_output         ! num_cols x num_vars
     real(r8),                  allocatable, dimension(:,:,:) :: interior_tendencies         ! num_tracers x num_levels x num_cols
@@ -97,21 +97,16 @@ Contains
 
     sfo_cnt = sfo_cnt+1
     do n=1, size(marbl_instances)
-      conc_flux_units = marbl_instances(n)%get_conc_flux_units()
-      call marbl_instances(n)%surface_flux_output%add_output(num_elements=col_cnt(n), &
-                                                             field_name="flux_co2", &
-                                                             conc_flux_units=conc_flux_units, &
-                                                             output_id=flux_co2_id, &
-                                                             marbl_status_log=marbl_instances(n)%StatusLog)
+      call marbl_instances(n)%add_output_for_GCM(num_elements=col_cnt(n), &
+                                                 field_name="flux_co2", &
+                                                 output_id=flux_co2_id)
     end do
 
     sfo_cnt = sfo_cnt+1
     do n=1, size(marbl_instances)
-      call marbl_instances(n)%surface_flux_output%add_output(num_elements=col_cnt(n), &
-                                                             field_name="total_surfChl", &
-                                                             conc_flux_units=conc_flux_units, &
-                                                             output_id=total_surfChl_id, &
-                                                             marbl_status_log=marbl_instances(n)%StatusLog)
+      call marbl_instances(n)%add_output_for_GCM(num_elements=col_cnt(n), &
+                                                 field_name="total_surfChl", &
+                                                 output_id=total_surfChl_id)
     end do
 
     allocate(surface_flux_output(num_cols, sfo_cnt))

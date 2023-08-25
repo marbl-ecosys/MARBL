@@ -162,8 +162,8 @@ module marbl_interface
                                           get_logical, &
                                           get_string
      procedure, public  :: get_settings_var_cnt
+     procedure, public  :: add_output_for_GCM
      procedure, public  :: get_output_for_GCM
-     procedure, public  :: get_conc_flux_units
      procedure, private :: inquire_settings_metadata_by_name
      procedure, private :: inquire_settings_metadata_by_id
      procedure, private :: put_real
@@ -765,6 +765,28 @@ contains
 
   !***********************************************************************
 
+  subroutine add_output_for_GCM(this, num_elements, field_name, output_id, num_levels)
+    ! Currently, we only need this subroutine for surface fluxes.
+    ! If we introduce this%interior_tendency_output then this function will need
+    ! a field_source argument (either 'surface_flux' or 'interior_tendency')
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),     intent(in)    :: field_name
+    integer(int_kind),    intent(in)    :: num_elements
+    integer(int_kind),    intent(out)   :: output_id
+    integer(int_kind),    optional, intent(in) :: num_levels
+
+    call this%surface_flux_output%add_output(num_elements, &
+                                             field_name, &
+                                             this%unit_system%conc_flux_units, &
+                                             output_id, &
+                                             this%StatusLog, &
+                                             num_levels)
+
+  end subroutine add_output_for_GCM
+
+  !***********************************************************************
+
   subroutine get_output_for_GCM(this, field_ind, array_out)
 
     use marbl_constants_mod, only : c0
@@ -791,17 +813,6 @@ contains
     end select
 
   end subroutine get_output_for_GCM
-
-  !***********************************************************************
-
-  function get_conc_flux_units(this)
-
-    class (marbl_interface_class), intent(inout) :: this
-    character(len=char_len) :: get_conc_flux_units
-
-    get_conc_flux_units = this%unit_system%conc_flux_units
-
-  end function get_conc_flux_units
 
   !***********************************************************************
 
