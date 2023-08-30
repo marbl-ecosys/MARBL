@@ -16,7 +16,7 @@ Contains
 
   !****************************************************************************
 
-  subroutine test(marbl_instances, hist_file, unit_system, driver_status_log)
+  subroutine test(marbl_instances, hist_file, unit_system_opt, driver_status_log)
 
     use marbl_settings_mod, only : output_for_GCM_iopt_total_Chl_3d
 
@@ -32,7 +32,7 @@ Contains
 
     type(marbl_interface_class), dimension(:), intent(inout) :: marbl_instances
     character(len=*),                          intent(in)    :: hist_file
-    character(len=*),                          intent(in)    :: unit_system
+    character(len=*),                          intent(in)    :: unit_system_opt
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:test'
@@ -67,8 +67,8 @@ Contains
     ! --------------------------------------------------------------------------
 
     ! 2. Initialize the test (reads grid info, distributes columns, etc)
-    call set_domain(size(marbl_instances), unit_system, num_levels, active_level_cnt, num_PAR_subcols, &
-                    col_start, col_cnt, grid_data, driver_status_log)
+    call set_domain(size(marbl_instances), unit_system_opt, num_levels, active_level_cnt, lat, &
+                    num_PAR_subcols, col_start, col_cnt, grid_data, driver_status_log)
     if (driver_status_log%labort_MARBL) then
       call driver_status_log%log_error_trace('set_domain', subname)
       return
@@ -85,7 +85,7 @@ Contains
                                    gcm_delta_z = grid_data%delta_z,            &
                                    gcm_zw = grid_data%zw,                      &
                                    gcm_zt = grid_data%zt,                      &
-                                   unit_system_opt = unit_system)
+                                   unit_system_opt = unit_system_opt)
     end do
 
     ! --------------------------------------------------------------------------
@@ -127,7 +127,6 @@ Contains
     allocate(interior_tendencies(num_tracers, num_levels, num_cols))
     allocate(bot_flux_to_tend(num_levels))
     allocate(tracer_initial_vals(num_tracers, num_levels, num_cols))
-    allocate(lat(num_cols))
     allocate(surface_flux_forcings(size(marbl_instances(1)%surface_flux_forcings)))
     allocate(interior_tendency_forcings(size(marbl_instances(1)%interior_tendency_forcings)))
     ! Allocate memory inside surface_flux_forcings
@@ -150,7 +149,7 @@ Contains
     end do
 
     !    (d) netCDF calls to create history file (dimensions are defined but data is not written)
-    call marbl_io_define_history(marbl_instances, col_cnt, unit_system, driver_status_log)
+    call marbl_io_define_history(marbl_instances, col_cnt, unit_system_opt, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_define_history', subname)
       return
@@ -159,15 +158,14 @@ Contains
     !    (e) Read initial conditions and forcing data
     do n=1, num_cols
       !      (i) Read tracer values over full column
-      call marbl_io_read_tracers(n, marbl_instances(1)%tracer_metadata, tracer_initial_vals(:,:,n), &
-                                 lat(n), driver_status_log)
+      call marbl_io_read_tracers(n, marbl_instances(1)%tracer_metadata, tracer_initial_vals(:,:,n), driver_status_log)
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('read_tracers', subname)
         return
       end if
 
       !      (ii) Read surface flux forcing fields
-      call marbl_io_read_forcing_field(n, lat(n), unit_system, marbl_instances(1)%surface_flux_forcings, &
+      call marbl_io_read_forcing_field(n, lat(n), unit_system_opt, marbl_instances(1)%surface_flux_forcings, &
                                        surface_flux_forcings, driver_status_log)
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('read_forcing_field(surface)', subname)
@@ -175,7 +173,7 @@ Contains
       end if
 
       !      (iii) Read interior tendency forcing fields
-      call marbl_io_read_forcing_field(n, lat(n), unit_system, marbl_instances(1)%interior_tendency_forcings, &
+      call marbl_io_read_forcing_field(n, lat(n), unit_system_opt, marbl_instances(1)%interior_tendency_forcings, &
                                        interior_tendency_forcings, driver_status_log, active_level_cnt(n))
       if (driver_status_log%labort_marbl) then
         call driver_status_log%log_error_trace('read_forcing_field(interior)', subname)
@@ -350,27 +348,28 @@ Contains
 
   !*****************************************************************************
 
-  subroutine set_domain(num_insts, unit_system, num_levels, active_level_cnt, num_PAR_subcols, &
-                        col_start, col_cnt, grid_data, driver_status_log)
+  subroutine set_domain(num_insts, unit_system_opt, num_levels, active_level_cnt, lat, &
+                        num_PAR_subcols, col_start, col_cnt, grid_data, driver_status_log)
 
     use marbl_tools_mod, only : marbl_tools_distribute_cols
     use marbl_io_mod, only : marbl_io_read_domain
 
-    integer,                            intent(in)    :: num_insts
-    character(len=*),                   intent(in)    :: unit_system
-    integer,                            intent(out)   :: num_levels
-    integer, dimension(:), allocatable, intent(out)   :: active_level_cnt
-    integer,                            intent(out)   :: num_PAR_subcols
-    integer, dimension(:), allocatable, intent(out)   :: col_start
-    integer, dimension(:), allocatable, intent(out)   :: col_cnt
-    type(grid_data_type),               intent(inout) :: grid_data
-    type(marbl_log_type),               intent(inout) :: driver_status_log
+    integer,                             intent(in)    :: num_insts
+    character(len=*),                    intent(in)    :: unit_system_opt
+    integer,                             intent(out)   :: num_levels
+    integer,  dimension(:), allocatable, intent(out)   :: active_level_cnt
+    real(r8), dimension(:), allocatable, intent(out)   :: lat
+    integer,                             intent(out)   :: num_PAR_subcols
+    integer,  dimension(:), allocatable, intent(out)   :: col_start
+    integer,  dimension(:), allocatable, intent(out)   :: col_cnt
+    type(grid_data_type),                intent(inout) :: grid_data
+    type(marbl_log_type),                intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_call_compute_subroutines_drv:set_domain'
     integer :: num_cols
 
     ! 1. Read domain info from netCDF file
-    call marbl_io_read_domain(unit_system, grid_data, active_level_cnt, num_cols, &
+    call marbl_io_read_domain(unit_system_opt, grid_data, active_level_cnt, lat, num_cols, &
                               num_levels, num_PAR_subcols, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('read_domain', subname)

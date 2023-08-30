@@ -14,10 +14,10 @@ module marbl_init_drv
 
 Contains
 
-  subroutine test(marbl_instance, unit_system, lshutdown, num_PAR_subcols)
+  subroutine test(marbl_instance, unit_system_opt, lshutdown, num_PAR_subcols)
 
     type(marbl_interface_class), intent(inout) :: marbl_instance
-    character(len=3),            intent(in)    :: unit_system
+    character(len=*),            intent(in)    :: unit_system_opt
     logical, optional,           intent(in)    :: lshutdown
     integer, optional,           intent(in)    :: num_PAR_subcols
 
@@ -57,7 +57,7 @@ Contains
                              gcm_delta_z = delta_z,                     &
                              gcm_zw = zw,                               &
                              gcm_zt = zt,                               &
-                             unit_system_opt = unit_system)
+                             unit_system_opt = unit_system_opt)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%init', subname)
       return
