@@ -104,6 +104,8 @@ MARBL provides the following metadata to describe each tracer:
      character(len=char_len) :: tracer_module_name
   end type marbl_tracer_metadata_type
 
+Note that the ``units`` will depend on whether MARBL is running in ``cgs`` or ``mks``,
+so a ``unit_system_type`` object will be passed around in this step.
 There are a few different subroutines in ``marbl_init_mod.F90`` to define the metadata for different classes of tracers.
 (Metadata for carbon isotope tracers is handled in ``marbl_ciso_init_mod::marbl_ciso_init_tracer_metadata``.)
 
@@ -131,13 +133,13 @@ For example, here is where the dissolved inorganic phosphate index is set:
 .. block from marbl_init_mod
 .. code-block:: fortran
 
-  subroutine marbl_init_non_autotroph_tracers_metadata(marbl_tracer_metadata, &
-             marbl_tracer_indices)
+  subroutine marbl_init_non_autotroph_tracer_metadata(short_name, long_name, unit_system, &
+                                                      marbl_tracer_metadata)
     .
     .
     .
     call marbl_init_non_autotroph_tracer_metadata('PO4', 'Dissolved Inorganic Phosphate', &
-               marbl_tracer_metadata(marbl_tracer_indices%po4_ind))
+               unit_system, marbl_tracer_metadata(marbl_tracer_indices%po4_ind))
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 4. Compute surface flux for new tracer (if necessary)
@@ -181,13 +183,13 @@ Surface fluxes are computed in ``marbl_surface_flux_mod::marbl_surface_flux_comp
        .
        .
        if (lflux_gas_o2) then
-         .
-         .
-         .
-         pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
-         o2sat(:) = ap_used(:) * o2sat_1atm(:)
-         flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - tracers_at_surface(:, o2_ind))
-         surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
+          .
+          .
+          .
+          pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
+          o2sat(:) = ap_used(:) * o2sat_1atm(:)
+          flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - tracers_at_surface(:, o2_ind))
+          surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 5. Compute tracer tendency
@@ -205,12 +207,16 @@ This is done in ``marbl_interior_tendency_mod::interior_tendency_compute``:
     .
     .
     call compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_indices, &
-                     totalChl_local, PAR)
+                     totalChl_local, unit_system, PAR)
 
     call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
 
-    call compute_function_scaling(temperature, Tfunc)
+    call compute_temperature_functional_form(temperature(:), autotroph_settings(:)%Tref, &
+         autotroph_settings(:)%temp_func_form_iopt, autotroph_settings(:)%Ea, Tfunc_auto(:,:))
+
+    call compute_temperature_functional_form(temperature(:), zooplankton_settings(:)%Tref, &
+         zooplankton_settings(:)%temp_func_form_iopt, zooplankton_settings(:)%Ea, Tfunc_zoo(:,:))
     .
     .
     .
@@ -232,14 +238,12 @@ This is done in ``marbl_interior_tendency_mod::interior_tendency_compute``:
 
        ! FIXME #28: need to pull particulate share out
        !            of compute_particulate_terms!
-       call compute_particulate_terms(k, domain,                   &
-            marbl_particulate_share, p_remin_scalef(k),            &
-            POC, POP, P_CaCO3, P_CaCO3_ALT_CO2,                    &
-            P_SiO2, dust, P_iron, PON_remin(k), PON_sed_loss(k),   &
-            QA_dust_def(k),                                        &
-            tracer_local(:, k), carbonate, sed_denitrif(k),        &
-            other_remin(k), fesedflux(k), marbl_tracer_indices,    &
-            glo_avg_fields_interior_tendency, marbl_status_log)
+       call compute_particulate_terms(k, domain, bot_flux_to_tend, p_remin_scalef(k),   &
+            tracer_local(:, :), carbonate, fesedflux(k), marbl_tracer_indices,          &
+            unit_system, PON_remin(:), POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2,      &
+            dust, P_iron, QA_dust_def(k), sed_denitrif(:), other_remin(:),              &
+            marbl_particulate_share, glo_avg_fields_interior_tendency, PON_sed_loss(k), &
+            marbl_status_log)
 
        if (marbl_status_log%labort_marbl) then
           call marbl_status_log%log_error_trace('compute_particulate_terms()', subname)

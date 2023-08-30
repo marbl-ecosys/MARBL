@@ -20,14 +20,15 @@ The class definition is shown below:
      type(marbl_tracer_index_type)     , pointer    , public  :: tracer_indices => NULL()
      type(marbl_log_type)                           , public  :: StatusLog
 
-     type(marbl_saved_state_type)              , public               :: surface_flux_saved_state             ! input/output
-     type(marbl_saved_state_type)              , public               :: interior_tendency_saved_state        ! input/output
-     type(marbl_surface_flux_saved_state_indexing_type), public       :: surf_state_ind
+     type(marbl_saved_state_type)                           , public  :: surface_flux_saved_state             ! input/output
+     type(marbl_saved_state_type)                           , public  :: interior_tendency_saved_state        ! input/output
+     type(marbl_surface_flux_saved_state_indexing_type)     , public  :: surf_state_ind
      type(marbl_interior_tendency_saved_state_indexing_type), public  :: interior_state_ind
-     type(marbl_timers_type)                   , public               :: timer_summary
+     type(marbl_timers_type)                                , public  :: timer_summary
 
      ! public data related to computing interior tendencies
      real (r8), allocatable                             , public  :: tracers(:,:)                  ! input
+     real (r8), allocatable                             , public  :: bot_flux_to_tend(:)           ! input
      type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
@@ -38,7 +39,7 @@ The class definition is shown below:
      type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)    ! input
      type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind    ! FIXME #311: should be private
      real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)         ! output
-     type(marbl_surface_flux_output_type)           , public               :: surface_flux_output         ! output
+     type(marbl_output_for_GCM_type)                , public               :: surface_flux_output         ! output
      type(marbl_diagnostics_type)                   , public               :: surface_flux_diags          ! output
 
      ! public data - global averages
@@ -58,6 +59,7 @@ The class definition is shown below:
      type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
+     type(unit_system_type),                   private :: unit_system
      type(marbl_PAR_type),                     private :: PAR
      type(autotroph_derived_terms_type),       private :: autotroph_derived_terms
      type(autotroph_local_type),               private :: autotroph_local
@@ -66,10 +68,14 @@ The class definition is shown below:
      type(zooplankton_share_type),             private :: zooplankton_share
      type(marbl_particulate_share_type),       private :: particulate_share
      type(marbl_interior_tendency_share_type), private :: interior_tendency_share
+     type(co2calc_coeffs_type),                private :: interior_co2calc_coeffs
+     type(co2calc_state_type),                 private :: interior_co2calc_state
      type(dissolved_organic_matter_type),      private :: dissolved_organic_matter
      type(carbonate_type),                     private :: carbonate
      type(marbl_surface_flux_share_type),      private :: surface_flux_share
      type(marbl_surface_flux_internal_type),   private :: surface_flux_internal
+     type(co2calc_coeffs_type),                private :: surface_co2calc_coeffs
+     type(co2calc_state_type),                 private :: surface_co2calc_state
      logical,                                  private :: lallow_glo_ops
      type(marbl_internal_timers_type),         private :: timers
      type(marbl_timer_indexing_type),          private :: timer_ids
@@ -88,24 +94,26 @@ The class definition is shown below:
      procedure, public  :: shutdown
      generic            :: inquire_settings_metadata => inquire_settings_metadata_by_name, &
                                                         inquire_settings_metadata_by_id
-     generic            :: put_setting => put_real,            &
-                                          put_integer,         &
-                                          put_logical,         &
-                                          put_string,          & ! This routine checks to see if string is actually an array
-                                          put_input_file_line, & ! This line converts string "var = val" to proper put()
+     generic            :: put_setting => put_real,               &
+                                          put_integer,            &
+                                          put_logical,            &
+                                          put_string,             & ! This routine checks to see if string is actually an array
+                                          put_settings_file_line, & ! This line converts string "var = val" to proper put()
                                           put_all_string
      generic            :: get_setting => get_real,    &
                                           get_integer, &
                                           get_logical, &
                                           get_string
      procedure, public  :: get_settings_var_cnt
+     procedure, public  :: add_output_for_GCM
+     procedure, public  :: get_output_for_GCM
      procedure, private :: inquire_settings_metadata_by_name
      procedure, private :: inquire_settings_metadata_by_id
      procedure, private :: put_real
      procedure, private :: put_integer
      procedure, private :: put_logical
      procedure, private :: put_string
-     procedure, private :: put_input_file_line
+     procedure, private :: put_settings_file_line
      procedure, private :: put_all_string
      procedure, private :: get_real
      procedure, private :: get_integer

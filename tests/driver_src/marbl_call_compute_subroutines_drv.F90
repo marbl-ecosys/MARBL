@@ -86,6 +86,10 @@ Contains
                                    gcm_zw = grid_data%zw,                      &
                                    gcm_zt = grid_data%zt,                      &
                                    unit_system_opt = unit_system_opt)
+      if (marbl_instances(n)%StatusLog%labort_marbl) then
+        call marbl_instances(n)%StatusLog%log_error_trace('marbl%init', subname)
+        return
+      end if
     end do
 
     ! --------------------------------------------------------------------------
