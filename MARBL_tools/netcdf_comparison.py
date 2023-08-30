@@ -167,7 +167,7 @@ def _get_conversion_factor(ds_base, ds_new, var):
     unit_conversion['meq/m^3 cm/s']['meq/m^2/s'] = 0.01 # meq/m^3 cm/s -> meq/m^2/s
     unit_conversion['mg/m^3 cm/s']['mg/m^2/s'] = 0.01 # mg/m^3 cm/s -> mg/m^2/s
 
-    conversion_factor = 1
+    conversion_factor = 1.
     if('units' in ds_base[var].attrs and ds_new[var].attrs):
         old_units = ds_base[var].attrs['units']
         new_units = ds_new[var].attrs['units']
@@ -178,7 +178,7 @@ def _get_conversion_factor(ds_base, ds_new, var):
                 found = True
             if not found:
                 if old_units in unit_conversion and new_units in unit_conversion[old_units]:
-                    conversion_factor = 1 / unit_conversion[old_units][new_units]
+                    conversion_factor = 1. / unit_conversion[old_units][new_units]
                     found = True
             if not found:
                 raise KeyError(f'Can not convert from {new_units} to {old_units}')
@@ -189,7 +189,7 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
         Assumes both datasets contain the same variables with the same dimensions
         Checks:
         1. Are NaNs in the same place?
-        2. If baseline is 0 at a given point, then ds_new must be with atol of 0 as well
+        2. If baseline value = 0, then |new value| must be <= atol
         3. Absolute vs relative error:
            i. If 0 < |baseline value| <= thres then want absolute difference < atol
            ii. If |baseline value| > thres, then want relative difference < rtol
@@ -259,7 +259,7 @@ def _variable_check_loose(ds_base, ds_new, rtol, atol, thres):
 ##################
 
 def _compute_rel_err(da_base, base_data, new_data, mask):
-    # denominator for relative error is column max value
+    # denominator for relative error is local max value (3-point stencil)
     # note the assumption that column is first dimension
     import numpy as np
 

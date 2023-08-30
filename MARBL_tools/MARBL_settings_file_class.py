@@ -413,12 +413,12 @@ def _translate_JSON_value(value, datatype, units, unit_system):
             return _get_F90_logical(value)
         # if variable is a real but value is unicode evaluate it
         if datatype == "real":
-            if isinstance(value, type(u'')):
+            if isinstance(value, str):
                 return "%24.16e" % (eval(value)*_get_scale_factor(units, unit_system))
             else:
                 return value*_get_scale_factor(units, unit_system)
         # if variable is an integer but value is unicode convert it
-        if datatype == "integer" and isinstance(value, type(u'')):
+        if datatype == "integer" and isinstance(value, str):
             return int(value)
 
     # Otherwise return value unchanged
@@ -429,26 +429,14 @@ def _translate_JSON_value(value, datatype, units, unit_system):
 def _unit_conv_dict():
     new_dict = dict()
     new_dict['mks'] = dict()
-    new_dict['mks']['cm'] = dict()
-    new_dict['mks']['cm']['new_units'] = 'm'
-    new_dict['mks']['cm']['scale_factor'] = 0.01
-    new_dict['mks']['1/cm'] = dict()
-    new_dict['mks']['1/cm']['new_units'] = '1/m'
-    new_dict['mks']['1/cm']['scale_factor'] = 100.
-    new_dict['mks']['cm^2/ng s/yr'] = dict()
-    new_dict['mks']['cm^2/ng s/yr']['new_units'] = 'm^2/mg s/yr'
-    new_dict['mks']['cm^2/ng s/yr']['scale_factor'] = 100.
+    new_dict['mks']['cm'] = {'new_units': 'm', 'scale_factor': 0.01}
+    new_dict['mks']['1/cm'] = {'new_units': '1/m', 'scale_factor': 100.}
+    new_dict['mks']['cm^2/ng s/yr'] = {'new_units': 'm^2/mg s/yr', 'scale_factor': 100.}
 
     new_dict['cgs'] = dict()
-    new_dict['cgs']['m'] = dict()
-    new_dict['cgs']['m']['new_units'] = 'cm'
-    new_dict['cgs']['m']['scale_factor'] = 100.
-    new_dict['cgs']['1/m'] = dict()
-    new_dict['cgs']['1/m']['new_units'] = '1/cm'
-    new_dict['cgs']['1/m']['scale_factor'] = 0.01
-    new_dict['cgs']['m^2/mg s/yr'] = dict()
-    new_dict['cgs']['m^2/mg s/yr']['new_units'] = 'cm^2/ng s/yr'
-    new_dict['cgs']['m^2/mg s/yr']['scale_factor'] = 0.01
+    new_dict['cgs']['m'] = {'new_units': 'cm', 'scale_factor': 100.}
+    new_dict['cgs']['1/m'] = {'new_units': '1/cm', 'scale_factor': 0.01}
+    new_dict['cgs']['m^2/mg s/yr'] = {'new_units': 'cm^2/ng s/yr', 'scale_factor': 0.01}
     return new_dict
 
 def _get_scale_factor(units, unit_system):
@@ -518,7 +506,7 @@ def _get_value(val_in, settings_dict, tracers_dict, dict_prefix=''):
 
     # If val_in is a string, then it is a variable name that should be in
     # settings_dict already
-    if isinstance(val_in, type(u'')):
+    if isinstance(val_in, str):
         # If val_in = _tracer_list, that's a special case where we want
         # to find a list of tracers according to current settings
         if val_in == '_tracer_list':
