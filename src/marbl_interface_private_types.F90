@@ -333,9 +333,10 @@ module marbl_interface_private_types
     ! Book-keeping (tracer count and index ranges)
     integer (int_kind) :: total_cnt = 0
     type (marbl_tracer_count_type) :: ecosys_base
+    type (marbl_tracer_count_type) :: abio
     type (marbl_tracer_count_type) :: ciso
 
-    ! General tracers
+    ! base tracers
     integer (int_kind) :: po4_ind         = 0 ! dissolved inorganic phosphate
     integer (int_kind) :: no3_ind         = 0 ! dissolved inorganic nitrate
     integer (int_kind) :: sio3_ind        = 0 ! dissolved inorganic silicate
@@ -353,6 +354,10 @@ module marbl_interface_private_types
     integer (int_kind) :: dopr_ind        = 0 ! refractory DOP
     integer (int_kind) :: donr_ind        = 0 ! refractory DON
     integer (int_kind) :: docr_ind        = 0 ! refractory DOC
+
+    ! ABIO tracers
+    integer (int_kind) :: abio_dic_ind    = 0 ! abiotic dissolved inorganic carbon
+    integer (int_kind) :: abio_di14c_ind  = 0 ! abiotic dissolved inorganic carbon 14
 
     ! CISO tracers
     integer (int_kind) :: di13c_ind       = 0 ! dissolved inorganic carbon 13
@@ -1422,8 +1427,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotroph_settings, &
-             zooplankton_settings, marbl_status_log)
+  subroutine tracer_index_constructor(this, base_tracers_on, abio_on, ciso_on, lvariable_PtoC, &
+                                      autotroph_settings, zooplankton_settings, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -1434,6 +1439,8 @@ contains
     use marbl_pft_mod, only : zooplankton_settings_type
 
     class(marbl_tracer_index_type),  intent(out)   :: this
+    logical,                         intent(in)    :: base_tracers_on
+    logical,                         intent(in)    :: abio_on
     logical,                         intent(in)    :: ciso_on
     logical,                         intent(in)    :: lvariable_PtoC
     type(autotroph_settings_type),   intent(in)    :: autotroph_settings(:)
@@ -1452,80 +1459,87 @@ contains
     allocate(this%zoo_inds(zooplankton_cnt))
 
     ! General ecosys tracers
-    call this%add_tracer_index('po4', 'ecosys_base', this%po4_ind, marbl_status_log)
-    call this%add_tracer_index('no3', 'ecosys_base', this%no3_ind, marbl_status_log)
-    call this%add_tracer_index('sio3', 'ecosys_base', this%sio3_ind, marbl_status_log)
-    call this%add_tracer_index('nh4', 'ecosys_base', this%nh4_ind, marbl_status_log)
-    call this%add_tracer_index('fe', 'ecosys_base', this%fe_ind, marbl_status_log)
-    call this%add_tracer_index('lig', 'ecosys_base', this%lig_ind, marbl_status_log)
-    call this%add_tracer_index('o2', 'ecosys_base', this%o2_ind, marbl_status_log)
-    call this%add_tracer_index('dic', 'ecosys_base', this%dic_ind, marbl_status_log)
-    call this%add_tracer_index('dic_alt_co2', 'ecosys_base', this%dic_alt_co2_ind, marbl_status_log)
-    call this%add_tracer_index('alk', 'ecosys_base', this%alk_ind, marbl_status_log)
-    call this%add_tracer_index('alk_alt_co2', 'ecosys_base', this%alk_alt_co2_ind, marbl_status_log)
-    call this%add_tracer_index('doc', 'ecosys_base', this%doc_ind, marbl_status_log)
-    call this%add_tracer_index('don', 'ecosys_base', this%don_ind, marbl_status_log)
-    call this%add_tracer_index('dop', 'ecosys_base', this%dop_ind, marbl_status_log)
-    call this%add_tracer_index('dopr', 'ecosys_base', this%dopr_ind, marbl_status_log)
-    call this%add_tracer_index('donr', 'ecosys_base', this%donr_ind, marbl_status_log)
-    call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
+    if (base_tracers_on) then
+      call this%add_tracer_index('po4', 'ecosys_base', this%po4_ind, marbl_status_log)
+      call this%add_tracer_index('no3', 'ecosys_base', this%no3_ind, marbl_status_log)
+      call this%add_tracer_index('sio3', 'ecosys_base', this%sio3_ind, marbl_status_log)
+      call this%add_tracer_index('nh4', 'ecosys_base', this%nh4_ind, marbl_status_log)
+      call this%add_tracer_index('fe', 'ecosys_base', this%fe_ind, marbl_status_log)
+      call this%add_tracer_index('lig', 'ecosys_base', this%lig_ind, marbl_status_log)
+      call this%add_tracer_index('o2', 'ecosys_base', this%o2_ind, marbl_status_log)
+      call this%add_tracer_index('dic', 'ecosys_base', this%dic_ind, marbl_status_log)
+      call this%add_tracer_index('dic_alt_co2', 'ecosys_base', this%dic_alt_co2_ind, marbl_status_log)
+      call this%add_tracer_index('alk', 'ecosys_base', this%alk_ind, marbl_status_log)
+      call this%add_tracer_index('alk_alt_co2', 'ecosys_base', this%alk_alt_co2_ind, marbl_status_log)
+      call this%add_tracer_index('doc', 'ecosys_base', this%doc_ind, marbl_status_log)
+      call this%add_tracer_index('don', 'ecosys_base', this%don_ind, marbl_status_log)
+      call this%add_tracer_index('dop', 'ecosys_base', this%dop_ind, marbl_status_log)
+      call this%add_tracer_index('dopr', 'ecosys_base', this%dopr_ind, marbl_status_log)
+      call this%add_tracer_index('donr', 'ecosys_base', this%donr_ind, marbl_status_log)
+      call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
 
-    do n=1,zooplankton_cnt
-      write(ind_name, "(2A)") trim(zooplankton_settings(n)%sname), "C"
-      call this%add_tracer_index(ind_name, 'ecosys_base', this%zoo_inds(n)%C_ind, marbl_status_log)
-    end do
-
-    do n=1,autotroph_cnt
-      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Chl"
-      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Chl_ind, marbl_status_log)
-
-      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C"
-      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%C_ind, marbl_status_log)
-
-      if (lvariable_PtoC) then
-        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "P"
-        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%P_ind, marbl_status_log)
-      end if
-
-      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Fe"
-      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Fe_ind, marbl_status_log)
-
-      if (autotroph_settings(n)%silicifier) then
-        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Si"
-        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Si_ind, marbl_status_log)
-      end if
-
-      if (autotroph_settings(n)%imp_calcifier.or. &
-          autotroph_settings(n)%exp_calcifier) then
-        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "CaCO3"
-        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
-      end if
-    end do
-
-    if (ciso_on) then
-      call this%add_tracer_index('di13c',    'ciso', this%di13c_ind,    marbl_status_log)
-      call this%add_tracer_index('do13ctot', 'ciso', this%do13ctot_ind, marbl_status_log)
-      call this%add_tracer_index('di14c',    'ciso', this%di14c_ind,    marbl_status_log)
-      call this%add_tracer_index('do14ctot', 'ciso', this%do14ctot_ind, marbl_status_log)
-      call this%add_tracer_index('zootot13C',   'ciso', this%zootot13C_ind,   marbl_status_log)
-      call this%add_tracer_index('zootot14C',   'ciso', this%zootot14C_ind,   marbl_status_log)
+      do n=1,zooplankton_cnt
+        write(ind_name, "(2A)") trim(zooplankton_settings(n)%sname), "C"
+        call this%add_tracer_index(ind_name, 'ecosys_base', this%zoo_inds(n)%C_ind, marbl_status_log)
+      end do
 
       do n=1,autotroph_cnt
-        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C13"
-        call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C13_ind, marbl_status_log)
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Chl"
+        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Chl_ind, marbl_status_log)
 
-        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C14"
-        call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C14_ind, marbl_status_log)
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C"
+        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%C_ind, marbl_status_log)
 
-        if (autotroph_settings(n)%imp_calcifier .or. &
+        if (lvariable_PtoC) then
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "P"
+          call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%P_ind, marbl_status_log)
+        end if
+
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Fe"
+        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Fe_ind, marbl_status_log)
+
+        if (autotroph_settings(n)%silicifier) then
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Si"
+          call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Si_ind, marbl_status_log)
+        end if
+
+        if (autotroph_settings(n)%imp_calcifier.or. &
             autotroph_settings(n)%exp_calcifier) then
-        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca13CO3"
-          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca13CO3_ind, marbl_status_log)
-
-        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca14CO3"
-          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca14CO3_ind, marbl_status_log)
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "CaCO3"
+          call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
         end if
       end do
+
+      if (ciso_on) then
+        call this%add_tracer_index('di13c',    'ciso', this%di13c_ind,    marbl_status_log)
+        call this%add_tracer_index('do13ctot', 'ciso', this%do13ctot_ind, marbl_status_log)
+        call this%add_tracer_index('di14c',    'ciso', this%di14c_ind,    marbl_status_log)
+        call this%add_tracer_index('do14ctot', 'ciso', this%do14ctot_ind, marbl_status_log)
+        call this%add_tracer_index('zootot13C',   'ciso', this%zootot13C_ind,   marbl_status_log)
+        call this%add_tracer_index('zootot14C',   'ciso', this%zootot14C_ind,   marbl_status_log)
+
+        do n=1,autotroph_cnt
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C13"
+          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C13_ind, marbl_status_log)
+
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C14"
+          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C14_ind, marbl_status_log)
+
+          if (autotroph_settings(n)%imp_calcifier .or. &
+              autotroph_settings(n)%exp_calcifier) then
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca13CO3"
+            call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca13CO3_ind, marbl_status_log)
+
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca14CO3"
+            call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca14CO3_ind, marbl_status_log)
+          end if
+        end do
+      end if
+    end if
+
+    if (abio_on) then
+      call this%add_tracer_index('abio_dic',   'abio', this%abio_dic_ind,   marbl_status_log)
+      call this%add_tracer_index('abio_di14c', 'abio', this%abio_di14c_ind, marbl_status_log)
     end if
 
     if (marbl_status_log%labort_marbl) then
@@ -1585,6 +1599,8 @@ contains
     select case (trim(category))
       case ('ecosys_base')
         call this%ecosys_base%update_count(ind, marbl_status_log)
+      case ('abio')
+        call this%abio%update_count(ind, marbl_status_log)
       case ('ciso')
         call this%ciso%update_count(ind, marbl_status_log)
       case DEFAULT

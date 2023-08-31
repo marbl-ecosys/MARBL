@@ -665,6 +665,9 @@
          "units": "mmol/m^3"
       },
       "((autotroph_sname))C": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "((autotroph_lname)) Carbon",
          "units": "mmol/m^3"
       },
@@ -686,21 +689,29 @@
       },
       "((autotroph_sname))CaCO3": {
          "dependencies": {
-            "((autotroph_calcifier))": true
+            "((autotroph_calcifier))": true,
+            "base_tracers_on": ".true."
          },
          "long_name": "((autotroph_lname)) CaCO3",
          "units": "mmol/m^3"
       },
       "((autotroph_sname))Chl": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "((autotroph_lname)) Chlorophyll",
          "units": "mmol/m^3"
       },
       "((autotroph_sname))Fe": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "((autotroph_lname)) Iron",
          "units": "mmol/m^3"
       },
       "((autotroph_sname))P": {
          "dependencies": {
+            "base_tracers_on": ".true.",
             "lvariable_PtoC": ".true."
          },
          "long_name": "((autotroph_lname)) Phosphorus",
@@ -708,20 +719,44 @@
       },
       "((autotroph_sname))Si": {
          "dependencies": {
-            "((autotroph_silicifier))": true
+            "((autotroph_silicifier))": true,
+            "base_tracers_on": ".true."
          },
          "long_name": "((autotroph_lname)) Silicon",
          "units": "mmol/m^3"
       },
       "((zooplankton_sname))C": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "((zooplankton_lname)) Carbon",
          "units": "mmol/m^3"
       },
+      "ABIO_DI14C": {
+         "dependencies": {
+            "abio_on": ".true."
+         },
+         "long_name": "Abiotic Dissolved Inorganic Carbon-14",
+         "units": "mmol/m^3"
+      },
+      "ABIO_DIC": {
+         "dependencies": {
+            "abio_on": ".true."
+         },
+         "long_name": "Abiotic Dissolved Inorganic Carbon",
+         "units": "mmol/m^3"
+      },
       "ALK": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Alkalinity",
          "units": "meq/m^3"
       },
       "ALK_ALT_CO2": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Alkalinity, Alternative CO2",
          "units": "meq/m^3"
       },
@@ -740,10 +775,16 @@
          "units": "mmol/m^3"
       },
       "DIC": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Dissolved Inorganic Carbon",
          "units": "mmol/m^3"
       },
       "DIC_ALT_CO2": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Dissolved Inorganic Carbon, Alternative CO2",
          "units": "mmol/m^3"
       },
@@ -762,54 +803,93 @@
          "units": "mmol/m^3"
       },
       "DOC": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Dissolved Organic Carbon",
          "units": "mmol/m^3"
       },
       "DOCr": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Refractory DOC",
          "units": "mmol/m^3"
       },
       "DON": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Dissolved Organic Nitrogen",
          "units": "mmol/m^3"
       },
       "DONr": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Refractory DON",
          "units": "mmol/m^3"
       },
       "DOP": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Dissolved Organic Phosphorus",
          "units": "mmol/m^3"
       },
       "DOPr": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Refractory DOP",
          "units": "mmol/m^3"
       },
       "Fe": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Dissolved Inorganic Iron",
          "units": "mmol/m^3"
       },
       "Lig": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Iron Binding Ligand",
          "units": "mmol/m^3"
       },
       "NH4": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Dissolved Ammonia",
          "units": "mmol/m^3"
       },
       "NO3": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Dissolved Inorganic Nitrate",
          "units": "mmol/m^3"
       },
       "O2": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Dissolved Oxygen",
          "units": "mmol/m^3"
       },
       "PO4": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Dissolved Inorganic Phosphate",
          "units": "mmol/m^3"
       },
       "SiO3": {
+         "dependencies": {
+            "base_tracers_on": ".true."
+         },
          "long_name": "Dissolved Inorganic Silicate",
          "units": "mmol/m^3"
       },
@@ -884,6 +964,13 @@
          "subcategory": "4. general parameters",
          "units": "mmol CaCO3/mmol C"
       },
+      "abio_on": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "longname": "Control whether abiotic carbon tracer module is active",
+         "subcategory": "2. config flags",
+         "units": "unitless"
+      },
       "auto_mort2_exp": {
          "datatype": "real",
          "default_value": 1.75,
@@ -896,6 +983,13 @@
          "default_value": 1.0,
          "longname": "maximum bury fraction for bSi",
          "subcategory": "4. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
+      "base_tracers_on": {
+         "datatype": "logical",
+         "default_value": ".true.",
+         "longname": "Control whether the base ecosystem tracer module is active",
+         "subcategory": "2. config flags",
          "units": "unitless"
       },
       "bftt_dz_sum_thres": {
@@ -1367,6 +1461,7 @@
                "ALK",
                "ALK_ALT_CO2"
             ],
+            "base_tracers_on == .false.": "",
             "default": ""
          },
          "longname": "Tracer names for tracers that are restored",

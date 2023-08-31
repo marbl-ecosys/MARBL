@@ -137,11 +137,14 @@ contains
                                 tracer_metadata, &
                                 marbl_status_log)
 
+    use marbl_settings_mod, only : base_tracers_on
+    use marbl_settings_mod, only : abio_on
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : autotroph_settings
     use marbl_settings_mod, only : zooplankton_settings
     use marbl_settings_mod, only : tracer_restore_vars
+    use marbl_abio_init_mod, only : marbl_abio_init_tracer_metadata
     use marbl_ciso_init_mod, only : marbl_ciso_init_tracer_metadata
 
     integer(int_kind),                             intent(in)    :: num_levels
@@ -163,8 +166,8 @@ contains
 
     ! Construct tracer indices
     allocate(tracer_indices)
-    call tracer_indices%construct(ciso_on, lvariable_PtoC, autotroph_settings, zooplankton_settings, &
-                                  marbl_status_log)
+    call tracer_indices%construct(base_tracers_on, abio_on, ciso_on, lvariable_PtoC, &
+                                  autotroph_settings, zooplankton_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
       return
@@ -182,6 +185,7 @@ contains
 
     ! Set up tracer metadata
     call marbl_init_tracer_metadata(unit_system, tracer_indices, tracer_metadata)
+    call marbl_abio_init_tracer_metadata(unit_system, tracer_indices, tracer_metadata)
     call marbl_ciso_init_tracer_metadata(unit_system, tracer_indices, tracer_metadata)
 
     ! Log what tracers are being used
@@ -193,10 +197,17 @@ contains
 
 100 format(A, ' tracer module contains ', I0, ' tracers; indices are ', I0, ' to ', I0)
     if (tracer_indices%ecosys_base%cnt.gt.0) then
-      write(log_message, 100) 'ecosys_base', &
+      write(log_message, 100) 'base tracers', &
                               tracer_indices%ecosys_base%cnt, &
                               tracer_indices%ecosys_base%ind_beg, &
                               tracer_indices%ecosys_base%ind_end
+      call marbl_status_log%log_noerror(log_message, subname)
+    end if
+    if (tracer_indices%abio%cnt.gt.0) then
+      write(log_message, 100) 'abio', &
+                              tracer_indices%ciso%cnt, &
+                              tracer_indices%ciso%ind_beg, &
+                              tracer_indices%ciso%ind_end
       call marbl_status_log%log_noerror(log_message, subname)
     end if
     if (tracer_indices%ciso%cnt.gt.0) then
@@ -215,6 +226,7 @@ contains
 
     !  Set tracer and forcing metadata
 
+    use marbl_settings_mod, only : base_tracers_on
     use marbl_settings_mod, only : lecovars_full_depth_tavg
 
     type(unit_system_type),            intent(in)  :: unit_system
@@ -232,6 +244,8 @@ contains
     !-----------------------------------------------------------------------
     ! initialize tracer metatdata
     !-----------------------------------------------------------------------
+
+    if (.not. base_tracers_on) return
 
     marbl_tracer_metadata(:)%lfull_depth_tavg   = .true.
     marbl_tracer_metadata(:)%tracer_module_name = 'ecosys'
