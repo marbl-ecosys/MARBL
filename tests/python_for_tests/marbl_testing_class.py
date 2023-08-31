@@ -63,6 +63,10 @@ class MARBL_testcase(object):
 
     parser.add_argument('-n', '--namelist_file', action='store', dest='namelist_file',
                         default='test.nml', help='namelist file for the marbl standalone driver')
+
+    parser.add_argument('-u', '--unit_system', action='store', dest='unit_system',
+                        default='cgs', choices=['cgs', 'mks'], help='unit system for MARBL')
+
     if not RequireNetCDF:
       parser.add_argument('--netcdf', action='store_true', help='build with netcdf')
 
@@ -126,6 +130,7 @@ class MARBL_testcase(object):
     self._withnc = RequireNetCDF or args.netcdf
 
     self._namelist_file = args.namelist_file
+    self._unit_system = args.unit_system
     self._mpitasks = int(args.mpitasks)
     sys.stdout.flush()
 
@@ -204,8 +209,8 @@ class MARBL_testcase(object):
     else:
       execmd += "marbl.exe"
 
-    # First argument is the file containing &marbl_driver_nml namelist
-    execmd += " -n %s" % self._namelist_file
+    # First argument is the file containing &marbl_driver_nml namelist, second argument is unit system
+    execmd += " -n %s -u %s" % (self._namelist_file, self._unit_system)
 
     # If an input file was specified, it should be the second argument
     if self._settings_file != None:

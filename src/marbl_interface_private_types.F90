@@ -24,7 +24,7 @@ module marbl_interface_private_types
      real(r8), allocatable :: col_frac(:)    ! column fraction occupied by each sub-column, dimension is (PAR_nsubcols)
      real(r8), allocatable :: interface(:,:) ! PAR at layer interfaces, dimensions are (0:km,PAR_nsubcols)
      real(r8), allocatable :: avg(:,:)       ! PAR averaged over layer, dimensions are (km,PAR_nsubcols)
-     real(r8), allocatable :: KPARdz(:)      ! PAR adsorption coefficient times dz (cm), dimension is (km)
+     real(r8), allocatable :: KPARdz(:)      ! PAR absorption coefficient times dz (absorp coeff is 1/L => variable is unitless), dimension is (km)
    contains
      procedure, public :: construct => marbl_PAR_constructor
      procedure, public :: destruct => marbl_PAR_destructor
@@ -161,15 +161,15 @@ module marbl_interface_private_types
      real(r8) :: gamma                      ! fraction of production -> hard subclass
      real(r8) :: mass                       ! mass of 1e9 base units in g
      real(r8) :: rho                        ! QA mass ratio of POC to this particle class
-     real(r8) :: to_floor                   ! flux hitting sea floor (base units/cm^s/sec)
-     real(r8) :: flux_at_ref_depth          ! flux at particulate_flux_ref_depth (base units/cm^s/sec)
-     real(r8), allocatable  :: sflux_in (:) ! incoming flux of soft subclass (base units/cm^2/sec)
-     real(r8), allocatable  :: hflux_in (:) ! incoming flux of hard subclass (base units/cm^2/sec)
-     real(r8), allocatable  :: prod     (:) ! production term (base units/cm^3/sec)
-     real(r8), allocatable  :: sflux_out(:) ! outgoing flux of soft subclass (base units/cm^2/sec)
-     real(r8), allocatable  :: hflux_out(:) ! outgoing flux of hard subclass (base units/cm^2/sec)
-     real(r8), allocatable  :: sed_loss (:) ! loss to sediments (base units/cm^s/sec)
-     real(r8), allocatable  :: remin    (:) ! remineralization term (base units/cm^3/sec)
+     real(r8) :: to_floor                   ! flux hitting sea floor (base units/L^2/sec)
+     real(r8) :: flux_at_ref_depth          ! flux at particulate_flux_ref_depth (base units/L^2/sec)
+     real(r8), allocatable  :: sflux_in (:) ! incoming flux of soft subclass (base units/L^2/sec)
+     real(r8), allocatable  :: hflux_in (:) ! incoming flux of hard subclass (base units/L^2/sec)
+     real(r8), allocatable  :: prod     (:) ! production term (base units/L^3/sec)
+     real(r8), allocatable  :: sflux_out(:) ! outgoing flux of soft subclass (base units/L^2/sec)
+     real(r8), allocatable  :: hflux_out(:) ! outgoing flux of hard subclass (base units/L^2/sec)
+     real(r8), allocatable  :: sed_loss (:) ! loss to sediments (base units/L^2/sec)
+     real(r8), allocatable  :: remin    (:) ! remineralization term (base units/L^3/sec)
    contains
      procedure, public :: construct => column_sinking_particle_constructor
      procedure, public :: destruct => column_sinking_particle_destructor
@@ -182,7 +182,7 @@ module marbl_interface_private_types
   type, public :: marbl_surface_flux_internal_type
      real (r8), allocatable, dimension(:)   :: piston_velocity
      real (r8), allocatable, dimension(:)   :: flux_co2
-     real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (nmol/cm^2/s)
+     real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (conc flux units)
      real (r8), allocatable, dimension(:)   :: co2star
      real (r8), allocatable, dimension(:)   :: dco2star
      real (r8), allocatable, dimension(:)   :: pco2surf
@@ -194,9 +194,9 @@ module marbl_interface_private_types
      real (r8), allocatable, dimension(:)   :: dpco2_alt
      real (r8), allocatable, dimension(:)   :: schmidt_co2  ! Schmidt number
      real (r8), allocatable, dimension(:)   :: schmidt_o2   ! Schmidt number
-     real (r8), allocatable, dimension(:)   :: pv_o2        ! piston velocity (cm/s)
-     real (r8), allocatable, dimension(:)   :: pv_co2       ! piston velocity (cm/s)
-     real (r8), allocatable, dimension(:)   :: o2sat        ! used O2 saturation (mmol/m^3)
+     real (r8), allocatable, dimension(:)   :: pv_o2        ! piston velocity (L/s)
+     real (r8), allocatable, dimension(:)   :: pv_co2       ! piston velocity (L/s)
+     real (r8), allocatable, dimension(:)   :: o2sat        ! used O2 saturation conc units)
      real (r8), allocatable, dimension(:)   :: nhx_surface_emis
    contains
      procedure, public :: construct => marbl_surface_flux_internal_constructor
@@ -225,19 +225,20 @@ module marbl_interface_private_types
   !***********************************************************************
 
   type, public :: marbl_particulate_share_type
-     type(column_sinking_particle_type) :: POC              ! base units = nmol C
-     type(column_sinking_particle_type) :: POP              ! base units = nmol P
-     type(column_sinking_particle_type) :: P_CaCO3          ! base units = nmol CaCO3
-     type(column_sinking_particle_type) :: P_CaCO3_ALT_CO2  ! base units = nmol CaCO3
-     type(column_sinking_particle_type) :: P_SiO2           ! base units = nmol SiO2
-     type(column_sinking_particle_type) :: dust             ! base units = g
-     type(column_sinking_particle_type) :: P_iron           ! base units = nmol Fe
+     ! units differ depending for cgs and mks
+     type(column_sinking_particle_type) :: POC              ! base units = nmol or mmol C
+     type(column_sinking_particle_type) :: POP              ! base units = nmol or mmol P
+     type(column_sinking_particle_type) :: P_CaCO3          ! base units = nmol or mmol CaCO3
+     type(column_sinking_particle_type) :: P_CaCO3_ALT_CO2  ! base units = nmol or mmol CaCO3
+     type(column_sinking_particle_type) :: P_SiO2           ! base units = nmol or mmol SiO2
+     type(column_sinking_particle_type) :: dust             ! base units = g or kg
+     type(column_sinking_particle_type) :: P_iron           ! base units = nmol or mmol Fe
 
      real(r8), allocatable :: decay_CaCO3_fields       (:) ! scaling factor for dissolution of CaCO3
      real(r8), allocatable :: decay_POC_E_fields       (:) ! scaling factor for dissolution of excess POC
      real(r8), allocatable :: decay_Hard_fields        (:) ! scaling factor for dissolution of Hard Ballast
-     real(r8), allocatable :: poc_diss_fields          (:) ! diss. length used (cm)
-     real(r8), allocatable :: caco3_diss_fields        (:) ! caco3 diss. length used (cm)
+     real(r8), allocatable :: poc_diss_fields          (:) ! diss. length used (L)
+     real(r8), allocatable :: caco3_diss_fields        (:) ! caco3 diss. length used (L)
      real(r8), allocatable :: POC_remin_fields         (:) ! POC remin from ecosys before it gets modified for k=KMT
      real(r8), allocatable :: POC_prod_avail_fields    (:) ! POC production available for excess POC flux
 

@@ -348,8 +348,8 @@ general_parms :
       longname : reference depth for particulate flux diagnostics
       subcategory : 4. general parameters
       units : m
-      datatype : integer
-      default_value : 100
+      datatype : real
+      default_value : 100.0
    parm_o2_min :
       longname : Minimum O2 needed for production & consumption
       subcategory : 4. general parameters
@@ -407,19 +407,19 @@ general_parms :
    parm_Fe_scavenge_rate0 :
       longname : Scavenging base rate for Fe
       subcategory : 4. general parameters (scavenging)
-      units : unitless
+      units : cm^2/ng s/yr
       datatype : real
       default_value : 24.0
    parm_Lig_scavenge_rate0 :
       longname : Scavenging base rate for bound ligand
       subcategory : 4. general parameters (scavenging)
-      units : unitless
+      units : cm^2/ng s/yr
       datatype : real
       default_value : 0.015
    parm_FeLig_scavenge_rate0 :
       longname : Scavenging base rate for bound iron
       subcategory : 4. general parameters (scavenging)
-      units : unitless
+      units : cm^2/ng s/yr
       datatype : real
       default_value : 1.3
    parm_Lig_degrade_rate0 :
@@ -431,7 +431,7 @@ general_parms :
    parm_Fe_desorption_rate0 :
       longname : Desorption rate for scavenged Fe from particles
       subcategory : 4. general parameters
-      units : unitless
+      units : 1/cm
       datatype : real
       default_value : 1e-6
    parm_f_prod_sp_CaCO3 :

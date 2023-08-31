@@ -5,6 +5,8 @@ module marbl_diagnostics_share_mod
 
   use marbl_constants_mod, only : c0
 
+  use marbl_settings_mod, only : unit_system_type
+
   use marbl_interface_private_types, only : marbl_surface_flux_diagnostics_indexing_type
   use marbl_interface_private_types, only : marbl_interior_tendency_diagnostics_indexing_type
 
@@ -28,28 +30,30 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_diagnostics_share_compute_vertical_integrals(integrand, delta_z, kmt, &
+  subroutine marbl_diagnostics_share_compute_vertical_integrals(integrand, delta_z, kmt, unit_system, &
        full_depth_integral, near_surface_integral, integrated_terms, shallow_depth)
 
-    real(kind=r8) , intent(in)             :: integrand(:)
-    real(kind=r8) , intent(in)             :: delta_z(:)
-    integer       , intent(in)             :: kmt
+    real(kind=r8),          intent(in) :: integrand(:)
+    real(kind=r8),          intent(in) :: delta_z(:)
+    integer,                intent(in) :: kmt
+    type(unit_system_type), intent(in) :: unit_system
+
     ! For some vertical integral diagnostics, we need to add additional terms
     ! that have already been integrated, so they are separated from the
     ! integrand
-    real(kind=r8) , intent(in)  , optional :: integrated_terms(:)
-    real(kind=r8) , intent(in)  , optional :: shallow_depth
-    real(kind=r8) , intent(out) , optional :: full_depth_integral
-    real(kind=r8) , intent(out) , optional :: near_surface_integral
+    real(kind=r8), intent(in),  optional :: integrated_terms(:)
+    real(kind=r8), intent(in),  optional :: shallow_depth
+    real(kind=r8), intent(out), optional :: full_depth_integral
+    real(kind=r8), intent(out), optional :: near_surface_integral
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    integer (int_kind) :: k
-    real(kind=r8)      :: integrated_terms_used(size(integrand))
-    real(kind=r8)      :: zw
-    real(kind=r8)      :: ztop
-    real(kind=r8)      :: shallow_depth_used
+    integer(int_kind) :: k
+    real(kind=r8)     :: integrated_terms_used(size(integrand))
+    real(kind=r8)     :: zw
+    real(kind=r8)     :: ztop
+    real(kind=r8)     :: shallow_depth_used
     !-----------------------------------------------------------------------
 
     if (present(integrated_terms)) then
@@ -61,7 +65,7 @@ contains
     if (present(shallow_depth)) then
       shallow_depth_used = shallow_depth
     else
-      shallow_depth_used = 100.0e2_r8
+      shallow_depth_used = 100._r8*unit_system%m2len
     end if
 
     if (present(full_depth_integral)) then

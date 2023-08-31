@@ -33,7 +33,8 @@ optional arguments:
                         A file that overrides values in JSON (default: None)
   -o SETTINGS_FILE_OUT, --settings_file_out SETTINGS_FILE_OUT
                         Name of file to be written (default: marbl.settings)
-
+  -u {cgs,mks}, --unit_system {cgs,mks}
+                        Unit system for parameter values (default: cgs)
 """
 
 #######################################
@@ -85,6 +86,10 @@ def _parse_args(marbl_root):
     parser.add_argument('-o', '--settings_file_out', action='store', dest='settings_file_out', default='marbl.settings',
                         help='Name of file to be written')
 
+    # Command line argument to where to write the settings file being generated
+    parser.add_argument('-u', '--unit_system', action='store', dest='unit_system', default='cgs',
+                        choices=['cgs', 'mks'], help='Unit system for parameter values')
+
     return parser.parse_args()
 
 #######################################
@@ -103,7 +108,7 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
 
     from MARBL_tools import MARBL_settings_class
-    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in)
+    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in, args.unit_system)
 
     # Write the settings file
     generate_settings_file(DefaultSettings, args.settings_file_out)

@@ -23,6 +23,7 @@ module marbl_io_mod
   use marbl_netcdf_mod, only : marbl_netcdf_def_var
   use marbl_netcdf_mod, only : marbl_netcdf_inq_dimid
   use marbl_netcdf_mod, only : marbl_netcdf_inq_varid
+  use marbl_netcdf_mod, only : marbl_netcdf_var_in_file
   use marbl_netcdf_mod, only : marbl_netcdf_get_var
   use marbl_netcdf_mod, only : marbl_netcdf_put_var
 
@@ -101,6 +102,7 @@ contains
 
   !****************************************************************************
 
+  ! Read marbl_in and call put_setting() line by line
   subroutine marbl_io_read_settings_file(settings_file, marbl_instance)
 
     use marbl_mpi_mod, only : marbl_mpi_bcast
@@ -156,6 +158,7 @@ contains
 
   !****************************************************************************
 
+  ! write the contents of a MARBL log to stdout (if outfile is provided, task 0 writes to file)
   subroutine marbl_io_print_marbl_log(log_to_print, outfile, labort_on_error)
 
     use marbl_logging, only : marbl_status_log_entry_type
@@ -206,6 +209,7 @@ contains
 
   !*****************************************************************************
 
+  ! Opens netcdf files and stores associated ncids
   subroutine marbl_io_open_files(init_file, hist_file, driver_status_log)
 
     use marbl_netcdf_mod, only : marbl_netcdf_open
@@ -345,14 +349,23 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_domain(grid_data, active_level_cnt, num_cols, num_levels, num_PAR_subcols, driver_status_log)
+  ! Reads the provided domain file. The file should contain
+  ! * latititude
+  ! * cell center / interface depths
+  ! * cell thickness
+  ! * number of active levels
+  ! Note that depths are expected in cm, but will be converted to m in mks
+  subroutine marbl_io_read_domain(unit_system_opt, grid_data, active_level_cnt, lat, num_cols, &
+                                  num_levels, num_PAR_subcols, driver_status_log)
 
-    type(grid_data_type), intent(inout) :: grid_data
-    integer, allocatable, intent(inout) :: active_level_cnt(:)
-    integer,              intent(out)   :: num_cols
-    integer,              intent(out)   :: num_levels
-    integer,              intent(out)   :: num_PAR_subcols
-    type(marbl_log_type), intent(inout) :: driver_status_log
+    character(len=*),     intent(in)     :: unit_system_opt
+    type(grid_data_type), intent(inout)  :: grid_data
+    integer, allocatable, intent(inout)  :: active_level_cnt(:)
+    real(r8), allocatable, intent(inout) :: lat(:)
+    integer,              intent(out)    :: num_cols
+    integer,              intent(out)    :: num_levels
+    integer,              intent(out)    :: num_PAR_subcols
+    type(marbl_log_type), intent(inout)  :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_domain'
 
@@ -377,7 +390,7 @@ contains
 
     ! 2. allocate memory for domain variables (grid_data and active_level_cnt)
     allocate(grid_data%delta_z(num_levels), grid_data%zt(num_levels), grid_data%zw(num_levels))
-    allocate(active_level_cnt(num_cols))
+    allocate(active_level_cnt(num_cols), lat(num_cols))
 
     ! 3. Read domain data into newly-allocated memory
     call get_init_file_var_by_name('delta_z', grid_data%delta_z, driver_status_log)
@@ -385,24 +398,27 @@ contains
       call driver_status_log%log_error_trace('get_init_file_var_by_name(delta_z)', subname)
       return
     end if
-    ! convert from m -> cm
-    grid_data%delta_z = grid_data%delta_z * 100._r8
+    if (trim(unit_system_opt) == 'cgs') &
+      ! convert from m -> cm
+      grid_data%delta_z = grid_data%delta_z * 100._r8
 
     call get_init_file_var_by_name('zt', grid_data%zt, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('get_init_file_var_by_name(zt)', subname)
       return
     end if
-    ! convert from m -> cm
-    grid_data%zt = grid_data%zt * 100._r8
+    if (trim(unit_system_opt) == 'cgs') &
+      ! convert from m -> cm
+      grid_data%zt = grid_data%zt * 100._r8
 
     call get_init_file_var_by_name('zw', grid_data%zw, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('get_init_file_var_by_name(zw)', subname)
       return
     end if
-    ! convert from m -> cm
-    grid_data%zw = grid_data%zw * 100._r8
+    if (trim(unit_system_opt) == 'cgs') &
+      ! convert from m -> cm
+      grid_data%zw = grid_data%zw * 100._r8
 
     call get_init_file_var_by_name('active_level_cnt', active_level_cnt, driver_status_log)
     if (driver_status_log%labort_marbl) then
@@ -410,15 +426,27 @@ contains
       return
     end if
 
+    call get_init_file_var_by_name('lat', lat, driver_status_log)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('get_init_file_var_by_name(lat)', subname)
+      return
+    end if
+
   end subroutine marbl_io_read_domain
 
   !*****************************************************************************
 
-  subroutine marbl_io_read_forcing_field(col_id, forcing_fields, forcing_fields_out, driver_status_log, active_level_cnt)
+  ! Read forcing fields from netcdf
+  ! Assumes units are in cgs, and converts to mks in that is prefered unit system
+  ! (d13c and d14c are hard-coded values, they are not in the forcing file)
+  subroutine marbl_io_read_forcing_field(col_id, lat, unit_system_opt, forcing_fields, forcing_fields_out, &
+                                         driver_status_log, active_level_cnt)
 
     use marbl_interface_public_types, only : marbl_forcing_fields_type
 
     integer,                                       intent(in)    :: col_id
+    real(r8),                                      intent(in)    :: lat  ! latitude in degrees
+    character(len=*),                              intent(in)    :: unit_system_opt
     type(marbl_forcing_fields_type), dimension(:), intent(in)    :: forcing_fields
     type(forcing_fields_type),       dimension(:), intent(inout) :: forcing_fields_out
     type(marbl_log_type),                          intent(inout) :: driver_status_log
@@ -431,13 +459,32 @@ contains
 
     do n=1, size(forcing_fields)
       ! Convert netcdf varname from forcing field name (also get rank and unit conversion factor)
-      call get_forcing_varname_rank_and_conv_factor(forcing_fields(n)%metadata%varname, varname, &
+      call get_forcing_varname_rank_and_conv_factor(forcing_fields(n)%metadata%varname, unit_system_opt, varname, &
                                                     rank, conv_factor, driver_status_log)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") "get_forcing_varname_rank_and_conv_factor(", &
                                    trim(forcing_fields(n)%metadata%varname), ")"
         call driver_status_log%log_error_trace(log_message, subname)
         return
+      end if
+
+      if (trim(varname) == 'd13c') then
+        ! CMIP protocol uses constant value by default
+        ! Units are permil
+        forcing_fields_out(n)%field_0d(col_id) = -6.61_r8
+        cycle
+      else if (trim(varname) == 'd14c') then
+        ! CMIP protocol uses one of three values by default:
+        ! -2.3 above 30 N, -4.0 between 30 S and 30 N, -5.8 below 30 S
+        ! Units are permil
+        if (lat > 30._r8) then
+          forcing_fields_out(n)%field_0d(col_id) = -2.3_r8
+        else if (lat > -30._r8) then
+          forcing_fields_out(n)%field_0d(col_id) = -4.0_r8
+        else
+          forcing_fields_out(n)%field_0d(col_id) = -5.8_r8
+        end if
+        cycle
       end if
 
       ! Get netcdf varid
@@ -487,44 +534,160 @@ contains
 
   !****************************************************************************
 
-  subroutine marbl_io_read_tracers(col_start, tracer_metadata, tracers, driver_status_log)
+  subroutine get_tracer_name_file_and_scale_factor(tracer_name, tracer_name_file, scale_factor, driver_status_log)
 
-    integer,                                          intent(in)    :: col_start
+    use marbl_constants_mod, only : c1
+
+    character(len=*),     intent(in)    :: tracer_name
+    character(len=*),     intent(out)   :: tracer_name_file
+    real(kind=r8),        intent(out)   :: scale_factor
+    type(marbl_log_type), intent(inout) :: driver_status_log
+
+    character(len=*), parameter :: subname = 'marbl_io_mod:get_tracer_name_file_and_scale_factor'
+    character(len=char_len) :: log_message
+
+    if (marbl_netcdf_var_in_file(ncid_in, tracer_name)) then
+      tracer_name_file = tracer_name
+      scale_factor = 1._r8
+      return
+    end if
+    select case (trim(tracer_name))
+      case('coccoChl')
+        tracer_name_file = 'spChl'
+        scale_factor = 0.07_r8
+      case('coccoC')
+        tracer_name_file = 'spC'
+        scale_factor = 0.07_r8
+      case('coccoP')
+        tracer_name_file = 'spP'
+        scale_factor = 0.07_r8
+      case('coccoFe')
+        tracer_name_file = 'spFe'
+        scale_factor = 0.07_r8
+      case('coccoCaCO3')
+        tracer_name_file = 'spCaCO3'
+        scale_factor = c1
+      case('microzooC')
+        tracer_name_file = 'zooC'
+        scale_factor = 0.56_r8
+      case('mesozooC')
+        tracer_name_file = 'zooC'
+        scale_factor = 0.44_r8
+      case('DI13C')
+        tracer_name_file = 'DIC'
+        scale_factor = 1.025_r8
+      case('DO13Ctot')
+        tracer_name_file = 'DOC'
+        scale_factor = c1
+      case('DI14C')
+        tracer_name_file = 'DIC'
+        scale_factor = 0.9225_r8
+      case('DO14Ctot')
+        tracer_name_file = 'DOC'
+        scale_factor = c1
+      case('zootot13C')
+        tracer_name_file = 'zooC'
+        scale_factor = c1
+      case('zootot14C')
+        tracer_name_file = 'zooC'
+        scale_factor = c1
+      case('sp13C')
+        tracer_name_file = 'spC'
+        scale_factor = c1
+      case('sp14C')
+        tracer_name_file = 'spC'
+        scale_factor = c1
+      case('spCa13CO3')
+        tracer_name_file = 'spCaCO3'
+        scale_factor = c1
+      case('spCa14CO3')
+        tracer_name_file = 'spCaCO3'
+        scale_factor = c1
+      case('diat13C')
+        tracer_name_file = 'diatC'
+        scale_factor = c1
+      case('diat14C')
+        tracer_name_file = 'diatC'
+        scale_factor = c1
+      case('diaz13C')
+        tracer_name_file = 'diazC'
+        scale_factor = c1
+      case('diaz14C')
+        tracer_name_file = 'diazC'
+        scale_factor = c1
+      case DEFAULT
+        write(log_message, "(3A)") "Can not read ", trim(tracer_name), " and no fallback field provided!"
+        call driver_status_log%log_error(log_message, subname)
+        tracer_name_file = ""
+        scale_factor = 0._r8
+    end select
+  end subroutine get_tracer_name_file_and_scale_factor
+  !****************************************************************************
+
+  ! Reads initial conditions for the MARBL tracers from netcdf
+  ! Has a basic hard-coded fallback option for a few tracers,
+  ! so if specific tracers are not in the file they can be initialized
+  ! based on value of other tracers.
+  subroutine marbl_io_read_tracers(col_id, tracer_metadata, tracers, driver_status_log)
+
+    integer,                                          intent(in)    :: col_id
     type(marbl_tracer_metadata_type), dimension(:),   intent(in)    :: tracer_metadata
     real(kind=r8),                    dimension(:,:), intent(inout) :: tracers            ! (tracer_cnt, num_levels)
     type(marbl_log_type),                             intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_io_mod:marbl_io_read_tracers'
-    character(len=char_len) :: log_message
+    character(len=char_len) :: log_message, tracer_name_file
+    real(kind=r8) :: scale_factor
     integer :: n, varid
 
+    ! Read each tracer from IC file
     do n = 1, size(tracer_metadata)
-      call marbl_netcdf_inq_varid(ncid_in, trim(tracer_metadata(n)%short_name), varid, driver_status_log)
+      ! Hard-code in mechanism for falling back:
+      ! 1. read 3p1z tracers when 4p2z tracers are not available
+      ! 2. read non-isotopic tracers when CISO tracers are not available
+      call get_tracer_name_file_and_scale_factor(tracer_metadata(n)%short_name, tracer_name_file, &
+                                                 scale_factor, driver_status_log)
+      if (driver_status_log%labort_marbl) then
+        call driver_status_log%log_error_trace('get_tracer_name_file_and_scale_factor', subname)
+        return
+      end if
+      if ((tracer_name_file /= tracer_metadata(n)%short_name) .and. (col_id == 1)) then
+        write(log_message, "(5A)") "Can not find ", trim(tracer_metadata(n)%short_name), &
+                                    " in IC file, initializing by scaling ", &
+                                    trim(tracer_name_file), " instead"
+        call driver_status_log%log_noerror(log_message, subname)
+        write(log_message, "(A, F6.4, A)") "  (scale factor = ", scale_factor, ")"
+        call driver_status_log%log_noerror(log_message, subname)
+      end if
+      call marbl_netcdf_inq_varid(ncid_in, trim(tracer_name_file), varid, driver_status_log)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") "marbl_netcdf_inq_varid(", trim(tracer_metadata(n)%short_name), ")"
         call driver_status_log%log_error_trace(log_message, subname)
         return
       end if
 
-      call marbl_netcdf_get_var(ncid_in, varid, tracers(n,:), driver_status_log, col_start=col_start)
+      call marbl_netcdf_get_var(ncid_in, varid, tracers(n,:), driver_status_log, col_start=col_id)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") "marbl_netcdf_get_var(", trim(tracer_metadata(n)%short_name), ")"
         call driver_status_log%log_error_trace(log_message, subname)
         return
       end if
+
+      tracers(n,:) = tracers(n,:) * scale_factor
     end do
 
   end subroutine marbl_io_read_tracers
 
   !*****************************************************************************
 
-  subroutine marbl_io_define_history(marbl_instances, col_cnt, driver_status_log)
+  subroutine marbl_io_define_history(marbl_instances, col_cnt, unit_system_opt, driver_status_log)
 
     use marbl_netcdf_mod, only : marbl_netcdf_def_dim
     use marbl_netcdf_mod, only : marbl_netcdf_enddef
 
     type(marbl_interface_class), dimension(:), intent(in)    :: marbl_instances
     integer,                     dimension(:), intent(in)    :: col_cnt
+    character(len=*),                          intent(in)    :: unit_system_opt
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_io_define_history'
@@ -558,15 +721,25 @@ contains
 
     ! netCDF variables
     ! 1) Domain variables
+    if (trim(unit_system_opt) == 'cgs') then
+      units = 'cm'
+    else
+      units = 'm'
+    end if
     call marbl_netcdf_def_var(ncid_out, 'zt', 'double', (/dimid_num_levels/), &
-                              "cell center depth", "m", driver_status_log)
+                              "cell center depth", units, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_netcdf_def_var(zt)', subname)
       return
     end if
 
+    if (trim(unit_system_opt) == 'cgs') then
+      units = 'cm'
+    else
+      units = 'm'
+    end if
     call marbl_netcdf_def_var(ncid_out, 'zw', 'double', (/dimid_num_levels/), &
-                              "cell interface depth", "m", driver_status_log)
+                              "cell interface depth", units, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_netcdf_def_var(zw)', subname)
       return
@@ -673,7 +846,7 @@ contains
         surface_flux_diag_buffer%diags(m)%field_2d((col_start+1):(col_start+col_cnt)) = &
             marbl_instance%surface_flux_diags%diags(m)%field_2d(:)
         surface_flux_diag_buffer%diags(m)%ref_depth_2d = &
-            marbl_instance%surface_flux_diags%diags(m)%ref_depth * 100._r8 ! m -> cm
+            marbl_instance%surface_flux_diags%diags(m)%ref_depth
       else
         surface_flux_diag_buffer%diags(m)%field_3d(:,(col_start+1):(col_start+col_cnt)) = &
             marbl_instance%surface_flux_diags%diags(m)%field_3d(:,:)
@@ -695,7 +868,7 @@ contains
         interior_tendency_diag_buffer%diags(m)%field_2d(col_id) = &
             marbl_instance%interior_tendency_diags%diags(m)%field_2d(1)
         interior_tendency_diag_buffer%diags(m)%ref_depth_2d = &
-            marbl_instance%interior_tendency_diags%diags(m)%ref_depth * 100._r8 ! m -> cm
+            marbl_instance%interior_tendency_diags%diags(m)%ref_depth
       else
         interior_tendency_diag_buffer%diags(m)%field_3d(:,col_id) = &
             marbl_instance%interior_tendency_diags%diags(m)%field_3d(:,1)
@@ -945,8 +1118,7 @@ contains
     write(varname, "(2A)") "STF_", trim(metadata%short_name)
     if (present(long_name)) &
       write(long_name, "(2A)") "Surface flux of ", trim(metadata%long_name)
-    if (present(units)) &
-      write(units, "(2A)") trim(metadata%units), ' cm/s'
+    if (present(units)) units = trim(metadata%flux_units)
 
   end subroutine get_surface_flux_desc_from_metadata
 
@@ -962,8 +1134,7 @@ contains
     write(varname, "(2A)") "J_", trim(metadata%short_name)
     if (present(long_name)) &
       write(long_name, "(2A)") trim(metadata%long_name), " Tendency"
-    if (present(units)) &
-      write(units, "(2A)") trim(metadata%units), '/s'
+    if (present(units)) units = trim(metadata%tend_units)
 
   end subroutine get_interior_tendency_desc_from_metadata
 
@@ -1036,9 +1207,10 @@ contains
 
   !*****************************************************************************
 
-  subroutine get_forcing_varname_rank_and_conv_factor(forcing_name, varname, rank, conv_factor, driver_status_log)
+  subroutine get_forcing_varname_rank_and_conv_factor(forcing_name, unit_system_opt, varname, rank, conv_factor, driver_status_log)
 
     character(len=*),        intent(in)    :: forcing_name
+    character(len=*),        intent(in)    :: unit_system_opt
     character(len=char_len), intent(out)   :: varname
     integer,                 intent(out)   :: rank
     real(r8),                intent(out)   :: conv_factor
@@ -1052,8 +1224,9 @@ contains
       case('u10_sqr')
         varname = 'u10_sqr'
         rank = 0
-        ! convert from m^2 / s^2 -> cm^2 / s^2
-        conv_factor = 10000._r8
+        if (trim(unit_system_opt) == 'cgs') &
+          ! convert from m^2 / s^2 -> cm^2 / s^2
+          conv_factor = 10000._r8
       case('sss')
         varname = 'SSS'
         rank = 0
@@ -1066,23 +1239,27 @@ contains
       case('Dust Flux')
         varname = 'dust_flux'
         rank = 0
-        ! convert from kg/m^2/s -> g/cm^2/s
-        conv_factor = 0.1_r8
+        if (trim(unit_system_opt) == 'cgs') &
+          ! convert from kg/m^2/s -> g/cm^2/s
+          conv_factor = 0.1_r8
       case('Iron Flux')
         varname = 'iron_flux'
         rank = 0
-        ! convert from mmol/m^2/s -> nmol/cm^2/s
-        conv_factor = 100._r8
+        if (trim(unit_system_opt) == 'cgs') &
+          ! convert from mmol/m^2/s -> nmol/cm^2/s
+          conv_factor = 100._r8
       case('NOx Flux')
         varname = 'nox_flux'
         rank = 0
-        ! convert from mmol/m^2/s -> nmol/cm^2/s
-        conv_factor = 100._r8
+        if (trim(unit_system_opt) == 'cgs') &
+          ! convert from mmol/m^2/s -> nmol/cm^2/s
+          conv_factor = 100._r8
       case('NHy Flux')
         varname = 'nhy_flux'
         rank = 0
-        ! convert from mmol/m^2/s -> nmol/cm^2/s
-        conv_factor = 100._r8
+        if (trim(unit_system_opt) == 'cgs') &
+          ! convert from mmol/m^2/s -> nmol/cm^2/s
+          conv_factor = 100._r8
       case('Atmospheric Pressure')
         varname = 'atm_pressure'
         rank = 0
@@ -1110,9 +1287,18 @@ contains
       case('Iron Sediment Flux')
         varname = 'iron_sed_flux'
         rank = 1
+        if (trim(unit_system_opt) == 'mks') &
+          ! convert from nmol/cm^2/s -> mmol/m^2/s
+          conv_factor = 0.01_r8
       case('O2 Consumption Scale Factor')
         varname = 'o2_consumption_scalef'
         rank = 1
+      case('d13c')
+        varname = 'd13c'
+        rank = 0
+      case('d14c')
+        varname = 'd14c'
+        rank = 0
       case DEFAULT
         rank = -1
         write(log_message, "(3A)") "Unrecognized forcing field '", trim(forcing_name), "'"

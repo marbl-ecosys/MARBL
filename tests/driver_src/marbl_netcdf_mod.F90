@@ -30,6 +30,7 @@ module marbl_netcdf_mod
   public :: marbl_netcdf_inq_dimid
   public :: marbl_netcdf_inquire_dimension
   public :: marbl_netcdf_inq_varid
+  public :: marbl_netcdf_var_in_file
   public :: marbl_netcdf_get_var
   public :: marbl_netcdf_put_var
   public :: marbl_netcdf_close
@@ -342,6 +343,26 @@ contains
 
   !*****************************************************************************
 
+  function marbl_netcdf_var_in_file(ncid, name)
+
+    integer,              intent(in)    :: ncid
+    character(len=*),     intent(in)    :: name
+
+    logical :: marbl_netcdf_var_in_file
+    integer :: varid
+
+#ifndef _NETCDF
+    ! Abort if not built with -D_NETCDF
+    varid = ncid + len(name) ! avoid warning when building without netcdf
+    marbl_netcdf_var_in_file = .false.
+#else
+    marbl_netcdf_var_in_file = (nf90_inq_varid(ncid, trim(name), varid) == nf90_noerr)
+#endif
+
+  end function marbl_netcdf_var_in_file
+
+  !*****************************************************************************
+
   subroutine marbl_netcdf_get_var_int_0d(ncid, varid, var, driver_status_log, col_id)
     ! Given netCDF identifier, populate domain variables
 
@@ -511,6 +532,8 @@ contains
                                      count=(/1, col_cnt/)), driver_status_log)
     else
       if (present(col_start)) then
+        ! Since var is dimension (num_levels), nf90_get_var will use count = (/num_levels, 1/)
+        ! So we don't need to explicitly provide count here
         call netcdf_check(nf90_get_var(ncid, varid, var, start=(/1, col_start/)), driver_status_log)
       else
         call netcdf_check(nf90_get_var(ncid, varid, var), driver_status_log)

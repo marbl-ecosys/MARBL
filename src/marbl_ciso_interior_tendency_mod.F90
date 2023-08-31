@@ -13,6 +13,7 @@ module marbl_ciso_interior_tendency_mod
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : autotroph_settings
   use marbl_settings_mod, only : ciso_on
+  use marbl_settings_mod, only : unit_system_type
 
   use marbl_logging, only : marbl_log_type
 
@@ -55,6 +56,7 @@ contains
        autotroph_derived_terms,                    &
        temperature,                                &
        marbl_tracer_indices,                       &
+       unit_system,                                &
        interior_tendencies,                        &
        marbl_interior_diags,                       &
        marbl_status_log)
@@ -81,6 +83,7 @@ contains
     type(autotroph_derived_terms_type),       intent(in)    :: autotroph_derived_terms
     real (r8),                                intent(in)    :: temperature(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
+    type(unit_system_type),                   intent(in)    :: unit_system
     real (r8),                                intent(inout) :: interior_tendencies(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
     type(marbl_diagnostics_type),             intent(inout) :: marbl_interior_diags
     type(marbl_log_type),                     intent(inout) :: marbl_status_log
@@ -557,11 +560,13 @@ contains
        ! Compute carbon isotope particulate terms
        !-----------------------------------------------------------------------
 
-       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,:), &
-            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO13C, P_Ca13CO3)
+       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,:),   &
+            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, unit_system, &
+            PO13C, P_Ca13CO3)
 
-       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,:), &
-            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, PO14C, P_Ca14CO3)
+       call compute_particulate_terms(k, marbl_domain, bot_flux_to_tend(:), tracer_local(:,:),   &
+            marbl_tracer_indices, interior_tendency_share, marbl_particulate_share, unit_system, &
+            PO14C, P_Ca14CO3)
 
        !-----------------------------------------------------------------------
        ! Update interior_tendencies for the 7 carbon pools for each Carbon isotope
@@ -711,6 +716,7 @@ contains
        P_Ca14CO3,           &
        interior_tendencies, &
        marbl_tracer_indices,&
+       unit_system,         &
        marbl_interior_diags,&
        marbl_status_log)
 
@@ -1059,7 +1065,7 @@ contains
   !***********************************************************************
 
   subroutine compute_particulate_terms(k, domain, bot_flux_to_tend, tracer_local, marbl_tracer_indices, &
-             interior_tendency_share, marbl_particulate_share, POC_ciso, P_CaCO3_ciso)
+             interior_tendency_share, marbl_particulate_share, unit_system, POC_ciso, P_CaCO3_ciso)
 
     !----------------------------------------------------------------------------------------
     !  Compute outgoing fluxes and remineralization terms for Carbon isotopes.
@@ -1071,6 +1077,7 @@ contains
     !----------------------------------------------------------------------------------------
 
     use marbl_constants_mod, only : spd
+    use marbl_constants_mod, only : spy
     use marbl_settings_mod , only : denitrif_C_N
     use marbl_settings_mod , only : parm_sed_denitrif_coeff
     use marbl_settings_mod , only : caco3_bury_thres_iopt
@@ -1086,6 +1093,7 @@ contains
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
     type(marbl_interior_tendency_share_type), intent(in)    :: interior_tendency_share
     type(marbl_particulate_share_type),       intent(in)    :: marbl_particulate_share
+    type(unit_system_type),                   intent(in)    :: unit_system
     type(column_sinking_particle_type),       intent(inout) :: POC_ciso          ! base units = nmol particulate organic Carbon isotope
     type(column_sinking_particle_type),       intent(inout) :: P_CaCO3_ciso      ! base units = nmol CaCO3 Carbon isotope
 
@@ -1245,7 +1253,7 @@ contains
        POC_ciso%to_floor = POC_ciso%sflux_out(k) + POC_ciso%hflux_out(k)
 
        if (POC_ciso%to_floor > c0) then
-          flux_alt = POC_ciso%to_floor * mpercm * spd ! convert to mmol/m^2/day
+          flux_alt = POC_ciso%to_floor * unit_system%len2m * spd ! convert to mmol/m^2/day [nmol/cm^2 = cm*mmol/m^3 = mmol/m^2 * cm/m]
 
           POC_ciso%sed_loss(k) = POC_ciso%to_floor * min(0.8_r8, POC_bury_coeff &
                * (0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2))
@@ -1254,7 +1262,7 @@ contains
           sed_denitrif(1:k) = bot_flux_to_tend(1:k) * parm_sed_denitrif_coeff * POC_ciso%to_floor * &
                               (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc))
 
-          flux_alt = POC_ciso%to_floor*1.0e-6_r8*spd*365.0_r8 ! convert to mmol/cm^2/year
+          flux_alt = POC_ciso%to_floor*(unit_system%conc_flux2mmol_m2s * (mpercm**2))*spy ! convert to mmol/cm^2/year
           other_remin(1:k) = min(bot_flux_to_tend(1:k) * &
                                  min(0.1_r8 + flux_alt,0.5_r8) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)), &
                                  bot_flux_to_tend(1:k) * (POC_ciso%to_floor - POC_ciso%sed_loss(k)) - &

@@ -43,6 +43,35 @@ module marbl_settings_mod
   save
 
   !---------------------------------------------------------------------------
+  ! Derived type for tracking unit system
+  !---------------------------------------------------------------------------
+
+  type, public :: unit_system_type
+    character(len=3)  :: unit_system     ! Name of unit system ('cgs' or 'mks')
+    character(len=2)  :: L               ! Standard unit of length ('cm' or 'm')
+    character(len=2)  :: M               ! Standard unit of mass ('g' or 'kg')
+    character(len=12) :: conc_units      ! Standard unit of concentration
+    character(len=12) :: conc_flux_units ! Standard unit of concentration flux
+    character(len=12) :: conc_tend_units ! Standard unit of concentration tendency
+    character(len=12) :: alk_conc_units      ! Standard unit of concentration for alkalinity
+    character(len=12) :: alk_conc_flux_units ! Standard unit of concentration flux for alkalinity
+    character(len=12) :: alk_conc_tend_units ! Standard unit of concentration tendency for alkalinity
+    real(r8)          :: mass2g          ! g / M (converts from model mass M -> grams)
+    real(r8)          :: g2mass          ! M / g (converts from grams -> model mass M)
+    real(r8)          :: mass2kg         ! kg / M (converts from model mass M -> kilograms)
+    real(r8)          :: cm2len          ! L / cm (converts from cm -> model length L)
+    real(r8)          :: len2cm          ! cm / L (converts from model length L -> cm)
+    real(r8)          :: m2len           ! L / m (converts from m -> model length L)
+    real(r8)          :: len2m           ! m / L (converts from model length L -> m)
+    real(r8)          :: mol_prefix      ! convert mol -> nmol, mmol, etc (get correct metric prefix)
+    real(r8)          :: nmol2mol_prefix  ! convert nmol -> nmol, mmol, etc
+    real(r8)          :: conc_flux2nmol_cm2s  ! L^2/cm^2 * nano[]/mol_prefix[] (converts from mol_prefix/L^2/s -> nmol/cm^2/s)
+    real(r8)          :: conc_flux2mmol_m2s   ! L^2/m^2 * milli[]/mol_prefix[] (converts from mol_prefix/L^2/s -> mmol/m^2/s)
+  contains
+    procedure :: set => set_unit_system
+  end type unit_system_type
+
+  !---------------------------------------------------------------------------
   !  Datatypes for marbl_instance%settings
   !---------------------------------------------------------------------------
 
@@ -92,10 +121,8 @@ module marbl_settings_mod
   !  BGC parameters that are currently hard-coded
   !---------------------------------------------------------------------
 
-  ! Redfield Ratios, dissolved & particulate
   real(r8), parameter :: &
        Q_10      =   1.7_r8,                                 & ! factor for temperature dependence (non-dim)
-       xkw_coeff =   6.97e-9_r8,                             & ! in s/cm, from a = 0.251 cm/hr s^2/m^2 in Wannikhof 2014
        parm_Red_D_C_P  = 117.0_r8,                           & ! carbon:phosphorus
        parm_Red_D_N_P  =  16.0_r8,                           & ! nitrogen:phosphorus
        parm_Red_D_O2_P = 170.0_r8,                           & ! oxygen:phosphorus
@@ -109,16 +136,6 @@ module marbl_settings_mod
        parm_Red_Fe_C   = 3.0e-6_r8,                          & ! iron:carbon
        parm_Red_D_C_O2_diaz = parm_Red_D_C_P/150.0_r8          ! carbon:oxygen
                                                                ! for diazotrophs
-
-  ! Misc. Rate constants
-  real(r8), parameter :: &
-       dust_Fe_scavenge_scale  = 1.0e9_r8      !dust scavenging scale factor
-
-  ! dust_to_Fe: conversion of dust to iron (nmol Fe/g Dust)
-  ! dust remin gDust = 0.035 gFe       mol Fe     1e9 nmolFe
-  !                    --------- *  ----------- * ----------
-  !                      gDust      molw_Fe gFe      molFe
-  real(r8), parameter :: dust_to_Fe = 0.035_r8 / molw_Fe * 1.0e9_r8
 
   ! parameters related to Iron binding ligands
   integer (int_kind), parameter :: Lig_cnt = 1 ! valid values are 1 or 2
@@ -141,11 +158,11 @@ module marbl_settings_mod
   ! fixed ratios
   real(r8), parameter :: r_Nfix_photo=1.25_r8    ! N fix relative to C fix (non-dim)
 
-  ! SET parmaeters and RATIOS for N/C, P/C, SiO3/C, Fe/C, etc...
+  ! SET parameters and RATIOS for N/C, P/C, SiO3/C, Fe/C, etc...
   real(r8), parameter :: &
       Q             = 16.0_r8 / 117.0_r8, & ! N/C ratio (mmol/mmol) of phyto & zoo
       Qfe_zoo       = 3.0e-6_r8,          & ! zooplankton Fe/C ratio
-      ! parameters in GalbraithMartiny Pquota Model^M
+      ! parameters in GalbraithMartiny Pquota Model
       PquotaSlope     = 7.0_r8,        &
       PquotaIntercept = 5.571_r8,      &
       PquotaMinNP     = 0.00854701_r8, &
@@ -154,10 +171,6 @@ module marbl_settings_mod
 
   ! loss term threshold parameters, chl:c ratios
   real(r8), parameter :: &
-      thres_z1_auto     =  80.0e2_r8, & ! autotroph threshold = C_loss_thres for z shallower than this (cm)
-      thres_z2_auto     = 120.0e2_r8, & ! autotroph threshold = 0 for z deeper than this (cm)
-      thres_z1_zoo      = 110.0e2_r8, & ! zooplankton threshold = C_loss_thres for z shallower than this (cm)
-      thres_z2_zoo      = 150.0e2_r8, & ! zooplankton threshold = 0 for z deeper than this (cm)
       CaCO3_temp_thres1 = 4.0_r8,     & ! upper temp threshold for CaCO3 prod
       CaCO3_temp_thres2 = -2.0_r8,    & ! lower temp threshold
       CaCO3_sp_thres    = 2.5_r8        ! bloom condition thres (mmolC/m3)
@@ -195,6 +208,20 @@ module marbl_settings_mod
   real (r8), parameter :: phhi_3d_init = 9.0_r8   ! high bound for subsurface ph for no prev soln
   real (r8), parameter :: del_ph = 0.20_r8        ! delta-ph for prev soln
 
+  !---------------------------------------------------------------------
+  !  BGC parameters that are currently hard-coded but can not be
+  !  fortran parameters because they depend on unit system
+  !  Values are determined in set_unit_system()
+  !---------------------------------------------------------------------
+
+  real(r8) :: xkw_coeff,     & ! correct value from Wannikhof 2014 is 0.251 cm/hr s^2/m^2  (s/L)
+              thres_z1_auto, & ! autotroph threshold = C_loss_thres for z shallower than this (L)
+              thres_z2_auto, & ! autotroph threshold = 0 for z deeper than this (L)
+              thres_z1_zoo,  & ! zooplankton threshold = C_loss_thres for z shallower than this (L)
+              thres_z2_zoo,  & ! zooplankton threshold = 0 for z deeper than this (L)
+              dust_Fe_scavenge_scale,  & !dust scavenging scale factor
+              dust_to_Fe
+
   !---------------------------------------------------------------------------------------------
   !  Variables defined in marbl_settings_define_general_parms, marbl_settings_define_PFT_counts,
   !  marbl_settings_define_PFT_derived_types, or marbl_settings_define_tracer_dependent
@@ -230,10 +257,8 @@ module marbl_settings_mod
 
   character(len=char_len), target :: init_bury_coeff_opt
 
-  integer(int_kind), target :: &
-       particulate_flux_ref_depth    ! reference depth for particulate flux diagnostics (m)
-
   real(r8), target :: &
+       particulate_flux_ref_depth, & ! reference depth for particulate flux diagnostics (L)
        bftt_dz_sum_thres,          & ! MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold
        Jint_Ctot_thres_molpm2pyr,  & ! MARBL will abort if abs(Jint_Ctot) exceeds this threshold
        Jint_Ctot_thres,            & ! MARBL will abort if abs(Jint_Ctot) exceeds this threshold (derived from Jint_Ctot_thres_molpm2pyr)
@@ -258,9 +283,12 @@ module marbl_settings_mod
        parm_init_POC_bury_coeff,   & ! initial scale factor for burial of POC, PON
        parm_init_POP_bury_coeff,   & ! initial scale factor for burial of POP
        parm_init_bSi_bury_coeff,   & ! initial scale factor burial of bSi
-       parm_Fe_scavenge_rate0,     & ! scavenging base rate for Fe
-       parm_Lig_scavenge_rate0,    & ! scavenging base rate for bound ligand
-       parm_FeLig_scavenge_rate0,  & ! scavenging base rate for bound iron
+       parm_Fe_scavenge_rate0,     & ! scavenging base rate for Fe (cm^2/ng s/yr)
+       parm_Lig_scavenge_rate0,    & ! scavenging base rate for bound ligand (cm^2/ng s/yr)
+       parm_FeLig_scavenge_rate0,  & ! scavenging base rate for bound iron (cm^2/ng s/yr)
+       parm_Fe_scavenge_rate0_yps,     & ! parm_Fe_scavenge_rate0 * yps (cm^2/ng)
+       parm_Lig_scavenge_rate0_yps,    & ! parm_Lig_scavenge_rate0 * yps (cm^2/ng)
+       parm_FeLig_scavenge_rate0_yps,  & ! parm_FeLig_scavenge_rate0 * yps (cm^2/ng)
        parm_Lig_degrade_rate0,     & ! Fe-binding ligand bacterial degradation base rate coefficient
        parm_Fe_desorption_rate0,   & ! desorption rate for scavenged Fe from particles
        parm_f_prod_sp_CaCO3,       & ! fraction of sp prod. as CaCO3 prod.
@@ -369,7 +397,9 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_settings_set_defaults_general_parms()
+  subroutine marbl_settings_set_defaults_general_parms(unit_system)
+
+    type(unit_system_type), intent(in) :: unit_system
 
     PFT_defaults                  = 'CESM2'         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_on                       = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -385,7 +415,7 @@ contains
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lo2_consumption_scalef        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    particulate_flux_ref_depth    = 100             ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    particulate_flux_ref_depth    = 100._r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     bftt_dz_sum_thres             = 1.0e-14_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     gQsi_0                        = 0.137_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -435,7 +465,17 @@ contains
     QCaCO3_max                    = 0.40_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     f_graze_CaCO3_remin           = 0.33_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
 
-
+    ! Variables that change depending on unit system
+    parm_POC_diss          = parm_POC_diss * unit_system%cm2len                        ! cm -> m in mks
+    parm_SiO2_diss         = parm_SiO2_diss * unit_system%cm2len                       ! cm -> m in mks
+    parm_CaCO3_diss        = parm_CaCO3_diss * unit_system%cm2len                      ! cm -> m in mks
+    parm_scalelen_z(:)     = parm_scalelen_z(:) * unit_system%cm2len                   ! cm -> m in mks
+    caco3_bury_thres_depth = caco3_bury_thres_depth * unit_system%cm2len               ! cm -> m in mks
+    parm_Fe_desorption_rate0 = parm_Fe_desorption_rate0 * unit_system%len2cm           ! 1/cm -> 1/m in mks
+    particulate_flux_ref_depth = particulate_flux_ref_depth * unit_system%m2len        ! in m because it used to be integer used to define FLUX_100m
+    parm_Fe_scavenge_rate0    = parm_Fe_scavenge_rate0 * unit_system%conc_flux2nmol_cm2s  ! cm^2/ng s/yr -> m^2/mg s/yr in mks
+    parm_Lig_scavenge_rate0   = parm_Lig_scavenge_rate0 * unit_system%conc_flux2nmol_cm2s  ! cm^2/ng s/yr -> m^2/mg s/yr in mks
+    parm_FeLig_scavenge_rate0 = parm_FeLig_scavenge_rate0 * unit_system%conc_flux2nmol_cm2s  ! cm^2/ng s/yr -> m^2/mg s/yr in mks
   end subroutine marbl_settings_set_defaults_general_parms
 
   !*****************************************************************************
@@ -552,7 +592,6 @@ contains
 
     character(len=char_len)          :: sname, lname, units, datatype, category
     real(r8),                pointer :: rptr => NULL()
-    integer(int_kind),       pointer :: iptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
     character(len=char_len), pointer :: sptr => NULL()
     logical                          :: labort_marbl_loc
@@ -710,10 +749,10 @@ contains
     sname     = 'particulate_flux_ref_depth'
     lname     = 'reference depth for particulate flux diagnostics'
     units     = 'm'
-    datatype  = 'integer'
-    iptr      => particulate_flux_ref_depth
+    datatype  = 'real'
+    rptr      => particulate_flux_ref_depth
     call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, iptr=iptr)
+                        marbl_status_log, rptr=rptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'bftt_dz_sum_thres'
@@ -862,7 +901,7 @@ contains
 
     sname     = 'parm_Fe_scavenge_rate0'
     lname     = 'scavenging base rate for Fe'
-    units     = '1/yr'
+    units     = 'cm^2/ng s/yr'
     datatype  = 'real'
     rptr      => parm_Fe_scavenge_rate0
     call this%add_var(sname, lname, units, datatype, category,       &
@@ -871,7 +910,7 @@ contains
 
     sname     = 'parm_Lig_scavenge_rate0'
     lname     = 'scavenging base rate for bound ligand'
-    units     = '1/yr'
+    units     = 'cm^2/ng s/yr'
     datatype  = 'real'
     rptr      => parm_Lig_scavenge_rate0
     call this%add_var(sname, lname, units, datatype, category,       &
@@ -880,7 +919,7 @@ contains
 
     sname     = 'parm_FeLig_scavenge_rate0'
     lname     = 'scavenging base rate for bound iron'
-    units     = '1/yr'
+    units     = 'cm^2/ng s/yr'
     datatype  = 'real'
     rptr      => parm_FeLig_scavenge_rate0
     call this%add_var(sname, lname, units, datatype, category,       &
@@ -1859,6 +1898,18 @@ contains
     call print_single_derived_parm('parm_kappa_nitrif_per_day', 'parm_kappa_nitrif', &
          parm_kappa_nitrif, subname, marbl_status_log)
 
+    parm_Fe_scavenge_rate0_yps = yps * parm_Fe_scavenge_rate0
+    call print_single_derived_parm('parm_Fe_scavenge_rate0', 'parm_Fe_scavenge_rate0_yps', &
+         parm_Fe_scavenge_rate0_yps, subname, marbl_status_log)
+
+    parm_Lig_scavenge_rate0_yps = yps * parm_Lig_scavenge_rate0
+    call print_single_derived_parm('parm_Lig_scavenge_rate0', 'parm_Lig_scavenge_rate0_yps', &
+         parm_Lig_scavenge_rate0_yps, subname, marbl_status_log)
+
+    parm_FeLig_scavenge_rate0_yps = yps * parm_FeLig_scavenge_rate0
+    call print_single_derived_parm('parm_FeLig_scavenge_rate0', 'parm_FeLig_scavenge_rate0_yps', &
+         parm_FeLig_scavenge_rate0_yps, subname, marbl_status_log)
+
     Jint_Ctot_thres = 1.0e9_r8 * mpercm**2 * yps * Jint_Ctot_thres_molpm2pyr
     call print_single_derived_parm('Jint_Ctot_thres_molpm2pyr', 'Jint_Ctot_thres', &
          Jint_Ctot_thres, subname, marbl_status_log)
@@ -2078,6 +2129,109 @@ contains
     end if
 
   end subroutine marbl_settings_consistency_check
+
+  !***********************************************************************
+
+  subroutine set_unit_system(this, unit_system, marbl_status_log)
+
+    use marbl_constants_mod, only : rho_sw
+
+    class(unit_system_type), intent(inout) :: this
+    character(len=*),        intent(in)    :: unit_system
+    type(marbl_log_type),    intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_interface_private_types:set_unit_system'
+    character(len=char_len) :: log_message
+
+    ! If requested unit system is same as current unit system, just return
+    if (trim(unit_system) == trim(this%unit_system)) return
+
+    if (trim(unit_system) == 'cgs') then
+      ! Use cm, g, and s for length, mass, and time
+
+      ! Set module variables that used to be fortran parameters
+      xkw_coeff     = 6.97e-9_r8   ! 0.251 cm/hr s^2/m^2 in s / cm
+      thres_z1_auto =  80.0e2_r8   ! cm
+      thres_z2_auto = 120.0e2_r8   ! cm
+      thres_z1_zoo  = 110.0e2_r8   ! cm
+      thres_z2_zoo  = 150.0e2_r8   ! cm
+      rho_sw        =   1.026_r8   ! g / cm^3
+      dust_Fe_scavenge_scale  = 1.0e9_r8  ! ng / g
+
+      ! set unit metadata
+      this%L               = 'cm'
+      this%M               = 'g'
+      this%conc_units      = 'nmol/cm^3'
+      this%conc_flux_units = 'nmol/cm^2/s'
+      this%conc_tend_units = 'nmol/cm^3/s'
+      this%alk_conc_units      = 'neq/cm^3'
+      this%alk_conc_flux_units = 'neq/cm^2/s'
+      this%alk_conc_tend_units = 'neq/cm^3/s'
+
+      ! set conversion factors
+      this%g2mass     = 1._r8    ! g -> g
+      this%mass2g     = 1._r8    ! g -> g
+      this%mass2kg    = 1.e-3_r8 ! g -> kg
+      this%cm2len     = 1._r8    ! cm -> cm
+      this%len2cm     = 1._r8    ! cm -> cm
+      this%m2len      = 1.e2_r8  ! m -> cm
+      this%len2m      = 0.01_r8  ! cm -> m
+      this%mol_prefix = 1.e9_r8  ! mol -> nmol
+      this%nmol2mol_prefix = 1._r8         ! nmol -> nmol
+      this%conc_flux2nmol_cm2s = 1._r8     ! nmol/cm^2 -> nmol/cm^2
+      this%conc_flux2mmol_m2s = 1.e-2_r8  ! nmol/cm^2 -> mmol/m^2
+    elseif (trim(unit_system) == 'mks') then
+      ! Use m, kg, and s for length, mass, and time
+
+      ! Set module variables that used to be fortran parameters
+      xkw_coeff     = 6.97e-7_r8   ! 0.251 cm/hr s^2/m^2 in s / m
+      thres_z1_auto =     80._r8   ! m
+      thres_z2_auto =    120._r8   ! m
+      thres_z1_zoo  =    110._r8   ! m
+      thres_z2_zoo  =    150._r8   ! m
+      rho_sw        =  1026.0_r8   ! kg / m^3
+      dust_Fe_scavenge_scale  = 1.0e6_r8  ! mg / kg
+
+      ! set unit metadata
+      this%L               = 'm'
+      this%M               = 'kg'
+      this%conc_units      = 'mmol/m^3'
+      this%conc_flux_units = 'mmol/m^2/s'
+      this%conc_tend_units = 'mmol/m^3/s'
+      this%alk_conc_units      = 'meq/m^3'
+      this%alk_conc_flux_units = 'meq/m^2/s'
+      this%alk_conc_tend_units = 'meq/m^3/s'
+
+      ! set conversion factors
+      this%g2mass     = 0.001_r8 ! g -> kg
+      this%mass2g     = 1.e3_r8  ! kg -> g
+      this%mass2kg    = 1._r8    ! kg -> kg
+      this%cm2len     = 0.01_r8  ! cm -> m
+      this%len2cm     = 1.e2_r8  ! cm -> m
+      this%m2len      = 1._r8    ! m -> m
+      this%len2m      = 1._r8    ! m -> m
+      this%mol_prefix = 1.e3_r8  ! mol -> mmol
+      this%nmol2mol_prefix = 1.e-6_r8     ! nmol -> mmol
+      this%conc_flux2nmol_cm2s = 1.e2_r8  ! mmol/m^2 -> nmol/cm^2
+      this%conc_flux2mmol_m2s = 1._r8    ! mmol/m^2 -> mmol/m^2
+    else
+      write(log_message, '(3A)') 'Can not update unit system to "', trim(unit_system), '"'
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    endif
+
+    ! dust_to_Fe: conversion of dust to iron (mol Fe/g Dust)
+    ! dust remin gDust = 0.035 gFe       mol Fe
+    !                    --------- *  -----------
+    !                      gDust      molw_Fe gFe
+    dust_to_Fe = 0.035_r8 / molw_Fe
+    ! mol -> mmol and 1/g -> 1/kg for mks; mol -> nmol for cgs
+    dust_to_Fe = dust_to_Fe * this%mass2g * this%mol_prefix
+
+    ! Update unit_system module variable
+    this%unit_system = trim(unit_system)
+
+  end subroutine set_unit_system
 
 !*****************************************************************************
 

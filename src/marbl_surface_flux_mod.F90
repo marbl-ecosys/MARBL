@@ -11,6 +11,8 @@ module marbl_surface_flux_mod
 
   use marbl_constants_mod, only : c0
   use marbl_constants_mod, only : c1
+  use marbl_constants_mod, only : molw_P
+  use marbl_constants_mod, only : molw_Si
 
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : r8
@@ -22,6 +24,7 @@ module marbl_surface_flux_mod
   use marbl_settings_mod, only : del_ph
   use marbl_settings_mod, only : phhi_surf_init
   use marbl_settings_mod, only : phlo_surf_init
+  use marbl_settings_mod, only : unit_system_type
 
   use marbl_interface_private_types, only : marbl_surface_flux_share_type
   use marbl_interface_private_types, only : marbl_surface_flux_internal_type
@@ -57,6 +60,7 @@ contains
        surface_flux_forcings,           &
        tracers_at_surface,              &
        surface_fluxes,                  &
+       unit_system,                     &
        marbl_tracer_indices,            &
        saved_state,                     &
        saved_state_ind,                 &
@@ -94,6 +98,7 @@ contains
     type(marbl_forcing_fields_type)           , intent(in)    :: surface_flux_forcings(:)
     real (r8)                                 , intent(in)    :: tracers_at_surface(:,:)
     real (r8)                                 , intent(out)   :: surface_fluxes(:,:)
+    type(unit_system_type)                    , intent(in)    :: unit_system
     type(marbl_tracer_index_type)             , intent(in)    :: marbl_tracer_indices
     type(marbl_saved_state_type)              , intent(inout) :: saved_state
     type(marbl_surface_flux_saved_state_indexing_type), intent(in) :: saved_state_ind
@@ -114,8 +119,8 @@ contains
     integer (int_kind) :: auto_ind                 ! autotroph functional group index
     real (r8)          :: phlo(num_elements)       ! lower bound for ph in solver
     real (r8)          :: phhi(num_elements)       ! upper bound for ph in solver
-    real (r8)          :: xkw_ice(num_elements)    ! common portion of piston vel., (1-fice)*xkw (cm/s)
-    real (r8)          :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (mmol/m^3)
+    real (r8)          :: xkw_ice(num_elements)    ! common portion of piston vel., (1-fice)*xkw (L/T)
+    real (r8)          :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (conc units)
     real (r8)          :: totalChl_loc(num_elements)  ! local value of totalChl
     real (r8)          :: flux_o2_loc(num_elements)   ! local value of o2 flux
     !-----------------------------------------------------------------------
@@ -238,7 +243,7 @@ contains
           pv_co2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_co2(:))
 
           !-----------------------------------------------------------------------
-          !  Set FLUX_CO2
+          !  Set flux_co2
           !-----------------------------------------------------------------------
 
           where (ph_prev_surf(:) /= c0)
@@ -262,6 +267,7 @@ contains
                temp       = surface_flux_forcings(ind%sst_id)%field_0d,    &
                salt       = surface_flux_forcings(ind%sss_id)%field_0d,    &
                atmpres    = surface_flux_forcings(ind%atm_pressure_id)%field_0d, &
+               unit_system = unit_system,                                  &
                co2calc_coeffs = co2calc_coeffs,                            &
                co2calc_state = co2calc_state,                              &
                co3        = co3,                                           &
@@ -321,6 +327,7 @@ contains
                temp       = surface_flux_forcings(ind%sst_id)%field_0d,    &
                salt       = surface_flux_forcings(ind%sss_id)%field_0d,    &
                atmpres    = surface_flux_forcings(ind%atm_pressure_id)%field_0d, &
+               unit_system = unit_system,                                  &
                co2calc_coeffs = co2calc_coeffs,                            &
                co2calc_state = co2calc_state,                              &
                co3        = co3,                                           &
@@ -344,13 +351,8 @@ contains
 
           flux_alt_co2(:) = pv_co2(:) * dco2star_alt(:)
 
-          !-----------------------------------------------------------------------
-          !  set air-sea co2 gas flux named field, converting units from
-          !  nmol/cm^2/s (positive down) to kg CO2/m^2/s (positive down)
-          !-----------------------------------------------------------------------
-
           surface_fluxes(:, dic_ind)         = surface_fluxes(:, dic_ind)         + flux_co2(:)
-          surface_fluxes(:, dic_alt_co2_ind) = surface_fluxes(:, dic_alt_co2_ind) + FLUX_ALT_CO2(:)
+          surface_fluxes(:, dic_alt_co2_ind) = surface_fluxes(:, dic_alt_co2_ind) + flux_alt_co2(:)
 
        else
           schmidt_co2(:) = c0
@@ -374,6 +376,7 @@ contains
            u10_sqr          = u10_sqr,                       &
            atmpres          = ap_used,                       &
            ifrac            = ifrac,                         &
+           unit_system      = unit_system,                   &
            nhx_surface_emis = nhx_surface_emis)
 
       if (sfo_ind%flux_nhx_id.ne.0) then
@@ -391,14 +394,16 @@ contains
 
     !-----------------------------------------------------------------------
     !  Add phosphate and silicate from dust after Krishnamurthy et al. (2010)
-    !  factors convert from g/cm2/s to nmol/cm2/s
-    !  ( P frac in dust by weight) * ( P solubility) / ( P molecular weight) * (mol->nmol)
-    !  (Si frac in dust by weight) * (Si solubility) / (Si molecular weight) * (mol->nmol)
+    !  factors convert from M/L2/s to conc units*L/s
+    !  ( P frac in dust by weight) * ( P solubility) / ( P molecular weight) * (unit system conversion)
+    !  (Si frac in dust by weight) * (Si solubility) / (Si molecular weight) * (unit system conversion)
     !-----------------------------------------------------------------------
 
-    surface_fluxes(:, po4_ind) = surface_fluxes(:, po4_ind)   + (dust_flux_in * (0.00105_r8 *  0.15_r8 / 30.974_r8 * 1.0e9_r8))
+    surface_fluxes(:, po4_ind)  = surface_fluxes(:, po4_ind) &
+      + (0.00105_r8 *  0.15_r8 / molw_P ) * unit_system%mass2g * unit_system%mol_prefix * dust_flux_in
 
-    surface_fluxes(:, sio3_ind) = surface_fluxes(:, sio3_ind) + (dust_flux_in * (  0.308_r8 * 0.075_r8 / 28.085_r8 * 1.0e9_r8))
+    surface_fluxes(:, sio3_ind) = surface_fluxes(:, sio3_ind) &
+      + (  0.308_r8 * 0.075_r8 / molw_Si) * unit_system%mass2g * unit_system%mol_prefix * dust_flux_in
 
     !-----------------------------------------------------------------------
     !  calculate nox and nhy fluxes
@@ -427,6 +432,7 @@ contains
          marbl_tracer_indices     = marbl_tracer_indices,     &
          saved_state              = saved_state,              &
          saved_state_ind          = saved_state_ind,          &
+         unit_system              = unit_system,              &
          surface_flux_diags       = surface_flux_diags)
 
     !-----------------------------------------------------------------------
