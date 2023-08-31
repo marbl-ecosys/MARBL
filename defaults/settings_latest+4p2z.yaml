@@ -51,55 +51,100 @@ _order :
 _tracer_list :
    # Non-living tracers
    PO4 :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Dissolved Inorganic Phosphate
       units : mmol/m^3
    NO3 :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Dissolved Inorganic Nitrate
       units : mmol/m^3
    SiO3 :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Dissolved Inorganic Silicate
       units : mmol/m^3
    NH4 :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Dissolved Ammonia
       units : mmol/m^3
    Fe :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Dissolved Inorganic Iron
       units : mmol/m^3
    Lig :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Iron Binding Ligand
       units : mmol/m^3
    O2 :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Dissolved Oxygen
       units : mmol/m^3
    DIC :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Dissolved Inorganic Carbon
       units : mmol/m^3
    DIC_ALT_CO2 :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Dissolved Inorganic Carbon, Alternative CO2
       units : mmol/m^3
    ALK :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Alkalinity
       units : meq/m^3
    ALK_ALT_CO2 :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Alkalinity, Alternative CO2
       units : meq/m^3
    DOC :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Dissolved Organic Carbon
       units : mmol/m^3
    DON :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Dissolved Organic Nitrogen
       units : mmol/m^3
    DOP :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Dissolved Organic Phosphorus
       units : mmol/m^3
    DOPr :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Refractory DOP
       units : mmol/m^3
    DONr :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Refractory DON
       units : mmol/m^3
    DOCr :
+      dependencies :
+         base_tracers_on : .true.
       long_name : Refractory DOC
+      units : mmol/m^3
+   # Non-living (abiotic only)
+   ABIO_DIC :
+      dependencies :
+         abio_on : .true.
+      long_name : Abiotic Dissolved Inorganic Carbon
+      units : mmol/m^3
+   ABIO_DI14C :
+      dependencies :
+         abio_on : .true.
+      long_name : Abiotic Dissolved Inorganic Carbon-14
       units : mmol/m^3
    # Non-living (ciso only)
    DI13C :
@@ -125,26 +170,35 @@ _tracer_list :
 
    # Per-autotroph tracers
    ((autotroph_sname))Chl :
+      dependencies :
+         base_tracers_on : .true.
       long_name : ((autotroph_lname)) Chlorophyll
       units : mmol/m^3
    ((autotroph_sname))C :
+      dependencies :
+         base_tracers_on : .true.
       long_name : ((autotroph_lname)) Carbon
       units : mmol/m^3
    ((autotroph_sname))Fe :
+      dependencies :
+         base_tracers_on : .true.
       long_name : ((autotroph_lname)) Iron
       units : mmol/m^3
    ((autotroph_sname))Si :
       dependencies :
+         base_tracers_on : .true.
          ((autotroph_silicifier)) : True
       long_name : ((autotroph_lname)) Silicon
       units : mmol/m^3
    ((autotroph_sname))CaCO3 :
       dependencies :
+         base_tracers_on : .true.
          ((autotroph_calcifier)) : True
       long_name : ((autotroph_lname)) CaCO3
       units : mmol/m^3
    ((autotroph_sname))P :
       dependencies :
+         base_tracers_on : .true.
          lvariable_PtoC : .true.
       long_name : ((autotroph_lname)) Phosphorus
       units : mmol/m^3
@@ -174,6 +228,8 @@ _tracer_list :
 
    # Per-zooplankton tracers
    ((zooplankton_sname))C :
+      dependencies :
+         base_tracers_on : .true.
       long_name : ((zooplankton_lname)) Carbon
       units : mmol/m^3
    # Total zooplankton tracers (ciso only)
@@ -221,6 +277,18 @@ general_parms :
             - "null"
             - microzoo_mesozoo
       _append_to_config_keywords : true
+   base_tracers_on :
+      longname : Control whether the base ecosystem tracer module is active
+      subcategory : 2. config flags
+      units : unitless
+      datatype : logical
+      default_value : .true.
+   abio_on :
+      longname : Control whether abiotic carbon tracer module is active
+      subcategory : 2. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
    ciso_on :
       longname : Control whether CISO tracer module is active
       subcategory : 2. config flags
