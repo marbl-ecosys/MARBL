@@ -1509,32 +1509,32 @@ contains
           call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
         end if
       end do
+    end if
 
-      if (ciso_on) then
-        call this%add_tracer_index('di13c',    'ciso', this%di13c_ind,    marbl_status_log)
-        call this%add_tracer_index('do13ctot', 'ciso', this%do13ctot_ind, marbl_status_log)
-        call this%add_tracer_index('di14c',    'ciso', this%di14c_ind,    marbl_status_log)
-        call this%add_tracer_index('do14ctot', 'ciso', this%do14ctot_ind, marbl_status_log)
-        call this%add_tracer_index('zootot13C',   'ciso', this%zootot13C_ind,   marbl_status_log)
-        call this%add_tracer_index('zootot14C',   'ciso', this%zootot14C_ind,   marbl_status_log)
+    if (ciso_on) then
+      call this%add_tracer_index('di13c',    'ciso', this%di13c_ind,    marbl_status_log)
+      call this%add_tracer_index('do13ctot', 'ciso', this%do13ctot_ind, marbl_status_log)
+      call this%add_tracer_index('di14c',    'ciso', this%di14c_ind,    marbl_status_log)
+      call this%add_tracer_index('do14ctot', 'ciso', this%do14ctot_ind, marbl_status_log)
+      call this%add_tracer_index('zootot13C',   'ciso', this%zootot13C_ind,   marbl_status_log)
+      call this%add_tracer_index('zootot14C',   'ciso', this%zootot14C_ind,   marbl_status_log)
 
-        do n=1,autotroph_cnt
-          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C13"
-          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C13_ind, marbl_status_log)
+      do n=1,autotroph_cnt
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C13"
+        call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C13_ind, marbl_status_log)
 
-          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C14"
-          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C14_ind, marbl_status_log)
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C14"
+        call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%C14_ind, marbl_status_log)
 
-          if (autotroph_settings(n)%imp_calcifier .or. &
-              autotroph_settings(n)%exp_calcifier) then
-          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca13CO3"
-            call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca13CO3_ind, marbl_status_log)
+        if (autotroph_settings(n)%imp_calcifier .or. &
+            autotroph_settings(n)%exp_calcifier) then
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca13CO3"
+          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca13CO3_ind, marbl_status_log)
 
-          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca14CO3"
-            call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca14CO3_ind, marbl_status_log)
-          end if
-        end do
-      end if
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Ca14CO3"
+          call this%add_tracer_index(ind_name, 'ciso', this%auto_inds(n)%Ca14CO3_ind, marbl_status_log)
+        end if
+      end do
     end if
 
     if (abio_dic_on) then

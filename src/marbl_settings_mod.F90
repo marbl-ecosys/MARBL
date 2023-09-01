@@ -2142,12 +2142,23 @@ contains
     character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_consistency_check'
     character(len=char_len) :: log_message
 
-    !  Abort if GCM doesn't support global ops but configuration requires them
+    ! Abort if no tracer modules are enabled
+    if (.not. (base_bio_on .or. abio_dic_on .or. ciso_on)) then
+      write(log_message, '(A)') 'You must enable at least one tracer package in MARBL'
+      call marbl_status_log%log_error(log_message, subname)
+    end if
+
+    ! Abort if ciso is on but base_bio is not
+    if (ciso_on .and. (.not.base_bio_on)) then
+      write(log_message, '(A)') 'You can not run with carbon isotopes without the base biotic tracers'
+      call marbl_status_log%log_error(log_message, subname)
+    end if
+
+    ! Abort if GCM doesn't support global ops but configuration requires them
     if (ladjust_bury_coeff .and. (.not.lallow_glo_ops)) then
       write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
              '.true. unless GCM can perform global operations'
       call marbl_status_log%log_error(log_message, subname)
-      return
     end if
 
   end subroutine marbl_settings_consistency_check
