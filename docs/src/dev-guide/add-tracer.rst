@@ -26,7 +26,7 @@ Due to the many ways to introduce tracers (different modules, living tracers, et
   type, public :: marbl_tracer_index_type
     ! Book-keeping (tracer count and index ranges)
     integer (int_kind) :: total_cnt = 0
-    type (marbl_tracer_count_type) :: ecosys_base
+    type (marbl_tracer_count_type) :: base_bio
     type (marbl_tracer_count_type) :: ciso
 
     ! General tracers
@@ -75,7 +75,7 @@ For example, here we set in index for the refractory DOC tracer:
     .
     .
     .
-    call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
+    call this%add_tracer_index('docr', 'base_bio', this%docr_ind, marbl_status_log)
     .
     .
     .

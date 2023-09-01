@@ -137,8 +137,8 @@ contains
                                 tracer_metadata, &
                                 marbl_status_log)
 
-    use marbl_settings_mod, only : base_tracers_on
-    use marbl_settings_mod, only : abio_on
+    use marbl_settings_mod, only : base_bio_on
+    use marbl_settings_mod, only : abio_dic_on
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : autotroph_settings
@@ -166,7 +166,7 @@ contains
 
     ! Construct tracer indices
     allocate(tracer_indices)
-    call tracer_indices%construct(base_tracers_on, abio_on, ciso_on, lvariable_PtoC, &
+    call tracer_indices%construct(base_bio_on, abio_dic_on, ciso_on, lvariable_PtoC, &
                                   autotroph_settings, zooplankton_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
@@ -196,18 +196,18 @@ contains
     end do
 
 100 format(A, ' tracer module contains ', I0, ' tracers; indices are ', I0, ' to ', I0)
-    if (tracer_indices%ecosys_base%cnt.gt.0) then
-      write(log_message, 100) 'base tracers', &
-                              tracer_indices%ecosys_base%cnt, &
-                              tracer_indices%ecosys_base%ind_beg, &
-                              tracer_indices%ecosys_base%ind_end
+    if (tracer_indices%base_bio%cnt.gt.0) then
+      write(log_message, 100) 'base biotic tracers', &
+                              tracer_indices%base_bio%cnt, &
+                              tracer_indices%base_bio%ind_beg, &
+                              tracer_indices%base_bio%ind_end
       call marbl_status_log%log_noerror(log_message, subname)
     end if
-    if (tracer_indices%abio%cnt.gt.0) then
+    if (tracer_indices%abio_dic%cnt.gt.0) then
       write(log_message, 100) 'abio', &
-                              tracer_indices%ciso%cnt, &
-                              tracer_indices%ciso%ind_beg, &
-                              tracer_indices%ciso%ind_end
+                              tracer_indices%abio_dic%cnt, &
+                              tracer_indices%abio_dic%ind_beg, &
+                              tracer_indices%abio_dic%ind_end
       call marbl_status_log%log_noerror(log_message, subname)
     end if
     if (tracer_indices%ciso%cnt.gt.0) then
@@ -226,7 +226,7 @@ contains
 
     !  Set tracer and forcing metadata
 
-    use marbl_settings_mod, only : base_tracers_on
+    use marbl_settings_mod, only : base_bio_on
     use marbl_settings_mod, only : lecovars_full_depth_tavg
 
     type(unit_system_type),            intent(in)  :: unit_system
@@ -245,7 +245,7 @@ contains
     ! initialize tracer metatdata
     !-----------------------------------------------------------------------
 
-    if (.not. base_tracers_on) return
+    if (.not. base_bio_on) return
 
     marbl_tracer_metadata(:)%lfull_depth_tavg   = .true.
     marbl_tracer_metadata(:)%tracer_module_name = 'ecosys'
@@ -379,6 +379,8 @@ contains
     use marbl_interface_public_types, only : marbl_domain_type
     use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
     use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
+    use marbl_settings_mod, only : base_bio_on
+    use marbl_settings_mod, only : abio_dic_on
     use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lflux_gas_o2
     use marbl_settings_mod, only : lflux_gas_co2
@@ -408,12 +410,15 @@ contains
          )
 
       ! Construct indices for surface and interior forcing
-      call surface_flux_forcing_ind%construct(ciso_on,                        &
+      call surface_flux_forcing_ind%construct(base_bio_on,                    &
+                                              abio_dic_on,                    &
+                                              ciso_on,                        &
                                               lflux_gas_o2,                   &
                                               lflux_gas_co2,                  &
                                               ladjust_bury_coeff,             &
                                               num_surface_flux_forcing_fields)
-      call interior_tendency_forcing_ind%construct(tracer_metadata%short_name,           &
+      call interior_tendency_forcing_ind%construct(base_bio_on,                          &
+                                                   tracer_metadata%short_name,           &
                                                    tracer_restore_vars,                  &
                                                    domain%num_PAR_subcols,               &
                                                    num_interior_tendency_forcing_fields, &

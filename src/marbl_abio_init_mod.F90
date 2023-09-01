@@ -1,7 +1,7 @@
 module marbl_abio_init_mod
 
   use marbl_kinds_mod, only : int_kind
-  use marbl_settings_mod, only : abio_on
+  use marbl_settings_mod, only : abio_dic_on
   use marbl_interface_public_types, only : marbl_tracer_metadata_type
   use marbl_interface_private_types, only : marbl_tracer_index_type
 
@@ -30,16 +30,16 @@ contains
     !-----------------------------------------------------------------------
     integer (int_kind) :: n                             ! tracer index
 
-    if (.not. abio_on) return
+    if (.not. abio_dic_on) return
 
     !-----------------------------------------------------------------------
     !  initialize non-autotroph metadata values
     !-----------------------------------------------------------------------
 
-    associate(abio_dic_ind   => marbl_tracer_indices%abio_dic_ind,   &
-              abio_di14c_ind => marbl_tracer_indices%abio_di14c_ind, &
-              abio_ind_beg   => marbl_tracer_indices%abio%ind_beg,   &
-              abio_ind_end   => marbl_tracer_indices%abio%ind_end    &
+    associate(abio_dic_ind   => marbl_tracer_indices%abio_dic_ind,     &
+              abio_di14c_ind => marbl_tracer_indices%abio_di14c_ind,   &
+              abio_ind_beg   => marbl_tracer_indices%abio_dic%ind_beg, &
+              abio_ind_end   => marbl_tracer_indices%abio_dic%ind_end  &
              )
 
     ! All abio tracers share units, tend_units, flux_units, and

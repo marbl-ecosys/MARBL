@@ -332,8 +332,8 @@ module marbl_interface_private_types
   type, public :: marbl_tracer_index_type
     ! Book-keeping (tracer count and index ranges)
     integer (int_kind) :: total_cnt = 0
-    type (marbl_tracer_count_type) :: ecosys_base
-    type (marbl_tracer_count_type) :: abio
+    type (marbl_tracer_count_type) :: base_bio
+    type (marbl_tracer_count_type) :: abio_dic
     type (marbl_tracer_count_type) :: ciso
 
     ! base tracers
@@ -1427,7 +1427,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine tracer_index_constructor(this, base_tracers_on, abio_on, ciso_on, lvariable_PtoC, &
+  subroutine tracer_index_constructor(this, base_bio_on, abio_dic_on, ciso_on, lvariable_PtoC, &
                                       autotroph_settings, zooplankton_settings, marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
@@ -1439,8 +1439,8 @@ contains
     use marbl_pft_mod, only : zooplankton_settings_type
 
     class(marbl_tracer_index_type),  intent(out)   :: this
-    logical,                         intent(in)    :: base_tracers_on
-    logical,                         intent(in)    :: abio_on
+    logical,                         intent(in)    :: base_bio_on
+    logical,                         intent(in)    :: abio_dic_on
     logical,                         intent(in)    :: ciso_on
     logical,                         intent(in)    :: lvariable_PtoC
     type(autotroph_settings_type),   intent(in)    :: autotroph_settings(:)
@@ -1459,54 +1459,54 @@ contains
     allocate(this%zoo_inds(zooplankton_cnt))
 
     ! General ecosys tracers
-    if (base_tracers_on) then
-      call this%add_tracer_index('po4', 'ecosys_base', this%po4_ind, marbl_status_log)
-      call this%add_tracer_index('no3', 'ecosys_base', this%no3_ind, marbl_status_log)
-      call this%add_tracer_index('sio3', 'ecosys_base', this%sio3_ind, marbl_status_log)
-      call this%add_tracer_index('nh4', 'ecosys_base', this%nh4_ind, marbl_status_log)
-      call this%add_tracer_index('fe', 'ecosys_base', this%fe_ind, marbl_status_log)
-      call this%add_tracer_index('lig', 'ecosys_base', this%lig_ind, marbl_status_log)
-      call this%add_tracer_index('o2', 'ecosys_base', this%o2_ind, marbl_status_log)
-      call this%add_tracer_index('dic', 'ecosys_base', this%dic_ind, marbl_status_log)
-      call this%add_tracer_index('dic_alt_co2', 'ecosys_base', this%dic_alt_co2_ind, marbl_status_log)
-      call this%add_tracer_index('alk', 'ecosys_base', this%alk_ind, marbl_status_log)
-      call this%add_tracer_index('alk_alt_co2', 'ecosys_base', this%alk_alt_co2_ind, marbl_status_log)
-      call this%add_tracer_index('doc', 'ecosys_base', this%doc_ind, marbl_status_log)
-      call this%add_tracer_index('don', 'ecosys_base', this%don_ind, marbl_status_log)
-      call this%add_tracer_index('dop', 'ecosys_base', this%dop_ind, marbl_status_log)
-      call this%add_tracer_index('dopr', 'ecosys_base', this%dopr_ind, marbl_status_log)
-      call this%add_tracer_index('donr', 'ecosys_base', this%donr_ind, marbl_status_log)
-      call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
+    if (base_bio_on) then
+      call this%add_tracer_index('po4', 'base_bio', this%po4_ind, marbl_status_log)
+      call this%add_tracer_index('no3', 'base_bio', this%no3_ind, marbl_status_log)
+      call this%add_tracer_index('sio3', 'base_bio', this%sio3_ind, marbl_status_log)
+      call this%add_tracer_index('nh4', 'base_bio', this%nh4_ind, marbl_status_log)
+      call this%add_tracer_index('fe', 'base_bio', this%fe_ind, marbl_status_log)
+      call this%add_tracer_index('lig', 'base_bio', this%lig_ind, marbl_status_log)
+      call this%add_tracer_index('o2', 'base_bio', this%o2_ind, marbl_status_log)
+      call this%add_tracer_index('dic', 'base_bio', this%dic_ind, marbl_status_log)
+      call this%add_tracer_index('dic_alt_co2', 'base_bio', this%dic_alt_co2_ind, marbl_status_log)
+      call this%add_tracer_index('alk', 'base_bio', this%alk_ind, marbl_status_log)
+      call this%add_tracer_index('alk_alt_co2', 'base_bio', this%alk_alt_co2_ind, marbl_status_log)
+      call this%add_tracer_index('doc', 'base_bio', this%doc_ind, marbl_status_log)
+      call this%add_tracer_index('don', 'base_bio', this%don_ind, marbl_status_log)
+      call this%add_tracer_index('dop', 'base_bio', this%dop_ind, marbl_status_log)
+      call this%add_tracer_index('dopr', 'base_bio', this%dopr_ind, marbl_status_log)
+      call this%add_tracer_index('donr', 'base_bio', this%donr_ind, marbl_status_log)
+      call this%add_tracer_index('docr', 'base_bio', this%docr_ind, marbl_status_log)
 
       do n=1,zooplankton_cnt
         write(ind_name, "(2A)") trim(zooplankton_settings(n)%sname), "C"
-        call this%add_tracer_index(ind_name, 'ecosys_base', this%zoo_inds(n)%C_ind, marbl_status_log)
+        call this%add_tracer_index(ind_name, 'base_bio', this%zoo_inds(n)%C_ind, marbl_status_log)
       end do
 
       do n=1,autotroph_cnt
         write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Chl"
-        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Chl_ind, marbl_status_log)
+        call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%Chl_ind, marbl_status_log)
 
         write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C"
-        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%C_ind, marbl_status_log)
+        call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%C_ind, marbl_status_log)
 
         if (lvariable_PtoC) then
           write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "P"
-          call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%P_ind, marbl_status_log)
+          call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%P_ind, marbl_status_log)
         end if
 
         write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Fe"
-        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Fe_ind, marbl_status_log)
+        call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%Fe_ind, marbl_status_log)
 
         if (autotroph_settings(n)%silicifier) then
           write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Si"
-          call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Si_ind, marbl_status_log)
+          call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%Si_ind, marbl_status_log)
         end if
 
         if (autotroph_settings(n)%imp_calcifier.or. &
             autotroph_settings(n)%exp_calcifier) then
           write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "CaCO3"
-          call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
+          call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
         end if
       end do
 
@@ -1537,7 +1537,7 @@ contains
       end if
     end if
 
-    if (abio_on) then
+    if (abio_dic_on) then
       call this%add_tracer_index('abio_dic',   'abio', this%abio_dic_ind,   marbl_status_log)
       call this%add_tracer_index('abio_di14c', 'abio', this%abio_di14c_ind, marbl_status_log)
     end if
@@ -1557,7 +1557,7 @@ contains
 
     ! Zero out counts
     this%total_cnt = 0
-    call this%ecosys_base%reset()
+    call this%base_bio%reset()
     call this%ciso%reset()
 
     ! Deallocate memory
@@ -1597,10 +1597,10 @@ contains
 
     ind = this%total_cnt+1
     select case (trim(category))
-      case ('ecosys_base')
-        call this%ecosys_base%update_count(ind, marbl_status_log)
+      case ('base_bio')
+        call this%base_bio%update_count(ind, marbl_status_log)
       case ('abio')
-        call this%abio%update_count(ind, marbl_status_log)
+        call this%abio_dic%update_count(ind, marbl_status_log)
       case ('ciso')
         call this%ciso%update_count(ind, marbl_status_log)
       case DEFAULT
@@ -1656,13 +1656,15 @@ contains
 
   !*****************************************************************************
 
-  subroutine surface_flux_forcing_index_constructor(this, ciso_on, lflux_gas_o2,   &
-             lflux_gas_co2, ladjust_bury_coeff, num_surface_flux_forcing_fields)
+  subroutine surface_flux_forcing_index_constructor(this, base_bio_on, abio_dic_on, ciso_on, &
+             lflux_gas_o2, lflux_gas_co2, ladjust_bury_coeff, num_surface_flux_forcing_fields)
 
     ! This subroutine sets the surface forcing indices, which are used to
     ! determine what forcing fields are required from the driver.
 
     class(marbl_surface_flux_forcing_indexing_type), intent(out) :: this
+    logical,                                         intent(in)  :: base_bio_on
+    logical,                                         intent(in)  :: abio_dic_on
     logical,                                         intent(in)  :: ciso_on
     logical,                                         intent(in)  :: lflux_gas_o2
     logical,                                         intent(in)  :: lflux_gas_co2
@@ -1673,94 +1675,107 @@ contains
 
       forcing_cnt = 0
 
-      ! -------------------------------
-      ! | Always request these fields |
-      ! -------------------------------
+      ! -------------------------------------------------------
+      ! | Request these fields if abio or base tracers are on |
+      ! -------------------------------------------------------
 
-      ! Square of 10m wind
-      forcing_cnt = forcing_cnt + 1
-      this%u10_sqr_id = forcing_cnt
-
-      ! Sea-surface salinity
-      forcing_cnt = forcing_cnt + 1
-      this%sss_id = forcing_cnt
-
-      ! Sea-surface temp
-      forcing_cnt = forcing_cnt + 1
-      this%sst_id = forcing_cnt
-
-      ! Ice Fraction
-      forcing_cnt = forcing_cnt + 1
-      this%ifrac_id = forcing_cnt
-
-      ! Dust Flux
-      forcing_cnt = forcing_cnt + 1
-      this%dust_flux_id = forcing_cnt
-
-      ! Iron Flux
-      forcing_cnt = forcing_cnt + 1
-      this%iron_flux_id = forcing_cnt
-
-      ! NOx Flux
-      forcing_cnt = forcing_cnt + 1
-      this%nox_flux_id = forcing_cnt
-
-      ! NHy Flux
-      forcing_cnt = forcing_cnt + 1
-      this%nhy_flux_id = forcing_cnt
-
-      ! ---------------------------------------------------------
-      ! | Request these if bury coefficients are being adjusted |
-      ! ---------------------------------------------------------
-
-      if (ladjust_bury_coeff) then
-        ! external C Flux
+      if (base_bio_on .or. abio_dic_on) then
+        ! Square of 10m wind
         forcing_cnt = forcing_cnt + 1
-        this%ext_C_flux_id = forcing_cnt
+        this%u10_sqr_id = forcing_cnt
 
-        ! external P Flux
+        ! Sea-surface salinity
         forcing_cnt = forcing_cnt + 1
-        this%ext_P_flux_id = forcing_cnt
+        this%sss_id = forcing_cnt
 
-        ! external Si Flux
+        ! Sea-surface temp
         forcing_cnt = forcing_cnt + 1
-        this%ext_Si_flux_id = forcing_cnt
+        this%sst_id = forcing_cnt
+
+        ! Ice Fraction
+        forcing_cnt = forcing_cnt + 1
+        this%ifrac_id = forcing_cnt
+
+        ! ------------------------------------------
+        ! | Request these if gas fluxes are needed |
+        ! ------------------------------------------
+
+        if (lflux_gas_o2 .or. lflux_gas_co2) then
+          ! atm pressure
+          forcing_cnt = forcing_cnt + 1
+          this%atm_pressure_id = forcing_cnt
+        end if
+
+        if (lflux_gas_co2) then
+          ! xco2
+          forcing_cnt = forcing_cnt + 1
+          this%xco2_id = forcing_cnt
+
+          ! xco2_alt_co2
+          if (base_bio_on) then
+            forcing_cnt = forcing_cnt + 1
+            this%xco2_alt_co2_id = forcing_cnt
+          end if
+        end if
+
       end if
 
-      ! ------------------------------------------
-      ! | Request these if gas fluxes are needed |
-      ! ------------------------------------------
+      ! -----------------------------------------------
+      ! | Request these fields if base tracers are on |
+      ! -----------------------------------------------
 
-      if (lflux_gas_o2.or.lflux_gas_co2) then
-        ! atm pressure
+      if (base_bio_on) then
+        ! Dust Flux
         forcing_cnt = forcing_cnt + 1
-        this%atm_pressure_id = forcing_cnt
+        this%dust_flux_id = forcing_cnt
+
+        ! Iron Flux
+        forcing_cnt = forcing_cnt + 1
+        this%iron_flux_id = forcing_cnt
+
+        ! NOx Flux
+        forcing_cnt = forcing_cnt + 1
+        this%nox_flux_id = forcing_cnt
+
+        ! NHy Flux
+        forcing_cnt = forcing_cnt + 1
+        this%nhy_flux_id = forcing_cnt
+
+        ! ---------------------------------------------------------
+        ! | Request these if bury coefficients are being adjusted |
+        ! ---------------------------------------------------------
+
+        if (ladjust_bury_coeff) then
+          ! external C Flux
+          forcing_cnt = forcing_cnt + 1
+          this%ext_C_flux_id = forcing_cnt
+
+          ! external P Flux
+          forcing_cnt = forcing_cnt + 1
+          this%ext_P_flux_id = forcing_cnt
+
+          ! external Si Flux
+          forcing_cnt = forcing_cnt + 1
+          this%ext_Si_flux_id = forcing_cnt
+        end if
+
+        ! -----------------------------------
+        ! | Request these fields if ciso_on |
+        ! -----------------------------------
+
+        if (ciso_on) then
+
+          ! d13c
+          forcing_cnt = forcing_cnt + 1
+          this%d13c_id = forcing_cnt
+
+        end if
       end if
 
-      if (lflux_gas_co2) then
-        ! xco2
-        forcing_cnt = forcing_cnt + 1
-        this%xco2_id = forcing_cnt
-
-        ! xco2_alt_co2
-        forcing_cnt = forcing_cnt + 1
-        this%xco2_alt_co2_id = forcing_cnt
-      end if
-
-      ! -----------------------------------
-      ! | Request these fields if ciso_on |
-      ! -----------------------------------
-
-      if (ciso_on) then
-
-        ! d13c
-        forcing_cnt = forcing_cnt + 1
-        this%d13c_id = forcing_cnt
-
-        ! d14c
+      if (abio_dic_on .or. ciso_on) then
+          ! d14c
         forcing_cnt = forcing_cnt + 1
         this%d14c_id = forcing_cnt
-
       end if
 
     end associate
@@ -1770,6 +1785,7 @@ contains
   !*****************************************************************************
 
   subroutine interior_tendency_forcing_index_constructor(this,                                 &
+                                                         base_bio_on,                          &
                                                          tracer_names,                         &
                                                          tracer_restore_vars,                  &
                                                          num_PAR_subcols,                      &
@@ -1783,6 +1799,7 @@ contains
     use marbl_settings_mod, only : lp_remin_scalef
 
     class(marbl_interior_tendency_forcing_indexing_type), intent(out)   :: this
+    logical,                                              intent(in)    :: base_bio_on
     character(len=char_len), dimension(:),                intent(in)    :: tracer_names
     character(len=char_len), dimension(:),                intent(in)    :: tracer_restore_vars
     integer(int_kind),                                    intent(in)    :: num_PAR_subcols
@@ -1801,47 +1818,49 @@ contains
 
       forcing_cnt = 0
 
-      ! Dust Flux
-      forcing_cnt = forcing_cnt + 1
-      this%dustflux_id = forcing_cnt
-
-      ! PAR column fraction (not needed if num_PAR_subcols = 1)
-      if (num_PAR_subcols .gt. 1) then
+      if (base_bio_on) then
+        ! Dust Flux
         forcing_cnt = forcing_cnt + 1
-        this%PAR_col_frac_id = forcing_cnt
+        this%dustflux_id = forcing_cnt
+
+        ! PAR column fraction (not needed if num_PAR_subcols = 1)
+        if (num_PAR_subcols .gt. 1) then
+          forcing_cnt = forcing_cnt + 1
+          this%PAR_col_frac_id = forcing_cnt
+        end if
+
+        ! PAR column shortwave
+        forcing_cnt = forcing_cnt + 1
+        this%surf_shortwave_id = forcing_cnt
+
+        ! Potential Temperature
+        forcing_cnt = forcing_cnt + 1
+        this%potemp_id = forcing_cnt
+
+        ! Salinity
+        forcing_cnt = forcing_cnt + 1
+        this%salinity_id = forcing_cnt
+
+        ! Pressure
+        forcing_cnt = forcing_cnt + 1
+        this%pressure_id = forcing_cnt
+
+        ! Iron Sediment Flux
+        forcing_cnt = forcing_cnt + 1
+        this%fesedflux_id = forcing_cnt
+
+        ! O2 Consumption Scale Factor
+        if (lo2_consumption_scalef) then
+          forcing_cnt = forcing_cnt + 1
+          this%o2_consumption_scalef_id = forcing_cnt
+        end if
+
+        ! Particulate Remin Scale Factor
+        if (lp_remin_scalef) then
+          forcing_cnt = forcing_cnt + 1
+          this%p_remin_scalef_id = forcing_cnt
+        end if
       end if
-
-      ! PAR column shortwave
-      forcing_cnt = forcing_cnt + 1
-      this%surf_shortwave_id = forcing_cnt
-
-      ! Potential Temperature
-      forcing_cnt = forcing_cnt + 1
-      this%potemp_id = forcing_cnt
-
-      ! Salinity
-      forcing_cnt = forcing_cnt + 1
-      this%salinity_id = forcing_cnt
-
-      ! Pressure
-      forcing_cnt = forcing_cnt + 1
-      this%pressure_id = forcing_cnt
-
-      ! Iron Sediment Flux
-      forcing_cnt = forcing_cnt + 1
-      this%fesedflux_id = forcing_cnt
-
-      ! O2 Consumption Scale Factor
-      if (lo2_consumption_scalef) then
-        forcing_cnt = forcing_cnt + 1
-        this%o2_consumption_scalef_id = forcing_cnt
-      endif
-
-      ! Particulate Remin Scale Factor
-      if (lp_remin_scalef) then
-        forcing_cnt = forcing_cnt + 1
-        this%p_remin_scalef_id = forcing_cnt
-      endif
 
       ! Tracer restoring
       ! Note that this section

@@ -237,15 +237,15 @@ module marbl_settings_mod
 
   character(len=char_len), target :: PFT_defaults             ! Set up PFT parameters based on known classes, e.g. 'CESM2'
                                                               ! (or set to 'user-specified' and use put_setting())
-  logical(log_kind), target :: base_tracers_on                ! control whether base tracer module is active
-  logical(log_kind), target :: abio_on                        ! control whether abio tracer module is active
+  logical(log_kind), target :: base_bio_on                    ! control whether base tracer module is active
+  logical(log_kind), target :: abio_dic_on                    ! control whether abio tracer module is active
   logical(log_kind), target :: ciso_on                        ! control whether ciso tracer module is active
   logical(log_kind), target :: lsource_sink                   ! control which portion of code is executed, useful for debugging
   logical(log_kind), target :: ciso_lsource_sink              ! control which portion of carbon isotope code is executed, useful for debugging
   logical(log_kind), target :: lcheck_forcing                 ! control whether consistency checks are performed on forcing input
   logical(log_kind), target :: lecovars_full_depth_tavg       ! If .false., MARBL will recommend truncating the column for some diagnostics
-  logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
-  logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
+  logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed useful for debugging
+  logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed useful for debugging
   logical(log_kind), target :: lcompute_nhx_surface_emis      ! control if NHx emissions are computed
   logical(log_kind), target :: lvariable_PtoC                 ! control if PtoC ratios in autotroph_settings vary
   logical(log_kind), target :: ladjust_bury_coeff             ! control if bury coefficients are adjusted (rather than constant)
@@ -404,8 +404,8 @@ contains
     type(unit_system_type), intent(in) :: unit_system
 
     PFT_defaults                  = 'CESM2'         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    base_tracers_on               = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    abio_on                       = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    base_bio_on                   = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    abio_dic_on                   = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_on                       = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lsource_sink                  = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_lsource_sink             = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -625,20 +625,20 @@ contains
     category = 'config flags'
     ! -----------------------
 
-    sname     = 'base_tracers_on'
+    sname     = 'base_bio_on'
     lname     = 'Control whether base tracer module is active'
     units     = 'unitless'
     datatype  = 'logical'
-    lptr      => base_tracers_on
+    lptr      => base_bio_on
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    sname     = 'abio_on'
+    sname     = 'abio_dic_on'
     lname     = 'Control whether abiotic tracer module is active'
     units     = 'unitless'
     datatype  = 'logical'
-    lptr      => abio_on
+    lptr      => abio_dic_on
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
