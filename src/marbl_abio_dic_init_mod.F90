@@ -1,4 +1,4 @@
-module marbl_abio_init_mod
+module marbl_abio_dic_init_mod
 
   use marbl_kinds_mod, only : int_kind
   use marbl_settings_mod, only : abio_dic_on
@@ -8,15 +8,15 @@ module marbl_abio_init_mod
   implicit none
   private
 
-  public  :: marbl_abio_init_tracer_metadata
+  public  :: marbl_abio_dic_init_tracer_metadata
 
 contains
 
   !*****************************************************************************
 
-  subroutine marbl_abio_init_tracer_metadata(unit_system, &
-                                             marbl_tracer_indices, &
-                                             marbl_tracer_metadata)
+  subroutine marbl_abio_dic_init_tracer_metadata(unit_system, &
+                                                 marbl_tracer_indices, &
+                                                 marbl_tracer_metadata)
 
     !  Set tracer and forcing metadata
     use marbl_settings_mod, only : unit_system_type
@@ -59,8 +59,8 @@ contains
 
     end associate
 
-  end subroutine marbl_abio_init_tracer_metadata
+  end subroutine marbl_abio_dic_init_tracer_metadata
 
   !*****************************************************************************
 
-end module marbl_abio_init_mod
+end module marbl_abio_dic_init_mod

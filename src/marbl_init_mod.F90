@@ -144,7 +144,7 @@ contains
     use marbl_settings_mod, only : autotroph_settings
     use marbl_settings_mod, only : zooplankton_settings
     use marbl_settings_mod, only : tracer_restore_vars
-    use marbl_abio_init_mod, only : marbl_abio_init_tracer_metadata
+    use marbl_abio_dic_init_mod, only : marbl_abio_dic_init_tracer_metadata
     use marbl_ciso_init_mod, only : marbl_ciso_init_tracer_metadata
 
     integer(int_kind),                             intent(in)    :: num_levels
@@ -185,7 +185,7 @@ contains
 
     ! Set up tracer metadata
     call marbl_init_tracer_metadata(unit_system, tracer_indices, tracer_metadata)
-    call marbl_abio_init_tracer_metadata(unit_system, tracer_indices, tracer_metadata)
+    call marbl_abio_dic_init_tracer_metadata(unit_system, tracer_indices, tracer_metadata)
     call marbl_ciso_init_tracer_metadata(unit_system, tracer_indices, tracer_metadata)
 
     ! Log what tracers are being used

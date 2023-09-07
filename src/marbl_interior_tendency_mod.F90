@@ -40,6 +40,7 @@ module marbl_interior_tendency_mod
 
   use marbl_logging, only : marbl_log_type
 
+  use marbl_settings_mod, only : base_bio_on
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : max_grazer_prey_cnt
@@ -126,6 +127,7 @@ contains
     !  Compute time derivatives for ecosystem state variables
 
     use marbl_temperature, only : marbl_temperature_potemp
+    use marbl_abio_dic_interior_tendency_mod, only : marbl_abio_dic_interior_tendency_compute
     use marbl_ciso_interior_tendency_mod, only : marbl_ciso_interior_tendency_compute
     use marbl_diagnostics_mod , only : marbl_diagnostics_interior_tendency_compute
     use marbl_interface_private_types, only : marbl_internal_timers_type
@@ -229,12 +231,16 @@ contains
       return
     end if
 
-    if (.not. lsource_sink) then
-       !-----------------------------------------------------------------------
-       !  exit immediately if computations are not to be performed
-       !-----------------------------------------------------------------------
+    call marbl_abio_dic_interior_tendency_compute()
+
+    if (marbl_status_log%labort_marbl) then
+       call marbl_status_log%log_error_trace(&
+            'marbl_abio_dic_interior_tendency_compute()', subname)
        return
-    endif
+    end if
+
+    ! Return if not using base biotic tracers or not performing computations
+    if (.not. (base_bio_on .and. lsource_sink)) return
 
     ! Verify forcing is consistent
     if (lcheck_forcing) &

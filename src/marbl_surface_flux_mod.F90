@@ -85,9 +85,11 @@ contains
     use marbl_co2calc_mod, only : marbl_co2calc_surface
     use marbl_oxygen, only : o2sat_surf
     use marbl_nhx_surface_emis_mod, only : marbl_nhx_surface_emis_compute
+    use marbl_settings_mod, only : base_bio_on
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
     use marbl_settings_mod, only : xkw_coeff
     use marbl_surface_flux_share_mod, only : marbl_surface_flux_share_export_variables
+    use marbl_abio_dic_surface_flux_mod, only : marbl_abio_dic_surface_flux_compute
     use marbl_ciso_surface_flux_mod, only : marbl_ciso_surface_flux_compute
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_flux_C_input
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_flux_P_input
@@ -179,6 +181,19 @@ contains
     !-----------------------------------------------------------------------
 
     surface_fluxes(:, :) = c0
+
+    !-----------------------------------------------------------------------
+    ! Compute carbon isotopes surface fluxes
+    !-----------------------------------------------------------------------
+
+    call marbl_abio_dic_surface_flux_compute(                                         &
+         surface_fluxes              = surface_fluxes,                                &
+         marbl_tracer_indices        = marbl_tracer_indices)
+
+    !-----------------------------------------------------------------------
+
+    ! Return if not using base biotic tracers
+    if (.not. base_bio_on) return
 
     !-----------------------------------------------------------------------
     !  Compute surface chlorophyll
