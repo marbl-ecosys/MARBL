@@ -212,11 +212,10 @@ contains
     ! can probably be vectorized over k and / or c!
     !-----------------------------------------------------------------------
 
-    ! NOTE(bja, 2015-07) interior_tendencies=0 must come before the "not
-    ! lsource_sink check to ensure correct answer when not doing
-    ! computations.
-
     interior_tendencies(:, :) = c0
+
+    ! Return with interior_tendencies = 0 if not performing computations
+    if (.not. lsource_sink) return
 
     if (abs(c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:))) > bftt_dz_sum_thres) then
       write(log_message, "(A, E11.3, A)") "1 - sum(bot_flux_to_tend * dz) = ", &
@@ -240,7 +239,7 @@ contains
     end if
 
     ! Return if not using base biotic tracers or not performing computations
-    if (.not. (base_bio_on .and. lsource_sink)) return
+    if (.not. base_bio_on) return
 
     ! Verify forcing is consistent
     if (lcheck_forcing) &
