@@ -151,7 +151,7 @@ contains
     end where
 
     ! In POP, ALK_bar_global = 2310._r8 microeq/kg = 2310._r8 neq/g
-    !         and ocn_ref_salinity comes from shr_const (TODO: verify SHR_CONST_OCN_REF_SAL = 34.7)
+    !         and ocn_ref_salinity comes from shr_const (SHR_CONST_OCN_REF_SAL = 34.7)
     ! Orr et al  eq (27):
     ! 2297 micromol / kg
     ! Sbar = "global- and annual- mean salinity"

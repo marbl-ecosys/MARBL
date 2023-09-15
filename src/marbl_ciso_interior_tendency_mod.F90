@@ -9,6 +9,7 @@ module marbl_ciso_interior_tendency_mod
   use marbl_constants_mod, only : c2
   use marbl_constants_mod, only : c1000
   use marbl_constants_mod, only : mpercm
+  use marbl_constants_mod, only : c14_lambda
 
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : autotroph_settings
@@ -33,13 +34,6 @@ module marbl_ciso_interior_tendency_mod
 
   public :: marbl_ciso_interior_tendency_compute
   public :: marbl_ciso_interior_tendency_autotroph_zero_consistency_enforce
-
-  !-----------------------------------------------------------------------
-  !  scalar constants for 14C decay calculation
-  !-----------------------------------------------------------------------
-
-   real (r8), parameter :: c14_halflife_years = 5730.0_r8 !C14 half file
-   real (r8) :: c14_lambda_inv_sec           ! Decay variable in seconds
 
 contains
 
@@ -70,7 +64,6 @@ contains
     use marbl_constants_mod, only : R13C_std
     use marbl_constants_mod, only : R14C_std
     use marbl_constants_mod, only : spd
-    use marbl_constants_mod, only : spy
     use marbl_ciso_diagnostics_mod, only : store_diagnostics_ciso_interior
 
     type(marbl_domain_type),                  intent(in)    :: marbl_domain
@@ -241,13 +234,6 @@ contains
     call PO14C%construct(num_levels=column_km)
     call P_Ca13CO3%construct(num_levels=column_km)
     call P_Ca14CO3%construct(num_levels=column_km)
-
-    !-----------------------------------------------------------------------
-    ! Set module variables
-    !-----------------------------------------------------------------------
-
-    !  Define decay variable for DI14C, using earlier defined half-life of 14C
-    c14_lambda_inv_sec = log(c2) / (c14_halflife_years * spy)
 
     !----------------------------------------------------------------------------------------
     ! Set cell attributes
@@ -586,9 +572,9 @@ contains
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
           interior_tendencies(n,k) = photo14C(auto_ind,k) - work1 * R14C_autotroph(auto_ind,k) - &
-               c14_lambda_inv_sec * autotroph_local%C14(auto_ind,k)
+               c14_lambda * autotroph_local%C14(auto_ind,k)
 
-          decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local%C14(auto_ind,k)
+          decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda * autotroph_local%C14(auto_ind,k)
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
           if (n > 0) then
@@ -600,9 +586,9 @@ contains
           if (n > 0) then
              interior_tendencies(n,k) = Ca14CO3_PROD(auto_ind,k) - QCaCO3(auto_ind,k) &
                   * work1 * R14C_autotrophCaCO3(auto_ind,k)      &
-                  - c14_lambda_inv_sec * autotroph_local%Ca14CO3(auto_ind,k)
+                  - c14_lambda * autotroph_local%Ca14CO3(auto_ind,k)
 
-             decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * autotroph_local%Ca14CO3(auto_ind,k)
+             decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda * autotroph_local%Ca14CO3(auto_ind,k)
           endif
        end do
 
@@ -618,9 +604,9 @@ contains
        interior_tendencies(zootot14C_ind,k) = &
               sum(auto_graze_zoo(:,k) * R14C_autotroph(:,k),dim=1) &
             + (zootot_graze_zoo(k) - zootot_graze(k) - zootot_loss(k)) &
-            * R14C_zoototC(k) - c14_lambda_inv_sec * zootot14C_loc(k)
+            * R14C_zoototC(k) - c14_lambda * zootot14C_loc(k)
 
-       decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * zootot14C_loc(k)
+       decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda * zootot14C_loc(k)
 
        !-----------------------------------------------------------------------
        !  interior_tendencies: dissolved organic Matter 13C and 14C
@@ -628,9 +614,9 @@ contains
 
        interior_tendencies(do13ctot_ind,k) = DO13Ctot_prod(k) - DO13Ctot_remin(k)
 
-       interior_tendencies(do14ctot_ind,k) = DO14Ctot_prod(k) - DO14Ctot_remin(k) - c14_lambda_inv_sec * DO14Ctot_loc(k)
+       interior_tendencies(do14ctot_ind,k) = DO14Ctot_prod(k) - DO14Ctot_remin(k) - c14_lambda * DO14Ctot_loc(k)
 
-       decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * DO14Ctot_loc(k)
+       decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda * DO14Ctot_loc(k)
 
        !-----------------------------------------------------------------------
        !   interior_tendencies: dissolved inorganic Carbon 13 and 14
@@ -649,9 +635,9 @@ contains
           + DO14Ctot_remin(k) + PO14C%remin(k) &
           + (zootot_loss_dic(k) + zootot_graze_dic(k)) * R14C_zoototC(k) &
           + P_Ca14CO3%remin(k) &
-          - c14_lambda_inv_sec * DI14C_loc(k)
+          - c14_lambda * DI14C_loc(k)
 
-       decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda_inv_sec * DI14C_loc(k)
+       decay_14Ctot(k) = decay_14Ctot(k) + c14_lambda * DI14C_loc(k)
 
        do auto_ind = 1, autotroph_cnt
           if (marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind > 0) then

@@ -230,7 +230,21 @@ contains
       return
     end if
 
-    call marbl_abio_dic_interior_tendency_compute()
+    !-----------------------------------------------------------------------
+    !  create local copies of model tracers
+    !-----------------------------------------------------------------------
+
+    call setup_local_tracers(domain%kmt, marbl_tracer_indices, tracers(:,:), autotroph_local, &
+         tracer_local(:,:), zooplankton_local, totalChl_local)
+
+    !-----------------------------------------------------------------------
+    !  Compute tendencies for abiotic tracers
+    !-----------------------------------------------------------------------
+
+    call marbl_abio_dic_interior_tendency_compute(&
+         marbl_tracer_indices = marbl_tracer_indices, &
+         tracer_local = tracer_local, &
+         interior_tendencies = interior_tendencies)
 
     if (marbl_status_log%labort_marbl) then
        call marbl_status_log%log_error_trace(&
@@ -323,13 +337,6 @@ contains
                interior_tendency_forcings,                  &
                interior_tendency_forcing_indices,           &
                interior_restore)
-
-    !-----------------------------------------------------------------------
-    !  create local copies of model tracers
-    !-----------------------------------------------------------------------
-
-    call setup_local_tracers(kmt, marbl_tracer_indices, tracers(:,:), autotroph_local, &
-         tracer_local(:,:), zooplankton_local, totalChl_local)
 
     call set_surface_particulate_terms(surface_flux_forcing_indices, unit_system, POC, POP, &
          P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
@@ -826,7 +833,11 @@ contains
     call autotroph_zero_consistency_enforce(column_kmt, marbl_tracer_indices, autotroph_local)
 
     ! set totalChl_local
-    totalChl_local = sum(autotroph_local%Chl(:,:), dim=1)
+    if (autotroph_cnt > 0) then
+      totalChl_local = sum(autotroph_local%Chl(:,:), dim=1)
+    else
+      totalChl_local = c0
+    end if
 
   end subroutine setup_local_tracers
 
