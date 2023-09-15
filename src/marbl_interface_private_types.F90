@@ -435,8 +435,9 @@ module marbl_interface_private_types
   !*****************************************************************************
 
   type, public :: marbl_surface_flux_saved_state_indexing_type
-    integer :: ph_surf = 0
-    integer :: ph_alt_co2_surf = 0
+    integer :: base_ph_surf = 0
+    integer :: base_ph_alt_co2_surf = 0
+    integer :: abio_ph_surf = 0
   end type marbl_surface_flux_saved_state_indexing_type
 
   !*****************************************************************************

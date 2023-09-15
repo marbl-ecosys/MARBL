@@ -161,8 +161,8 @@ contains
          flux_alt_co2         => surface_flux_internal%flux_alt_co2(:),                          &
          nhx_surface_emis     => surface_flux_internal%nhx_surface_emis(:),                      &
 
-         ph_prev_surf         => saved_state%state(saved_state_ind%ph_surf)%field_2d,               &
-         ph_prev_alt_co2_surf => saved_state%state(saved_state_ind%ph_alt_co2_surf)%field_2d,       &
+         ph_prev_surf         => saved_state%state(saved_state_ind%base_ph_surf)%field_2d,         &
+         ph_prev_alt_co2_surf => saved_state%state(saved_state_ind%base_ph_alt_co2_surf)%field_2d, &
 
          po4_ind           => marbl_tracer_indices%po4_ind,                                     &
          no3_ind           => marbl_tracer_indices%no3_ind,                                     &
@@ -186,9 +186,20 @@ contains
     ! Compute carbon isotopes surface fluxes
     !-----------------------------------------------------------------------
 
-    call marbl_abio_dic_surface_flux_compute(                                         &
-         surface_fluxes              = surface_fluxes,                                &
-         marbl_tracer_indices        = marbl_tracer_indices)
+    call marbl_abio_dic_surface_flux_compute(&
+         num_elements             = num_elements, &
+         tracers_at_surface       = tracers_at_surface, &
+         marbl_tracer_indices     = marbl_tracer_indices, &
+         saved_state_ind          = saved_state_ind, &
+         surface_flux_forcing_ind = surface_flux_forcing_ind, &
+         surface_flux_forcings    = surface_flux_forcings, &
+         unit_system              = unit_system, &
+         surface_flux_internal    = surface_flux_internal, &
+         saved_state              = saved_state, &
+         surface_fluxes           = surface_fluxes, &
+         co2calc_coeffs           = co2calc_coeffs, &
+         co2calc_state            = co2calc_state, &
+         marbl_status_log         = marbl_status_log)
 
     !-----------------------------------------------------------------------
 

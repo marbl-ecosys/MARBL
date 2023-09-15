@@ -3319,12 +3319,12 @@ contains
          nhx_surface_emis  => surface_flux_internal%nhx_surface_emis,                        &
 
 
-         ph_prev           => saved_state%state(saved_state_ind%ph_surf)%field_2d,              &
-         ph_prev_alt_co2   => saved_state%state(saved_state_ind%ph_alt_co2_surf)%field_2d,      &
+         ph_prev           => saved_state%state(saved_state_ind%base_ph_surf)%field_2d,         &
+         ph_prev_alt_co2   => saved_state%state(saved_state_ind%base_ph_alt_co2_surf)%field_2d, &
 
          po4_ind           => marbl_tracer_indices%po4_ind,                                     &
          no3_ind           => marbl_tracer_indices%no3_ind,                                     &
-         sio3_ind          => marbl_tracer_indices%sio3_ind,                                     &
+         sio3_ind          => marbl_tracer_indices%sio3_ind,                                    &
          nh4_ind           => marbl_tracer_indices%nh4_ind,                                     &
          fe_ind            => marbl_tracer_indices%fe_ind,                                      &
          o2_ind            => marbl_tracer_indices%o2_ind,                                      &
