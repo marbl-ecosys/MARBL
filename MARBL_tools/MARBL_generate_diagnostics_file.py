@@ -40,7 +40,9 @@ optional arguments:
                         (default: None)
   -o DIAGNOSTICS_FILE_OUT, --diagnostics_file_out DIAGNOSTICS_FILE_OUT
                         Name of file to be written (default: marbl.diags)
-
+  -u {cgs,mks}, --unit_system {cgs,mks}
+                        Unit system for parameter values (default: cgs)
+  -a, --append          Append to existing diagnostics file (default: False)
 """
 
 #######################################
@@ -129,9 +131,14 @@ def _parse_args(marbl_root):
     parser.add_argument('-o', '--diagnostics_file_out', action='store', dest='diagnostics_file_out', default='marbl.diags',
                         help='Name of file to be written')
 
+    # Command line argument to where to write the settings file being generated
+    parser.add_argument('-u', '--unit_system', action='store', dest='unit_system', default='cgs',
+                        choices=['cgs', 'mks'], help='Unit system for parameter values')
+
     # Append to existing diagnostics file?
     parser.add_argument('-a', '--append', action='store_true', dest='append',
                         help='Append to existing diagnostics file')
+
     return parser.parse_args()
 
 #######################################
@@ -151,8 +158,8 @@ if __name__ == "__main__":
 
     from MARBL_tools import MARBL_settings_class
     from MARBL_tools import MARBL_diagnostics_class
-    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in)
-    MARBL_diagnostics = MARBL_diagnostics_class(args.default_diagnostics_file, DefaultSettings)
+    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in, args.unit_system)
+    MARBL_diagnostics = MARBL_diagnostics_class(args.default_diagnostics_file, DefaultSettings, args.unit_system)
 
     # Write the diagnostic file
     generate_diagnostics_file(MARBL_diagnostics, args.diagnostics_file_out, args.append)
