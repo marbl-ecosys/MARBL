@@ -21,12 +21,15 @@ module marbl_abio_dic_surface_flux_mod
     use marbl_interface_private_types, only : co2calc_coeffs_type
     use marbl_interface_private_types, only : co2calc_state_type
 
+    use marbl_interface_public_types, only : marbl_diagnostics_type
     use marbl_interface_public_types, only : marbl_saved_state_type
     use marbl_interface_public_types, only : marbl_forcing_fields_type
 
     use marbl_co2calc_mod, only : marbl_co2calc_surface
 
     use marbl_schmidt_number_mod, only : schmidt_co2_surf
+
+    use marbl_abio_dic_diagnostics_mod, only : marbl_abio_dic_diagnostics_surface_flux_compute
 
     use marbl_logging, only : marbl_log_type
 
@@ -47,6 +50,7 @@ contains
       unit_system, &
       surface_flux_internal, &
       saved_state, &
+      surface_flux_diags, &
       surface_fluxes, &
       co2calc_coeffs, &
       co2calc_state, &
@@ -61,13 +65,14 @@ contains
     type(unit_system_type),                             intent(in)    :: unit_system
     type(marbl_surface_flux_internal_type),             intent(inout) :: surface_flux_internal
     type(marbl_saved_state_type),                       intent(inout) :: saved_state
+    type(marbl_diagnostics_type),                       intent(inout) :: surface_flux_diags
     real(r8),                                           intent(inout) :: surface_fluxes(:, :)
     type(co2calc_coeffs_type),                          intent(inout) :: co2calc_coeffs
     type(co2calc_state_type),                           intent(inout) :: co2calc_state
     type(marbl_log_type),                               intent(inout) :: marbl_status_log
 
     real(r8) :: xkw_ice(num_elements)      ! common portion of piston vel., (1-fice)*xkw (L/T)
-    real(r8) :: alk(num_elements)          ! local alkalinity
+    real(r8) :: alk_surf(num_elements)          ! local alkalinity
     real(r8) :: phlo(num_elements)         ! lower bound for ph in solver
     real(r8) :: phhi(num_elements)         ! upper bound for ph in solver
     real(r8) :: SiO2(num_elements)         ! Abiotic silicate
@@ -157,7 +162,7 @@ contains
     ! Orr et al  eq (27):
     ! 2297 micromol / kg
     ! Sbar = "global- and annual- mean salinity"
-    alk(:) = (2310._r8 * (unit_system%nmol2mol_prefix * unit_system%mass2g))  * rho_sw * sss(:) / 34.7_r8
+    alk_surf(:) = (2310._r8 * (unit_system%nmol2mol_prefix * unit_system%mass2g))  * rho_sw * sss(:) / 34.7_r8
 
     ! Note the following computes a new ph_prev_surf
     ! pass in sections of surface_flux_forcings instead of associated vars because of problems with intel/15.0.3
@@ -166,29 +171,42 @@ contains
          lcomp_co2calc_coeffs = .true., &
          dic_in = tracers_at_surface(:,dic_ind), &
          xco2_in = xco2(:), &
-         ta_in = alk(:), &
-         pt_in      = PO4(:), &
-         sit_in     = SiO2(:), &
-         temp       = sst(:), &
-         salt       = sss(:), &
-         atmpres    = ap_used(:), &
+         ta_in = alk_surf(:), &
+         pt_in = PO4(:), &
+         sit_in = SiO2(:), &
+         temp = sst(:), &
+         salt = sss(:), &
+         atmpres = ap_used(:), &
          unit_system = unit_system, &
          co2calc_coeffs = co2calc_coeffs, &
          co2calc_state = co2calc_state, &
-         co3        = co3(:), &
-         co2star    = co2star, &
-         dco2star   = dco2star, &
-         pco2surf   = pco2surf, &
-         dpco2      = dpco2, &
-         phlo       = phlo, &
-         phhi       = phhi, &
-         ph         = ph_prev_surf, &
+         co3 = co3(:), &
+         co2star = co2star, &
+         dco2star = dco2star, &
+         pco2surf = pco2surf, &
+         dpco2 = dpco2, &
+         phlo = phlo, &
+         phhi = phhi, &
+         ph = ph_prev_surf, &
          marbl_status_log = marbl_status_log)
 
     flux_co2(:) = pv_co2(:) * dco2star(:)
     flux14_co2(:) = pv_co2(:) * ((dco2star(:) + co2star(:)) * R14C_atm(:) - co2star(:) * R14C_ocn(:))
     surface_fluxes(:, dic_ind) = surface_fluxes(:, dic_ind) + flux_co2(:)
     surface_fluxes(:, di14c_ind) = surface_fluxes(:, di14c_ind) + flux14_co2(:)
+
+    ! update abiotic DIC diagnostics
+
+    call marbl_abio_dic_diagnostics_surface_flux_compute( &
+         num_elements, &
+         ifrac, &
+         piston_velocity, &
+         alk_surf, &
+         xco2, &
+         pco2surf, &
+         dco2star, &
+         co2star, &
+         surface_flux_diags)
 
     end associate
 

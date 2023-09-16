@@ -358,6 +358,76 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "ABIO_ALK_SURF": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface Alkalinity for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": "meq/m^3",
+      "vertical_grid": "none"
+   },
+   "ABIO_CO2STAR": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "CO2 Star for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "none"
+   },
+   "ABIO_DCO2STAR": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "D CO2 Star for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "none"
+   },
+   "ABIO_IFRAC": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Ice Fraction for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": "fraction",
+      "vertical_grid": "none"
+   },
+   "ABIO_XKW": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "XKW for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": "cm/s",
+      "vertical_grid": "none"
+   },
+   "ABIO_pCO2": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "CO2 atmospheric partial pressure for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": "ppm",
+      "vertical_grid": "none"
+   },
+   "ABIO_pCO2SURF": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface pCO2 for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": "ppmv",
+      "vertical_grid": "none"
+   },
    "AOU": {
       "frequency": "medium",
       "longname": "Apparent O2 Utilization",
@@ -1291,7 +1361,7 @@
    },
    "ECOSYS_ATM_PRESS": {
       "frequency": "medium",
-      "longname": "Atmospheric Pressure for ecosys fluxes",
+      "longname": "Atmospheric Pressure for base biotic tracer fluxes",
       "operator": "average",
       "units": "atmospheres",
       "vertical_grid": "none"
@@ -1301,7 +1371,7 @@
          "medium",
          "high"
       ],
-      "longname": "Ice Fraction for ecosys fluxes",
+      "longname": "Ice Fraction for base biotic tracer fluxes",
       "operator": [
          "average",
          "average"
@@ -1314,7 +1384,7 @@
          "medium",
          "high"
       ],
-      "longname": "XKW for ecosys fluxes",
+      "longname": "XKW for base biotic tracer fluxes",
       "operator": [
          "average",
          "average"

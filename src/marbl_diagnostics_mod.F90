@@ -88,6 +88,7 @@ contains
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : particulate_flux_ref_depth
     use marbl_settings_mod, only : lecovars_full_depth_tavg
+    use marbl_abio_dic_diagnostics_mod, only : marbl_abio_dic_diagnostics_init
     use marbl_ciso_diagnostics_mod, only : marbl_ciso_diagnostics_init
 
     type(marbl_domain_type)           , intent(in)    :: marbl_domain
@@ -127,7 +128,7 @@ contains
               diags => marbl_surface_flux_diags   &
              )
 
-      lname    = 'Ice Fraction for ecosys fluxes'
+      lname    = 'Ice Fraction for base biotic tracer fluxes'
       sname    = 'ECOSYS_IFRAC'
       units    = 'fraction'
       vgrid    = 'none'
@@ -139,7 +140,7 @@ contains
         return
       end if
 
-      lname    = 'XKW for ecosys fluxes'
+      lname    = 'XKW for base biotic tracer fluxes'
       sname    = 'ECOSYS_XKW'
       units    = vel_units
       vgrid    = 'none'
@@ -151,7 +152,7 @@ contains
         return
       end if
 
-      lname    = 'Atmospheric Pressure for ecosys fluxes'
+      lname    = 'Atmospheric Pressure for base biotic tracer fluxes'
       sname    = 'ECOSYS_ATM_PRESS'
       units    = 'atmospheres'
       vgrid    = 'none'
@@ -3024,6 +3025,16 @@ contains
         end if
 
       end do
+
+      !-----------------------------------------------------------------
+      ! Abiotic DIC diagnostics
+      !-----------------------------------------------------------------
+
+      call marbl_abio_dic_diagnostics_init(unit_system, marbl_surface_flux_diags, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace("marbl_abio_dic_diagnostics_init()", subname)
+        return
+      end if
 
       !-----------------------------------------------------------------
       ! CISO diagnostics

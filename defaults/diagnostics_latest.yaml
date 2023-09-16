@@ -22,7 +22,7 @@
 ###############
 
 ECOSYS_IFRAC :
-   longname : Ice Fraction for ecosys fluxes # Want more consistent capitalization
+   longname : Ice Fraction for base biotic tracer fluxes # Want more consistent capitalization
    units : fraction
    vertical_grid : none
    frequency :
@@ -32,7 +32,7 @@ ECOSYS_IFRAC :
       - average
       - average
 ECOSYS_XKW :
-   longname : XKW for ecosys fluxes # Want more consistent capitalization
+   longname : XKW for base biotic tracer fluxes # Want more consistent capitalization
    units : cm/s
    vertical_grid : none
    frequency :
@@ -42,7 +42,7 @@ ECOSYS_XKW :
       - average
       - average
 ECOSYS_ATM_PRESS :
-   longname : Atmospheric Pressure for ecosys fluxes # Want more consistent capitalization
+   longname : Atmospheric Pressure for base biotic tracer fluxes # Want more consistent capitalization
    units : atmospheres
    vertical_grid : none
    frequency : medium
@@ -1053,6 +1053,68 @@ Nfix :
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : never
+   operator : average
+
+###############
+# abio module #
+###############
+
+# 2D fields
+ABIO_IFRAC :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Ice Fraction for Abiotic DIC tracer fluxes
+   units : fraction
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_XKW :
+   dependencies :
+      abio_dic_on : .true.
+   longname : XKW for Abiotic DIC tracer fluxes
+   units : cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_ALK_SURF :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Surface Alkalinity for Abiotic DIC tracer fluxes
+   units : meq/m^3
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_pCO2 :
+   dependencies :
+      abio_dic_on : .true.
+   longname : CO2 atmospheric partial pressure for Abiotic DIC tracer fluxes
+   units : ppm
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_pCO2SURF :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Surface pCO2 for Abiotic DIC tracer fluxes
+   units : ppmv
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_DCO2STAR :
+   dependencies :
+      abio_dic_on : .true.
+   longname : D CO2 Star for Abiotic DIC tracer fluxes
+   units : mmol/m^3
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_CO2STAR :
+   dependencies :
+      abio_dic_on : .true.
+   longname : CO2 Star for Abiotic DIC tracer fluxes
+   units : mmol/m^3
+   vertical_grid : none
+   frequency : medium
    operator : average
 
 ###############
