@@ -38,7 +38,6 @@ contains
     !  local variables
     !-----------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_abio_dic_diagnostics_mod:marbl_abio_dic_diagnostics_init'
-    integer :: n
     logical :: truncate
     character(len=char_len) :: lname, sname, units, vgrid
     character(len=char_len) :: vel_units
@@ -89,7 +88,7 @@ contains
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_XKW, marbl_status_log)
+          ind%ABIO_ALK_SURF, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
        return
@@ -162,8 +161,6 @@ contains
 
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
-
-    use marbl_constants_mod, only : R13C_std, R14C_std
 
     integer (int_kind),                 intent(in)    :: num_elements
     real (r8), dimension(num_elements), intent(in)    :: ifrac
