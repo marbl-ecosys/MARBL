@@ -51,7 +51,7 @@ class MARBL_settings_class(object):
             # 5b. Need tracer count after determining PFT_derived_types, which means
             #     determining which tracers are active
             if cat_name == "PFT_derived_types":
-                self.tracers_dict = self._get_tracers()
+                self.tracers_dict = self._get_tracers(unit_system)
 
         # 6. Abort if not all values from input file were processed
         #    (That implies at least one variable from input file was not recognized)
@@ -180,7 +180,7 @@ class MARBL_settings_class(object):
 
     ################################################################################
 
-    def _get_tracers(self):
+    def _get_tracers(self, unit_system):
         """ Parses self._settings['_tracer_list'] to determine what tracers
             are enabled given other MARBL settings
         """
@@ -196,7 +196,7 @@ class MARBL_settings_class(object):
             if re.search('\(\(.*\)\)', tracer_name) == None:
                 tracer_dict[tracer_name] = dict(self._settings['_tracer_list'][tracer_name])
             else:
-                tracer_dict.update(MARBL_tools.expand_template_value(tracer_name, self, self._settings['_tracer_list'][tracer_name]))
+                tracer_dict.update(MARBL_tools.expand_template_value(tracer_name, self, unit_system, self._settings['_tracer_list'][tracer_name]))
 
         # 2. Delete tracers where dependencies are not met
         #    (Some tracers have already been removed via expand_template_value())
@@ -207,7 +207,10 @@ class MARBL_settings_class(object):
 
             # 3. Add tend_units and flux_units to dictionary
             tracer_dict[tracer_name][u'tend_units'] = tracer_dict[tracer_name]['units'] + '/s'
-            tracer_dict[tracer_name][u'flux_units'] = tracer_dict[tracer_name]['units'] + ' cm/s'
+            if unit_system == 'cgs':
+                tracer_dict[tracer_name][u'flux_units'] = tracer_dict[tracer_name]['units'] + ' cm/s'
+            else:
+                tracer_dict[tracer_name][u'flux_units'] = tracer_dict[tracer_name]['units'] + ' m/s'
 
         for tracer_name in tracers_to_delete:
             del tracer_dict[tracer_name]

@@ -66,14 +66,15 @@ contains
     type(co2calc_state_type),                           intent(inout) :: co2calc_state
     type(marbl_log_type),                               intent(inout) :: marbl_status_log
 
-    real(r8) :: xkw_ice(num_elements)    ! common portion of piston vel., (1-fice)*xkw (L/T)
-    real(r8) :: alk(num_elements)        ! local alkalinity
-    real(r8) :: phlo(num_elements)       ! lower bound for ph in solver
-    real(r8) :: phhi(num_elements)       ! upper bound for ph in solver
-    real(r8) :: SiO2(num_elements)       ! Abiotic silicate
-    real(r8) :: PO4(num_elements)        ! Abiotic phosphate
-    real(r8) :: R14C_ocn(num_elements)   ! Rocn = DIC14/DIC
-    real(r8) :: R14C_atm(num_elements)   ! Ratm = 1+ D14C/1000
+    real(r8) :: xkw_ice(num_elements)      ! common portion of piston vel., (1-fice)*xkw (L/T)
+    real(r8) :: alk(num_elements)          ! local alkalinity
+    real(r8) :: phlo(num_elements)         ! lower bound for ph in solver
+    real(r8) :: phhi(num_elements)         ! upper bound for ph in solver
+    real(r8) :: SiO2(num_elements)         ! Abiotic silicate
+    real(r8) :: PO4(num_elements)          ! Abiotic phosphate
+    real(r8) :: R14C_ocn(num_elements)     ! Rocn = DIC14/DIC
+    real(r8) :: R14C_atm(num_elements)     ! Ratm = 1+ D14C/1000
+    real(r8) :: flux14_co2(num_elements)   ! Isotopic gas flux
 
 
     ! Return immediately if not running with abiotic dic tracer module
@@ -88,6 +89,7 @@ contains
         xco2    => surface_flux_forcings(surface_flux_forcing_ind%xco2_id)%field_0d, &
         ap_used => surface_flux_forcings(surface_flux_forcing_ind%atm_pressure_id)%field_0d, &
         u10_sqr => surface_flux_forcings(surface_flux_forcing_ind%u10_sqr_id)%field_0d, &
+        d14c    => surface_flux_forcings(surface_flux_forcing_ind%d14c_id)%field_0d,  &
         ! Intermediate computations (saved for diagnostics)
         piston_velocity => surface_flux_internal%piston_velocity(:), &
         flux_co2        => surface_flux_internal%flux_co2(:), &
@@ -121,7 +123,7 @@ contains
     else where
       R14C_ocn = c0
     end where
-    R14C_atm = c1 + R14C_ocn
+    R14C_atm = c1 + d14c(:) / 1000._r8
 
     !-----------------------------------------------------------------------
     !  Use constant concentrations of silicate and phosphate
@@ -184,9 +186,9 @@ contains
          marbl_status_log = marbl_status_log)
 
     flux_co2(:) = pv_co2(:) * dco2star(:)
+    flux14_co2(:) = pv_co2(:) * ((dco2star(:) + co2star(:)) * R14C_atm(:) - co2star(:) * R14C_ocn(:))
     surface_fluxes(:, dic_ind) = surface_fluxes(:, dic_ind) + flux_co2(:)
-    surface_fluxes(:, di14c_ind) = surface_fluxes(:, di14c_ind) + (flux_co2(:) * R14C_atm) &
-                                   + pv_co2(:) * co2star(:) * (R14C_atm(:) - R14C_ocn)
+    surface_fluxes(:, di14c_ind) = surface_fluxes(:, di14c_ind) + flux14_co2(:)
 
     end associate
 

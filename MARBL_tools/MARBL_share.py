@@ -30,7 +30,7 @@ def natural_sort_key(string_):
 
 ################################################################################
 
-def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq=False):
+def expand_template_value(key_name, MARBL_settings, unit_system, unprocessed_dict, check_freq=False):
     """ unprocessed_dict is a dictionary whose keys / values have templated strings (e.g.
         strings that depend on tracer name or PFT name). This subroutine replaces the
         templated values and adds the appropriate entry / entries to processed_dict
@@ -67,7 +67,10 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
             fill_source = 'zoo_graze_zoo'
     elif template == '((particulate_flux_ref_depth_str))':
         fill_source = 'strings'
-        particulate_flux_ref_depth_str = '%dm' % MARBL_settings.settings_dict['particulate_flux_ref_depth']['value']
+        particulate_flux_ref_depth = MARBL_settings.settings_dict['particulate_flux_ref_depth']['value']
+        if unit_system == 'cgs':
+            particulate_flux_ref_depth = particulate_flux_ref_depth / 100.
+        particulate_flux_ref_depth_str = '%dm' % particulate_flux_ref_depth
         loop_for_replacement = [ particulate_flux_ref_depth_str ]
     else:
         logger.error("%s is not a valid template value" % template)

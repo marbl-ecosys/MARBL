@@ -248,7 +248,7 @@ contains
     if (.not. base_bio_on) return
 
     marbl_tracer_metadata(:)%lfull_depth_tavg   = .true.
-    marbl_tracer_metadata(:)%tracer_module_name = 'ecosys'
+    marbl_tracer_metadata(:)%tracer_module_name = 'base_biotic'
 
     call marbl_init_non_autotroph_tracers_metadata(marbl_tracer_metadata,     &
          marbl_tracer_indices, unit_system)

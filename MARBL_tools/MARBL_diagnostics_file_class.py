@@ -15,7 +15,7 @@ class MARBL_diagnostics_class(object):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, default_diagnostics_file, MARBL_settings):
+    def __init__(self, default_diagnostics_file, MARBL_settings, unit_system):
         """ Class constructor: read the JSON file and then construct self.diagnostics_dict
         """
 
@@ -44,7 +44,7 @@ class MARBL_diagnostics_class(object):
                 self.diagnostics_dict[diag_name] = dict(self._diagnostics[diag_name])
             else:
                 # (Also determine correct frequency if 'frequency' is a dict)
-                self.diagnostics_dict.update(MARBL_tools.expand_template_value(diag_name, MARBL_settings, self._diagnostics[diag_name], check_freq=True))
+                self.diagnostics_dict.update(MARBL_tools.expand_template_value(diag_name, MARBL_settings, unit_system, self._diagnostics[diag_name], check_freq=True))
 
         #    ii. Delete diagnostics where dependencies are not met
         #        (Some diagnostics have already been removed via expand_template_value())
