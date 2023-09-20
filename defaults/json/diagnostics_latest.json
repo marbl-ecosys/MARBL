@@ -372,7 +372,7 @@
       "dependencies": {
          "abio_dic_on": ".true."
       },
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Atmospheric Pressure for Abiotic DIC tracer fluxes",
       "operator": "average",
       "units": "atmospheres",
@@ -392,14 +392,14 @@
       "dependencies": {
          "abio_dic_on": ".true."
       },
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "CO2 Piston Velocity for Abiotic DIC tracer fluxes",
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
    },
    "ABIO_CO2_SCHMIDT": {
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "CO2 Schmidt Number for Abiotic DIC tracer fluxes",
       "operator": "average",
       "units": 1,
@@ -449,7 +449,7 @@
       "dependencies": {
          "abio_dic_on": ".true."
       },
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "Ice Fraction for Abiotic DIC tracer fluxes",
       "operator": "average",
       "units": "fraction",
@@ -469,7 +469,7 @@
       "dependencies": {
          "abio_dic_on": ".true."
       },
-      "frequency": "medium",
+      "frequency": "never",
       "longname": "XKW for Abiotic DIC tracer fluxes",
       "operator": "average",
       "units": "cm/s",

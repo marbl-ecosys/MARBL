@@ -1066,7 +1066,7 @@ ABIO_IFRAC :
    longname : Ice Fraction for Abiotic DIC tracer fluxes
    units : fraction
    vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 ABIO_XKW :
    dependencies :
@@ -1074,7 +1074,7 @@ ABIO_XKW :
    longname : XKW for Abiotic DIC tracer fluxes
    units : cm/s
    vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 ABIO_ATM_PRESS :
    dependencies :
@@ -1082,7 +1082,7 @@ ABIO_ATM_PRESS :
    longname : Atmospheric Pressure for Abiotic DIC tracer fluxes
    units : atmospheres
    vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 ABIO_pCO2 :
    dependencies :
@@ -1104,7 +1104,7 @@ ABIO_CO2_SCHMIDT : # todo rename ABIO_SCHMIDT_CO2 to match base biotic version
    longname : CO2 Schmidt Number for Abiotic DIC tracer fluxes
    units : 1
    vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 ABIO_CO2_PV : # todo rename ABIO_PV_CO2 to match base biotic version
    dependencies :
@@ -1112,7 +1112,7 @@ ABIO_CO2_PV : # todo rename ABIO_PV_CO2 to match base biotic version
    longname : CO2 Piston Velocity for Abiotic DIC tracer fluxes
    units : cm/s
    vertical_grid : none
-   frequency : medium
+   frequency : never
    operator : average
 ABIO_CO2STAR :
    dependencies :
