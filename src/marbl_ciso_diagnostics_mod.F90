@@ -26,7 +26,7 @@ module marbl_ciso_diagnostics_mod
 
   public :: marbl_ciso_diagnostics_init
   public :: marbl_ciso_diagnostics_surface_flux_compute
-  public :: store_diagnostics_ciso_interior
+  public :: marbl_ciso_diagnostics_interior_tendency_compute
 
 contains
 
@@ -969,7 +969,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine store_diagnostics_ciso_interior(&
+  subroutine marbl_ciso_diagnostics_interior_tendency_compute(&
        marbl_domain,        &
        autotroph_d13C,      &
        autotroph_d14C,      &
@@ -1063,7 +1063,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_diagnostics_mod:store_diagnostics_ciso_interior'
+    character(len=*), parameter :: subname = 'marbl_ciso_diagnostics_mod:marbl_ciso_diagnostics_interior_tendency_compute'
     character(len=char_len)     :: log_message
     integer (int_kind) :: k, n, auto_ind
     real (r8)          :: work(marbl_domain%km)
@@ -1222,7 +1222,7 @@ contains
 
     end associate
 
-  end subroutine store_diagnostics_ciso_interior
+  end subroutine marbl_ciso_diagnostics_interior_tendency_compute
 
   !***********************************************************************
 

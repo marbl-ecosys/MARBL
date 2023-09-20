@@ -64,7 +64,7 @@ contains
     use marbl_constants_mod, only : R13C_std
     use marbl_constants_mod, only : R14C_std
     use marbl_constants_mod, only : spd
-    use marbl_ciso_diagnostics_mod, only : store_diagnostics_ciso_interior
+    use marbl_ciso_diagnostics_mod, only : marbl_ciso_diagnostics_interior_tendency_compute
 
     type(marbl_domain_type),                  intent(in)    :: marbl_domain
     real (r8),                                intent(in)    :: bot_flux_to_tend(:)
@@ -671,7 +671,7 @@ contains
     ! update carbon isotope diagnostics
     ! FIXME #18: the following arguments need to be group into a derived type
 
-    call store_diagnostics_ciso_interior(&
+    call marbl_ciso_diagnostics_interior_tendency_compute(&
        marbl_domain,        &
        autotroph_d13C,      &
        autotroph_d14C,      &
@@ -707,7 +707,7 @@ contains
        marbl_status_log)
 
     if (marbl_status_log%labort_marbl) then
-       call marbl_status_log%log_error_trace("store_diagnostics_ciso_interior", subname)
+       call marbl_status_log%log_error_trace("marbl_ciso_diagnostics_interior_tendency_compute", subname)
        return
     end if
 
