@@ -1,16 +1,23 @@
 module marbl_abio_dic_diagnostics_mod
 
+  use marbl_constants_mod, only : c0
+  use marbl_constants_mod, only : c1
+
   use marbl_kinds_mod, only : r8
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : char_len
 
   use marbl_settings_mod, only : unit_system_type
 
+  use marbl_interface_private_types, only : marbl_tracer_index_type
+
   use marbl_interface_public_types, only : marbl_diagnostics_type
+
 
   use marbl_logging, only : marbl_log_type
   use marbl_logging, only : marbl_logging_add_diagnostics_error
 
+  use marbl_diagnostics_share_mod, only : marbl_interior_tendency_diag_ind
   use marbl_diagnostics_share_mod, only : marbl_surface_flux_diag_ind
 
   implicit none
@@ -18,6 +25,7 @@ module marbl_abio_dic_diagnostics_mod
 
   public :: marbl_abio_dic_diagnostics_init
   public :: marbl_abio_dic_diagnostics_surface_flux_compute
+  public :: marbl_abio_dic_diagnostics_interior_tendency_compute
 
 contains
 
@@ -25,12 +33,14 @@ contains
 
   subroutine marbl_abio_dic_diagnostics_init( &
        unit_system, &
-       marbl_surface_flux_diags,  &
+       marbl_interior_tendency_diags, &
+       marbl_surface_flux_diags, &
        marbl_status_log)
 
     use marbl_settings_mod, only : abio_dic_on
 
     type(unit_system_type),       intent(in)    :: unit_system
+    type(marbl_diagnostics_type), intent(inout) :: marbl_interior_tendency_diags
     type(marbl_diagnostics_type), intent(inout) :: marbl_surface_flux_diags
     type(marbl_log_type),         intent(inout) :: marbl_status_log
 
@@ -53,9 +63,9 @@ contains
     ! Surface forcing diagnostics
     !-----------------------------------------------------------------
 
-    associate(                                    &
+    associate(&
               ind => marbl_surface_flux_diag_ind, &
-              diags => marbl_surface_flux_diags   &
+              diags => marbl_surface_flux_diags &
              )
 
       lname    = 'Ice Fraction for Abiotic DIC tracer fluxes'
@@ -221,7 +231,7 @@ contains
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_FG_DIC, marbl_status_log)
+           ind%ABIO_FG_DIC, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
        return
@@ -245,7 +255,30 @@ contains
 
     end associate
 
-  end subroutine marbl_abio_dic_diagnostics_init
+    !-----------------------------------------------------------------
+    ! Surface forcing diagnostics
+    !-----------------------------------------------------------------
+
+    associate(&
+              ind => marbl_interior_tendency_diag_ind, &
+              diags => marbl_interior_tendency_diags &
+             )
+
+      lname    = 'Oceanic Delta 14C in permil for Abiotic DIC tracer fluxes'
+      sname    = 'ABIO_D14Cocn'
+      units    = 'permil'
+      vgrid    = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+           ind%ABIO_D14Cocn, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+       return
+      end if
+
+      end associate
+
+    end subroutine marbl_abio_dic_diagnostics_init
 
   !***********************************************************************
 
@@ -311,6 +344,37 @@ contains
     end associate
 
   end subroutine marbl_abio_dic_diagnostics_surface_flux_compute
+
+  !*****************************************************************************
+
+  subroutine marbl_abio_dic_diagnostics_interior_tendency_compute(marbl_tracer_indices, tracer_local, &
+                                                                  interior_tendency_diags)
+
+ !---------------------------------------------------------------------
+ ! !DESCRIPTION:
+ !  Update marbl_interior_abio_dic_diags data type
+ !---------------------------------------------------------------------
+
+    type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
+    real(r8),                      intent(in)    :: tracer_local(:,:)
+    type(marbl_diagnostics_type),  intent(inout) :: interior_tendency_diags
+
+    associate(&
+        ! tracers
+        dic   => tracer_local(marbl_tracer_indices%abio_dic_ind, :), &
+        di14c => tracer_local(marbl_tracer_indices%abio_di14c_ind, :), &
+        ! diagnostics
+        diags => interior_tendency_diags%diags, &
+        ind   => marbl_interior_tendency_diag_ind &
+       )
+
+      where (dic == 0)
+        diags(ind%ABIO_D14Cocn)%field_3d(:,1) = c0
+      elsewhere
+        diags(ind%ABIO_D14Cocn)%field_3d(:,1) = (di14c(:) / dic(:) -c1) * 1000._r8
+      end where
+    end associate
+end subroutine marbl_abio_dic_diagnostics_interior_tendency_compute
 
   !***********************************************************************
 

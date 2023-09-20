@@ -733,64 +733,67 @@ module marbl_interface_private_types
     integer(int_kind), allocatable :: zoo_graze_zoo(:,:)
     integer(int_kind), allocatable :: x_graze_zoo(:)
 
-     !  ciso ids for nonstandard 3d fields
-     integer (int_kind) :: CISO_PO13C_FLUX_IN                                 ! po13c flux into cell
-     integer (int_kind) :: CISO_PO14C_FLUX_IN                                 ! po14c flux into cell
-     integer (int_kind) :: CISO_PO13C_PROD                                    ! po13c production
-     integer (int_kind) :: CISO_PO14C_PROD                                    ! po14c production
-     integer (int_kind) :: CISO_PO13C_REMIN                                   ! po13c remineralization
-     integer (int_kind) :: CISO_PO14C_REMIN                                   ! po14c remineralization
-     integer (int_kind) :: CISO_Ca13CO3_PROD                                  ! ca13co3 production
-     integer (int_kind) :: CISO_Ca14CO3_PROD                                  ! ca14co3 production
-     integer (int_kind) :: CISO_Ca13CO3_REMIN                                 ! ca13co3 remineralization
-     integer (int_kind) :: CISO_Ca14CO3_REMIN                                 ! ca14co3 remineralization
-     integer (int_kind) :: CISO_Ca13CO3_FLUX_IN                               ! ca13co3 flux into cell
-     integer (int_kind) :: CISO_Ca14CO3_FLUX_IN                               ! ca14co3 flux into cell
-     integer (int_kind) :: CISO_photo13C_TOT                                  ! total 13C fixation
-     integer (int_kind) :: CISO_photo14C_TOT                                  ! total 14C fixation
-     integer (int_kind) :: CISO_photo13C_TOT_zint                             ! total 13C fixation vertical integral
-     integer (int_kind) :: CISO_photo14C_TOT_zint                             ! total 14C fixation vertical integral
+    !  abio ids
+    integer(int_kind) :: ABIO_D14Cocn
 
-     ! ciso ids for  MORE nonstandard 3d fields
-     integer (int_kind), allocatable :: CISO_eps_autotroph(:)       ! epsilon for each autotroph
-     integer (int_kind), allocatable :: CISO_mui_to_co2star(:)      ! mui_to_co2star for each autotroph
-     integer (int_kind), allocatable :: CISO_Ca13CO3_form(:)        ! Ca13CO3 formation
-     integer (int_kind), allocatable :: CISO_Ca14CO3_form(:)        ! Ca14CO3 formation
-     integer (int_kind), allocatable :: CISO_Ca13CO3_form_zint(:)   ! Ca13CO3 formation vertical integral 0-100 m
-     integer (int_kind), allocatable :: CISO_Ca14CO3_form_zint(:)   ! Ca14CO3 formation vertical integral 0-100 m
-     integer (int_kind), allocatable :: CISO_photo13C(:)            ! 13C fixation
-     integer (int_kind), allocatable :: CISO_photo14C(:)            ! 14C fixation
-     integer (int_kind), allocatable :: CISO_photo13C_zint(:)       ! 13C fixation vertical integral
-     integer (int_kind), allocatable :: CISO_photo14C_zint(:)       ! 14C fixation vertical integral
-     integer (int_kind), allocatable :: CISO_d13C(:)                ! d13C of autotroph carbon
-     integer (int_kind), allocatable :: CISO_d14C(:)                ! d14C of autotroph carbon
-     integer (int_kind), allocatable :: CISO_autotrophCaCO3_d14C(:) ! d14C of autotrophCaCO3
-     integer (int_kind), allocatable :: CISO_autotrophCaCO3_d13C(:) ! d13C of autotrophCaCO3
+    !  ciso ids for nonstandard 3d fields
+    integer (int_kind) :: CISO_PO13C_FLUX_IN                                 ! po13c flux into cell
+    integer (int_kind) :: CISO_PO14C_FLUX_IN                                 ! po14c flux into cell
+    integer (int_kind) :: CISO_PO13C_PROD                                    ! po13c production
+    integer (int_kind) :: CISO_PO14C_PROD                                    ! po14c production
+    integer (int_kind) :: CISO_PO13C_REMIN                                   ! po13c remineralization
+    integer (int_kind) :: CISO_PO14C_REMIN                                   ! po14c remineralization
+    integer (int_kind) :: CISO_Ca13CO3_PROD                                  ! ca13co3 production
+    integer (int_kind) :: CISO_Ca14CO3_PROD                                  ! ca14co3 production
+    integer (int_kind) :: CISO_Ca13CO3_REMIN                                 ! ca13co3 remineralization
+    integer (int_kind) :: CISO_Ca14CO3_REMIN                                 ! ca14co3 remineralization
+    integer (int_kind) :: CISO_Ca13CO3_FLUX_IN                               ! ca13co3 flux into cell
+    integer (int_kind) :: CISO_Ca14CO3_FLUX_IN                               ! ca14co3 flux into cell
+    integer (int_kind) :: CISO_photo13C_TOT                                  ! total 13C fixation
+    integer (int_kind) :: CISO_photo14C_TOT                                  ! total 14C fixation
+    integer (int_kind) :: CISO_photo13C_TOT_zint                             ! total 13C fixation vertical integral
+    integer (int_kind) :: CISO_photo14C_TOT_zint                             ! total 14C fixation vertical integral
 
-     integer (int_kind) :: CISO_eps_aq_g                                      ! eps_aq_g
-     integer (int_kind) :: CISO_eps_dic_g                                     ! eps_dic_g
-     integer (int_kind) :: CISO_DO13Ctot_prod                                 ! do13ctot production
-     integer (int_kind) :: CISO_DO14Ctot_prod                                 ! do14ctot production
-     integer (int_kind) :: CISO_DO13Ctot_remin                                ! do13ctot remineralization
-     integer (int_kind) :: CISO_DO14Ctot_remin                                ! do14ctot remineralization
-     integer (int_kind) :: CISO_Jint_13Ctot                                   ! vertically integrated source sink term, 13Ctot
-     integer (int_kind) :: CISO_Jint_14Ctot                                   ! vertically integrated source sink term, 14Ctot
-     integer (int_kind) :: CISO_zoototC_d13C                                  ! d13C of total zooC
-     integer (int_kind) :: CISO_zoototC_d14C                                  ! d14C of total zooC
-     integer (int_kind) :: CISO_DOCtot_d13C                                   ! d13C of DOCtot
-     integer (int_kind) :: CISO_DOCtot_d14C                                   ! d14C of DOCtot
-     integer (int_kind) :: CISO_DIC_d13C                                      ! d13C of DIC
-     integer (int_kind) :: CISO_DIC_d14C                                      ! d14C of DIC
-     integer (int_kind) :: calcToSed_13C                                      ! calcite flux sedimentary burial
-     integer (int_kind) :: calcToSed_14C                                      ! calcite flux sedimentary burial
-     integer (int_kind) :: pocToSed_13C                                       ! poc burial flux to sediments
-     integer (int_kind) :: pocToSed_14C                                       ! poc burial flux to sediments
+    ! ciso ids for  MORE nonstandard 3d fields
+    integer (int_kind), allocatable :: CISO_eps_autotroph(:)       ! epsilon for each autotroph
+    integer (int_kind), allocatable :: CISO_mui_to_co2star(:)      ! mui_to_co2star for each autotroph
+    integer (int_kind), allocatable :: CISO_Ca13CO3_form(:)        ! Ca13CO3 formation
+    integer (int_kind), allocatable :: CISO_Ca14CO3_form(:)        ! Ca14CO3 formation
+    integer (int_kind), allocatable :: CISO_Ca13CO3_form_zint(:)   ! Ca13CO3 formation vertical integral 0-100 m
+    integer (int_kind), allocatable :: CISO_Ca14CO3_form_zint(:)   ! Ca14CO3 formation vertical integral 0-100 m
+    integer (int_kind), allocatable :: CISO_photo13C(:)            ! 13C fixation
+    integer (int_kind), allocatable :: CISO_photo14C(:)            ! 14C fixation
+    integer (int_kind), allocatable :: CISO_photo13C_zint(:)       ! 13C fixation vertical integral
+    integer (int_kind), allocatable :: CISO_photo14C_zint(:)       ! 14C fixation vertical integral
+    integer (int_kind), allocatable :: CISO_d13C(:)                ! d13C of autotroph carbon
+    integer (int_kind), allocatable :: CISO_d14C(:)                ! d14C of autotroph carbon
+    integer (int_kind), allocatable :: CISO_autotrophCaCO3_d14C(:) ! d14C of autotrophCaCO3
+    integer (int_kind), allocatable :: CISO_autotrophCaCO3_d13C(:) ! d13C of autotrophCaCO3
 
-     ! restoring 3D diags
-     integer(int_kind), dimension(:), allocatable :: restore_tend
-   contains
-     procedure, public :: lconstructed => interior_diag_ind_constructed
-     procedure, public :: destruct => interior_diag_ind_destructor
+    integer (int_kind) :: CISO_eps_aq_g                                      ! eps_aq_g
+    integer (int_kind) :: CISO_eps_dic_g                                     ! eps_dic_g
+    integer (int_kind) :: CISO_DO13Ctot_prod                                 ! do13ctot production
+    integer (int_kind) :: CISO_DO14Ctot_prod                                 ! do14ctot production
+    integer (int_kind) :: CISO_DO13Ctot_remin                                ! do13ctot remineralization
+    integer (int_kind) :: CISO_DO14Ctot_remin                                ! do14ctot remineralization
+    integer (int_kind) :: CISO_Jint_13Ctot                                   ! vertically integrated source sink term, 13Ctot
+    integer (int_kind) :: CISO_Jint_14Ctot                                   ! vertically integrated source sink term, 14Ctot
+    integer (int_kind) :: CISO_zoototC_d13C                                  ! d13C of total zooC
+    integer (int_kind) :: CISO_zoototC_d14C                                  ! d14C of total zooC
+    integer (int_kind) :: CISO_DOCtot_d13C                                   ! d13C of DOCtot
+    integer (int_kind) :: CISO_DOCtot_d14C                                   ! d14C of DOCtot
+    integer (int_kind) :: CISO_DIC_d13C                                      ! d13C of DIC
+    integer (int_kind) :: CISO_DIC_d14C                                      ! d14C of DIC
+    integer (int_kind) :: calcToSed_13C                                      ! calcite flux sedimentary burial
+    integer (int_kind) :: calcToSed_14C                                      ! calcite flux sedimentary burial
+    integer (int_kind) :: pocToSed_13C                                       ! poc burial flux to sediments
+    integer (int_kind) :: pocToSed_14C                                       ! poc burial flux to sediments
+
+    ! restoring 3D diags
+    integer(int_kind), dimension(:), allocatable :: restore_tend
+  contains
+    procedure, public :: lconstructed => interior_diag_ind_constructed
+    procedure, public :: destruct => interior_diag_ind_destructor
   end type marbl_interior_tendency_diagnostics_indexing_type
 
   !***********************************************************************

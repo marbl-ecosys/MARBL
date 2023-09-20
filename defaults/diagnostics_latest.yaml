@@ -1178,6 +1178,14 @@ FG_ABIO_DIC14 :
    vertical_grid : none
    frequency : medium
    operator : average
+ABIO_D14Cocn : # todo add underscore after D14C to be consistent with CISO version
+   dependencies :
+      abio_dic_on : .true.
+   longname : Oceanic Delta 14C in permil for Abiotic DIC tracer fluxes
+   units : permil
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
 
 ###############
 # ciso module #

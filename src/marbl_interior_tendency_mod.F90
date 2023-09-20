@@ -244,6 +244,7 @@ contains
     call marbl_abio_dic_interior_tendency_compute(&
          marbl_tracer_indices = marbl_tracer_indices, &
          tracer_local = tracer_local, &
+         interior_tendency_diags = interior_tendency_diags, &
          interior_tendencies = interior_tendencies)
 
     if (marbl_status_log%labort_marbl) then
