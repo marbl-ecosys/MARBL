@@ -95,7 +95,7 @@ pCO2SURF_ALT_CO2 :
    frequency : never
    operator : average
 DpCO2 : &DpCO2
-   longname : D pCO2
+   longname : D pCO2 for base biotic tracer fluxes
    units : ppmv
    vertical_grid : none
    frequency :
@@ -110,13 +110,13 @@ DpCO2_ALT_CO2 :
    frequency : medium
    operator : average
 PV_CO2 :
-   longname : CO2 Piston Velocity
+   longname : CO2 Piston Velocity for base biotic tracer fluxes
    units : cm/s
    vertical_grid : none
    frequency : never
    operator : average
 SCHMIDT_CO2 :
-   longname : CO2 Schmidt Number
+   longname : CO2 Schmidt Number for base biotic tracers fluxes
    units : 1
    vertical_grid : none
    frequency : medium
@@ -1076,11 +1076,11 @@ ABIO_XKW :
    vertical_grid : none
    frequency : medium
    operator : average
-ABIO_ALK_SURF :
+ABIO_ATM_PRESS :
    dependencies :
       abio_dic_on : .true.
-   longname : Surface Alkalinity for Abiotic DIC tracer fluxes
-   units : meq/m^3
+   longname : Atmospheric Pressure for Abiotic DIC tracer fluxes
+   units : atmospheres
    vertical_grid : none
    frequency : medium
    operator : average
@@ -1092,11 +1092,33 @@ ABIO_pCO2 :
    vertical_grid : none
    frequency : medium
    operator : average
-ABIO_pCO2SURF :
+ABIO_D14Catm : # todo add underscore after D14C to be consistent with CISO version
    dependencies :
       abio_dic_on : .true.
-   longname : Surface pCO2 for Abiotic DIC tracer fluxes
-   units : ppmv
+   longname : Atmospheric Delta 14C in permil for Abiotic DIC tracer fluxes
+   units : permil
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_CO2_SCHMIDT : # todo rename ABIO_SCHMIDT_CO2 to match base biotic version
+   longname : CO2 Schmidt Number for Abiotic DIC tracer fluxes
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_CO2_PV : # todo rename ABIO_PV_CO2 to match base biotic version
+   dependencies :
+      abio_dic_on : .true.
+   longname : CO2 Piston Velocity for Abiotic DIC tracer fluxes
+   units : cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_CO2STAR :
+   dependencies :
+      abio_dic_on : .true.
+   longname : CO2 Star for Abiotic DIC tracer fluxes
+   units : mmol/m^3
    vertical_grid : none
    frequency : medium
    operator : average
@@ -1108,11 +1130,51 @@ ABIO_DCO2STAR :
    vertical_grid : none
    frequency : medium
    operator : average
-ABIO_CO2STAR :
+ABIO_pCO2SURF :
    dependencies :
       abio_dic_on : .true.
-   longname : CO2 Star for Abiotic DIC tracer fluxes
-   units : mmol/m^3
+   longname : Surface pCO2 for Abiotic DIC tracer fluxes
+   units : ppmv
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_DpCO2 :
+   dependencies :
+      abio_dic_on : .true.
+   longname : D pCO2 for Abiotic DIC tracer fluxes
+   units : ppmv
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_PH_SURF : # todo: for base biotic tracers, there is no _SURF
+   dependencies :
+      abio_dic_on : .true.
+   longname : Surface pH for Abiotic DIC tracer fluxes
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_ALK_SURF :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Surface Alkalinity for Abiotic DIC tracer fluxes
+   units : meq/m^3
+   vertical_grid : none
+   frequency : medium
+   operator : average
+FG_ABIO_DIC :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Surface gas flux of abiotic DIC
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+FG_ABIO_DIC14 :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Surface gas flux of abiotic DI14C
+   units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average

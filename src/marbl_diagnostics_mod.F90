@@ -236,7 +236,7 @@ contains
         return
       end if
 
-      lname    = 'D pCO2'
+      lname    = 'D pCO2 for base biotic tracer fluxes'
       sname    = 'DpCO2'
       units    = 'ppmv'
       vgrid    = 'none'
@@ -248,7 +248,7 @@ contains
         return
       end if
 
-      lname    = 'CO2 Piston Velocity'
+      lname    = 'CO2 Piston Velocity for base biotic tracer fluxes'
       sname    = 'PV_CO2'
       units    = vel_units
       vgrid    = 'none'
@@ -260,7 +260,7 @@ contains
         return
       end if
 
-      lname    = 'CO2 Schmidt Number'
+      lname    = 'CO2 Schmidt Number for base biotic tracers fluxes'
       sname    = 'SCHMIDT_CO2'
       units    = '1'
       vgrid    = 'none'

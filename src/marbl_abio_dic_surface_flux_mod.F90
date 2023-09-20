@@ -48,7 +48,6 @@ contains
       surface_flux_forcing_ind, &
       surface_flux_forcings, &
       unit_system, &
-      surface_flux_internal, &
       saved_state, &
       surface_flux_diags, &
       surface_fluxes, &
@@ -63,7 +62,6 @@ contains
     type(marbl_surface_flux_forcing_indexing_type),     intent(in)    :: surface_flux_forcing_ind
     type(marbl_forcing_fields_type),                    intent(in)    :: surface_flux_forcings(:)
     type(unit_system_type),                             intent(in)    :: unit_system
-    type(marbl_surface_flux_internal_type),             intent(inout) :: surface_flux_internal
     type(marbl_saved_state_type),                       intent(inout) :: saved_state
     type(marbl_diagnostics_type),                       intent(inout) :: surface_flux_diags
     real(r8),                                           intent(inout) :: surface_fluxes(:, :)
@@ -72,15 +70,23 @@ contains
     type(marbl_log_type),                               intent(inout) :: marbl_status_log
 
     real(r8) :: xkw_ice(num_elements)      ! common portion of piston vel., (1-fice)*xkw (L/T)
-    real(r8) :: alk_surf(num_elements)          ! local alkalinity
+    real(r8) :: xkw(num_elements)          ! piston velocity
+    real(r8) :: pv_co2(num_elements)       ! piston velocity
+    real(r8) :: alk_surf(num_elements)     ! local alkalinity
     real(r8) :: phlo(num_elements)         ! lower bound for ph in solver
     real(r8) :: phhi(num_elements)         ! upper bound for ph in solver
     real(r8) :: SiO2(num_elements)         ! Abiotic silicate
     real(r8) :: PO4(num_elements)          ! Abiotic phosphate
     real(r8) :: R14C_ocn(num_elements)     ! Rocn = DIC14/DIC
     real(r8) :: R14C_atm(num_elements)     ! Ratm = 1+ D14C/1000
-    real(r8) :: flux14_co2(num_elements)   ! Isotopic gas flux
-
+    real(r8) :: fg_dic(num_elements)       ! Carbon gas flux
+    real(r8) :: fg_di14c(num_elements)     ! Isotopic carbon gas flux
+    real(r8) :: co2star(num_elements)
+    real(r8) :: dco2star(num_elements)
+    real(r8) :: pco2surf(num_elements)
+    real(r8) :: dpco2(num_elements)
+    real(r8) :: schmidt_co2(num_elements)
+    real(r8) :: co3(num_elements)
 
     ! Return immediately if not running with abiotic dic tracer module
     if (.not. abio_dic_on) return
@@ -95,18 +101,8 @@ contains
         ap_used => surface_flux_forcings(surface_flux_forcing_ind%atm_pressure_id)%field_0d, &
         u10_sqr => surface_flux_forcings(surface_flux_forcing_ind%u10_sqr_id)%field_0d, &
         d14c    => surface_flux_forcings(surface_flux_forcing_ind%d14c_id)%field_0d,  &
-        ! Intermediate computations (saved for diagnostics)
-        piston_velocity => surface_flux_internal%piston_velocity(:), &
-        flux_co2        => surface_flux_internal%flux_co2(:), &
-        co2star         => surface_flux_internal%co2star(:), &
-        dco2star        => surface_flux_internal%dco2star(:), &
-        pco2surf        => surface_flux_internal%pco2surf(:), &
-        dpco2           => surface_flux_internal%dpco2(:), &
-        schmidt_co2     => surface_flux_internal%schmidt_co2(:), &
-        co3             => surface_flux_internal%co3(:), &
-        pv_co2          => surface_flux_internal%pv_co2(:), &
         ! Saved state
-        ph_prev_surf => saved_state%state(saved_state_ind%abio_ph_surf)%field_2d, &
+        ph_surf => saved_state%state(saved_state_ind%abio_ph_surf)%field_2d, &
         ! Tracer indices
         dic_ind      => marbl_tracer_indices%abio_dic_ind, &
         di14c_ind    => marbl_tracer_indices%abio_di14c_ind, &
@@ -144,14 +140,14 @@ contains
     ! Compute CO2 flux
     !-----------------------------------------------------------------------
 
-    piston_velocity = xkw_coeff*u10_sqr(:)
-    xkw_ice(:) = (c1 - ifrac(:)) * piston_velocity
+    xkw(:) = xkw_coeff*u10_sqr(:)
+    xkw_ice(:) = (c1 - ifrac(:)) * xkw(:)
     schmidt_co2(:) = schmidt_co2_surf(num_elements, sst)
     pv_co2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_co2(:))
 
-    where (ph_prev_surf(:) /= c0)
-      phlo(:) = ph_prev_surf(:) - del_ph
-      phhi(:) = ph_prev_surf(:) + del_ph
+    where (ph_surf(:) /= c0)
+      phlo(:) = ph_surf(:) - del_ph
+      phhi(:) = ph_surf(:) + del_ph
     elsewhere
       phlo(:) = phlo_surf_init
       phhi(:) = phhi_surf_init
@@ -164,7 +160,7 @@ contains
     ! Sbar = "global- and annual- mean salinity"
     alk_surf(:) = (2310._r8 * (unit_system%nmol2mol_prefix * unit_system%mass2g))  * rho_sw * sss(:) / 34.7_r8
 
-    ! Note the following computes a new ph_prev_surf
+    ! Note the following computes a new ph_surf
     ! pass in sections of surface_flux_forcings instead of associated vars because of problems with intel/15.0.3
     call marbl_co2calc_surface(&
          num_elements  = num_elements, &
@@ -187,25 +183,32 @@ contains
          dpco2 = dpco2, &
          phlo = phlo, &
          phhi = phhi, &
-         ph = ph_prev_surf, &
+         ph = ph_surf, &
          marbl_status_log = marbl_status_log)
 
-    flux_co2(:) = pv_co2(:) * dco2star(:)
-    flux14_co2(:) = pv_co2(:) * ((dco2star(:) + co2star(:)) * R14C_atm(:) - co2star(:) * R14C_ocn(:))
-    surface_fluxes(:, dic_ind) = surface_fluxes(:, dic_ind) + flux_co2(:)
-    surface_fluxes(:, di14c_ind) = surface_fluxes(:, di14c_ind) + flux14_co2(:)
+    fg_dic(:) = pv_co2(:) * dco2star(:)
+    fg_di14c(:) = pv_co2(:) * ((dco2star(:) + co2star(:)) * R14C_atm(:) - co2star(:) * R14C_ocn(:))
+    surface_fluxes(:, dic_ind) = surface_fluxes(:, dic_ind) + fg_dic(:)
+    surface_fluxes(:, di14c_ind) = surface_fluxes(:, di14c_ind) + fg_di14c(:)
 
     ! update abiotic DIC diagnostics
 
     call marbl_abio_dic_diagnostics_surface_flux_compute( &
-         num_elements, &
          ifrac, &
-         piston_velocity, &
-         alk_surf, &
+         xkw, &
+         ap_used, &
          xco2, &
-         pco2surf, &
-         dco2star, &
+         d14c, &
+         schmidt_co2, &
+         pv_co2, &
          co2star, &
+         dco2star, &
+         pco2surf, &
+         dpco2, &
+         ph_surf, &
+         alk_surf, &
+         fg_dic, &
+         fg_di14c, &
          surface_flux_diags)
 
     end associate

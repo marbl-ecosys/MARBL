@@ -194,7 +194,6 @@ contains
          surface_flux_forcing_ind = surface_flux_forcing_ind, &
          surface_flux_forcings    = surface_flux_forcings, &
          unit_system              = unit_system, &
-         surface_flux_internal    = surface_flux_internal, &
          saved_state              = saved_state, &
          surface_flux_diags       = surface_flux_diags, &
          surface_fluxes           = surface_fluxes, &

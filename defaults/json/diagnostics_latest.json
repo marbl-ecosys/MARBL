@@ -368,6 +368,16 @@
       "units": "meq/m^3",
       "vertical_grid": "none"
    },
+   "ABIO_ATM_PRESS": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Atmospheric Pressure for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": "atmospheres",
+      "vertical_grid": "none"
+   },
    "ABIO_CO2STAR": {
       "dependencies": {
          "abio_dic_on": ".true."
@@ -376,6 +386,33 @@
       "longname": "CO2 Star for Abiotic DIC tracer fluxes",
       "operator": "average",
       "units": "mmol/m^3",
+      "vertical_grid": "none"
+   },
+   "ABIO_CO2_PV": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "CO2 Piston Velocity for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": "cm/s",
+      "vertical_grid": "none"
+   },
+   "ABIO_CO2_SCHMIDT": {
+      "frequency": "medium",
+      "longname": "CO2 Schmidt Number for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
+   },
+   "ABIO_D14Catm": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Atmospheric Delta 14C in permil for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": "permil",
       "vertical_grid": "none"
    },
    "ABIO_DCO2STAR": {
@@ -388,6 +425,16 @@
       "units": "mmol/m^3",
       "vertical_grid": "none"
    },
+   "ABIO_DpCO2": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "D pCO2 for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": "ppmv",
+      "vertical_grid": "none"
+   },
    "ABIO_IFRAC": {
       "dependencies": {
          "abio_dic_on": ".true."
@@ -396,6 +443,16 @@
       "longname": "Ice Fraction for Abiotic DIC tracer fluxes",
       "operator": "average",
       "units": "fraction",
+      "vertical_grid": "none"
+   },
+   "ABIO_PH_SURF": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface pH for Abiotic DIC tracer fluxes",
+      "operator": "average",
+      "units": 1,
       "vertical_grid": "none"
    },
    "ABIO_XKW": {
@@ -1344,7 +1401,7 @@
          "medium",
          "high"
       ],
-      "longname": "D pCO2",
+      "longname": "D pCO2 for base biotic tracer fluxes",
       "operator": [
          "average",
          "average"
@@ -1398,6 +1455,26 @@
       "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "layer_avg"
+   },
+   "FG_ABIO_DIC": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface gas flux of abiotic DIC",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "FG_ABIO_DIC14": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface gas flux of abiotic DI14C",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "FG_ALT_CO2": {
       "frequency": "medium",
@@ -1803,7 +1880,7 @@
    },
    "PV_CO2": {
       "frequency": "never",
-      "longname": "CO2 Piston Velocity",
+      "longname": "CO2 Piston Velocity for base biotic tracer fluxes",
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
@@ -1855,7 +1932,7 @@
    },
    "SCHMIDT_CO2": {
       "frequency": "medium",
-      "longname": "CO2 Schmidt Number",
+      "longname": "CO2 Schmidt Number for base biotic tracers fluxes",
       "operator": "average",
       "units": 1,
       "vertical_grid": "none"
