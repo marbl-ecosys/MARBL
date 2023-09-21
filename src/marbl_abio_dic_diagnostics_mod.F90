@@ -9,8 +9,6 @@ module marbl_abio_dic_diagnostics_mod
 
   use marbl_settings_mod, only : unit_system_type
 
-  use marbl_interface_private_types, only : marbl_tracer_index_type
-
   use marbl_interface_public_types, only : marbl_diagnostics_type
 
 
@@ -256,7 +254,7 @@ contains
     end associate
 
     !-----------------------------------------------------------------
-    ! Surface forcing diagnostics
+    ! Interior tendency diagnostics
     !-----------------------------------------------------------------
 
     associate(&
@@ -347,33 +345,30 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_abio_dic_diagnostics_interior_tendency_compute(marbl_tracer_indices, tracer_local, &
-                                                                  interior_tendency_diags)
+  subroutine marbl_abio_dic_diagnostics_interior_tendency_compute(dic, di14c, interior_tendency_diags)
 
  !---------------------------------------------------------------------
  ! !DESCRIPTION:
  !  Update marbl_interior_abio_dic_diags data type
  !---------------------------------------------------------------------
 
-    type(marbl_tracer_index_type), intent(in)    :: marbl_tracer_indices
-    real(r8),                      intent(in)    :: tracer_local(:,:)
+    real(r8),                      intent(in)    :: dic(:)
+    real(r8),                      intent(in)    :: di14c(:)
     type(marbl_diagnostics_type),  intent(inout) :: interior_tendency_diags
 
     associate(&
-        ! tracers
-        dic   => tracer_local(marbl_tracer_indices%abio_dic_ind, :), &
-        di14c => tracer_local(marbl_tracer_indices%abio_di14c_ind, :), &
         ! diagnostics
         diags => interior_tendency_diags%diags, &
         ind   => marbl_interior_tendency_diag_ind &
        )
 
-      where (dic == 0)
+      where (dic(:) == c0)
         diags(ind%ABIO_D14Cocn)%field_3d(:,1) = c0
       elsewhere
-        diags(ind%ABIO_D14Cocn)%field_3d(:,1) = (di14c(:) / dic(:) -c1) * 1000._r8
+        diags(ind%ABIO_D14Cocn)%field_3d(:,1) = (di14c(:)/dic(:) - c1) * 1000._r8
       end where
     end associate
+
 end subroutine marbl_abio_dic_diagnostics_interior_tendency_compute
 
   !***********************************************************************

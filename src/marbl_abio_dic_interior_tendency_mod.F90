@@ -35,6 +35,7 @@ contains
 
         associate(&
             ! Tracer
+            dic => tracer_local(marbl_tracer_indices%abio_dic_ind, :), &
             di14c => tracer_local(marbl_tracer_indices%abio_di14c_ind, :), &
             ! Tracer indices
             di14c_ind    => marbl_tracer_indices%abio_di14c_ind, &
@@ -45,8 +46,7 @@ contains
             interior_tendencies(abio_ind_beg:abio_ind_end, :) = c0
             interior_tendencies(di14c_ind, :) = -c14_lambda * di14c(:)
 
-            call marbl_abio_dic_diagnostics_interior_tendency_compute(marbl_tracer_indices, tracer_local, &
-                                                                      interior_tendency_diags)
+            call marbl_abio_dic_diagnostics_interior_tendency_compute(dic, di14c, interior_tendency_diags)
 
         end associate
 

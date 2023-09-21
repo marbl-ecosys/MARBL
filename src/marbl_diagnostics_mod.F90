@@ -3163,13 +3163,6 @@ contains
 
     !-----------------------------------------------------------------
 
-    call marbl_interior_tendency_diags%set_to_zero(marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace(&
-           'marbl_interior_tendency_diags%set_to_zero', subname)
-      return
-    end if
-
     associate( &
          kmt   => domain%kmt, &
          diags => marbl_interior_tendency_diags%diags, &

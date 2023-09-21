@@ -238,6 +238,19 @@ contains
          tracer_local(:,:), zooplankton_local, totalChl_local)
 
     !-----------------------------------------------------------------------
+    !  Set all interior diagnostics to zero
+    !  This is useful to prevent deep values persisting
+    !  when computing diagnostics in shallow columns
+    !-----------------------------------------------------------------------
+
+    call interior_tendency_diags%set_to_zero(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace(&
+           'interior_tendency_diags%set_to_zero', subname)
+      return
+    end if
+
+    !-----------------------------------------------------------------------
     !  Compute tendencies for abiotic tracers
     !-----------------------------------------------------------------------
 
