@@ -399,6 +399,9 @@
       "vertical_grid": "none"
    },
    "ABIO_CO2_SCHMIDT": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
       "frequency": "never",
       "longname": "CO2 Schmidt Number for Abiotic DIC tracer fluxes",
       "operator": "average",

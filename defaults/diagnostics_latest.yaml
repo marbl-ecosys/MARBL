@@ -1101,6 +1101,8 @@ ABIO_D14Catm : # todo add underscore after D14C to be consistent with CISO versi
    frequency : medium
    operator : average
 ABIO_CO2_SCHMIDT : # todo rename ABIO_SCHMIDT_CO2 to match base biotic version
+   dependencies :
+      abio_dic_on : .true.
    longname : CO2 Schmidt Number for Abiotic DIC tracer fluxes
    units : 1
    vertical_grid : none
