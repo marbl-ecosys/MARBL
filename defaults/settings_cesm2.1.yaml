@@ -193,27 +193,6 @@ _tracer_list :
 ################################################################################
 
 general_parms :
-   PFT_defaults :
-      longname : Define how PFTs are initialized
-      subcategory : 1. config PFTs
-      units : unitless
-      datatype : string
-      default_value : CESM2
-      valid_values :
-            - CESM2
-            - user-specified
-      _CESM2_PFT_keys :
-         autotroph_settings :
-            - sp
-            - diat
-            - diaz
-         zooplankton_settings :
-            - zoo
-         grazing_relationship_settings :
-            - sp_zoo
-            - diat_zoo
-            - diaz_zoo
-      _append_to_config_keywords : true
    ciso_on :
       longname : Control whether CISO tracer module is active
       subcategory : 2. config flags
@@ -618,6 +597,27 @@ general_parms :
 ################################################################################
 
 general_parms2 :
+   PFT_defaults :
+      longname : Define how PFTs are initialized
+      subcategory : 1. config PFTs
+      units : unitless
+      datatype : string
+      default_value : CESM2
+      valid_values :
+            - CESM2
+            - user-specified
+      _CESM2_PFT_keys :
+         autotroph_settings :
+            - sp
+            - diat
+            - diaz
+         zooplankton_settings :
+            - zoo
+         grazing_relationship_settings :
+            - sp_zoo
+            - diat_zoo
+            - diaz_zoo
+      _append_to_config_keywords : true
    init_bury_coeff_opt :
       longname : Source of initial burial coefficient
       subcategory : 3. config strings

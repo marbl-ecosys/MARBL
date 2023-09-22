@@ -1004,40 +1004,6 @@
          "subcategory": "4. general parameters",
          "units": "mol m-2 yr-1"
       },
-      "PFT_defaults": {
-         "_4p2z_PFT_keys": {
-            "autotroph_settings": [
-               "sp",
-               "diat",
-               "diaz",
-               "cocco"
-            ],
-            "grazing_relationship_settings": [
-               "sp_microzoo",
-               "diat_mesozoo",
-               "diaz_microzoo",
-               "cocco_mesozoo",
-               "cocco_microzoo",
-               "diaz_mesozoo",
-               "null",
-               "microzoo_mesozoo"
-            ],
-            "zooplankton_settings": [
-               "microzoo",
-               "mesozoo"
-            ]
-         },
-         "_append_to_config_keywords": true,
-         "datatype": "string",
-         "default_value": "4p2z",
-         "longname": "Define how PFTs are initialized",
-         "subcategory": "1. config PFTs",
-         "units": "unitless",
-         "valid_values": [
-            "4p2z",
-            "user-specified"
-         ]
-      },
       "POM_bury_frac_max": {
          "datatype": "real",
          "default_value": 0.8,
@@ -1517,6 +1483,40 @@
       }
    },
    "general_parms2": {
+      "PFT_defaults": {
+         "_4p2z_PFT_keys": {
+            "autotroph_settings": [
+               "sp",
+               "diat",
+               "diaz",
+               "cocco"
+            ],
+            "grazing_relationship_settings": [
+               "sp_microzoo",
+               "diat_mesozoo",
+               "diaz_microzoo",
+               "cocco_mesozoo",
+               "cocco_microzoo",
+               "diaz_mesozoo",
+               "null",
+               "microzoo_mesozoo"
+            ],
+            "zooplankton_settings": [
+               "microzoo",
+               "mesozoo"
+            ]
+         },
+         "_append_to_config_keywords": true,
+         "datatype": "string",
+         "default_value": "4p2z",
+         "longname": "Define how PFTs are initialized",
+         "subcategory": "1. config PFTs",
+         "units": "unitless",
+         "valid_values": [
+            "4p2z",
+            "user-specified"
+         ]
+      },
       "init_bury_coeff_opt": {
          "datatype": "string",
          "default_value": {

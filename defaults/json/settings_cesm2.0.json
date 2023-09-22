@@ -836,33 +836,6 @@
          "subcategory": "4. general parameters",
          "units": "mol m-2 yr-1"
       },
-      "PFT_defaults": {
-         "_CESM2_PFT_keys": {
-            "autotroph_settings": [
-               "sp",
-               "diat",
-               "diaz"
-            ],
-            "grazing_relationship_settings": [
-               "sp_zoo",
-               "diat_zoo",
-               "diaz_zoo"
-            ],
-            "zooplankton_settings": [
-               "zoo"
-            ]
-         },
-         "_append_to_config_keywords": true,
-         "datatype": "string",
-         "default_value": "CESM2",
-         "longname": "Define how PFTs are initialized",
-         "subcategory": "1. config PFTs",
-         "units": "unitless",
-         "valid_values": [
-            "CESM2",
-            "user-specified"
-         ]
-      },
       "POM_bury_frac_max": {
          "datatype": "real",
          "default_value": 0.8,
@@ -1325,6 +1298,33 @@
       }
    },
    "general_parms2": {
+      "PFT_defaults": {
+         "_CESM2_PFT_keys": {
+            "autotroph_settings": [
+               "sp",
+               "diat",
+               "diaz"
+            ],
+            "grazing_relationship_settings": [
+               "sp_zoo",
+               "diat_zoo",
+               "diaz_zoo"
+            ],
+            "zooplankton_settings": [
+               "zoo"
+            ]
+         },
+         "_append_to_config_keywords": true,
+         "datatype": "string",
+         "default_value": "CESM2",
+         "longname": "Define how PFTs are initialized",
+         "subcategory": "1. config PFTs",
+         "units": "unitless",
+         "valid_values": [
+            "CESM2",
+            "user-specified"
+         ]
+      },
       "init_bury_coeff_opt": {
          "datatype": "string",
          "default_value": {
