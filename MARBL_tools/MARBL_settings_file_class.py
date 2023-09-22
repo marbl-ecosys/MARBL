@@ -239,7 +239,7 @@ class MARBL_settings_class(object):
                 append_to_keys = 'PFT_defaults == "{}"'.format(valid_PFT_default) in self._config_keyword
                 if append_to_keys:
                     settings_key = '_{}_PFT_keys'.format(valid_PFT_default)
-                    PFT_keys = self._settings['general_parms']['PFT_defaults'][settings_key][variable_name]
+                    PFT_keys = self._settings['general_parms2']['PFT_defaults'][settings_key][variable_name]
                     break
 
         # Is the derived type an array? If so, treat each entry separately
