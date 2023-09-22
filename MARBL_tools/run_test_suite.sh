@@ -197,6 +197,36 @@ if [ "${STATUS}" == "PASS" ]; then
     print_status "netCDF Comparison (1 inst (mks, 4p2z) vs baseline (cgs, 4p2z))" >> ${RESULTS_CACHE}
   fi
 
+  # Initialize MARBL (with abio tracers), compute surface fluxes and interior tendencies
+  cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
+  (set -x ; ./call_compute_subroutines.py -s ../../input_files/settings/marbl_with_abio_only.settings)
+  STATUS=$(check_return $?)
+  print_status "call_compute_subroutines.py -s ../../input_files/settings/marbl_with_abio_only.settings" >> ${RESULTS_CACHE}
+
+  if [ "${STATUS}" == "PASS" ]; then
+    cd ${MARBL_ROOT}/MARBL_tools
+    BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
+    HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
+    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_abio.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    STATUS=$(check_return $?)
+    print_status "netCDF Comparison (1 inst (cgs, with abio) vs baseline (cgs, with abio))" >> ${RESULTS_CACHE}
+  fi
+
+  # Initialize MARBL (with abio tracers), compute surface fluxes and interior tendencies in mks instead of cgs
+  cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
+  (set -x ; ./call_compute_subroutines.py -s ../../input_files/settings/marbl_with_abio_only.settings -u mks)
+  STATUS=$(check_return $?)
+  print_status "call_compute_subroutines.py -s ../../input_files/settings/marbl_with_abio_only.settings -u mks" >> ${RESULTS_CACHE}
+
+  if [ "${STATUS}" == "PASS" ]; then
+    cd ${MARBL_ROOT}/MARBL_tools
+    BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
+    HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
+    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_abio.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    STATUS=$(check_return $?)
+    print_status "netCDF Comparison (1 inst (mks, with abio) vs baseline (cgs, with abio))" >> ${RESULTS_CACHE}
+  fi
+
   # Initialize MARBL (with ciso tracers), compute surface fluxes and interior tendencies
   cd ${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
   (set -x ; ./call_compute_subroutines.py -s ../../input_files/settings/marbl_with_ciso.settings)
