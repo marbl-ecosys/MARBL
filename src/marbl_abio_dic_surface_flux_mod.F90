@@ -49,6 +49,7 @@ contains
       surface_flux_forcings, &
       unit_system, &
       saved_state, &
+      surface_flux_internal, &
       surface_flux_diags, &
       surface_fluxes, &
       co2calc_coeffs, &
@@ -63,15 +64,13 @@ contains
     type(marbl_forcing_fields_type),                    intent(in)    :: surface_flux_forcings(:)
     type(unit_system_type),                             intent(in)    :: unit_system
     type(marbl_saved_state_type),                       intent(inout) :: saved_state
+    type(marbl_surface_flux_internal_type),             intent(inout) :: surface_flux_internal
     type(marbl_diagnostics_type),                       intent(inout) :: surface_flux_diags
     real(r8),                                           intent(inout) :: surface_fluxes(:, :)
     type(co2calc_coeffs_type),                          intent(inout) :: co2calc_coeffs
     type(co2calc_state_type),                           intent(inout) :: co2calc_state
     type(marbl_log_type),                               intent(inout) :: marbl_status_log
 
-    real(r8) :: xkw_ice(num_elements)      ! common portion of piston vel., (1-fice)*xkw (L/T)
-    real(r8) :: xkw(num_elements)          ! piston velocity
-    real(r8) :: pv_co2(num_elements)       ! piston velocity
     real(r8) :: alk_surf(num_elements)     ! local alkalinity
     real(r8) :: phlo(num_elements)         ! lower bound for ph in solver
     real(r8) :: phhi(num_elements)         ! upper bound for ph in solver
@@ -85,7 +84,6 @@ contains
     real(r8) :: dco2star(num_elements)
     real(r8) :: pco2surf(num_elements)
     real(r8) :: dpco2(num_elements)
-    real(r8) :: schmidt_co2(num_elements)
     real(r8) :: co3(num_elements)
 
     ! Return immediately if not running with abiotic dic tracer module
@@ -101,7 +99,12 @@ contains
         ap_used => surface_flux_forcings(surface_flux_forcing_ind%atm_pressure_id)%field_0d, &
         u10_sqr => surface_flux_forcings(surface_flux_forcing_ind%u10_sqr_id)%field_0d, &
         d14c    => surface_flux_forcings(surface_flux_forcing_ind%d14c_id)%field_0d,  &
-        ! Saved state
+        ! Values computed for abio and bio
+        piston_velocity => surface_flux_internal%piston_velocity(:), &
+        xkw_ice         => surface_flux_internal%xkw_ice(:), &
+        schmidt_co2     => surface_flux_internal%schmidt_co2(:), &
+        pv_co2          => surface_flux_internal%pv_co2(:), &
+       ! Saved state
         ph_surf => saved_state%state(saved_state_ind%abio_ph_surf)%field_2d, &
         ! Tracer indices
         dic_ind      => marbl_tracer_indices%abio_dic_ind, &
@@ -139,11 +142,6 @@ contains
     !-----------------------------------------------------------------------
     ! Compute CO2 flux
     !-----------------------------------------------------------------------
-
-    xkw(:) = xkw_coeff*u10_sqr(:)
-    xkw_ice(:) = (c1 - ifrac(:)) * xkw(:)
-    schmidt_co2(:) = schmidt_co2_surf(num_elements, sst)
-    pv_co2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_co2(:))
 
     where (ph_surf(:) /= c0)
       phlo(:) = ph_surf(:) - del_ph
@@ -195,7 +193,7 @@ contains
 
     call marbl_abio_dic_diagnostics_surface_flux_compute( &
          ifrac, &
-         xkw, &
+         piston_velocity, &
          ap_used, &
          xco2, &
          d14c, &

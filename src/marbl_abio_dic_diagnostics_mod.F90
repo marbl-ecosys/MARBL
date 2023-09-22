@@ -282,7 +282,7 @@ contains
 
   subroutine marbl_abio_dic_diagnostics_surface_flux_compute( &
        ifrac, &
-       xkw, &
+       piston_velocity, &
        ap_used, &
        xco2, &
        d14c, &
@@ -302,7 +302,7 @@ contains
     !  Compute surface fluxes for ecosys tracer module.
 
     real (r8), dimension(:),      intent(in)    :: ifrac
-    real (r8), dimension(:),      intent(in)    :: xkw
+    real (r8), dimension(:),      intent(in)    :: piston_velocity
     real (r8), dimension(:),      intent(in)    :: ap_used
     real (r8), dimension(:),      intent(in)    :: xco2
     real (r8), dimension(:),      intent(in)    :: d14c
@@ -324,7 +324,7 @@ contains
          )
 
     diags(ind%ABIO_IFRAC)%field_2d(:) = ifrac(:)
-    diags(ind%ABIO_XKW)%field_2d(:) = xkw(:)
+    diags(ind%ABIO_XKW)%field_2d(:) = piston_velocity(:)
     diags(ind%ABIO_ATM_PRESS)%field_2d(:) = ap_used(:)
     diags(ind%ABIO_pCO2)%field_2d(:) = xco2(:)
     diags(ind%ABIO_D14Catm)%field_2d(:) = d14c(:)

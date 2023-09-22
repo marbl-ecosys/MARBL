@@ -181,6 +181,7 @@ module marbl_interface_private_types
   ! that makes it easy to pass to the diagnostics
   type, public :: marbl_surface_flux_internal_type
      real (r8), allocatable, dimension(:)   :: piston_velocity
+     real (r8), allocatable, dimension(:)   :: xkw_ice
      real (r8), allocatable, dimension(:)   :: flux_co2
      real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (conc flux units)
      real (r8), allocatable, dimension(:)   :: co2star
@@ -1344,42 +1345,25 @@ contains
     class(marbl_surface_flux_internal_type), intent(out) :: this
     integer (int_kind),                      intent(in)  :: num_elements
 
-    allocate(this%piston_velocity (num_elements))
-    this%piston_velocity  = c0
-    allocate(this%flux_co2        (num_elements))
-    this%flux_co2         = c0
-    allocate(this%flux_alt_co2    (num_elements))
-    this%flux_alt_co2     = c0
-    allocate(this%co2star         (num_elements))
-    this%co2star          = c0
-    allocate(this%dco2star        (num_elements))
-    this%dco2star         = c0
-    allocate(this%pco2surf        (num_elements))
-    this%pco2surf         = c0
-    allocate(this%dpco2           (num_elements))
-    this%dpco2            = c0
-    allocate(this%co3             (num_elements))
-    this%co3              = c0
-    allocate(this%co2star_alt     (num_elements))
-    this%co2star_alt      = c0
-    allocate(this%dco2star_alt    (num_elements))
-    this%dco2star_alt     = c0
-    allocate(this%pco2surf_alt    (num_elements))
-    this%pco2surf_alt     = c0
-    allocate(this%dpco2_alt       (num_elements))
-    this%dpco2_alt        = c0
-    allocate(this%schmidt_co2     (num_elements))
-    this%schmidt_co2      = c0
-    allocate(this%schmidt_o2      (num_elements))
-    this%schmidt_o2       = c0
-    allocate(this%pv_o2           (num_elements))
-    this%pv_o2            = c0
-    allocate(this%pv_co2          (num_elements))
-    this%pv_co2           = c0
-    allocate(this%o2sat           (num_elements))
-    this%o2sat            = c0
-    allocate(this%nhx_surface_emis(num_elements))
-    this%nhx_surface_emis = c0
+    allocate(this%piston_velocity(num_elements), source=c0)
+    allocate(this%xkw_ice(num_elements), source=c0)
+    allocate(this%flux_co2(num_elements), source=c0)
+    allocate(this%flux_alt_co2(num_elements), source=c0)
+    allocate(this%co2star(num_elements), source=c0)
+    allocate(this%dco2star(num_elements), source=c0)
+    allocate(this%pco2surf(num_elements), source=c0)
+    allocate(this%dpco2(num_elements), source=c0)
+    allocate(this%co3(num_elements), source=c0)
+    allocate(this%co2star_alt(num_elements), source=c0)
+    allocate(this%dco2star_alt(num_elements), source=c0)
+    allocate(this%pco2surf_alt(num_elements), source=c0)
+    allocate(this%dpco2_alt(num_elements), source=c0)
+    allocate(this%schmidt_co2(num_elements), source=c0)
+    allocate(this%schmidt_o2(num_elements), source=c0)
+    allocate(this%pv_o2(num_elements), source=c0)
+    allocate(this%pv_co2(num_elements), source=c0)
+    allocate(this%o2sat(num_elements), source=c0)
+    allocate(this%nhx_surface_emis(num_elements), source=c0)
 
   end subroutine marbl_surface_flux_internal_constructor
 
@@ -1390,23 +1374,24 @@ contains
     class(marbl_surface_flux_internal_type), intent(inout) :: this
 
     if (allocated(this%piston_velocity)) then
-      deallocate(this%piston_velocity )
-      deallocate(this%flux_co2        )
-      deallocate(this%flux_alt_co2    )
-      deallocate(this%co2star         )
-      deallocate(this%dco2star        )
-      deallocate(this%pco2surf        )
-      deallocate(this%dpco2           )
-      deallocate(this%co3             )
-      deallocate(this%co2star_alt     )
-      deallocate(this%dco2star_alt    )
-      deallocate(this%pco2surf_alt    )
-      deallocate(this%dpco2_alt       )
-      deallocate(this%schmidt_co2     )
-      deallocate(this%schmidt_o2      )
-      deallocate(this%pv_o2           )
-      deallocate(this%pv_co2          )
-      deallocate(this%o2sat           )
+      deallocate(this%piston_velocity)
+      deallocate(this%xkw_ice)
+      deallocate(this%flux_co2)
+      deallocate(this%flux_alt_co2)
+      deallocate(this%co2star)
+      deallocate(this%dco2star)
+      deallocate(this%pco2surf)
+      deallocate(this%dpco2)
+      deallocate(this%co3)
+      deallocate(this%co2star_alt)
+      deallocate(this%dco2star_alt)
+      deallocate(this%pco2surf_alt)
+      deallocate(this%dpco2_alt)
+      deallocate(this%schmidt_co2)
+      deallocate(this%schmidt_o2)
+      deallocate(this%pv_o2)
+      deallocate(this%pv_co2)
+      deallocate(this%o2sat)
       deallocate(this%nhx_surface_emis)
     end if
 

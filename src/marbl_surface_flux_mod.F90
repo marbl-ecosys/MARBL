@@ -86,6 +86,7 @@ contains
     use marbl_oxygen, only : o2sat_surf
     use marbl_nhx_surface_emis_mod, only : marbl_nhx_surface_emis_compute
     use marbl_settings_mod, only : base_bio_on
+    use marbl_settings_mod, only : abio_dic_on
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
     use marbl_settings_mod, only : xkw_coeff
     use marbl_surface_flux_share_mod, only : marbl_surface_flux_share_export_variables
@@ -121,7 +122,6 @@ contains
     integer (int_kind) :: auto_ind                 ! autotroph functional group index
     real (r8)          :: phlo(num_elements)       ! lower bound for ph in solver
     real (r8)          :: phhi(num_elements)       ! upper bound for ph in solver
-    real (r8)          :: xkw_ice(num_elements)    ! common portion of piston vel., (1-fice)*xkw (L/T)
     real (r8)          :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (conc units)
     real (r8)          :: totalChl_loc(num_elements)  ! local value of totalChl
     real (r8)          :: flux_o2_loc(num_elements)   ! local value of o2 flux
@@ -143,6 +143,7 @@ contains
          nhy_flux     => surface_flux_forcings(surface_flux_forcing_ind%nhy_flux_id)%field_0d,     &
 
          piston_velocity      => surface_flux_internal%piston_velocity(:),                       &
+         xkw_ice              => surface_flux_internal%xkw_ice(:),                               &
          flux_co2             => surface_flux_internal%flux_co2(:),                              &
          co2star              => surface_flux_internal%co2star(:),                               &
          dco2star             => surface_flux_internal%dco2star(:),                              &
@@ -183,6 +184,19 @@ contains
     surface_fluxes(:, :) = c0
 
     !-----------------------------------------------------------------------
+    ! fields used for both abiotic and biotic surface flux computation
+    !-----------------------------------------------------------------------
+
+    if (abio_dic_on .or. (base_bio_on .and. (lflux_gas_o2 .or. lflux_gas_co2))) then
+      piston_velocity = xkw_coeff*u10_sqr(:)
+      xkw_ice(:) = (c1 - ifrac(:)) * piston_velocity
+    end if
+    if (abio_dic_on .or. (base_bio_on .and. lflux_gas_co2)) then
+      schmidt_co2(:) = schmidt_co2_surf(num_elements, sst)
+      pv_co2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_co2(:))
+    end if
+
+    !-----------------------------------------------------------------------
     ! Compute carbon isotopes surface fluxes
     !-----------------------------------------------------------------------
 
@@ -195,6 +209,7 @@ contains
          surface_flux_forcings    = surface_flux_forcings, &
          unit_system              = unit_system, &
          saved_state              = saved_state, &
+         surface_flux_internal    = surface_flux_internal, &
          surface_flux_diags       = surface_flux_diags, &
          surface_fluxes           = surface_fluxes, &
          co2calc_coeffs           = co2calc_coeffs, &
@@ -230,13 +245,6 @@ contains
     if (lflux_gas_o2 .or. lflux_gas_co2) then
 
        !-----------------------------------------------------------------------
-       !  Compute XKW_ICE. XKW is zero over land, so XKW_ICE is too.
-       !-----------------------------------------------------------------------
-
-       piston_velocity = xkw_coeff*u10_sqr(:)
-       xkw_ice(:) = (c1 - ifrac(:)) * piston_velocity
-
-       !-----------------------------------------------------------------------
        !  compute O2 flux
        !-----------------------------------------------------------------------
 
@@ -263,10 +271,6 @@ contains
        !-----------------------------------------------------------------------
 
        if (lflux_gas_co2) then
-
-          schmidt_co2(:) = schmidt_co2_surf(num_elements, sst)
-
-          pv_co2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_co2(:))
 
           !-----------------------------------------------------------------------
           !  Set flux_co2
