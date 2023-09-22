@@ -272,6 +272,8 @@ class MARBL_settings_class(object):
                 if append_to_keys:
                     # Remove PFT-specific key
                     del self._config_keyword[-1]
+        if len(_get_array_info(this_var["_array_shape"], self.settings_dict, self.tracers_dict)) == 0:
+            del self._settings['PFT_derived_types'][variable_name]
 
     ################################################################################
 
