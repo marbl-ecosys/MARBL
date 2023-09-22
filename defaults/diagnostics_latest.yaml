@@ -22,6 +22,8 @@
 ###############
 
 ECOSYS_IFRAC :
+   dependencies :
+      base_bio_on : .true.
    longname : Ice Fraction for base biotic tracer fluxes # Want more consistent capitalization
    units : fraction
    vertical_grid : none
@@ -32,6 +34,8 @@ ECOSYS_IFRAC :
       - average
       - average
 ECOSYS_XKW :
+   dependencies :
+      base_bio_on : .true.
    longname : XKW for base biotic tracer fluxes # Want more consistent capitalization
    units : cm/s
    vertical_grid : none
@@ -42,30 +46,40 @@ ECOSYS_XKW :
       - average
       - average
 ECOSYS_ATM_PRESS :
+   dependencies :
+      base_bio_on : .true.
    longname : Atmospheric Pressure for base biotic tracer fluxes # Want more consistent capitalization
    units : atmospheres
    vertical_grid : none
    frequency : medium
    operator : average
 PV_O2 :
+   dependencies :
+      base_bio_on : .true.
    longname : PV_O2 # Should be "O2 Piston Velocity" to match PV_CO2?
    units : cm/s
    vertical_grid : none
    frequency : never
    operator : average
 SCHMIDT_O2 :
+   dependencies :
+      base_bio_on : .true.
    longname : O2 Schmidt Number
    units : 1
    vertical_grid : none
    frequency : medium
    operator : average
 O2SAT :
+   dependencies :
+      base_bio_on : .true.
    longname : O2 Saturation
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
    operator : average
 CO2STAR : &CO2STAR
+   dependencies :
+      base_bio_on : .true.
    longname : CO2 Star
    units : mmol/m^3
    vertical_grid : none
@@ -75,6 +89,8 @@ CO2STAR_ALT_CO2 :
    << : *CO2STAR
    longname : CO2 Star, Alternate CO2
 DCO2STAR : &DCO2STAR
+   dependencies :
+      base_bio_on : .true.
    longname : D CO2 Star
    units : mmol/m^3
    vertical_grid : none
@@ -84,6 +100,8 @@ DCO2STAR_ALT_CO2 :
    << : *DCO2STAR
    longname : D CO2 Star, Alternative CO2
 pCO2SURF : &pCO2SURF
+   dependencies :
+      base_bio_on : .true.
    longname : surface pCO2
    units : ppmv
    vertical_grid : none
@@ -95,6 +113,8 @@ pCO2SURF_ALT_CO2 :
    frequency : never
    operator : average
 DpCO2 : &DpCO2
+   dependencies :
+      base_bio_on : .true.
    longname : D pCO2 for base biotic tracer fluxes
    units : ppmv
    vertical_grid : none
@@ -110,18 +130,24 @@ DpCO2_ALT_CO2 :
    frequency : medium
    operator : average
 PV_CO2 :
+   dependencies :
+      base_bio_on : .true.
    longname : CO2 Piston Velocity for base biotic tracer fluxes
    units : cm/s
    vertical_grid : none
    frequency : never
    operator : average
 SCHMIDT_CO2 :
+   dependencies :
+      base_bio_on : .true.
    longname : CO2 Schmidt Number for base biotic tracers fluxes
    units : 1
    vertical_grid : none
    frequency : medium
    operator : average
 FG_CO2 : &FG_CO2 # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
+   dependencies :
+      base_bio_on : .true.
    longname : DIC Surface Gas Flux
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -137,6 +163,8 @@ FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
    frequency : medium
    operator : average
 PH : &PH
+   dependencies :
+      base_bio_on : .true.
    longname : Surface pH
    units : 1
    vertical_grid : none
@@ -146,6 +174,8 @@ PH_ALT_CO2 :
    << : *PH
    longname : Surface pH, Alternative CO2
 ATM_CO2 : &ATM_CO2
+   dependencies :
+      base_bio_on : .true.
    longname : Atomspheric CO2
    units : ppmv
    vertical_grid : none
@@ -155,32 +185,167 @@ ATM_ALT_CO2 :
    << : *ATM_CO2
    longname : Atomspheric CO2
 IRON_FLUX :
+   dependencies :
+      base_bio_on : .true.
    longname : Atmospheric Iron Flux
    units : mmol/m^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 DUST_FLUX :
+   dependencies :
+      base_bio_on : .true.
    longname : Dust Flux # Should be "Atmospheric Dust Flux?"
    units : g/cm^2/s
    vertical_grid : none
    frequency : never
    operator : average
 NOx_FLUX :
+   dependencies :
+      base_bio_on : .true.
    longname : Flux of NOx from Atmosphere
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 NHy_FLUX :
+   dependencies :
+      base_bio_on : .true.
    longname : Flux of NHy from Atmosphere
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 NHx_SURFACE_EMIS :
+   dependencies :
+      base_bio_on : .true.
    longname : Emission of NHx to Atmosphere
    units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+
+###############
+# abio module #
+###############
+
+ABIO_IFRAC :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Ice Fraction for Abiotic DIC tracer fluxes
+   units : fraction
+   vertical_grid : none
+   frequency : never
+   operator : average
+ABIO_XKW :
+   dependencies :
+      abio_dic_on : .true.
+   longname : XKW for Abiotic DIC tracer fluxes
+   units : cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+ABIO_ATM_PRESS :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Atmospheric Pressure for Abiotic DIC tracer fluxes
+   units : atmospheres
+   vertical_grid : none
+   frequency : never
+   operator : average
+ABIO_pCO2 :
+   dependencies :
+      abio_dic_on : .true.
+   longname : CO2 atmospheric partial pressure for Abiotic DIC tracer fluxes
+   units : ppm
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_D14Catm : # todo add underscore after D14C to be consistent with CISO version
+   dependencies :
+      abio_dic_on : .true.
+   longname : Atmospheric Delta 14C in permil for Abiotic DIC tracer fluxes
+   units : permil
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_CO2_SCHMIDT : # todo rename ABIO_SCHMIDT_CO2 to match base biotic version
+   dependencies :
+      abio_dic_on : .true.
+   longname : CO2 Schmidt Number for Abiotic DIC tracer fluxes
+   units : 1
+   vertical_grid : none
+   frequency : never
+   operator : average
+ABIO_CO2_PV : # todo rename ABIO_PV_CO2 to match base biotic version
+   dependencies :
+      abio_dic_on : .true.
+   longname : CO2 Piston Velocity for Abiotic DIC tracer fluxes
+   units : cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+ABIO_CO2STAR :
+   dependencies :
+      abio_dic_on : .true.
+   longname : CO2 Star for Abiotic DIC tracer fluxes
+   units : mmol/m^3
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_DCO2STAR :
+   dependencies :
+      abio_dic_on : .true.
+   longname : D CO2 Star for Abiotic DIC tracer fluxes
+   units : mmol/m^3
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_pCO2SURF :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Surface pCO2 for Abiotic DIC tracer fluxes
+   units : ppmv
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_DpCO2 :
+   dependencies :
+      abio_dic_on : .true.
+   longname : D pCO2 for Abiotic DIC tracer fluxes
+   units : ppmv
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_PH_SURF : # todo: for base biotic tracers, there is no _SURF
+   dependencies :
+      abio_dic_on : .true.
+   longname : Surface pH for Abiotic DIC tracer fluxes
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+ABIO_ALK_SURF :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Surface Alkalinity for Abiotic DIC tracer fluxes
+   units : meq/m^3
+   vertical_grid : none
+   frequency : medium
+   operator : average
+FG_ABIO_DIC :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Surface gas flux of abiotic DIC
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+FG_ABIO_DIC14 :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Surface gas flux of abiotic DI14C
+   units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
@@ -327,114 +492,152 @@ CISO_R14C_atm :
 ###############
 
 zsatcalc :
+   dependencies :
+      base_bio_on : .true.
    longname : Calcite Saturation Depth
    units : cm
    vertical_grid : none
    frequency : medium
    operator : average
 zsatarag :
+   dependencies :
+      base_bio_on : .true.
    longname : Aragonite Saturation Depth
    units : cm
    vertical_grid : none
    frequency : medium
    operator : average
 O2_ZMIN :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Minimum of O2
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
    operator : average
 O2_ZMIN_DEPTH :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Minimum of O2
    units : cm
    vertical_grid : none
    frequency : medium
    operator : average
 photoC_TOT_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Total C Fixation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 photoC_TOT_zint_100m :
+   dependencies :
+      base_bio_on : .true.
    longname : Total C Fixation Vertical Integral, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 photoC_NO3_TOT_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Total C Fixation from NO3 Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 photoC_NO3_TOT_zint_100m :
+   dependencies :
+      base_bio_on : .true.
    longname : Total C Fixation from NO3 Vertical Integral, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 DOC_prod_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of DOC Production
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 DOC_prod_zint_100m :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of DOC Production, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 DOC_remin_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of DOC Remineralization
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 DOC_remin_zint_100m :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of DOC Remineralization, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 DOCr_remin_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of DOCr Remineralization
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 DOCr_remin_zint_100m :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of DOCr Remineralization, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 Jint_Ctot :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ctot
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never
    operator : average
 Jint_Ntot :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ntot
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never
    operator : average
 Jint_Ptot :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Ptot
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never
    operator : average
 Jint_Sitot :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Sitot
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never
    operator : average
 Jint_Fetot :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of Conservative Subterms of Source Sink Term for Fetot
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -443,24 +646,32 @@ Jint_Fetot :
 
 # Particulate 2D diags
 calcToFloor :
+   dependencies :
+      base_bio_on : .true.
    longname : CaCO3 Flux Hitting Sea Floor
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : never
    operator : average
 calcToSed :
+   dependencies :
+      base_bio_on : .true.
    longname : CaCO3 Flux to Sediments
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 calcToSed_ALT_CO2 :
+   dependencies :
+      base_bio_on : .true.
    longname : CaCO3 Flux to Sediments, Alternative CO2
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 pocToFloor :
+   dependencies :
+      base_bio_on : .true.
    longname : POC Flux Hitting Sea Floor
    units : nmol/cm^2/s
    vertical_grid : none
@@ -471,54 +682,72 @@ pocToFloor :
       - average
       - average
 pocToSed :
+   dependencies :
+      base_bio_on : .true.
    longname : POC Flux to Sediments
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 ponToSed :
+   dependencies :
+      base_bio_on : .true.
    longname : nitrogen burial Flux to Sediments
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 SedDenitrif :
+   dependencies :
+      base_bio_on : .true.
    longname : nitrogen loss in Sediments
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 OtherRemin :
+   dependencies :
+      base_bio_on : .true.
    longname : non-oxic,non-dentr remin in Sediments
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : never
    operator : average
 popToSed :
+   dependencies :
+      base_bio_on : .true.
    longname : phosphorus Flux to Sediments
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 bsiToSed :
+   dependencies :
+      base_bio_on : .true.
    longname : biogenic Si Flux to Sediments
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 dustToSed :
+   dependencies :
+      base_bio_on : .true.
    longname : dust Flux to Sediments
    units : g/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 pfeToSed :
+   dependencies :
+      base_bio_on : .true.
    longname : pFe Flux to Sediments
    units : nmol/cm^2/s
    vertical_grid : none
    frequency : medium
    operator : average
 CaCO3_form_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Total CaCO3 Formation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -529,6 +758,8 @@ CaCO3_form_zint :
       - average
       - average
 CaCO3_form_zint_100m :
+   dependencies :
+      base_bio_on : .true.
    longname : Total CaCO3 Formation Vertical Integral, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -537,84 +768,112 @@ CaCO3_form_zint_100m :
 
 # General 3D diags
 insitu_temp :
+   dependencies :
+      base_bio_on : .true.
    longname : in situ temperature
    units : degC
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CO3 :
+   dependencies :
+      base_bio_on : .true.
    longname : Carbonate Ion Concentration
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 HCO3 :
+   dependencies :
+      base_bio_on : .true.
    longname : Bicarbonate Ion Concentration
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 H2CO3 :
+   dependencies :
+      base_bio_on : .true.
    longname : Carbonic Acid Concentration
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 pH_3D :
+   dependencies :
+      base_bio_on : .true.
    longname : pH
    units : 1
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CO3_ALT_CO2 :
+   dependencies :
+      base_bio_on : .true.
    longname : Carbonate Ion Concentration, Alternative CO2
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : never
    operator : average
 HCO3_ALT_CO2 :
+   dependencies :
+      base_bio_on : .true.
    longname : Bicarbonate Ion Concentration, Alternative CO2
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : never
    operator : average
 H2CO3_ALT_CO2 :
+   dependencies :
+      base_bio_on : .true.
    longname : Carbonic Acid Concentration, Alternative CO2
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : never
    operator : average
 pH_3D_ALT_CO2 :
+   dependencies :
+      base_bio_on : .true.
    longname : pH, Alternative CO2
    units : 1
    vertical_grid : layer_avg
    frequency : never
    operator : average
 co3_sat_calc :
+   dependencies :
+      base_bio_on : .true.
    longname : CO3 concentration at calcite saturation
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 co3_sat_arag :
+   dependencies :
+      base_bio_on : .true.
    longname : CO3 concentration at aragonite saturation
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 NITRIF :
+   dependencies :
+      base_bio_on : .true.
    longname : Nitrification
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DENITRIF :
+   dependencies :
+      base_bio_on : .true.
    longname : Denitrification
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 O2_PRODUCTION :
+   dependencies :
+      base_bio_on : .true.
    longname : O2 Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
@@ -622,6 +881,7 @@ O2_PRODUCTION :
    operator : average
 O2_CONSUMPTION_SCALEF :
    dependencies :
+      base_bio_on : .true.
       lo2_consumption_scalef : .true.
    longname : O2 Consumption Scale Factor
    units : 1
@@ -629,150 +889,200 @@ O2_CONSUMPTION_SCALEF :
    frequency : never
    operator : average
 O2_CONSUMPTION :
+   dependencies :
+      base_bio_on : .true.
    longname : O2 Consumption
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 AOU :
+   dependencies :
+      base_bio_on : .true.
    longname : Apparent O2 Utilization
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 PAR_avg :
+   dependencies :
+      base_bio_on : .true.
    longname : PAR Average over Model Cell
    units : W/m^2
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 graze_auto_TOT :
+   dependencies :
+      base_bio_on : .true.
    longname : Total Autotroph Grazing
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 photoC_TOT :
+   dependencies :
+      base_bio_on : .true.
    longname : Total C Fixation
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 photoC_NO3_TOT :
+   dependencies :
+      base_bio_on : .true.
    longname : Total C Fixation from NO3
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DOC_prod :
+   dependencies :
+      base_bio_on : .true.
    longname : DOC Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DOC_remin :
+   dependencies :
+      base_bio_on : .true.
    longname : DOC Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 DOCr_remin :
+   dependencies :
+      base_bio_on : .true.
    longname : DOCr Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 DON_prod :
+   dependencies :
+      base_bio_on : .true.
    longname : DON Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DON_remin :
+   dependencies :
+      base_bio_on : .true.
    longname : DON Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 DONr_remin :
+   dependencies :
+      base_bio_on : .true.
    longname : DONr Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 DOP_prod :
+   dependencies :
+      base_bio_on : .true.
    longname : DOP Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 DOP_remin :
+   dependencies :
+      base_bio_on : .true.
    longname : DOP Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 DOPr_remin :
+   dependencies :
+      base_bio_on : .true.
    longname : DOPr Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 DOP_loss_P_bal :
+   dependencies :
+      base_bio_on : .true.
    longname : DOP loss, due to P budget balancing
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : never
    operator : average
 Fe_scavenge :
+   dependencies :
+      base_bio_on : .true.
    longname : Iron Scavenging
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Fe_scavenge_rate :
+   dependencies :
+      base_bio_on : .true.
    longname : Iron Scavenging Rate
    units : 1/y
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Lig_prod :
+   dependencies :
+      base_bio_on : .true.
    longname : Production of Fe-binding Ligand
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Lig_loss :
+   dependencies :
+      base_bio_on : .true.
    longname : Loss of Fe-binding Ligand
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Lig_scavenge :
+   dependencies :
+      base_bio_on : .true.
    longname : Fe not bound to Ligand
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Fefree :
+   dependencies :
+      base_bio_on : .true.
    longname : Fe not bound to Ligand
    units : mmol/m^3
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Lig_photochem :
+   dependencies :
+      base_bio_on : .true.
    longname : Loss of Fe-binding Ligand from UV radiation
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 Lig_deg :
+   dependencies :
+      base_bio_on : .true.
    longname : Loss of Fe-binding Ligand from Bacterial Degradation
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 FESEDFLUX :
+   dependencies :
+      base_bio_on : .true.
    longname : Iron Sediment Flux
    units : nmol/cm^2/s
    vertical_grid : layer_avg
@@ -781,90 +1091,120 @@ FESEDFLUX :
 
 # Particulate 2D diags
 POC_FLUX_((particulate_flux_ref_depth_str)) :
+   dependencies :
+      base_bio_on : .true.
    longname : POC Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 POP_FLUX_((particulate_flux_ref_depth_str)) :
+   dependencies :
+      base_bio_on : .true.
    longname : POP Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CaCO3_FLUX_((particulate_flux_ref_depth_str)) :
+   dependencies :
+      base_bio_on : .true.
    longname : CaCO3 Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 SiO2_FLUX_((particulate_flux_ref_depth_str)) :
+   dependencies :
+      base_bio_on : .true.
    longname : SiO2 Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 P_iron_FLUX_((particulate_flux_ref_depth_str)) :
+   dependencies :
+      base_bio_on : .true.
    longname : P_iron Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 POC_PROD_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of POC Production
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 POC_PROD_zint_100m :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of POC Production, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 POC_REMIN_DOCr_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of POC Remineralization routed to DOCr
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 POC_REMIN_DOCr_zint_100m :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of POC Remineralization routed to DOCr, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 POC_REMIN_DIC_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of POC Remineralization routed to DIC
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 POC_REMIN_DIC_zint_100m :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of POC Remineralization routed to DIC, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CaCO3_PROD_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of CaCO3 Production
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CaCO3_PROD_zint_100m :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of CaCO3 Production, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CaCO3_REMIN_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of CaCO3 Remineralization
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
 CaCO3_REMIN_zint_100m :
+   dependencies :
+      base_bio_on : .true.
    longname : Vertical Integral of CaCO3 Remineralization, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -874,6 +1214,7 @@ CaCO3_REMIN_zint_100m :
 # Particulate 3D diags
 P_REMIN_SCALEF :
    dependencies :
+      base_bio_on : .true.
       lp_remin_scalef : .true.
    longname : Particulate Remin Scale Factor
    units : 1
@@ -881,174 +1222,232 @@ P_REMIN_SCALEF :
    frequency : never
    operator : average
 POC_FLUX_IN :
+   dependencies :
+      base_bio_on : .true.
    longname : POC Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 POC_sFLUX_IN :
+   dependencies :
+      base_bio_on : .true.
    longname : POC sFlux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : never
    operator : average
 POC_hFLUX_IN :
+   dependencies :
+      base_bio_on : .true.
    longname : POC hFlux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : never
    operator : average
 POC_PROD :
+   dependencies :
+      base_bio_on : .true.
    longname : POC Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 POC_REMIN_DOCr :
+   dependencies :
+      base_bio_on : .true.
    longname : POC Remineralization routed to DOCr
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 POC_REMIN_DIC :
+   dependencies :
+      base_bio_on : .true.
    longname : POC Remineralization routed to DIC
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 POP_FLUX_IN :
+   dependencies :
+      base_bio_on : .true.
    longname : POP Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 POP_PROD :
+   dependencies :
+      base_bio_on : .true.
    longname : POP Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 POP_REMIN_DOPr :
+   dependencies :
+      base_bio_on : .true.
    longname : POP Remineralization routed to DOPr
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 POP_REMIN_PO4 :
+   dependencies :
+      base_bio_on : .true.
    longname : POP Remineralization routed to PO4
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 PON_REMIN_DONr :
+   dependencies :
+      base_bio_on : .true.
    longname : PON Remineralization routed to DONr
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 PON_REMIN_NH4 :
+   dependencies :
+      base_bio_on : .true.
    longname : PON Remineralization routed to NH4
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 CaCO3_FLUX_IN :
+   dependencies :
+      base_bio_on : .true.
    longname : CaCO3 Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 CaCO3_PROD :
+   dependencies :
+      base_bio_on : .true.
    longname : CaCO3 Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 CaCO3_REMIN :
+   dependencies :
+      base_bio_on : .true.
    longname : CaCO3 Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 CaCO3_ALT_CO2_FLUX_IN :
+   dependencies :
+      base_bio_on : .true.
    longname : CaCO3 Flux into Cell, Alternative CO2
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 CaCO3_ALT_CO2_PROD :
+   dependencies :
+      base_bio_on : .true.
    longname : CaCO3 Production, Alternative CO2
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : never
    operator : average
 CaCO3_ALT_CO2_REMIN :
+   dependencies :
+      base_bio_on : .true.
    longname : CaCO3 Remineralization, Alternative CO2
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 SiO2_FLUX_IN :
+   dependencies :
+      base_bio_on : .true.
    longname : SiO2 Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 SiO2_PROD :
+   dependencies :
+      base_bio_on : .true.
    longname : SiO2 Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 SiO2_REMIN :
+   dependencies :
+      base_bio_on : .true.
    longname : SiO2 Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : never
    operator : average
 dust_FLUX_IN :
+   dependencies :
+      base_bio_on : .true.
    longname : Dust Flux into Cell
    units : g/cm^2/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 dust_REMIN :
+   dependencies :
+      base_bio_on : .true.
    longname : Dust Remineralization
    units : g/cm^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 P_iron_FLUX_IN :
+   dependencies :
+      base_bio_on : .true.
    longname : P_iron Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 P_iron_PROD :
+   dependencies :
+      base_bio_on : .true.
    longname : P_iron Production
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 P_iron_REMIN :
+   dependencies :
+      base_bio_on : .true.
    longname : P_iron Remineralization
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 bSi_form :
+   dependencies :
+      base_bio_on : .true.
    longname : Total Si Uptake
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
 CaCO3_form :
+   dependencies :
+      base_bio_on : .true.
    longname : Total CaCO3 Formation
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : low
    operator : average
 Nfix :
+   dependencies :
+      base_bio_on : .true.
    longname : Total N Fixation
    units : mmol/m^3/s
    vertical_grid : layer_avg
@@ -1059,127 +1458,6 @@ Nfix :
 # abio module #
 ###############
 
-# 2D fields
-ABIO_IFRAC :
-   dependencies :
-      abio_dic_on : .true.
-   longname : Ice Fraction for Abiotic DIC tracer fluxes
-   units : fraction
-   vertical_grid : none
-   frequency : never
-   operator : average
-ABIO_XKW :
-   dependencies :
-      abio_dic_on : .true.
-   longname : XKW for Abiotic DIC tracer fluxes
-   units : cm/s
-   vertical_grid : none
-   frequency : never
-   operator : average
-ABIO_ATM_PRESS :
-   dependencies :
-      abio_dic_on : .true.
-   longname : Atmospheric Pressure for Abiotic DIC tracer fluxes
-   units : atmospheres
-   vertical_grid : none
-   frequency : never
-   operator : average
-ABIO_pCO2 :
-   dependencies :
-      abio_dic_on : .true.
-   longname : CO2 atmospheric partial pressure for Abiotic DIC tracer fluxes
-   units : ppm
-   vertical_grid : none
-   frequency : medium
-   operator : average
-ABIO_D14Catm : # todo add underscore after D14C to be consistent with CISO version
-   dependencies :
-      abio_dic_on : .true.
-   longname : Atmospheric Delta 14C in permil for Abiotic DIC tracer fluxes
-   units : permil
-   vertical_grid : none
-   frequency : medium
-   operator : average
-ABIO_CO2_SCHMIDT : # todo rename ABIO_SCHMIDT_CO2 to match base biotic version
-   dependencies :
-      abio_dic_on : .true.
-   longname : CO2 Schmidt Number for Abiotic DIC tracer fluxes
-   units : 1
-   vertical_grid : none
-   frequency : never
-   operator : average
-ABIO_CO2_PV : # todo rename ABIO_PV_CO2 to match base biotic version
-   dependencies :
-      abio_dic_on : .true.
-   longname : CO2 Piston Velocity for Abiotic DIC tracer fluxes
-   units : cm/s
-   vertical_grid : none
-   frequency : never
-   operator : average
-ABIO_CO2STAR :
-   dependencies :
-      abio_dic_on : .true.
-   longname : CO2 Star for Abiotic DIC tracer fluxes
-   units : mmol/m^3
-   vertical_grid : none
-   frequency : medium
-   operator : average
-ABIO_DCO2STAR :
-   dependencies :
-      abio_dic_on : .true.
-   longname : D CO2 Star for Abiotic DIC tracer fluxes
-   units : mmol/m^3
-   vertical_grid : none
-   frequency : medium
-   operator : average
-ABIO_pCO2SURF :
-   dependencies :
-      abio_dic_on : .true.
-   longname : Surface pCO2 for Abiotic DIC tracer fluxes
-   units : ppmv
-   vertical_grid : none
-   frequency : medium
-   operator : average
-ABIO_DpCO2 :
-   dependencies :
-      abio_dic_on : .true.
-   longname : D pCO2 for Abiotic DIC tracer fluxes
-   units : ppmv
-   vertical_grid : none
-   frequency : medium
-   operator : average
-ABIO_PH_SURF : # todo: for base biotic tracers, there is no _SURF
-   dependencies :
-      abio_dic_on : .true.
-   longname : Surface pH for Abiotic DIC tracer fluxes
-   units : 1
-   vertical_grid : none
-   frequency : medium
-   operator : average
-ABIO_ALK_SURF :
-   dependencies :
-      abio_dic_on : .true.
-   longname : Surface Alkalinity for Abiotic DIC tracer fluxes
-   units : meq/m^3
-   vertical_grid : none
-   frequency : medium
-   operator : average
-FG_ABIO_DIC :
-   dependencies :
-      abio_dic_on : .true.
-   longname : Surface gas flux of abiotic DIC
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
-   operator : average
-FG_ABIO_DIC14 :
-   dependencies :
-      abio_dic_on : .true.
-   longname : Surface gas flux of abiotic DI14C
-   units : mmol/m^3 cm/s
-   vertical_grid : none
-   frequency : medium
-   operator : average
 ABIO_D14Cocn : # todo add underscore after D14C to be consistent with CISO version
    dependencies :
       abio_dic_on : .true.

@@ -249,27 +249,6 @@ _tracer_list :
 ################################################################################
 
 general_parms :
-   PFT_defaults :
-      longname : Define how PFTs are initialized
-      subcategory : 1. config PFTs
-      units : unitless
-      datatype : string
-      default_value : CESM2
-      valid_values :
-            - CESM2
-            - user-specified
-      _CESM2_PFT_keys :
-         autotroph_settings :
-            - sp
-            - diat
-            - diaz
-         zooplankton_settings :
-            - zoo
-         grazing_relationship_settings :
-            - sp_zoo
-            - diat_zoo
-            - diaz_zoo
-      _append_to_config_keywords : true
    base_bio_on :
       longname : Control whether the base ecosystem tracer module is active
       subcategory : 2. config flags
@@ -687,6 +666,30 @@ general_parms :
 ################################################################################
 
 general_parms2 :
+   PFT_defaults :
+      longname : Define how PFTs are initialized
+      subcategory : 1. config PFTs
+      units : unitless
+      datatype : string
+      default_value :
+         default : CESM2
+         not base_bio_on : None
+      valid_values :
+            - CESM2
+            - None
+            - user-specified
+      _CESM2_PFT_keys :
+         autotroph_settings :
+            - sp
+            - diat
+            - diaz
+         zooplankton_settings :
+            - zoo
+         grazing_relationship_settings :
+            - sp_zoo
+            - diat_zoo
+            - diaz_zoo
+      _append_to_config_keywords : true
    init_bury_coeff_opt :
       longname : Source of initial burial coefficient
       subcategory : 3. config strings
@@ -716,7 +719,7 @@ PFT_counts :
       default_value :
          default : 1
          PFT_defaults == "CESM2" : 3
-         not base_bio_on : 0
+         PFT_defaults == "None" : 0
       cannot change : PFT_defaults == 'CESM2'
       must set : PFT_defaults == 'user-specified'
    zooplankton_cnt :
@@ -727,7 +730,7 @@ PFT_counts :
       default_value :
          default : 1
          PFT_defaults == "CESM2" : 1
-         not base_bio_on : 0
+         PFT_defaults == "None" : 0
    max_grazer_prey_cnt :
       longname : Number of grazer prey classes
       subcategory : 1. config PFTs
@@ -736,7 +739,7 @@ PFT_counts :
       default_value :
          default : 1
          PFT_defaults == "CESM2" : 3
-         not base_bio_on : 0
+         PFT_defaults == "None" : 0
 
 ################################################################################
 #                         Category 3: PFT_derived_types                        #

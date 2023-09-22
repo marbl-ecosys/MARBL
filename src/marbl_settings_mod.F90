@@ -498,6 +498,14 @@ contains
       PFT_defaults = 'user-specified'
     end if
 
+    if ((.not. base_bio_on) .and. (trim(PFT_defaults) .ne. 'None')) then
+      write(log_message, '(4A)') 'PFT_defaults = "', trim(PFT_defaults), &
+                                 '" in input file, but being treated as "None"', &
+                                 ' since base_bio_on = .false.'
+      call marbl_status_log%log_noerror(log_message, subname)
+      PFT_defaults = 'None'
+    end if
+
     select case (trim(PFT_defaults))
       case ('CESM2')
         autotroph_cnt                 = 3
@@ -508,6 +516,11 @@ contains
         autotroph_cnt                 = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
         zooplankton_cnt               = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
         max_grazer_prey_cnt           = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+      case ('None')
+        ! User must change these with put_setting()
+        autotroph_cnt                 = 0        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+        zooplankton_cnt               = 0        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+        max_grazer_prey_cnt           = 0        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
       case DEFAULT
         write(log_message, "(3A)") "'", trim(PFT_defaults), "' is not a valid value for PFT_defaults"
         call marbl_status_log%log_error(log_message, subname)
@@ -542,6 +555,7 @@ contains
         call grazing_relationship_settings(1,1)%set_to_default('sp_zoo', marbl_status_log)
         call grazing_relationship_settings(2,1)%set_to_default('diat_zoo', marbl_status_log)
         call grazing_relationship_settings(3,1)%set_to_default('diaz_zoo', marbl_status_log)
+      case ('None')
       case ('user-specified')
         do m=1,autotroph_cnt
           call autotroph_settings(m)%set_to_default('unset', marbl_status_log)
