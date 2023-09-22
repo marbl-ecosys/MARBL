@@ -5,7 +5,8 @@
          "datatype": "integer",
          "default_value": {
             "PFT_defaults == \"CESM2\"": 3,
-            "default": 1
+            "default": 1,
+            "not base_bio_on": 0
          },
          "longname": "Number of autotroph classes",
          "must set": "PFT_defaults == 'user-specified'",
@@ -16,7 +17,8 @@
          "datatype": "integer",
          "default_value": {
             "PFT_defaults == \"CESM2\"": 3,
-            "default": 1
+            "default": 1,
+            "not base_bio_on": 0
          },
          "longname": "Number of grazer prey classes",
          "subcategory": "1. config PFTs",
@@ -26,7 +28,8 @@
          "datatype": "integer",
          "default_value": {
             "PFT_defaults == \"CESM2\"": 1,
-            "default": 1
+            "default": 1,
+            "not base_bio_on": 0
          },
          "longname": "Number of zooplankton classes",
          "subcategory": "1. config PFTs",
@@ -986,6 +989,7 @@
          "units": "unitless"
       },
       "base_bio_on": {
+         "_append_to_config_keywords": true,
          "datatype": "logical",
          "default_value": ".true.",
          "longname": "Control whether the base ecosystem tracer module is active",
@@ -1461,8 +1465,8 @@
                "ALK",
                "ALK_ALT_CO2"
             ],
-            "base_bio_on == .false.": "",
-            "default": ""
+            "default": "",
+            "not base_bio_on": ""
          },
          "longname": "Tracer names for tracers that are restored",
          "subcategory": "20. tracer restoring",

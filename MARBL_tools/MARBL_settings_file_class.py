@@ -48,6 +48,15 @@ class MARBL_settings_class(object):
         for cat_name in self.get_category_names():
             for var_name in self.get_variable_names(cat_name):
                 self._process_variable_value(cat_name, var_name, unit_system)
+            # 5a. Need to make sure base_bio_on appears after PFT_default in config_keywords
+            #     So that it takes precedence when setting autotroph_cnt, zooplankton_cnt, and
+            #     max_grazer_prey_cnt
+            config_keywords = self._config_keyword
+            if cat_name == "general_parms":
+                for n, key in enumerate(config_keywords):
+                    if 'base_bio' in key:
+                        self._config_keyword.pop(n)
+                        self._config_keyword.append(key)
             # 5b. Need tracer count after determining PFT_derived_types, which means
             #     determining which tracers are active
             if cat_name == "PFT_derived_types":
@@ -272,6 +281,8 @@ class MARBL_settings_class(object):
                 if append_to_keys:
                     # Remove PFT-specific key
                     del self._config_keyword[-1]
+
+        # If array is length 0, remove it from settings dictionary
         if len(_get_array_info(this_var["_array_shape"], self.settings_dict, self.tracers_dict)) == 0:
             del self._settings['PFT_derived_types'][variable_name]
 

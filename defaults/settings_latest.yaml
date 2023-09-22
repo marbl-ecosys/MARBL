@@ -276,6 +276,7 @@ general_parms :
       units : unitless
       datatype : logical
       default_value : .true.
+      _append_to_config_keywords : true
    abio_dic_on :
       longname : Control whether abiotic carbon tracer module is active
       subcategory : 2. config flags
@@ -715,6 +716,7 @@ PFT_counts :
       default_value :
          default : 1
          PFT_defaults == "CESM2" : 3
+         not base_bio_on : 0
       cannot change : PFT_defaults == 'CESM2'
       must set : PFT_defaults == 'user-specified'
    zooplankton_cnt :
@@ -725,6 +727,7 @@ PFT_counts :
       default_value :
          default : 1
          PFT_defaults == "CESM2" : 1
+         not base_bio_on : 0
    max_grazer_prey_cnt :
       longname : Number of grazer prey classes
       subcategory : 1. config PFTs
@@ -733,6 +736,7 @@ PFT_counts :
       default_value :
          default : 1
          PFT_defaults == "CESM2" : 3
+         not base_bio_on : 0
 
 ################################################################################
 #                         Category 3: PFT_derived_types                        #
@@ -1265,4 +1269,4 @@ tracer_dependent :
             - 'ALK_ALT_CO2'
          GRID == "CESM_x3" : *CESM_TRACER_RESTORE
          GRID == "CESM_x1" : *CESM_TRACER_RESTORE
-         base_bio_on == .false.: ''
+         not base_bio_on : ''
