@@ -1,0 +1,173 @@
++++ b/defaults/settings_latest+4p2z.yaml
++   - tracer_modules
++   ABIO_DIC :
++      dependencies :
++         abio_dic_on : .true.
++      long_name : Abiotic Dissolved Inorganic Carbon
++      units : mmol/m^3
++   ABIO_DI14C :
++      dependencies :
++         abio_dic_on : .true.
++      long_name : Abiotic Dissolved Inorganic Carbon-14
++      units : mmol/m^3
++   # Non-living (abiotic only)
++#                        Category 0: Tracer Modules                            #
++tracer_modules :
++      subcategory : 1. tracer modules
++      subcategory : 1. tracer modules
++      subcategory : 1. tracer modules
++
++################################################################################
++#                        Category 1: General Parameters                        #
++################################################################################
++
++general_parms :
++   PFT_defaults :
++      defined_if : base_bio_on
++      longname : Define how PFTs are initialized
++      subcategory : 2. config PFTs
++      units : unitless
++      datatype : string
++      default_value : CESM2+cocco
++      valid_values :
++            - CESM2+cocco
++            - user-specified
++      _CESM2+cocco_PFT_keys :
++         autotroph_settings :
++            - sp
++            - diat
++            - diaz
++            - cocco
++         zooplankton_settings :
++            - zoo
++         grazing_relationship_settings :
++            - sp_zoo
++            - diat_zoo
++            - diaz_zoo
++            - cocco_zoo
++      _append_to_config_keywords : true
++      subcategory : 3. config flags
++      defined_if : ciso_on
++      subcategory : 3. config flags
++      subcategory : 3. config flags
++      subcategory : 3. config flags
++      defined_if : base_bio_on
++      subcategory : 3. config flags
++      defined_if : base_bio_on
++      subcategory : 3. config flags
++      defined_if : base_bio_on
++      subcategory : 3. config flags
++      defined_if : base_bio_on
++      subcategory : 3. config flags
++      defined_if : base_bio_on
++      subcategory : 3. config flags
++      defined_if : base_bio_on
++      subcategory : 3. config flags
++      defined_if : base_bio_on
++      subcategory : 3. config flags
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (nitrification)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (nitrification)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (bury coeffs)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (bury coeffs)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (bury coeffs)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (scavenging)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (scavenging)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (scavenging)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (dissolution)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (dissolution)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (dissolution)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 6. Scale lengths
++      defined_if : base_bio_on
++      subcategory : 6. Scale lengths
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (bury coeffs)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (bury coeffs)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters (bury coeffs)
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 5. general parameters
++      defined_if : base_bio_on
++      subcategory : 4. config strings
++      defined_if : base_bio_on
++      subcategory : 2. config PFTs
++      defined_if : base_bio_on
++      subcategory : 2. config PFTs
++      defined_if : base_bio_on
++      subcategory : 2. config PFTs

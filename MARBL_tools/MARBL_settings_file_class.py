@@ -239,7 +239,7 @@ class MARBL_settings_class(object):
                 append_to_keys = 'PFT_defaults == "{}"'.format(valid_PFT_default) in self._config_keyword
                 if append_to_keys:
                     settings_key = '_{}_PFT_keys'.format(valid_PFT_default)
-                    PFT_keys = self._settings['general_parms2']['PFT_defaults'][settings_key][variable_name]
+                    PFT_keys = self._settings['general_parms']['PFT_defaults'][settings_key][variable_name]
                     break
 
         # Is the derived type an array? If so, treat each entry separately
@@ -288,6 +288,11 @@ class MARBL_settings_class(object):
             is populated with a list of all the keys added to self.settings_dict for this variable
             (just varname for scalars, but multiple keys for arrays)
         """
+
+        # Return immediately if variable should not be settings file
+        if 'defined_if' in this_var:
+            if this_var['defined_if'] not in self._config_keyword:
+                return
 
         # Keys copied out of the settings file into settings_dict[varname]['attrs']
         settings_dict_attrs = ['longname', 'units']
@@ -501,7 +506,7 @@ def _sort_with_specific_suffix_first(list_in, suffix=None, sort_key=lambda s: s.
 
 ################################################################################
 
-def _get_value(val_in, settings_dict, tracers_dict, dict_prefix=''):
+def _get_value(val_in, settings_dict, tracers_dict, dict_prefix='', return_zero_for_unfound=False):
     """ Translate val_in (which may be a variable name) to an integer value
     """
 
@@ -527,6 +532,8 @@ def _get_value(val_in, settings_dict, tracers_dict, dict_prefix=''):
             try:
                 val_out = settings_dict[val_in]['value']
             except:
+                if return_zero_for_unfound:
+                    return 0
                 logger.error('Unknown variable name in _get_value: %s' % val_in)
                 MARBL_tools.abort(1)
         return val_out
@@ -558,13 +565,13 @@ def _get_array_info(array_size_in, settings_dict, tracers_dict, dict_prefix=''):
             logger.error("_get_array_info() only supports 1D and 2D arrays")
             MARBL_tools.abort(1)
 
-        for i in range(0, _get_value(array_size_in[0], settings_dict, tracers_dict, dict_prefix)):
-            for j in range(0, _get_value(array_size_in[1], settings_dict, tracers_dict, dict_prefix)):
+        for i in range(0, _get_value(array_size_in[0], settings_dict, tracers_dict, dict_prefix, return_zero_for_unfound=True)):
+            for j in range(0, _get_value(array_size_in[1], settings_dict, tracers_dict, dict_prefix, return_zero_for_unfound=True)):
                 str_index.append("(%d,%d)" % (i+1,j+1))
         return str_index
 
     # How many elements? May be an integer or an entry in self.settings_dict
-    for i in range(0, _get_value(array_size_in, settings_dict, tracers_dict, dict_prefix)):
+    for i in range(0, _get_value(array_size_in, settings_dict, tracers_dict, dict_prefix, return_zero_for_unfound=True)):
         str_index.append("(%d)" % (i+1))
     return str_index
 

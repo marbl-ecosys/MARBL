@@ -47,23 +47,34 @@ def expand_template_value(key_name, MARBL_settings, unit_system, unprocessed_dic
 
     template = re.search('\(\(.*\)\)', key_name).group()
     template_fill_dict = dict()
+
+    # Find counts
+    try:
+        autotroph_cnt = MARBL_settings.settings_dict['autotroph_cnt']['value']
+    except:
+        autotroph_cnt = 0
+    try:
+        zooplankton_cnt = MARBL_settings.settings_dict['zooplankton_cnt']['value']
+    except:
+        zooplankton_cnt = 0
+
     if template == '((tracer_short_name))':
         fill_source = 'tracers'
         # diag name will replace template with key_fill_vals
         loop_for_replacement = MARBL_settings.tracers_dict.keys()
     elif template == '((autotroph_sname))':
         fill_source = 'autotrophs'
-        loop_for_replacement = range(1,MARBL_settings.settings_dict['autotroph_cnt']['value']+1)
+        loop_for_replacement = range(1,autotroph_cnt+1)
     elif template == '((zooplankton_sname))':
         fill_source = 'zooplankton'
-        loop_for_replacement = range(1,MARBL_settings.settings_dict['zooplankton_cnt']['value']+1)
+        loop_for_replacement = range(1,zooplankton_cnt+1)
     elif '_((zooplankton_sname))' in template:
         first_half = re.search('\(\(.*\)\)_', template).group()[:-1]
         if first_half == '((autotroph_sname))':
-            loop_for_replacement = range(1,(MARBL_settings.settings_dict['autotroph_cnt']['value'] * MARBL_settings.settings_dict['zooplankton_cnt']['value'])+1)
+            loop_for_replacement = range(1,(autotroph_cnt * zooplankton_cnt)+1)
             fill_source = 'phyto_graze_zoo'
         elif first_half == '((zooplankton_sname))':
-            loop_for_replacement = range(1, (MARBL_settings.settings_dict['zooplankton_cnt']['value'] * MARBL_settings.settings_dict['zooplankton_cnt']['value'])+1)
+            loop_for_replacement = range(1, (zooplankton_cnt * zooplankton_cnt)+1)
             fill_source = 'zoo_graze_zoo'
     elif template == '((particulate_flux_ref_depth_str))':
         fill_source = 'strings'
@@ -112,17 +123,17 @@ def expand_template_value(key_name, MARBL_settings, unit_system, unprocessed_dic
             key_fill_val = MARBL_settings.settings_dict[zoo_prefix + "sname"]['value'].strip('"')
             template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict[zoo_prefix + "lname"]['value'].strip('"')
         elif fill_source == 'phyto_graze_zoo':
-            auto_ind = (item-1) % MARBL_settings.settings_dict['autotroph_cnt']['value'] + 1
+            auto_ind = (item-1) % autotroph_cnt + 1
             auto_prefix = "autotroph_settings(%d)%%" % auto_ind
-            zoo_ind = (item-1) // MARBL_settings.settings_dict['autotroph_cnt']['value'] + 1
+            zoo_ind = (item-1) // autotroph_cnt + 1
             zoo_prefix = "zooplankton_settings(%d)%%" % zoo_ind
             key_fill_val = MARBL_settings.settings_dict[auto_prefix + "sname"]['value'].strip('"') + '_' + MARBL_settings.settings_dict[zoo_prefix + "sname"]['value'].strip('"')
             template_fill_dict['((autotroph_lname))'] = MARBL_settings.settings_dict[auto_prefix + "lname"]['value'].strip('"')
             template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict[zoo_prefix + "lname"]['value'].strip('"')
         elif fill_source == 'zoo_graze_zoo':
-            zoo_ind1 = (item-1) % MARBL_settings.settings_dict['zooplankton_cnt']['value'] + 1
+            zoo_ind1 = (item-1) % zooplankton_cnt + 1
             zoo_prefix1 = "zooplankton_settings(%d)%%" % zoo_ind1
-            zoo_ind2 = (item-1) // MARBL_settings.settings_dict['zooplankton_cnt']['value'] + 1
+            zoo_ind2 = (item-1) // zooplankton_cnt + 1
             zoo_prefix2 = "zooplankton_settings(%d)%%" % zoo_ind2
             key_fill_val = MARBL_settings.settings_dict[zoo_prefix1 + "sname"]['value'].strip('"') + '_' + MARBL_settings.settings_dict[zoo_prefix2 + "sname"]['value'].strip('"')
             template_fill_dict['((zooplankton_lname))1'] = MARBL_settings.settings_dict[zoo_prefix1 + "lname"]['value'].strip('"')
