@@ -368,16 +368,6 @@
       "units": "meq/m^3",
       "vertical_grid": "none"
    },
-   "ABIO_ATM_PRESS": {
-      "dependencies": {
-         "abio_dic_on": ".true."
-      },
-      "frequency": "never",
-      "longname": "Atmospheric Pressure for Abiotic DIC tracer fluxes",
-      "operator": "average",
-      "units": "atmospheres",
-      "vertical_grid": "none"
-   },
    "ABIO_CO2STAR": {
       "dependencies": {
          "abio_dic_on": ".true."
@@ -388,27 +378,7 @@
       "units": "mmol/m^3",
       "vertical_grid": "none"
    },
-   "ABIO_CO2_PV": {
-      "dependencies": {
-         "abio_dic_on": ".true."
-      },
-      "frequency": "never",
-      "longname": "CO2 Piston Velocity for Abiotic DIC tracer fluxes",
-      "operator": "average",
-      "units": "cm/s",
-      "vertical_grid": "none"
-   },
-   "ABIO_CO2_SCHMIDT": {
-      "dependencies": {
-         "abio_dic_on": ".true."
-      },
-      "frequency": "never",
-      "longname": "CO2 Schmidt Number for Abiotic DIC tracer fluxes",
-      "operator": "average",
-      "units": 1,
-      "vertical_grid": "none"
-   },
-   "ABIO_D14Catm": {
+   "ABIO_D14C_atm": {
       "dependencies": {
          "abio_dic_on": ".true."
       },
@@ -418,7 +388,7 @@
       "units": "permil",
       "vertical_grid": "none"
    },
-   "ABIO_D14Cocn": {
+   "ABIO_D14C_ocn": {
       "dependencies": {
          "abio_dic_on": ".true."
       },
@@ -448,17 +418,7 @@
       "units": "ppmv",
       "vertical_grid": "none"
    },
-   "ABIO_IFRAC": {
-      "dependencies": {
-         "abio_dic_on": ".true."
-      },
-      "frequency": "never",
-      "longname": "Ice Fraction for Abiotic DIC tracer fluxes",
-      "operator": "average",
-      "units": "fraction",
-      "vertical_grid": "none"
-   },
-   "ABIO_PH_SURF": {
+   "ABIO_PH": {
       "dependencies": {
          "abio_dic_on": ".true."
       },
@@ -468,12 +428,12 @@
       "units": 1,
       "vertical_grid": "none"
    },
-   "ABIO_XKW": {
+   "ABIO_PV_CO2": {
       "dependencies": {
          "abio_dic_on": ".true."
       },
       "frequency": "never",
-      "longname": "XKW for Abiotic DIC tracer fluxes",
+      "longname": "CO2 Piston Velocity for Abiotic DIC tracer fluxes",
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
