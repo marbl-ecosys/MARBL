@@ -483,14 +483,14 @@ module marbl_interface_private_types
      integer(int_kind) :: ABIO_XKW
      integer(int_kind) :: ABIO_ATM_PRESS
      integer(int_kind) :: ABIO_pCO2
-     integer(int_kind) :: ABIO_D14Catm
+     integer(int_kind) :: ABIO_D14C_atm
      integer(int_kind) :: ABIO_CO2_SCHMIDT
-     integer(int_kind) :: ABIO_CO2_PV
+     integer(int_kind) :: ABIO_PV_CO2
      integer(int_kind) :: ABIO_CO2STAR
      integer(int_kind) :: ABIO_DCO2STAR
      integer(int_kind) :: ABIO_pCO2SURF
      integer(int_kind) :: ABIO_DpCO2
-     integer(int_kind) :: ABIO_PH_SURF
+     integer(int_kind) :: ABIO_PH
      integer(int_kind) :: ABIO_ALK_SURF
      integer(int_kind) :: ABIO_FG_DIC
      integer(int_kind) :: ABIO_FG_DI14C
@@ -738,7 +738,7 @@ module marbl_interface_private_types
     integer(int_kind), allocatable :: x_graze_zoo(:)
 
     !  abio ids
-    integer(int_kind) :: ABIO_D14Cocn
+    integer(int_kind) :: ABIO_D14C_ocn
 
     !  ciso ids for nonstandard 3d fields
     integer (int_kind) :: CISO_PO13C_FLUX_IN                                 ! po13c flux into cell

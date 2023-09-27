@@ -115,12 +115,12 @@ contains
       end if
 
       lname    = 'Atmospheric Delta 14C in permil for Abiotic DIC tracer fluxes'
-      sname    = 'ABIO_D14Catm'
+      sname    = 'ABIO_D14C_atm'
       units    = 'permil'
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_D14Catm, marbl_status_log)
+          ind%ABIO_D14C_atm, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
        return
@@ -139,12 +139,12 @@ contains
       end if
 
       lname    = 'CO2 Piston Velocity for Abiotic DIC tracer fluxes'
-      sname    = 'ABIO_CO2_PV'
+      sname    = 'ABIO_PV_CO2'
       units    = vel_units
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_CO2_PV, marbl_status_log)
+          ind%ABIO_PV_CO2, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
        return
@@ -199,12 +199,12 @@ contains
       end if
 
       lname    = 'Surface pH for Abiotic DIC tracer fluxes'
-      sname    = 'ABIO_PH_SURF'
+      sname    = 'ABIO_PH'
       units    = '1'
       vgrid    = 'none'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_PH_SURF, marbl_status_log)
+          ind%ABIO_PH, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
        return
@@ -295,12 +295,12 @@ contains
              )
 
       lname    = 'Oceanic Delta 14C in permil for Abiotic DIC tracer fluxes'
-      sname    = 'ABIO_D14Cocn'
+      sname    = 'ABIO_D14C_ocn'
       units    = 'permil'
       vgrid    = 'layer_avg'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-           ind%ABIO_D14Cocn, marbl_status_log)
+           ind%ABIO_D14C_ocn, marbl_status_log)
       if (marbl_status_log%labort_marbl) then
        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
        return
@@ -361,14 +361,14 @@ contains
     diags(ind%ABIO_XKW)%field_2d(:) = piston_velocity(:)
     diags(ind%ABIO_ATM_PRESS)%field_2d(:) = ap_used(:)
     diags(ind%ABIO_pCO2)%field_2d(:) = xco2(:)
-    diags(ind%ABIO_D14Catm)%field_2d(:) = d14c(:)
+    diags(ind%ABIO_D14C_atm)%field_2d(:) = d14c(:)
     diags(ind%ABIO_CO2_SCHMIDT)%field_2d(:) = schmidt_co2(:)
-    diags(ind%ABIO_CO2_PV)%field_2d(:) = pv_co2(:)
+    diags(ind%ABIO_PV_CO2)%field_2d(:) = pv_co2(:)
     diags(ind%ABIO_CO2STAR)%field_2d(:) = co2star(:)
     diags(ind%ABIO_DCO2STAR)%field_2d(:) = dco2star(:)
     diags(ind%ABIO_pCO2SURF)%field_2d(:) = pco2surf(:)
     diags(ind%ABIO_DpCO2)%field_2d(:) = dpco2(:)
-    diags(ind%ABIO_PH_SURF)%field_2d(:) = ph_surf(:)
+    diags(ind%ABIO_PH)%field_2d(:) = ph_surf(:)
     diags(ind%ABIO_ALK_SURF)%field_2d(:) = alk_surf(:)
     diags(ind%ABIO_FG_DIC)%field_2d(:) = fg_dic(:)
     diags(ind%ABIO_FG_DI14C)%field_2d(:) = fg_di14c(:)
@@ -400,9 +400,9 @@ contains
        )
 
       where (dic(:) == c0)
-        diags(ind%ABIO_D14Cocn)%field_3d(:,1) = c0
+        diags(ind%ABIO_D14C_ocn)%field_3d(:,1) = c0
       elsewhere
-        diags(ind%ABIO_D14Cocn)%field_3d(:,1) = (di14c(:)/dic(:) - c1) * 1000._r8
+        diags(ind%ABIO_D14C_ocn)%field_3d(:,1) = (di14c(:)/dic(:) - c1) * 1000._r8
       end where
     end associate
 
