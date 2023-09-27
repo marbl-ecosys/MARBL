@@ -258,7 +258,7 @@ contains
       derivative_terms(:,2) = -p5 * (co2star_tmp1(:) / (tracers_at_surface(:,dic_ind) + c1) &
                                      - co2star_tmp2(:) / (tracers_at_surface(:,dic_ind) - c1)) &
                               * tracers_at_surface(:,di14c_ind) * pv_co2(:)
-      derivative_terms(:,3) = -co2star(:) / tracers_at_surface(:,dic_ind)
+      derivative_terms(:,3) = -pv_co2(:) * co2star(:) / tracers_at_surface(:,dic_ind)
     else where
       derivative_terms(:,2) = c0
       derivative_terms(:,3) = c0
