@@ -36,6 +36,7 @@ module marbl_surface_flux_mod
   use marbl_interface_public_types, only : marbl_forcing_fields_type
 
   use marbl_diagnostics_mod , only : marbl_diagnostics_surface_flux_compute
+  use marbl_diagnostics_mod , only : marbl_diagnostics_surface_flux_share
 
   use marbl_logging         , only : marbl_log_type
 
@@ -195,6 +196,17 @@ contains
       schmidt_co2(:) = schmidt_co2_surf(num_elements, sst)
       pv_co2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_co2(:))
     end if
+
+    !-----------------------------------------------------------------------
+    ! Compute surface flux-related diagnostics for fields used by
+    ! both abiotic and biotic tracers
+    !-----------------------------------------------------------------------
+
+    call marbl_diagnostics_surface_flux_share(                &
+         surface_flux_forcing_ind = ind,                      &
+         surface_flux_forcings    = surface_flux_forcings,    &
+         surface_flux_internal    = surface_flux_internal,    &
+         surface_flux_diags       = surface_flux_diags)
 
     !-----------------------------------------------------------------------
     ! Compute carbon isotopes surface fluxes

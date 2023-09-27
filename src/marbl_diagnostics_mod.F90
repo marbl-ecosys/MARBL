@@ -51,6 +51,7 @@ module marbl_diagnostics_mod
   public :: marbl_diagnostics_init
   public :: marbl_diagnostics_interior_tendency_compute
   public :: marbl_diagnostics_surface_flux_compute
+  public :: marbl_diagnostics_surface_flux_share
 
   private :: store_diagnostics_carbonate
   private :: store_diagnostics_nitrification
@@ -3275,7 +3276,7 @@ contains
        surface_flux_diags)
 
     ! !DESCRIPTION:
-    !  Compute surface fluxes for ecosys tracer module.
+    !  Compute surface flux diagnostics for base biotic tracer module.
 
     use marbl_interface_private_types , only : marbl_surface_flux_forcing_indexing_type
     use marbl_interface_private_types , only : marbl_surface_flux_saved_state_indexing_type
@@ -3297,14 +3298,11 @@ contains
          diags             => surface_flux_diags%diags(:),                                              &
          xco2              => surface_flux_forcings(surface_flux_forcing_ind%xco2_id)%field_0d,         &
          xco2_alt_co2      => surface_flux_forcings(surface_flux_forcing_ind%xco2_alt_co2_id)%field_0d, &
-         ap_used           => surface_flux_forcings(surface_flux_forcing_ind%atm_pressure_id)%field_0d, &
-         ifrac             => surface_flux_forcings(surface_flux_forcing_ind%ifrac_id)%field_0d,        &
          dust_flux_in      => surface_flux_forcings(surface_flux_forcing_ind%dust_flux_id)%field_0d,    &
          iron_flux_in      => surface_flux_forcings(surface_flux_forcing_ind%iron_flux_id)%field_0d,    &
          nox_flux          => surface_flux_forcings(surface_flux_forcing_ind%nox_flux_id)%field_0d,     &
          nhy_flux          => surface_flux_forcings(surface_flux_forcing_ind%nhy_flux_id)%field_0d,     &
 
-         piston_velocity   => surface_flux_internal%piston_velocity,                         &
          flux_co2          => surface_flux_internal%flux_co2,                                &
          flux_alt_co2      => surface_flux_internal%flux_alt_co2,                            &
          co2star           => surface_flux_internal%co2star,                                 &
@@ -3315,9 +3313,7 @@ contains
          dco2star_alt      => surface_flux_internal%dco2star_alt,                            &
          pco2surf_alt      => surface_flux_internal%pco2surf_alt,                            &
          dpco2_alt         => surface_flux_internal%dpco2_alt,                               &
-         pv_co2            => surface_flux_internal%pv_co2,                                  &
          pv_o2             => surface_flux_internal%pv_o2,                                   &
-         schmidt_co2       => surface_flux_internal%schmidt_co2,                             &
          schmidt_o2        => surface_flux_internal%schmidt_o2,                              &
          o2sat             => surface_flux_internal%o2sat,                                   &
          nhx_surface_emis  => surface_flux_internal%nhx_surface_emis,                        &
@@ -3347,14 +3343,6 @@ contains
     !  calculate gas flux quantities if necessary
     !-----------------------------------------------------------------------
 
-    if (lflux_gas_o2 .or. lflux_gas_co2) then
-
-       diags(ind_diag%ECOSYS_IFRAC)%field_2d(:)     = ifrac(:)
-       diags(ind_diag%ECOSYS_XKW)%field_2d(:)       = piston_velocity(:)
-       diags(ind_diag%ECOSYS_ATM_PRESS)%field_2d(:) = ap_used(:)
-
-    endif  ! lflux_gas_o2 .or. lflux_gas_co2
-
     if (lflux_gas_o2) then
 
        diags(ind_diag%PV_O2)%field_2d(:)      = pv_o2(:)
@@ -3379,8 +3367,6 @@ contains
        diags(ind_diag%pCO2SURF_ALT_CO2)%field_2d(:)     = pco2surf_alt(:)
        diags(ind_diag%DpCO2_ALT_CO2)%field_2d(:)        = dpco2_alt(:)
 
-       diags(ind_diag%PV_CO2)%field_2d(:)               = pv_co2(:)
-       diags(ind_diag%SCHMIDT_CO2)%field_2d(:)          = schmidt_co2(:)
        diags(ind_diag%DIC_GAS_FLUX)%field_2d(:)         = flux_co2(:)
        diags(ind_diag%PH)%field_2d(:)                   = ph_prev(:)
        diags(ind_diag%ATM_CO2)%field_2d(:)              = xco2(:)
@@ -3413,6 +3399,67 @@ contains
 
   end subroutine marbl_diagnostics_surface_flux_compute
 
+  !***********************************************************************
+
+  subroutine marbl_diagnostics_surface_flux_share(  &
+       surface_flux_forcing_ind,                    &
+       surface_flux_forcings,                       &
+       surface_flux_internal,                       &
+       surface_flux_diags)
+
+    ! !DESCRIPTION:
+    !  Compute surface flux diagnostics that are shared by
+    !  abiotic and base biotic tracer modules.
+
+    use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
+
+    use marbl_settings_mod, only : abio_dic_on
+    use marbl_settings_mod, only : base_bio_on
+    use marbl_settings_mod, only : lflux_gas_o2
+    use marbl_settings_mod, only : lflux_gas_co2
+
+    type(marbl_surface_flux_forcing_indexing_type), intent(in) :: surface_flux_forcing_ind
+    type(marbl_forcing_fields_type)           , intent(in)    :: surface_flux_forcings(:)
+    type(marbl_surface_flux_internal_type)    , intent(in)    :: surface_flux_internal
+    type(marbl_diagnostics_type)              , intent(inout) :: surface_flux_diags
+
+    associate(                                                                                  &
+         ind_diag          => marbl_surface_flux_diag_ind,                                      &
+         diags             => surface_flux_diags%diags(:),                                              &
+         ap_used           => surface_flux_forcings(surface_flux_forcing_ind%atm_pressure_id)%field_0d, &
+         ifrac             => surface_flux_forcings(surface_flux_forcing_ind%ifrac_id)%field_0d,        &
+         piston_velocity   => surface_flux_internal%piston_velocity,                         &
+         pv_co2            => surface_flux_internal%pv_co2,                                  &
+         schmidt_co2       => surface_flux_internal%schmidt_co2                              &
+         )
+
+    !-----------------------------------------------------------------------
+    !  calculate gas flux quantities if necessary
+    !-----------------------------------------------------------------------
+
+    if (abio_dic_on .or. (base_bio_on .and. (lflux_gas_o2 .or. lflux_gas_co2))) then
+
+       diags(ind_diag%ECOSYS_IFRAC)%field_2d(:)     = ifrac(:)
+       diags(ind_diag%ECOSYS_XKW)%field_2d(:)       = piston_velocity(:)
+       diags(ind_diag%ECOSYS_ATM_PRESS)%field_2d(:) = ap_used(:)
+
+    endif
+
+    !-----------------------------------------------------------------------
+    !  compute CO2 flux, computing disequilibrium one row at a time
+    !-----------------------------------------------------------------------
+
+    if (abio_dic_on .or. (base_bio_on .and. lflux_gas_co2)) then
+
+     diags(ind_diag%PV_CO2)%field_2d(:)      = pv_co2(:)
+     diags(ind_diag%SCHMIDT_CO2)%field_2d(:) = schmidt_co2(:)
+
+    endif  !  lflux_gas_co2
+
+    end associate
+
+  end subroutine marbl_diagnostics_surface_flux_share
   !***********************************************************************
 
   subroutine store_diagnostics_carbonate(marbl_domain, carbonate,             &

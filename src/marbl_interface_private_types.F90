@@ -479,13 +479,8 @@ module marbl_interface_private_types
      integer(int_kind) :: NHy_FLUX
      integer(int_kind) :: NHx_SURFACE_EMIS
 
-     integer(int_kind) :: ABIO_IFRAC
-     integer(int_kind) :: ABIO_XKW
-     integer(int_kind) :: ABIO_ATM_PRESS
      integer(int_kind) :: ABIO_pCO2
      integer(int_kind) :: ABIO_D14C_atm
-     integer(int_kind) :: ABIO_CO2_SCHMIDT
-     integer(int_kind) :: ABIO_PV_CO2
      integer(int_kind) :: ABIO_CO2STAR
      integer(int_kind) :: ABIO_DCO2STAR
      integer(int_kind) :: ABIO_pCO2SURF

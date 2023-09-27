@@ -418,6 +418,26 @@
       "units": "ppmv",
       "vertical_grid": "none"
    },
+   "ABIO_FG_DI14C": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface gas flux of abiotic DI14C",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "ABIO_FG_DIC": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface gas flux of abiotic DIC",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "ABIO_PH": {
       "dependencies": {
          "abio_dic_on": ".true."
@@ -426,16 +446,6 @@
       "longname": "Surface pH for Abiotic DIC tracer fluxes",
       "operator": "average",
       "units": 1,
-      "vertical_grid": "none"
-   },
-   "ABIO_PV_CO2": {
-      "dependencies": {
-         "abio_dic_on": ".true."
-      },
-      "frequency": "never",
-      "longname": "CO2 Piston Velocity for Abiotic DIC tracer fluxes",
-      "operator": "average",
-      "units": "cm/s",
       "vertical_grid": "none"
    },
    "ABIO_pCO2": {
@@ -1569,26 +1579,6 @@
       "operator": "average",
       "units": "nmol/cm^2/s",
       "vertical_grid": "layer_avg"
-   },
-   "FG_ABIO_DIC": {
-      "dependencies": {
-         "abio_dic_on": ".true."
-      },
-      "frequency": "medium",
-      "longname": "Surface gas flux of abiotic DIC",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
-   },
-   "FG_ABIO_DIC14": {
-      "dependencies": {
-         "abio_dic_on": ".true."
-      },
-      "frequency": "medium",
-      "longname": "Surface gas flux of abiotic DI14C",
-      "operator": "average",
-      "units": "mmol/m^3 cm/s",
-      "vertical_grid": "none"
    },
    "FG_ALT_CO2": {
       "dependencies": {

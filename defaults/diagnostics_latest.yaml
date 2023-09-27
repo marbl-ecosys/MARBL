@@ -245,14 +245,6 @@ ABIO_D14C_atm :
    vertical_grid : none
    frequency : medium
    operator : average
-ABIO_PV_CO2 :
-   dependencies :
-      abio_dic_on : .true.
-   longname : CO2 Piston Velocity for Abiotic DIC tracer fluxes
-   units : cm/s
-   vertical_grid : none
-   frequency : never
-   operator : average
 ABIO_CO2STAR :
    dependencies :
       abio_dic_on : .true.
@@ -301,7 +293,7 @@ ABIO_ALK_SURF :
    vertical_grid : none
    frequency : medium
    operator : average
-FG_ABIO_DIC :
+ABIO_FG_DIC :
    dependencies :
       abio_dic_on : .true.
    longname : Surface gas flux of abiotic DIC
@@ -309,7 +301,7 @@ FG_ABIO_DIC :
    vertical_grid : none
    frequency : medium
    operator : average
-FG_ABIO_DIC14 :
+ABIO_FG_DI14C :
    dependencies :
       abio_dic_on : .true.
    longname : Surface gas flux of abiotic DI14C

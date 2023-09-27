@@ -105,18 +105,13 @@ contains
 
     associate(&
         ! Forcing fields from GCM
-        ifrac   => surface_flux_forcings(surface_flux_forcing_ind%ifrac_id)%field_0d, &
         sst     => surface_flux_forcings(surface_flux_forcing_ind%sst_id)%field_0d, &
         sss     => surface_flux_forcings(surface_flux_forcing_ind%sss_id)%field_0d, &
         ! TODO: need to add abio_xco2_id to surface flux forcing inds
         xco2    => surface_flux_forcings(surface_flux_forcing_ind%xco2_id)%field_0d, &
         ap_used => surface_flux_forcings(surface_flux_forcing_ind%atm_pressure_id)%field_0d, &
-        u10_sqr => surface_flux_forcings(surface_flux_forcing_ind%u10_sqr_id)%field_0d, &
         d14c    => surface_flux_forcings(surface_flux_forcing_ind%d14c_id)%field_0d,  &
         ! Values computed for abio and bio
-        piston_velocity => surface_flux_internal%piston_velocity(:), &
-        xkw_ice         => surface_flux_internal%xkw_ice(:), &
-        schmidt_co2     => surface_flux_internal%schmidt_co2(:), &
         pv_co2          => surface_flux_internal%pv_co2(:), &
        ! Saved state
         ph_surf => saved_state%state(saved_state_ind%abio_ph_surf)%field_2d, &
@@ -266,13 +261,8 @@ contains
 
     ! update abiotic DIC diagnostics
     call marbl_abio_dic_diagnostics_surface_flux_compute( &
-         ifrac, &
-         piston_velocity, &
-         ap_used, &
          xco2, &
          d14c, &
-         schmidt_co2, &
-         pv_co2, &
          co2star, &
          dco2star, &
          pco2surf, &
