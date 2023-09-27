@@ -4,6 +4,7 @@ module marbl_abio_dic_surface_flux_mod
     use marbl_kinds_mod, only : r8
 
     use marbl_constants_mod, only : c0
+    use marbl_constants_mod, only : p5
     use marbl_constants_mod, only : c1
     use marbl_constants_mod, only : rho_sw
 
@@ -72,19 +73,32 @@ contains
     type(marbl_log_type),                               intent(inout) :: marbl_status_log
 
     real(r8) :: alk_surf(num_elements)     ! local alkalinity
-    real(r8) :: phlo(num_elements)         ! lower bound for ph in solver
-    real(r8) :: phhi(num_elements)         ! upper bound for ph in solver
     real(r8) :: SiO2(num_elements)         ! Abiotic silicate
     real(r8) :: PO4(num_elements)          ! Abiotic phosphate
     real(r8) :: R14C_ocn(num_elements)     ! Rocn = DIC14/DIC
     real(r8) :: R14C_atm(num_elements)     ! Ratm = 1+ D14C/1000
     real(r8) :: fg_dic(num_elements)       ! Carbon gas flux
     real(r8) :: fg_di14c(num_elements)     ! Isotopic carbon gas flux
+    real(r8) :: phlo(num_elements)         ! lower bound for ph in solver
+    real(r8) :: phhi(num_elements)         ! upper bound for ph in solver
     real(r8) :: co2star(num_elements)
     real(r8) :: dco2star(num_elements)
     real(r8) :: pco2surf(num_elements)
     real(r8) :: dpco2(num_elements)
     real(r8) :: co3(num_elements)
+    ! Terms for computing derivative diagnostics
+    real(r8) :: ph_surf_tmp(num_elements)
+    real(r8) :: phlo_tmp(num_elements)
+    real(r8) :: phhi_tmp(num_elements)
+    real(r8) :: co2star_tmp1(num_elements)
+    real(r8) :: co2star_tmp2(num_elements)
+    real(r8) :: dco2star_tmp(num_elements)
+    real(r8) :: pco2surf_tmp(num_elements)
+    real(r8) :: dpco2_tmp(num_elements)
+    real(r8) :: co3_tmp(num_elements)
+    real(r8) :: derivative_terms(num_elements, 3) ! d[SF_ABIO_DIC]/d[ABIO_DIC]
+                                                  ! d[SF_ABIO_DI14C]/d[ABIO_DIC]
+                                                  ! d[SF_ABIO_DI14C]/d[ABIO_DI14C]
 
     ! Return immediately if not running with abiotic dic tracer module
     if (.not. abio_dic_on) return
@@ -150,6 +164,8 @@ contains
       phlo(:) = phlo_surf_init
       phhi(:) = phhi_surf_init
     end where
+    phlo_tmp(:) = phlo(:)
+    phhi_tmp(:) = phhi(:)
 
     ! In POP, ALK_bar_global = 2310._r8 microeq/kg = 2310._r8 neq/g
     !         and ocn_ref_salinity comes from shr_const (SHR_CONST_OCN_REF_SAL = 34.7)
@@ -189,8 +205,66 @@ contains
     surface_fluxes(:, dic_ind) = surface_fluxes(:, dic_ind) + fg_dic(:)
     surface_fluxes(:, di14c_ind) = surface_fluxes(:, di14c_ind) + fg_di14c(:)
 
-    ! update abiotic DIC diagnostics
+    ! Compute derivative diagnostics
+    derivative_terms(:,:) = c0
+    call marbl_co2calc_surface(&
+         num_elements  = num_elements, &
+         lcomp_co2calc_coeffs = .false., &
+         dic_in = tracers_at_surface(:,dic_ind) + c1, &
+         xco2_in = xco2(:), &
+         ta_in = alk_surf(:), &
+         pt_in = PO4(:), &
+         sit_in = SiO2(:), &
+         temp = sst(:), &
+         salt = sss(:), &
+         atmpres = ap_used(:), &
+         unit_system = unit_system, &
+         phlo = phlo_tmp, &
+         phhi = phhi_tmp, &
+         ph = ph_surf_tmp, &
+         co3 = co3_tmp(:), &
+         co2calc_coeffs = co2calc_coeffs, &
+         co2calc_state = co2calc_state, &
+         co2star = co2star_tmp1, &
+         dco2star = dco2star_tmp, &
+         pco2surf = pco2surf_tmp, &
+         dpco2 = dpco2_tmp, &
+         marbl_status_log = marbl_status_log)
+    call marbl_co2calc_surface(&
+         num_elements  = num_elements, &
+         lcomp_co2calc_coeffs = .false., &
+         dic_in = tracers_at_surface(:,dic_ind) - c1, &
+         xco2_in = xco2(:), &
+         ta_in = alk_surf(:), &
+         pt_in = PO4(:), &
+         sit_in = SiO2(:), &
+         temp = sst(:), &
+         salt = sss(:), &
+         atmpres = ap_used(:), &
+         unit_system = unit_system, &
+         phlo = phlo_tmp, &
+         phhi = phhi_tmp, &
+         ph = ph_surf_tmp, &
+         co3 = co3_tmp(:), &
+         co2calc_coeffs = co2calc_coeffs, &
+         co2calc_state = co2calc_state, &
+         co2star = co2star_tmp2, &
+         dco2star = dco2star_tmp, &
+         pco2surf = pco2surf_tmp, &
+         dpco2 = dpco2_tmp, &
+         marbl_status_log = marbl_status_log)
+    derivative_terms(:,1) = -p5 * (co2star_tmp1(:) - co2star_tmp2(:)) * pv_co2(:)
+    where (tracers_at_surface(:,dic_ind) > 0)
+      derivative_terms(:,2) = -p5 * (co2star_tmp1(:) / (tracers_at_surface(:,dic_ind) + c1) &
+                                     - co2star_tmp2(:) / (tracers_at_surface(:,dic_ind) - c1)) &
+                              * tracers_at_surface(:,di14c_ind) * pv_co2(:)
+      derivative_terms(:,3) = -co2star(:) / tracers_at_surface(:,dic_ind)
+    else where
+      derivative_terms(:,2) = c0
+      derivative_terms(:,3) = c0
+    end where
 
+    ! update abiotic DIC diagnostics
     call marbl_abio_dic_diagnostics_surface_flux_compute( &
          ifrac, &
          piston_velocity, &
@@ -207,6 +281,7 @@ contains
          alk_surf, &
          fg_dic, &
          fg_di14c, &
+         derivative_terms, &
          surface_flux_diags)
 
     end associate

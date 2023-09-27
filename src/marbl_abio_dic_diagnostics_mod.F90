@@ -247,9 +247,41 @@ contains
        return
       end if
 
-      ! d_SF_ABIO_DIC_d_ABIO_DIC
-      ! d_SF_ABIO_DIC14_d_ABIO_DIC
-      ! d_SF_ABIO_DIC14_d_ABIO_DIC14
+      lname    = 'Derivative of STF_ABIO_DIC wrt ABIO_DIC'
+      sname    = 'd_SF_ABIO_DIC_d_ABIO_DIC'
+      units    = vel_units
+      vgrid    = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+          ind%d_SF_ABIO_DIC_d_ABIO_DIC, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+       return
+      end if
+
+      lname    = 'Derivative of STF_ABIO_DI14C wrt ABIO_DIC'
+      sname    = 'd_SF_ABIO_DI14C_d_ABIO_DIC'
+      units    = vel_units
+      vgrid    = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+          ind%d_SF_ABIO_DI14C_d_ABIO_DIC, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+       return
+      end if
+
+      lname    = 'Derivative of STF_ABIO_DI14C wrt ABIO_DI14C'
+      sname    = 'd_SF_ABIO_DI14C_d_ABIO_DI14C'
+      units    = vel_units
+      vgrid    = 'none'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+          ind%d_SF_ABIO_DI14C_d_ABIO_DI14C, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+       return
+      end if
 
     end associate
 
@@ -296,6 +328,7 @@ contains
        alk_surf, &
        fg_dic, &
        fg_di14c, &
+       derivative_terms, &
        marbl_surface_flux_diags)
 
     ! !DESCRIPTION:
@@ -316,6 +349,7 @@ contains
     real (r8), dimension(:),      intent(in)    :: alk_surf
     real (r8), dimension(:),      intent(in)    :: fg_dic
     real (r8), dimension(:),      intent(in)    :: fg_di14c
+    real (r8), dimension(:,:),    intent(in)    :: derivative_terms
     type(marbl_diagnostics_type), intent(inout) :: marbl_surface_flux_diags
 
     associate(                                       &
@@ -338,6 +372,9 @@ contains
     diags(ind%ABIO_ALK_SURF)%field_2d(:) = alk_surf(:)
     diags(ind%ABIO_FG_DIC)%field_2d(:) = fg_dic(:)
     diags(ind%ABIO_FG_DI14C)%field_2d(:) = fg_di14c(:)
+    diags(ind%d_SF_ABIO_DIC_d_ABIO_DIC)%field_2d(:) = derivative_terms(:,1)
+    diags(ind%d_SF_ABIO_DI14C_d_ABIO_DIC)%field_2d(:) = derivative_terms(:,2)
+    diags(ind%d_SF_ABIO_DI14C_d_ABIO_DI14C)%field_2d(:) = derivative_terms(:,3)
 
     end associate
 

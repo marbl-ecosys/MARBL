@@ -2386,6 +2386,36 @@
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
    },
+   "d_SF_ABIO_DI14C_d_ABIO_DI14C": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "never",
+      "longname": "Derivative of STF_ABIO_DI14C wrt ABIO_DI14C",
+      "operator": "average",
+      "units": "cm/s",
+      "vertical_grid": "none"
+   },
+   "d_SF_ABIO_DI14C_d_ABIO_DIC": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "never",
+      "longname": "Derivative of STF_ABIO_DI14C wrt ABIO_DIC",
+      "operator": "average",
+      "units": "cm/s",
+      "vertical_grid": "none"
+   },
+   "d_SF_ABIO_DIC_d_ABIO_DIC": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "never",
+      "longname": "Derivative of STF_ABIO_DIC wrt ABIO_DIC",
+      "operator": "average",
+      "units": "cm/s",
+      "vertical_grid": "none"
+   },
    "dustToSed": {
       "dependencies": {
          "base_bio_on": ".true."

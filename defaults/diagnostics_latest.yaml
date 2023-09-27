@@ -317,6 +317,30 @@ FG_ABIO_DIC14 :
    vertical_grid : none
    frequency : medium
    operator : average
+d_SF_ABIO_DIC_d_ABIO_DIC :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Derivative of STF_ABIO_DIC wrt ABIO_DIC
+   units : cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+d_SF_ABIO_DI14C_d_ABIO_DIC :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Derivative of STF_ABIO_DI14C wrt ABIO_DIC
+   units : cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+d_SF_ABIO_DI14C_d_ABIO_DI14C :
+   dependencies :
+      abio_dic_on : .true.
+   longname : Derivative of STF_ABIO_DI14C wrt ABIO_DI14C
+   units : cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
 
 ###############
 # ciso module #

@@ -494,6 +494,9 @@ module marbl_interface_private_types
      integer(int_kind) :: ABIO_ALK_SURF
      integer(int_kind) :: ABIO_FG_DIC
      integer(int_kind) :: ABIO_FG_DI14C
+     integer(int_kind) :: d_SF_ABIO_DIC_d_ABIO_DIC
+     integer(int_kind) :: d_SF_ABIO_DI14C_d_ABIO_DIC
+     integer(int_kind) :: d_SF_ABIO_DI14C_d_ABIO_DI14C
 
      integer(int_kind) :: CISO_DI13C_GAS_FLUX       ! di13c flux
      integer(int_kind) :: CISO_DI14C_GAS_FLUX       ! di14c flux
