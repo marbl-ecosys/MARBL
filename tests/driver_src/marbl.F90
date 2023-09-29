@@ -373,6 +373,7 @@ Program marbl
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         ! Log tracers requested for initialization
         call driver_status_log%log_header('Requested tracers', subname)
+        ! Provide message if no tracers are requested
         if (size(marbl_instances(1)%tracer_metadata) == 0) &
           call driver_status_log%log_noerror('No tracers requested!', subname)
         do n=1, size(marbl_instances(1)%tracer_metadata)
@@ -392,6 +393,7 @@ Program marbl
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         ! Log requested surface forcing fields
         call driver_status_log%log_header('Requested surface forcing fields', subname)
+        ! Provide message if no surface flux forcings are requested
         if (size(marbl_instances(1)%surface_flux_forcings) == 0) &
           call driver_status_log%log_noerror('No forcing fields requested!', subname)
         do n=1,size(marbl_instances(1)%surface_flux_forcings)
@@ -400,8 +402,10 @@ Program marbl
                 ' (units: ', trim(marbl_instances(1)%surface_flux_forcings(n)%metadata%field_units),')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
+
         ! Log requested interior forcing fields
         call driver_status_log%log_header('Requested interior forcing fields', subname)
+        ! Provide message if no itnerior tendency forcings are requested
         if (size(marbl_instances(1)%interior_tendency_forcings) == 0) &
           call driver_status_log%log_noerror('No forcing fields requested!', subname)
         do n=1,size(marbl_instances(1)%interior_tendency_forcings)
@@ -410,7 +414,7 @@ Program marbl
                ' (units: ', trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%field_units),')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
-        ! Provide message if no forcings are requested
+
         call marbl_instances(1)%shutdown()
       end if
 
@@ -432,6 +436,7 @@ Program marbl
             call driver_status_log%log_noerror(log_message, subname)
           end if
         end do
+        ! Provide message if no tracers are restored
         if (cnt.eq.0) then
           call driver_status_log%log_noerror('No tracers to restore!', subname)
         end if
