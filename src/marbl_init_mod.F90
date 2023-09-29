@@ -57,10 +57,13 @@ contains
   subroutine marbl_init_parameters_pre_tracers(marbl_settings, unit_system, marbl_status_log)
 
     use marbl_settings_mod, only : marbl_settings_type
+    use marbl_settings_mod, only : marbl_settings_set_defaults_tracer_modules
+    use marbl_settings_mod, only : marbl_settings_define_tracer_modules
     use marbl_settings_mod, only : marbl_settings_set_defaults_general_parms
     use marbl_settings_mod, only : marbl_settings_define_general_parms
     use marbl_settings_mod, only : marbl_settings_set_defaults_PFT_counts
     use marbl_settings_mod, only : marbl_settings_define_PFT_counts
+    use marbl_settings_mod, only : marbl_settings_allocate_PFT_types
     use marbl_settings_mod, only : marbl_settings_set_defaults_PFT_derived_types
     use marbl_settings_mod, only : marbl_settings_define_PFT_derived_types
 
@@ -70,6 +73,22 @@ contains
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_pre_tracers'
+
+    !---------------------------------------------------------------------------
+    ! set default values for logicals controlling active tracer modules
+    !---------------------------------------------------------------------------
+
+    call marbl_settings_set_defaults_tracer_modules()
+
+    !---------------------------------------------------------------------------
+    ! Add tracer module settings to list of allowable put / get vars
+    !---------------------------------------------------------------------------
+
+    call marbl_settings_define_tracer_modules(marbl_settings, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_settings_define_tracer_modules()", subname)
+      return
+    end if
 
     !---------------------------------------------------------------------------
     ! set default values for basic settings
@@ -100,6 +119,12 @@ contains
     call marbl_settings_define_PFT_counts(marbl_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("marbl_settings_define_PFT_counts()", subname)
+      return
+    end if
+
+    call marbl_settings_allocate_PFT_types(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_settings_allocate_PFT_types()", subname)
       return
     end if
 
