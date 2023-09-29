@@ -1010,7 +1010,7 @@
          "units": "mol m-2 yr-1"
       },
       "PFT_defaults": {
-         "_CESM2+cocco_PFT_keys": {
+         "_4p2z_PFT_keys": {
             "autotroph_settings": [
                "sp",
                "diat",
@@ -1018,24 +1018,29 @@
                "cocco"
             ],
             "grazing_relationship_settings": [
-               "sp_zoo",
-               "diat_zoo",
-               "diaz_zoo",
-               "cocco_zoo"
+               "sp_microzoo",
+               "diat_mesozoo",
+               "diaz_microzoo",
+               "cocco_mesozoo",
+               "cocco_microzoo",
+               "diaz_mesozoo",
+               "null",
+               "microzoo_mesozoo"
             ],
             "zooplankton_settings": [
-               "zoo"
+               "microzoo",
+               "mesozoo"
             ]
          },
          "_append_to_config_keywords": true,
          "datatype": "string",
-         "default_value": "CESM2+cocco",
+         "default_value": "4p2z",
          "defined_if": "base_bio_on",
          "longname": "Define how PFTs are initialized",
          "subcategory": "2. config PFTs",
          "units": "unitless",
          "valid_values": [
-            "CESM2+cocco",
+            "4p2z",
             "user-specified"
          ]
       },

@@ -1,3 +1,8 @@
+! tracer modules
+abio_dic_on = .false.
+base_bio_on = .true.
+ciso_on = .false.
+
 ! config PFTs
 PFT_defaults = "4p2z"
 autotroph_cnt = 4
@@ -5,8 +10,6 @@ max_grazer_prey_cnt = 4
 zooplankton_cnt = 2
 
 ! config flags
-ciso_lsource_sink = .true.
-ciso_on = .false.
 ladjust_bury_coeff = .false.
 lcheck_forcing = .false.
 lcompute_nhx_surface_emis = .true.
@@ -30,7 +33,6 @@ bury_coeff_rmean_timescale_years = 10.0
 caco3_bury_thres_depth =   3.0000000000000000e+05
 caco3_bury_thres_omega_calc = 1.0
 caco3_bury_thres_opt = "omega_calc"
-ciso_fract_factors = "Laws"
 f_graze_CaCO3_remin = 0.5
 gQ_Fe_kFe_thres = 10.0
 gQ_Si_kSi_thres = 5.0
