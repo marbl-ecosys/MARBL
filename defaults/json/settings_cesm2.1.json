@@ -922,18 +922,16 @@
          "units": "mol m-2 yr-1"
       },
       "PFT_defaults": {
-         "_CESM2+cocco_PFT_keys": {
+         "_CESM2_PFT_keys": {
             "autotroph_settings": [
                "sp",
                "diat",
-               "diaz",
-               "cocco"
+               "diaz"
             ],
             "grazing_relationship_settings": [
                "sp_zoo",
                "diat_zoo",
-               "diaz_zoo",
-               "cocco_zoo"
+               "diaz_zoo"
             ],
             "zooplankton_settings": [
                "zoo"
@@ -941,13 +939,13 @@
          },
          "_append_to_config_keywords": true,
          "datatype": "string",
-         "default_value": "CESM2+cocco",
+         "default_value": "CESM2",
          "defined_if": "base_bio_on",
          "longname": "Define how PFTs are initialized",
          "subcategory": "2. config PFTs",
          "units": "unitless",
          "valid_values": [
-            "CESM2+cocco",
+            "CESM2",
             "user-specified"
          ]
       },
@@ -1505,7 +1503,8 @@
                "ALK",
                "ALK_ALT_CO2"
             ],
-            "default": ""
+            "default": "",
+            "not base_bio_on": ""
          },
          "longname": "Tracer names for tracers that are restored",
          "subcategory": "20. tracer restoring",

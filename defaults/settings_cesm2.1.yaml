@@ -283,23 +283,21 @@ general_parms :
       subcategory : 2. config PFTs
       units : unitless
       datatype : string
-      default_value : CESM2+cocco
+      default_value : CESM2
       valid_values :
-            - CESM2+cocco
+            - CESM2
             - user-specified
-      _CESM2+cocco_PFT_keys :
+      _CESM2_PFT_keys :
          autotroph_settings :
             - sp
             - diat
             - diaz
-            - cocco
          zooplankton_settings :
             - zoo
          grazing_relationship_settings :
             - sp_zoo
             - diat_zoo
             - diaz_zoo
-            - cocco_zoo
       _append_to_config_keywords : true
    lsource_sink :
       longname : Control which portions of code are executed (useful for debugging)
@@ -1339,3 +1337,4 @@ tracer_dependent :
             - 'ALK_ALT_CO2'
          GRID == "CESM_x3" : *CESM_TRACER_RESTORE
          GRID == "CESM_x1" : *CESM_TRACER_RESTORE
+         not base_bio_on : ''

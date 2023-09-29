@@ -1598,7 +1598,8 @@
                "ALK",
                "ALK_ALT_CO2"
             ],
-            "default": ""
+            "default": "",
+            "not base_bio_on": ""
          },
          "longname": "Tracer names for tracers that are restored",
          "subcategory": "20. tracer restoring",
