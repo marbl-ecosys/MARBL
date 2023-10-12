@@ -134,7 +134,7 @@ if __name__ == "__main__":
         if var in driver_vars or var.startswith("output_for_GCM"):
             continue
         if var not in json_in:
-            logger.info(f"Can not find {var} in {args.default_diagnostics_file}!")
+            logger.info("Can not find %s in %s!", var, args.default_diagnostics_file)
             diff_found = True
             continue
 
@@ -149,13 +149,13 @@ if __name__ == "__main__":
         # Report any differences
         if different_units or different_lname:
             diff_found = True
-            logger.info(f"Differences in {var}:")
+            logger.info("Differences in %s:", var)
             if different_units:
-                logger.info(f"* JSON units: {json_dict['units']}")
-                logger.info(f"* netcdf units: {netcdf_dict['units']}")
+                logger.info("* JSON units: %s", json_dict["units"])
+                logger.info("* netcdf units: %s", netcdf_dict["units"])
             if different_lname:
-                logger.info(f"* JSON long name: {json_dict['longname']}")
-                logger.info(f"* netcdf long name: {netcdf_dict['longname']}")
+                logger.info("* JSON long name: %s", json_dict["longname"])
+                logger.info("* netcdf long name: %s", netcdf_dict["longname"])
 
 if diff_found:
     logger.error("Differences found between JSON and netCDF metadata!")
