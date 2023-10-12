@@ -174,7 +174,7 @@ _tracer_list :
       dependencies :
          base_bio_on : .true.
       long_name : ((autotroph_lname)) Chlorophyll
-      units : mmol/m^3
+      units : mg/m^3
    ((autotroph_sname))C :
       dependencies :
          base_bio_on : .true.

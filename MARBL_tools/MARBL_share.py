@@ -80,11 +80,11 @@ def expand_template_value(key_name, MARBL_settings, unit_system, unprocessed_dic
         fill_source = 'strings'
         try:
             particulate_flux_ref_depth = MARBL_settings.settings_dict['particulate_flux_ref_depth']['value']
+            if MARBL_settings.settings_dict['particulate_flux_ref_depth']['attrs']['units'] == 'cm':
+                particulate_flux_ref_depth = float(particulate_flux_ref_depth) / 100.
         except:
             # If base_biotic_on is False, we don't need particulate_flux_ref_depth
             particulate_flux_ref_depth = 0
-        if MARBL_settings.settings_dict['particulate_flux_ref_depth']['attrs']['units'] == 'cm':
-            particulate_flux_ref_depth = float(particulate_flux_ref_depth) / 100.
         particulate_flux_ref_depth_str = '%dm' % particulate_flux_ref_depth
         loop_for_replacement = [ particulate_flux_ref_depth_str ]
     else:
