@@ -220,7 +220,7 @@ if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
-    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_abio.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_abio_only.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (cgs, with abio) vs baseline (cgs, with abio))" >> ${RESULTS_CACHE}
 
@@ -240,7 +240,7 @@ if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
-    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_abio.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_abio_only.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (mks, with abio) vs baseline (cgs, with abio))" >> ${RESULTS_CACHE}
   fi
