@@ -58,5 +58,20 @@ class MARBL_diagnostics_class(object):
                 self.diagnostics_dict[diag_name]['frequency'] = [self.diagnostics_dict[diag_name]['frequency']]
                 self.diagnostics_dict[diag_name]['operator'] = [self.diagnostics_dict[diag_name]['operator']]
 
+            #    iv. update units
+            fix_units = {}
+            if unit_system == 'cgs':
+                fix_units["mmol/m^3 cm"] = "nmol/cm^2"
+                fix_units["mmol/m^3"] = "nmol/cm^3"
+                fix_units["meq/m^3"] = "neq/cm^3"
+            else:
+                fix_units["mmol/m^3 cm"] = "mmol/m^2"
+                fix_units["nmol/cm^2"] = "mmol/m^2"
+                fix_units["g/cm"] = "kg/m"
+                fix_units["cm"] = "m"
+
+            for key, value in fix_units.items():
+                self.diagnostics_dict[diag_name]["units"] = str(self.diagnostics_dict[diag_name]["units"]).replace(key, value)
+
         for diag_name in diags_to_delete:
             del self.diagnostics_dict[diag_name]

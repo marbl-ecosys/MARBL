@@ -84,15 +84,24 @@ def _parse_args():
 ##################
 
 if __name__ == "__main__":
-    import xarray as xr
-    import sys
+    import logging
     import os
+    import sys
+    import xarray as xr
 
     # We need marbl_root in python path so we can import MARBL_tools from generate_settings_file()
     marbl_root = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), ".."))
     sys.path.append(marbl_root)
-    from MARBL_tools import MARBL_settings_class, MARBL_diagnostics_class, abort
+    from MARBL_tools import MARBL_settings_class, MARBL_diagnostics_class, abort, LogFormatter
 
+    # Set up logging
+    logger = logging.getLogger("__name__")
+    handler = logging.StreamHandler()
+    handler.setFormatter(LogFormatter())
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+
+    # Parse command line arguments
     args = _parse_args()
     if args.settings_file_in == "None":
         args.settings_file_in = None
@@ -125,34 +134,31 @@ if __name__ == "__main__":
         if var in driver_vars or var.startswith("output_for_GCM"):
             continue
         if var not in json_in:
-            print(f"Can not find {var} in {args.default_diagnostics_file}!")
+            logger.info(f"Can not find {var} in {args.default_diagnostics_file}!")
             diff_found = True
             continue
+
+        # Determine if units and longname match
         netcdf_dict = {}
         netcdf_dict["units"] = str(ds[var].attrs["units"])
         netcdf_dict["longname"] = ds[var].attrs["long_name"]
         json_dict = {key: str(json_in[var][key]) for key in ["units", "longname"]}
         different_lname = (netcdf_dict["longname"] != json_dict["longname"])
         different_units = (netcdf_dict["units"] != json_dict["units"])
-        # Account for equivalent units
-        if json_dict["units"].replace("mmol/m^3", "nmol/cm^3") == netcdf_dict["units"]:
-            different_units = False
-        if json_dict["units"].replace("meq/m^3", "neq/cm^3") == netcdf_dict["units"]:
-            different_units = False
-        if json_dict["units"] == "mmol/m^3 cm/s" and netcdf_dict["units"] == "nmol/cm^2/s":
-            different_units = False
+
+        # Report any differences
         if different_units or different_lname:
             diff_found = True
-            print(f"Differences in {var}:")
+            logger.info(f"Differences in {var}:")
             if different_units:
-                print(f"* JSON units: {json_dict['units']}")
-                print(f"* netcdf units: {netcdf_dict['units']}")
+                logger.info(f"* JSON units: {json_dict['units']}")
+                logger.info(f"* netcdf units: {netcdf_dict['units']}")
             if different_lname:
-                print(f"* JSON long name: {json_dict['longname']}")
-                print(f"* netcdf long name: {netcdf_dict['longname']}")
+                logger.info(f"* JSON long name: {json_dict['longname']}")
+                logger.info(f"* netcdf long name: {netcdf_dict['longname']}")
 
 if diff_found:
-    print("Differences found between JSON and netCDF metadata!")
+    logger.error("Differences found between JSON and netCDF metadata!")
     abort(1)
 else:
-    print("No differences found between JSON and netCDF metadata")
+    logger.info("No differences found between JSON and netCDF metadata")

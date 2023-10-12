@@ -2,6 +2,8 @@
     and MARBL_diagnostics_file_class.py
 """
 
+import logging
+
 ################################################################################
 #                            PUBLIC MODULE METHODS                             #
 ################################################################################
@@ -12,6 +14,15 @@ def abort(err_code=0):
     import sys
     sys.exit(err_code)
 
+################################################################################
+
+class LogFormatter(logging.Formatter):
+    def format(self, record):
+        if record.levelno == logging.ERROR:
+            self._style._fmt = '%(levelname)s: %(message)s'
+        else:
+            self._style._fmt = '%(message)s'
+        return super().format(record)
 ################################################################################
 
 def sort(list_in, sort_key=lambda s: s.lower()):
